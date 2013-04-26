@@ -406,6 +406,7 @@ Turbulenz Service API
     - Allows additional numerical data.
 
 **Bridge**
+
 - Bi-directional communication channel between game and webpage.
 - Allows messages to be exchanged.
 - Live updating.
