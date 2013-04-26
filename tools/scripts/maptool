@@ -1,0 +1,251 @@
+#!/usr/bin/env node
+// Copyright (c) 2013 Turbulenz Limited
+
+var version = "0.9.0";
+
+global.sys = require("sys");
+var fs = require("fs")
+
+function usage()
+{
+    var o = _error;
+    o("");
+    o(" Usage:");
+    o("    maptool [<options>] <basefile.json>");
+    o("");
+    o(" Options:");
+    o("");
+    o("   -h, --help          this message");
+    o("");
+    o("   --profile <name>,<mapfile.json>[,<parent>]");
+    o("");
+    o("                       add the mapping from <mapping.json> as profile");
+    o("                       named <name>, optionally inheriting from the");
+    o("                       profile named <parent>.");
+    o("");
+    o("   -o <outfile>        write the result to a file (default: stdout)");
+    o("");
+    o("   -v                  verbose output");
+    o("");
+    o("   --version           print version and exit");
+    o("");
+}
+
+var _error = function(msg)
+{
+    process.stderr.write(msg);
+    if ('\n' !== msg[msg.length - 1])
+    {
+        process.stderr.write('\n');
+    }
+};
+
+var _log = function(msg)
+{
+    if (options.verbose)
+    {
+        _error("LOG: " + msg);
+    }
+};
+
+// -----------------------------------------------------------------------------
+// Options
+// -----------------------------------------------------------------------------
+
+var options = {
+    verbose: false,
+    outfile: undefined,
+    basefile: undefined,
+    profiles: {}, // : { [name: string]: { filename: string; parent?: string; };
+};
+
+var handleProfile = function handleProfileFn(profileStr)
+{
+    _log("Got profile string: " + profileStr);
+    entries = profileStr.split(',');
+
+    var name = entries[0];
+    var filename = entries[1];
+    var parent = entries[2];
+    _log(" - name: " + name + ", filename: " + filename +
+         ", parent: " + JSON.stringify(parent));
+
+    options.profiles[name] = { filename: filename, parent: parent };
+};
+
+var args = process.argv.slice(2);
+while (args.length)
+{
+    var a = args.shift();
+
+    if ("-h" === a || "--help" === a)
+    {
+        usage();
+        process.exit(0);
+    }
+    else if ("--profile" === a)
+    {
+        handleProfile(args.shift());
+    }
+    else if ("-o" === a)
+    {
+        options.outfile = args.shift();
+    }
+    else if ("-v" === a)
+    {
+        options.verbose = true;
+    }
+    else if ("--version" === a)
+    {
+        process.stdout.write(version + "\n");
+        process.exit(0);
+    }
+    else
+    {
+        if (!options.basefile)
+        {
+            options.basefile = a;
+        }
+        else
+        {
+            _error("ERROR: bad argument '" + a + "'");
+            usage();
+            process.exit(1);
+        }
+    }
+};
+
+if (!options.basefile)
+{
+    _error("ERROR: no basefile specified");
+    usage();
+    process.exit(1);
+}
+
+// -----------------------------------------------------------------------------
+// main
+// -----------------------------------------------------------------------------
+
+var writeOutput = function writeOutputFn(obj)
+{
+    _log("writing output...");
+
+    var outString = JSON.stringify(obj, undefined, 4);
+    var outStream = process.stdout;
+
+    if (options.outfile)
+    {
+        outStream = fs.createWriteStream
+        (options.outfile, { flags: "w", encoding: "utf8", mode: 0644 });
+    }
+
+    outStream.write(outString);
+};
+
+var checkProfilesAndWrite = function checkProfilesAndWriteFn(obj)
+{
+    _log("checking profiles ...");
+
+    var overrides = obj.overrides;
+    if (overrides)
+    {
+        for (var o in overrides)
+        {
+            if (overrides.hasOwnProperty(o))
+            {
+                _log("checking profile '" + o + "'");
+                var override = overrides[o];
+                var parent = override.parent;
+                if (parent)
+                {
+                    _log(" looking for parent '" + parent + "'");
+                    if (!overrides[parent])
+                    {
+                        _error("ERROR: no parent profile '" + parent + "'");
+                        process.exit(1);
+                    }
+                }
+            }
+        }
+    }
+
+    writeOutput(obj);
+}
+
+var processBasefile = function processBasefileFn(basefileText)
+{
+    basefile = JSON.parse(basefileText);
+
+    // Handle profiles
+
+    var numProfiles = 0;
+    var addProfile = function addProfileFn(name, filename, parent)
+    {
+        _log("processing profile '" + name + "'");
+
+        var overrides = basefile.overrides;
+        if (!overrides)
+        {
+            overrides = {};
+            basefile.overrides = overrides;
+        }
+
+        if (overrides[name])
+        {
+            _error("ERROR: profile '" + name + "' already in basefile");
+            process.exit(1);
+        }
+
+        var onProfileLoaded = function onProfileLoadedFn(err, profileText)
+        {
+            _log("loaded profile '" + name + "'");
+            if (err)
+            {
+                _error("ERROR: failed to load '" + filename + "'");
+                process.exit(1);
+            }
+
+            var profileObj = JSON.parse(profileText);
+            var newProfileObj = {
+                urnmapping: profileObj.urnmapping,
+                parent: parent
+            };
+            overrides[name] = newProfileObj;
+
+            var remaningProfiles = --numProfiles;
+            _log("" + remaningProfiles + " profiles remaining");
+            if (0 === remaningProfiles)
+            {
+                checkProfilesAndWrite(basefile);
+            }
+        }
+        fs.readFile(filename, "utf8", onProfileLoaded);
+    };
+
+    var profiles = options.profiles;
+    for (var p in profiles)
+    {
+        if (profiles.hasOwnProperty(p))
+        {
+            ++numProfiles;
+
+            var profile = profiles[p];
+            addProfile(p, profile.filename, profile.parent);
+        }
+    }
+
+    _log("saw " + numProfiles + " profiles");
+    if (0 === numProfiles)
+    {
+        _log("nothing to do");
+        writeOutput(basefile);
+        return;
+    }
+
+};
+
+fs.readFile(options.basefile, "utf8", function(err, text) {
+    if (err) throw err;
+    processBasefile(text);
+});
+_log("scheduled read ...");

@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title></title>
+        <link rel="stylesheet" type="text/css" href="css/sampleapp.css">
+        <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    </head>
+    <body>
+        <div id="content">
+            <div id="play" class="feature">
+                <h1 id="title-header"></h1>
+                <div id="app-object">
+                    <div id="engine-object">
+                        <div id="engine-wrapper">
+                            <!--
+                              HTML to create a plugin or canvas instance.
+                              Supplied by 'tz_engine_div' variable.
+                            -->
+                            /*{{ tz_engine_div }}*/
+
+                            <script type="text/javascript">
+                                var pw = $('#engine-object').width();
+                                // Calculate aspect ratio
+                                var ph = pw * 9 / 16;
+
+                                // Resize element for plugin or canvas to fill
+                                $('#engine-wrapper').css({
+                                    height: ph,
+                                    width: pw
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+                <p id="game-details" class="game-info">
+                </p>
+                <span id="versions" class="game-info">
+                    <span class="sdk">
+                        SDK version: <span id="sdk_version"></span>
+                        <span id="sdk_alert"></span>
+                    </span>
+                    <span class="engine">
+                        Engine version: <span id="engine_version">0.0.0</span>
+                        <span id="engine_alert"></span>
+                    </span>
+                </span>
+                <span class="copyright game-info">Turbulenz Engine &copy; Copyright Turbulenz Limited. 2010-2011</span>
+                <span class="clear"></span>
+            </div>
+
+        </div>
+    <script>
+        var config =
+        {
+            title: "Sample App",
+            version: "0.5",
+            sdk_version: "/*{{ tz_sdk_version }}*/",
+            language: "English",
+            allowAlerts: false
+        };
+        document.title = config.title + " powered By Turbulenz";
+        document.getElementById("sdk_version").innerHTML = config.sdk_version;
+        document.getElementById("game-details").innerHTML = config.title + " | v" + config.version + " | " + config.language;
+    </script>
+
+    <!-- begin 'tz_include_js' variable -->
+    /*{{ tz_include_js }}*/
+    <!-- end 'tz_include_js' variable -->
+
+    <script type="text/javascript">
+      // ----------------------------------------
+      // Embedded code and startup code.
+      // Supplied by 'tz_startup_code' variable.
+      // ----------------------------------------
+      /*{{ tz_startup_code }}*/
+    </script>
+
+    </body>
+</html>

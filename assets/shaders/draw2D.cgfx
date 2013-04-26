@@ -1,0 +1,126 @@
+// Copyright (c) 2009-2012 Turbulenz Limited
+
+//
+// Uniform variables
+//
+float4 clipSpace;
+float2 copyUVScale;
+float copyFlip;
+
+sampler2D texture = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D inputTexture0 = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+//
+// Vertex Programs
+//
+
+void vp_draw2D(in float2 INPosition : POSITION,
+               in float4 INColor : COLOR,
+               in float2 INTexCoord0 : TEXCOORD0,
+               out float4 OUTPosition : POSITION,
+               out float4 OUTColor : COLOR,
+               out float2 OUTTexCoord0 : TEXCOORD0)
+{
+    float2 position = INPosition * clipSpace.xy + clipSpace.zw;
+    OUTPosition.x = position.x;
+    OUTPosition.y = position.y;
+    OUTPosition.z = 0.0;
+    OUTPosition.w = 1.0;
+    OUTColor     = INColor;
+    OUTTexCoord0 = INTexCoord0;
+}
+
+void vp_copy(in float4 InPosition : POSITION,
+             in float2 InUV : TEXCOORD0,
+             out float4 OutPosition : POSITION,
+             out float2 OutUV : TEXCOORD0)
+{
+    OutPosition.x = InPosition.x;
+    OutPosition.y = InPosition.y * copyFlip;
+    OutPosition.zw = InPosition.zw;
+    OutUV = InUV * copyUVScale;
+}
+
+//
+// Pixel Programs
+//
+
+float4 fp_draw2D(float4 INColor : COLOR, float2 INTexCoord0 : TEXCOORD0) : COLOR
+{
+    return INColor * tex2D(texture, INTexCoord0);
+}
+
+float4 fp_copy(float2 UV: TEXCOORD0) : COLOR
+{
+    return tex2D(inputTexture0, UV);
+}
+
+//
+// Techniques
+//
+technique opaque
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_draw2D();
+        FragmentProgram = compile latest fp_draw2D();
+    }
+}
+
+technique alpha
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, OneMinusSrcAlpha);
+        VertexProgram   = compile latest vp_draw2D();
+        FragmentProgram = compile latest fp_draw2D();
+    }
+}
+
+technique additive
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, One);
+        VertexProgram   = compile latest vp_draw2D();
+        FragmentProgram = compile latest fp_draw2D();
+    }
+}
+
+technique copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp_copy();
+        FragmentProgram = compile glslf fp_copy();
+    }
+}

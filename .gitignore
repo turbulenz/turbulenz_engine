@@ -1,0 +1,15 @@
+# Virtual env
+env
+
+# Compiled python files
+*.pyc
+*.pyo
+
+# JSLIB build files
+jslib/
+jslib-modular/
+jslib-refcheck/
+.mkdir
+
+# Build output
+./build

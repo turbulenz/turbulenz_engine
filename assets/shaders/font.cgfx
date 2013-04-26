@@ -1,0 +1,58 @@
+// Copyright (c) 2009,2012 Turbulenz Limited
+
+float4 clipSpace;
+float  alphaRef = 0.03;
+float4 color;
+
+sampler2D texture = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+};
+
+//
+// Vertex Programs
+//
+void
+vp_font(in float4 INPosition : POSITION,
+               in float2 INTexCoord0 : TEXCOORD0,
+               out float4 OUTPosition : POSITION,
+               out float2 OUTTexCoord0 : TEXCOORD0)
+{
+    float4 position = INPosition;
+    position.xy = position.xy * clipSpace.xy + clipSpace.zw;
+    OUTPosition  = position;
+    OUTTexCoord0 = INTexCoord0;
+}
+
+//
+// Pixel Programs
+//
+float4
+fp_font(float2 INTexCoord0 : TEXCOORD0) : COLOR
+{
+    float4 result = color * tex2D(texture, INTexCoord0);
+    if (result.a < alphaRef)
+    {
+        discard;
+    }
+    return result;
+}
+
+//
+// Techniques
+//
+technique font
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+
+        VertexProgram   = compile latest vp_font();
+        FragmentProgram = compile latest fp_font();
+    }
+}

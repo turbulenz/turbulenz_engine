@@ -1,0 +1,71 @@
+/*{% extends "templates/base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/MultiWorm - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/MultiWorm/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key</th><th>Action</th>
+</tr>
+<tr>
+    <td class="key">W,A,S,D</td>
+    <td>Movement</td>
+</tr>
+<tr>
+    <td class="key">SPACE</td>
+    <td>Restart after dead</td>
+</tr>
+<tr>
+    <td class="key">1,2,3,4</td>
+    <td>Award Badge</td>
+</tr>
+<tr>
+    <td class="key">Left click</td>
+    <td>Turn left</td>
+</tr>
+<tr>
+    <td class="key">Right click</td>
+    <td>Turn right</td>
+</tr>
+<tr>
+    <td class="key">Enter</td>
+    <td>Toggle full screen</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div id="bsui" class="dynamicui"></div>
+
+<div class="html-control control-output-pair">
+<span>Score</span>
+<span id="scores" class="html-control control-output"></span>
+</div>
+
+<div class="html-control control-output-pair">
+<span>Kills</span>
+<span id="kills" class="html-control control-output"></span>
+</div>
+
+<div class="html-control control-output-pair">
+<span>Leaderboards</span>
+<span class="html-control control-output"></span>
+</div>
+<div id="leaderboards"></div>
+
+<div class="html-control control-output-pair">
+<span>Badges</span>
+<span class="html-control control-output"></span>
+</div>
+<div id="badges"></div>
+
+
+/*{% endblock %}*/

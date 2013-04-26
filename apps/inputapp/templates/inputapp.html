@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title>Input App - Turbulenz Engine</title>
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+</head>
+<body>
+    <div id="titlebar" class="ui-layout-north">
+        <strong class="title">Input App</strong>
+        <div id="titlelogo"></div>
+    </div>
+
+    <div id="sidebar" class="ui-layout-west scrollable">
+        <div class="html-control control-checkbox">
+            <span class="control-title">Show keyboard events</span>
+            <input type="checkbox" id="checkbox-keyboard">
+        </div>
+        <div class="html-control control-checkbox">
+            <span class="control-title">Show mouse button events</span>
+            <input type="checkbox" id="checkbox-mousebutton">
+        </div>
+        <div class="html-control control-checkbox">
+            <span class="control-title">Show mouse over events</span>
+            <input type="checkbox" id="checkbox-mouseover">
+        </div>
+        <div class="html-control control-checkbox">
+            <span class="control-title">Show mouse move events</span>
+            <input type="checkbox" id="checkbox-mousemove">
+        </div>
+        <div class="html-control control-checkbox">
+            <span class="control-title">Show mouse wheel events</span>
+            <input type="checkbox" id="checkbox-mousewheel">
+        </div>
+        <div class="html-control control-checkbox" id="padbutton-div">
+            <span class="control-title">Show pad button events</span>
+            <input type="checkbox" id="checkbox-padbutton">
+        </div>
+        <div class="html-control control-checkbox" id="padmove-div">
+            <span class="control-title">Show pad move events</span>
+            <input type="checkbox" id="checkbox-padmove">
+        </div>
+        <div id="locale"></div>
+
+        <div class="engine-control">
+        <p>When the mouse is over the TurbulenzEngine, the background is red, it is gray otherwise. A black border appears when
+        the TurbulenzEngine has focus.</p>
+
+        <p>Clicking the "Lock" button, locks the mouse. To unlock the mouse, press the "Unlock" button or the Escape key.</p>
+
+        <p>Pad support is only available on Windows, and only for the Xbox 360 gamepad.</p>
+
+        <p>To see output logs, please activate the console (using Firebug or the built-in browser development tools).</p>
+
+        <table cellspacing="0">
+        <tbody>
+        <tr>
+            <th>Key</th><th>Action</th>
+        </tr>
+        <tr>
+            <td class="key">ENTER</td>
+            <td>Enter/leave fullscreen</td>
+        </tr>
+        <tr>
+            <td class="key">1</td>
+            <td>Toggle keyboard event logging</td>
+        </tr>
+        <tr>
+            <td class="key">2</td>
+            <td>Toggle mouse button logging</td>
+        </tr>
+        <tr>
+            <td class="key">3</td>
+            <td>Toggle mouse over logging</td>
+        </tr>
+        <tr>
+            <td class="key">4</td>
+            <td>Toggle mouse move logging</td>
+        </tr>
+        <tr>
+            <td class="key">5</td>
+            <td>Toggle mouse wheel logging</td>
+        </tr>
+        <tr>
+            <td class="key">6</td>
+            <td>Toggle pad button logging</td>
+        </tr>
+        <tr>
+            <td class="key">7</td>
+            <td>Toggle pad move logging</td>
+        </tr>
+        </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div id="engine" class="ui-layout-center">
+      /*{{ tz_engine_div }}*/
+    </div>
+
+    <!-- begin 'tz_include_js' variable -->
+    /*{{ tz_include_js }}*/
+    <!-- end 'tz_include_js' variable -->
+
+    <script type="text/javascript">
+      // ----------------------------------------
+      // Embedded code and startup code.
+      // Supplied by 'tz_startup_code' variable.
+      // ----------------------------------------
+      /*{{ tz_startup_code }}*/
+    </script>
+
+</body>
+</html>

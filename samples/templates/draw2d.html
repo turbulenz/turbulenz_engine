@@ -1,0 +1,102 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_title %}*/Draw2D - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Draw2D/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<style type="text/css">
+    #sidebar {
+        bottom: 147px;
+    }
+</style>
+<div class="html-control control-output-pair">Sprite count:
+    <input type="text" id="spriteSliderinput" size="4" value="0" class="control-textfield">
+</div>
+<div class="html-control control-slider">
+    <div id="spriteSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Move Sprites:</span>
+    <input type="checkbox" id="moveBox" checked="yes" />
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Rotate Sprites:</span>
+    <input type="checkbox" id="rotateBox" checked="yes" />
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Cycle Sprite Color:</span>
+    <input type="checkbox" id="colorBox" checked="yes" />
+</div>
+<div class="html-control text">
+    <span>Please note that 'drawRaw' in this sample forces a single texture and blend mode.</span>
+</div>
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Draw Mode</legend>
+            <label for="draw0">drawSprite</label><input type="radio" name="drawMode" id="draw0"><br />
+            <label for="draw1">draw</label><input type="radio" name="drawMode" id="draw1"><br />
+            <label for="draw2">drawRaw</label><input type="radio" name="drawMode" id="draw2">
+        </fieldset>
+    </form>
+</div>
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Texturing</legend>
+            <label for="tex0">None</label><input type="radio" name="texMode" id="tex0"><br />
+            <label for="tex1">Single</label><input type="radio" name="texMode" id="tex1"><br />
+            <label for="tex2">Many</label><input type="radio" name="texMode" id="tex2">
+        </fieldset>
+    </form>
+</div>
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Sort Mode</legend>
+            <label for="sort0">Immediate</label><input type="radio" name="sortMode" id="sort0"><br/>
+            <label for="sort1">Deferred</label><input type="radio" name="sortMode" id="sort1"><br/>
+            <label for="sort2">Texture</label><input type="radio" name="sortMode" id="sort2">
+        </fieldset>
+    </form>
+</div>
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Blend Mode</legend>
+            <label for="blend0">Opaque</label><input type="radio" name="blendMode" id="blend0"><br/>
+            <label for="blend1">Alpha</label><input type="radio" name="blendMode" id="blend1"><br/>
+            <label for="blend2">Additive</label><input type="radio" name="blendMode" id="blend2"><br/>
+            <label for="blend3">Cycle modes</label><input type="radio" name="blendMode" id="blend3">
+        </fieldset>
+    </form>
+</div>
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Scale Mode</legend>
+            <label for="scale0">None</label><input type="radio" name="scaleMode" id="scale0"><br/>
+            <label for="scale1">Scale</label><input type="radio" name="scaleMode" id="scale1"><br/>
+        </fieldset>
+    </form>
+</div>
+<div class="engine-control">
+    <dl class="performance-list">
+        <dt>Performance:       </dt><dd id="fps"></dd><br/>
+        <dt>GPU Memory Usage:  </dt><dd id="gpu"></dd><br/>
+        <dt>GPU Data Transfers:</dt><dd id="dataTransfers"></dd><br/>
+        <dt>Batch Count:       </dt><dd id="batchCount"></dd><br/>
+        <dt>Min. Batch Size:   </dt><dd id="minBatch"></dd><br/>
+        <dt>Max. Batch Size:   </dt><dd id="maxBatch"></dd><br/>
+        <dt>Avg. Batch Size:   </dt><dd id="avgBatch"></dd>
+    </dl>
+</div>
+/*{% endblock %}*/

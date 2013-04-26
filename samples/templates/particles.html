@@ -1,0 +1,23 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Particles - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Particles/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Particle Type</legend>
+            <span>Multi-coloured Spheres</span><input type="radio" id="radio01"><br>
+            <span>Stars</span><input type="radio" id="radio02"><br>
+            <span>Multi-coloured Sparks</span><input type="radio" id="radio03">
+        </fieldset>
+    </form>
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Draw bounding box</span>
+    <input type="checkbox" id="checkbox01">
+</div>
+<div class="html-control control-output-pair">Performance: <strong id="fpscounter" class="control-output"></strong></div>
+<div class="html-control control-output-pair">Active particles: <strong id="numActiveParticles" class="control-output"></strong></div>
+/*{% endblock %}*/

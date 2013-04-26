@@ -1,0 +1,49 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Camera - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Camera/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Camera Position</legend>
+            <span>Tracking Camera 1</span><input type="radio" id="radio01"><br>
+            <span>Tracking Camera 2</span><input type="radio" id="radio02"><br>
+            <span>Tracking Camera 3</span><input type="radio" id="radio03"><br>
+            <span>Orbit Camera</span><input type="radio" id="radio04"><br>
+            <span>Chase Camera</span><input type="radio" id="radio05">
+        </fieldset>
+    </form>
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key</th><th>Camera Control</th>
+</tr>
+<tr>
+    <td class="key">T</td>
+    <td>Toggle tracking cameras</td>
+</tr>
+<tr>
+    <td class="key">O</td>
+    <td>Switch to orbit camera</td>
+</tr>
+<tr>
+    <td class="key">C</td>
+    <td>Switch to chase camera</td>
+</tr>
+<tr>
+    <td class="key">Enter</td>
+    <td>Toggle full screen</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

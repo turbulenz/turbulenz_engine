@@ -1,0 +1,145 @@
+// Copyright (c) 2009-2012 Turbulenz Limited
+
+//
+// Uniform variables
+//
+float4 fadeColor;
+float3 color0;
+float3 color1;
+float3 modulateColor;
+float  alpha;
+
+sampler2D colorTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+//
+// Variant inputs
+//
+struct VS_IN
+{
+    float4 Position: POSITION;
+    float2 UV: TEXCOORD0;
+};
+
+struct VS_OUT
+{
+    float4 Position: POSITION;
+    float2 UV: TEXCOORD0;
+};
+
+//
+// Vertex programs
+//
+VS_OUT vp(VS_IN In)
+{
+    VS_OUT Out;
+    Out.Position = In.Position;
+    Out.UV = In.UV;
+    return Out;
+}
+
+//
+// Fragment programs
+//
+float4 fp_fade(float2 UV: TEXCOORD0) : COLOR
+{
+    float3 color = tex2D(colorTexture, UV).xyz;
+    return float4(lerp(color, fadeColor.xyz, smoothstep(0.0, 1.0, fadeColor.w)), 1.0);
+}
+
+float4 fp_copy(float2 UV: TEXCOORD0) : COLOR
+{
+    return tex2D(colorTexture, UV);
+}
+
+float4 fp_bicolor(float2 UV: TEXCOORD0) : COLOR
+{
+    float3 color = tex2D(colorTexture, UV).xyz;
+    float luminance = (0.3 * color.x + 0.59 * color.y + 0.11 * color.z);
+    return float4(lerp(color0, color1, luminance), 1.0);
+}
+
+float4 fp_modulate(float2 UV: TEXCOORD0) : COLOR
+{
+    float3 color = tex2D(colorTexture, UV).xyz;
+    return float4(color * modulateColor, 1.0);
+}
+
+float4 fp_blend(float2 UV: TEXCOORD0) : COLOR
+{
+    return float4(tex2D(colorTexture, UV).xyz, alpha);
+}
+
+//
+// Techniques
+//
+technique fadein
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_fade();
+    }
+}
+
+technique copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_copy();
+    }
+}
+
+technique bicolor
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_bicolor();
+    }
+}
+
+technique modulate
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_modulate();
+    }
+}
+
+technique blend
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_blend();
+    }
+}

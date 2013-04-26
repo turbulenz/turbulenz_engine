@@ -1,0 +1,202 @@
+// Copyright (c) 2010-2012 Turbulenz Limited
+
+//
+// Uniform variables
+//
+float alpha;
+float luminance;
+float4 bgColor;
+
+float horzDim;
+float vertDim;
+
+#define NUMWT 9
+float Gauss[NUMWT] = {0.93, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
+#define WT_NORMALIZE (1.0/(1.0+2.0*(0.93 + 0.8 + 0.7 + 0.6 + 0.5 + 0.4 + 0.3 + 0.2 + 0.1)))
+
+sampler2D inputTexture0 = sampler_state
+{
+    MinFilter = Linear;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D inputTexture1 = sampler_state
+{
+    MinFilter = Linear;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+//
+// Variant inputs
+//
+struct VS_IN
+{
+    float4 Position: POSITION;
+    float2 UV: TEXCOORD0;
+};
+
+struct VS_OUT
+{
+    float4 Position: POSITION;
+    float2 UV: TEXCOORD0;
+};
+
+//
+// Vertex programs
+//
+VS_OUT vp(VS_IN In)
+{
+    VS_OUT Out;
+    Out.Position = In.Position;
+    Out.UV = In.UV;
+    return Out;
+}
+
+//
+// Fragment programs
+//
+float4 fp_copy(float2 UV: TEXCOORD0) : COLOR
+{
+    return float4(tex2D(inputTexture0, UV).xyz, 1.0);
+}
+
+float4 fp_invert(float2 UV: TEXCOORD0) : COLOR
+{
+    float4 color = tex2D(inputTexture0, UV);
+    color.xyz = (1 - color.xyz);
+    return color;
+}
+
+float4 fp_luminance(float2 UV: TEXCOORD0) : COLOR
+{
+    float4 color = tex2D(inputTexture0, UV);
+    float lum = (color.x * 0.3) + (color.y * 0.59) + (color.z * 0.11);
+    return lerp(bgColor, color, sign(max(lum - luminance, 0.0)));
+}
+
+float4 fp_basicblur_vert(float2 UV: TEXCOORD0) : COLOR
+{
+    float2 step = {0.0, (1.0 / vertDim)};
+    float4 color = tex2D(inputTexture0, UV) * (WT_NORMALIZE);
+    float4 color2;
+    float2 dir = step;
+    for(int i=0; i<NUMWT; i++)
+    {
+        color2 = tex2D(inputTexture0, UV + dir);
+        color += color2 * (Gauss[i]*WT_NORMALIZE);
+        color2 = tex2D(inputTexture0, UV - dir);
+        color += color2 * (Gauss[i]*WT_NORMALIZE);
+        dir += step;
+    }
+    return color;
+}
+
+float4 fp_basicblur_horz(float2 UV: TEXCOORD0) : COLOR
+{
+    float2 step = { (1.0 / horzDim), 0.0};
+    float4 color = tex2D(inputTexture0, UV) * (WT_NORMALIZE);
+    float4 color2;
+    float2 dir = step;
+    for(int i=0; i<NUMWT; i++)
+    {
+        color2 = tex2D(inputTexture0, UV + dir);
+        color += color2 * (Gauss[i]*WT_NORMALIZE);
+        color2 = tex2D(inputTexture0, UV - dir);
+        color += color2 * (Gauss[i]*WT_NORMALIZE);
+        dir += step;
+    }
+    return color;
+}
+
+float4 fp_composite(float2 UV: TEXCOORD0) : COLOR
+{
+    float3 color0 = tex2D(inputTexture0, UV).xyz;
+    float3 color1 = (tex2D(inputTexture1, UV).xyz * alpha);
+    return float4(color0 + color1, 1.0);
+}
+
+//
+// Techniques
+//
+technique copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_copy();
+    }
+}
+
+technique invert
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_invert();
+    }
+}
+
+technique luminance
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_luminance();
+    }
+}
+
+technique blurvert
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_basicblur_vert();
+    }
+
+}
+
+technique blurhorz
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_basicblur_horz();
+    }
+}
+
+technique composite
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_composite();
+    }
+}

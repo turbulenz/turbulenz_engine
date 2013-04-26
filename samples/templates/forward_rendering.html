@@ -1,0 +1,50 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Forward Rendering - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Forward Rendering/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-checkbox">
+    <span class="control-title">Toggle colored lights</span>
+    <input type="checkbox" id="checkbox-colored">
+</div>
+
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Lights type</legend>
+            <span>Directional</span><input type="radio" id="radio-directional"><br>
+            <span>Point</span><input type="radio" id="radio-point"><br>
+            <span>Spot</span><input type="radio" id="radio-spot"><br>
+        </fieldset>
+    </form>
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Toggle grayscale effect</span>
+    <input type="checkbox" id="checkbox-post">
+</div>
+<div class="html-control control-output-pair">Performance: <strong id="fpscounter" class="control-output"></strong></div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th class="key">Key</th><th>Movement Control</th>
+</tr>
+<tr>
+    <td class="key">W,A,S,D</td>
+    <td>Movement</td>
+</tr>
+<tr>
+    <td class="key">Enter</td>
+    <td>Toggle full screen</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

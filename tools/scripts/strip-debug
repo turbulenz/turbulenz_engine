@@ -1,0 +1,825 @@
+#!/usr/bin/env node
+// Copyright (c) 2009-2013 Turbulenz Limited
+
+global.sys = require(/^v0\.[012]/.test(process.version) ? "sys" : "util");
+var fs = require("fs"), path = require("path");
+
+// -----------------------------------------------------------------------------
+// options
+// -----------------------------------------------------------------------------
+
+var options = {
+    outfile : undefined, //'a.out',
+    infile : undefined,
+    verbose : false,
+    debug_verbose : false,
+    ignore_errors: false,
+    stripspaces : [],
+    defines : {},
+    uglifyjs : undefined
+};
+
+function usage()
+{
+    function o(m) { process.stdout.write(m); process.stdout.write("\n"); }
+
+    o(" Usage:  node strip-debug.js [<options>] [<infile>]");
+    o("");
+    o(" Options:");
+    o("");
+    o("   -h, --help                this message");
+    o("");
+    o("   -o <outfile>              output file");
+    o("");
+    o("   --namespace <name.space>  add a namespace(s) to strip calls to");
+    o("");
+    o("   -D<varname>[=false]       an identifier to be defined everywhere.");
+    o("                             can be used to statically strip code.");
+    o("");
+    o("   --ignore-errors           ignore syntax errors during parsing");
+    o("");
+    o("");
+    o("   --uglifyjs path           supply path to uglifyjs folder (if not");
+    o("                             passed strip-debug will attempt to find)");
+    o("");
+    o("   -v                        verbose");
+    o("");
+    o("   -d                        debug verbose (very verbose)");
+    o("");
+    o(" By default, the 'debug' namespace will be stripped.  If the");
+    o(" --namespace flag is given, the default namespace is overridden.");
+    o(" --namespace can be used several times to strip multiple namespaces");
+    o(" in one go.");
+}
+
+// Takes the VARNAME[=val] part of a -DVARNAME[=val] cmd line
+var handleDefineArg = function handleDefineArgFn(def)
+{
+    debug("handleDefineArg: " + def + "\n");
+    var val = true;
+
+    var eqFalseIdx = def.indexOf("=false");
+    if (-1 !== eqFalseIdx)
+    {
+        def = def.substr(0, eqFalseIdx);
+        val = false;
+    }
+
+    debug("handleDefineArg: DEFINE: " + def + ": ");
+    debugval(val);
+    options.defines[def] = val;
+};
+
+var args = process.argv.slice(2);
+
+while (args.length)
+{
+    var a = args.shift();
+
+    // process.stdout.write("arg: " + a + "\n");
+    if ("-o" === a)
+    {
+        options.outfile = args.shift();
+        // process.stdout.write(" outfile: " + options.outfile + "\n");
+    }
+    else if ("--namespace" === a)
+    {
+        var space = args.shift();
+        options.stripspaces.push(space.split("."));
+    }
+    else if ("-D" === a)
+    {
+        handleDefineArg(args.shift());
+    }
+    else if (0 === a.indexOf("-D"))
+    {
+        handleDefineArg(a.substr(2));
+    }
+    else if ("-v" === a)
+    {
+        options.verbose = true;
+        // process.stdout.write(" verbose: " + options.verbose + "\n");
+    }
+    else if ("-d" === a)
+    {
+        options.verbose = true;
+        options.debug_verbose = true;
+    }
+    else if ("-h" === a || "--help" === a)
+    {
+        usage();
+        process.exit(0);
+    }
+    else if ("--ignore-errors" === a)
+    {
+        options.ignore_errors = true;
+    }
+    else if ("--uglifyjs" === a)
+    {
+        options.uglifyjs = args.shift();
+    }
+    else
+    {
+        if (!options.infile)
+        {
+            options.infile = a;
+            // process.stdout.write(" infile: " + options.infile + "\n");
+        }
+        else
+        {
+            usage();
+            process.exit(1);
+        }
+    }
+}
+
+if (0 === options.stripspaces.length)
+{
+    options.stripspaces.push([ "debug" ]);
+}
+
+// -----------------------------------------------------------------------------
+// import uglifyjs
+// -----------------------------------------------------------------------------
+
+var uglifyPaths = [ options.uglifyjs + 'lib',
+                    '../../external/uglifyjs/lib',
+                    '../../engine/external/uglifyjs/lib' ];
+var jsp, pro;
+for (var p = 0; p < uglifyPaths.length; p += 1)
+{
+    if (uglifyPaths[p])
+    {
+        try {
+            jsp = require(uglifyPaths[p] + "/parse-js");
+            pro = require(uglifyPaths[p] + "/process");
+        } catch (e) {
+        }
+        if (jsp)
+        {
+            break;
+        }
+    }
+}
+
+if (!jsp)
+{
+    process.stderr.write("ERROR: Could not find uglifyjs\n");
+    process.exit(1);
+}
+
+// -----------------------------------------------------------------------------
+// output formatting
+// -----------------------------------------------------------------------------
+
+var _indent = 0;
+var _newline = true;
+function indent(spaces)
+{
+    _indent = _indent + spaces;
+    if (_indent < 0) throw "indent = " + _indent;
+}
+
+function print(str, always)
+{
+    if (!always && !options.verbose)
+    {
+        return;
+    }
+
+    if (_newline)
+    {
+        for (var i = 0 ; i < _indent ; ++i)
+            process.stdout.write(" ");
+    }
+    process.stderr.write(str);
+    _newline = str[str.length - 1] === '\n';
+}
+
+function debug(str)
+{
+    if (!options.debug_verbose)
+    {
+        return;
+    }
+    print(str, true);
+}
+
+function printval(str, always)
+{
+    print(sys.inspect(str), always);
+    print("\n", always);
+}
+
+function debugval(str)
+{
+    if (!options.debug_verbose)
+    {
+        return;
+    }
+    printval(str, true);
+}
+
+// -----------------------------------------------------------------------------
+// processing
+// -----------------------------------------------------------------------------
+
+// Mark all function definitions that have a 'debug' local var
+// anywhere in the body.
+function markScopes(ast)
+{
+    print("================================================\n");
+    print("==                 FIRST PASS                 ==\n");
+    print("================================================\n");
+
+    // Any function defining the top-level name is to be flagged.
+    var topLevelNames = [];
+    for (var s in options.stripspaces)
+    {
+        var space = options.stripspaces[s];
+        topLevelNames.push(space[0]);
+    }
+    debug("topLevelNames:");
+    debugval(topLevelNames);
+
+    var _scopeStack = [ false ];
+    var _curScopeIdx = 0;
+    function _scopeStart()
+    {
+        _curScopeIdx += 1;
+        _scopeStack[_curScopeIdx] = [];
+    }
+    function _scopeEnd()
+    {
+        _scopeStack.length = _curScopeIdx;
+        _curScopeIdx = _curScopeIdx -1 ;
+    }
+    function _scopeLocalDebug(topLevelName)
+    {
+        debug(" got topLevelName " + topLevelName + "\n");
+        if (_curScopeIdx !== 0)
+        {
+            var scope = _scopeStack[_curScopeIdx];
+            if (topLevelName in scope)
+            {
+                return;
+            }
+            scope.push(topLevelName);
+        }
+    }
+    function _scopeGetLocalSymbols()
+    {
+        return _scopeStack[_curScopeIdx];
+    }
+
+    function _checkID(name)
+    {
+        debug("checking: " + name + "... ");
+        var numTLN = topLevelNames.length;
+        for (var tlnI = 0 ; tlnI < numTLN ; tlnI = tlnI + 1)
+        {
+            var tln = topLevelNames[tlnI];
+            debug(tln + " ... ");
+            if (name === tln)
+            {
+                debug("found");
+                return true;
+            }
+            debug("not found, ");
+        }
+
+        return false;
+    }
+
+    function functionFn(name, args, body)
+    {
+        debug("FN: " + name + "\n");
+        // printval(this);
+        indent(2);
+
+        _scopeStart();
+
+        debug("SEARCHING FOR: ");
+        debugval(topLevelNames);
+
+        debug(" ARGS: ");
+        debugval(args);
+        // Check args
+
+        for (var a = 0 ; a < args.length ; ++a)
+        {
+            var arg = args[a];
+            if (_checkID(arg))
+            {
+                debug("\n");
+                _scopeLocalDebug(arg);
+            }
+            else
+            {
+                debug("\n");
+            }
+        }
+
+        // Check the function body
+
+        var newBody = [];
+        for (var n in body)
+        {
+            debug(" ST: ");
+            debugval(body[n]);
+            newBody.push(w.walk(body[n]));
+        }
+
+        indent(-2);
+        debug("END FN: " + name);
+
+        var localVars = _scopeGetLocalSymbols();
+        if (0 != localVars.length)
+        {
+            debug(" has debug vars:");
+            debugval(localVars);
+            this[0].tz_has_debug = localVars;
+        }
+        _scopeEnd();
+        debug("\n");
+
+        return [ this[0], name, args, newBody ];
+    }
+
+    function varFn(vars)
+    {
+        for (var _v in vars)
+        {
+            var v = vars[_v];
+            var varname = v[0];
+            var varval = v[1];
+
+            debug("VAR: " +  varname);
+
+            if (_checkID(varname))
+            {
+                debug(" (debug namespace)");
+                _scopeLocalDebug(varname);
+            }
+
+            if (varval)
+            {
+                debug(" (= ...)");
+            }
+            debug("\n");
+        }
+    }
+
+    var w = pro.ast_walker();
+    var new_ast = w.with_walkers({
+        "var"           : varFn,
+        "function"      : functionFn,
+    }, function () {
+        return w.walk(ast);
+    });
+}
+
+
+function extractDebugCalls(code)
+{
+    var calls = [];
+
+    try {
+        var ast = jsp.parse(code, undefined, true);
+    } catch(e) {
+        // Standard formatting that editors can parse
+        var filename = options.infile ? options.infile : "(stdin)";
+        process.stderr.write(filename +":" + e.line + ":" + e.col +
+                             ": error: " + e.message + "\n");
+        if (options.ignore_errors)
+        {
+            process.stderr.write("(ignoring - output will be unchanged)\n");
+            return [];
+        }
+        process.exit(2);
+    }
+
+    markScopes(ast);
+
+    print("================================================\n");
+    print("==                SECOND PASS                 ==\n");
+    print("================================================\n");
+
+    var stripspaces = options.stripspaces;
+    var numSpaces = stripspaces.length;
+
+    var currentLocals = [];
+    function _spaceIsExcluded(name)
+    {
+        var stackIdx = currentLocals.length - 1;
+        var nameIdx;
+        var locals;
+
+        while (stackIdx >= 0)
+        {
+            locals = currentLocals[stackIdx];
+            for (nameIdx = 0 ; nameIdx < locals.length ; nameIdx = nameIdx + 1)
+            {
+                var local = locals[nameIdx];
+                if (name === local)
+                {
+                    return true;
+                }
+            }
+
+            stackIdx = stackIdx - 1;
+        }
+
+        return false;
+    }
+
+    function functionFn(name, args, body)
+    {
+        debug("FN: " + name + "\n");
+        indent(2);
+
+        var hasDebug = this[0].tz_has_debug || false;
+
+        // If the scope contains any debug symbols, add them to the stack
+
+        if (hasDebug)
+        {
+            debug("locals: " + hasDebug);
+            currentLocals.push(hasDebug);
+        };
+
+        for (var n in body)
+        {
+            w.walk(body[n]);
+        }
+
+        if (hasDebug)
+        {
+            debug("popping locals");
+            currentLocals.length = currentLocals.length - 1;
+        }
+
+        indent(-2);
+        debug("END FN: " + name + "\n");
+
+        return [ this[0], name, args, body ];
+    }
+
+    // Recurse through a dot expression, looking for stripspace
+    // idx = index into the stripspace array we are currently looking for
+    var dotRecurse = function (expr, stripspace, idx)
+    {
+        debug("dotRecurse:\n");
+        debug(" expr: "); debugval(expr);
+        debug(" stripspace: "); debugval(stripspace);
+        debug(" idx: "); debugval(idx);
+
+        var nameToCheck = stripspace[idx];
+
+        // If we are at the end of the chain we require expr
+        // to be a property name.
+
+        if (0 === idx)
+        {
+            return (expr instanceof Array) &&
+                ('name' === expr[0])       &&
+                (nameToCheck === expr[1]);
+        }
+
+        // We must recurse into the expression
+
+        if (expr instanceof Array)
+        {
+            // It must be a dot expression
+
+            if ('dot' !== expr[0])
+            {
+                return false;
+            }
+
+            // The label must match the next thing on our list
+
+            var label = expr[2];
+            if (label !== nameToCheck)
+            {
+                return false;
+            }
+
+            var newExpr = expr[1];
+            return dotRecurse(newExpr, stripspace, idx-1);
+        }
+
+        return false;
+    }
+
+    var _stripCall = function _stripCallFn(call)
+    {
+        var nodeToken = call[0];
+        var expr = call[1];
+        var args = call[2];
+
+        if ('dot' !== expr[0])
+        {
+            return false;
+        }
+
+        debug("EXPR: "); debugval(expr);
+
+        var dotObj  = expr[1];  // 'turbulenz_tools.utils.debug'
+        var dotProp = expr[2];  // 'assert'
+
+        // For each namespace we are interested in ...
+        for (var i = 0 ; i < numSpaces ; i = i + 1)
+        {
+            var stripspace = stripspaces[i];
+            var numNames = stripspace.length;
+            var stripspaceLast = stripspace[numNames-1];
+            var dotObjToCheck = dotObj;
+
+            debug(" checking against namespace: "); debugval(stripspace);
+
+            // Search back through the chain of 'dot' objects to find
+            // where to start the comparison.
+
+            debug(" looking for node called " + stripspaceLast + " ...\n");
+            while (true)
+            {
+                debug("  cur node: "); debugval(dotObjToCheck);
+                if ('dot' === dotObjToCheck[0])
+                {
+                    debug("   is dot, name: " + dotObjToCheck[2] + "\n");
+                    if (stripspaceLast !== dotObjToCheck[2])
+                    {
+                        dotObjToCheck = dotObjToCheck[1];
+                        continue;
+                    }
+                    else
+                    {
+                        debug("   found\n");
+                        break;
+                    }
+                }
+                else if ('name' == dotObjToCheck[0])
+                {
+                    debug("   is name, name: " + dotObjToCheck[1] + "\n");
+                    if (stripspaceLast === dotObjToCheck[1])
+                    {
+                        debug("   found");
+                        break;
+                    }
+                }
+
+                debug("   don't understand this node.  finished.\n");
+                dotObjToCheck = null;
+                break;
+            }
+
+            if (dotObjToCheck)
+            {
+                if (dotRecurse(dotObjToCheck, stripspace, numNames - 1))
+                {
+                    // TODO: Keep an updated list of spaces to remove on
+                    // the stack, so we don't have all these loops.
+                    if (!_spaceIsExcluded(stripspace[0]))
+                    {
+                        return true;
+                    }
+
+                    debug("excluded by local\n");
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Returns:
+    // -1 if the condition is statically true (remove the else clause)
+    //  0 if the condition is not checkable (do nothing)
+    //  1 if the condition is statically false (remove the true clause)
+    var _conditionIsStatic = function _conditionIsStaticFn(cond)
+    {
+        var _cond = cond[0];
+        var _condName = _cond.name || _cond;
+
+        debug(" _conditionIsStatic: "); debugval(cond);
+        debug(" _conditionIsStatic: type: "); debugval(_condName);
+
+        if (!("string" === typeof _condName || _condName instanceof String))
+        {
+            debug(" _conditionIsStatic: _condName not a string\n");
+            return 0;
+        }
+
+        if ("name" === _condName)
+        {
+            var n = cond[1];
+
+            if (options.defines.hasOwnProperty(n))
+            {
+                var defVal = options.defines[n];
+                return (defVal)?(-1):(1);
+            }
+        }
+        else if ("unary-prefix" === _condName)
+        {
+            var op = cond[1];
+            var newCond = cond[2];
+            if ("!" === op)
+            {
+                return -1 * _conditionIsStatic(newCond);
+            }
+        }
+        return 0;
+    };
+
+    function callFn(fn, args)
+    {
+        // printval(this);
+        debug("CALL: ");
+        //printval(this);
+
+        var expr = this[1];
+        var args = this[2];
+
+        debugval(expr);
+
+        if (_stripCall(this))
+        {
+            var nodeToken = this[0];
+            var toDelete = [nodeToken.start.pos, nodeToken.end.endpos];
+            debug("deleting: ");
+            debugval(toDelete);
+            calls.push(toDelete);
+
+            return this;
+        }
+
+        w.walk(fn);
+        var numArgs = args.length;
+        for (var a = 0 ; a < numArgs ; ++a)
+        {
+            w.walk(args[a]);
+        }
+
+        return this;
+    }
+
+    function conditionalFn()
+    {
+        debug("------------: ");  debugval(this);
+
+        var _if = this[0];
+        var _condition = this[1];
+        var _true = this[2]
+        var _false = this[3]
+
+        // debug("_if: "); debugval(_if);
+        debug("_if: "); debugval(_if);
+        debug("_condition: "); debugval(_condition);
+        debug("_true: "); debugval(_true);
+        debug("_false: "); debugval(_false);
+
+        // Check the condition against all defines
+
+        var isFalse = _conditionIsStatic(_condition);
+        debug("isFalse: "); debugval(isFalse);
+        if (1 === isFalse)
+        {
+            var trueToken = _true[0];
+
+            if (!_false)
+            {
+                calls.push([ _if.start.pos, trueToken.end.pos ]);
+                return this;
+            }
+
+            // There is an else clause
+
+            var elseToken = _false[0];
+            var trueClauseEnd = trueToken.end.endpos;  // before the else
+            var elseClauseStart = elseToken.start.pos; // inside else bracket
+
+            // We need to find the beginning of the 'else', in between
+            // trueClauseEnd and elseClauseStart.
+
+            var elseStart = code.indexOf("else", trueClauseEnd);
+            if (-1 === elseStart)
+            {
+                throw "Internal Error: expected to find else, but none given.";
+            }
+            if (elseStart >= elseClauseStart)
+            {
+                throw "Internal Error: expected else before else clause.";
+            }
+
+            var toDelete = [ _if.start.pos, elseStart + 3 ];
+            calls.push(toDelete);
+
+            // Don't traverse the 'true' clause.  Any point traversing
+            // _condition?
+
+            return [ this[0], _condition, _true, w.walk(_false) ];
+        }
+        else if (-1 === isFalse)
+        {
+            // Remove the 'if (condition)' part
+
+            calls.push( [ _if.start.pos, _condition[0].end.endpos ] );
+
+            // Any deletes in the _true clause must be pushed onto the
+            // array ahead of any in the else clause to maintain the
+            // correct order, thus we walk the true block here.
+
+            var newTrue = w.walk(_true);
+
+            // Remove any else clause
+
+            if (_false)
+            {
+                var trueToken = _true[0];
+                var elseToken = _false[0];
+
+                var toDelete = [ trueToken.end.endpos, elseToken.end.pos ];
+                calls.push(toDelete);
+            }
+
+            return [ this[0], _condition, newTrue, undefined ];
+        }
+
+        return [ this[0], w.walk(_condition), w.walk(_true), w.walk(_false) ];
+    }
+
+    var w = pro.ast_walker();
+    var new_ast = w.with_walkers({
+        "call"          : callFn,
+        "function"      : functionFn,
+
+
+        "if"   : conditionalFn,
+        // "defun"   : conditionalFn,
+        // "block"   : conditionalFn,
+        // "splice"   : conditionalFn,
+        // "toplevel"   : conditionalFn,
+        // "try"   : conditionalFn,
+
+    }, function () {
+        return w.walk(ast);
+    });
+
+    return calls;
+};
+
+function processCode(code)
+{
+    var codeLength = code.length;
+    var debugCalls = extractDebugCalls(code);
+    var numDebugCalls = debugCalls.length;
+
+    var out;
+    if (options.outfile)
+    {
+        out = fs.createWriteStream
+        (options.outfile, { flags: "w", encoding: "utf8", mode: 0644 });
+    }
+    else
+    {
+        out = process.stdout;
+    }
+
+    var curPos = 0;
+    for (var i = 0 ; i < numDebugCalls ; ++i)
+    {
+        var debugCall = debugCalls[i];
+        var callStart = debugCall[0];
+        var callEnd = debugCall[1];
+
+        out.write(code.slice(curPos, callStart));
+        out.write("/* ");
+        out.write(code.slice(callStart, callEnd + 1));
+        out.write(" */");
+
+        curPos = callEnd + 1;
+    }
+
+    out.write(code.slice(curPos, codeLength));
+};
+
+// -----------------------------------------------------------------------------
+// main
+// -----------------------------------------------------------------------------
+
+if (!options.infile)
+{
+    var text = "";
+    var stdin = process.openStdin();
+    stdin.on("data", function(t) { text += t; });
+    stdin.on("end", function() { processCode(text); });
+}
+else
+{
+    fs.readFile(options.infile, "utf8", function (err, text) {
+        if (err) throw err;
+        processCode(text);
+    });
+}

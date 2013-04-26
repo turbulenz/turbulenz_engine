@@ -1,0 +1,263 @@
+// Copyright (c) 2010-2012 Turbulenz Limited
+
+#define MAX_MORPH_WEIGHTS 3
+
+//
+// Uniform variables
+//
+float4x4 worldViewProjection;
+
+float3 eyePosition; // in local space
+
+float morphWeights[MAX_MORPH_WEIGHTS];
+float4 materialColor = {1.0, 1.0, 1.0, 1.0};
+
+float3 lightPosition; // in local space
+float3 lightColor;
+float3 ambientColor;
+
+static const float Ks = 0.5;
+static const float Kr = 0.5;
+static const float SpecularExponent = 32.0;
+
+sampler2D diffuse : register(s0) = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+    WrapS = Repeat;
+    WrapT = Repeat;
+    MaxAnisotropy = 16;
+};
+
+
+//
+// Variant inputs
+//
+struct VP_FLAT_IN
+{
+    float3 Position : POSITION;
+    float3 Normal	: NORMAL;
+};
+
+struct VP_FLAT_OUT
+{
+    float4 Position : POSITION;
+    float4 Color    : COLOR;
+};
+
+struct VP_MORPH_IN
+{
+    float3 Position0 : ATTR0;
+    float3 Normal0   : ATTR2;
+
+    float3 Position1 : ATTR10;
+    float3 Normal1   : ATTR11;
+
+    float3 Position2 : ATTR12;
+    float3 Normal2   : ATTR13;
+
+    float3 Position3 : ATTR14;
+    float3 Normal3   : ATTR15;
+
+    float2 UV       : ATTR8; //TEXCOORD0
+};
+
+struct VP_MORPH_OUT
+{
+    float4 Position : POSITION;
+    float4 Color    : COLOR;
+};
+
+struct VP_DEBUG_OUT
+{
+    float4 Position : POSITION;
+    float3 Normal   : TEXCOORD0;
+};
+
+struct VP_BLINN_OUT
+{
+    float4 Position : POSITION;
+    float4 Color    : COLOR;
+    float2 UV       : TEXCOORD0;
+    float3 Normal   : TEXCOORD1;
+    float3 Light    : TEXCOORD2;
+    float3 View     : TEXCOORD3;
+};
+
+struct FP_BLINN_IN
+{
+    float4 Color    : COLOR;
+    float2 UV       : TEXCOORD0;
+    float3 Normal   : TEXCOORD1;
+    float3 Light    : TEXCOORD2;
+    float3 View     : TEXCOORD3;
+};
+
+//
+// Programs
+//
+float4 PointToDevice(float3 pt, float4x4 transform)
+{
+    return pt.xxxx * transform[0] +
+           pt.yyyy * transform[1] +
+           pt.zzzz * transform[2] +
+                     transform[3];
+}
+
+void blinn_shading(float3 LightColor,
+                   float3 Nn,
+                   float3 Ln,
+                   float3 Vn,
+                   out float3 DiffuseContrib,
+                   out float3 SpecularContrib)
+{
+    float3 Hn = normalize(Vn + Ln);
+    float d = saturate(dot(Ln, Nn));
+    float s = pow(saturate(dot(Hn, Nn)), SpecularExponent);
+    DiffuseContrib = d * LightColor;
+    SpecularContrib = float(d > 0.0f) * s * Ks * LightColor;
+}
+
+VP_MORPH_OUT vp_morph(VP_MORPH_IN IN)
+{
+    VP_MORPH_OUT OUT;
+    float3 morphPosition = IN.Position0;
+    float3 morphNormal = IN.Normal0;
+
+    morphPosition += (IN.Position1 - IN.Position0) * morphWeights[0];
+    morphPosition += (IN.Position2 - IN.Position0) * morphWeights[1];
+    morphPosition += (IN.Position3 - IN.Position0) * morphWeights[2];
+
+    morphNormal += (IN.Normal1 - IN.Normal0) * morphWeights[0];
+    morphNormal += (IN.Normal2 - IN.Normal0) * morphWeights[1];
+    morphNormal += (IN.Normal3 - IN.Normal0) * morphWeights[2];
+
+    morphNormal = normalize(morphNormal.xyz);
+
+    OUT.Position = PointToDevice(morphPosition, worldViewProjection);
+    float3 lv = normalize(lightPosition - morphPosition);
+    float3 color = (saturate(dot(morphNormal, lv)) * lightColor + ambientColor);
+    OUT.Color = float4(color * materialColor.xyz, materialColor.w);
+    return OUT;
+}
+
+float4 fp_morph(float4 INColor : COLOR) : COLOR
+{
+    return INColor;
+}
+
+VP_DEBUG_OUT vp_normals_morph(VP_MORPH_IN IN)
+{
+    VP_DEBUG_OUT OUT;
+    float3 morphPosition = IN.Position0;
+    float3 morphNormal = IN.Normal0;
+
+    morphPosition += (IN.Position1 - IN.Position0) * morphWeights[0];
+    morphPosition += (IN.Position2 - IN.Position0) * morphWeights[1];
+    morphPosition += (IN.Position3 - IN.Position0) * morphWeights[2];
+
+    morphNormal += (IN.Normal1 - IN.Normal0) * morphWeights[0];
+    morphNormal += (IN.Normal2 - IN.Normal0) * morphWeights[1];
+    morphNormal += (IN.Normal3 - IN.Normal0) * morphWeights[2];
+
+    morphNormal = normalize(morphNormal.xyz);
+
+    OUT.Position = PointToDevice(morphPosition, worldViewProjection);
+    OUT.Normal = morphNormal;
+    return OUT;
+}
+
+float4 fp_normals(float3 normal : TEXCOORD0) : COLOR
+{
+    float3 Nn = normalize(normal);
+    return float4(Nn * 0.5 + 0.5, 1.0);
+}
+
+VP_BLINN_OUT vp_blinn_morph(VP_MORPH_IN IN)
+{
+    VP_BLINN_OUT OUT;
+    float3 morphPosition = IN.Position0;
+    float3 morphNormal = IN.Normal0;
+
+    morphPosition += (IN.Position1 - IN.Position0) * morphWeights[0];
+    morphPosition += (IN.Position2 - IN.Position0) * morphWeights[1];
+    morphPosition += (IN.Position3 - IN.Position0) * morphWeights[2];
+
+    morphNormal += (IN.Normal1 - IN.Normal0) * morphWeights[0];
+    morphNormal += (IN.Normal2 - IN.Normal0) * morphWeights[1];
+    morphNormal += (IN.Normal3 - IN.Normal0) * morphWeights[2];
+
+    morphNormal = normalize(morphNormal.xyz);
+
+    OUT.Position = PointToDevice(morphPosition, worldViewProjection);
+    OUT.Color = materialColor;
+    OUT.UV = IN.UV;
+    OUT.Normal = morphNormal;
+    OUT.Light = normalize(lightPosition - morphPosition);
+    OUT.View  = normalize(eyePosition - morphPosition);
+    return OUT;
+}
+
+float4 fp_blinn(FP_BLINN_IN IN) : COLOR
+{
+    float3 diffContrib;
+    float3 specContrib;
+    float3 Nn = normalize(IN.Normal);
+    float3 Ln = normalize(IN.Light);
+    float3 Vn = normalize(IN.View);
+    blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
+    float4 diffuseColor = IN.Color * tex2D(diffuse, IN.UV);
+    float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
+    return float4(result, diffuseColor.w);
+}
+
+//
+// Techniques
+//
+technique morph
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_morph();
+        FragmentProgram = compile latest fp_morph();
+    }
+}
+
+technique debug_normals_morph
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_normals_morph();
+        FragmentProgram = compile latest fp_normals();
+    }
+}
+
+technique blinn_morph
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_blinn_morph();
+        FragmentProgram = compile latest fp_blinn();
+    }
+}

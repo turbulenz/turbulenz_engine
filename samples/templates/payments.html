@@ -1,0 +1,82 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Payments - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Payments/*{% endblock %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+
+<link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control text">
+    The +/- buttons change the items in the basket.
+</div>
+
+<div class="html-control control-button-pair">
+    <span class="control-title">Rocket launcher $3.99</span>
+    <span class="control-button-small">
+        <input type="button" id="button-decrease-rocket-launcher" value="-">
+        <input type="button" id="button-increase-rocket-launcher" value="+">
+    </span>
+</div>
+
+<div class="html-control text">
+    The rocket launcher is an own item.
+    Own items can only be purchased once and cannot be consumed.
+</div>
+
+<div class="html-control control-button-pair">
+    <span class="control-title">Grenade $0.99</span>
+    <span class="control-button-small">
+        <input type="button" id="button-decrease-grenade" value="-">
+        <input type="button" id="button-increase-grenade" value="+">
+    </span>
+</div>
+
+<div class="html-control text">
+    The grenade is a consume item.
+    It can be consumed by the game by clicking the "Use grenade" button.
+</div>
+
+<div class="html-control control-button-pair">
+    <span class="control-title">Grenade pack $1.99</span>
+    <span class="control-button-small">
+        <input type="button" id="button-decrease-grenade-pack" value="-">
+        <input type="button" id="button-increase-grenade-pack" value="+">
+    </span>
+</div>
+
+<div class="html-control text">
+    This offering is a pack containing 3 grenades.
+</div>
+
+<div class="html-control control-button-pair">
+    <span class="control-title">Explosives pack $4.99</span>
+    <span class="control-button-small">
+        <input type="button" id="button-decrease-explosives-pack" value="-">
+        <input type="button" id="button-increase-explosives-pack" value="+">
+    </span>
+</div>
+
+<div class="html-control text">
+    This offering is a pack containing 15 grenades and a rocket launcher.
+    The user can still only have one rocket launcher so it will not be added twice.
+</div>
+
+<div class="html-control control-button">
+    <input type="button" id="button-purchase" value="Purchase">
+</div>
+
+<div class="html-control control-button">
+    <input type="button" id="button-consume-grenade" value="Use grenade">
+</div>
+
+<div class="html-control control-button">
+    <input type="button" id="button-reset" value="Reset items">
+</div>
+/*{% endblock %}*/

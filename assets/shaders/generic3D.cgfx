@@ -1,0 +1,313 @@
+// Copyright (c) 2009-2012 Turbulenz Limited
+
+//
+// Vertex Programs
+//
+float4x4 worldViewProjection;
+float pointSize;
+
+struct VP_CONSTANTCOLOR3D_IN
+{
+    float3	Position  : POSITION;
+};
+
+struct VP_PRELIGHT3D_IN
+{
+    float3	Position  : POSITION;
+    float4	Color0    : COLOR;
+};
+
+struct VP_TEXTURED3D_IN
+{
+    float3	Position : POSITION;
+    float2  TexCoord0 : TEXCOORD0;
+};
+
+struct VP_PRELIGHT_TEXTURED3D_IN
+{
+    float3	Position : POSITION;
+    float4	Color0    : COLOR;
+    float2  TexCoord0 : TEXCOORD0;
+};
+
+struct VP_CONSTANTCOLOR_OUT
+{
+    float4	Position  : POSITION;
+};
+
+struct VP_POINT_CONSTANTCOLOR_OUT
+{
+    float4	Position  : POSITION;
+    float	PointSize : PSIZE;
+};
+
+struct VP_PRELIGHT_OUT
+{
+    float4	Position  : POSITION;
+    float4	Color0    : COLOR;
+};
+
+struct VP_TEXTURED_OUT
+{
+    float4	Position : POSITION;
+    float2  TexCoord0 : TEXCOORD0;
+};
+
+struct VP_PRELIGHT_TEXTURED_OUT
+{
+    float4	Position  : POSITION;
+    float4	Color0    : COLOR;
+    float2  TexCoord0 : TEXCOORD0;
+};
+
+
+float4 TransformPoint(float3 pt, float4x4 transform)
+{
+    return pt.xxxx * transform[0] +
+           pt.yyyy * transform[1] +
+           pt.zzzz * transform[2] +
+                     transform[3];
+}
+
+
+VP_CONSTANTCOLOR_OUT
+vp_constantColor_3d(VP_CONSTANTCOLOR3D_IN In)
+{
+    VP_CONSTANTCOLOR_OUT Out;
+
+    Out.Position = TransformPoint(In.Position, worldViewProjection);
+
+    return Out;
+}
+
+VP_PRELIGHT_OUT
+vp_vertexColor_3d(VP_PRELIGHT3D_IN In)
+{
+    VP_PRELIGHT_OUT Out;
+
+    Out.Position = TransformPoint(In.Position, worldViewProjection);
+    Out.Color0   = In.Color0;
+
+    return Out;
+}
+
+VP_TEXTURED_OUT
+vp_textured_3d(VP_TEXTURED3D_IN In)
+{
+    VP_TEXTURED_OUT Out;
+
+    Out.Position  = TransformPoint(In.Position, worldViewProjection);
+    Out.TexCoord0 = In.TexCoord0;
+
+    return Out;
+}
+
+VP_PRELIGHT_TEXTURED_OUT
+vp_vertexColorTextured_3d(VP_PRELIGHT_TEXTURED3D_IN In)
+{
+    VP_PRELIGHT_TEXTURED_OUT Out;
+
+    Out.Position  = TransformPoint(In.Position, worldViewProjection);
+    Out.Color0    = In.Color0;
+    Out.TexCoord0 = In.TexCoord0;
+
+    return Out;
+}
+
+VP_POINT_CONSTANTCOLOR_OUT
+vp_point_constantColor_3d(VP_CONSTANTCOLOR3D_IN In)
+{
+    VP_POINT_CONSTANTCOLOR_OUT Out;
+
+    Out.Position = TransformPoint(In.Position, worldViewProjection);
+    Out.PointSize = pointSize;
+
+    return Out;
+}
+
+//
+// Pixel Programs
+//
+float4 constantColor;
+sampler2D diffuse  = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+};
+
+struct FP_PRELIGHT_IN
+{
+    float4	Color : COLOR;
+};
+
+struct FP_TEXTURED_IN
+{
+    float2  TexCoord0 : TEXCOORD0;
+};
+
+struct FP_PRELIGHT_TEXTURED_IN
+{
+    float4	Color : COLOR;
+    float2  TexCoord0 : TEXCOORD0;
+};
+
+
+struct FP_OUT
+{
+    float4	Color : COLOR;
+};
+
+
+FP_OUT
+fp_constantColor()
+{
+    FP_OUT Out;
+
+    Out.Color = constantColor;
+
+    return Out;
+}
+
+FP_OUT
+fp_vertexColor(FP_PRELIGHT_IN In)
+{
+    FP_OUT Out;
+
+    Out.Color = In.Color;
+
+    return Out;
+}
+
+FP_OUT
+fp_textured(FP_TEXTURED_IN In)
+{
+    FP_OUT Out;
+
+    Out.Color = tex2D(diffuse, In.TexCoord0);
+    //Out.Color = float4(In.TexCoord0, 0.0, 1.0);
+
+    return Out;
+}
+
+FP_OUT
+fp_vertexColorTextured(FP_PRELIGHT_TEXTURED_IN In)
+{
+    FP_OUT Out;
+
+    Out.Color = In.Color * tex2D(diffuse, In.TexCoord0);
+
+    return Out;
+}
+
+FP_OUT
+fp_desatureTextureConstantColor(FP_TEXTURED_IN In)
+{
+    FP_OUT Out;
+
+    float4 tex      = tex2D(diffuse, In.TexCoord0);
+    float greyscale = dot(tex.rgb, float3(0.30, 0.59, 0.11));
+    tex.rgb         = lerp(greyscale, tex.rgb, 0.0);
+
+    Out.Color = constantColor * tex;
+
+    return Out;
+}
+
+//
+// Techniques
+//
+technique constantColor3D
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_constantColor_3d();
+        FragmentProgram = compile latest fp_constantColor();
+    }
+}
+
+technique vertexColor3D
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_vertexColor_3d();
+        FragmentProgram = compile latest fp_vertexColor();
+    }
+}
+
+technique textured3D
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_textured_3d();
+        FragmentProgram = compile latest fp_textured();
+    }
+}
+
+technique vertexColorTextured3D
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_vertexColorTextured_3d();
+        FragmentProgram = compile latest fp_vertexColorTextured();
+    }
+}
+
+technique desatureTextureConstantColor3D
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_textured_3d();
+        FragmentProgram = compile latest fp_desatureTextureConstantColor();
+    }
+}
+
+technique pointConstantColor3D
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_point_constantColor_3d();
+        FragmentProgram = compile latest fp_constantColor();
+    }
+}

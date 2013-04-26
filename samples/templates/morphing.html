@@ -1,0 +1,62 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Morphing - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Morphing/*{% endblock %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+<link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Morph Effect</legend>
+            <span>Textured Blinn</span><input type="radio" id="radio03"><br>
+            <span>Debug Normals</span><input type="radio" id="radio04">
+        </fieldset>
+    </form>
+</div>
+<div class="html-control control-output-pair">Morph Target 1: Big head <input type="text" id="slider1input" size="2" value="0" class="control-textfield"></div>
+<div class="html-control control-slider">
+    <div id="slider1" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Morph Target 2: Squash<input type="text" id="slider2input" size="2" value="0" class="control-textfield"></div>
+<div class="html-control control-slider">
+    <div id="slider2" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Morph Target 3: Twist<input type="text" id="slider3input" size="2" value="0" class="control-textfield"></div>
+<div class="html-control control-slider">
+    <div id="slider3" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Rotate Target: <input type="text" id="slider4input" size="2" value="0" class="control-textfield"></div>
+<div class="html-control control-slider">
+    <div id="slider4" class="sliderinput"></div>
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th class="key">Key</th><th>Movement Control</th>
+</tr>
+<tr>
+    <td class="key">W,A,S,D</td>
+    <td>Movement</td>
+</tr>
+<tr>
+    <td class="key">Enter</td>
+    <td>Toggle full screen</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

@@ -1,0 +1,610 @@
+// Copyright (c) 2009-2012 Turbulenz Limited
+
+#include "skinning.cgh"
+
+//
+// Uniform variables
+//
+float4x4 worldViewProjection;
+float3x3 worldInverseTranspose;
+float4 constantColor;
+float2 windowScale;
+float4 wireColor;
+float4 fillColor;
+float alphaRef;
+float alpha = 1.0;
+
+//
+// Variant inputs
+//
+struct VP_DEBUG_IN
+{
+    float3 Position : POSITION;
+    float3 Normal   : NORMAL;
+    float3 Tangent  : TANGENT;
+    float3 Binormal : BINORMAL;
+};
+
+struct VP_DEBUG_SKINNED_IN
+{
+    float3 Position : POSITION;
+    float3 Normal   : NORMAL;
+    float3 Tangent  : TANGENT;
+    float3 Binormal : BINORMAL;
+    float4 Indices  : BLENDINDICES;
+    float4 Weights  : BLENDWEIGHT;
+};
+
+struct VP_WIREFRAME_IN
+{
+    float4 Vertex0  : POSITION;
+    float3 Vertex1  : TEXCOORD0;
+    float3 Vertex2  : TEXCOORD1;
+};
+
+struct VP_WIREFRAME_SKINNED_IN
+{
+    float4 Vertex0  : POSITION;
+    float3 Vertex1  : TEXCOORD0;
+    float3 Vertex2  : TEXCOORD1;
+    float4 Indices0 : BLENDINDICES;
+    float4 Weights0 : BLENDWEIGHT;
+    float4 Indices1 : TEXCOORD2;
+    float4 Weights1 : TEXCOORD3;
+    float4 Indices2 : TEXCOORD4;
+    float4 Weights2 : TEXCOORD5;
+};
+
+struct FP_WIREFRAME_IN
+{
+    float4 Distance : TEXCOORD0;
+};
+
+struct VP_DEBUG_OUT
+{
+    float4 Position : POSITION;
+    float3 Normal   : TEXCOORD0;
+};
+
+struct VP_DEBUG_VERTEXCOLOR_OUT
+{
+    float4 Position : POSITION;
+    float4 Color    : COLOR;
+};
+
+struct VP_WIREFRAME_OUT
+{
+    float4 Position : POSITION;
+    float4 Distance : TEXCOORD0;
+};
+
+struct FP_WIREFRAME_OUT
+{
+    float4 Color    : COLOR;
+};
+
+//
+// Utils
+//
+float4 PointToDevice(float3 pt, float4x4 transform)
+{
+    return pt.xxxx * transform[0] +
+           pt.yyyy * transform[1] +
+           pt.zzzz * transform[2] +
+                     transform[3];
+}
+
+float3 PointToWorld(float3 pt, float3x4 transform)
+{
+    float4 p = float4(pt, 1.0);
+    return float3(dot(p, transform[0]),
+                  dot(p, transform[1]),
+                  dot(p, transform[2]));
+}
+
+float3 NormalToWorld(float3 n, float3x3 transform)
+{
+    return n.xxx * transform[0] +
+           n.yyy * transform[1] +
+           n.zzz * transform[2];
+}
+
+//
+// Vertex programs
+//
+VP_DEBUG_OUT vp_normals(VP_DEBUG_IN IN)
+{
+    VP_DEBUG_OUT OUT;
+    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
+    float3 Nn = NormalToWorld(IN.Normal, worldInverseTranspose);
+    OUT.Normal = Nn;
+    return OUT;
+}
+
+VP_DEBUG_OUT vp_normals_skinned(VP_DEBUG_SKINNED_IN IN)
+{
+    VP_DEBUG_OUT OUT;
+    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
+
+    float4 skinTempPosition = float4(IN.Position, 1.0);
+
+    float3 skinTempNormal = IN.Normal.xyz;
+
+    float3 Position;
+    float3 Normal;
+    Position.x = dot(skinTempPosition, skinTransform.X);
+    Position.y = dot(skinTempPosition, skinTransform.Y);
+    Position.z = dot(skinTempPosition, skinTransform.Z);
+
+    Normal.x = dot(skinTempNormal, skinTransform.X.xyz);
+    Normal.y = dot(skinTempNormal, skinTransform.Y.xyz);
+    Normal.z = dot(skinTempNormal, skinTransform.Z.xyz);
+
+    Normal.xyz = normalize(Normal.xyz);
+
+    OUT.Position = PointToDevice(Position, worldViewProjection);
+    float3 Nn = NormalToWorld(Normal, worldInverseTranspose);
+
+    OUT.Normal = Nn;
+    return OUT;
+
+}
+
+VP_DEBUG_OUT vp_tangents(VP_DEBUG_IN IN)
+{
+    VP_DEBUG_OUT OUT;
+    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
+    float3 Tn = NormalToWorld(IN.Tangent, worldInverseTranspose);
+    OUT.Normal = Tn;
+    return OUT;
+}
+
+VP_DEBUG_OUT vp_tangents_skinned(VP_DEBUG_SKINNED_IN IN)
+{
+    VP_DEBUG_OUT OUT;
+    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
+
+    float4 skinTempPosition = float4(IN.Position, 1.0);
+
+    float3 skinTempTangent = IN.Tangent.xyz;
+
+    float3 Position;
+    float3 Tangent;
+
+    Position.x = dot(skinTempPosition, skinTransform.X);
+    Position.y = dot(skinTempPosition, skinTransform.Y);
+    Position.z = dot(skinTempPosition, skinTransform.Z);
+
+    Tangent.x = dot(skinTempTangent, skinTransform.X.xyz);
+    Tangent.y = dot(skinTempTangent, skinTransform.Y.xyz);
+    Tangent.z = dot(skinTempTangent, skinTransform.Z.xyz);
+
+    Tangent.xyz = normalize(Tangent.xyz);
+
+    OUT.Position = PointToDevice(Position, worldViewProjection);
+    float3 Tn = NormalToWorld(Tangent, worldInverseTranspose);
+
+    OUT.Normal = Tn;
+    return OUT;
+}
+
+VP_DEBUG_OUT vp_binormals(VP_DEBUG_IN IN)
+{
+    VP_DEBUG_OUT OUT;
+    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
+    float3 Bn = NormalToWorld(IN.Binormal, worldInverseTranspose);
+    OUT.Normal = Bn;
+    return OUT;
+}
+
+VP_DEBUG_OUT vp_binormals_skinned(VP_DEBUG_SKINNED_IN IN)
+{
+    VP_DEBUG_OUT OUT;
+    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
+
+    float4 skinTempPosition = float4(IN.Position, 1.0);
+
+    float3 skinTempBinormal = IN.Binormal.xyz;
+
+    float3 Position;
+    float3 Binormal;
+
+    Position.x = dot(skinTempPosition, skinTransform.X);
+    Position.y = dot(skinTempPosition, skinTransform.Y);
+    Position.z = dot(skinTempPosition, skinTransform.Z);
+
+    Binormal.x = dot(skinTempBinormal, skinTransform.X.xyz);
+    Binormal.y = dot(skinTempBinormal, skinTransform.Y.xyz);
+    Binormal.z = dot(skinTempBinormal, skinTransform.Z.xyz);
+
+    Binormal.xyz = normalize(Binormal.xyz);
+
+    OUT.Position = PointToDevice(Position, worldViewProjection);
+    float3 Bn = NormalToWorld(Binormal, worldInverseTranspose);
+
+    OUT.Normal = Bn;
+    return OUT;
+}
+
+VP_DEBUG_VERTEXCOLOR_OUT vp_vertexcolor(float3 position : POSITION,
+                                        float4 color : COLOR)
+{
+    VP_DEBUG_VERTEXCOLOR_OUT OUT;
+    OUT.Position = PointToDevice(position, worldViewProjection);
+    OUT.Color = color;
+    return OUT;
+}
+
+float4 vp_constantcolor(float3 position : POSITION) : POSITION
+{
+    return PointToDevice(position, worldViewProjection);
+}
+
+float4 vp_constantcolor_skinned(float3 position : POSITION,
+                                float4 indices  : BLENDINDICES,
+                                float4 weights  : BLENDWEIGHT) : POSITION
+{
+    SkinTransform skinTransform = BuildSkinTransform(indices, weights);
+
+    float4 skinTempPosition = float4(position, 1.0);
+
+    float3 Position;
+    Position.x = dot(skinTempPosition, skinTransform.X);
+    Position.y = dot(skinTempPosition, skinTransform.Y);
+    Position.z = dot(skinTempPosition, skinTransform.Z);
+
+    return PointToDevice(Position, worldViewProjection);
+}
+
+VP_WIREFRAME_OUT vp_wireframe(VP_WIREFRAME_IN IN)
+{
+    VP_WIREFRAME_OUT OUT;
+
+    float VertexId = IN.Vertex0.w;
+    float4 Position = IN.Vertex0;
+    Position.w = 1.0;
+
+    OUT.Position = PointToDevice(Position.xyz, worldViewProjection);
+    float2 Position2D = OUT.Position.xy / OUT.Position.w;
+
+    float4 Vertex1Trans = PointToDevice(IN.Vertex1, worldViewProjection);
+    float2 Vector1 = windowScale * (Vertex1Trans.xy / Vertex1Trans.w - Position2D);
+
+    float4 Vertex2Trans = PointToDevice(IN.Vertex2, worldViewProjection);
+    float2 Vector2 = windowScale * (Vertex2Trans.xy / Vertex2Trans.w - Position2D);
+
+    float Area2D = abs(Vector1.x * Vector2.y - Vector1.y * Vector2.x);
+    float Height = Area2D / length(Vector1 - Vector2);
+
+    if (VertexId < 1.0)         // VertexId == 0
+        OUT.Distance.xyz = float3(Height, 0.0, 0.0);
+    else if (VertexId < 2.0)    // VertexId == 1
+        OUT.Distance.xyz = float3(0.0, Height, 0.0);
+    else                        // VertexId == 2
+        OUT.Distance.xyz = float3(0.0, 0.0, Height);
+
+    OUT.Distance.xyz *= OUT.Position.w;
+    OUT.Distance.w = 1.0 / OUT.Position.w;
+
+    return OUT;
+}
+
+VP_WIREFRAME_OUT vp_wireframe_skinned(VP_WIREFRAME_SKINNED_IN IN)
+{
+    VP_WIREFRAME_OUT OUT;
+
+    float VertexId = IN.Vertex0.w;
+    float4 Position = IN.Vertex0;
+    Position.w = 1.0;
+
+    SkinTransform skinTransform = BuildSkinTransform(IN.Indices0, IN.Weights0);
+    float3 newPosition;
+    newPosition.x = dot(Position, skinTransform.X);
+    newPosition.y = dot(Position, skinTransform.Y);
+    newPosition.z = dot(Position, skinTransform.Z);
+    OUT.Position = PointToDevice(newPosition, worldViewProjection);
+    float2 Position2D = OUT.Position.xy / OUT.Position.w;
+
+    skinTransform = BuildSkinTransform(IN.Indices1, IN.Weights1);
+    float4 skinTempPosition = float4(IN.Vertex1, 1.0);
+    newPosition.x = dot(skinTempPosition, skinTransform.X);
+    newPosition.y = dot(skinTempPosition, skinTransform.Y);
+    newPosition.z = dot(skinTempPosition, skinTransform.Z);
+    float4 Vertex1Trans = PointToDevice(newPosition, worldViewProjection);
+    float2 Vector1 = windowScale * (Vertex1Trans.xy / Vertex1Trans.w - Position2D);
+
+    skinTransform = BuildSkinTransform(IN.Indices2, IN.Weights2);
+    skinTempPosition = float4(IN.Vertex2, 1.0);
+    newPosition.x = dot(skinTempPosition, skinTransform.X);
+    newPosition.y = dot(skinTempPosition, skinTransform.Y);
+    newPosition.z = dot(skinTempPosition, skinTransform.Z);
+    float4 Vertex2Trans = PointToDevice(newPosition, worldViewProjection);
+    float2 Vector2 = windowScale * (Vertex2Trans.xy / Vertex2Trans.w - Position2D);
+
+    float Area2D = abs(Vector1.x * Vector2.y - Vector1.y * Vector2.x);
+    float Height = Area2D / length(Vector1 - Vector2);
+
+    if (VertexId < 1.0)         // VertexId == 0
+        OUT.Distance.xyz = float3(Height, 0.0, 0.0);
+    else if (VertexId < 2.0)    // VertexId == 1
+        OUT.Distance.xyz = float3(0.0, Height, 0.0);
+    else                        // VertexId == 2
+        OUT.Distance.xyz = float3(0.0, 0.0, Height);
+
+    OUT.Distance.xyz *= OUT.Position.w;
+    OUT.Distance.w = 1.0 / OUT.Position.w;
+
+    return OUT;
+}
+
+//
+// Fragment programs
+//
+float4 fp_normals(float3 normal : TEXCOORD0) : COLOR
+{
+    float3 Nn = normalize(normal);
+    return float4(Nn * 0.5 + 0.5, 1.0);
+}
+
+float4 fp_vertexcolor(float4 color : COLOR) : COLOR
+{
+    return color;
+}
+
+float4 fp_constantcolor() : COLOR
+{
+    return constantColor;
+}
+
+FP_WIREFRAME_OUT fp_wireframe(FP_WIREFRAME_IN IN)
+{
+    FP_WIREFRAME_OUT OUT;
+
+    float3 Distance = IN.Distance.xyz * IN.Distance.w;
+
+    float MinDistance = min(Distance.x, min(Distance.y, Distance.z));
+    float Intensity = exp2(-2.0 * MinDistance * MinDistance);
+    OUT.Color = Intensity * wireColor + (1.0 - Intensity) * fillColor;
+
+    if (OUT.Color.a < alphaRef)
+        discard;
+
+    return OUT;
+}
+
+FP_WIREFRAME_OUT fp_physics_debug(FP_WIREFRAME_IN IN)
+{
+    FP_WIREFRAME_OUT OUT;
+
+    float3 Distance = IN.Distance.xyz * IN.Distance.w;
+
+    float MinDistance = min(Distance.x, min(Distance.y, Distance.z));
+    float Intensity = exp2(-2.0 * MinDistance * MinDistance);
+    OUT.Color = Intensity * wireColor + (1.0 - Intensity) * fillColor;
+
+    if (alpha < 1.0)
+        OUT.Color.a = alpha;
+
+    if (OUT.Color.a < alphaRef)
+        discard;
+
+    return OUT;
+}
+
+//
+// Techniques
+//
+technique debug_normals
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_normals();
+        FragmentProgram = compile latest fp_normals();
+    }
+}
+
+technique debug_normals_skinned
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_normals_skinned();
+        FragmentProgram = compile latest fp_normals();
+    }
+}
+
+technique debug_tangents
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_tangents();
+        FragmentProgram = compile latest fp_normals();
+    }
+}
+
+technique debug_tangents_skinned
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_tangents_skinned();
+        FragmentProgram = compile latest fp_normals();
+    }
+}
+
+technique debug_binormals
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_binormals();
+        FragmentProgram = compile latest fp_normals();
+    }
+}
+
+technique debug_binormals_skinned
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_binormals_skinned();
+        FragmentProgram = compile latest fp_normals();
+    }
+}
+
+technique debug_lines
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+        LineWidth       = 2.0;
+
+        VertexProgram   = compile latest vp_vertexcolor();
+        FragmentProgram = compile latest fp_vertexcolor();
+    }
+}
+
+technique debug_lines_constant
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+        LineWidth       = 2.0;
+
+        VertexProgram   = compile latest vp_constantcolor();
+        FragmentProgram = compile latest fp_constantcolor();
+    }
+}
+
+technique debug_triangles
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        CullFace        = Back;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, OneMinusSrcAlpha);
+
+        VertexProgram   = compile latest vp_vertexcolor();
+        FragmentProgram = compile latest fp_vertexcolor();
+    }
+}
+
+technique debug_triangles_constant
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        CullFace        = Back;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, OneMinusSrcAlpha);
+
+        VertexProgram   = compile latest vp_constantcolor();
+        FragmentProgram = compile latest fp_constantcolor();
+    }
+}
+
+technique wireframe
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_wireframe();
+        FragmentProgram = compile latest fp_wireframe();
+    }
+}
+
+technique physics_debug
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, OneMinusSrcAlpha);
+        PolygonOffset   = float2(-2.0, -2.0);
+        PolygonOffsetFillEnable = true;
+
+        VertexProgram   = compile latest vp_wireframe();
+        FragmentProgram = compile latest fp_physics_debug();
+    }
+}
+
+technique wireframe_skinned
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_wireframe_skinned();
+        FragmentProgram = compile latest fp_wireframe();
+    }
+}

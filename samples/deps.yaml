@@ -1,0 +1,101 @@
+# Syntax:
+#
+# Either:
+# - assetpath
+#
+# or:
+# - path: path to input asset
+# - logical_path: [Optional] Change the logical mapping table name (defaults to path)
+# - install: [Optional] copy the built asset to staticmax (defaults to true)
+# - deps: [Optional] extra definitions that the build tool requires
+# - args: [Optional] extra arguments for the build tool
+
+- textures/duck.png
+- textures/texture_carpet.dds
+- textures/texture_cha_0063.dds
+- textures/Texture_Floor_Wood.dds
+- textures/texture_table.dds
+- textures/brick.dds
+- textures/default_light.png
+- textures/boy_10.png
+- textures/boy_20.png
+- textures/boy_30.png
+- textures/boy_40.png
+- textures/boy_50.png
+- textures/crate.jpg
+- textures/stones.jpg
+- textures/brick.png
+- textures/particle_star.png
+- textures/particle_spark.png
+- textures/logo.png
+- textures/draw2DCircle.png
+- textures/draw2DStar.png
+- textures/draw2DSquare.png
+- textures/texfxbg.png
+- textures/texfxdisplace.png
+- textures/physics2d.png
+- textures/hero_0.dds
+- textures/up.png
+- textures/down.png
+
+- path: textures/boy_10.png
+  logical_path: boy_10.png
+
+- sounds/duck.ogg
+- sounds/duck.mp3
+- sounds/furelise.ogg
+- sounds/furelise.mp3
+
+- models/cube.dae
+- models/sphere.dae
+
+- path: materials/samples.material
+  install: false
+
+- models/duck.dae
+- models/duck_trianglemesh.dae
+- models/duck_morph.dae
+- path: models/watercan.obj
+  args: ['-d', '_build/assets/materials/samples.material.json']
+  deps: ['materials/samples.material']
+- path: models/Seymour.dae
+  args: ['-d', '_build/assets/materials/samples.material.json']
+  deps: ['materials/samples.material']
+- path: models/Seymour_anim2.dae
+  args: ['-d', '_build/assets/materials/samples.material.json']
+  deps: ['materials/samples.material']
+- path: models/diningroom.dae
+  args: ['-d', '_build/assets/materials/samples.material.json']
+  deps: ['materials/samples.material']
+- path: models/Seymour_anim2_rot90.dae
+  args: ['-d', '_build/assets/materials/samples.material.json', '-I', 'animations']
+  deps: ['materials/samples.material']
+  logical_path: models/Seymour_anim2_rot90_anim_only.dae
+
+- shaders/debug.cgfx
+- shaders/draw2D.cgfx
+- shaders/zonly.cgfx
+- shaders/standard.cgfx
+- shaders/npot2D.cgfx
+- shaders/generic2D.cgfx
+- shaders/generic3D.cgfx
+- shaders/posteffects.cgfx
+- shaders/shadowmapping.cgfx
+- shaders/deferredtransparent.cgfx
+- shaders/deferredlights.cgfx
+- shaders/deferredopaque.cgfx
+- shaders/defaultrendering.cgfx
+- shaders/forwardrendering.cgfx
+- shaders/forwardrenderingshadows.cgfx
+- shaders/postfx.cgfx
+- shaders/deferredtransparent.cgfx
+- shaders/morph.cgfx
+- shaders/font.cgfx
+- shaders/video.cgfx
+
+- fonts/hero.fnt
+
+- videos/turbulenzanimation.mp4
+- videos/turbulenzanimation.webm
+- sounds/turbulenzanimation.mp3
+- sounds/turbulenzanimation.ogg

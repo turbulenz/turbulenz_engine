@@ -1,0 +1,82 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Leaderboards - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Leaderboards/*{% endblock %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+
+<link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+
+<div class="html-control control-button">
+    <span class="control-title">Reset leaderboards</span>
+    <input type="button" id="button-reset" value="Reset">
+</div>
+
+<div class="html-control control-radio">
+    <form action="">
+        <fieldset>
+            <legend>Leaderboard</legend>
+            <span>Rockets launched</span><input type="radio" id="radio0"><br>
+            <span>Time to complete</span><input type="radio" id="radio1"><br>
+        </fieldset>
+    </form>
+</div>
+
+<div class="html-control control-output-pair control-button">
+    <input type="button" id="button-setscore" value="Set score">
+    Score <input type="text" id="text-scoreinput" size="2" value="0" class="control-textfield">
+</div>
+
+<div class="html-control control-output-pair control-button">
+    <input type="button" id="button-setxp" value="Set XP">
+    XP <input type="text" id="text-xpinput" size="2" value="0" class="control-textfield">
+</div>
+
+<div class="html-control control-button">
+    <span class="control-title">Top scores</span>
+    <input type="button" id="button-topscores" value="Go">
+</div>
+
+<div class="html-control control-button">
+    <span class="control-title">My score</span>
+    <input type="button" id="button-myscore" value="Go">
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <td class="key">Left/Right</td>
+    <td>Switch leaderboard</td>
+</tr>
+<tr>
+    <td class="key">Up/Down</td>
+    <td>Page up/down</td>
+</tr>
+<tr>
+    <td class="key">Mouse wheel</td>
+    <td>Scroll up/down</td>
+</tr>
+<tr>
+    <td class="key">Space</td>
+    <td>Launch rocket</td>
+</tr>
+<tr>
+    <td class="key">R</td>
+    <td>Reset scores</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

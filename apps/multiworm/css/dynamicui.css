@@ -1,0 +1,101 @@
+/* Copyright (c) 2012 Turbulenz Limited */
+
+.dynamicui
+{
+    padding: 3px;
+}
+
+.dui-group
+{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    width: 100%;
+    padding-left: 6px;
+    display: table;
+}
+
+.dui-group-contents
+{
+    display: table-row-group;
+}
+
+.dynamicui .collapsed .dui-group-contents
+{
+    display: none;
+}
+
+.dynamicui .collapsed .dui-group-title:before {
+    content: "▸ ";
+}
+
+.dynamicui .dui-group-title:before {
+    content: "▾ ";
+}
+
+.dynamicui .hidden
+{
+    display: none;
+}
+
+.dui-group-title
+{
+    height: 13px;
+    font-size: 12px;
+    font-weight: bold;
+    display: table-caption;
+    cursor: pointer;
+    text-shadow: 0px 0px;
+}
+
+.dui-control
+{
+    display: table-row;
+    font-weight: bold;
+    font-size: 10px;
+    text-shadow: 0px 0px;
+    text-align: right;
+}
+
+.dui-control-title
+{
+    display: table-cell;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.dui-control-widget input
+{
+    height: 11px;
+    font-size: 10px;
+    border: 1px solid black;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.dui-control-value
+{
+    display: inline-block;
+    vertical-align: middle;
+    min-width: 3em;
+}
+
+.dui-control-widget select {
+    font-size: 10px;
+}
+
+.dui-control-widget input[type=range] {
+    -webkit-appearance: none !important;
+    height:2px;
+    background: black;
+    cursor: pointer;
+}
+
+.dui-control-widget input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    -moz-apperance:none; 
+    width:3px; 
+    height:8px;
+    background: grey;
+    cursor: pointer;
+}

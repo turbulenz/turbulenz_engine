@@ -1,0 +1,48 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_title %}*/Physics2D - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Physics2D/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-output-pair">Performance: <strong id="fpscounter" class="control-output"></strong></div>
+<div class="html-control control-output-pair">Rigid bodies: <strong id="bodiescounter" class="control-output"></strong></div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Enable Debug Rendering</span>
+    <input type="checkbox" id="enableDebug"/>
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Enable Contact Rendering</span>
+    <input type="checkbox" id="enableContacts"/>
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key/Mouse</th><th>Physics Control</th>
+</tr>
+<tr>
+    <td class="key">R</td>
+    <td>Reset</td>
+</tr>
+<tr>
+    <td class="mouse">Left click (hold)</td>
+    <td>Manipulate body under cursor</td>
+</tr>
+<tr>
+    <td class="mouse">Right click</td>
+    <td>Generate random body</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

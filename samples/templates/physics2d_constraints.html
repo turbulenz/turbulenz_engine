@@ -1,0 +1,49 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_title %}*/Physics2D Constraints - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Physics2D Constraints/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-checkbox">
+    <span class="control-title">Elastic Constraints</span>
+    <input type="checkbox" id="elasticConstraints"/>
+</div>
+<div class="html-control control-output-pair">Elastic Frequency:
+    <input type="text" id="frequencySliderinput" size="2" value="1" class="control-textfield">
+</div>
+<div class="html-control control-slider">
+    <div id="frequencySlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Elastic Damping:
+    <input type="text" id="dampingSliderinput" size="2" value="0.1" class="control-textfield">
+</div>
+<div class="html-control control-slider">
+    <div id="dampingSlider" class="sliderinput"></div>
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key/Mouse</th><th>Physics Control</th>
+</tr>
+<tr>
+    <td class="key">R</td>
+    <td>Reset</td>
+</tr>
+<tr>
+    <td class="mouse">Left click (hold)</td>
+    <td>Manipulate body under cursor</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

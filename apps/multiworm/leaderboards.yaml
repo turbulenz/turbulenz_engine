@@ -1,0 +1,14 @@
+-   key: most-kills
+    title: Most kills
+    sortBy: 1
+    icon256: 'img/leaderboards/best-time256.png'
+    icon48: 'img/leaderboards/best-time48.png'
+    icon32: 'img/leaderboards/best-time32.png'
+
+-   key: best-score
+    title: Best score
+    sortBy: 1
+    icon256: 'img/leaderboards/best-score256.png'
+    icon48: 'img/leaderboards/best-score48.png'
+    icon32: 'img/leaderboards/best-score32.png'
+

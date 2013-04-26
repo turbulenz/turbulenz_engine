@@ -1,0 +1,9 @@
+*.debug.html
+*.release.html
+*.canvas.js
+*.tzjs
+jslib
+manifest.yaml
+build
+*.lock-wscript
+mapping_table.json

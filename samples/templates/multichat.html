@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title>Multi Chat - Samples - Turbulenz Engine</title>
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    /*{% block tz_app_header %}*//*{% endblock %}*/
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <style>
+        #turbulenz_game_engine_object {
+            height: 0;
+        }
+        #log {
+            color:black;
+            background:white;
+            width:100%;
+            overflow:auto;
+            border:1px black;
+            font-family:monospace;
+            overflow: auto;
+            position: absolute;
+            top: 25px;
+            bottom: 0;
+        }
+        #log ul {
+            padding: 0;
+            margin: 0;
+        }
+
+        #log ul li {
+            list-style: none;
+            clear: both;
+        }
+        #log ul li .time-message {
+            color: gray;
+            font-weight: bold;
+            float: left;
+            width: 170px;
+        }
+        #log ul li .user-message {
+            font-weight: bold;
+            float: left;
+            width: 70px;
+        }
+        #log ul li .text-message {
+            padding-left: 240px;
+            word-wrap: break-word;
+        }
+        #log .system-message{
+            color: gray;
+            padding-left: 170px;
+            padding-right: 5px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="titlebar" class="ui-layout-north">
+        <strong class="title">Multi Chat</strong>
+        <div id="titlelogo"></div>
+    </div>
+    <div id="sidebar" class="ui-layout-west scrollable">
+        <!-- tz_app_html_controls -->
+        <div class="html-control control-output-pair">
+            Alias:
+            <input type="button" id="buttonalias" value="Change" class="control-output" style="margin-top:13px;">
+            <input type="text" id="buttonaliasinput" class="control-textfield" maxlength="8">
+        </div>
+        <!-- end tz_app_html_controls -->
+        <!-- tz_engine_controls -->
+        /*{% block tz_engine_controls %}*/
+        /*{% endblock %}*/
+        <!-- tz_engine_controls -->
+    </div>
+    <div id="engine" class="ui-layout-center">
+        <input type="button" id="sendmessage" value="Send">
+        <div style="position: absolute; left: 60px; right: 0; top: 0;">
+            <input type="text" id="messageinput" maxlength="100" style="width:99%;">
+        </div>
+        <div id="log">
+            <ul id="loglist">
+            </ul>
+        </div>
+        <div style="width: 1px; height: 1px;">
+            /*{{ tz_engine_div }}*/
+        </div>
+
+    </div>
+
+    <!-- begin 'tz_include_js' variable -->
+    /*{{ tz_include_js }}*/
+    <!-- end 'tz_include_js' variable -->
+
+    <script type="text/javascript">
+      // ----------------------------------------
+      // Embedded code and startup code.
+      // Supplied by 'tz_startup_code' variable.
+      // ----------------------------------------
+      /*{{ tz_startup_code }}*/
+    </script>
+
+
+</body>
+</html>

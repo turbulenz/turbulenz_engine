@@ -1,0 +1,11 @@
+// Copyright (c) 2011-2012 Turbulenz Limited
+
+//
+//  tex2DprojFix
+//      Work around for Intel graphics chips , eg G41
+
+float3 tex2DprojFix(sampler2D sampler, float3 point)
+{
+    float4 temp = float4(point.xyz, 1.0);
+    return tex2Dproj(sampler, temp.xyz).xyz;
+}

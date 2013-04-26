@@ -1,0 +1,41 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Physics Constraints - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Physics Constraints/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-checkbox">
+    <span class="control-title">Enable Debug Rendering</span>
+    <input type="checkbox" id="checkbox01"/>
+</div>
+<div class="html-control control-output-pair">
+    <span class="constraint-title">Constraint Type:</span>
+    <span id="constrainttype" class="control-output">None Selected</span>
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key/Mouse</th><th>Camera Control</th>
+</tr>
+<tr>
+    <td class="key">W,A,S,D</td>
+    <td>Movement</td>
+</tr>
+<tr>
+    <td class="mouse">Right/Left click (hold)</td>
+    <td>Manipulate box under crosshair</td>
+</tr>
+<tr>
+    <td class="key">Enter</td>
+    <td>Toggle full screen</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

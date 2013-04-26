@@ -1,0 +1,17 @@
+canvas_main: forward_rendering.canvas.js
+cover_art: cover_art.png
+deploy_files:
+- forward_rendering.tzjs
+- forward_rendering.canvas.js
+- mapping_table.json
+- staticmax/*
+deployed: Never
+engine_version: '0.26'
+is_temp: false
+mapping_table: mapping_table.json
+modified: 10:17 | 21/07/2011
+path: ../../samples
+plugin_main: forward_rendering.tzjs
+slug: samples
+title: Samples
+title_logo: ''

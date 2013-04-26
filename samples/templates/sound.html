@@ -1,0 +1,63 @@
+/*{% extends "base/base_template.html" %}*/
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_title %}*/Sound - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Sound/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-output-pair">Global volume: <input type="text" id="slider1input" size="2" value="0" class="control-textfield"></div>
+<div class="html-control control-slider">
+    <div id="slider1" class="sliderinput"></div>
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Move duck 1</span>
+    <input type="checkbox" id="checkbox01">
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Quack duck 1</span>
+    <input type="checkbox" id="checkbox02">
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Move duck 2</span>
+    <input type="checkbox" id="checkbox03">
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Quack duck 2</span>
+    <input type="checkbox" id="checkbox04">
+</div>
+
+<div class="html-control control-button">
+    <span class="control-title">Change direction</span>
+    <input type="button" id="button01"  value="Duck 1">
+</div>
+
+<div class="html-control control-button">
+    <span class="control-title">Change direction</span>
+    <input type="button" id="button02" value="Duck 2">
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Effect: Reverb</span>
+    <input type="checkbox" id="checkbox05">
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Effect: Echo</span>
+    <input type="checkbox" id="checkbox06">
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Filter: LowPass</span>
+    <input type="checkbox" id="checkbox07">
+</div>
+/*{% endblock %}*/

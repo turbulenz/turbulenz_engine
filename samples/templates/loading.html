@@ -1,0 +1,56 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Loading - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Loading/*{% endblock %}*/
+
+/*{% block tz_app_header %}*/
+<link rel="stylesheet" type="text/css" href="css/base_template.css">
+<link rel="shortcut icon" href="img/favicon.ico">
+<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-button-pair">
+    <span class="control-title">Duck model</span>
+    <input type="button" id="buttonRemoveDuck" value="Remove">
+    <input type="button" id="buttonLoadDuck" value="Load">
+</div>
+<div id="watercan-asset-div" class="html-control control-button-pair">
+    <span class="control-title">Watercan model</span>
+    <input type="button" id="buttonRemoveWatercan" value="Remove">
+    <input type="button" id="buttonLoadWatercan" value="Load">
+</div>
+<div id="watercan-instance-div" class="html-control control-button-pair control-hidden">
+    <span class="control-title">Watercan instances</span>
+    <input type="button" id="buttonRemoveWatercanInstance" value="Remove">
+    <input type="button" id="buttonCreateWatercanInstance" value="Create">
+</div>
+<div class="html-control text">
+  <p>
+  This sample requires an active internet connection. You can load a watering can model, which has a very high polygon count. This may take a long time on slow connections, and may not work on older graphics cards.
+  </p>
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key</th><th>Movement Control</th>
+</tr>
+<tr>
+    <td class="key">W,A,S,D</td>
+    <td>Movement</td>
+</tr>
+<tr>
+    <td class="key">Enter</td>
+    <td>Toggle full screen</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

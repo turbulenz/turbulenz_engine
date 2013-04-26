@@ -1,0 +1,178 @@
+// Copyright (c) 2009-2012 Turbulenz Limited
+
+//
+// Vertex Programs
+//
+float4 clipSpace;
+float  alphaRef = 0.03;
+
+float4
+vp_constantColor_2d(float4 INPosition : POSITION) : POSITION
+{
+    float4 position = INPosition;
+    position.xy = position.xy * clipSpace.xy + clipSpace.zw;
+    return position;
+}
+
+void
+vp_vertexColor_2d(in float4 INPosition : POSITION,
+                  in float4 INColor : COLOR,
+                  out float4 OUTPosition : POSITION,
+                  out float4 OUTColor : COLOR)
+{
+    float4 position = INPosition;
+    float4 color = INColor;
+    position.xy = position.xy * clipSpace.xy + clipSpace.zw;
+    OUTPosition = position;
+    OUTColor   = color;
+}
+
+void
+vp_textured_2d(in float4 INPosition : POSITION,
+               in float2 INTexCoord0 : TEXCOORD0,
+               out float4 OUTPosition : POSITION,
+               out float2 OUTTexCoord0 : TEXCOORD0)
+{
+    float4 position = INPosition;
+    position.xy = position.xy * clipSpace.xy + clipSpace.zw;
+    OUTPosition  = position;
+    OUTTexCoord0 = INTexCoord0;
+}
+
+void
+vp_vertexColorTextured_2d(in float4 INPosition : POSITION,
+                          in float4 INColor : COLOR,
+                          in float2 INTexCoord0 : TEXCOORD0,
+                          out float4 OUTPosition : POSITION,
+                          out float4 OUTColor : COLOR,
+                          out float2 OUTTexCoord0 : TEXCOORD0)
+{
+    float4 position = INPosition;
+    position.xy  = position.xy * clipSpace.xy + clipSpace.zw;
+    OUTPosition  = position;
+    OUTColor     = INColor;
+    OUTTexCoord0 = INTexCoord0;
+}
+
+
+//
+// Pixel Programs
+//
+float4 constantColor;
+sampler2D diffuse = sampler_state
+{
+    MinFilter = LinearMipMapLinear;
+    MagFilter = Linear;
+};
+
+float4
+fp_constantColor() : COLOR
+{
+    return constantColor;
+}
+
+float4
+fp_vertexColor(float4 INColor : COLOR) : COLOR
+{
+    return INColor;
+}
+
+
+float4
+fp_textured(float2 INTexCoord0 : TEXCOORD0) : COLOR
+{
+    return tex2D(diffuse, INTexCoord0);
+}
+
+float4
+fp_texturedAlpha(float2 INTexCoord0 : TEXCOORD0) : COLOR
+{
+    float4 result = tex2D(diffuse, INTexCoord0);
+    if (result.a < alphaRef)
+    {
+        discard;
+    }
+    return result;
+}
+
+float4
+fp_vertexColorTextured(float4 INColor : COLOR,
+                       float2 INTexCoord0 : TEXCOORD0) : COLOR
+{
+    return INColor * tex2D(diffuse, INTexCoord0);
+}
+
+
+//
+// Techniques
+//
+technique constantColor2D
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_constantColor_2d();
+        FragmentProgram = compile latest fp_constantColor();
+    }
+}
+
+technique vertexColor2D
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_vertexColor_2d();
+        FragmentProgram = compile latest fp_vertexColor();
+    }
+}
+
+technique textured2D
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_textured_2d();
+        FragmentProgram = compile latest fp_textured();
+    }
+}
+
+technique textured2DAlpha
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+
+        VertexProgram   = compile latest vp_textured_2d();
+        FragmentProgram = compile latest fp_texturedAlpha();
+    }
+}
+
+technique vertexColorTextured2D
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_vertexColorTextured_2d();
+        FragmentProgram = compile latest fp_vertexColorTextured();
+    }
+}

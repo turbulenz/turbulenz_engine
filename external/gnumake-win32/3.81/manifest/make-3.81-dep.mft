@@ -1,0 +1,4 @@
+bin/libiconv2.dll
+bin/libintl3.dll
+manifest/make-3.81-dep.mft
+manifest/make-3.81-dep.ver

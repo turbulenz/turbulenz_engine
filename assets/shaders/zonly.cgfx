@@ -1,0 +1,367 @@
+// Copyright (c) 2010-2013 Turbulenz Limited
+#include "uvtransform.cgh"
+
+//
+// Uniform variables
+//
+float4x4 projection;
+float4x3 worldView;
+float3x3 lightFrustum;
+
+float4 skinBones[75 * 3];
+
+float alphaFactor;
+
+sampler2D alpha_map = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+    WrapS = Repeat;
+    WrapT = Repeat;
+    MaxAnisotropy = 4;
+};
+
+//
+// Utils
+//
+float3x4 BuildSkinTransform(float4 indices, float4 weights)
+{
+    float3x4 skinWeightTransform;
+
+    indices *= 3.0;
+    int4 Indices = int4(indices);
+
+    skinWeightTransform[0] = weights.x * skinBones[Indices.x + 0];
+    skinWeightTransform[1] = weights.x * skinBones[Indices.x + 1];
+    skinWeightTransform[2] = weights.x * skinBones[Indices.x + 2];
+
+    skinWeightTransform[0] += weights.y * skinBones[Indices.y + 0];
+    skinWeightTransform[1] += weights.y * skinBones[Indices.y + 1];
+    skinWeightTransform[2] += weights.y * skinBones[Indices.y + 2];
+
+    skinWeightTransform[0] += weights.z * skinBones[Indices.z + 0];
+    skinWeightTransform[1] += weights.z * skinBones[Indices.z + 1];
+    skinWeightTransform[2] += weights.z * skinBones[Indices.z + 2];
+
+    skinWeightTransform[0] += weights.w * skinBones[Indices.w + 0];
+    skinWeightTransform[1] += weights.w * skinBones[Indices.w + 1];
+    skinWeightTransform[2] += weights.w * skinBones[Indices.w + 2];
+
+    return skinWeightTransform;
+}
+
+float4 LocalPointToDevice(float3 pt, float4x3 w, float4x4 vp)
+{
+    float3 wpt = ((pt.xxx * w[0]) + (pt.yyy * w[1]) + (pt.zzz * w[2]) + w[3]);
+    return ((wpt.xxxx * vp[0]) + (wpt.yyyy * vp[1]) + (wpt.zzzz * vp[2]) + vp[3]);
+}
+
+float3 LocalPointToWorld(float3 pt, float4x3 w)
+{
+    return ((pt.xxx * w[0]) + (pt.yyy * w[1]) + (pt.zzz * w[2]) + w[3]);
+}
+
+float4 WorldPointToDevice(float3 wpt, float4x4 vp)
+{
+    return ((wpt.xxxx * vp[0]) + (wpt.yyyy * vp[1]) + (wpt.zzzz * vp[2]) + vp[3]);
+}
+
+float3 RotateScalePoint(float3 p, float3x3 transform)
+{
+    return ((p.xxx * transform[0]) + (p.yyy * transform[1]) + (p.zzz * transform[2]));
+}
+
+//
+// Vertex programs
+//
+float4 vp(float3 position : POSITION) : POSITION
+{
+    float3 viewPosition = LocalPointToWorld(position, worldView);
+    return WorldPointToDevice(viewPosition, projection);
+}
+
+float4 vp_spotlight(float3 position : POSITION) : POSITION
+{
+    float3 scaledInPosition = RotateScalePoint(position, lightFrustum);
+    return LocalPointToDevice(scaledInPosition, worldView, projection);
+}
+
+float4 vp_skinned(float3 position : POSITION,
+                  float4 indices  : BLENDINDICES,
+                  float4 weights  : BLENDWEIGHT) : POSITION
+{
+    float3x4 skinTransform = BuildSkinTransform(indices, weights);
+
+    float4 skinTempPosition = float4(position, 1.0);
+    float3 localPosition;
+    localPosition.x = dot(skinTempPosition, skinTransform[0]);
+    localPosition.y = dot(skinTempPosition, skinTransform[1]);
+    localPosition.z = dot(skinTempPosition, skinTransform[2]);
+
+    float3 viewPosition = LocalPointToWorld(localPosition, worldView);
+    return WorldPointToDevice(viewPosition, projection);
+}
+
+void vp_alpha(in float3 INPosition : POSITION,
+              in float2 INUV       : TEXCOORD0,
+              out float4 OUTPosition : POSITION,
+              out float2 OUTUV       : TEXCOORD0)
+{
+    float3 viewPosition = LocalPointToWorld(INPosition, worldView);
+    OUTPosition = WorldPointToDevice(viewPosition, projection);
+    OUTUV = TransformUV(INUV);
+}
+
+void vp_alpha_skinned(in float3 INPosition : POSITION,
+                      in float2 INUV       : TEXCOORD0,
+                      in float4 INIndices  : BLENDINDICES,
+                      in float4 INWeights  : BLENDWEIGHT,
+                      out float4 OUTPosition : POSITION,
+                      out float2 OUTUV       : TEXCOORD0)
+{
+    float3x4 skinTransform = BuildSkinTransform(INIndices, INWeights);
+
+    float4 skinTempPosition = float4(INPosition, 1.0);
+    float3 localPosition;
+    localPosition.x = dot(skinTempPosition, skinTransform[0]);
+    localPosition.y = dot(skinTempPosition, skinTransform[1]);
+    localPosition.z = dot(skinTempPosition, skinTransform[2]);
+
+    float3 viewPosition = LocalPointToWorld(localPosition, worldView);
+    OUTPosition = WorldPointToDevice(viewPosition, projection);
+    OUTUV = TransformUV(INUV);
+}
+
+
+//
+// Fragment programs
+//
+float4 fp_alpha(float2 UV : TEXCOORD0) : COLOR
+{
+    float alpha = alphaFactor * tex2D(alpha_map, UV).w;
+    if (alpha < 1.0)
+    {
+        discard;
+    }
+    return float4(0.0, 0.0, 0.0, alpha);
+}
+
+void fp_null()
+{
+}
+
+
+//
+// Techniques
+//
+technique rigid
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_null();
+    }
+}
+
+technique skinned
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp_skinned();
+        FragmentProgram = compile glslf fp_null();
+    }
+}
+
+technique rigid_alphatest
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp_alpha();
+        FragmentProgram = compile glslf fp_alpha();
+    }
+}
+
+technique skinned_alphatest
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp_alpha_skinned();
+        FragmentProgram = compile glslf fp_alpha();
+    }
+}
+
+technique rigid_nocull
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_null();
+    }
+}
+
+technique skinned_nocull
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp_skinned();
+        FragmentProgram = compile glslf fp_null();
+    }
+}
+
+technique rigid_alphatest_nocull
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp_alpha();
+        FragmentProgram = compile glslf fp_alpha();
+    }
+}
+
+technique skinned_alphatest_nocull
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp_alpha_skinned();
+        FragmentProgram = compile glslf fp_alpha();
+    }
+}
+
+technique stencil_set
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Always, 1, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Replace);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_null();
+    }
+}
+
+technique stencil_set_spotlight
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Always, 1, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Replace);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp_spotlight();
+        FragmentProgram = compile glslf fp_null();
+    }
+}
+
+technique stencil_clear
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Always, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Zero);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_null();
+    }
+}
+
+technique stencil_clear_spotlight
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Always, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Zero);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = false;
+        ColorMask       = { 0, 0, 0, 0 };
+
+        VertexProgram   = compile glslv vp_spotlight();
+        FragmentProgram = compile glslf fp_null();
+    }
+}

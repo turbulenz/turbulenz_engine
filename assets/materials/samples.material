@@ -1,0 +1,61 @@
+# dining room scene
+
+phong25:
+    effect: blinn
+    diffuse: textures/texture_cha_0063.dds
+
+phong15:
+    effect: blinn
+    diffuse: textures/texture_table.dds
+
+phong_walls:
+    effect: blinn
+    meta:
+        noshadows: true
+    diffuse: textures/brick.dds
+
+phong_floor:
+    effect: blinn
+    meta:
+        noshadows: true
+    diffuse: textures/Texture_Floor_Wood.dds
+
+phong_carpet:
+    effect: blinn
+    meta:
+        noshadows: true
+    diffuse: textures/texture_carpet.dds
+
+
+# Seymour
+
+face:
+    effect: lambert
+    diffuse: boy_10.png
+
+glass:
+    effect: lambert
+    diffuse: boy_10.png
+
+matte:
+    effect: lambert
+    diffuse: boy_10.png
+
+shinny:
+    effect: lambert
+    diffuse: boy_10.png
+
+
+# Watercan
+
+wire_225088199:
+    effect: constant_nocull
+    materialColor: [0.1824, 0.3451, 0.7804, 1.0]
+    meta:
+        normals: true
+
+wire_006134006:
+    effect: constant_nocull
+    materialColor: [0.4000, 0.4000, 0.4000, 1.0]
+    meta:
+        normals: true

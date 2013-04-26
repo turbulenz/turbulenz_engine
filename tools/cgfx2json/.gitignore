@@ -1,0 +1,12 @@
+# Ignore all the test files in this directory
+*.cgfx
+*.cgh
+*.json
+*.user
+Debug
+Release
+x64
+obj
+linux32
+linux64
+macosx

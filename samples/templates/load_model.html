@@ -1,0 +1,39 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Load Model - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Load Model/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-button-pair">
+    <span class="control-title">Duck model</span>
+    <input type="button" id="buttonRemoveDuck" value="Remove">
+    <input type="button" id="buttonLoadDuck" value="Load">
+</div>
+<div class="html-control control-button-pair">
+    <span class="control-title">Cube model</span>
+    <input type="button" id="buttonRemoveCube" value="Remove">
+    <input type="button" id="buttonLoadCube" value="Load">
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key</th><th>Movement Control</th>
+</tr>
+<tr>
+    <td class="key">W,A,S,D</td>
+    <td>Movement</td>
+</tr>
+<tr>
+    <td class="key">Enter</td>
+    <td>Toggle full screen</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

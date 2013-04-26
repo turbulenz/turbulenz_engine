@@ -1,0 +1,748 @@
+// Copyright (c) 2009-2012 Turbulenz Limited
+
+#include "common.cgh"
+
+//
+// Uniform variables
+//
+float4x4 viewProjection;
+float4x3 world;
+float3x4 worldViewTranspose;
+float3 lightExtents;
+float3 lightExtentsInverse;
+
+float3 eyePositionLightSpace;
+
+float3x4 lightViewInverseTranspose;
+float3x3 lightFrustum;
+float maxDepth;
+float3 lightOrigin;
+float3 lightColor;
+float3 lightDirection;
+float3 ambientColor;
+float lightingScale;
+
+float4x4 shadowProjection;
+float4 shadowDepth;
+float shadowSize;
+
+float alphaRef = 0.003;
+
+static const float SpecularExponent = 8.0;
+
+sampler2D lightprojection = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D lightfalloff = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D depthTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D normalTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D shadowMapTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D albedoTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D specularTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D diffuseLightingTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D specularLightingTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D colorTexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+//
+// Variant inputs
+//
+struct VP_DIRECTIONAL_LIGHT_OUT
+{
+    float4 Position : POSITION;
+    float2 UV       : TEXCOORD0;
+};
+
+struct VP_LIGHT_OUT
+{
+    float4 Position  : POSITION;
+    float3 ScreenPos : TEXCOORD0;
+    float3 ViewPos   : TEXCOORD1;
+};
+
+struct VP_FOG_LIGHT_OUT
+{
+    float4 Position  : POSITION;
+    float3 ScreenPos : TEXCOORD0;
+    float3 ViewPos   : TEXCOORD1;
+    float3 ExitPos   : TEXCOORD2;
+    float3 HitPos    : TEXCOORD3;
+};
+
+struct FP_LIGHT_OUT
+{
+    float4 diffuse  : COLOR0;
+    float4 specular : COLOR1;
+};
+
+struct VS_MIX_OUT
+{
+    float4 Position: POSITION;
+    float2 UV: TEXCOORD0;
+};
+
+//
+// Utils
+//
+float4 LocalPointToDevice(float3 pt, float4x3 w, float4x4 vp)
+{
+    float3 wpt = ((pt.xxx * w[0]) + (pt.yyy * w[1]) + (pt.zzz * w[2]) + w[3]);
+    return ((wpt.xxxx * vp[0]) + (wpt.yyyy * vp[1]) + (wpt.zzzz * vp[2]) + vp[3]);
+}
+
+float3 LocalPointToView(float3 pt, float3x4 wvt)
+{
+    float4 p = float4(pt, 1.0);
+    return float3(dot(p, wvt[0]),
+                  dot(p, wvt[1]),
+                  dot(p, wvt[2]));
+}
+
+float4 WorldPointToDevice(float3 wpt, float4x4 vp)
+{
+    return ((wpt.xxxx * vp[0]) + (wpt.yyyy * vp[1]) + (wpt.zzzz * vp[2]) + vp[3]);
+}
+
+float3 RotateScalePoint(float3 p, float3x3 transform)
+{
+    return ((p.xxx * transform[0]) + (p.yyy * transform[1]) + (p.zzz * transform[2]));
+}
+
+void blinn_shading(float3 Nn,
+                   float3 Ln,
+                   float3 Vn,
+                   out float3 DiffuseContrib,
+                   out float3 SpecularContrib)
+{
+    float3 Hn = normalize(Vn + Ln);
+    float d = max(dot(Ln, Nn), 0.0);
+    float s = pow(max(dot(Hn, Nn), 0.0), SpecularExponent);
+    DiffuseContrib = d * lightColor;
+    SpecularContrib = float(d > 0.0) * (s * lightColor);
+}
+
+float3 GetFirstSceneIntersection(float3 vRayO, float3 vRayDir)
+{
+    // Intersect the ray with the bounding box
+    // ( y - vRayO.y ) / vRayDir.y = t
+
+    float fMaxT = -1.0;
+    float t;
+    float3 vRayIntersection;
+
+    // -X plane
+    if( vRayDir.x > 0.0 )
+    {
+        t = ( 0.0 - vRayO.x ) / vRayDir.x;
+        fMaxT = max( t, fMaxT );
+    }
+
+    // +X plane
+    if( vRayDir.x < 0.0 )
+    {
+        t = ( 1.0 - vRayO.x ) / vRayDir.x;
+        fMaxT = max( t, fMaxT );
+    }
+
+    // -Y plane
+    if( vRayDir.y > 0.0 )
+    {
+        t = ( 0.0 - vRayO.y ) / vRayDir.y;
+        fMaxT = max( t, fMaxT );
+    }
+
+    // +Y plane
+    if( vRayDir.y < 0.0 )
+    {
+        t = ( 1.0 - vRayO.y ) / vRayDir.y;
+        fMaxT = max( t, fMaxT );
+    }
+
+    // -Z plane
+    if( vRayDir.z > 0.0 )
+    {
+        t = ( 0.0 - vRayO.z ) / vRayDir.z;
+        fMaxT = max( t, fMaxT );
+    }
+
+    // +Z plane
+    if( vRayDir.z < 0.0 )
+    {
+        t = ( 1.0 - vRayO.z ) / vRayDir.z;
+        fMaxT = max( t, fMaxT );
+    }
+
+    vRayIntersection = vRayO + vRayDir * fMaxT;
+
+    return vRayIntersection;
+}
+
+float DecodeFloatRGBA(float4 rgba)
+{
+    return dot(rgba, float4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/16581375.0));
+}
+
+float3 ApplyShadowAttenuation(float3 position, float3 attenuation)
+{
+    float3 shadowPosition = WorldPointToDevice(position, shadowProjection).xyw;
+    float2 shadowSpace = (shadowPosition.xy / shadowPosition.z);
+    float2 shadowSpaceRange = abs(shadowSpace);
+    float depth = saturate(dot(shadowDepth, float4(position, 1.0)));
+    float2 shadowuv = (shadowSpace * 0.5 + 0.5);
+
+    // emulate bilinear filtering
+    float2 unnormalized = (shadowuv * shadowSize);
+    float2 fractional = frac(unnormalized);
+    unnormalized = floor(unnormalized);
+    float shadowSizeReciprocal = (1.0 / shadowSize);
+    float4 exponent;
+    exponent.x = DecodeFloatRGBA(tex2D(shadowMapTexture, (unnormalized + float2(-0.5,  0.5)) * shadowSizeReciprocal));
+    exponent.y = DecodeFloatRGBA(tex2D(shadowMapTexture, (unnormalized + float2( 0.5,  0.5)) * shadowSizeReciprocal));
+    exponent.z = DecodeFloatRGBA(tex2D(shadowMapTexture, (unnormalized + float2( 0.5, -0.5)) * shadowSizeReciprocal));
+    exponent.w = DecodeFloatRGBA(tex2D(shadowMapTexture, (unnormalized + float2(-0.5, -0.5)) * shadowSizeReciprocal));
+
+    float over_darkening_factor = 48.0;
+    /*
+    float4 occluder4 = exponent;
+    float occluder = (occluder4.w + (occluder4.x - occluder4.w) * fractional.y);
+    occluder = occluder + ((occluder4.z + (occluder4.y - occluder4.z) * fractional.y) - occluder)*fractional.x;
+    float shadowAttenuation = min(exp(over_darkening_factor * (occluder - depth)), 1.0);
+    */
+    // take the minimum with some large value in order to avoid an inf value
+    float4 occlusion4 = min(exp(over_darkening_factor * (exponent - depth)), 1e4);
+
+    float occlusion = (occlusion4.w + (occlusion4.x - occlusion4.w) * fractional.y);
+    float shadowAttenuation = min(occlusion + ((occlusion4.z + (occlusion4.y - occlusion4.z) * fractional.y) - occlusion)*fractional.x, 1.0);
+    attenuation *= shadowAttenuation;
+    return attenuation;
+}
+
+//
+// Vertex programs
+//
+float4 vp_ambient_light(float4 Position : POSITION) : POSITION
+{
+   return Position;
+}
+
+VP_DIRECTIONAL_LIGHT_OUT vp_directional_light(float4 Position : POSITION,
+                                              float2 UV       : TEXCOORD0)
+{
+    VP_DIRECTIONAL_LIGHT_OUT OUT;
+    OUT.Position = Position;
+    OUT.UV       = UV;
+    return OUT;
+}
+
+VP_LIGHT_OUT vp_spot_light(float3 INPosition : POSITION)
+{
+    VP_LIGHT_OUT OUT;
+    float3 scaledInPosition = RotateScalePoint(INPosition, lightFrustum);
+    float4 position = LocalPointToDevice(scaledInPosition, world, viewProjection);
+    OUT.Position  = position;
+    OUT.ScreenPos = position.xyw;
+    OUT.ViewPos   = LocalPointToView(scaledInPosition, worldViewTranspose);
+    return OUT;
+}
+
+VP_LIGHT_OUT vp_light(float3 INPosition : POSITION)
+{
+    VP_LIGHT_OUT OUT;
+    float3 scaledInPosition = (INPosition * lightExtents);
+    float4 position = LocalPointToDevice(scaledInPosition, world, viewProjection);
+    OUT.Position  = position;
+    OUT.ScreenPos = position.xyw;
+    OUT.ViewPos   = LocalPointToView(scaledInPosition, worldViewTranspose);
+    return OUT;
+}
+
+VP_FOG_LIGHT_OUT vp_fog_light(float3 INPosition : POSITION)
+{
+    VP_FOG_LIGHT_OUT OUT;
+    float3 scaledInPosition = (INPosition * lightExtents);
+    float4 position = LocalPointToDevice(scaledInPosition, world, viewProjection);
+    float3 exitPos  = (INPosition * 0.5 + 0.5);
+    OUT.Position  = position;
+    OUT.ScreenPos = position.xyw;
+    OUT.ViewPos   = LocalPointToView(scaledInPosition, worldViewTranspose);
+    OUT.ExitPos   = exitPos;
+    if (any(eyePositionLightSpace < 0.0) || any(eyePositionLightSpace > 1.0))
+    {
+        OUT.HitPos = GetFirstSceneIntersection(eyePositionLightSpace, (exitPos - eyePositionLightSpace));
+    }
+    else
+    {
+        OUT.HitPos = eyePositionLightSpace;
+    }
+    return OUT;
+}
+
+VS_MIX_OUT vp_mix(float4 Position : POSITION, float2 UV : TEXCOORD0)
+{
+   VS_MIX_OUT Out;
+   Out.Position = Position;
+   Out.UV = UV;
+   return Out;
+}
+
+//
+// Fragment programs
+//
+FP_LIGHT_OUT fp_ambient_light()
+{
+    FP_LIGHT_OUT OUT;
+    OUT.diffuse  = float4(lightColor, 1.0);
+    OUT.specular = float4(0.0, 0.0, 0.0, 0.0);
+    return OUT;
+}
+
+FP_LIGHT_OUT fp_directional_light(float2 UV : TEXCOORD0)
+{
+    FP_LIGHT_OUT OUT;
+    float3 normal = (tex2D(normalTexture, UV).xyz * 2.0 - 1.0);
+    float3 diffuseContrib = (max(dot(-lightDirection, normal), 0.0) * lightColor);
+    OUT.diffuse = float4(diffuseContrib, 1.0);
+    OUT.specular = float4(0.0, 0.0, 0.0, 0.0);
+    return OUT;
+}
+
+FP_LIGHT_OUT fp_ambient_directional_light(float2 UV : TEXCOORD0)
+{
+    FP_LIGHT_OUT OUT;
+    float3 normal = (tex2D(normalTexture, UV).xyz * 2.0 - 1.0);
+    float3 diffuseContrib = ((max(dot(-lightDirection, normal), 0.0) * lightColor) + ambientColor);
+    OUT.diffuse = float4(diffuseContrib, 1.0);
+    OUT.specular = float4(0.0, 0.0, 0.0, 0.0);
+    return OUT;
+}
+
+FP_LIGHT_OUT fp_spot_light(float3 ScreenPos : TEXCOORD0,
+                           float3 ViewPos   : TEXCOORD1)
+{
+    FP_LIGHT_OUT OUT;
+    float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
+    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
+    float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
+    float3 attenuation = tex2DprojFix(lightprojection, lightPos).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    float alpha = dot(attenuation, float3(0.3, 0.59, 0.11));
+    if (alpha < alphaRef)
+    {
+        discard;
+    }
+    float3 light = normalize(lightOrigin - position);
+    float3 view = -normalize(position);
+    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float3 diffuseContrib, specularContrib;
+    blinn_shading(normal, light, view, diffuseContrib, specularContrib);
+    OUT.diffuse = float4(diffuseContrib * attenuation, alpha);
+    OUT.specular = float4(specularContrib * attenuation, alpha);
+    return OUT;
+}
+
+FP_LIGHT_OUT fp_spot_light_shadow(float3 ScreenPos : TEXCOORD0,
+                                  float3 ViewPos   : TEXCOORD1)
+{
+    FP_LIGHT_OUT OUT;
+    float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
+    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
+    float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
+    float3 attenuation = tex2DprojFix(lightprojection, lightPos).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    // do NOT apply the shadowmap before the 'alpha' value or the pixelCount will be wrong
+    float alpha = dot(attenuation, float3(0.3, 0.59, 0.11));
+    if (alpha < alphaRef)
+    {
+        discard;
+    }
+    float3 light = normalize(lightOrigin - position);
+    float3 view = -normalize(position);
+    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float3 diffuseContrib, specularContrib;
+    blinn_shading(normal, light, view, diffuseContrib, specularContrib);
+    attenuation = ApplyShadowAttenuation(position, attenuation);
+    OUT.diffuse = float4(diffuseContrib * attenuation, alpha);
+    OUT.specular = float4(specularContrib * attenuation, alpha);
+    return OUT;
+}
+
+FP_LIGHT_OUT fp_point_light(float3 ScreenPos : TEXCOORD0,
+                            float3 ViewPos   : TEXCOORD1)
+{
+    FP_LIGHT_OUT OUT;
+    float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
+    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
+    float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
+    float3 light = normalize(lightOrigin - position);
+    float3 diffuseContrib = max(dot(light, normal), 0.0) * lightColor;
+    float3 attenuation = tex2D(lightprojection, lightPos.xy).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    diffuseContrib *= attenuation;
+    float alpha = dot(diffuseContrib, float3(0.3, 0.59, 0.11));
+    if (alpha < alphaRef)
+    {
+        discard;
+    }
+    OUT.diffuse = float4(diffuseContrib, alpha);
+    OUT.specular = float4(0.0, 0.0, 0.0, 0.0);
+    return OUT;
+}
+
+FP_LIGHT_OUT fp_point_light_specular(float3 ScreenPos : TEXCOORD0,
+                                     float3 ViewPos   : TEXCOORD1)
+{
+    FP_LIGHT_OUT OUT;
+    float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
+    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
+    float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
+    float3 attenuation = tex2D(lightprojection, lightPos.xy).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    float alpha = dot(attenuation, float3(0.3, 0.59, 0.11));
+    if (alpha < alphaRef)
+    {
+        discard;
+    }
+    float3 light = normalize(lightOrigin - position);
+    float3 view = -normalize(position);
+    float3 diffuseContrib, specularContrib;
+    blinn_shading(normal, light, view, diffuseContrib, specularContrib);
+    OUT.diffuse = float4(diffuseContrib * attenuation, alpha);
+    OUT.specular = float4(specularContrib * attenuation, alpha);
+    return OUT;
+}
+
+FP_LIGHT_OUT fp_point_light_specular_shadow(float3 ScreenPos : TEXCOORD0,
+                                            float3 ViewPos   : TEXCOORD1)
+{
+    FP_LIGHT_OUT OUT;
+    float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
+    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
+    float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
+    float3 attenuation = tex2D(lightprojection, lightPos.xy).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    // do NOT apply the shadowmap before the 'alpha' value or the pixelCount will be wrong
+    float alpha = dot(attenuation, float3(0.3, 0.59, 0.11));
+    if (alpha < alphaRef)
+    {
+        discard;
+    }
+    float3 light = normalize(lightOrigin - position);
+    float3 view = -normalize(position);
+    float3 diffuseContrib, specularContrib;
+    blinn_shading(normal, light, view, diffuseContrib, specularContrib);
+    attenuation = ApplyShadowAttenuation(position, attenuation);
+    OUT.diffuse = float4(diffuseContrib * attenuation, alpha);
+    OUT.specular = float4(specularContrib * attenuation, alpha);
+    return OUT;
+}
+
+float4 fp_fog_light(float3 ScreenPos : TEXCOORD0,
+                    float3 ViewPos   : TEXCOORD1,
+                    float3 ExitPos   : TEXCOORD2,
+                    float3 HitPos    : TEXCOORD3) : COLOR
+{
+    FP_LIGHT_OUT OUT;
+    float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
+    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
+    float3 fragmentPos = LocalPointToView(position, lightViewInverseTranspose);
+    float3 eyePos = float3(lightViewInverseTranspose[0].w, lightViewInverseTranspose[1].w, lightViewInverseTranspose[2].w);
+    float distanceToFragment = length((fragmentPos - eyePos) * lightExtentsInverse);
+    float distanceToEntry = length((HitPos - eyePos) * lightExtentsInverse);
+    float distanceToExit = length((ExitPos - eyePos) * lightExtentsInverse);
+    float fogDistance = ((distanceToFragment - distanceToEntry) - max((distanceToFragment - distanceToExit), 0.0));
+    if (fogDistance < alphaRef)
+    {
+        discard;
+    }
+    return float4(lightColor, fogDistance);
+}
+
+float4 fp_mix(float2 UV : TEXCOORD0) : COLOR
+{
+   float3 albedo = tex2D(albedoTexture, UV).xyz;
+   float4 specular = tex2D(specularTexture, UV);
+   float3 diffuseLighting  = lightingScale * tex2D(diffuseLightingTexture, UV).xyz;
+   float3 specularLighting = lightingScale * tex2D(specularLightingTexture, UV).xyz;
+   return float4((lerp(albedo, (albedo * diffuseLighting), specular.w) + (specularLighting * specular.xyz)), 1.0);
+}
+
+
+//
+// Techniques
+//
+technique ambient_light
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp_ambient_light();
+        FragmentProgram = compile glslf fp_ambient_light();
+    }
+}
+
+technique ambient_directional_light
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp_directional_light();
+        FragmentProgram = compile glslf fp_ambient_directional_light();
+    }
+}
+
+technique directional_light
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile glslv vp_directional_light();
+        FragmentProgram = compile glslf fp_directional_light();
+    }
+}
+
+technique spot_light
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile glslv vp_spot_light();
+        FragmentProgram = compile glslf fp_spot_light();
+    }
+}
+
+technique spot_light_shadow
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile glslv vp_spot_light();
+        FragmentProgram = compile glslf fp_spot_light_shadow();
+    }
+}
+
+technique point_light
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile glslv vp_light();
+        FragmentProgram = compile glslf fp_point_light();
+    }
+}
+
+technique point_light_specular
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile glslv vp_light();
+        FragmentProgram = compile glslf fp_point_light_specular();
+    }
+}
+
+technique point_light_specular_opaque
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp_light();
+        FragmentProgram = compile glslf fp_point_light_specular();
+    }
+}
+
+technique point_light_specular_shadow
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile glslv vp_light();
+        FragmentProgram = compile glslf fp_point_light_specular_shadow();
+    }
+}
+
+technique point_light_specular_shadow_opaque
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = GEqual;
+        DepthMask       = false;
+        StencilTestEnable = true;
+        StencilFunc       = int3(Equal, 0, 0xFFFFFFFF);
+        StencilOp         = int3(Keep, Keep, Keep);
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp_light();
+        FragmentProgram = compile glslf fp_point_light_specular_shadow();
+    }
+}
+technique fog_light
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = true;
+        CullFace        = Front;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+        VertexProgram   = compile glslv vp_fog_light();
+        FragmentProgram = compile glslf fp_fog_light();
+    }
+}
+
+technique mix
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp_mix();
+        FragmentProgram = compile glslf fp_mix();
+    }
+}

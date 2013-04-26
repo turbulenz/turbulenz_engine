@@ -1,0 +1,16 @@
+# Syntax:
+#
+# Either:
+# - assetpath
+#
+# or:
+# - path: path to input asset
+# - logical_path: [Optional] Change the logical mapping table name (defaults to path)
+# - install: [Optional] copy the built asset to staticmax (defaults to true)
+# - deps: [Optional] extra definitions that the build tool requires
+# - args: [Optional] extra arguments for the build tool
+
+- models/duck.dae
+- shaders/debug.cgfx
+- shaders/defaultrendering.cgfx
+- textures/duck.png

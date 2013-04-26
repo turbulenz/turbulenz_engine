@@ -1,0 +1,19 @@
+canvas_main: inputapp.canvas.js
+cover_art: cover_art.png
+deploy_files:
+- inputapp.tzjs
+- inputapp.canvas.js
+- mapping_table.json
+- staticmax/*
+- fonts/*
+- img/*
+deployed: Never
+engine_version: '0.26'
+is_temp: false
+mapping_table: mapping_table.json
+modified: 18:53 | 08/12/2011
+path: ..\..\apps\inputapp
+plugin_main: inputapp.tzjs
+slug: input-app
+title: Input App
+title_logo: ''

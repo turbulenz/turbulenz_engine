@@ -1,0 +1,51 @@
+// Copyright (c) 2012 Turbulenz Limited
+
+float4 clipSpace;
+sampler2D texture = sampler_state
+{
+    MinFilter = Linear;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+//
+// Vertex Programs
+//
+void vp_draw2D(in float2 InPosition : POSITION,
+               in float4 InColor : COLOR,
+               in float2 InTexCoord : TEXCOORD0,
+               out float4 OutPosition : POSITION,
+               out float4 OutColor : COLOR,
+               out float2 OutTexCoord : TEXCOORD0)
+{
+    OutPosition = float4(InPosition * clipSpace.xy + clipSpace.zw, 0.0, 1.0);
+    OutColor = InColor;
+    OutTexCoord = InTexCoord;
+}
+
+//
+// Pixel Programs
+//
+float4 fp_draw2D(float4 InColor : COLOR,
+                 float2 InTexCoord : TEXCOORD0) : COLOR
+{
+    return InColor * tex2D(texture, InTexCoord);
+}
+
+//
+// Techniques
+//
+technique textured2D
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_draw2D();
+        FragmentProgram = compile latest fp_draw2D();
+    }
+}

@@ -1,0 +1,54 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Physics Benchmark - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Physics Benchmark/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<div class="html-control control-checkbox">
+    <span class="control-title">Enable Debug Rendering</span>
+    <input type="checkbox" id="checkbox01"/>
+</div>
+<div class="html-control control-output-pair">Performance: <strong id="fpscounter" class="control-output"></strong></div>
+
+/*{% if tz_canvas %}*/
+<div class="html-control control-output-pair">Discrete Collisions: <strong id="discrete" class="control-output"></strong></div>
+<div class="html-control control-output-pair">Pre-computations: <strong id="precomputations" class="control-output"></strong></div>
+<div class="html-control control-output-pair">Physics iterations: <strong id="physicsiterations" class="control-output"></strong></div>
+<div class="html-control control-output-pair">Continuous Collisions: <strong id="continuous" class="control-output"></strong></div>
+/*{% endif %}*/
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Animate bowl</span>
+    <input type="checkbox" id="checkbox02"/>
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key/Mouse</th><th>Physics Control</th>
+</tr>
+<tr>
+    <td class="key">W,A,S,D</td>
+    <td>Movement</td>
+</tr>
+<tr>
+    <td class="key">R</td>
+    <td>Reset</td>
+</tr>
+<tr>
+    <td class="mouse">Right/Left click (hold)</td>
+    <td>Manipulate shape under crosshair</td>
+</tr>
+<tr>
+    <td class="key">Enter</td>
+    <td>Toggle full screen</td>
+</tr>
+<tr>
+    <td class="key">Escape</td>
+    <td>Release mouse pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

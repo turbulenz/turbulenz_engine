@@ -1,0 +1,69 @@
+- key:              'abstract_cube_devourer'
+  title:            'Abstract Cube Devourer'
+  predescription:   'Eat 10 cubes'
+  description:      'Ate 10 cubes'
+  points:           10
+  total:            10
+  shape:            'circle'
+  visible:          true
+  imageresource:
+    icon:                 'img/badges/abstractorig.png'
+    border-color:         '#2299e3'
+    
+- key:              'suicidal_worm'
+  title:            'Suicidal Worm'
+  predescription:   'Die by crashing into yourself'
+  description:      'Died by crashing into yourself'
+  points:           10
+  total:            1
+  shape:            'circle'
+  visible:          true
+  imageresource:
+    icon:                 'img/badges/suicidalorig.png'
+    border-color:         '#2299e3'
+
+- key:              'abstract_killer'
+  title:            'Abstract Killer'
+  description:      '10 kills'
+  points:           10
+  total:            10
+  shape:            'circle'
+  visible:          true
+  imageresource:
+    icon:                 'img/badges/abstract-killer.png'
+    border-color:         '#2299e3'
+
+- key:              'addicted' 
+  title:            'Addicted'
+  predescription:   'Play 10 games'
+  description:      'Played 10 games'
+  points:           10
+  total:            10
+  shape:            'circle'
+  visible:          true
+  imageresource:
+    icon:                 'img/badges/addictedorig.png'
+    border-color:         '#2299e3'
+    
+- key:              'played' 
+  title:            'Play to Win'
+  predescription:   'Start a game'
+  description:      'Started a game'
+  points:           10
+  shape:            'circle'
+  visible:          true
+  imageresource:
+    icon:                 'img/badges/play-to-win.png'
+    border-color:         '#2299e3'
+
+- key:              'driven_over_the_edge'
+  title:            'Driven Over The Edge'
+  predescription:   'Loop over edge of map'
+  description:      'Looped over edge of map'
+  points:           10
+  total:            1
+  shape:            'circle'
+  visible:          true
+  imageresource:
+    icon:                 'img/badges/driven.png'
+    border-color:         '#2299e3'

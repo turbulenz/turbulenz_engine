@@ -1,0 +1,46 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_title %}*/Physics2D Callbacks - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Physics2D Callbacks/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+
+<div style="text-shadow: 0px 0px #ffffff">
+<ul style="margin: 10px; padding: 10px">
+    <li>Middle platforms using preSolve callbacks to implement one-way platforms.</li>
+    <li>Spikes querying impulse strengths to break apart objects on begin and progress events.</li>
+    <li>Sensor in bottom right teleporting object to top of world on begin events.</li>
+    <li>Light tunnel applying impulses in begin and progress events to move bodies along.</li>
+</ul>
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <th>Key/Mouse</th><th>Physics Control</th>
+</tr>
+<tr>
+    <td class="key">R</td>
+    <td>Reset</td>
+</tr>
+<tr>
+    <td class="mouse">Left click (hold)</td>
+    <td>Manipulate body under cursor</td>
+</tr>
+<tr>
+    <td class="mouse">Right click</td>
+    <td>Create body at point</td>
+</tr>
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/

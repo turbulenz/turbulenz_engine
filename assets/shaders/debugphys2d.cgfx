@@ -1,0 +1,31 @@
+// Copyright (c) 2012 Turbulenz Limited
+
+float4 clipSpace;
+
+void vp_draw2dlines(in float2 inpos : POSITION,
+                  in float4 incol : COLOR,
+                  out float4 outpos : POSITION,
+                  out float4 outcol : COLOR)
+{
+    outpos = float4(inpos * clipSpace.xy + clipSpace.zw, 0, 1);
+    outcol = incol;
+}
+
+float4 fp_draw2dlines(float4 col : COLOR) : COLOR
+{
+    return col;
+}
+
+technique alpha
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, OneMinusSrcAlpha);
+        VertexProgram   = compile latest vp_draw2dlines();
+        FragmentProgram = compile latest fp_draw2dlines();
+    }
+}

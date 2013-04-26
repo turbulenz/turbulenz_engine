@@ -1,0 +1,9 @@
+// Copyright (c) 2012-2013 Turbulenz Limited
+
+float3x2 uvTransform = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+
+float2 TransformUV(float2 uv)
+{
+    // return uv;
+    return (uv.xx * uvTransform[0]) + (uv.yy * uvTransform[1]) + uvTransform[2];
+}

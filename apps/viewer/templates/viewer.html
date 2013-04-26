@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Viewer</title>
+        <link rel="stylesheet" type="text/css" href="css/viewer.css">
+        <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+        <script type="text/javascript" src="js/htmlcontrols.js"></script>
+    </head>
+    <body>
+        <div id="titlebar">
+            <strong class="title">Viewer</strong>
+            <a id="titlelogo" href="/"></a>
+            <div id="loading">
+                <span class="message-container-outer">
+                    <span id="osd_message_content" class="message-container">
+                        <span id="osd_message" class="message-span">Loading...</span>
+                    </span>
+                </span>
+            </div>
+        </div>
+        <div id="sidebar">
+            <div class="html-control control-textbox">
+                <span>Base Asset URL</span>
+                <input type="text" id="asseturlinput" size=16 value="">
+            </div>
+            <div class="html-control control-output-pair">
+                Asset file:
+                <input type="button" id="buttonloadassetfile" value="Load" class="control-output" style="margin-top:13px;">
+                <input type="text" id="assetfileinput" class="control-textfield">
+            </div>
+            <div class="html-control control-textbox">
+                <span>Mapping Table</span>
+                <input type="text" id="assetmappinginput" size=16 value="mapping_table.json">
+            </div>
+            <div class="html-control control-dropdownbox">
+                <span>Select wireframe</span><select id="selectWireframe"></select>
+            </div>
+            <div class="html-control control-dropdownbox">
+                <span>Debug shader</span><select id="debugShaders"></select>
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw lights extents</span>
+                <input type="checkbox" id="check_drawLights" value="drawLights" checked="yes">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw Interpolators</span>
+                <input type="checkbox" id="check_drawInterpolators" value="drawInterpolators" checked="yes">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw Skeleton</span>
+                <input type="checkbox" id="check_drawSkeleton" value="drawSkeleton" checked="yes">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw scene node hierarchy</span>
+                <input type="checkbox" id="check_drawSceneNodeHierarchy" value="drawSceneNodeHierarchy">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw opaque nodes extents</span>
+                <input type="checkbox" id="check_drawOpaqueNodesExtents" value="drawOpaqueNodesExtents">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw physics geometry</span>
+                <input type="checkbox" id="check_drawPhysicsGeometry" value="drawPhysicsGeometry">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw physics extents</span>
+                <input type="checkbox" id="check_drawPhysicsExtents" value="drawPhysicsExtents">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw areas extents</span>
+                <input type="checkbox" id="check_drawAreasExtents" value="drawAreasExtents">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw portals</span>
+                <input type="checkbox" id="check_drawPortals" value="drawPortals">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw skins in bind pose</span>
+                <input type="checkbox" id="check_useSkinBindPose" value="drawSkinBindPose">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw normals</span>
+                <input type="checkbox" id="check_drawNormals" value="drawNormals">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw tangents</span>
+                <input type="checkbox" id="check_drawTangents" value="drawTangents">
+            </div>
+            <div class="html-control control-checkbox">
+                <span>Draw binormals</span>
+                <input type="checkbox" id="check_drawBinormals" value="drawBinormals">
+            </div>
+            <div class="html-control control-textbox">
+                <span> Animation speed scale</span>
+                <input type="text" id="text_animScale" size=6 value="1">
+            </div>
+            <div class="html-control control-textbox">
+                <span>Movement speed scale</span>
+                <input type="text" id="text_movementScale" size=6 value="1">
+            </div>
+            <div class="html-control control-textbox">
+                <span>Normals scale</span>
+                <input type="text" id="text_normalsScale" size=6 value="1">
+            </div>
+            <div id="light-details"></div>
+        </div>
+
+        <div class="engine-control">
+            <table cellspacing="0">
+                <tbody>
+                    <tr>
+                        <td class="key">W,A,S,D</td>
+                        <td>Movement</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Enter</td>
+                        <td>Toggle Full Screen</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Escape</td>
+                        <td>Release mouse pointer</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="engine-object">
+            <div id="engine-wrapper">
+                <!--
+                  HTML to create a plugin or canvas instance.
+                  Supplied by 'tz_engine_div' variable.
+                -->
+                /*{{ tz_engine_div }}*/
+            </div>
+        </div>
+
+        <!-- begin 'tz_include_js' variable -->
+        /*{{ tz_include_js }}*/
+        <!-- end 'tz_include_js' variable -->
+
+        <script type="text/javascript">
+          // ----------------------------------------
+          // Embedded code and startup code.
+          // Supplied by 'tz_startup_code' variable.
+          // ----------------------------------------
+          /*{{ tz_startup_code }}*/
+        </script>
+
+    </body>
+</html>

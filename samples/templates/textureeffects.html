@@ -1,0 +1,155 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_title %}*/TextureEffects - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/TextureEffects/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<style type="text/css">
+    #sidebar {
+        bottom: 98px;
+    }
+</style>
+<div class="html-control control-checkbox">
+    <span class="control-title">Distort Effect:</span>
+    <input type="checkbox" id="distortBox" checked="no"/>
+</div>
+<div class="html-control control-output-pair">Strength:
+    <input type="text" id="strengthSliderinput" size="4" value="10" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="strengthSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Rotation:
+    <input type="text" id="rotationSliderinput" size="3" value="0" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="rotationSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Scale:
+    <input type="text" id="scaleSliderinput" size="4" value="100%" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="scaleSlider" class="sliderinput"></div>
+</div>
+
+<div class="html-control"></div>
+<div class="html-control control-checkbox">
+    <span class="control-title">ColorMatrix Effect:</span>
+    <input type="checkbox" id="colorMatrixBox" checked="no"/>
+</div>
+<div class="html-control control-output-pair">Saturation:
+    <input type="text" id="saturationSliderinput" size="6" value="100%" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="saturationSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Hue:
+    <input type="text" id="hueSliderinput" size="5" value="0" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="hueSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Brightness:
+    <input type="text" id="brightnessSliderinput" size="5" value="100%" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="brightnessSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Contrast:
+    <input type="text" id="contrastSliderinput" size="5" value="100%" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="contrastSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Grayscale:</span>
+    <input type="checkbox" id="grayscaleBox" checked="no"/>
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Negative:</span>
+    <input type="checkbox" id="negativeBox" checked="no"/>
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Sepia:</span>
+    <input type="checkbox" id="sepiaBox" checked="no"/>
+</div>
+
+<div class="html-control"></div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Bloom Effect:</span>
+    <input type="checkbox" id="bloomBox" checked="no"/>
+</div>
+<div class="html-control control-output-pair">Blur Radius:
+    <input type="text" id="bloomRadiusSliderinput" size="2" value="5" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="bloomRadiusSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Bloom Threshold:
+    <input type="text" id="bloomThresholdSliderinput" size="4" value="0" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="bloomThresholdSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Bloom Threshold Cutoff:
+    <input type="text" id="bloomThresholdCutoffSliderinput" size="4" value="0" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="bloomThresholdCutoffSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Bloom Intensity:
+    <input type="text" id="bloomIntensitySliderinput" size="4" value="0" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="bloomIntensitySlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Bloom Saturation:
+    <input type="text" id="bloomSaturationSliderinput" size="4" value="0" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="bloomSaturationSlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Original Intensity:
+    <input type="text" id="originalIntensitySliderinput" size="4" value="0" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="originalIntensitySlider" class="sliderinput"></div>
+</div>
+<div class="html-control control-output-pair">Original Saturation:
+    <input type="text" id="originalSaturationSliderinput" size="4" value="0" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="originalSaturationSlider" class="sliderinput"></div>
+</div>
+
+<div class="html-control"></div>
+<div class="html-control control-checkbox">
+    <span class="control-title">GaussianBlur Effect:</span>
+    <input type="checkbox" id="gausBlurBox" checked="no"/>
+</div>
+<div class="html-control control-output-pair">Blur Radius:
+    <input type="text" id="gausBlurRadiusSliderinput" size="3" value="10" class="control-textfield"/>
+</div>
+<div class="html-control control-slider">
+    <div id="gausBlurRadiusSlider" class="sliderinput"></div>
+</div>
+
+<div class="engine-control">
+    <div>
+        <span class="control-title">Performance:</span><br/><br/>
+        <span style="margin: 0 0 0 16px" id="fpscounter"></span>
+    </div>
+    <div>
+        <span class="control-title">Active Effect Order:</span><br/><br/>
+        <span style="margin: 0 0 0 16px" id="effectInfo"></span>
+    </div>
+</div>
+/*{% endblock %}*/

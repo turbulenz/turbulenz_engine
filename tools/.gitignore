@@ -1,0 +1,5 @@
+# Build output
+bin
+
+# Solution files
+*/*.sln

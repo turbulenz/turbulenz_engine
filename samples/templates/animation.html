@@ -1,0 +1,51 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_title %}*/Animation - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/Animation/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+
+<div class="html-control control-button-pair">
+    <span class="control-title">Switch animation</span>
+    <input type="button" id="button01" value="Next">
+    <input type="button" id="button02" value="Previous">
+</div>
+<div class="html-control control-button">
+    <span class="control-title">Reset view</span>
+    <input type="button" id="button03" value="Reset Camera">
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Loop animation</span>
+    <input type="checkbox" id="checkbox01">
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Blend transitions</span>
+    <input type="checkbox" id="checkbox02">
+</div>
+<div class="html-control control-checkbox">
+    <span class="control-title">Draw debug</span>
+    <input type="checkbox" id="checkbox03">
+</div>
+
+<div class="engine-control">
+  <table cellspacing="0">
+    <tbody>
+      <tr>
+          <th>Key</th><th>Movement Control</th>
+      </tr>
+      <tr>
+          <td class="key">W,A,S,D</td>
+          <td>Movement</td>
+      </tr>
+      <tr>
+          <td class="key">Enter</td>
+          <td>Toggle full screen</td>
+      </tr>
+      <tr>
+          <td class="key">Escape</td>
+          <td>Release mouse pointer</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+/*{% endblock %}*/

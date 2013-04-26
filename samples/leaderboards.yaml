@@ -1,0 +1,359 @@
+- key: rockets
+  title: Rockets launched
+  icon256: icons/rocket256.png
+  icon48: icons/rocket48.png
+  icon32: icons/rocket32.png
+  sortBy: 1
+  default-scores:
+    - user: tz-zoey
+      score: 86
+    - user: tz-hailey
+      score: 85
+    - user: tz-joe
+      score: 83
+    - user: tz-jon
+      score: 83
+    - user: tz-logan
+      score: 83
+    - user: tz-noah
+      score: 81
+    - user: tz-brooklyn
+      score: 80
+    - user: tz-caleb
+      score: 79
+    - user: tz-chloe
+      score: 78
+    - user: tz-bob
+      score: 78
+    - user: tz-gavin
+      score: 75
+    - user: tz-samantha
+      score: 75
+    - user: tz-mason
+      score: 70
+    - user: tz-gabriella
+      score: 69
+    - user: tz-anthony
+      score: 69
+    - user: tz-lillian
+      score: 69
+    - user: tz-olivia
+      score: 69
+    - user: tz-ethan
+      score: 69
+    - user: tz-grace
+      score: 69
+    - user: tz-abigail
+      score: 67
+    - user: tz-matthew
+      score: 66
+    - user: tz-victoria
+      score: 65
+    - user: tz-layla
+      score: 64
+    - user: tz-rob
+      score: 63
+    - user: tz-isabella
+      score: 62
+    - user: tz-leah
+      score: 61
+    - user: tz-david
+      score: 60
+    - user: tz-daniel
+      score: 59
+    - user: tz-charlotte
+      score: 58
+    - user: tz-william
+      score: 57
+    - user: tz-liam
+      score: 56
+    - user: tz-emma
+      score: 55
+    - user: tz-andrew
+      score: 54
+    - user: tz-ben
+      score: 53
+    - user: tz-chris
+      score: 52
+    - user: tz-yota
+      score: 51
+    - user: tz-simon
+      score: 50
+    - user: tz-john
+      score: 49
+    - user: tz-sophia
+      score: 48
+    - user: tz-michael
+      score: 47
+    - user: tz-sheheryar
+      score: 47
+    - user: tz-duncan
+      score: 42
+    - user: tz-zoe
+      score: 42
+    - user: tz-emily
+      score: 42
+    - user: tz-james
+      score: 42
+    - user: tz-benjamin
+      score: 42
+    - user: tz-lucas
+      score: 40
+    - user: tz-gabriel
+      score: 39
+    - user: tz-jacob
+      score: 38
+    - user: tz-vincent
+      score: 37
+    - user: tz-samuel
+      score: 36
+    - user: tz-nicola
+      score: 35
+    - user: tz-avery
+      score: 33
+    - user: tz-andy
+      score: 33
+    - user: tz-blake
+      score: 29
+    - user: tz-amelia
+      score: 28
+    - user: tz-imad
+      score: 27
+    - user: tz-ava
+      score: 26
+    - user: tz-jackson
+      score: 25
+    - user: tz-elizabeth
+      score: 24
+    - user: tz-bill
+      score: 23
+    - user: tz-nathan
+      score: 22
+    - user: tz-alexis
+      score: 21
+    - user: tz-sofia
+      score: 20
+    - user: tz-alex
+      score: 19
+    - user: tz-jan
+      score: 18
+    - user: tz-joseph
+      score: 17
+    - user: tz-ian
+      score: 15
+    - user: tz-ryan
+      score: 15
+    - user: tz-madison
+      score: 15
+    - user: tz-aiden
+      score: 13
+    - user: tz-lily
+      score: 12
+    - user: tz-claudio
+      score: 11
+    - user: tz-mia
+      score: 10
+    - user: tz-natalie
+      score: 9
+    - user: tz-evelyn
+      score: 8
+    - user: tz-aubrey
+      score: 7
+    - user: tz-elijah
+      score: 7
+    - user: tz-hannah
+      score: 7
+    - user: tz-dave
+      score: 7
+    - user: tz-jayden
+      score: 6
+    - user: tz-adam
+      score: 5
+    - user: tz-steffan
+      score: 4
+    - user: tz-ella
+      score: 3
+    - user: tz-addison
+      score: 2
+    - user: tz-joshua
+      score: 1
+
+- key: completedTime
+  title: Time to complete
+  icon256: icons/time256.png
+  icon48: icons/time48.png
+  icon32: icons/time32.png
+  sortBy: -1
+  default-scores:
+    - user: tz-jayden
+      score: 5
+    - user: tz-adam
+      score: 5
+    - user: tz-steffan
+      score: 5
+    - user: tz-ella
+      score: 6
+    - user: tz-alexis
+      score: 7
+    - user: tz-liam
+      score: 8
+    - user: tz-emma
+      score: 9
+    - user: tz-andrew
+      score: 10
+    - user: tz-ryan
+      score: 11
+    - user: tz-madison
+      score: 12
+    - user: tz-aiden
+      score: 14
+    - user: tz-lily
+      score: 14
+    - user: tz-ben
+      score: 15
+    - user: tz-chris
+      score: 16
+    - user: tz-yota
+      score: 17
+    - user: tz-joseph
+      score: 18
+    - user: tz-zoe
+      score: 19
+    - user: tz-emily
+      score: 20
+    - user: tz-james
+      score: 21
+    - user: tz-benjamin
+      score: 22
+    - user: tz-lucas
+      score: 23
+    - user: tz-gabriel
+      score: 24
+    - user: tz-jacob
+      score: 25
+    - user: tz-vincent
+      score: 26
+    - user: tz-samuel
+      score: 27
+    - user: tz-nicola
+      score: 28
+    - user: tz-avery
+      score: 29
+    - user: tz-andy
+      score: 30
+    - user: tz-blake
+      score: 30
+    - user: tz-amelia
+      score: 31
+    - user: tz-imad
+      score: 33
+    - user: tz-aubrey
+      score: 34
+    - user: tz-elijah
+      score: 35
+    - user: tz-hannah
+      score: 36
+    - user: tz-dave
+      score: 37
+    - user: tz-sofia
+      score: 38
+    - user: tz-grace
+      score: 39
+    - user: tz-abigail
+      score: 40
+    - user: tz-matthew
+      score: 41
+    - user: tz-victoria
+      score: 42
+    - user: tz-layla
+      score: 43
+    - user: tz-rob
+      score: 46
+    - user: tz-isabella
+      score: 46
+    - user: tz-leah
+      score: 46
+    - user: tz-claudio
+      score: 46
+    - user: tz-mia
+      score: 48
+    - user: tz-natalie
+      score: 49
+    - user: tz-addison
+      score: 50
+    - user: tz-alex
+      score: 51
+    - user: tz-jan
+      score: 52
+    - user: tz-jackson
+      score: 56
+    - user: tz-ava
+      score: 56
+    - user: tz-simon
+      score: 56
+    - user: tz-john
+      score: 56
+    - user: tz-sophia
+      score: 57
+    - user: tz-michael
+      score: 58
+    - user: tz-sheheryar
+      score: 59
+    - user: tz-duncan
+      score: 60
+    - user: tz-elizabeth
+      score: 61
+    - user: tz-bill
+      score: 62
+    - user: tz-nathan
+      score: 64
+    - user: tz-evelyn
+      score: 64
+    - user: tz-lillian
+      score: 64
+    - user: tz-olivia
+      score: 66
+    - user: tz-ethan
+      score: 67
+    - user: tz-zoey
+      score: 68
+    - user: tz-hailey
+      score: 69
+    - user: tz-joe
+      score: 73
+    - user: tz-david
+      score: 73
+    - user: tz-daniel
+      score: 73
+    - user: tz-charlotte
+      score: 73
+    - user: tz-william
+      score: 73
+    - user: tz-joshua
+      score: 75
+    - user: tz-ian
+      score: 76
+    - user: tz-jon
+      score: 77
+    - user: tz-logan
+      score: 78
+    - user: tz-noah
+      score: 79
+    - user: tz-brooklyn
+      score: 80
+    - user: tz-caleb
+      score: 83
+    - user: tz-chloe
+      score: 83
+    - user: tz-bob
+      score: 83
+    - user: tz-gavin
+      score: 84
+    - user: tz-samantha
+      score: 87
+    - user: tz-mason
+      score: 87
+    - user: tz-gabriella
+      score: 87
+    - user: tz-anthony
+      score: 87

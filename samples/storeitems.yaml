@@ -1,0 +1,54 @@
+resources:
+- key: rocket-launcher
+  title: Rocket launcher
+  description: A rocket launcher
+  icon256: icons/rocketlauncher.png
+  type: own
+
+- key: grenade
+  title: Grenade
+  description: A grenade
+  icon256: icons/grenade.png
+  type: consume
+
+offerings:
+- key: rocket-launcher
+  title: Rocket launcher
+  description: A rocket launcher
+  icon256: icons/rocketlauncher.png
+  output:
+    'rocket-launcher': 1
+  price:
+    USD: 3.99
+    GBP: 2.60
+
+- key: grenade
+  title: Grenade
+  description: A grenade
+  icon256: icons/grenade.png
+  output:
+    'grenade': 1
+  price:
+    USD: 0.99
+    GBP: 0.69
+
+- key: grenade-pack
+  title: Grenade pack
+  description: A pack containing 3 grenades
+  icon256: icons/grenadepack.png
+  output:
+    'grenade': 3
+  price:
+    USD: 1.99
+    GBP: 1.30
+
+- key: explosives-pack
+  title: Explosives pack
+  description: A pack containing 15 grenades and a rocket launcher
+  icon256: icons/explosivespack.png
+  output:
+    'rocket-launcher': 1
+    'grenade': 15
+  price:
+    USD: 4.99
+    GBP: 3.30

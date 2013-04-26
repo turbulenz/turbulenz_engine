@@ -1,0 +1,11 @@
+* models
+    o Collada Public Test Model Bank:
+    o http://research.scea.com/scea_shared_source_license.html
+    o Watercan model:
+    o http://www.sharecg.com/v/48053/View/5/3D-Model/Watering-can, see Usage Rights
+* sounds
+    o Fur Elise
+    o http://en.wikipedia.org/wiki/File:FurElise.ogg#Licensing
+* fonts
+    o Open Sans
+    o http://www.google.com/webfonts/specimen/Open+Sans, http://www.apache.org/licenses/LICENSE-2.0.html

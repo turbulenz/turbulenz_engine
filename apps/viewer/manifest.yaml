@@ -1,0 +1,19 @@
+canvas_main: viewer.canvas.js
+cover_art: cover_art.png
+deploy_files:
+- viewer.tzjs
+- viewer.canvas.js
+- mapping_table.json
+- css/*
+- img/*
+- js/*
+- staticmax/*
+deployed: Never
+engine_version: '0.26'
+is_temp: false
+mapping_table: mapping_table.json
+path: ../../apps/viewer
+plugin_main: viewer.tzjs
+slug: viewer
+title: Viewer
+title_logo: ''

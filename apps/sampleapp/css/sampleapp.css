@@ -1,0 +1,130 @@
+/* Copyright (c) 2010-2012 Turbulenz Limited */
+
+/* reset */
+html, body, div, span, object, iframe, h1, h2, p, a, img, ul, li, fieldset, form, label, legend {
+    border: 0;
+    font-size: 100%;
+    margin: 0;
+    outline: 0;
+    padding: 0;
+    vertical-align: baseline;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    background: #dbdbd9 url('../img/noise-bg.png') repeat;
+    font: normal normal normal 13px/1.231 Helvetica,Arial,sans-serif;
+    line-height: 1;
+}
+
+#header {
+    padding: 3.462em 0 1.692em;
+    margin: 0 auto;
+    overflow: hidden;
+    width: 960px;
+}
+
+#content {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.feature {
+    background: url(../img/panel-tile.png) repeat 0 0;
+    margin: 0;
+    position: relative;
+    width: 100%;
+    zoom: 1;
+    overflow: hidden;
+}
+
+.feature h1 {
+    background: url(../img/panel-top.png) repeat-x 0 0;
+    float: left;
+    height: 17px;
+    margin: 0;
+    padding: 0;
+    text-indent: -9999em;
+    width: 100%;
+}
+
+.feature .clear {
+    display: block;
+    float: left;
+    clear: both;
+    height: 30px;
+    background-image: url(../img/panel-bottom.png);
+    background-repeat: repeat-x;
+    background-position: 0 bottom;
+    width: 100%;
+}
+
+#details {
+    margin: 22px auto 0;
+    width: 960px;
+}
+
+.push {
+    clear: both;
+    height: 1.5em;
+    margin-top: 2.308em;
+}
+
+#footer {
+    clear: both;
+    height: 1.462em; /* 19px */
+    border-top: 1px solid #888;
+    width: 100%;
+    background: url(../img/panel-tile.png) repeat 0 0;
+    overflow: hidden;
+    position: absolute;
+    bottom: 0px;
+}
+
+#footer .content {
+    color: #666;
+    font-size: 69.2%;
+    line-height: 2.111em;
+    margin: 0 auto;
+    text-align: center;
+    text-shadow: 0 2px 2px #fff;
+    width: 960px;
+}
+
+#footer a {
+    color: #5eb4ff;
+}
+
+#play .game-info {
+    color: #898989;
+    display: block;
+    font-size: 92.31%;
+    margin: 0 auto;
+    padding: 10px 0;
+    text-shadow: 0px 1px 0.25px #fff;
+    width: 960px;
+}
+
+#play #engine-wrapper {
+    width: 100%;
+    height: 100%;
+    display: inline-block;
+}
+
+#play #engine-object {
+    background-color: #898989;
+    clear: left;
+    margin: 0;
+    padding: 5px;
+    width: 950px;
+}
+
+#play #app-object {
+    margin: 30px auto 0;
+    padding: 0;
+    width: 960px;
+}

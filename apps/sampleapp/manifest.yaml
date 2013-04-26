@@ -1,0 +1,20 @@
+canvas_main: sampleapp.canvas.js
+cover_art: cover_art.png
+deploy_files:
+- sampleapp.tzjs
+- sampleapp.canvas.js
+- mapping_table.json
+- css/*
+- img/*
+- js/*
+- staticmax/*
+deployed: Never
+engine_version: '0.26'
+is_temp: false
+mapping_table: mapping_table.json
+modified: 16:24 | 08/04/2011
+path: ../../apps/sampleapp
+plugin_main: sampleapp.tzjs
+slug: sample-app
+title: Sample App
+title_logo: ''

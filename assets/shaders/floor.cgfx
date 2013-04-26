@@ -1,0 +1,34 @@
+// Copyright (c) 2009-2010 Turbulenz Limited
+
+float4x4 worldViewProjection;
+float4 color;
+float4 fadeToColor;
+
+void vp_floor(float2 INPosition : POSITION,
+              out float4 OUTPosition: POSITION,
+              out float2 OUTDistance: TEXCOORD0)
+{
+    OUTPosition = (INPosition.xxxx * worldViewProjection[0] +
+                   INPosition.yyyy * worldViewProjection[2] +
+                   worldViewProjection[3]);
+    OUTDistance = INPosition;
+}
+
+float4 fp_floor(float2 distance : TEXCOORD0) : COLOR
+{
+    return lerp(color, fadeToColor, saturate(length(distance)));
+}
+
+technique floor
+{
+   pass
+   {
+       DepthTestEnable = true;
+       DepthFunc       = LEqual;
+       DepthMask       = false;
+       CullFaceEnable  = false;
+       BlendEnable     = false;
+       VertexProgram   = compile latest vp_floor();
+       FragmentProgram = compile latest fp_floor();
+   }
+}

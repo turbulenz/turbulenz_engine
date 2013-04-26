@@ -1,0 +1,2372 @@
+// Copyright (c) 2013 Turbulenz Limited
+
+// Commands:
+// 'BD': beginDraw
+// 'BO': beginOcclusionQuery
+// 'BR': beginRenderTarget
+// 'C': clear
+// 'DV': draw
+// 'DI': drawIndexed
+// 'EO': endOcclusionQuery
+// 'ER': endRenderTarget
+// 'D': setData
+// 'I': setIndexBuffer
+// 'S': setScissor
+// 'V': setStream
+// 'T': setTechnique
+// 'P': setTechniqueParameters
+// 'W': setViewport
+
+class CaptureGraphicsDevice
+{
+    static version = 1;
+
+    gd:         any;
+    current:    any[];
+    frames:     any[];
+    commands:   { [method: string]: any[]; };
+    numCommands: number;
+    lastId:     number;
+    recycledIds: number[];
+    destroyedIds: number[];
+    data:       {};
+    objects:    {};
+    vertexBuffers: {};
+    indexBuffers: {};
+    semantics:  {};
+    semanticsMap: {};
+    formats:  {};
+    formatsMap: {};
+    textures:   {};
+    shaders:    {};
+    techniques: {};
+    videos:     {};
+    renderBuffers: {};
+    renderTargets: {};
+    occlusionQueries: {};
+    reverseSemantic: string[];
+
+    constructor(gd)
+    {
+        var reverseSemantic = [];
+        var p;
+        for (p in gd)
+        {
+            var value = gd[p];
+            if (typeof value === "number" ||
+                typeof value === "string" ||
+                0 === p.indexOf('VERTEXFORMAT'))
+            {
+                this[p] = value;
+                if (0 === p.indexOf('SEMANTIC_'))
+                {
+                    if (reverseSemantic.length <= value)
+                    {
+                        reverseSemantic[value] = p.slice(9);
+                    }
+                }
+            }
+        }
+        this.gd = gd;
+        this.current = [];
+        this.frames = [];
+        this.commands = {};
+        this.numCommands = 0;
+        this.lastId = -1;
+        this.recycledIds = [];
+        this.destroyedIds = [];
+        this.data = {};
+        this.objects = {};
+        this.vertexBuffers = {};
+        this.indexBuffers = {};
+        this.semantics = {};
+        this.semanticsMap = {};
+        this.formats = {};
+        this.formatsMap = {};
+        this.textures = {};
+        this.shaders = {};
+        this.techniques = {};
+        this.videos = {};
+        this.renderBuffers = {};
+        this.renderTargets = {};
+        this.occlusionQueries = {};
+        this.reverseSemantic = reverseSemantic;
+        return this;
+    }
+
+    _getCommandId() : number
+    {
+        var id = this.numCommands;
+        this.numCommands = (id + 1);
+        return id;
+    }
+
+    _getIntegerId() : number
+    {
+        if (this.recycledIds.length)
+        {
+            return this.recycledIds.pop();
+        }
+        var id = (this.lastId + 1);
+        this.lastId = id;
+        return id;
+    }
+
+    _getStringId() : string
+    {
+        return this._getIntegerId().toString();
+    }
+
+    _addData(data, length, integers) : string
+    {
+        var dataBin = this.data[length];
+        if (dataBin === undefined)
+        {
+            this.data[length] = dataBin = [];
+        }
+
+        var binLength = dataBin.length;
+        var n;
+        if (integers)
+        {
+            for (n = 0; n < binLength; n += 2)
+            {
+                if (this._equalIntegerArrays(data, dataBin[n + 1], length))
+                {
+                    return dataBin[n].toString();
+                }
+            }
+        }
+        else
+        {
+            var threshold = (length > 16 ? 0.001 : 0.0001);
+            for (n = 0; n < binLength; n += 2)
+            {
+                if (this._equalFloatArrays(data, dataBin[n + 1], length, threshold))
+                {
+                    return dataBin[n].toString();
+                }
+            }
+        }
+
+        var clonedData;
+        if (data.slice)
+        {
+            clonedData = data.slice(0, length);
+        }
+        else
+        {
+            clonedData = new Array(length);
+            for (n = 0; n < length; n += 1)
+            {
+                clonedData[n] = data[n];
+            }
+        }
+        var id = this._getIntegerId();
+        dataBin.push(id, clonedData);
+        return id.toString();
+    }
+
+    _addCommand(...args: any[]): void
+    {
+        var length = args.length;
+        var method = args[0];
+
+        var commandsBin = this.commands[method];
+        if (commandsBin === undefined)
+        {
+            this.commands[method] = commandsBin = [];
+        }
+
+        var binLength = commandsBin.length;
+        var n, command, a, cmdId;
+        for (n = 0; n < binLength; n += 2)
+        {
+            command = commandsBin[n + 1];
+            // First argument is method id
+            for (a = 1; a < length; a += 1)
+            {
+                if (command[a] !== args[a])
+                {
+                    break;
+                }
+            }
+            if (a === length)
+            {
+                cmdId = commandsBin[n];
+                this.current.push(cmdId);
+                return;
+            }
+        }
+
+        command = new Array(length);
+        for (a = 0; a < length; a += 1)
+        {
+            command[a] = args[a];
+        }
+        cmdId = this._getCommandId();
+        commandsBin.push(cmdId, command);
+        this.current.push(cmdId);
+    }
+
+    _objectToArray(object) : any[]
+    {
+        var properties = [];
+        var p;
+        for (p in object)
+        {
+            if (object.hasOwnProperty(p))
+            {
+                properties.push(p);
+            }
+        }
+        properties.sort();
+
+        var numProperties = properties.length;
+        var objectArray = [];
+        var n, value;
+        for (n = 0; n < numProperties; n += 1)
+        {
+            p = properties[n];
+            value = object[p];
+            if (value !== undefined && value !== null)
+            {
+                objectArray.push(p, this._clone(value));
+            }
+        }
+        return objectArray;
+    }
+
+    _addObject(object) : string
+    {
+        var objectArray = this._objectToArray(object);
+        var length = objectArray.length;
+        if (length === 0)
+        {
+            return null;
+        }
+
+        var objectsBin = this.objects[length];
+        if (objectsBin === undefined)
+        {
+            this.objects[length] = objectsBin = [];
+        }
+
+        var binLength = objectsBin.length;
+        var n, object, j;
+        for (n = 0; n < binLength; n += 2)
+        {
+            object = objectsBin[n + 1];
+            for (j = 0; j < length; j += 1)
+            {
+                if (object[j] !== objectArray[j])
+                {
+                    break;
+                }
+            }
+            if (j === length)
+            {
+                return objectsBin[n].toString();
+            }
+        }
+
+        var id = this._getIntegerId();
+        objectsBin.push(id, objectArray);
+        return id.toString();
+    }
+
+    _cloneObject(object, raw)
+    {
+        var length, index, result, value, id;
+
+        if (object instanceof Array)
+        {
+            length = object.length;
+            if (!raw)
+            {
+                for (index = 0; index < length; index += 1)
+                {
+                    if (typeof object[index] !== "number")
+                    {
+                        break;
+                    }
+                }
+                if (index === length)
+                {
+                    return this._addData(object, length, false);
+                }
+            }
+
+            result = new Array(length);
+            for (index = 0; index < length; index += 1)
+            {
+                value = object[index];
+                if (value !== undefined &&
+                    typeof value !== "function")
+                {
+                    if (!value || typeof value !== "object")
+                    {
+                        result[index] = value;
+                    }
+                    else
+                    {
+                        result[index] = this._cloneObject(value, raw);
+                    }
+                }
+            }
+            return result;
+        }
+
+        if (object.byteLength !== undefined &&
+            object.buffer instanceof ArrayBuffer)
+        {
+            if (raw)
+            {
+                length = object.length;
+                result = new Array(length);
+                for (index = 0; index < length; index += 1)
+                {
+                    result[index] = object[index];
+                }
+                return result;
+            }
+            else
+            {
+                var integers = !(object instanceof Float32Array ||
+                                 object instanceof Float64Array);
+                return this._addData(object, object.length, integers);
+            }
+        }
+
+        if (object instanceof ArrayBuffer)
+        {
+            return undefined;
+        }
+
+        if (object instanceof Date)
+        {
+            result = new Date(object.getTime());
+            return result;
+        }
+
+        // Check if it has an Id
+        if (typeof object._id === "string")
+        {
+            return object._id;
+        }
+
+        // This does not clone the prototype. See Object.create() if you want that behaviour
+        result = {};
+        var property;
+        for (property in object)
+        {
+            if (object.hasOwnProperty(property))
+            {
+                value = object[property];
+                if (value !== undefined &&
+                    typeof value !== "function")
+                {
+                    if (!value || typeof value !== "object")
+                    {
+                        result[property] = value;
+                    }
+                    else
+                    {
+                        result[property] = this._cloneObject(value, raw);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    _clone(object)
+    {
+        // boolean, numbers, strings, undefined, null
+        if (!object || typeof object !== "object")
+        {
+            // We are assuming that 'object' will never be a function
+            return object;
+        }
+
+        return this._cloneObject(object, false);
+    }
+
+    _cloneVertexFormats(formats)
+    {
+        var gd = this.gd;
+        var numFormats = formats.length;
+        var newFormats = new Array(numFormats);
+        var n;
+        for (n = 0; n < numFormats; n += 1)
+        {
+            var fmt = formats[n];
+            if (typeof fmt === "string")
+            {
+                newFormats[n] = fmt;
+            }
+            else
+            {
+                if (fmt === gd.VERTEXFORMAT_BYTE4)
+                {
+                    newFormats[n] = 'BYTE4';
+                }
+                else if (fmt === gd.VERTEXFORMAT_BYTE4N)
+                {
+                    newFormats[n] = 'BYTE4N';
+                }
+                else if (fmt === gd.VERTEXFORMAT_UBYTE4)
+                {
+                    newFormats[n] = 'UBYTE4';
+                }
+                else if (fmt === gd.VERTEXFORMAT_UBYTE4N)
+                {
+                    newFormats[n] = 'UBYTE4N';
+                }
+                else if (fmt === gd.VERTEXFORMAT_SHORT2)
+                {
+                    newFormats[n] = 'SHORT2';
+                }
+                else if (fmt === gd.VERTEXFORMAT_SHORT2N)
+                {
+                    newFormats[n] = 'SHORT2N';
+                }
+                else if (fmt === gd.VERTEXFORMAT_SHORT4)
+                {
+                    newFormats[n] = 'SHORT4';
+                }
+                else if (fmt === gd.VERTEXFORMAT_SHORT4N)
+                {
+                    newFormats[n] = 'SHORT4N';
+                }
+                else if (fmt === gd.VERTEXFORMAT_USHORT2)
+                {
+                    newFormats[n] = 'USHORT2';
+                }
+                else if (fmt === gd.VERTEXFORMAT_USHORT2N)
+                {
+                    newFormats[n] = 'USHORT2N';
+                }
+                else if (fmt === gd.VERTEXFORMAT_USHORT4)
+                {
+                    newFormats[n] = 'USHORT4';
+                }
+                else if (fmt === gd.VERTEXFORMAT_USHORT4N)
+                {
+                    newFormats[n] = 'USHORT4N';
+                }
+                else if (fmt === gd.VERTEXFORMAT_FLOAT1)
+                {
+                    newFormats[n] = 'FLOAT1';
+                }
+                else if (fmt === gd.VERTEXFORMAT_FLOAT2)
+                {
+                    newFormats[n] = 'FLOAT2';
+                }
+                else if (fmt === gd.VERTEXFORMAT_FLOAT3)
+                {
+                    newFormats[n] = 'FLOAT3';
+                }
+                else if (fmt === gd.VERTEXFORMAT_FLOAT4)
+                {
+                    newFormats[n] = 'FLOAT4';
+                }
+            }
+        }
+        var hash = newFormats.join(',');
+        var id = this.formatsMap[hash];
+        if (id === undefined)
+        {
+            id = this._getStringId();
+            this.formats[id] = newFormats;
+            this.formatsMap[hash] = id;
+        }
+        return id;
+    }
+
+    _cloneSemantics(semantics)
+    {
+        var gd = this.gd;
+        var numSemantics = semantics.length;
+        var newSemantics = new Array(numSemantics);
+        var n;
+        for (n = 0; n < numSemantics; n += 1)
+        {
+            var semantic = semantics[n];
+            if (typeof semantic === "string")
+            {
+                newSemantics[n] = semantic;
+            }
+            else
+            {
+                newSemantics[n] = this.reverseSemantic[semantic];
+            }
+        }
+        return newSemantics;
+    }
+
+    _checkProperties(pass)
+    {
+        var techniqueParameters = {};
+
+        pass.dirty = false;
+        var parameters = pass.parameters;
+        for (var p in parameters)
+        {
+            if (parameters.hasOwnProperty(p))
+            {
+                var parameter = parameters[p];
+                if (parameter.dirty)
+                {
+                    parameter.dirty = 0;
+                    var paramInfo = parameter.info;
+                    if (paramInfo &&
+                        null !== location)
+                    {
+                        var parameterValues = paramInfo.values;
+                        if (paramInfo.sampler !== undefined)
+                        {
+                            techniqueParameters[p] = parameterValues;
+                        }
+                        else if (1 === paramInfo.numValues)
+                        {
+                            techniqueParameters[p] = parameterValues[0];
+                        }
+                        else
+                        {
+                            techniqueParameters[p] = parameterValues;
+                        }
+                    }
+                }
+            }
+        }
+
+        this.setTechniqueParameters(techniqueParameters);
+    };
+
+    _compareArrays(a, b) : number
+    {
+        var length = Math.min(a.length, b.length);
+        var n = 0;
+        do
+        {
+            var diff = (a[n] - b[n]);
+            if (diff < -0.0001)
+            {
+                return -1;
+            }
+            else if (diff > 0.0001)
+            {
+                return 1;
+            }
+            n += 1;
+        }
+        while (n < length);
+        return (a.length - b.length);
+    }
+
+    _equalFloatArrays(a, b, length, threshold) : bool
+    {
+        var n = 0;
+        do
+        {
+            if (Math.abs(a[n] - b[n]) >= threshold)
+            {
+                return false;
+            }
+            n += 1;
+        }
+        while (n < length);
+        return true;
+    }
+
+    _equalIntegerArrays(a, b, length) : bool
+    {
+        var n = 0;
+        do
+        {
+            if (a[n] !== b[n])
+            {
+                return false;
+            }
+            n += 1;
+        }
+        while (n < length);
+        return true;
+    }
+
+    // GraphicsDevice API
+    drawIndexed(primitive, numIndices, first)
+    {
+        this.gd.drawIndexed(primitive, numIndices, first);
+
+        this._addCommand('DI', primitive, numIndices, first || 0);
+    }
+
+    draw(primitive, numVertices, first)
+    {
+        this.gd.draw(primitive, numVertices, first);
+
+        this._addCommand('DV', primitive, numVertices, first || 0);
+    }
+
+    setTechniqueParameters(unused?)
+    {
+        var numTechniqueParameters = arguments.length;
+        for (var t = 0; t < numTechniqueParameters; t += 1)
+        {
+            var techniqueParameters = arguments[t];
+            if (techniqueParameters)
+            {
+                var objectId = this._addObject(techniqueParameters);
+                if (objectId !== null)
+                {
+                    this._addCommand('P', objectId);
+                }
+            }
+        }
+
+        this.gd.setTechniqueParameters.apply(this.gd, arguments);
+    }
+
+    setTechnique(technique)
+    {
+        if (technique.passes.length === 1)
+        {
+            var pass = technique.passes[0];
+            if (pass.dirty)
+            {
+                this._checkProperties(pass);
+            }
+        }
+
+        this.gd.setTechnique(technique);
+
+        // Prevent technique from setting data directly, so we can check the dirty flag
+        technique.device = null;
+
+        // we need to do this AFTER the technique has been activated for the first time
+        var id = technique._id;
+        if (id === undefined)
+        {
+            id = this._getStringId();
+            technique._id = id;
+            this.techniques[id] = {
+                shader: technique.shader._id,
+                name: technique.name
+            };
+
+            if (technique.passes.length === 1)
+            {
+                var self = this;
+                technique.checkProperties = function captureCheckProperties()
+                {
+                    var pass = this.passes[0];
+                    if (pass.dirty)
+                    {
+                        self._checkProperties(pass);
+                    }
+                };
+            }
+        }
+        this._addCommand('T', id);
+    }
+
+    setStream(vertexBuffer, semantics, offset)
+    {
+        if (offset === undefined)
+        {
+            offset = 0;
+        }
+        this._addCommand('V', vertexBuffer._id, semantics._id, offset);
+
+        this.gd.setStream(vertexBuffer, semantics, offset);
+    }
+
+    setIndexBuffer(indexBuffer)
+    {
+        this._addCommand('I', indexBuffer._id);
+
+        this.gd.setIndexBuffer(indexBuffer);
+    }
+
+    drawArray(drawParametersArray, globalTechniqueParametersArray, sortMode)
+    {
+        var numDrawParameters = drawParametersArray.length;
+        if (numDrawParameters <= 0)
+        {
+            return;
+        }
+
+        if (numDrawParameters > 1 && sortMode)
+        {
+            if (sortMode > 0)
+            {
+                drawParametersArray.sort(function drawArraySortPositive(a, b) {
+                    return (b.sortKey - a.sortKey);
+                });
+            }
+            else //if (sortMode < 0)
+            {
+                drawParametersArray.sort(function drawArraySortNegative(a, b) {
+                    return (a.sortKey - b.sortKey);
+                });
+            }
+        }
+
+        var numGlobalTechniqueParameters = globalTechniqueParametersArray.length;
+
+        var currentParameters = null;
+        var deltaParameters = null;
+        var deltaEmpty = true;
+        var validParameters = null;
+        var activeIndexBuffer = null;
+        var lastTechnique = null;
+        var lastEndStreams = -1;
+        var lastDrawParameters = null;
+        var techniqueParameters = null;
+        var v = 0;
+        var streamsMatch = false;
+        var vertexBuffer = null;
+        var offset = 0;
+        var t = 0;
+        var p, value, currentValue;
+
+        for (var n = 0; n < numDrawParameters; n += 1)
+        {
+            var drawParameters = drawParametersArray[n];
+            var technique = drawParameters.technique;
+            var endTechniqueParameters = drawParameters.endTechniqueParameters;
+            var endStreams = drawParameters.endStreams;
+            var endInstances = drawParameters.endInstances;
+            var indexBuffer = drawParameters.indexBuffer;
+            var primitive = drawParameters.primitive;
+            var count = drawParameters.count;
+            var firstIndex = drawParameters.firstIndex;
+
+            deltaParameters = {};
+            deltaEmpty = true;
+
+            if (lastTechnique !== technique)
+            {
+                lastTechnique = technique;
+
+                this.setTechnique(technique);
+
+                validParameters = technique.shader.parameters;
+
+                currentParameters = {};
+
+                for (t = 0; t < numGlobalTechniqueParameters; t += 1)
+                {
+                    techniqueParameters = globalTechniqueParametersArray[t];
+                    for (p in techniqueParameters)
+                    {
+                        if (validParameters[p] !== undefined)
+                        {
+                            value = techniqueParameters[p];
+                            if (value !== undefined)
+                            {
+                                currentParameters[p] = value;
+                                deltaParameters[p] = value;
+                                deltaEmpty = false;
+                            }
+                            else
+                            {
+                                delete techniqueParameters[p];
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (t = (16 * 3); t < endTechniqueParameters; t += 1)
+            {
+                techniqueParameters = drawParameters[t];
+                for (p in techniqueParameters)
+                {
+                    if (validParameters[p] !== undefined)
+                    {
+                        value = techniqueParameters[p];
+                        currentValue = currentParameters[p];
+                        if (currentValue !== value)
+                        {
+                            if (value !== undefined)
+                            {
+                                if (currentValue !== undefined &&
+                                    (value instanceof Float32Array ||
+                                     value instanceof Array) &&
+                                    0 === this._compareArrays(value, currentValue))
+                                {
+                                    continue;
+                                }
+                                currentParameters[p] = value;
+                                deltaParameters[p] = value;
+                                deltaEmpty = false;
+                            }
+                            else
+                            {
+                                delete techniqueParameters[p];
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!deltaEmpty)
+            {
+                this.setTechniqueParameters(deltaParameters);
+            }
+
+            streamsMatch = (lastEndStreams === endStreams);
+            for (v = 0; streamsMatch && v < endStreams; v += 3)
+            {
+                streamsMatch = (lastDrawParameters[v]     === drawParameters[v]     &&
+                                lastDrawParameters[v + 1] === drawParameters[v + 1] &&
+                                lastDrawParameters[v + 2] === drawParameters[v + 2]);
+            }
+
+            if (!streamsMatch)
+            {
+                lastEndStreams = endStreams;
+                lastDrawParameters = drawParameters;
+
+                for (v = 0; v < endStreams; v += 3)
+                {
+                    vertexBuffer = drawParameters[v];
+                    if (vertexBuffer)
+                    {
+                        this.setStream(vertexBuffer, drawParameters[v + 1], drawParameters[v + 2]);
+                    }
+                }
+            }
+
+            /*jshint bitwise: false*/
+            if (indexBuffer)
+            {
+                if (activeIndexBuffer !== indexBuffer)
+                {
+                    activeIndexBuffer = indexBuffer;
+                    this.setIndexBuffer(indexBuffer);
+                }
+
+                t = ((16 * 3) + 8);
+                if (t < endInstances)
+                {
+                    do
+                    {
+                        deltaParameters = {};
+
+                        techniqueParameters = drawParameters[t];
+                        for (p in techniqueParameters)
+                        {
+                            if (validParameters[p] !== undefined)
+                            {
+                                value = techniqueParameters[p];
+                                currentValue = currentParameters[p];
+                                if (currentValue !== value)
+                                {
+                                    if (currentValue !== undefined &&
+                                        (value instanceof Float32Array ||
+                                         value instanceof Array) &&
+                                        0 === this._compareArrays(value, currentValue))
+                                    {
+                                        continue;
+                                    }
+                                    currentParameters[p] = value;
+                                    deltaParameters[p] = value;
+                                }
+                            }
+                        }
+
+                        this.setTechniqueParameters(deltaParameters);
+
+                        this.drawIndexed(primitive, count, firstIndex);
+
+                        t += 1;
+                    }
+                    while (t < endInstances);
+                }
+                else
+                {
+                    this.drawIndexed(primitive, count, firstIndex);
+                }
+            }
+            else
+            {
+                t = ((16 * 3) + 8);
+                if (t < endInstances)
+                {
+                    do
+                    {
+                        deltaParameters = {};
+
+                        techniqueParameters = drawParameters[t];
+                        for (p in techniqueParameters)
+                        {
+                            if (validParameters[p] !== undefined)
+                            {
+                                value = techniqueParameters[p];
+                                if (currentParameters[p] !== value)
+                                {
+                                    currentParameters[p] = value;
+                                    deltaParameters[p] = value;
+                                }
+                            }
+                        }
+
+                        this.setTechniqueParameters(deltaParameters);
+
+                        this.draw(primitive, count, firstIndex);
+
+                        t += 1;
+                    }
+                    while (t < endInstances);
+                }
+                else
+                {
+                    this.draw(primitive, count, firstIndex);
+                }
+            }
+        }
+    }
+
+    beginDraw(primitive, numVertices, formats, semantics)
+    {
+        var writer = this.gd.beginDraw(primitive, numVertices, formats, semantics);
+        if (writer)
+        {
+            var self = this;
+            var data = [];
+            numVertices = 0;
+            var captureWriter = function captureBeginDrawWriter()
+            {
+                var numArguments = arguments.length;
+                for (var a = 0; a < numArguments; a += 1)
+                {
+                    var value = arguments[a];
+                    if (typeof value === 'number')
+                    {
+                        data.push(value);
+                    }
+                    else
+                    {
+                        data.push.apply(data, value);
+                    }
+                }
+                numVertices += 1;
+
+                writer.apply(this, arguments);
+            };
+            captureWriter['end'] = function captureEndDrawWriter()
+            {
+                self._addCommand('BD',
+                                 primitive,
+                                 numVertices,
+                                 self._cloneVertexFormats(formats),
+                                 semantics._id,
+                                 self._addData(data, data.length, false));
+            };
+            captureWriter['proxy'] = writer;
+            return captureWriter;
+        }
+        else
+        {
+            return writer;
+        }
+    }
+
+    endDraw(writer)
+    {
+        writer['end']();
+        this.gd.endDraw(writer['proxy']);
+    }
+
+    setViewport(x, y, w, h)
+    {
+        var gd = this.gd;
+
+        gd.setViewport(x, y, w, h);
+
+        if (w === gd.width &&
+            h === gd.height)
+        {
+            w = -1;
+            h = -1;
+        }
+        this._addCommand('W', x, y, w, h);
+    }
+
+    setScissor(x, y, w, h)
+    {
+        var gd = this.gd;
+
+        gd.setScissor(x, y, w, h);
+
+        if (w === gd.width &&
+            h === gd.height)
+        {
+            w = -1;
+            h = -1;
+        }
+        this._addCommand('S', x, y, w, h);
+    }
+
+    clear(color, depth, stencil)
+    {
+        this._addCommand('C', this._clone(color), depth, stencil);
+
+        this.gd.clear(color, depth, stencil);
+    }
+
+    beginFrame()
+    {
+        this['width'] = this.gd.width;
+        this['height'] = this.gd.height;
+        return this.gd.beginFrame();
+    }
+
+    beginRenderTarget(renderTarget)
+    {
+        this._addCommand('BR', renderTarget._id);
+
+        return this.gd.beginRenderTarget(renderTarget);
+    }
+
+    endRenderTarget()
+    {
+        this._addCommand('ER');
+
+        this.gd.endRenderTarget();
+    }
+
+    beginOcclusionQuery(query)
+    {
+        this._addCommand('BO', query._id);
+
+        return this.gd.beginOcclusionQuery(query)
+    }
+
+    endOcclusionQuery(query)
+    {
+        this._addCommand('EO', query._id);
+
+        this.gd.endOcclusionQuery(query)
+    }
+
+    endFrame()
+    {
+        this.frames.push(this.current);
+        this.current = [];
+
+        this.gd.endFrame();
+
+        this['fps'] = this.gd.fps;
+    }
+
+    createTechniqueParameters(params)
+    {
+        return this.gd.createTechniqueParameters(params);
+    }
+
+    createSemantics(attributes)
+    {
+        var semantics = this.gd.createSemantics(attributes);
+        if (semantics)
+        {
+            var clonedAttributes = this._cloneSemantics(attributes);
+            var hash = clonedAttributes.join(',');
+            var id = this.semanticsMap[hash];
+            if (id === undefined)
+            {
+                id = this._getStringId();
+                this.semanticsMap[hash] = id;
+                this.semantics[id] = clonedAttributes;
+            }
+            semantics._id = id;
+        }
+        return semantics;
+    }
+
+    createVertexBuffer(params)
+    {
+        var vertexBuffer = this.gd.createVertexBuffer(params);
+        if (vertexBuffer)
+        {
+            var id = this._getStringId();
+            vertexBuffer._id = id;
+            var self = this;
+            var setData = vertexBuffer.setData;
+            vertexBuffer.setData = function captureVBSetData(data, offset, numVertices)
+            {
+                if (offset === undefined)
+                {
+                    offset = 0;
+                }
+                if (numVertices === undefined)
+                {
+                    numVertices = this.numVertices;
+                }
+                self._addCommand('D', id, offset, numVertices, self._addData(data, (numVertices * this.stride), false));
+
+                setData.call(this, data, offset, numVertices);
+            };
+            var map = vertexBuffer.map;
+            vertexBuffer.map = function captureVBmap(offset, numVertices)
+            {
+                if (offset === undefined)
+                {
+                    offset = 0;
+                }
+                if (numVertices === undefined)
+                {
+                    numVertices = this.numVertices;
+                }
+                var writer = map.call(this, offset, numVertices);
+                if (writer)
+                {
+                    var data = [];
+                    numVertices = 0;
+                    var captureWriter = function captureVBWriter()
+                    {
+                        var numArguments = arguments.length;
+                        for (var a = 0; a < numArguments; a += 1)
+                        {
+                            var value = arguments[a];
+                            if (typeof value === 'number')
+                            {
+                                data.push(value);
+                            }
+                            else
+                            {
+                                data.push.apply(data, value);
+                            }
+                        }
+                        numVertices += 1;
+
+                        writer.apply(this, arguments);
+                    };
+                    captureWriter['end'] = function captureVBWriterEnd()
+                    {
+                        self._addCommand('D', id, offset, numVertices, self._addData(data, data.length, false));
+                    };
+                    captureWriter['proxy'] = writer;
+                    return captureWriter;
+                }
+                else
+                {
+                    return writer;
+                }
+            };
+            var unmap = vertexBuffer.unmap;
+            vertexBuffer.unmap = function captureVBunmap(writer)
+            {
+                writer['end']();
+                unmap.call(this, writer['proxy']);
+            };
+
+            var destroy = vertexBuffer.destroy;
+            vertexBuffer.destroy = function captureVBDestroy()
+            {
+                self.destroyedIds.push(parseInt(this._id, 10));
+                destroy.call(this);
+            };
+
+            var attributes = params.attributes;
+            params.attributes = this._cloneVertexFormats(attributes);
+            if (params.dynamic === false)
+            {
+                delete params.dynamic;
+            }
+            if (params.data)
+            {
+                var data = params.data;
+                this._addCommand('D', id, 0, vertexBuffer.numVertices, this._addData(data, data.length, false));
+                delete params.data;
+            }
+            this.vertexBuffers[id] = this._cloneObject(params, true);
+            params.attributes = attributes;
+        }
+        return vertexBuffer;
+    }
+
+    createIndexBuffer(params)
+    {
+        var indexBuffer = this.gd.createIndexBuffer(params);
+        if (indexBuffer)
+        {
+            var id = this._getStringId();
+            indexBuffer._id = id;
+            var self = this;
+            var setData = indexBuffer.setData;
+            indexBuffer.setData = function captureIBSetData(data, offset, numIndices)
+            {
+                if (offset === undefined)
+                {
+                    offset = 0;
+                }
+                if (numIndices === undefined)
+                {
+                    numIndices = this.numIndices;
+                }
+                self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+
+                setData.call(this, data, offset, numIndices);
+            };
+            var map = indexBuffer.map;
+            indexBuffer.map = function captureIBmap(offset, numIndices)
+            {
+                if (offset === undefined)
+                {
+                    offset = 0;
+                }
+                if (numIndices === undefined)
+                {
+                    numIndices = this.numIndices;
+                }
+                var writer = map.call(this, offset, numIndices);
+                if (writer)
+                {
+                    var data = [];
+                    var captureWriter = function capturIBWriter()
+                    {
+                        var numArguments = arguments.length;
+                        for (var a = 0; a < numArguments; a += 1)
+                        {
+                            var value = arguments[a];
+                            if (typeof value === 'number')
+                            {
+                                data.push(value);
+                            }
+                            else
+                            {
+                                data.push.apply(data, value);
+                            }
+                        }
+
+                        writer.apply(this, arguments);
+                    };
+                    captureWriter['end'] = function captureIBWriterEnd()
+                    {
+                        self._addCommand('D', id, offset, data.length, self._addData(data, data.length, true));
+                    };
+                    captureWriter['proxy'] = writer;
+                    return captureWriter;
+                }
+                else
+                {
+                    return writer;
+                }
+            };
+            var unmap = indexBuffer.unmap;
+            indexBuffer.unmap = function captureIBunmap(writer)
+            {
+                writer['end']();
+                unmap.call(this, writer['proxy']);
+            };
+
+            var destroy = indexBuffer.destroy;
+            indexBuffer.destroy = function captureIBDestroy()
+            {
+                self.destroyedIds.push(parseInt(this._id, 10));
+                destroy.call(this);
+            };
+
+            if (params.dynamic === false)
+            {
+                delete params.dynamic;
+            }
+            if (params.data)
+            {
+                var data = params.data;
+                this._addCommand('D', id, 0, indexBuffer.numIndices, this._addData(data, data.length, true));
+                delete params.data;
+            }
+            var clonedParams = this._cloneObject(params, true);
+            if (clonedParams.format === this.gd.INDEXFORMAT_USHORT)
+            {
+                clonedParams.format = 'USHORT';
+            }
+            else if (clonedParams.format === this.gd.INDEXFORMAT_UINT)
+            {
+                clonedParams.format = 'UINT';
+            }
+            else if (clonedParams.format === this.gd.INDEXFORMAT_UBYTE)
+            {
+                clonedParams.format = 'UBYTE';
+            }
+            this.indexBuffers[id] = clonedParams;
+        }
+        return indexBuffer;
+    }
+
+    createTexture(params)
+    {
+        var texture = this.gd.createTexture(params);
+        if (texture)
+        {
+            var id = this._getStringId();
+            texture._id = id;
+            var self = this;
+            var setData = texture.setData;
+            texture.setData = function captureTSetData(data)
+            {
+                var integers = !(data instanceof Float32Array ||
+                                 data instanceof Float64Array ||
+                                 data instanceof Array);
+                self._addCommand('D', id, 0, 0, self._addData(data, data.length, integers));
+
+                setData.call(this, data);
+            };
+            if (params.data)
+            {
+                var data = params.data;
+                var integers = !(data instanceof Float32Array ||
+                                 data instanceof Float64Array ||
+                                 data instanceof Array);
+                this._addCommand('D', id, 0, 0, this._addData(data, data.length, integers));
+                delete params.data;
+            }
+            if (params.cubemap === false)
+            {
+                delete params.cubemap;
+            }
+            if (params.dynamic === false)
+            {
+                delete params.dynamic;
+            }
+            if (params.mipmaps === false)
+            {
+                delete params.mipmaps;
+            }
+            var clonedParams = this._cloneObject(params, true);
+            if (clonedParams.renderable)
+            {
+                // special case for fullscreen renderables
+                if (clonedParams.width === this.gd.width &&
+                    clonedParams.height === this.gd.height)
+                {
+                    clonedParams.width = -1;
+                    clonedParams.height = -1;
+                }
+            }
+            this.textures[id] = clonedParams;
+        }
+        return texture;
+    }
+
+    createVideo(params)
+    {
+        var video = this.gd.createVideo(params);
+        if (video)
+        {
+            var id = this._getStringId();
+            video._id = id;
+            this.videos[id] = this._cloneObject(params, true);
+        }
+        return video;
+    }
+
+    createShader(params)
+    {
+        // Need to clone before calling createShader because that function modifies the input object...
+        var clonedParams = this._cloneObject(params, true);
+        var shader = this.gd.createShader(params);
+        if (shader)
+        {
+            var id = this._getStringId();
+            shader._id = id;
+            this.shaders[id] = clonedParams;
+        }
+        return shader;
+    }
+
+    createTechniqueParameterBuffer(params)
+    {
+        return this.gd.createTechniqueParameterBuffer(params);
+    }
+
+    createRenderBuffer(params)
+    {
+        var renderBuffer = this.gd.createRenderBuffer(params);
+        if (renderBuffer)
+        {
+            var id = this._getStringId();
+            renderBuffer._id = id;
+            var clonedParams = this._cloneObject(params, true);
+            // special case for fullscreen buffers
+            if (clonedParams.width === this.gd.width &&
+                clonedParams.height === this.gd.height)
+            {
+                clonedParams.width = -1;
+                clonedParams.height = -1;
+            }
+            this.renderBuffers[id] = clonedParams;
+        }
+        return renderBuffer;
+    }
+
+    createRenderTarget(params)
+    {
+        var renderTarget = this.gd.createRenderTarget(params);
+        if (renderTarget)
+        {
+            var id = this._getStringId();
+            renderTarget._id = id;
+            this.renderTargets[id] = this._cloneObject(params, true);
+        }
+        return renderTarget;
+    }
+
+    createOcclusionQuery(params)
+    {
+        var query = this.gd.createOcclusionQuery(params);
+        if (query)
+        {
+            var id = this._getStringId();
+            query._id = id;
+            this.occlusionQueries[id] = this._cloneObject(params, true);
+        }
+        return query;
+    }
+
+    createDrawParameters(params)
+    {
+        return this.gd.createDrawParameters(params);
+    }
+
+    isSupported(name)
+    {
+        return this.gd.isSupported(name);
+    }
+
+    maxSupported(name)
+    {
+        return this.gd.maxSupported(name);
+    }
+
+    loadTexturesArchive(params)
+    {
+        var clonedParams = this._cloneObject(params, true);
+        clonedParams.archive = {};
+        this.textures[this._getStringId()] = clonedParams;
+
+        var self = this;
+        var ontextureload = params.ontextureload;
+        var onload = params.onload;
+        params.ontextureload = function captureOnTextureLoad(texture)
+        {
+            if (texture)
+            {
+                var id = self._getStringId();
+                clonedParams.archive[texture.name] = id;
+                texture._id = id;
+                ontextureload(texture);
+            }
+        };
+        params.onload = function captureOnLoad(success, status)
+        {
+            params.ontextureload = ontextureload;
+            params.onload = onload;
+            if (onload)
+            {
+                params.onload(success, status);
+            }
+        };
+        return this.gd.loadTexturesArchive(params);
+    }
+
+    getScreenshot(compress, x?, y?, width?, height?)
+    {
+        return this.gd.getScreenshot(compress, x, y, width, height);
+    }
+
+    flush()
+    {
+        this.gd.flush();
+    }
+
+    finish()
+    {
+        this.gd.finish();
+    }
+
+    // Capture device API
+    getFramesString()
+    {
+        var commands = this.commands;
+        var numCommands = this.numCommands;
+        var commandsArray = new Array(numCommands);
+        var p, n, commandsBin, length;
+        for (p in commands)
+        {
+            if (commands.hasOwnProperty(p))
+            {
+                commandsBin = commands[p];
+                length = commandsBin.length;
+                for (n = 0; n < length; n += 2)
+                {
+                    commandsArray[commandsBin[n]] = commandsBin[n + 1];
+                }
+            }
+        }
+
+        var framesString = '{"version":1,"commands":[';
+        for (n = 0; n < numCommands; n += 1)
+        {
+            if (n)
+            {
+                framesString += ',';
+            }
+
+            framesString += '[';
+            var command = commandsArray[n];
+            var numArguments = command.length;
+            var a, value, valueInt;
+            for (a = 0; a < numArguments; a += 1)
+            {
+                value = command[a];
+                if (a)
+                {
+                    framesString += ',';
+                }
+
+                if (typeof value === "string")
+                {
+                    framesString += '"' + value + '"';
+                }
+                else if (typeof value === "number")
+                {
+                    valueInt = (value | 0);
+                    if (valueInt === value)
+                    {
+                        framesString += valueInt.toString();
+                    }
+                    else
+                    {
+                        framesString += value.toFixed(4).replace(/\.?0+$/, '');
+                    }
+                }
+                else if (value === undefined || value === null)
+                {
+                    framesString += 'null';
+                }
+                else
+                {
+                    framesString += value.toString();
+                }
+            }
+            framesString += ']';
+        }
+        framesString += '],"frames":[';
+
+        var frames = this.frames;
+        var numFrames = frames.length;
+        for (n = 0; n < numFrames; n += 1)
+        {
+            if (n)
+            {
+                framesString += ',';
+            }
+            framesString += '[' + frames[n].join(',') + ']';
+        }
+        framesString += ']}';
+        return framesString;
+    }
+
+    getDataString()
+    {
+        var dataString = '{"version":1,"data":[';
+        var addValuesComma = false;
+        var dataBins = this.data;
+        var p, dataBin, binLength, n, j;
+        for (p in dataBins)
+        {
+            if (dataBins.hasOwnProperty(p))
+            {
+                dataBin = dataBins[p];
+                binLength = dataBin.length;
+                var id, data, length, value, valueInt;
+                for (n = 0; n < binLength; n += 2)
+                {
+                    id = dataBin[n];
+                    data = dataBin[n + 1];
+                    length = data.length;
+                    if (addValuesComma)
+                    {
+                        dataString += ',';
+                    }
+                    else
+                    {
+                        addValuesComma = true;
+                    }
+                    dataString += id + ',[';
+                    for (j = 0; j < length; j += 1)
+                    {
+                        if (j)
+                        {
+                            dataString += ',';
+                        }
+                        value = data[j];
+                        valueInt = (value | 0);
+                        if (valueInt === value)
+                        {
+                            dataString += valueInt.toString();
+                        }
+                        else
+                        {
+                            var valueString;
+                            if (length <= 16)
+                            {
+                                valueString = value.toFixed(5);
+                            }
+                            else
+                            {
+                                valueString = value.toFixed(3);
+                            }
+                            dataString += valueString.replace(/\.?0+$/, '');
+                        }
+                    }
+                    dataString += ']';
+                }
+            }
+        }
+
+        dataString += '],"objects":[';
+        var objects = this.objects;
+        addValuesComma = false;
+        var objectsBin, object;
+        for (p in objects)
+        {
+            if (objects.hasOwnProperty(p))
+            {
+                objectsBin = objects[p];
+                binLength = objectsBin.length;
+                for (n = 0; n < binLength; n += 2)
+                {
+                    id = objectsBin[n];
+                    object = objectsBin[n + 1];
+                    length = object.length;
+                    if (addValuesComma)
+                    {
+                        dataString += ',';
+                    }
+                    else
+                    {
+                        addValuesComma = true;
+                    }
+                    dataString += id + ',[';
+                    for (j = 0; j < length; j += 1)
+                    {
+                        if (j)
+                        {
+                            dataString += ',';
+                        }
+                        var value = object[j];
+                        if (typeof value === "string")
+                        {
+                            dataString += '"' + value + '"';
+                        }
+                        else if (typeof value === "number")
+                        {
+                            valueInt = (value | 0);
+                            if (valueInt === value)
+                            {
+                                dataString += valueInt.toString();
+                            }
+                            else
+                            {
+                                dataString += value.toFixed(4).replace(/\.?0+$/, '');
+                            }
+                        }
+                        else
+                        {
+                            dataString += value.toString();
+                        }
+                    }
+                    dataString += ']';
+                }
+            }
+        }
+        dataString += ']}';
+        return dataString;
+    }
+
+    getResourcesString()
+    {
+        return JSON.stringify({
+            version: 1,
+            resources: {
+                vertexBuffers: this.vertexBuffers,
+               indexBuffers: this.indexBuffers,
+               semantics: this.semantics,
+               formats: this.formats,
+               textures: this.textures,
+               shaders: this.shaders,
+               techniques: this.techniques,
+               videos: this.videos,
+               renderBuffers: this.renderBuffers,
+               renderTargets: this.renderTargets
+            }
+        });
+    }
+
+    reset()
+    {
+        // Try forcing a memory release
+        var frames = this.frames;
+        var numFrames = frames.length;
+        var n;
+        for (n = 0; n < numFrames; n += 1)
+        {
+            frames[n].length = 0;
+            frames[n] = null;
+        }
+        frames.length = 0;
+
+        var commands = this.commands;
+        var p;
+        for (p in commands)
+        {
+            if (commands.hasOwnProperty(p))
+            {
+                commands[p].length = 0;
+            }
+        }
+        this.numCommands = 0;
+
+        // Clean data array and reclaim the ids for reuse
+        var recycledIds = this.recycledIds;
+        var dataBins = this.data;
+        var dataBin, binLength;
+        for (p in dataBins)
+        {
+            if (dataBins.hasOwnProperty(p))
+            {
+                dataBin = dataBins[p];
+                binLength = dataBin.length;
+                for (n = 0; n < binLength; n += 2)
+                {
+                    recycledIds.push(dataBin[n]);
+                }
+                dataBin.length = 0;
+            }
+        }
+
+        // Clean the objects dictionary and reclaim the ids for reuse
+        var objects = this.objects;
+        var objectsBin;
+        for (p in objects)
+        {
+            if (objects.hasOwnProperty(p))
+            {
+                objectsBin = objects[p];
+                binLength = objectsBin.length;
+                for (n = 0; n < binLength; n += 2)
+                {
+                    recycledIds.push(objectsBin[n]);
+                }
+                objectsBin.length = 0;
+            }
+        }
+
+        if (this.destroyedIds.length)
+        {
+            recycledIds.push.apply(recycledIds, this.destroyedIds);
+            this.destroyedIds.length = 0;
+        }
+
+        // Sort higher to lower so we pop low ids first
+        recycledIds.sort(function (a, b) { return (b - a); });
+
+        // Try to release reclaimed ids that can be done with lastId
+        var lastId = this.lastId;
+        n = 0;
+        while (lastId === recycledIds[n])
+        {
+            n += 1;
+            lastId -= 1;
+        }
+        if (n)
+        {
+            this.lastId = lastId;
+            if (n < recycledIds.length)
+            {
+                recycledIds.splice(0, n);
+            }
+            else
+            {
+                recycledIds.length = 0;
+            }
+        }
+
+        this.vertexBuffers = {};
+        this.indexBuffers = {};
+        this.semantics = {};
+        this.formats = {};
+        this.textures = {};
+        this.shaders = {};
+        this.techniques = {};
+        this.videos = {};
+        this.renderBuffers = {};
+        this.renderTargets = {};
+        this.occlusionQueries = {};
+    }
+
+    destroy()
+    {
+        this.gd.destroy();
+        this.gd = null;
+        this.current = null;
+        this.frames = null;
+        this.commands = null;
+        this.numCommands = 0;
+        this.lastId = -1;
+        this.recycledIds = null;
+        this.destroyedIds = null;
+        this.data= null;
+        this.objects = null;
+        this.vertexBuffers = null;
+        this.indexBuffers = null;
+        this.semantics = null;
+        this.semanticsMap = null;
+        this.textures = null;
+        this.shaders = null;
+        this.techniques = null;
+        this.videos = null;
+        this.renderBuffers = null;
+        this.renderTargets = null;
+        this.occlusionQueries = null;
+        this.reverseSemantic = null;
+    }
+
+    static create(gd) : CaptureGraphicsDevice
+    {
+        return new CaptureGraphicsDevice(gd);
+    }
+};
+
+// Playback
+class PlaybackGraphicsDevice
+{
+    static version = 1;
+
+    gd:         any;
+    frames:     any[];
+    writerData: any[];
+    entities:   any[];
+    numPendingResources: number;
+    onerror:    any;
+
+    constructor(gd)
+    {
+        this.gd = gd;
+        this.frames = [];
+        this.entities = [];
+        this.writerData = [];
+        this.numPendingResources = 0;
+        this.onerror = null;
+    }
+
+    _storeEntity(id, value)
+    {
+        if (value === null || value === undefined)
+        {
+            if (this.onerror)
+            {
+                this.onerror("Failed to create entity: " + id);
+            }
+        }
+        this.entities[parseInt(id, 10)] = value;
+    }
+
+    _resolveEntity(id)
+    {
+        var entity = this.entities[parseInt(id, 10)];
+        if (!entity)
+        {
+            if (this.onerror)
+            {
+                this.onerror("Unknown entity: " + id);
+            }
+        }
+        return entity;
+    }
+
+    addResources(resourcesObject, baseURL)
+    {
+        var resources = resourcesObject.resources;
+        var gd = this.gd;
+        var self = this;
+        var p, params, src;
+
+        function makeResourceLoader(src)
+        {
+            self.numPendingResources += 1;
+            return function resourceLoaded(resource, status)
+            {
+                if (resource)
+                {
+                    self.numPendingResources -= 1;
+                }
+                else
+                {
+                    if (self.onerror)
+                    {
+                        self.onerror('Failed to load resource: ' + src);
+                    }
+                }
+            };
+        }
+
+        function makArchiveTextureLoader(archive)
+        {
+            return function archiveTextureLoaded(tex)
+            {
+                self.numPendingResources -= 1;
+                self._storeEntity(archive[tex.name], tex);
+            };
+        }
+
+        var shaders = resources.shaders;
+        for (p in shaders)
+        {
+            if (shaders.hasOwnProperty(p))
+            {
+                params = shaders[p];
+                this._storeEntity(p, gd.createShader(params));
+            }
+        }
+
+        var videos = resources.videos;
+        for (p in videos)
+        {
+            if (videos.hasOwnProperty(p))
+            {
+                params = videos[p];
+                src = params.src;
+                if (src)
+                {
+                    params.src = baseURL + src;
+                    params.onload = makeResourceLoader(params.src);
+                }
+                this._storeEntity(p, gd.createVideo(params));
+            }
+        }
+
+        var renderBuffers = resources.renderBuffers;
+        for (p in renderBuffers)
+        {
+            if (renderBuffers.hasOwnProperty(p))
+            {
+                params = renderBuffers[p];
+                if (params.width === -1)
+                {
+                    params.width = gd.width;
+                }
+                if (params.height === -1)
+                {
+                    params.height = gd.height;
+                }
+                this._storeEntity(p, gd.createRenderBuffer(params));
+            }
+        }
+
+        var textures = resources.textures;
+        for (p in textures)
+        {
+            if (textures.hasOwnProperty(p))
+            {
+                params = textures[p];
+                src = params.src;
+                if (src)
+                {
+                    params.src = baseURL + src;
+                    params.onload = makeResourceLoader(params.src);
+                }
+                if (params.archive)
+                {
+                    var archive = params.archive;
+                    var name;
+                    for (name in archive)
+                    {
+                        if (archive.hasOwnProperty(name))
+                        {
+                            this.numPendingResources += 1;
+                        }
+                    }
+                    params.ontextureload = makArchiveTextureLoader(archive);
+                    gd.loadTexturesArchive(params);
+                }
+                else
+                {
+                    if (params.width === -1)
+                    {
+                        params.width = gd.width;
+                    }
+                    if (params.height === -1)
+                    {
+                        params.height = gd.height;
+                    }
+                    this._storeEntity(p, gd.createTexture(params));
+                }
+            }
+        }
+
+        var renderTargets = resources.renderTargets;
+        for (p in renderTargets)
+        {
+            if (renderTargets.hasOwnProperty(p))
+            {
+                params = renderTargets[p];
+                if (typeof params.colorTexture0 === "string")
+                {
+                    params.colorTexture0 = this._resolveEntity(params.colorTexture0);
+                }
+                if (typeof params.colorTexture1 === "string")
+                {
+                    params.colorTexture1 = this._resolveEntity(params.colorTexture1);
+                }
+                if (typeof params.colorTexture2 === "string")
+                {
+                    params.colorTexture2 = this._resolveEntity(params.colorTexture2);
+                }
+                if (typeof params.colorTexture3 === "string")
+                {
+                    params.colorTexture3 =this._resolveEntity(params.colorTexture3);
+                }
+                if (typeof params.depthBuffer === "string")
+                {
+                    params.depthBuffer = this._resolveEntity(params.depthBuffer);
+                }
+                if (typeof params.depthTexture === "string")
+                {
+                    params.depthTexture = this._resolveEntity(params.depthTexture);
+                }
+                this._storeEntity(p, gd.createRenderTarget(params));
+            }
+        }
+
+        var formats = resources.formats;
+        for (p in formats)
+        {
+            if (formats.hasOwnProperty(p))
+            {
+                var formatArray = formats[p];
+                var numFormats = formatArray.length;
+                var n;
+                for (n = 0; n < numFormats; n += 1)
+                {
+                    var format = formatArray[n];
+                    formatArray[n] = gd['VERTEXFORMAT_' + format];
+                    if (formatArray[n] === undefined)
+                    {
+                        if (this.onerror)
+                        {
+                            this.onerror("Unknown vertex format: " + format);
+                        }
+                        return;
+                    }
+                }
+                this._storeEntity(p, formatArray);
+            }
+        }
+
+        var vertexBuffers = resources.vertexBuffers;
+        for (p in vertexBuffers)
+        {
+            if (vertexBuffers.hasOwnProperty(p))
+            {
+                params = vertexBuffers[p];
+                params.attributes = this._resolveEntity(params.attributes);
+                this._storeEntity(p, gd.createVertexBuffer(params));
+            }
+        }
+
+        var indexBuffers = resources.indexBuffers;
+        for (p in indexBuffers)
+        {
+            if (indexBuffers.hasOwnProperty(p))
+            {
+                params = indexBuffers[p];
+                this._storeEntity(p, gd.createIndexBuffer(params));
+            }
+        }
+
+        var semantics = resources.semantics;
+        for (p in semantics)
+        {
+            if (semantics.hasOwnProperty(p))
+            {
+                params = semantics[p];
+                this._storeEntity(p, gd.createSemantics(params));
+            }
+        }
+
+        var techniques = resources.techniques;
+        for (p in techniques)
+        {
+            if (techniques.hasOwnProperty(p))
+            {
+                params = techniques[p];
+                this._storeEntity(p, this._resolveEntity(params.shader).getTechnique(params.name));
+            }
+        }
+
+        resourcesObject.resources = {};
+    }
+
+    addData(dataObject)
+    {
+        var data = dataObject.data;
+        var length = data.length;
+        var n;
+        for (n = 0; n < length; n += 2)
+        {
+            this._storeEntity(data[n], data[n + 1]);
+        }
+        data.length = 0;
+
+        var objects = dataObject.objects;
+        length = objects.length;
+        var id, fileObject, object, objectLength, j, k, v, entity;
+        for (n = 0; n < length; n += 2)
+        {
+            id = objects[n];
+            fileObject = objects[n + 1];
+            objectLength = fileObject.length;
+            object = {};
+            for (j = 0; j < objectLength; j += 2)
+            {
+                k = fileObject[j];
+                v = fileObject[j + 1];
+                if (typeof v === "string")
+                {
+                    entity = this._resolveEntity(v);
+                    if (entity instanceof Array)
+                    {
+                        entity = new Float32Array(entity);
+                        this._storeEntity(v, entity);
+                    }
+                    object[k] = entity;
+                }
+                else
+                {
+                    object[k] = v;
+                }
+            }
+            this._storeEntity(id, object);
+        }
+        objects.length = 0;
+    }
+
+    addFrames(framesObject, reset?)
+    {
+        var commands = framesObject.commands;
+        var numCommands = commands.length;
+        var fileFrames = framesObject.frames;
+        var numFileFrames = fileFrames.length;
+        var frames = this.frames;
+        var n, c, command, cmdId, a;
+        if (reset)
+        {
+            var numFrames = frames.length;
+            for (n = 0; n < numFrames; n += 1)
+            {
+                frames[n].length = 0;
+                frames[n] = null;
+            }
+            frames.length = 0;
+        }
+        for (n = 0; n < numCommands; n += 1)
+        {
+            var command = commands[n];
+            var numArguments = command.length;
+            // first argument is method Id
+            for (a = 1; a < numArguments; a += 1)
+            {
+                var value = command[a];
+                if (typeof value === "string")
+                {
+                    command[a] = this._resolveEntity(value);
+                }
+            }
+        }
+        for (n = 0; n < numFileFrames; n += 1)
+        {
+            var frame = fileFrames[n];
+            var numCommands = frame.length;
+            for (c = 0; c < numCommands; c += 1)
+            {
+                cmdId = frame[c];
+                command = commands[cmdId];
+                frame[c] = command;
+            }
+            frames.push(frame);
+        }
+        commands.length = 0;
+        fileFrames.length = 0;
+    }
+
+    _beginEndDraw(primitive, numVertices, formats, semantics, data)
+    {
+        var writer = this.gd.beginDraw(primitive, numVertices, formats, semantics);
+        if (writer)
+        {
+            var numTotalComponents = data.length;
+            var numComponents = Math.floor(numTotalComponents / numVertices);
+            var writerData = this.writerData;
+            writerData.length = numComponents;
+            var n = 0;
+            while (n < numTotalComponents)
+            {
+                var i;
+                for (i = 0; i < numComponents; i += 1)
+                {
+                    writerData[i] = data[n];
+                    n += 1;
+                }
+                writer.apply(this, writerData);
+            }
+            this.gd.endDraw(writer);
+        }
+    }
+
+    play(frameIndex)
+    {
+        var frame = this.frames[frameIndex];
+        if (!frame)
+        {
+            return false;
+        }
+
+        var gd = this.gd;
+        var numCommands = frame.length;
+        var c;
+        for (c = 0; c < numCommands; c += 1)
+        {
+            var command = frame[c];
+            var method = command[0];
+            if (method === 'P')
+            {
+                gd.setTechniqueParameters(command[1]);
+            }
+            else if (method === 'DI')
+            {
+                gd.drawIndexed(command[1],
+                               command[2],
+                               command[3]);
+            }
+            else if (method === 'DV')
+            {
+                gd.draw(command[1],
+                        command[2],
+                        command[3]);
+            }
+            else if (method === 'I')
+            {
+                gd.setIndexBuffer(command[1]);
+            }
+            else if (method === 'V')
+            {
+                gd.setStream(command[1],
+                             command[2],
+                             command[3]);
+            }
+            else if (method === 'T')
+            {
+                gd.setTechnique(command[1]);
+            }
+            else if (method === 'D')
+            {
+                command[1].setData(command[4],
+                                   command[2],
+                                   command[3]);
+            }
+            else if (method === 'BD')
+            {
+                this._beginEndDraw(command[1],
+                                   command[2],
+                                   command[3],
+                                   command[4],
+                                   command[5]);
+            }
+            else if (method === 'BR')
+            {
+                gd.beginRenderTarget(command[1]);
+            }
+            else if (method === 'C')
+            {
+                gd.clear(command[1],
+                         command[2],
+                         command[3]);
+            }
+            else if (method === 'ER')
+            {
+                gd.endRenderTarget();
+            }
+            else if (method === 'BO')
+            {
+                gd.beginOcclusionQuery(command[1]);
+            }
+            else if (method === 'EO')
+            {
+                gd.endOcclusionQuery(command[1]);
+            }
+            else if (method === 'W')
+            {
+                var x = command[1];
+                var y = command[2];
+                var w = command[3];
+                var h = command[4];
+                if (w === -1)
+                {
+                    w = gd.width;
+                }
+                if (h === -1)
+                {
+                    h = gd.height;
+                }
+                gd.setViewport(x, y, w, h);
+            }
+            else if (method === 'S')
+            {
+                var x = command[1];
+                var y = command[2];
+                var w = command[3];
+                var h = command[4];
+                if (w === -1)
+                {
+                    w = gd.width;
+                }
+                if (h === -1)
+                {
+                    h = gd.height;
+                }
+                gd.setScissor(x, y, w, h);
+            }
+            else
+            {
+                if (this.onerror)
+                {
+                    this.onerror('Unknown command: ' + method);
+                }
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    destroy()
+    {
+        this.gd = null;
+        this.frames = null;
+        this.entities = null;
+    }
+
+    static create(gd) : PlaybackGraphicsDevice
+    {
+        return new PlaybackGraphicsDevice(gd);
+    }
+};

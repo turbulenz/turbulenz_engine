@@ -1,0 +1,23 @@
+aspect_ratio: '16:9'
+canvas_main: multiworm.canvas.js
+cover_art: cover_art.png
+deploy_files:
+- multiworm.tzjs
+- multiworm.canvas.js
+- mapping_table.json
+- leaderboards.yaml
+- badges.yaml
+- img/badges/*.png
+- img/leaderboards/*.png
+- staticmax/*
+deployed: Never
+engine_version: '0.26'
+is_multiplayer: true
+is_temp: false
+mapping_table: mapping_table.json
+modified: 16:16 | 12/07/2012
+path: ../../apps/multiworm
+plugin_main: multiworm.tzjs
+slug: multiworm
+title: MultiWorm
+title_logo: ''

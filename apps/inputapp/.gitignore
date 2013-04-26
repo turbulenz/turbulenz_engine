@@ -1,0 +1,19 @@
+*.debug.html
+*.release.html
+*.canvas.js
+*.tzjs
+.lock-wscript
+build
+mapping_table.json
+jslib
+staticmax
+models
+shaders
+textures
+materials
+shaders
+sounds
+
+# All .js files are now copied or generated from .ts files
+*.js
+*.d.ts

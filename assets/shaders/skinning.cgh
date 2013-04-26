@@ -1,0 +1,54 @@
+// Copyright (c) 2009-2012 Turbulenz Limited
+
+//
+// Uniform variables
+//
+float4 skinBones[75 * 3];
+
+struct SkinTransform
+{
+    float4 X;
+    float4 Y;
+    float4 Z;
+};
+
+//
+// Utils
+//
+SkinTransform BuildSkinTransform(float4 indices, float4 weights)
+{
+    SkinTransform skinWeightTransform;
+    float4 skinWeights = weights;
+    indices *= 3.0;
+    int4 Indices = int4(indices);
+
+    skinWeightTransform.X = skinWeights.x * skinBones[Indices.x + 0];
+    skinWeightTransform.Y = skinWeights.x * skinBones[Indices.x + 1];
+    skinWeightTransform.Z = skinWeights.x * skinBones[Indices.x + 2];
+
+    skinWeightTransform.X += skinWeights.y * skinBones[Indices.y + 0];
+    skinWeightTransform.Y += skinWeights.y * skinBones[Indices.y + 1];
+    skinWeightTransform.Z += skinWeights.y * skinBones[Indices.y + 2];
+
+    skinWeightTransform.X += skinWeights.z * skinBones[Indices.z + 0];
+    skinWeightTransform.Y += skinWeights.z * skinBones[Indices.z + 1];
+    skinWeightTransform.Z += skinWeights.z * skinBones[Indices.z + 2];
+
+    skinWeightTransform.X += skinWeights.w * skinBones[Indices.w + 0];
+    skinWeightTransform.Y += skinWeights.w * skinBones[Indices.w + 1];
+    skinWeightTransform.Z += skinWeights.w * skinBones[Indices.w + 2];
+
+    // 1-weight
+
+    // skinWeightTransform.X = skinBones[Indices.x + 0];
+    // skinWeightTransform.Y = skinBones[Indices.x + 1];
+    // skinWeightTransform.Z = skinBones[Indices.x + 2];
+
+    // 0-weight
+
+    // skinWeightTransform.X = float4(1.0,0.0,0.0,0.0);
+    // skinWeightTransform.Y = float4(0.0,1.0,0.0,0.0);
+    // skinWeightTransform.Z = float4(0.0,0.0,1.0,0.0);
+
+    return skinWeightTransform;
+}

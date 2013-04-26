@@ -1,0 +1,201 @@
+/* Copyright (c) 2010-2011 Turbulenz Limited */
+
+html, body, div, span, object, iframe, h1, h2, p, a, img, ul, li, fieldset, form, label, legend, table, thead, tbody, tfoot, tr, th, td {
+    border: 0;
+    font-size: 100%;
+    margin: 0;
+    outline: 0;
+    padding: 0;
+    vertical-align: baseline;
+}
+
+body {
+    background: #B4B4B4;
+    font: normal normal normal 13px/1.231 Helvetica,Arial,sans-serif;
+}
+
+#titlebar {
+    background: url(../img/titlebar.png) repeat-x;
+    height: 65px;
+}
+
+.title {
+    font-size: 24px;
+    line-height: 64px;
+    margin: 16px;
+}
+
+#titlelogo {
+    float: right;
+    background: url(../img/logo2.png);
+    width: 27px;
+    height: 27px;
+    margin: 18px 24px;
+}
+
+#sidebar {
+    background: #B4B4B4;
+    border-right: 1px solid #898989;
+    width: 303px;
+    overflow: auto;
+    bottom: 56px;
+    top: 65px;
+    position:fixed;
+}
+
+#engine-wrapper {
+    padding:0px;
+    position:fixed;
+    top:65px;
+    bottom:0;
+    left:305px;
+    right:0;
+}
+
+.html-control {
+    background: url(../img/sidebar-item.png) #DFDDDE repeat-x;
+    padding: 0;
+    margin: 0;
+    height: 48px;
+}
+
+
+.html-control span {
+    float: left;
+    font-weight: bold;
+    height: 16px;
+    padding: 0;
+    margin: 14px 16px 18px 16px;
+}
+
+.control-checkbox input {
+    float: right;
+    margin: 16px;
+    padding: 0;
+}
+
+.control-textbox input {
+    float: right;
+    margin: 11px;
+    padding: 0;
+}
+
+.control-dropdownbox select {
+    float: right;
+    margin: 11px;
+    padding: 0;
+}
+
+.control-button-pair input {
+    float: right;
+    font-size: 11px;
+    padding: 0;
+    width: 56px;
+    margin: 14px 16px 18px 0px;
+}
+
+#light-details {
+    background: #DFDDDE;
+    border-top: 1px solid #F6F6F6;
+    border-bottom: 1px solid #898989;
+    position: relative;
+    bottom: 0;
+    height: 65px;
+    left: 0;
+    font-weight: bold;
+    padding-left: 15px;
+    padding-top: 12px;
+}
+
+#light-details table {
+    font-size: 11px;
+    font-weight: normal;
+
+}
+
+.engine-control {
+    background: #DFDDDE;
+    border-top: 1px solid #F6F6F6;
+    border-bottom: 1px solid #898989;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 303px;
+}
+
+.engine-control table {
+    font-size: 11px;
+    margin: 6px 16px;
+}
+
+.engine-control table td.key {
+    width: 52px;
+}
+
+#loading {
+    position: absolute;
+    width: 100%;
+    top: 0px;
+    z-index: 9999;
+    text-align: center;
+    display: none;
+}
+
+#osd_message_content {
+    display: block;
+}
+
+.message-container-outer {
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: none;
+    border-radius: 0px 0px 4px 4px;
+    -webkit-border-radius: 0px 0px 4px 4px;
+    -moz-border-radius: 0px 0px 4px 4px;
+    -o-border-radius: 0px 0px 4px 4px;
+}
+
+.message-container {
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    background-color: #222222;
+    background-color: rgba(20, 20, 20, 0.8) !important;
+    padding: 0px 9px;
+    height: 26px;
+    border-radius: 0px 0px 4px 4px;
+    -webkit-border-radius: 0px 0px 4px 4px;
+    -moz-border-radius: 0px 0px 4px 4px;
+    -o-border-radius: 0px 0px 4px 4px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: none;
+    cursor: pointer;
+    font-family: helvetica;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+}
+
+.message-container span {
+    float: left;
+}
+
+.message-container span.message-counter {
+    text-shadow: none;
+    /* for some reason you have to declare all corners in ie*/
+    border-radius: 14px 14px 14px 14px;
+    -webkit-border-radius: 14px;
+    -moz-border-radius: 14px;
+    -o-border-radius: 14px;
+    background-color: #c7123c;
+    margin-top: 4px;
+    padding: 1px 5px 2px 5px;
+    display: none;
+}
+
+.message-container span.message-span {
+    margin-top: 6px;
+}
+
+.message-container span.message-span a {
+    color: white;
+}
+
