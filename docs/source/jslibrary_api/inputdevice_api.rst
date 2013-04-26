@@ -9,14 +9,14 @@
 The InputDevice Object
 ----------------------
 
-``InputDevice`` provides support for keyboard, mouse, and Xbox 360
-gamepad input events. It queues input events received between
+``InputDevice`` provides support for keyboard, mouse, gamepad and touch input events.
+It queues input events received between
 consecutive calls to :ref:`update<inputdevice-update>`. When
 :ref:`update<inputdevice-update>` is called, the events are dispatched
 in order using the appropriate event handlers and the event queue is
 cleared.
 
-The ``InputDevice`` also allows the game to hide/show the mouse cursor
+The ``InputDevice`` also allows the game to :ref:`hide<inputdevice-hideMouse>`/:ref:`show<inputdevice-showMouse>` the mouse cursor
 and lock its position (by calling
 :ref:`lockMouse<inputdevice-lockMouse>`).
 
@@ -27,12 +27,23 @@ For each HID supported, there are three main event types: down events,
 up events, and move events. Down events occur when a button/key is
 pressed, up events when a button/key is released and move events occur
 when the HID is moved, or an analogue control on it (e.g. thumbstick)
-is adjusted. In addition, the following events are supported:
+is adjusted. Such events include:
 
-* :ref:`mousewheel<inputdevice-mousewheel>` events
+* :ref:`keydown <inputdevice-keydown>`/:ref:`keyup <inputdevice-keyup>` events
+* :ref:`mousedown <inputdevice-mousedown>`/:ref:`mouseup <inputdevice-mouseup>` events
+* :ref:`mousemove <inputdevice-mousemove>` events (When mouse is :ref:`locked<inputdevice-lockMouse>`)
+* :ref:`paddown <inputdevice-paddown>`/:ref:`padup <inputdevice-padup>` events
+* :ref:`padmove <inputdevice-padmove>` events
+* :ref:`touchstart <inputdevice-touchstart>`/:ref:`touchend <inputdevice-touchend>` events
+* :ref:`touchmove <inputdevice-touchmove>` events
+
+In addition, the following events are supported:
+
 * :ref:`focus<inputdevice-focus>`/:ref:`blur<inputdevice-blur>` events
-* :ref:`mouseenter<inputdevice-mouseenter>`/:ref:`mouseleave<inputdevice-mouseleave>` events
+* :ref:`mouseenter<inputdevice-mouseenter>`/:ref:`mouseover <inputdevice-mouseover>`/:ref:`mouseleave<inputdevice-mouseleave>` events
+* :ref:`mousewheel<inputdevice-mousewheel>` events
 * :ref:`mouselocklost<inputdevice-mouselocklost>` events
+* :ref:`touchenter <inputdevice-touchenter>`/:ref:`touchleave <inputdevice-touchleave>`/:ref:`touchcancel <inputdevice-touchcancel>` events
 
 Focus and blur events occur when the TurbulenzEngine object gains or
 loses focus. Clicking on the TurbulenzEngine object gives it focus,

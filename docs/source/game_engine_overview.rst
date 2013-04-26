@@ -31,7 +31,7 @@ The runtime may be broadly categorized into two types of code:
   API will determine which interfaces the browser provides and
   dynamically select the most appropriate.
 
-- **Engine Libraries**: a collection of JavaScript libraries that
+- **High-level API**: a collection of JavaScript libraries that
   built on top of the Low-level APIs that provide developers with
   features such as a Scene Graph, Material System, Forward and
   Deferred Renderers, etc.
@@ -56,10 +56,6 @@ parameters object to *create* functions on the :ref:`TurbulenzEngine
 retrieved by calling the corresponding *get* functions.  See, for
 example, :ref:`tz_creategraphicsdevice` and
 :ref:`tz_getgraphicsdevice`.
-
-The descriptions given here apply when using the browser extensions.
-In canvas mode, HTML5 and associated APIs do not yet allow a
-sufficiently performant implementation of certain features.
 
 :ref:`GraphicsDevice <graphicsdevice>`
 
@@ -88,27 +84,34 @@ sufficiently performant implementation of certain features.
 - Occlusion queries.
     - Number of pixels rendered can be queried for a section of
       rendering.
+    - Available in plugin mode only.
+- Fullscreen support (Supported platforms).
+- Take screenshot feature.
+- Video playback support.
+    - WebM, MP4.
+    - Render video as texture.
+    - Playback controls play, pause, stop, resume, rewind.
 
 :ref:`MathDevice <mathdevice>`
 
 - Math types:
-    - *Vector3*, *Vector4*
+    - *Vector2* *Vector3*, *Vector4*
     - *Matrix33*, *Matrix34*, *Matrix43*, *Matrix44*
     - *Quaternion*, *QuatPos*
     - *AABB*
 - Storage format optimized based on available support
 - Optimized operations support *destination parameters*, reducing
   object allocation.
+- Array to/from Math type conversion utilities.
 
 :ref:`PhysicsDevice <physicsdevice>`
 
-- Easy-to-use efficient physics simulation.  In plugin mode, this is a
-  lightweight wrapper around the Bullet Physics Library.
+**3D**
 
-    - http://bulletphysics.org/wordpress/
-
-  In canvas mode, Turbulenz provides an optimized JavaScript
-  implementation of the same interface.
+- Easy-to-use efficient physics simulation.
+    - Optimized JavaScript implementation.
+    - In plugin mode, this is a lightweight wrapper around the Bullet Physics Library.
+        - http://bulletphysics.org/wordpress/
 
 - Rigid bodies and collision objects.
     - Plane, Box, Sphere, Capsule, Cylinder, Cone, Triangle Mesh,
@@ -120,31 +123,84 @@ sufficiently performant implementation of certain features.
 - Ray and convex sweep queries.
     - Returning closest point of impact and surface normal.
 
+- Character representation.
+    - For use with 1st/3rd person games.
+    - Includes properties for velocity, position, crouch, jump height, death, on ground.
+
+- Contact callbacks.
+    - Rigidbodies, characters, collision objects.
+    - Called on presolve, added, processed, removed.
+    - Filter responses by mask.
+    - Triggers with no collision response.
+
 .. NOTE::
   Developers may see slightly different behavior across the plugin and
   canvas implementations of :ref:`PhysicsDevice <physicsdevice>`.
 
+**2D**
+
+- Efficient 2D physics simulation written specifically for JavaScript.
+
+- Shapes.
+    - Circle, Box, Rectangle, Regular Polygon, Custom Polygon.
+    - Create shapes as sensors.
+    - Shape grouping and mask interactions.
+
+- Collision detection.
+    - Sweep & Prune, Box Tree Broadphases.
+    - Utilities for Raytest, Signed Distance, Intersection, Contains Point, Sweep Test.
+
+- Simulation world.
+    - Multiple simulation groups.
+    - Optional gravity.
+    - Customisable simulation iterations.
+
+- Rigid body simulation.
+    - Dynamic, Static, Kinematic objects.
+
+- Materials.
+    - Elasticity, Static/Dynamic/Rolling Friction, Density.
+
+- Arbiters.
+    - Contact grouping.
+    - Contact information: Position, Penetration, Normal/Tangent Impulse
+
+- Constraints.
+    - Point to Point, Distance, Weld, Angle, Motor, Line, Pulley, Custom Constraint.
+
+- Debug rendering.
+    - Rigid Bodies, Constraints, Worlds, Lines, Curves, Rectangles, Circles, Spirals, Linear/Spiral Springs.
+    - Enabling and disabling of rendering types.
+    - Scaling for Draw2D viewport.
+
 :ref:`SoundDevice <sounddevice>`
 
-- Easy-to-use efficient wrapper of OpenAL.
-    - http://connect.creativelabs.com/openal/default.aspx
+- Easy-to-use efficient wrapper of hardware audio features.
+    - Utilizes Web Audio, <Audio> tag, `OpenAL <http://connect.creativelabs.com/openal/default.aspx>`__ dependent on platform support.
 - 3D sound sources.
     - Position, Direction, Velocity, Gain, Pitch, Loop.
-- Support for multiple speakers, up to 7.1 systems.
-- Separate threads for audio streaming and mixing.
+- Emulated 3D sound for stereo setups.
 - Asynchronous sound files loading.
     - Multiple resource files can be downloaded on the fly, JavaScript
       code will be notified when resource is available for usage.
+- Uncompress audio dynamically.
 - Multiple sound file formats:
-    - OGG, WAV.
+    - OGG, WAV, MP3.
+- Supported query for platform capabilities.
+    - Load the best audio format for the platform.
+- Effect/Filter support:
+    - Reverb, Echo, Low Pass
+
+  .. NOTE::
+    Interface availability depends on platform.
 
 :ref:`NetworkDevice <networkdevice>`
 
-- Efficient implementation of WebSockets.
-    - http://en.wikipedia.org/wiki/WebSocket
-    - http://dev.w3.org/html5/websockets/
-- Bi-directional, full-duplex communications channels, over a TCP
-  socket.
+- Bi-directional, full-duplex communications channels, over a TCP socket.
+    - Utilizes browser Websocket support.
+    - Efficient native implementation of WebSockets for platforms without support.
+        - http://en.wikipedia.org/wiki/WebSocket
+        - http://dev.w3.org/html5/websockets/
 - HTTP-compatible handshake so that HTTP servers can share their
   default HTTP and HTTPS ports (80 and 443) with a WebSocket server.
 - Support for secure connections as part of the standard.
@@ -152,13 +208,19 @@ sufficiently performant implementation of certain features.
 
 :ref:`InputDevice <inputdevice>`
 
-- Access to HID.
-    - Keyboard, Mouse, Xbox360 Pad, Joysticks, Wheels.
+- Access to input types.
+    - Keyboard, Mouse, Xbox360 Pad, Joysticks, Wheels, Touch, Multi-touch
 - Asynchronous event system when state changes.
     - JavaScript code is notified when input changes.
+    - Events for keydown, keyup, mousedown, mouseup, mousewheel, mousemove,
+      mouseover, mouseenter, mouseleave, paddown, padup, focus, blur, mouselocklost,
+      touchstart, touchend, touchmove, touchmove, touchenter, touchleave, touchcancel.
+- Additional mouse features:
+    - hiding/showing platform icon, locking/unlocking (supported platforms).
+- Language independent keymapping.
 
-Engine Libraries
-----------------
+High-level API
+--------------
 
 These higher-level JavaScript libraries are designed for flexibility
 and ease of use.  The JavaScript language itself provides all the
@@ -193,6 +255,15 @@ future.
       Opaque, Transparent, Decal.
 - Lazy evaluation of node updates.
 
+**Animation**
+
+- 3D animation for scene geometry.
+- Skeleton/Skinning animation.
+- Animation controllers.
+    - Interpolation, Overloaded Node, Reference, Transition, Blend, Mask, Pose, Skin, GPU Skin, Skinned Node.
+    - Controllers can be combined for desired effect.
+- Dynamically update scene data.
+
 **Resource Manager**
 
 - Asynchronous loading avoiding duplicates.
@@ -201,9 +272,17 @@ future.
     - Game can provide custom default resource to be used when a
       required one is missing or still loading.
 - Multiple managers for individual needs.
-    - Textures, Shaders, Effects, Sounds, Fonts.
+    - Animations, Effects, Fonts, Shaders, Sounds, Textures.
 - Bandwidth and hardware scaling by selecting different assets and
   effects depending on machine and Internet connection performance.
+- Client-side asset cache for optimizing and reusing requests.
+
+**Server Requests**
+
+- HTTP & AJAX request functionality
+    - Automatic retry and error handling.
+    - Cross-browser support.
+    - Encrypted API support.
 
 **Deferred Renderer**
 
@@ -217,20 +296,119 @@ future.
 - Pluggable post effects.
     - Easy set-up for full screen post effects as part of the final
       deferred shading.
+    - Copy, Fade in, Modulate, Bicolor, Blend.
 - Exponential shadow maps.
     - Reuse of texture shadow maps to save video memory.
     - Gaussian blur for smooth results.
     - Exponential depth information to avoid light bleeding.
 - Volumetric fog.
 - 4 weight GPU skinning.
+- UV animation.
+- Wireframe mode.
+- Callbacks for additional passes.
+    - decals, transparency, debug
+- Available in plugin mode only.
 
-**Social Networks**
+**Forward Renderer**
 
-- Easy integration with popular social networks.
-- Player sign-in and access automatically handled.
-- Compatible with:
-    - Twitter, Facebook, Tumblr.
-- Easy integration as an application within Facebook.
+- Unlimited number of lights.
+    - Point, Spot, Directional, Ambient.
+- Texture based light falloff.
+    - Allows multi-colored lights and cheap fake shadows, for example
+      the typical fan under a light source.
+- Materials with multiple texture maps.
+    - Specular color and intensity, Normal vector, Glow color, Alpha.
+- Pluggable post effects.
+    - Easy set-up for full screen post effects as part of the final
+      deferred shading.
+    - Copy, Fade in, Modulate, Bicolor, Blend.
+- Exponential shadow maps.
+    - Reuse of texture shadow maps to save video memory.
+    - Gaussian blur for smooth results.
+    - Exponential depth information to avoid light bleeding.
+- 4 weight GPU skinning.
+- UV animation.
+- Wireframe mode.
+- Callbacks for additional passes.
+    - decals, transparency, debug
+
+**Default Renderer**
+
+- Single point and ambient light.
+- Pixel-based lighting.
+- Materials with multiple texture maps.
+    - Specular color and intensity, Normal vector, Glow color, Alpha.
+- Optimzed for speed and compatibility on a wide range of hardware.
+- 4 weight GPU skinning.
+- UV animation.
+- Wireframe mode.
+- Callbacks for additional passes.
+    - decals, transparency, debug
+
+**Simple Renderer**
+
+- Single point and ambient light.
+- Vertex-based lighting.
+- Materials with multiple texture maps.
+    - Specular color and intensity, Normal vector, Glow color, Alpha.
+- Optimzed for speed and compatibility on a wide range of hardware.
+- 4 weight GPU skinning.
+- UV animation.
+- Wireframe mode.
+- Callbacks for additional passes.
+    - decals, transparency, debug
+
+**2D Rendering**
+
+**Draw2D**
+
+- 2D sprite-based renderer.
+    - Batches sprites for efficiency.
+- Draw modes:
+    - **Draw:** Draw object literal, **DrawRaw:** Draw buffer data, **DrawSprite:** Draw sprite reference.
+- Scalable viewport.
+    - Input coordinate mapping.
+- Sort modes.
+    - Immediate, Deferred, Texture.
+- Blend modes.
+    - Opaque, Additive, Alpha.
+- Custom shader support.
+- Render-to-target support.
+- Texture effects.
+    - Distort, Gaussian Blur, Bloom, Color, Grey Scale, Sepia, Negative, Saturation, Hue, Brightness, Contrast.
+- Recording performance data.
+
+**Canvas2D**
+
+- Accelerated implementation of `canvas 2D API <http://www.w3.org/html/wg/drafts/2dcontext/html5_canvas/>`__.
+- Runs on WebGL/OpenGL depending on platform.
+- SVG rendering.
+- Text rendering via FontManager.
+- For complete implementation see `canvas element specification <http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#the-canvas-element>`__
+
+**Utilities**
+
+- Allocation and management of graphics buffers.
+    - Vertex buffers.
+    - Index buffers.
+- API controlled JavaScript profiling.
+    - Per-function millisecond accuracy timing.
+    - Record top-down or bottom-up function trees.
+    - Calculate the time spent by an individual function or
+      the total spent by sub-functions.
+    - Identify the source file and line number of problematic areas.
+- Memory usage identification.
+    - Retrieve the object count of constructed object types.
+    - Take snapshots and compare memory fluctuations.
+- Encryption and decryption of server-side requests for TZO formats.
+- Debug utility with function stripping for performance.
+    - assert, log, abort.
+    - Complete stacktrace.
+    - Supports adding custom functions.
+- Network Simulator.
+    - Simulates latency and network behaviour.
+    - Client-side manipulation of multiplayer session messages.
+    - Simulates spikes in network traffic.
 
 .. ------------------------------------------------------------
 

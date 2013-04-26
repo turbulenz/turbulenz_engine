@@ -8,25 +8,414 @@ The Engine includes libraries for features that games require such as:
 Features
 ========
 
-:Graphics: 2D/3D rendering, sprite drawing, font rendering, vertex & pixel shader effects such as materials/shadows etc, forward/deferred/simple scene renderers, fullscreen, in-game video, utilizes technologies such as canvas/WebGL.
-:Sound: ogg/wav/mp3, compressed/uncompressed, 3D audio, OpenAL-like interface.
-:Networking: Client-to-client real-time messaging, client-to-server connectivity utilizing Websockets, latency simulation.
-:Input: Mouse/Keyboard/gamepad/touch interfaces, mouse locking/hiding.
-:Physics: 2D/3D rigid body simulation, collision detection, 2D/3D constraints, rayhit testing, static/dynamic/kinematic objects.
-:Scene Management: Hierarchical scene node managing. Scene loading geometry/animation/physics/materials from COLLADA format.
-:Animation: Skeleton/skinning animation for 3D geometry, interpolation/skinning/blending/transition controllers.
-:Utilities: Profiling, Vector/matrix math, debug/logging/assertion.
+Low-level API
+-------------
 
-The services include JavaScript and TypeScript libraries for server-side features for games such as:
+**Graphics**
 
-:Leaderboards: Submitting/retrieving ranked friend/global leaderboards, default score entries, infinitely scrollable scoreboards, friend's score notifications.
-:Badges: Achievement system for awarding game progress, custom badge shape and design, progression badges, achievement notification.
-:Payments: In-game/Out-of-game payments, different payment methods: single purchase/micro transactions, store consumable/ownable items.
-:Userdata: Per-user save game information, key-value pair data storage for settings/preferences/personal items.
-:Userprofile: Game player's profile information, such as username, language, location, etc.
-:Gameprofile: Game player's public per game profile, such as level, XP, favourite weapon, etc.
-:Multiplayer: Real-time session match-making, session creation/joining, friend location, multiplayer session invite and notification.
-:Utilities: Automatic service retries, uniquely identifiable game sessions, asset mapping, front-end communication channel, notification messages, metrics/event tracking.
+- Simple shader-based immediate mode API.
+    - A Shader may contain multiple Techniques, either single or
+      multi-pass.
+    - Once a shader Technique is set on the Device, the parameters
+      required by the program code can be updated by a
+      TechniqueParameter object.
+    - TechniqueParameter objects hold multiple references to Textures,
+      TechniqueParameterBuffers or individual values.
+    - Multiple TechniqueParameters can be set on the Device at once.
+- Vertex buffers, Index buffers and Textures can be created, updated
+  and destroyed dynamically.
+- Multiple Streams of Vertex buffers can be used at the same time.
+- Support for 1D, 2D, 3D and Cube textures.
+    - Any pixel format supported by the hardware.
+- Asynchronous resource loading.
+    - Multiple resource files can be downloaded on the fly, JavaScript
+      code will be notified when resource is available for usage.
+- Multiple image file formats.
+    - DDS, JPG, PNG and TGA.
+- Support for textures archives containing multiple image files.
+    - Less flexibility than individual files but better for optimal
+      bandwidth usage.
+- Occlusion queries.
+    - Number of pixels rendered can be queried for a section of
+      rendering.
+    - Available in plugin mode only.
+- Fullscreen support (Supported platforms).
+- Take screenshot feature.
+- Video playback support.
+    - WebM, MP4.
+    - Render video as texture.
+    - Playback controls play, pause, stop, resume, rewind.
+
+**Math**
+
+- Math types:
+    - *Vector2* *Vector3*, *Vector4*
+    - *Matrix33*, *Matrix34*, *Matrix43*, *Matrix44*
+    - *Quaternion*, *QuatPos*
+    - *AABB*
+- Storage format optimized based on available support
+- Optimized operations support *destination parameters*, reducing
+  object allocation.
+- Array to/from Math type conversion utilities.
+
+**Physics**
+
+**3D**
+
+- Easy-to-use efficient physics simulation.
+    - Optimized JavaScript implementation.
+    - In plugin mode, this is a lightweight wrapper around the Bullet Physics Library.
+        - http://bulletphysics.org/wordpress/
+
+- Rigid bodies and collision objects.
+    - Plane, Box, Sphere, Capsule, Cylinder, Cone, Triangle Mesh,
+      Convex Hull.
+
+- Constraints.
+    - Point to Point, Hinge, Cone Twist, 6DOF, Slider.
+
+- Ray and convex sweep queries.
+    - Returning closest point of impact and surface normal.
+
+- Character representation.
+    - For use with 1st/3rd person games.
+    - Includes properties for velocity, position, crouch, jump height, death, on ground.
+
+- Contact callbacks.
+    - Rigidbodies, characters, collision objects.
+    - Called on presolve, added, processed, removed.
+    - Filter responses by mask.
+    - Triggers with no collision response.
+
+**2D**
+
+- Efficient 2D physics simulation written specifically for JavaScript.
+
+- Shapes.
+    - Circle, Box, Rectangle, Regular Polygon, Custom Polygon.
+    - Create shapes as sensors.
+    - Shape grouping and mask interactions.
+
+- Collision detection.
+    - Sweep & Prune, Box Tree Broadphases.
+    - Utilities for Raytest, Signed Distance, Intersection, Contains Point, Sweep Test.
+
+- Simulation world.
+    - Multiple simulation groups.
+    - Optional gravity.
+    - Customisable simulation iterations.
+
+- Rigid body simulation.
+    - Dynamic, Static, Kinematic objects.
+
+- Materials.
+    - Elasticity, Static/Dynamic/Rolling Friction, Density.
+
+- Arbiters.
+    - Contact grouping.
+    - Contact information: Position, Penetration, Normal/Tangent Impulse
+
+- Constraints.
+    - Point to Point, Distance, Weld, Angle, Motor, Line, Pulley, Custom Constraint.
+
+- Debug rendering.
+    - Rigid Bodies, Constraints, Worlds, Lines, Curves, Rectangles, Circles, Spirals, Linear/Spiral Springs.
+    - Enabling and disabling of rendering types.
+    - Scaling for Draw2D viewport.
+
+**Sound**
+
+- Easy-to-use efficient wrapper of hardware audio features.
+    - Utilizes Web Audio, <Audio> tag, `OpenAL <http://connect.creativelabs.com/openal/default.aspx>`__ dependent on platform support.
+- 3D sound sources.
+    - Position, Direction, Velocity, Gain, Pitch, Loop.
+- Emulated 3D sound for stereo setups.
+- Asynchronous sound files loading.
+    - Multiple resource files can be downloaded on the fly, JavaScript
+      code will be notified when resource is available for usage.
+- Uncompress audio dynamically.
+- Multiple sound file formats:
+    - OGG, WAV, MP3.
+- Supported query for platform capabilities.
+    - Load the best audio format for the platform.
+- Effect/Filter support:
+    - Reverb, Echo, Low Pass
+
+**Networking**
+
+- Bi-directional, full-duplex communications channels, over a TCP socket.
+    - Utilizes browser Websocket support.
+    - Efficient native implementation of WebSockets for platforms without support.
+        - http://en.wikipedia.org/wiki/WebSocket
+        - http://dev.w3.org/html5/websockets/
+- HTTP-compatible handshake so that HTTP servers can share their
+  default HTTP and HTTPS ports (80 and 443) with a WebSocket server.
+- Support for secure connections as part of the standard.
+- Support for data compression with the extension `deflate-frame`.
+
+**Input**
+
+- Access to input types.
+    - Keyboard, Mouse, Xbox360 Pad, Joysticks, Wheels, Touch, Multi-touch
+- Asynchronous event system when state changes.
+    - JavaScript code is notified when input changes.
+    - Events for keydown, keyup, mousedown, mouseup, mousewheel, mousemove,
+      mouseover, mouseenter, mouseleave, paddown, padup, focus, blur, mouselocklost,
+      touchstart, touchend, touchmove, touchmove, touchenter, touchleave, touchcancel.
+- Additional mouse features:
+    - hiding/showing platform icon, locking/unlocking (supported platforms).
+- Language independent keymapping.
+
+High-level API
+--------------
+
+**Scene Graph**
+
+- Flexible JSON file format.
+    - Could describe either a whole scene or individual meshes.
+- Asynchronous loading of external references.
+    - If a scene contains references to external meshes they are all
+      loaded in parallel and attached to the main scene when ready.
+    - Support for optimal reuse of same mesh on different locations.
+- Pluggable renderer system.
+    - Links between geometries, effects and materials are resolved at
+      runtime.
+    - Easy swap of multiple rendering techniques for same assets.
+- Geometry sharing.
+    - Geometry information can be optimally reused on multiple scene
+      locations with different rendering effects.
+- Flexible scene hierarchy nodes.
+    - Lights, Geometries, Animation, Physics.
+- Visibility queries.
+    - Portals, Frustum, Overlapping Box.
+- Sorting and grouping.
+    - Visible nodes are sorted and grouped for optimal rendering:
+      Opaque, Transparent, Decal.
+- Lazy evaluation of node updates.
+
+**Animation**
+
+- 3D animation for scene geometry.
+- Skeleton/Skinning animation.
+- Animation controllers.
+    - Interpolation, Overloaded Node, Reference, Transition, Blend, Mask, Pose, Skin, GPU Skin, Skinned Node.
+    - Controllers can be combined for desired effect.
+- Dynamically update scene data.
+
+**Resource Manager**
+
+- Asynchronous loading avoiding duplicates.
+    - Additional remapping layer for easy URL redirection.
+- Provide default resources if missing.
+    - Game can provide custom default resource to be used when a
+      required one is missing or still loading.
+- Multiple managers for individual needs.
+    - Animations, Effects, Fonts, Shaders, Sounds, Textures.
+- Bandwidth and hardware scaling by selecting different assets and
+  effects depending on machine and Internet connection performance.
+- Client-side asset cache for optimizing and reusing requests.
+
+**Server Requests**
+
+- HTTP & AJAX request functionality
+    - Automatic retry and error handling.
+    - Cross-browser support.
+    - Encrypted API support.
+
+**Deferred Renderer**
+
+- Unlimited number of lights.
+    - Point, Spot, Directional, Ambient.
+- Texture based light falloff.
+    - Allows multi-colored lights and cheap fake shadows, for example
+      the typical fan under a light source.
+- Materials with multiple texture maps.
+    - Specular color and intensity, Normal vector, Glow color, Alpha.
+- Pluggable post effects.
+    - Easy set-up for full screen post effects as part of the final
+      deferred shading.
+    - Copy, Fade in, Modulate, Bicolor, Blend.
+- Exponential shadow maps.
+    - Reuse of texture shadow maps to save video memory.
+    - Gaussian blur for smooth results.
+    - Exponential depth information to avoid light bleeding.
+- Volumetric fog.
+- 4 weight GPU skinning.
+- UV animation.
+- Wireframe mode.
+- Callbacks for additional passes.
+    - decals, transparency, debug
+- Available in plugin mode only.
+
+**Forward Renderer**
+
+- Unlimited number of lights.
+    - Point, Spot, Directional, Ambient.
+- Texture based light falloff.
+    - Allows multi-colored lights and cheap fake shadows, for example
+      the typical fan under a light source.
+- Materials with multiple texture maps.
+    - Specular color and intensity, Normal vector, Glow color, Alpha.
+- Pluggable post effects.
+    - Easy set-up for full screen post effects as part of the final
+      deferred shading.
+    - Copy, Fade in, Modulate, Bicolor, Blend.
+- Exponential shadow maps.
+    - Reuse of texture shadow maps to save video memory.
+    - Gaussian blur for smooth results.
+    - Exponential depth information to avoid light bleeding.
+- 4 weight GPU skinning.
+- UV animation.
+- Wireframe mode.
+- Callbacks for additional passes.
+    - decals, transparency, debug
+
+**Default Renderer**
+
+- Single point and ambient light.
+- Pixel-based lighting.
+- Materials with multiple texture maps.
+    - Specular color and intensity, Normal vector, Glow color, Alpha.
+- Optimzed for speed and compatibility on a wide range of hardware.
+- 4 weight GPU skinning.
+- UV animation.
+- Wireframe mode.
+- Callbacks for additional passes.
+    - decals, transparency, debug
+
+**Simple Renderer**
+
+- Single point and ambient light.
+- Vertex-based lighting.
+- Materials with multiple texture maps.
+    - Specular color and intensity, Normal vector, Glow color, Alpha.
+- Optimzed for speed and compatibility on a wide range of hardware.
+- 4 weight GPU skinning.
+- UV animation.
+- Wireframe mode.
+- Callbacks for additional passes.
+    - decals, transparency, debug
+
+**2D Rendering**
+
+**Draw2D**
+
+- 2D sprite-based renderer.
+    - Batches sprites for efficiency.
+- Draw modes:
+    - **Draw:** Draw object literal, **DrawRaw:** Draw buffer data, **DrawSprite:** Draw sprite reference.
+- Scalable viewport.
+    - Input coordinate mapping.
+- Sort modes.
+    - Immediate, Deferred, Texture.
+- Blend modes.
+    - Opaque, Additive, Alpha.
+- Custom shader support.
+- Render-to-target support.
+- Texture effects.
+    - Distort, Gaussian Blur, Bloom, Color, Grey Scale, Sepia, Negative, Saturation, Hue, Brightness, Contrast.
+- Recording performance data.
+
+**Canvas2D**
+
+- Accelerated implementation of `canvas 2D API <http://www.w3.org/html/wg/drafts/2dcontext/html5_canvas/>`__.
+- Runs on WebGL/OpenGL depending on platform.
+- SVG rendering.
+- Text rendering via FontManager.
+- For complete implementation see `canvas element specification <http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#the-canvas-element>`__
+
+**Utilities**
+
+- Allocation and management of graphics buffers.
+    - Vertex buffers.
+    - Index buffers.
+- API controlled JavaScript profiling.
+    - Per-function millisecond accuracy timing.
+    - Record top-down or bottom-up function trees.
+    - Calculate the time spent by an individual function or
+      the total spent by sub-functions.
+    - Identify the source file and line number of problematic areas.
+- Memory usage identification.
+    - Retrieve the object count of constructed object types.
+    - Take snapshots and compare memory fluctuations.
+- Encryption and decryption of server-side requests for TZO formats.
+- Debug utility with function stripping for performance.
+    - assert, log, abort.
+    - Complete stacktrace.
+    - Supports adding custom functions.
+- Network Simulator.
+    - Simulates latency and network behaviour.
+    - Client-side manipulation of multiplayer session messages.
+    - Simulates spikes in network traffic.
+
+Turbulenz Service API
+---------------------
+
+**Leaderboards**
+
+- Submitting/retrieving ranked friend/global leaderboards.
+- Default score entries.
+- Infinitely scrollable scoreboards.
+- Friend's score notifications.
+
+**Badges**
+
+- Achievement system for awarding game progress.
+- Custom badge shape and design
+- Progression badges.
+- Achievement notification.
+
+**Payments**
+
+- Payments API.
+    - In game, On website, App stores.
+- Payment methods.
+    - Single purchase, Micro transactions.
+- Purchasable items.
+    - Ownable, Consumeable.
+
+**Userdata**
+
+- Per-user save game information.
+- Key-value pair data storage.
+    - Settings, Preferences, Personal items.
+
+**Userprofile**
+
+- Game player's profile information.
+    - Username, Display name, Language, Age, Country, Guest user.
+
+**Gameprofile**
+
+- Game status of a player.
+    - Viewable by other players a game.
+    - Custom field information decided by game.
+
+**Multiplayer**
+
+- Real-time session match-making between friends and public users.
+- Session creation/joining.
+- Multiplayer session invite and notification.
+
+**Metrics**
+
+- Custom event submission.
+    - Can be used to gather progress during game.
+    - Exportable from developer services.
+    - Events identifiable by custom key.
+    - Allows additional numerical data.
+
+**Bridge**
+- Bi-directional communication channel between game and webpage.
+- Allows messages to be exchanged.
+- Live updating.
+    - Badge progress, notifications, loading/saving status.
+
+**Utilities**
+
+- Mapping between game resources references and content distribution network.
+- Uniquely identifiable gamesession.
+- Service availability notification.
 
 
 History

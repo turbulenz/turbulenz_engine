@@ -15,29 +15,6 @@ Introduction
 Turbulenz is an HTML5 game engine and server-side APIs available in JavaScript and TypeScript for building and distributing 2D and 3D games that run on platforms that support HTML5 features such as modern browsers without the need for plugins.
 The Engine includes libraries for features that games require such as:
 
-Features
---------
-
-:Graphics: 2D/3D rendering, sprite drawing, font rendering, vertex & pixel shader effects such as materials/shadows etc, forward/deferred/simple scene renderers, fullscreen, in-game video, utilizes technologies such as canvas/WebGL.
-:Sound: ogg/wav/mp3, compressed/uncompressed, 3D audio, OpenAL-like interface.
-:Networking: Client-to-client real-time messaging, client-to-server connectivity utilizing Websockets, latency simulation.
-:Input: Mouse/Keyboard/gamepad/touch interfaces, mouse locking/hiding.
-:Physics: 2D/3D rigid body simulation, collision detection, 2D/3D constraints, rayhit testing, static/dynamic/kinematic objects.
-:Scene Management: Hierarchical scene node managing. Scene loading geometry/animation/physics/materials from COLLADA format.
-:Animation: Skeleton/skinning animation for 3D geometry, interpolation/skinning/blending/transition controllers.
-:Utilities: Profiling, Vector/matrix math, debug/logging/assertion.
-
-The services include JavaScript and TypeScript libraries for server-side features for games such as:
-
-:Leaderboards: Submitting/retrieving ranked friend/global leaderboards, default score entries, infinitely scrollable scoreboards, friend's score notifications.
-:Badges: Achievement system for awarding game progress, custom badge shape and design, progression badges, achievement notification.
-:Payments: In-game/Out-of-game payments, different payment methods: single purchase/micro transactions, store consumable/ownable items.
-:Userdata: Per-user save game information, key-value pair data storage for settings/preferences/personal items.
-:Userprofile: Game player's profile information, such as username, language, location, etc.
-:Gameprofile: Game player's public per game profile, such as level, XP, favourite weapon, etc.
-:Multiplayer: Real-time session match-making, session creation/joining, friend location, multiplayer session invite and notification.
-:Utilities: Automatic service retries, uniquely identifiable game sessions, asset mapping, front-end communication channel, notification messages, metrics/event tracking.
-
 In This Guide
 -------------
 

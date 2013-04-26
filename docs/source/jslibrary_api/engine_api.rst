@@ -361,7 +361,7 @@ Always returns true if not running a TZO file.
 
     var originalStr = "Hello World";
     var originalSignature = "xdVw6STqGdSzGi1lFcMeQfiPDINGY+t/3k6K8e/rbkw=";
-    var verified = TurbulenzEngine.generateSignature(str);
+    var verified = TurbulenzEngine.verifySignature(originalStr, originalSignature);
 
 ``originalStr``
     The string the signature was originally generated from.
