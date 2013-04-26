@@ -29,10 +29,6 @@ animation_src := tsscripts/templates/animation.ts
 animation_deps := sceneloader htmlcontrols motion
 TSAPPS += animation
 
-animation_blend_src := tsscripts/templates/animation_blend.ts
-animation_blend_deps := sceneloader htmlcontrols
-TSAPPS += animation_blend
-
 basic_loop_src := tsscripts/templates/basic_loop.ts
 basic_loop_deps := htmlcontrols
 TSAPPS += basic_loop
@@ -56,10 +52,6 @@ TSAPPS += draw2d
 forward_rendering_src := tsscripts/templates/forward_rendering.ts
 forward_rendering_deps := sceneloader htmlcontrols
 TSAPPS += forward_rendering
-
-hierarchy_src := tsscripts/templates/hierarchy.ts
-hierarchy_deps := sceneloader
-TSAPPS += hierarchy
 
 immediate_mode_rendering_src := tsscripts/templates/immediate_mode_rendering.ts
 TSAPPS += immediate_mode_rendering

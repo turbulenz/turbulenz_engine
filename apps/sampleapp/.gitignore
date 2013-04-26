@@ -3,8 +3,7 @@
 *.canvas.js
 *.tzjs
 *.jsinc
-.lock-wscript
-build
+_build
 staticmax
 mapping_table.json
 jslib

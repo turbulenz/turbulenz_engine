@@ -2,8 +2,7 @@
 *.release.html
 *.canvas.js
 *.tzjs
-.lock-wscript
-build
+_build
 mapping_table.json
 jslib
 staticmax
@@ -14,5 +13,8 @@ materials
 shaders
 sounds
 
-*.js
-*.d.ts
+# .js files generated from .ts files
+templates/*.js
+templates/*.d.ts
+scripts/*.js
+scripts/*.d.ts

@@ -4,6 +4,5 @@
 *.tzjs
 jslib
 manifest.yaml
-build
-*.lock-wscript
+_build
 mapping_table.json

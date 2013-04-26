@@ -4,10 +4,7 @@
 *.tzjs
 *.tzo
 *.jsinc
-*.pyc
-.lock-wscript
-build
-make_*.bat
+_build
 mapping_table.json
 jslib
 staticmax
@@ -17,5 +14,8 @@ textures
 materials
 shaders
 sounds
-*.d.ts
-*.js
+/scripts
+templates/*.d.ts
+templates/*.js
+templates/**/*.d.ts
+templates/**/*.js
