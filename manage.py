@@ -39,7 +39,7 @@ def command_env():
     if TURBULENZOS == 'win32':
         env_bin = os.path.join('env', 'scripts')
         with open(os.path.join(env_bin, 'activate.bat'), 'a') as f:
-            f.write('set PATH=%%PATH%%;%%VIRTUAL_ENV%%\\..\\tools\\scripts\n')
+            f.write('set PATH=%PATH%;%VIRTUAL_ENV%\\..\\tools\\scripts\n')
     else:
         env_bin = os.path.join('env', 'bin')
         with open(os.path.join(env_bin, 'activate'), 'a') as f:
@@ -63,12 +63,10 @@ def command_env():
     _easy_install('turbulenz_tools>=0.26.0')
     _easy_install('turbulenz_local>=0.9')
 
-    if TURBULENZOS in [ 'linux32', 'linux64' ]:
-        force = ''
-    else:
-        force = ' -f'
-    cmd = [os.path.join(env_bin, 'python'), os.path.join('scripts', 'install_nodejs.py'), '--typescript', force]
-    sh(cmd)
+    cmd = [os.path.join(env_bin, 'python'), os.path.join('scripts', 'install_nodejs.py'), '--typescript']
+    if not TURBULENZOS in [ 'linux32', 'linux64' ]:
+        cmd.append('-f')
+    sh(cmd, console=True)
 
 @command_no_arguments
 def command_env_clean():
