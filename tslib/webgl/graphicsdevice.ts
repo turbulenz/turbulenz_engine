@@ -3836,15 +3836,6 @@ TechniqueParameters.create = function TechniqueParametersFn(params)
 //
 // TechniqueParameterBuffer
 //
-function techniqueParameterBufferSetData(data, offset, numValues)
-{
-    for (var n = 0, o = offset; n < numValues; n += 1, o += 1)
-    {
-        this[o] = data[n];
-    }
-    return o;
-}
-
 var techniqueParameterBufferCreate =
     function techniqueParameterBufferCreateFn(params)
 {
@@ -3873,7 +3864,8 @@ var techniqueParameterBufferCreate =
                     }
                     else
                     {
-                        offset = techniqueParameterBufferSetData.call(buffer, value, offset, value.length);
+                        buffer.setData(value, offset, value.length);
+                        offset += value.length;
                     }
                 }
             }
@@ -3881,6 +3873,23 @@ var techniqueParameterBufferCreate =
         };
 
         Float32Array.prototype.unmap = function techniqueParameterBufferUnmap(/* writer */) {
+        };
+
+        Float32Array.prototype.setData = function techniqueParameterBufferSetData(data,
+                                                                                  offset?: number,
+                                                                                  numValues?: number) {
+            if (offset === undefined)
+            {
+                offset = 0;
+            }
+            if (numValues === undefined)
+            {
+                numValues = this.length;
+            }
+            for (var n = 0; n < numValues; n += 1, offset += 1)
+            {
+                this[offset] = data[n];
+            }
         };
     }
 

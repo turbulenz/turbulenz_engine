@@ -24,6 +24,7 @@ interface Float32Array
     slice(s: number, e: number): Float32Array; // defined in vmath
     map(offset: number, numFloats: number): void;
     unmap(): void;
+    setData(data, offset?: number, numFloats?: number): void;
 };
 
 // HTMLImageElement
