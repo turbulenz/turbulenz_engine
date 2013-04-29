@@ -33,6 +33,7 @@ class CaptureGraphicsDevice
     objects:    {};
     vertexBuffers: {};
     indexBuffers: {};
+    techniqueParameterBuffers: {};
     semantics:  {};
     semanticsMap: {};
     formats:  {};
@@ -79,6 +80,7 @@ class CaptureGraphicsDevice
         this.objects = {};
         this.vertexBuffers = {};
         this.indexBuffers = {};
+        this.techniqueParameterBuffers = {};
         this.semantics = {};
         this.semanticsMap = {};
         this.formats = {};
@@ -279,6 +281,12 @@ class CaptureGraphicsDevice
     {
         var length, index, result, value, id;
 
+        // Check if it has an Id
+        if (typeof object._id === "string")
+        {
+            return object._id;
+        }
+
         if (object instanceof Array)
         {
             length = object.length;
@@ -347,12 +355,6 @@ class CaptureGraphicsDevice
         {
             result = new Date(object.getTime());
             return result;
-        }
-
-        // Check if it has an Id
-        if (typeof object._id === "string")
-        {
-            return object._id;
         }
 
         // This does not clone the prototype. See Object.create() if you want that behaviour
@@ -1383,7 +1385,126 @@ class CaptureGraphicsDevice
 
     createTechniqueParameterBuffer(params)
     {
-        return this.gd.createTechniqueParameterBuffer(params);
+        var techniqueParameterBuffer = new Float32Array(params.numFloats);
+        var id = this._getStringId();
+        techniqueParameterBuffer['_id'] = id;
+        if (techniqueParameterBuffer['_id'] !== id)
+        {
+            // Firefox does not support adding extra properties to Float32Arrays
+            // TechniqueParameterBuffers will be treated as regular Float32Arrays...
+            return this.gd.createTechniqueParameterBuffer(params);
+        }
+        var self = this;
+        techniqueParameterBuffer['setData'] = function captureTPBSetData(data, offset, numValues)
+        {
+            if (offset === undefined)
+            {
+                offset = 0;
+            }
+            if (numValues === undefined)
+            {
+                numValues = this.length;
+            }
+
+            var n = 0;
+            while (n < numValues &&
+                   this[offset] === data[n])
+            {
+                offset += 1;
+                n += 1;
+            }
+
+            if (n < numValues)
+            {
+                if (0 < n)
+                {
+                    numValues -= n;
+                    if (data.subarray)
+                    {
+                        data = data.subarray(n, (n + numValues));
+                    }
+                    else
+                    {
+                        data = data.slice(n, numValues);
+                    }
+                }
+
+                self._addCommand('D', id, offset, numValues, self._addData(data, numValues, true));
+
+                n = 0;
+                do
+                {
+                    this[offset] = data[n];
+                    offset += 1;
+                    n += 1;
+                }
+                while (n < numValues);
+            }
+        };
+        techniqueParameterBuffer['map'] = function captureTPBmap(offset, numValues)
+        {
+            if (offset === undefined)
+            {
+                offset = 0;
+            }
+            if (numValues === undefined)
+            {
+                numValues = this.length;
+            }
+            var data = new Float32Array(numValues);
+            var valuesWritten = 0;
+            var captureWriter = function capturTPBWriter()
+            {
+                var numArguments = arguments.length;
+                for (var a = 0; a < numArguments; a += 1)
+                {
+                    var value = arguments[a];
+                    if (typeof value === 'number')
+                    {
+                        data[valuesWritten] = value;
+                        valuesWritten += 1;
+                    }
+                    else
+                    {
+                        var length = value.length;
+                        var n;
+                        for (n = 0; n < length; n += 1)
+                        {
+                            data[valuesWritten] = value[n];
+                            valuesWritten += 1;
+                        }
+                    }
+                }
+            };
+            captureWriter['end'] = function captureTPBWriterEnd()
+            {
+                techniqueParameterBuffer['setData'](data, offset, valuesWritten);
+            };
+            return captureWriter;
+        };
+        techniqueParameterBuffer['unmap'] = function captureTPBunmap(writer)
+        {
+            writer['end']();
+        };
+
+        techniqueParameterBuffer['destroy'] = function captureTPBDestroy()
+        {
+            self.destroyedIds.push(parseInt(this._id, 10));
+            this.length = 0;
+        };
+
+        if (params.dynamic === false)
+        {
+            delete params.dynamic;
+        }
+        if (params.data)
+        {
+            var data = params.data;
+            this._addCommand('D', id, 0, techniqueParameterBuffer.length, this._addData(data, data.length, true));
+            delete params.data;
+        }
+        this.techniqueParameterBuffers[id] = this._cloneObject(params, true);
+        return techniqueParameterBuffer;
     }
 
     createRenderBuffer(params)
@@ -1698,15 +1819,16 @@ class CaptureGraphicsDevice
             version: 1,
             resources: {
                 vertexBuffers: this.vertexBuffers,
-               indexBuffers: this.indexBuffers,
-               semantics: this.semantics,
-               formats: this.formats,
-               textures: this.textures,
-               shaders: this.shaders,
-               techniques: this.techniques,
-               videos: this.videos,
-               renderBuffers: this.renderBuffers,
-               renderTargets: this.renderTargets
+                indexBuffers: this.indexBuffers,
+                techniqueParameterBuffers: this.techniqueParameterBuffers,
+                semantics: this.semantics,
+                formats: this.formats,
+                textures: this.textures,
+                shaders: this.shaders,
+                techniques: this.techniques,
+                videos: this.videos,
+                renderBuffers: this.renderBuffers,
+                renderTargets: this.renderTargets
             }
         });
     }
@@ -1802,6 +1924,7 @@ class CaptureGraphicsDevice
 
         this.vertexBuffers = {};
         this.indexBuffers = {};
+        this.techniqueParameterBuffers = {};
         this.semantics = {};
         this.formats = {};
         this.textures = {};
@@ -1828,6 +1951,7 @@ class CaptureGraphicsDevice
         this.objects = null;
         this.vertexBuffers = null;
         this.indexBuffers = null;
+        this.techniqueParameterBuffers = null;
         this.semantics = null;
         this.semanticsMap = null;
         this.textures = null;
@@ -2090,6 +2214,16 @@ class PlaybackGraphicsDevice
             {
                 params = indexBuffers[p];
                 this._storeEntity(p, gd.createIndexBuffer(params));
+            }
+        }
+
+        var techniqueParameterBuffers = resources.techniqueParameterBuffers;
+        for (p in techniqueParameterBuffers)
+        {
+            if (techniqueParameterBuffers.hasOwnProperty(p))
+            {
+                params = techniqueParameterBuffers[p];
+                this._storeEntity(p, gd.createTechniqueParameterBuffer(params));
             }
         }
 
