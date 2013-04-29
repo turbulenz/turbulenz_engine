@@ -438,7 +438,7 @@ Setup Guide
 There are two ways to get up and running with the Turbulenz Engine, you can downloaded a packaged fully QA'd
 snapshot release from the `Turbulenz Hub <https://hub.turbulenz.com>`__. These installers are available for
 Windows, Mac OSX and Linux and will install all the required packages and dependencies to get started,
- a full guide can be found at `<http://docs.turbulenz.com/installing.html>`__
+a full guide can be found at `<http://docs.turbulenz.com/installing.html>`__
 
 *Note: SDK versions prior to 0.26.0 were released under a non open source license.*
 
@@ -450,26 +450,59 @@ Setup
 -----
 
 1. Clone the repository `<http://github.com/turbulenz/turbulenz_engine>`__ (or if you wish you can fork the repository
-   on GitHub and clone that). ``git clone git@github.com:turbulenz/turbulenz_engine.git`` will clone the repository
-   maintained by Turbulenz.
-2. Initialize the Git submodules with ``git submodule update --init``.
-   The Turbulenz Engine submodules the following technology in the external folder
+   on GitHub and clone that). To clone the repository maintained by Turbulenz use
+
+::
+
+    git clone git@github.com:turbulenz/turbulenz_engine.git
+
+2. The Turbulenz Engine submodules the following technology in the external folder
 
     + tzbuild: https://github.com/turbulenz/turbulenz_build
     + DefinitelyTyped: https://github.com/borisyankov/DefinitelyTyped
     + UglifyJS: https://github.com/mishoo/UglifyJS.git
+
+   Initialize the Git submodules with
+
+::
+    git submodule update --init
+
 3. Check you have the pre-requisites installed
 
-    + Python 2.7.x (2.7.3 is the most tested version) - ``python --version`` will check your current version, if
-      you have multiple Python versions installed e.g. 3.x you may need to run commands with ``python2.7``
-    + VirtualEnv - you can check for VirtualEnv with ``virtualenv --version``
-4. From the cloned repository run ``python manage.py env``. This will create a VirtualEnv environment and install
-   the required Python packages and NodeJS allowing you to use all the features of the Turbulenz Engine.
-5. Activate the environment in your shell. For bash and similar shells ``source env/bin/activate`` or for Windows
-   ``env\scripts\activate.bat``
-6. If you want to move onto the API tutorial section next then your final step is to build the JavaScript sources
-   from the TypeScript sources. For this run the command ``python manage.py jslib``, the next section will detail
-   some of the additional actions you can perform or you can move onto `Getting Started With The API`_
+    + Python 2.7.x (2.7.3 is the current QA'd version) - if you have multiple Python versions installed e.g. 3.x
+      you may need to run commands with ``python2.7``
+    + VirtualEnv - 1.9.1 or higher recommended
+
+   You can check versions with
+
+::
+
+    python --version
+    Python 2.7.3
+    virtualenv --version
+    1.9.1
+
+4. From the cloned repository create a VirtualEnv environment to install the required Python packages and NodeJS,
+   allowing you to use all the features of the Turbulenz Engine.
+
+::
+
+    python manage.py env
+
+5. Activate the environment in your shell.
+
+::
+
+    source env/bin/activate - for bash and similar shells
+    env\scripts\activate.bat - for Windows
+
+6. If you want to move onto the API tutorial section next then your final command is to build the JavaScript sources
+   from the TypeScript sources. The next section will detail some of the additional actions you can perform or you
+   can move onto `Getting Started With The API`_
+
+::
+
+    python manage.py jslib
 
 Working With The Open Source Project
 ------------------------------------
