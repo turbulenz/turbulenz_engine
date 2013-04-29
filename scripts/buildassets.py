@@ -163,6 +163,7 @@ class CopyTool(object):
         if verbose:
             print 'Copy ' + src + ' -> ' + dst
         copy_file(src, dst)
+        return True
 
     @staticmethod
     def check_version(build_path, verbose=False):
@@ -188,7 +189,12 @@ class Tga2Json(Tool):
         cmd = [self.path, '-quality', '105', src, dst]
         if args:
             cmd.extend(args)
-        return sh(cmd, verbose=verbose)
+        try:
+            sh(cmd, verbose=verbose)
+            return True
+        except CalledProcessError as e:
+            error('command %s failed\n%s' % (' '.join(e.cmd), e.output))
+            return False
 
 class PythonTool(Tool):
     def __init__(self, name, path=None, module_name=None):
@@ -208,7 +214,12 @@ class PythonTool(Tool):
         cmd.extend(['-i', src, '-o', dst])
         if args:
             cmd.extend(args)
-        return sh(cmd, verbose=verbose)
+        try:
+            sh(cmd, verbose=verbose)
+            return True
+        except CalledProcessError as e:
+            error('command %s failed\n%s' % (' '.join(e.cmd), e.output))
+            return False
 
 class Dae2Json(PythonTool):
     def __init__(self, name, path=None, module_name=None, nvtristrip=None):
@@ -227,7 +238,12 @@ class Dae2Json(PythonTool):
             cmd.extend(['--nvtristrip', self.nvtristrip])
         if args:
             cmd.extend(args)
-        return sh(cmd, verbose=verbose)
+        try:
+            sh(cmd, verbose=verbose)
+            return True
+        except CalledProcessError as e:
+            error('command %s failed\n%s' % (' '.join(e.cmd), e.output))
+            return False
 
 class Cgfx2JsonTool(Tool):
     def get_version(self, version_file_path):
@@ -244,7 +260,12 @@ class Cgfx2JsonTool(Tool):
         cmd = [self.path, '-i', src, '-o', dst]
         if args:
             cmd.extend(args)
-        return sh(cmd, verbose=verbose)
+        try:
+            sh(cmd, verbose=verbose)
+            return True
+        except CalledProcessError as e:
+            error('command %s failed\n%s' % (' '.join(e.cmd), e.output))
+            return False
 
 class Tools(object):
     def __init__(self, args, build_path):
@@ -372,7 +393,6 @@ def build_asset(asset_info, source_list, tools, build_path, verbose):
         print '[%s] %s' % (asset_tool.name.upper(), src)
         source = source_list.get_source(src)
         asset_tool.run(source.asset_path, dst_path, verbose, asset_info.args)
-
         return True
     else:
         return False
