@@ -3,6 +3,8 @@
 *.cgh
 *.json
 *.user
+*.ncb
+*.suo
 Debug
 Release
 x64
