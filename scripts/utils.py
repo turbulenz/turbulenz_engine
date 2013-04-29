@@ -238,7 +238,7 @@ if platform.system() == "Windows":
         devenv_path = _get_reg_software_value(HKEY_LOCAL_MACHINE, 'Microsoft\VisualStudio\9.0', 'InstallDir')
 
         if devenv_path is not None:
-            devenv_path = join(devenv_path, 'devenv.com')
+            devenv_path = os.path.join(devenv_path, 'devenv.com')
 
         return devenv_path
     # pylint: enable=F0401, E0602
