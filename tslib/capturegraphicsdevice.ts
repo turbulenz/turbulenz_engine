@@ -16,6 +16,7 @@
 // 'T': setTechnique
 // 'P': setTechniqueParameters
 // 'W': setViewport
+// 'X': destroy
 
 class CaptureGraphicsDevice
 {
@@ -1171,6 +1172,7 @@ class CaptureGraphicsDevice
             vertexBuffer.destroy = function captureVBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
+                self._addCommand('X', this._id);
                 destroy.call(this);
             };
 
@@ -1271,6 +1273,7 @@ class CaptureGraphicsDevice
             indexBuffer.destroy = function captureIBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
+                self._addCommand('X', this._id);
                 destroy.call(this);
             };
 
@@ -2478,6 +2481,10 @@ class PlaybackGraphicsDevice
             else if (method === 'EO')
             {
                 gd.endOcclusionQuery(command[1]);
+            }
+            else if (method === 'X')
+            {
+                command[1].destroy();
             }
             else
             {
