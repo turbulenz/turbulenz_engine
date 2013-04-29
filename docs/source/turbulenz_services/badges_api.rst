@@ -96,6 +96,9 @@ possibly at the same time as :ref:`saving your game <userdatamanager>`.
 **Defining your game's badges**
 
 Badges are defined with a ``badges.yaml`` file located in your games folder.
+
+.. highlight:: yaml
+
 Here is an example file::
 
     -   key:            'cropmaster'
@@ -119,6 +122,8 @@ Here is an example file::
         imageresource:
             icon:                 'img/badges/seedmeister.png'
             border-color:         '#00000'
+
+.. highlight:: javascript
 
 Badges are sorted the way you define them in your YAML file.
 The YAML file is a dictionary of badge definitions.

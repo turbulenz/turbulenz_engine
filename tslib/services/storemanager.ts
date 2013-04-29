@@ -26,7 +26,7 @@ interface UserItemList
 //
 interface StoreManagerErrorCB
 {
-    (msg: string, status?: number, items?: any, todo?: any[]): void;
+    (msg: string, status?: number, fn_called?: any, parameters_given?: any[]): void;
 };
 
 //

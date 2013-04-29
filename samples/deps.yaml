@@ -37,6 +37,9 @@
 - textures/hero_0.dds
 - textures/up.png
 - textures/down.png
+- textures/nought.png
+- textures/cross.png
+- textures/tictactoeboard.png
 
 - path: textures/boy_10.png
   logical_path: boy_10.png

@@ -11,8 +11,11 @@ The UserDataManager Object
 
 The UserDataManager object is an API for creating and loading save games and storing user settings.
 
-UserData shouldn't be confused with the :ref:`public game profiles <gameprofilemanager>` (for a public game profile)
-, :ref:`badges system<badgemanager>` (for achievements) or :ref:`leaderboards <leaderboardmanager>` (for high scores).
+UserData shouldn't be confused with the
+:ref:`public game profiles API<gameprofilemanager>` (for a public game profile),
+:ref:`data share API<datasharemanager>` (for multiplayer save games),
+:ref:`badges API<badgemanager>` (for achievements) or
+:ref:`leaderboards API<leaderboardmanager>` (for high scores).
 UserData is separate from the badges and leaderboards in that it is designed to only be accessed from inside a game.
 
 **Required scripts**
@@ -23,13 +26,17 @@ The ``UserDataManager`` object requires::
     /*{{ javascript("jslib/services/turbulenzservices.js") }}*/
     /*{{ javascript("jslib/services/userdatamanager.js") }}*/
 
-.. _userdatamanager_working_with_http:
+.. _working_with_http:
 
 Working with HTTP requests
 ==========================
 
-The TurbulenzServices JavaScript library and its objects all communicate with Turbulenz Services over a HTTP connection.
-There are several aspects of HTTP behavior developers should be aware of when considering this model:
+The TurbulenzServices JavaScript library and its objects all communicate with Turbulenz Services over an HTTP connection.
+:ref:`User data <userdatamanager>` and :ref:`data shares <datasharemanager>` make HTTP requests for each get or set function call.
+For these API's it is up to the developer to decide how to use the key-value store effiecently
+Subsequently, in order to decrease loading times and bandwidth required you should be aware of HTTP requests and their limitations.
+
+There are several aspects of HTTP behavior developers should be aware of:
 
 * Before any communication can take place, a connection needs to be established.
 * Setting up a connection can potentially take a long time.
@@ -42,19 +49,21 @@ These rules mean that in order to make the most use of Turbulenz Services you wi
 A single large request will not take advantage of the multiple connections.
 Equally, lots of small requests will have a higher chance of requiring a connection restart and will have a higher HTTP request header overhead.
 
-Subsequently, it is preferable to split large requests into several smaller requests.
-A large set of small requests should be grouped into several larger requests.
+Subsequently, it is preferable to split large requests into several smaller requests to maximize throughput.
+Lots of small requests (<1KB) should be grouped into several larger requests to minimize HTTP request header overhead.
 
 .. NOTE::
-	A request that is smaller than 1KB should not be split as multiple request headers will require more than 1KB.
-	An exception to this rule is when splitting the request means that only one of the requests needs to be made.
+  A request that is smaller than 1KB should not be split as multiple request headers will require more than 1KB.
+  An exception to this rule is when splitting the request means that only one of the requests needs to be made.
 
 Usage guidelines
 ================
 
+.. _userdata_key_value_store:
+
 **The key-value system**
 
-The HTTP model requires a different way of thinking about save data.
+The :ref:`HTTP model <working_with_http>` requires a different way of thinking about save data.
 An online model no longer suits a single large save game object and Turbulenz Services encourage developers to break their save game data into small transactions.
 In order to allow you to take advantage of the HTTP model Turbulenz has provided a key-value system for saving user data.
 This allows you to split your own save games into parts.
@@ -255,7 +264,7 @@ Saving multiple independent objects::
 
 
 .. NOTE::
-    This example is wasteful as each object saved is smaller than :ref:`the HTTP header size <userdatamanager_working_with_http>`.
+    This example is wasteful as each object saved is smaller than :ref:`the HTTP header size <working_with_http>`.
     In your game you should merge keys with small value sizes into one object.
 
 .. NOTE::

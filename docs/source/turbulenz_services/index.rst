@@ -12,6 +12,7 @@ Turbulenz Services API
 
    turbulenzservices_api
    turbulenzservices_assets
+   turbulenzservices_gamedata
    servicerequester_api
    osdlib_api
    turbulenzbridge_api
@@ -25,3 +26,4 @@ Turbulenz Services API
    store_api
    userprofile_api
    gameprofile_api
+   datashare_api

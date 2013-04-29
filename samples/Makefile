@@ -149,6 +149,9 @@ userdata_src := tsscripts/templates/userdata.ts
 userdata_deps := sceneloader htmlcontrols
 TSAPPS += userdata
 
+datashares_src := tsscripts/templates/datashares.ts
+datashares_deps := simplebuttons
+TSAPPS += datashares
 
 video_src := tsscripts/templates/video.ts
 TSAPPS += video

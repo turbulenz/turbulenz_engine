@@ -74,6 +74,8 @@ The store definition file contains ``resources`` and ``offerings``:
   An offering can contain more than one resource and can contain mixtures of resource types.
   The offerings are what the users buy and have a price in each currency (currently only USD are supported).
 
+.. highlight:: yaml
+
 Here is an example file::
 
     resources:
@@ -135,6 +137,8 @@ Here is an example file::
           bananas: 5
         price:
           USD: 3.99
+
+.. highlight:: javascript
 
 .. WARNING::
 

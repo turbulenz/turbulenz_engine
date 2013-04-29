@@ -76,6 +76,9 @@ possibly at the same time as :ref:`saving your game <userdatamanager>`.
 **Defining your game's leaderboards**
 
 Leaderboards are defined with a ``leaderboards.yaml`` file.
+
+.. highlight:: yaml
+
 Here is an example file::
 
     - key: steps
@@ -109,6 +112,8 @@ Here is an example file::
       title: Highest kills in deathmatch round
       sortBy: 1
       icon256: img/Best dm kills256.png
+
+.. highlight:: javascript
 
 The definition file is a dictionary of leaderboard definitions.
 Each key in the dictionary is a leaderboard key which is used as a reference to the leaderboard for the LeaderboardManager API calls.
