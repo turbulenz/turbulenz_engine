@@ -451,7 +451,6 @@ Setup
 
 1. Clone the repository `<http://github.com/turbulenz/turbulenz_engine>`__ (or if you wish you can fork the repository
    on GitHub and clone that). To clone the repository maintained by Turbulenz use
-
 ::
 
     git clone git@github.com:turbulenz/turbulenz_engine.git
@@ -463,8 +462,8 @@ Setup
     + UglifyJS: https://github.com/mishoo/UglifyJS.git
 
    Initialize the Git submodules with
-
 ::
+
     git submodule update --init
 
 3. Check you have the pre-requisites installed
@@ -474,7 +473,6 @@ Setup
     + VirtualEnv - 1.9.1 or higher recommended
 
    You can check versions with
-
 ::
 
     python --version
@@ -484,13 +482,11 @@ Setup
 
 4. From the cloned repository create a VirtualEnv environment to install the required Python packages and NodeJS,
    allowing you to use all the features of the Turbulenz Engine.
-
 ::
 
     python manage.py env
 
 5. Activate the environment in your shell.
-
 ::
 
     source env/bin/activate - for bash and similar shells
@@ -499,7 +495,6 @@ Setup
 6. If you want to move onto the API tutorial section next then your final command is to build the JavaScript sources
    from the TypeScript sources. The next section will detail some of the additional actions you can perform or you
    can move onto `Getting Started With The API`_
-
 ::
 
     python manage.py jslib
