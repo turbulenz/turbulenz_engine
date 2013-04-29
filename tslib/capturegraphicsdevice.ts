@@ -1419,32 +1419,41 @@ class CaptureGraphicsDevice
                 n += 1;
             }
 
-            if (n < numValues)
+            var end = (offset + numValues);
+            while (n < numValues &&
+                   this[end - 1] === data[numValues - 1])
             {
-                if (0 < n)
-                {
-                    numValues -= n;
-                    if (data.subarray)
-                    {
-                        data = data.subarray(n, (n + numValues));
-                    }
-                    else
-                    {
-                        data = data.slice(n, numValues);
-                    }
-                }
-
-                self._addCommand('D', id, offset, numValues, self._addData(data, numValues, true));
-
-                n = 0;
-                do
-                {
-                    this[offset] = data[n];
-                    offset += 1;
-                    n += 1;
-                }
-                while (n < numValues);
+                end -= 1;
+                numValues -= 1;
             }
+            if (n >= numValues)
+            {
+                return;
+            }
+
+            if (0 < n)
+            {
+                numValues -= n;
+                if (data.subarray)
+                {
+                    data = data.subarray(n, (n + numValues));
+                }
+                else
+                {
+                    data = data.slice(n, numValues);
+                }
+            }
+
+            self._addCommand('D', id, offset, numValues, self._addData(data, numValues, true));
+
+            n = 0;
+            do
+            {
+                this[offset] = data[n];
+                offset += 1;
+                n += 1;
+            }
+            while (n < numValues);
         };
         techniqueParameterBuffer['map'] = function captureTPBmap(offset, numValues)
         {
