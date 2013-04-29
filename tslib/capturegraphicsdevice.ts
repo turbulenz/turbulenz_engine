@@ -1178,7 +1178,7 @@ class CaptureGraphicsDevice
 
             var attributes = params.attributes;
             params.attributes = this._cloneVertexFormats(attributes);
-            if (params.dynamic === false)
+            if (params.dynamic === false || params.transient)
             {
                 delete params.dynamic;
             }
@@ -1277,7 +1277,7 @@ class CaptureGraphicsDevice
                 destroy.call(this);
             };
 
-            if (params.dynamic === false)
+            if (params.dynamic === false || params.transient)
             {
                 delete params.dynamic;
             }
