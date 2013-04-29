@@ -747,9 +747,6 @@ class CaptureGraphicsDevice
             var count = drawParameters.count;
             var firstIndex = drawParameters.firstIndex;
 
-            deltaParameters = {};
-            deltaEmpty = true;
-
             if (lastTechnique !== technique)
             {
                 lastTechnique = technique;
@@ -763,6 +760,7 @@ class CaptureGraphicsDevice
                 for (t = 0; t < numGlobalTechniqueParameters; t += 1)
                 {
                     techniqueParameters = globalTechniqueParametersArray[t];
+
                     for (p in techniqueParameters)
                     {
                         if (validParameters[p] !== undefined)
@@ -771,8 +769,6 @@ class CaptureGraphicsDevice
                             if (value !== undefined)
                             {
                                 currentParameters[p] = value;
-                                deltaParameters[p] = value;
-                                deltaEmpty = false;
                             }
                             else
                             {
@@ -781,11 +777,17 @@ class CaptureGraphicsDevice
                         }
                     }
                 }
+
+                this.setTechniqueParameters(currentParameters);
             }
 
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
             {
                 techniqueParameters = drawParameters[t];
+
+                deltaParameters = {};
+                deltaEmpty = true;
+
                 for (p in techniqueParameters)
                 {
                     if (validParameters[p] !== undefined)
@@ -814,11 +816,11 @@ class CaptureGraphicsDevice
                         }
                     }
                 }
-            }
 
-            if (!deltaEmpty)
-            {
-                this.setTechniqueParameters(deltaParameters);
+                if (!deltaEmpty)
+                {
+                    this.setTechniqueParameters(deltaParameters);
+                }
             }
 
             streamsMatch = (lastEndStreams === endStreams);
