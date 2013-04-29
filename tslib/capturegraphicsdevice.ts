@@ -2439,14 +2439,6 @@ class PlaybackGraphicsDevice
             {
                 gd.endRenderTarget();
             }
-            else if (method === 'BO')
-            {
-                gd.beginOcclusionQuery(command[1]);
-            }
-            else if (method === 'EO')
-            {
-                gd.endOcclusionQuery(command[1]);
-            }
             else if (method === 'W')
             {
                 var x = command[1];
@@ -2478,6 +2470,14 @@ class PlaybackGraphicsDevice
                     h = gd.height;
                 }
                 gd.setScissor(x, y, w, h);
+            }
+            else if (method === 'BO')
+            {
+                gd.beginOcclusionQuery(command[1]);
+            }
+            else if (method === 'EO')
+            {
+                gd.endOcclusionQuery(command[1]);
             }
             else
             {
