@@ -453,7 +453,7 @@ Setup
    on GitHub and clone that). To clone the repository maintained by Turbulenz use
 ::
 
-    git clone git@github.com:turbulenz/turbulenz_engine.git
+    $ git clone git@github.com:turbulenz/turbulenz_engine.git
 
 2. The Turbulenz Engine submodules the following technology in the external folder
 
@@ -464,7 +464,7 @@ Setup
    Initialize the Git submodules with
 ::
 
-    git submodule update --init
+    $ git submodule update --init
 
 3. Check you have the pre-requisites installed
 
@@ -475,29 +475,29 @@ Setup
    You can check versions with
 ::
 
-    python --version
+    $ python --version
     Python 2.7.3
-    virtualenv --version
+    $ virtualenv --version
     1.9.1
 
 4. From the cloned repository create a VirtualEnv environment to install the required Python packages and NodeJS,
    allowing you to use all the features of the Turbulenz Engine.
 ::
 
-    python manage.py env
+    $ python manage.py env
 
 5. Activate the environment in your shell.
 ::
 
-    source env/bin/activate - for bash and similar shells
-    env\scripts\activate.bat - for Windows
+    $ source env/bin/activate - for bash and similar shells
+    > env\scripts\activate.bat - for Windows
 
 6. If you want to move onto the API tutorial section next then your final command is to build the JavaScript sources
    from the TypeScript sources. The next section will detail some of the additional actions you can perform or you
    can move onto `Getting Started With The API`_
 ::
 
-    python manage.py jslib
+    $ python manage.py jslib
 
 Working With The Open Source Project
 ------------------------------------
