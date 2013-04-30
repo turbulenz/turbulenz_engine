@@ -6499,7 +6499,10 @@ WebGLGraphicsDevice.create = function webGLGraphicsDeviceCreateFn(canvas, params
     textureUnits.length = maxTextureUnit;
     for (var t = 0; t < maxTextureUnit; t += 1)
     {
-        textureUnits[t] = {};
+        textureUnits[t] = {
+            texture: null,
+            target: 0
+        };
     }
 
     var defaultDepthFunc = gl.LEQUAL;
