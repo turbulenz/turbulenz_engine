@@ -60,9 +60,9 @@ class TurbulenzBridge
         }
     };
 
-    static isInitialised()
+    static isInitialised(): bool
     {
-        return this._bridge !== undefined;
+        return (this._bridge !== undefined);
     };
 
     static emit(serviceName: string, request: string)
