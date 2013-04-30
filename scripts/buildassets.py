@@ -154,6 +154,14 @@ class Tool(object):
         else:
             return self.changed
 
+    def run_sh(self, cmd, verbose):
+        try:
+            sh(cmd, verbose=verbose)
+            return True
+        except CalledProcessError as e:
+            error('command %s failed\n%s' % (' '.join(e.cmd), e.output))
+            raise
+
 class CopyTool(object):
     def __init__(self, name='copy', path=None):
         self.name = name
@@ -163,6 +171,7 @@ class CopyTool(object):
         if verbose:
             print 'Copy ' + src + ' -> ' + dst
         copy_file(src, dst)
+        return True
 
     @staticmethod
     def check_version(build_path, verbose=False):
@@ -188,7 +197,7 @@ class Tga2Json(Tool):
         cmd = [self.path, '-quality', '105', src, dst]
         if args:
             cmd.extend(args)
-        return sh(cmd, verbose=verbose)
+        return self.run_sh(cmd, verbose=verbose)
 
 class PythonTool(Tool):
     def __init__(self, name, path=None, module_name=None):
@@ -208,7 +217,7 @@ class PythonTool(Tool):
         cmd.extend(['-i', src, '-o', dst])
         if args:
             cmd.extend(args)
-        return sh(cmd, verbose=verbose)
+        return self.run_sh(cmd, verbose=verbose)
 
 class Dae2Json(PythonTool):
     def __init__(self, name, path=None, module_name=None, nvtristrip=None):
@@ -227,14 +236,14 @@ class Dae2Json(PythonTool):
             cmd.extend(['--nvtristrip', self.nvtristrip])
         if args:
             cmd.extend(args)
-        return sh(cmd, verbose=verbose)
+        return self.run_sh(cmd, verbose=verbose)
 
 class Cgfx2JsonTool(Tool):
     def get_version(self, version_file_path):
         try:
             version = sh([self.path, '--version'], verbose=False)
         except CalledProcessError:
-            error('could not launch cgfx2json')
+            error('could not launch cgfx2json, CGFX support will be unavailable.')
             return None
         with open(version_file_path, 'wt') as f:
             f.write(version)
@@ -244,7 +253,7 @@ class Cgfx2JsonTool(Tool):
         cmd = [self.path, '-i', src, '-o', dst]
         if args:
             cmd.extend(args)
-        return sh(cmd, verbose=verbose)
+        return self.run_sh(cmd, verbose=verbose)
 
 class Tools(object):
     def __init__(self, args, build_path):
@@ -372,7 +381,6 @@ def build_asset(asset_info, source_list, tools, build_path, verbose):
         print '[%s] %s' % (asset_tool.name.upper(), src)
         source = source_list.get_source(src)
         asset_tool.run(source.asset_path, dst_path, verbose, asset_info.args)
-
         return True
     else:
         return False
@@ -486,6 +494,7 @@ def main():
                 assets_rebuilt += 1
     except CalledProcessError as e:
         error('Tool failed - %s' % str(e))
+        return 1
     except IOError as e:
         error(str(e))
 
