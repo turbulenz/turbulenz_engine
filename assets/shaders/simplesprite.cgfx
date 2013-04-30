@@ -1,0 +1,174 @@
+// Copyright (c) 2009-2012 Turbulenz Limited
+
+#include "skinning.cgh"
+
+//
+// Uniform variables
+//
+float4x4 worldViewProjection;
+
+float4 materialColor = {1.0, 1.0, 1.0, 1.0};
+
+sampler2D diffuse : register(s0) = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+    WrapS = Repeat;
+    WrapT = Repeat;
+    MaxAnisotropy = 16;
+};
+
+//
+// Variant inputs
+//
+struct VP_NOLIGHT_VERTEXCOLOR_IN
+{
+    float3 Position : POSITION;
+    float2 UV       : TEXCOORD0;
+    float4 Color    : COLOR;
+};
+
+struct VP_NOLIGHT_OUT
+{
+    float4 Position : POSITION;
+    float4 Color    : COLOR;
+    float2 UV       : TEXCOORD0;
+};
+
+struct FP_NOLIGHT_IN
+{
+    float4 Color    : COLOR;
+    float2 UV       : TEXCOORD0;
+};
+
+//
+// Utils
+//
+float4 PointToDevice(float3 pt, float4x4 transform)
+{
+    return pt.xxxx * transform[0] +
+           pt.yyyy * transform[1] +
+           pt.zzzz * transform[2] +
+                     transform[3];
+}
+
+//
+// Vertex programs
+//
+VP_NOLIGHT_OUT vp_nolight_vertexcolor(VP_NOLIGHT_VERTEXCOLOR_IN IN)
+{
+    VP_NOLIGHT_OUT OUT;
+    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
+    OUT.Color = float4(IN.Color.xyz * materialColor.xyz, IN.Color.w);
+    OUT.UV = IN.UV;
+    return OUT;
+}
+
+//
+// Fragment programs
+//
+float4 fp_normal(FP_NOLIGHT_IN IN) : COLOR
+{
+    return IN.Color * tex2D(diffuse, IN.UV);
+}
+
+float4 fp_premodulatealpha(FP_NOLIGHT_IN IN) : COLOR
+{
+    float4 color = IN.Color * tex2D(diffuse, IN.UV);
+    color.xyz *= IN.Color.w;
+    return color;
+}
+
+//
+// Techniques
+//
+technique blend_particle
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+        PolygonOffset   = float2(-1.0, -1.0);
+        PolygonOffsetFillEnable = true;
+
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_normal();
+    }
+}
+
+technique add_particle
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, One);
+        PolygonOffset   = float2(-1.0, -1.0);
+        PolygonOffsetFillEnable = true;
+
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_normal();
+    }
+}
+
+technique blend_particle_no_z
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthFunc       = Always;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+        PolygonOffset   = float2(-1.0, -1.0);
+        PolygonOffsetFillEnable = true;
+
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_normal();
+    }
+}
+
+technique add_particle_no_z
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthFunc       = Always;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, One);
+        PolygonOffset   = float2(-1.0, -1.0);
+        PolygonOffsetFillEnable = true;
+
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_normal();
+    }
+}
+
+
+technique invfilter_particle
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, InvSrcColor);
+        PolygonOffset   = float2(-1.0, -1.0);
+        PolygonOffsetFillEnable = true;
+
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_normal();
+    }
+}
