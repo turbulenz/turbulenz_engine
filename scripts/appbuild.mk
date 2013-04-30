@@ -282,6 +282,7 @@ help :
 	@echo "   make [<options>] clean"
 	@echo "   make distclean"
 	@echo "   make install_jslib"
+	@echo "   make install_protolib"
 	@echo ""
 	@echo " Targets:"
 	@echo ""
@@ -293,6 +294,11 @@ help :
 	@echo ""
 	@echo "   install_jslib   - Install jslib into the current directory.  This"
 	@echo "                     recursively copies all files from TZROOT/jslib,"
+	@echo "                     taking care not to overwrite any files that have"
+	@echo "                     been changed (safe to run at every build)."
+	@echo ""
+	@echo "   install_protolib - Install protolib into the current directory.  This"
+	@echo "                     recursively copies all files from TZROOT/protolib,"
 	@echo "                     taking care not to overwrite any files that have"
 	@echo "                     been changed (safe to run at every build)."
 	@echo ""
@@ -338,6 +344,37 @@ endef
 
 $(foreach s,$(_jslib_src_files),$(eval                          \
   $(call _copy_jslib_file,$(s),$(subst $(JSLIBDIR),jslib,$(s))) \
+))
+
+############################################################
+# 'install_protolib' target
+############################################################
+
+PROTOLIBDIR ?= $(TZROOT)/protolib
+_protolib_src_files := $(shell $(FIND) $(PROTOLIBDIR) -iname '*.js')
+
+.PHONY: install_protolib
+.PHONY: do_install_protolib
+
+install_protolib:
+	$(MAKE) do_install_protolib
+
+# 1 - src
+# 2 - dst
+define _copy_protolib_file
+
+  $(call _mkdir_rule,$(dir $(2)))
+
+  $(2): $(1) |$(call _dir_marker,$(dir $(2)))
+	@echo [CP   ] $(1) $(2)
+	$(CMDPREFIX)$(CP) $(1) $(2)
+
+  do_install_protolib: $(2)
+
+endef
+
+$(foreach s,$(_protolib_src_files),$(eval                          \
+  $(call _copy_protolib_file,$(s),$(subst $(PROTOLIBDIR),protolib,$(s))) \
 ))
 
 ############################################################
