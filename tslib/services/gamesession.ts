@@ -175,7 +175,7 @@ class GameSession
     };
 
     static create(requestHandler, sessionCreatedFn,
-                  errorCallbackFn): GameSession
+                  errorCallbackFn?): GameSession
     {
         var gameSession = new GameSession();
         var gameSlug = window.gameSlug;

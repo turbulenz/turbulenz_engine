@@ -350,7 +350,7 @@ class TurbulenzServices
     {
     };
 
-    static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn)
+    static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn?)
     {
         return GameSession.create(requestHandler, sessionCreatedFn,
                                   errorCallbackFn);
@@ -358,8 +358,8 @@ class TurbulenzServices
 
     static createMappingTable(requestHandler, gameSession,
                               tableRecievedFn,
-                              defaultMappingSettings,
-                              errorCallbackFn) : MappingTable
+                              defaultMappingSettings?,
+                              errorCallbackFn?) : MappingTable
     {
         var mappingTable;
         var mappingTableSettings = gameSession && gameSession.mappingTable;
