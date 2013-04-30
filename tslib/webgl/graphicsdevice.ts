@@ -3345,9 +3345,7 @@ Technique.prototype =
                 }
             }
 
-            this.checkProperties = function ()
-            {
-            };
+            this.checkProperties = null;
         }
         else
         {
@@ -3836,15 +3834,6 @@ TechniqueParameters.create = function TechniqueParametersFn(params)
 //
 // TechniqueParameterBuffer
 //
-function techniqueParameterBufferSetData(data, offset, numValues)
-{
-    for (var n = 0, o = offset; n < numValues; n += 1, o += 1)
-    {
-        this[o] = data[n];
-    }
-    return o;
-}
-
 var techniqueParameterBufferCreate =
     function techniqueParameterBufferCreateFn(params)
 {
@@ -3873,7 +3862,8 @@ var techniqueParameterBufferCreate =
                     }
                     else
                     {
-                        offset = techniqueParameterBufferSetData.call(buffer, value, offset, value.length);
+                        buffer.setData(value, offset, value.length);
+                        offset += value.length;
                     }
                 }
             }
@@ -3881,6 +3871,23 @@ var techniqueParameterBufferCreate =
         };
 
         Float32Array.prototype.unmap = function techniqueParameterBufferUnmap(/* writer */) {
+        };
+
+        Float32Array.prototype.setData = function techniqueParameterBufferSetData(data,
+                                                                                  offset?: number,
+                                                                                  numValues?: number) {
+            if (offset === undefined)
+            {
+                offset = 0;
+            }
+            if (numValues === undefined)
+            {
+                numValues = this.length;
+            }
+            for (var n = 0; n < numValues; n += 1, offset += 1)
+            {
+                this[offset] = data[n];
+            }
         };
     }
 
@@ -4300,7 +4307,10 @@ WebGLGraphicsDevice.prototype =
         var numPasses = passes.length;
         var mask;
 
-        activeTechnique.checkProperties(this);
+        if (activeTechnique.checkProperties)
+        {
+            activeTechnique.checkProperties(this);
+        }
 
         /*jshint bitwise: false*/
         if (1 === numPasses)
@@ -4354,7 +4364,10 @@ WebGLGraphicsDevice.prototype =
         var numPasses = passes.length;
         var mask;
 
-        activeTechnique.checkProperties(this);
+        if (activeTechnique.checkProperties)
+        {
+            activeTechnique.checkProperties(this);
+        }
 
         /*jshint bitwise: false*/
         if (1 === numPasses)
@@ -4809,7 +4822,10 @@ WebGLGraphicsDevice.prototype =
                     setParameters = setParametersDeferred;
                 }
 
-                technique.checkProperties(this);
+                if (technique.checkProperties)
+                {
+                    technique.checkProperties(this);
+                }
 
                 for (t = 0; t < numGlobalTechniqueParameters; t += 1)
                 {
@@ -6483,7 +6499,10 @@ WebGLGraphicsDevice.create = function webGLGraphicsDeviceCreateFn(canvas, params
     textureUnits.length = maxTextureUnit;
     for (var t = 0; t < maxTextureUnit; t += 1)
     {
-        textureUnits[t] = {};
+        textureUnits[t] = {
+            texture: null,
+            target: 0
+        };
     }
 
     var defaultDepthFunc = gl.LEQUAL;

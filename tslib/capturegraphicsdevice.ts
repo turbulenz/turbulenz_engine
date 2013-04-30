@@ -10,12 +10,14 @@
 // 'EO': endOcclusionQuery
 // 'ER': endRenderTarget
 // 'D': setData
+// 'DD': setData without offset and count
 // 'I': setIndexBuffer
 // 'S': setScissor
 // 'V': setStream
 // 'T': setTechnique
 // 'P': setTechniqueParameters
 // 'W': setViewport
+// 'X': destroy
 
 class CaptureGraphicsDevice
 {
@@ -33,6 +35,7 @@ class CaptureGraphicsDevice
     objects:    {};
     vertexBuffers: {};
     indexBuffers: {};
+    techniqueParameterBuffers: {};
     semantics:  {};
     semanticsMap: {};
     formats:  {};
@@ -79,6 +82,7 @@ class CaptureGraphicsDevice
         this.objects = {};
         this.vertexBuffers = {};
         this.indexBuffers = {};
+        this.techniqueParameterBuffers = {};
         this.semantics = {};
         this.semanticsMap = {};
         this.formats = {};
@@ -279,6 +283,12 @@ class CaptureGraphicsDevice
     {
         var length, index, result, value, id;
 
+        // Check if it has an Id
+        if (typeof object._id === "string")
+        {
+            return object._id;
+        }
+
         if (object instanceof Array)
         {
             length = object.length;
@@ -347,12 +357,6 @@ class CaptureGraphicsDevice
         {
             result = new Date(object.getTime());
             return result;
-        }
-
-        // Check if it has an Id
-        if (typeof object._id === "string")
-        {
-            return object._id;
         }
 
         // This does not clone the prototype. See Object.create() if you want that behaviour
@@ -744,9 +748,6 @@ class CaptureGraphicsDevice
             var count = drawParameters.count;
             var firstIndex = drawParameters.firstIndex;
 
-            deltaParameters = {};
-            deltaEmpty = true;
-
             if (lastTechnique !== technique)
             {
                 lastTechnique = technique;
@@ -760,6 +761,7 @@ class CaptureGraphicsDevice
                 for (t = 0; t < numGlobalTechniqueParameters; t += 1)
                 {
                     techniqueParameters = globalTechniqueParametersArray[t];
+
                     for (p in techniqueParameters)
                     {
                         if (validParameters[p] !== undefined)
@@ -768,8 +770,6 @@ class CaptureGraphicsDevice
                             if (value !== undefined)
                             {
                                 currentParameters[p] = value;
-                                deltaParameters[p] = value;
-                                deltaEmpty = false;
                             }
                             else
                             {
@@ -778,11 +778,17 @@ class CaptureGraphicsDevice
                         }
                     }
                 }
+
+                this.setTechniqueParameters(currentParameters);
             }
 
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
             {
                 techniqueParameters = drawParameters[t];
+
+                deltaParameters = {};
+                deltaEmpty = true;
+
                 for (p in techniqueParameters)
                 {
                     if (validParameters[p] !== undefined)
@@ -811,11 +817,11 @@ class CaptureGraphicsDevice
                         }
                     }
                 }
-            }
 
-            if (!deltaEmpty)
-            {
-                this.setTechniqueParameters(deltaParameters);
+                if (!deltaEmpty)
+                {
+                    this.setTechniqueParameters(deltaParameters);
+                }
             }
 
             streamsMatch = (lastEndStreams === endStreams);
@@ -1107,7 +1113,15 @@ class CaptureGraphicsDevice
                 {
                     numVertices = this.numVertices;
                 }
-                self._addCommand('D', id, offset, numVertices, self._addData(data, (numVertices * this.stride), false));
+
+                if (offset === 0 && numVertices === this.numVertices)
+                {
+                    self._addCommand('DD', id, self._addData(data, (numVertices * this.stride), false));
+                }
+                else
+                {
+                    self._addCommand('D', id, offset, numVertices, self._addData(data, (numVertices * this.stride), false));
+                }
 
                 setData.call(this, data, offset, numVertices);
             };
@@ -1148,7 +1162,14 @@ class CaptureGraphicsDevice
                     };
                     captureWriter['end'] = function captureVBWriterEnd()
                     {
-                        self._addCommand('D', id, offset, numVertices, self._addData(data, data.length, false));
+                        if (offset === 0 && numVertices === vertexBuffer.numVertices)
+                        {
+                            self._addCommand('DD', id, self._addData(data, data.length, false));
+                        }
+                        else
+                        {
+                            self._addCommand('D', id, offset, numVertices, self._addData(data, data.length, false));
+                        }
                     };
                     captureWriter['proxy'] = writer;
                     return captureWriter;
@@ -1169,19 +1190,20 @@ class CaptureGraphicsDevice
             vertexBuffer.destroy = function captureVBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
+                self._addCommand('X', this._id);
                 destroy.call(this);
             };
 
             var attributes = params.attributes;
             params.attributes = this._cloneVertexFormats(attributes);
-            if (params.dynamic === false)
+            if (params.dynamic === false || params.transient)
             {
                 delete params.dynamic;
             }
             if (params.data)
             {
                 var data = params.data;
-                this._addCommand('D', id, 0, vertexBuffer.numVertices, this._addData(data, data.length, false));
+                this._addCommand('DD', id, this._addData(data, data.length, false));
                 delete params.data;
             }
             this.vertexBuffers[id] = this._cloneObject(params, true);
@@ -1209,7 +1231,15 @@ class CaptureGraphicsDevice
                 {
                     numIndices = this.numIndices;
                 }
-                self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+
+                if (offset === 0 && numIndices === this.numIndices)
+                {
+                    self._addCommand('DD', id, self._addData(data, numIndices, true));
+                }
+                else
+                {
+                    self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+                }
 
                 setData.call(this, data, offset, numIndices);
             };
@@ -1248,7 +1278,15 @@ class CaptureGraphicsDevice
                     };
                     captureWriter['end'] = function captureIBWriterEnd()
                     {
-                        self._addCommand('D', id, offset, data.length, self._addData(data, data.length, true));
+                        var numIndices = data.length;
+                        if (offset === 0 && numIndices === indexBuffer.numIndices)
+                        {
+                            self._addCommand('DD', id, self._addData(data, numIndices, true));
+                        }
+                        else
+                        {
+                            self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+                        }
                     };
                     captureWriter['proxy'] = writer;
                     return captureWriter;
@@ -1269,17 +1307,18 @@ class CaptureGraphicsDevice
             indexBuffer.destroy = function captureIBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
+                self._addCommand('X', this._id);
                 destroy.call(this);
             };
 
-            if (params.dynamic === false)
+            if (params.dynamic === false || params.transient)
             {
                 delete params.dynamic;
             }
             if (params.data)
             {
                 var data = params.data;
-                this._addCommand('D', id, 0, indexBuffer.numIndices, this._addData(data, data.length, true));
+                this._addCommand('DD', id, this._addData(data, data.length, true));
                 delete params.data;
             }
             var clonedParams = this._cloneObject(params, true);
@@ -1314,7 +1353,7 @@ class CaptureGraphicsDevice
                 var integers = !(data instanceof Float32Array ||
                                  data instanceof Float64Array ||
                                  data instanceof Array);
-                self._addCommand('D', id, 0, 0, self._addData(data, data.length, integers));
+                self._addCommand('DD', id, self._addData(data, data.length, integers));
 
                 setData.call(this, data);
             };
@@ -1324,7 +1363,7 @@ class CaptureGraphicsDevice
                 var integers = !(data instanceof Float32Array ||
                                  data instanceof Float64Array ||
                                  data instanceof Array);
-                this._addCommand('D', id, 0, 0, this._addData(data, data.length, integers));
+                this._addCommand('DD', id, this._addData(data, data.length, integers));
                 delete params.data;
             }
             if (params.cubemap === false)
@@ -1383,7 +1422,142 @@ class CaptureGraphicsDevice
 
     createTechniqueParameterBuffer(params)
     {
-        return this.gd.createTechniqueParameterBuffer(params);
+        var techniqueParameterBuffer = new Float32Array(params.numFloats);
+        var id = this._getStringId();
+        techniqueParameterBuffer['_id'] = id;
+        if (techniqueParameterBuffer['_id'] !== id)
+        {
+            // Firefox does not support adding extra properties to Float32Arrays
+            // TechniqueParameterBuffers will be treated as regular Float32Arrays...
+            return this.gd.createTechniqueParameterBuffer(params);
+        }
+        var self = this;
+        techniqueParameterBuffer['setData'] = function captureTPBSetData(data, offset, numValues)
+        {
+            if (offset === undefined)
+            {
+                offset = 0;
+            }
+            if (numValues === undefined)
+            {
+                numValues = this.length;
+            }
+
+            var n = 0;
+            while (n < numValues &&
+                   this[offset] === data[n])
+            {
+                offset += 1;
+                n += 1;
+            }
+
+            var end = (offset + numValues);
+            while (n < numValues &&
+                   this[end - 1] === data[numValues - 1])
+            {
+                end -= 1;
+                numValues -= 1;
+            }
+            if (n >= numValues)
+            {
+                return;
+            }
+
+            if (0 < n)
+            {
+                numValues -= n;
+                if (data.subarray)
+                {
+                    data = data.subarray(n, (n + numValues));
+                }
+                else
+                {
+                    data = data.slice(n, numValues);
+                }
+            }
+
+            if (offset === 0 && numValues === this.length)
+            {
+                self._addCommand('DD', id, self._addData(data, numValues, false));
+            }
+            else
+            {
+                self._addCommand('D', id, offset, numValues, self._addData(data, numValues, false));
+            }
+
+            n = 0;
+            do
+            {
+                this[offset] = data[n];
+                offset += 1;
+                n += 1;
+            }
+            while (n < numValues);
+        };
+        techniqueParameterBuffer['map'] = function captureTPBmap(offset, numValues)
+        {
+            if (offset === undefined)
+            {
+                offset = 0;
+            }
+            if (numValues === undefined)
+            {
+                numValues = this.length;
+            }
+            var data = new Float32Array(numValues);
+            var valuesWritten = 0;
+            var captureWriter = function capturTPBWriter()
+            {
+                var numArguments = arguments.length;
+                for (var a = 0; a < numArguments; a += 1)
+                {
+                    var value = arguments[a];
+                    if (typeof value === 'number')
+                    {
+                        data[valuesWritten] = value;
+                        valuesWritten += 1;
+                    }
+                    else
+                    {
+                        var length = value.length;
+                        var n;
+                        for (n = 0; n < length; n += 1)
+                        {
+                            data[valuesWritten] = value[n];
+                            valuesWritten += 1;
+                        }
+                    }
+                }
+            };
+            captureWriter['end'] = function captureTPBWriterEnd()
+            {
+                techniqueParameterBuffer['setData'](data, offset, valuesWritten);
+            };
+            return captureWriter;
+        };
+        techniqueParameterBuffer['unmap'] = function captureTPBunmap(writer)
+        {
+            writer['end']();
+        };
+
+        techniqueParameterBuffer['destroy'] = function captureTPBDestroy()
+        {
+            self.destroyedIds.push(parseInt(this._id, 10));
+            this.length = 0;
+        };
+
+        if (params.dynamic === false)
+        {
+            delete params.dynamic;
+        }
+        if (params.data)
+        {
+            var data = params.data;
+            this._addCommand('DD', id, this._addData(data, data.length, true));
+            delete params.data;
+        }
+        this.techniqueParameterBuffers[id] = this._cloneObject(params, true);
+        return techniqueParameterBuffer;
     }
 
     createRenderBuffer(params)
@@ -1698,15 +1872,16 @@ class CaptureGraphicsDevice
             version: 1,
             resources: {
                 vertexBuffers: this.vertexBuffers,
-               indexBuffers: this.indexBuffers,
-               semantics: this.semantics,
-               formats: this.formats,
-               textures: this.textures,
-               shaders: this.shaders,
-               techniques: this.techniques,
-               videos: this.videos,
-               renderBuffers: this.renderBuffers,
-               renderTargets: this.renderTargets
+                indexBuffers: this.indexBuffers,
+                techniqueParameterBuffers: this.techniqueParameterBuffers,
+                semantics: this.semantics,
+                formats: this.formats,
+                textures: this.textures,
+                shaders: this.shaders,
+                techniques: this.techniques,
+                videos: this.videos,
+                renderBuffers: this.renderBuffers,
+                renderTargets: this.renderTargets
             }
         });
     }
@@ -1802,6 +1977,7 @@ class CaptureGraphicsDevice
 
         this.vertexBuffers = {};
         this.indexBuffers = {};
+        this.techniqueParameterBuffers = {};
         this.semantics = {};
         this.formats = {};
         this.textures = {};
@@ -1828,6 +2004,7 @@ class CaptureGraphicsDevice
         this.objects = null;
         this.vertexBuffers = null;
         this.indexBuffers = null;
+        this.techniqueParameterBuffers = null;
         this.semantics = null;
         this.semanticsMap = null;
         this.textures = null;
@@ -2093,6 +2270,16 @@ class PlaybackGraphicsDevice
             }
         }
 
+        var techniqueParameterBuffers = resources.techniqueParameterBuffers;
+        for (p in techniqueParameterBuffers)
+        {
+            if (techniqueParameterBuffers.hasOwnProperty(p))
+            {
+                params = techniqueParameterBuffers[p];
+                this._storeEntity(p, gd.createTechniqueParameterBuffer(params));
+            }
+        }
+
         var semantics = resources.semantics;
         for (p in semantics)
         {
@@ -2283,6 +2470,10 @@ class PlaybackGraphicsDevice
                                    command[2],
                                    command[3]);
             }
+            else if (method === 'DD')
+            {
+                command[1].setData(command[2]);
+            }
             else if (method === 'BD')
             {
                 this._beginEndDraw(command[1],
@@ -2304,14 +2495,6 @@ class PlaybackGraphicsDevice
             else if (method === 'ER')
             {
                 gd.endRenderTarget();
-            }
-            else if (method === 'BO')
-            {
-                gd.beginOcclusionQuery(command[1]);
-            }
-            else if (method === 'EO')
-            {
-                gd.endOcclusionQuery(command[1]);
             }
             else if (method === 'W')
             {
@@ -2344,6 +2527,18 @@ class PlaybackGraphicsDevice
                     h = gd.height;
                 }
                 gd.setScissor(x, y, w, h);
+            }
+            else if (method === 'BO')
+            {
+                gd.beginOcclusionQuery(command[1]);
+            }
+            else if (method === 'EO')
+            {
+                gd.endOcclusionQuery(command[1]);
+            }
+            else if (method === 'X')
+            {
+                command[1].destroy();
             }
             else
             {
