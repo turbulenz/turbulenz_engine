@@ -10,6 +10,7 @@
 // 'EO': endOcclusionQuery
 // 'ER': endRenderTarget
 // 'D': setData
+// 'DD': setData without offset and count
 // 'I': setIndexBuffer
 // 'S': setScissor
 // 'V': setStream
@@ -1112,7 +1113,15 @@ class CaptureGraphicsDevice
                 {
                     numVertices = this.numVertices;
                 }
-                self._addCommand('D', id, offset, numVertices, self._addData(data, (numVertices * this.stride), false));
+
+                if (offset === 0 && numVertices === this.numVertices)
+                {
+                    self._addCommand('DD', id, self._addData(data, (numVertices * this.stride), false));
+                }
+                else
+                {
+                    self._addCommand('D', id, offset, numVertices, self._addData(data, (numVertices * this.stride), false));
+                }
 
                 setData.call(this, data, offset, numVertices);
             };
@@ -1153,7 +1162,14 @@ class CaptureGraphicsDevice
                     };
                     captureWriter['end'] = function captureVBWriterEnd()
                     {
-                        self._addCommand('D', id, offset, numVertices, self._addData(data, data.length, false));
+                        if (offset === 0 && numVertices === vertexBuffer.numVertices)
+                        {
+                            self._addCommand('DD', id, self._addData(data, data.length, false));
+                        }
+                        else
+                        {
+                            self._addCommand('D', id, offset, numVertices, self._addData(data, data.length, false));
+                        }
                     };
                     captureWriter['proxy'] = writer;
                     return captureWriter;
@@ -1187,7 +1203,7 @@ class CaptureGraphicsDevice
             if (params.data)
             {
                 var data = params.data;
-                this._addCommand('D', id, 0, vertexBuffer.numVertices, this._addData(data, data.length, false));
+                this._addCommand('DD', id, this._addData(data, data.length, false));
                 delete params.data;
             }
             this.vertexBuffers[id] = this._cloneObject(params, true);
@@ -1215,7 +1231,15 @@ class CaptureGraphicsDevice
                 {
                     numIndices = this.numIndices;
                 }
-                self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+
+                if (offset === 0 && numIndices === this.numIndices)
+                {
+                    self._addCommand('DD', id, self._addData(data, numIndices, true));
+                }
+                else
+                {
+                    self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+                }
 
                 setData.call(this, data, offset, numIndices);
             };
@@ -1254,7 +1278,15 @@ class CaptureGraphicsDevice
                     };
                     captureWriter['end'] = function captureIBWriterEnd()
                     {
-                        self._addCommand('D', id, offset, data.length, self._addData(data, data.length, true));
+                        var numIndices = data.length;
+                        if (offset === 0 && numIndices === indexBuffer.numIndices)
+                        {
+                            self._addCommand('DD', id, self._addData(data, numIndices, true));
+                        }
+                        else
+                        {
+                            self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+                        }
                     };
                     captureWriter['proxy'] = writer;
                     return captureWriter;
@@ -1286,7 +1318,7 @@ class CaptureGraphicsDevice
             if (params.data)
             {
                 var data = params.data;
-                this._addCommand('D', id, 0, indexBuffer.numIndices, this._addData(data, data.length, true));
+                this._addCommand('DD', id, this._addData(data, data.length, true));
                 delete params.data;
             }
             var clonedParams = this._cloneObject(params, true);
@@ -1321,7 +1353,7 @@ class CaptureGraphicsDevice
                 var integers = !(data instanceof Float32Array ||
                                  data instanceof Float64Array ||
                                  data instanceof Array);
-                self._addCommand('D', id, 0, 0, self._addData(data, data.length, integers));
+                self._addCommand('DD', id, self._addData(data, data.length, integers));
 
                 setData.call(this, data);
             };
@@ -1331,7 +1363,7 @@ class CaptureGraphicsDevice
                 var integers = !(data instanceof Float32Array ||
                                  data instanceof Float64Array ||
                                  data instanceof Array);
-                this._addCommand('D', id, 0, 0, this._addData(data, data.length, integers));
+                this._addCommand('DD', id, this._addData(data, data.length, integers));
                 delete params.data;
             }
             if (params.cubemap === false)
@@ -1444,7 +1476,14 @@ class CaptureGraphicsDevice
                 }
             }
 
-            self._addCommand('D', id, offset, numValues, self._addData(data, numValues, true));
+            if (offset === 0 && numValues === this.length)
+            {
+                self._addCommand('DD', id, self._addData(data, numValues, false));
+            }
+            else
+            {
+                self._addCommand('D', id, offset, numValues, self._addData(data, numValues, false));
+            }
 
             n = 0;
             do
@@ -1514,7 +1553,7 @@ class CaptureGraphicsDevice
         if (params.data)
         {
             var data = params.data;
-            this._addCommand('D', id, 0, techniqueParameterBuffer.length, this._addData(data, data.length, true));
+            this._addCommand('DD', id, this._addData(data, data.length, true));
             delete params.data;
         }
         this.techniqueParameterBuffers[id] = this._cloneObject(params, true);
@@ -2430,6 +2469,10 @@ class PlaybackGraphicsDevice
                 command[1].setData(command[4],
                                    command[2],
                                    command[3]);
+            }
+            else if (method === 'DD')
+            {
+                command[1].setData(command[2]);
             }
             else if (method === 'BD')
             {
