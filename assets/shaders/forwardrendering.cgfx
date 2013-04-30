@@ -99,12 +99,12 @@ float4 fp_flat(FP_FLAT_IN IN) : COLOR
     float3 position = IN.ViewPosition;
 
     float4 position4 = float4(position, 1.0);
-    float3 projection = PointToLight(position4, lightViewInverseTranspose);
-    float falloff = dot(position4, lightFalloff);
+    float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
 
     float3 Ln = normalize(lightOrigin - position);
-    float3 diffContrib = max(dot(Ln, Nn), 0.0) * lightColor;
-    float3 attenuation = tex2DprojFix(lightprojection, projection).xyz * tex2D(lightfalloff, float2(falloff, 0.5)).y;
+    float3 diffContrib = dot(Ln, Nn) * lightColor;
+    float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
+                         tex2D(lightfalloff, float2(projection.w, 0.5)).y;
     diffContrib *= attenuation;
     if (dot(diffContrib, float3(0.3, 0.59, 0.11)) < 0.004)
     {
@@ -120,13 +120,13 @@ float4 fp_blinn(FP_BLINN_IN IN) : COLOR
     float3 position = IN.ViewPosition;
 
     float4 position4 = float4(position, 1.0);
-    float3 projection = PointToLight(position4, lightViewInverseTranspose);
-    float falloff = dot(position4, lightFalloff);
+    float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
 
     float3 Ln = normalize(lightOrigin - position);
-    float3 diffContrib = max(dot(Ln, Nn), 0.0) * lightColor;
+    float3 diffContrib = dot(Ln, Nn) * lightColor;
     float4 diffuseColor = tex2D(diffuse, IN.UV);
-    float3 attenuation = tex2DprojFix(lightprojection, projection).xyz * tex2D(lightfalloff, float2(falloff, 0.5)).y;
+    float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
+                         tex2D(lightfalloff, float2(projection.w, 0.5)).y;
     diffContrib *= attenuation;
     if (dot(diffContrib, float3(0.3, 0.59, 0.11)) < 0.004)
     {
