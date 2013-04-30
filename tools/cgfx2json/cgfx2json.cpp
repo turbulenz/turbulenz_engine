@@ -1099,6 +1099,7 @@ int main(int argc, char **argv)
             if (argn < argc)
             {
                 dependencyFileName = argv[argn];
+                outputDependencies = true;
             }
         }
         else if (0 == strcmp(argv[argn], "-j"))
@@ -1298,7 +1299,19 @@ int main(int argc, char **argv)
         IncludeList::const_iterator itr = includePaths.begin();
         for (itr = includePaths.begin(); itr != itrEnd; ++itr)
         {
-            fprintf(dependenciesFile, "%s%s\n", cwd, itr->c_str());
+            const char *includePath = itr->c_str();
+#ifdef WIN32
+            if (includePath[0] == '/' || strstr(includePath, ":/"))
+#else
+            if (includePath[0] == '/')
+#endif
+            {
+                fprintf(dependenciesFile, "%s\n", itr->c_str());
+            }
+            else
+            {
+                fprintf(dependenciesFile, "%s%s\n", cwd, itr->c_str());
+            }
         }
 
         if (stdout != dependenciesFile)
