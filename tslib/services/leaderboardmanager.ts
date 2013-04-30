@@ -22,13 +22,13 @@ class LeaderboardManager
 
     maxGetSize = 32;
 
-    gameSession: GameSession;
-    gameSessionId: string;
-    errorCallbackFn: { (errMsg: string, status?: number): void; };
-    service: ServiceRequester;
-    requestHandler: RequestHandler;
-    ready: bool;
-    meta: any;
+    gameSession     : GameSession;
+    gameSessionId   : string;
+    errorCallbackFn : ServiceErrorCB;
+    service         : ServiceRequester;
+    requestHandler  : RequestHandler;
+    ready           : bool;
+    meta            : any;
 
     getOverview(spec, callbackFn, errorCallbackFn)
     {
