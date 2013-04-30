@@ -419,6 +419,21 @@ technique ambient_flat
     }
 }
 
+technique ambient_flat_nocull
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_ambient_flat();
+        FragmentProgram = compile latest fp_ambient_flat();
+    }
+}
+
 technique ambient_flat_skinned
 {
     pass

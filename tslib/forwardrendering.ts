@@ -107,6 +107,7 @@ class ForwardRendering
     ambientRigidAlphaTechnique: Technique;
     ambientSkinnedAlphaTechnique: Technique;
     ambientFlatRigidTechnique: Technique;
+    ambientFlatRigidNoCullTechnique: Technique;
     ambientFlatSkinnedTechnique: Technique;
     ambientGlowmapRigidTechnique: Technique;
     ambientGlowmapSkinnedTechnique: Technique;
@@ -166,6 +167,7 @@ class ForwardRendering
             this.ambientRigidAlphaTechnique = shader.getTechnique("ambient_alphatest");
             this.ambientSkinnedAlphaTechnique = shader.getTechnique("ambient_alphatest_skinned");
             this.ambientFlatRigidTechnique = shader.getTechnique("ambient_flat");
+            this.ambientFlatRigidNoCullTechnique = shader.getTechnique("ambient_flat_nocull");
             this.ambientFlatSkinnedTechnique = shader.getTechnique("ambient_flat_skinned");
             this.ambientGlowmapRigidTechnique = shader.getTechnique("ambient_glowmap");
             this.ambientGlowmapSkinnedTechnique = shader.getTechnique("ambient_glowmap_skinned");
@@ -1331,6 +1333,7 @@ class ForwardRendering
             delete this.ambientRigidAlphaTechnique
             delete this.ambientSkinnedAlphaTechnique;
             delete this.ambientFlatRigidTechnique;
+            delete this.ambientFlatRigidNoCullTechnique
             delete this.ambientFlatSkinnedTechnique;
             delete this.ambientGlowmapRigidTechnique;
             delete this.ambientGlowmapSkinnedTechnique;
@@ -1727,7 +1730,14 @@ class ForwardRendering
                     }
                     else if (0 === techniqueName.indexOf("flat"))
                     {
-                        drawParameters.technique = fr.ambientFlatRigidTechnique;
+                        if (-1 !== techniqueName.indexOf("_nocull"))
+                        {
+                            drawParameters.technique = fr.ambientFlatRigidNoCullTechnique;
+                        }
+                        else
+                        {
+                            drawParameters.technique = fr.ambientFlatRigidTechnique;
+                        }
                     }
                     else if (-1 !== techniqueName.indexOf("_alpha"))
                     {
