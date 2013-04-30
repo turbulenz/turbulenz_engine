@@ -25,3 +25,4 @@ Turbulenz Services API
    store_api
    userprofile_api
    gameprofile_api
+   notifications_api

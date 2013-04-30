@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2012 Turbulenz Limited
+// Copyright (c) 2011-2013 Turbulenz Limited
 /*global window: false*/
 /*global TurbulenzServices: false*/
 /*global debug: false*/
@@ -15,7 +15,6 @@
  * It wraps an EventEmitter instance that is stored on the page and provides
  * methods that manually display the 'loading'-flag, post certain events to
  * the page or request information about a player's settings.
- *
  */
 
 class TurbulenzBridge
@@ -43,8 +42,8 @@ class TurbulenzBridge
             // TODO can remove all of these or's after gamesite and hub updates
             this.on = bridge.gameListenerOn || bridge.addListener || bridge.setListener;
 
-            // we cant use off yet becuase the function recieved on the other VM is re-wrapped each time
-            //this.off = bridge.gameListenerOff;
+            // we cant use off yet because the function received on the other VM is re-wrapped each time
+            // this.off = bridge.gameListenerOff;
             // Legacy functions addListener/setListener
             this.addListener = bridge.gameListenerOn || bridge.addListener || bridge.setListener;
             this.setListener = bridge.gameListenerOn || bridge.setListener;
@@ -225,6 +224,51 @@ class TurbulenzBridge
     static setOnStoreMeta(callback)
     {
         this.on('store.meta.v2', callback);
+    };
+
+
+    /**
+     * Handle in-game notification events
+     */
+
+    static triggerSendInstantNotification(notification)
+    {
+        this.emit('notifications.ingame.sendInstant', notification);
+    };
+
+    static triggerSendDelayedNotification(notification)
+    {
+        this.emit('notifications.ingame.sendDelayed', notification);
+    };
+
+    static setOnNotificationSent(callback)
+    {
+        this.on('notifications.ingame.sent', callback);
+    }
+
+    static triggerCancelNotificationByID(params)
+    {
+        this.emit('notifications.ingame.cancelByID', params);
+    };
+
+    static triggerCancelNotificationsByKey(params)
+    {
+        this.emit('notifications.ingame.cancelByKey', params);
+    };
+
+    static triggerCancelAllNotifications(params)
+    {
+        this.emit('notifications.ingame.cancelAll', params);
+    };
+
+    static triggerInitNotificationManager(params)
+    {
+        this.emit('notifications.ingame.initNotificationManager', params);
+    };
+
+    static setOnReceiveNotification(callback)
+    {
+        this.on('notifications.ingame.receive', callback);
     };
 
     /**
