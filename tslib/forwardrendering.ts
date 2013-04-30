@@ -1478,7 +1478,6 @@ class ForwardRendering
             }
 
             var techniqueParameters = this.techniqueParameters;
-            techniqueParameters.world = node.world;
             techniqueParameters.worldView = rendererInfo.worldView;
             techniqueParameters.worldViewInverseTranspose = rendererInfo.worldViewInverseTranspose;
         };
@@ -1494,7 +1493,6 @@ class ForwardRendering
             }
 
             var techniqueParameters = this.techniqueParameters;
-            techniqueParameters.world = node.world;
             techniqueParameters.worldView = rendererInfo.worldView;
             techniqueParameters.worldViewInverseTranspose = rendererInfo.worldViewInverseTranspose;
 
