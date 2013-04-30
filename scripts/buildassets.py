@@ -4,7 +4,7 @@
 from sys import argv, stdout
 from json import loads as load_json, dumps as dump_json
 from yaml import load as load_yaml
-from os.path import join as path_join, exists as path_exists, splitext, basename, normpath
+from os.path import join as path_join, exists as path_exists, splitext, basename, normpath, getmtime
 from os import makedirs, listdir, unlink as remove_file, getenv as os_getenv
 from shutil import copy2 as copy_file
 from hashlib import md5
@@ -162,6 +162,9 @@ class Tool(object):
             error('command %s failed\n%s' % (' '.join(e.cmd), e.output))
             raise
 
+    def check_external_deps(self, src, dst, args):
+        return False
+
 class CopyTool(object):
     def __init__(self, name='copy', path=None):
         self.name = name
@@ -179,6 +182,10 @@ class CopyTool(object):
 
     @staticmethod
     def has_changed():
+        return False
+
+    @staticmethod
+    def check_external_deps(src, dst, args):
         return False
 
 class Tga2Json(Tool):
@@ -254,6 +261,19 @@ class Cgfx2JsonTool(Tool):
         if args:
             cmd.extend(args)
         return self.run_sh(cmd, verbose=verbose)
+
+    def check_external_deps(self, src, dst, args):
+        cmd = [self.path, '-i', src, '-M']
+        try:
+            dep_files = sh(cmd, verbose=False)
+        except CalledProcessError as e:
+            error('deps command %s failed ignoring external deps\n%s' % (' '.join(e.cmd), e.output))
+            return False
+        dst_mtime = getmtime(dst)
+        for filename in dep_files.split('\n'):
+            if getmtime(filename) > dst_mtime:
+                return True
+
 
 class Tools(object):
     def __init__(self, args, build_path):
@@ -376,10 +396,11 @@ def build_asset(asset_info, source_list, tools, build_path, verbose):
     dst_path = path_join(build_path, tools.get_asset_destination(src))
     asset_info.build_path = dst_path
 
+    source = source_list.get_source(src)
     deps = [ source_list.get_source(path) for path in asset_info.deps ]
-    if any([dep.has_changed() for dep in deps]) or asset_tool.has_changed() or not path_exists(dst_path):
+    if any([dep.has_changed() for dep in deps]) or asset_tool.has_changed() or not path_exists(dst_path) \
+            or asset_tool.check_external_deps(source.asset_path, dst_path, asset_info.args):
         print '[%s] %s' % (asset_tool.name.upper(), src)
-        source = source_list.get_source(src)
         asset_tool.run(source.asset_path, dst_path, verbose, asset_info.args)
         return True
     else:

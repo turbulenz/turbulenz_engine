@@ -12,6 +12,7 @@
 /*global MultiPlayerSessionManager: false*/
 /*global Observer*/
 /*global StoreManager: false*/
+/*global NotificationsManager: false*/
 /*global debug: false*/
 
 /// <reference path="../requesthandler.ts" />
@@ -21,6 +22,7 @@
 /// <reference path="badgemanager.ts" />
 /// <reference path="leaderboardmanager.ts" />
 /// <reference path="storemanager.ts" />
+/// <reference path="notificationsmanager.ts" />
 /// <reference path="multiplayersessionmanager.ts" />
 
 /// <reference path="gamesession.ts" />

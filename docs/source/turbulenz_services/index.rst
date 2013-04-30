@@ -27,3 +27,4 @@ Turbulenz Services API
    userprofile_api
    gameprofile_api
    datashare_api
+   notifications_api
