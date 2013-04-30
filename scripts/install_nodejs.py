@@ -11,6 +11,7 @@ import StringIO
 import argparse
 
 NODEJS_DIST = 'http://nodejs.org/dist'
+PLATFORM = sys.platform
 
 def download(url, filename, verbose=True):
     from urllib2 import urlopen, HTTPError, URLError
@@ -34,9 +35,15 @@ def download(url, filename, verbose=True):
 
 #
 #
-def nodejs_get_version():
+def nodejs_get_version(allow_system_node):
     try:
-        return str(check_output('node --version', shell=True)).rstrip()
+        if allow_system_node:
+            return str(check_output('node --version', shell=True)).rstrip()
+        elif PLATFORM == 'win32':
+            return str(check_output('env\\Scripts\\node --version', shell=True)).rstrip()
+        else:
+            return str(check_output('env/bin/node --version', shell=True)).rstrip()
+
     except CalledProcessError:
         return ''
 
@@ -146,9 +153,11 @@ def typescript_install_unix(_version):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', default='v0.8.14')
-    parser.add_argument('--typescript', action='store_true')
+    parser.add_argument('--typescript', action='store_true', help='Install TypeScript compiler package')
     parser.add_argument('--typescript-version', default='0.8.3')
     parser.add_argument('-f', '--force', action='store_true')
+    parser.add_argument('--allow-system-node', action='store_true',
+                        help='Allow use of an existing node install')
     parser.add_argument('downloaded_file', nargs='?', default=None)
 
     args = parser.parse_args(sys.argv[1:])
@@ -156,14 +165,12 @@ def main():
     filename = args.downloaded_file
     version = args.version
 
-    platform = sys.platform
-
-    # print 'Version: %s (current=%s), Platform: %s' \
-    #     % (version, current_version, platform)
+    # print 'Version: %s (current=%s), PLATFORM: %s' \
+    #     % (version, current_version, PLATFORM)
 
     install_nodejs = True
     if not args.force:
-        current_version = nodejs_get_version()
+        current_version = nodejs_get_version(args.allow_system_node)
         if version == current_version:
             print 'NodeJS version %s already installed.' % version
             install_nodejs = False
@@ -171,15 +178,15 @@ def main():
     if install_nodejs and version != '-':
         print 'Installing nodejs-%s' % version
 
-        if 'darwin' == platform:
+        if 'darwin' == PLATFORM:
             # nodejs_install_source_unix(version)
-            nodejs_install_binary_unix(version, platform)
+            nodejs_install_binary_unix(version, PLATFORM)
 
-        elif platform.startswith('linux'):
+        elif PLATFORM.startswith('linux'):
             nodejs_install_source_unix(version)
             # nodejs_install_binary_unix(version, 'linux')
 
-        elif 'win32' == platform:
+        elif 'win32' == PLATFORM:
             nodejs_install_binary_win32(version, filename)
     else:
         print 'Skipping nodejs.'
@@ -189,7 +196,7 @@ def main():
         print 'Skipping typescript.'
     else:
         print 'Installing typescript-%s' % ts_version
-        if 'win32' == platform:
+        if 'win32' == PLATFORM:
             typescript_install_win32(ts_version)
         else:
             typescript_install_unix(ts_version)
