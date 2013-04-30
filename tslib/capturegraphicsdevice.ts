@@ -2314,6 +2314,7 @@ class PlaybackGraphicsDevice
         }
         data.length = 0;
 
+        var gd = this.gd;
         var objects = dataObject.objects;
         length = objects.length;
         var id, fileObject, object, objectLength, j, k, v, entity;
@@ -2322,7 +2323,7 @@ class PlaybackGraphicsDevice
             id = objects[n];
             fileObject = objects[n + 1];
             objectLength = fileObject.length;
-            object = {};
+            object = gd.createTechniqueParameters();
             for (j = 0; j < objectLength; j += 2)
             {
                 k = fileObject[j];
@@ -2400,6 +2401,7 @@ class PlaybackGraphicsDevice
         var writer = this.gd.beginDraw(primitive, numVertices, formats, semantics);
         if (writer)
         {
+            var write = writer.write;
             var numTotalComponents = data.length;
             var numComponents = Math.floor(numTotalComponents / numVertices);
             var writerData = this.writerData;
@@ -2413,7 +2415,7 @@ class PlaybackGraphicsDevice
                     writerData[i] = data[n];
                     n += 1;
                 }
-                writer.apply(this, writerData);
+                write.apply(writer, writerData);
             }
             this.gd.endDraw(writer);
         }
