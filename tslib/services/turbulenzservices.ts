@@ -418,8 +418,8 @@ class TurbulenzServices
     };
 
     static createLeaderboardManager(requestHandler, gameSession,
-                                    leaderboardMetaRecieved,
-                                    errorCallbackFn) : LeaderboardManager
+                                    leaderboardMetaRecieved?,
+                                    errorCallbackFn?) : LeaderboardManager
     {
         return LeaderboardManager.create(requestHandler, gameSession,
                                          leaderboardMetaRecieved,
@@ -431,8 +431,8 @@ class TurbulenzServices
         return BadgeManager.create(requestHandler, gameSession);
     };
 
-    static createStoreManager(requestHandler, gameSession, storeMetaRecieved,
-                              errorCallbackFn) : StoreManager
+    static createStoreManager(requestHandler, gameSession, storeMetaRecieved?,
+                              errorCallbackFn?) : StoreManager
     {
         return StoreManager.create(requestHandler,
                                    gameSession,
@@ -446,8 +446,8 @@ class TurbulenzServices
         return MultiPlayerSessionManager.create(requestHandler, gameSession);
     };
 
-    static createUserProfile(requestHandler, profileRecievedFn,
-                             errorCallbackFn): UserProfile
+    static createUserProfile(requestHandler, profileRecievedFn?,
+                             errorCallbackFn?): UserProfile
     {
         var userProfile = <UserProfile><any>{};
 

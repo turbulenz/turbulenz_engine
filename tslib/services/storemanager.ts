@@ -379,8 +379,8 @@ class StoreManager
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
-                  storeMetaReceived: StoreManagerMetaReceivedCB,
-                  errorCallbackFn: StoreManagerErrorCB): StoreManager
+                  storeMetaReceived?: StoreManagerMetaReceivedCB,
+                  errorCallbackFn?: StoreManagerErrorCB): StoreManager
     {
         if (!TurbulenzServices.available())
         {
