@@ -78,11 +78,6 @@ services_deps := utilities debug servicedatatypes
 tzdraw2d_src := $(TS_SRC_DIR)/draw2d.ts
 tzdraw2d_deps = platform
 
-# viewers
-fontviewer_src = $(TS_SRC_DIR)/fontviewer.ts
-
-viewer_src = $(TS_SRC_DIR)/viewer.ts
-
 # physics2d
 physics2d_src := $(addprefix $(TS_SRC_DIR)/, \
   physics2ddevice.ts physics2ddebugdraw.ts boxtree.ts)
