@@ -1826,22 +1826,27 @@ class CaptureGraphicsDevice
                         }
                         value = data[j];
                         valueInt = (value | 0);
-                        if (valueInt === value)
+                        if (Math.abs(valueInt - value) < 0.00001)
                         {
                             dataString += valueInt.toString();
                         }
                         else
                         {
-                            var valueString;
                             if (length <= 16)
                             {
-                                valueString = value.toFixed(5);
+                                if (Math.abs(value) < 0.001)
+                                {
+                                    dataString += value.toExponential(2).replace(/\.?0+e/, 'e');
+                                }
+                                else
+                                {
+                                    dataString += value.toFixed(5).replace(/\.?0+$/, '');
+                                }
                             }
                             else
                             {
-                                valueString = value.toFixed(3);
+                                dataString += value.toFixed(3).replace(/\.?0+$/, '');
                             }
-                            dataString += valueString.replace(/\.?0+$/, '');
                         }
                     }
                     dataString += ']';
