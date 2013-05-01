@@ -369,9 +369,9 @@ class LeaderboardManager
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
-                  leaderboardMetaRecieved:
+                  leaderboardMetaRecieved?:
                   { (mngr: LeaderboardManager): void; },
-                  errorCallbackFn: { (errMsg: string): void; }
+                  errorCallbackFn?: { (errMsg: string): void; }
                  ): LeaderboardManager
     {
         if (!TurbulenzServices.available())

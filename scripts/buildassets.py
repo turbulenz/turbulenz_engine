@@ -269,8 +269,10 @@ class Cgfx2JsonTool(Tool):
         except CalledProcessError as e:
             error('deps command %s failed ignoring external deps\n%s' % (' '.join(e.cmd), e.output))
             return False
+        if not dep_files:
+            return False
         dst_mtime = getmtime(dst)
-        for filename in dep_files.split('\n'):
+        for filename in dep_files.replace('\r\n', '\n').split('\n'):
             if getmtime(filename) > dst_mtime:
                 return True
 
