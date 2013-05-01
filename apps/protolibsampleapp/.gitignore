@@ -13,9 +13,3 @@ textures
 materials
 shaders
 sounds
-
-# .js files generated from .ts files
-templates/*.js
-templates/*.d.ts
-scripts/*.js
-scripts/*.d.ts
