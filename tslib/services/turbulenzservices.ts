@@ -442,6 +442,12 @@ class TurbulenzServices
                                    errorCallbackFn);
     };
 
+    static createNotificationsManager(requestHandler, gameSession, successCallbackFn, errorCallbackFn)
+    : NotificationsManager
+    {
+        return NotificationsManager.create(requestHandler, gameSession, successCallbackFn, errorCallbackFn);
+    };
+
     static createMultiplayerSessionManager(requestHandler, gameSession)
     : MultiPlayerSessionManager
     {
