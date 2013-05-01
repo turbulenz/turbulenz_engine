@@ -157,7 +157,7 @@ function Protolib(params)
     var dynamicUI = params.enableDynamicUI ? DynamicUIManager.create() : null;
     globals.dynamicUI = dynamicUI;
 
-    this.watch = {
+    this.watchTypes = {
         SLIDER: 'slider'
     };
     this.dynamicUIGroups = {};

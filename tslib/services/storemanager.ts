@@ -379,8 +379,8 @@ class StoreManager
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
-                  storeMetaReceived: StoreManagerMetaReceivedCB,
-                  errorCallbackFn: StoreManagerErrorCB): StoreManager
+                  storeMetaReceived?: StoreManagerMetaReceivedCB,
+                  errorCallbackFn?: StoreManagerErrorCB): StoreManager
     {
         if (!TurbulenzServices.available())
         {
@@ -417,7 +417,7 @@ class StoreManager
         storeManager.userItems = null;
 
         var calledMetaReceived = false;
-        function checkMetaRecieved() : void
+        function checkMetaReceived() : void
         {
             if (!calledMetaReceived &&
                 storeManager.offerings !== null &&
@@ -434,7 +434,7 @@ class StoreManager
             }
         }
 
-        storeManager.requestUserItems(checkMetaRecieved);
+        storeManager.requestUserItems(checkMetaReceived);
 
         storeManager.onBasketUpdate = null;
         storeManager.updateBasketCallbacks = {};
@@ -459,7 +459,7 @@ class StoreManager
                 storeManager.onBasketUpdate(basket);
             }
 
-            checkMetaRecieved();
+            checkMetaReceived();
         };
         TurbulenzBridge.setOnBasketUpdate(onBasketUpdate);
         TurbulenzBridge.triggerBasketUpdate();
@@ -470,7 +470,7 @@ class StoreManager
             storeManager.currency = meta.currency;
             storeManager.offerings = meta.items || meta.offerings;
             storeManager.resources = meta.resources;
-            checkMetaRecieved();
+            checkMetaReceived();
         };
         TurbulenzBridge.setOnStoreMeta(onStoreMeta);
         TurbulenzBridge.triggerFetchStoreMeta();

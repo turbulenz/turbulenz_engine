@@ -9,10 +9,110 @@
 The Protolib Object
 -------------------
 
-Dependencies
+**Added SDK 0.26.0**
+
+**BETA**
+
+This feature is currently in beta and does not represent the final set of available APIs.
+
+Introduction
 ============
 
-Protolib requires::
+Protolib is library/framework providing simple graphics, input and sound for prototyping games.
+It provides a subset of the complete Turbulenz Engine features with simple interfaces for:
+
+* Setting :ref:`background color <protolib-setclearcolor>`.
+* Modifying 3D :ref:`camera <protolib-setcameraposition>` position, direction, orientation, FOV, near/far planes.
+* Loading and drawing :ref:`2D Sprites <protolib-draw2dsprite>`, :ref:`3D Sprites <protolib-draw3dsprite>`, :ref:`3D Meshes <protolib-loadmesh>`.
+* Font rendering :ref:`text <protolib-drawText>` for GUIs.
+* Debug rendering for :ref:`3D lines <protolib-draw3dline>`, :ref:`spheres <protolib-drawdebugsphere>`, :ref:`cubes <protolib-drawdebugcube>`.
+* Lighting for the 3D scene including shadowrendering : :ref:`ambient <protolib-setambientlightcolor>`, :ref:`spot <protolib-addspotlight>`, :ref:`point <protolib-addpointlight>`.
+* State-based input for :ref:`keyboard <protolib-iskeydown>`, :ref:`mouse <protolib-ismousedown>`.
+* Play, pause, resume and stop for 3D :ref:`sound <protolib-playsound>` with position, looping, pitch, min/max distance, rolloff.
+* Live manipulation and :ref:`monitoring of variables <protolib-variablewatch>` with sliders.
+* Configurable functionality with :ref:`parameters <protolib-constructor>` e.g. fonts, providing custom asset mapping, disabling of sound/shadows.
+
+Using Protolib
+--------------
+
+To use Protolib you must create an instance using::
+
+    var protolibConfig = {
+        onIntialized: function onInitializedFn(protolib)
+        {
+            // Protolib has loaded requirements
+        }
+    };
+
+    var protolib = Protolib.create(protolibConfig);
+
+You can then use functions provided by Protolib to load any files and set any configuration required before rendering::
+
+    protolib.setClearColor(bgColor);
+    protolib.setAmbientLightColor(ambientColor);
+
+    var mesh = protolib.loadMesh({
+        mesh: "models/mymesh.dae",
+        v3Position: meshPosition
+    });
+
+    var pointLight = protolib.addPointLight({
+        v3Position: lightPos,
+        radius: 300,
+        v3Color: color
+    });
+
+Some functions will provide a wrapper to the object type you created.
+The wrapper is your reference to the instance of the type e.g. mesh, point light, spot light, sound.
+When the resource is available, the library will render/play them automatically.
+
+To update properties of the library during a frame you should make calls between the beginFrame, endFrame functions::
+
+    if (protolib.beginFrame())
+    {
+        pointLight.setPosition(newLightPosition);
+
+        protolib.draw3DLine({
+            pos1: startPos,
+            pos2: endPos,
+            v3Color: lineColor
+        });
+
+        if (protolib.isKeyDown(protolib.keyCodes.UP))
+        {
+            protolib.moveCamera(cameraUpVector);
+        }
+
+        protolib.drawText({
+            text: "Hello World!",
+            position: textScreenPosition
+        });
+
+        protolib.endFrame();
+    }
+
+The state of protolib will be updated by the functions called between these functions, then any rendering required will be done at the end of the frame.
+Functions like draw2DSprite will efficiently batch the function calls together drawing them together.
+
+Library Files
+-------------
+
+Protolib is made up of multiple files and all these files should be included for the library to work:
+
+:protolib: The core protolib file. Creation, destruction and configuration.
+:simplesprite: The rendering for the 3D sprites.
+:simplefonts: The rendering for the gui text.
+:sceneloader: The loading utility for scenes, used by simplesceneloader.
+:simplesceneloader: The module for loading and managing meshes.
+:debugdraw: The debug drawing utility for lines, etc.
+:soundsourcemanager: The manager for handling sound sources.
+:jqueryextend: A minimal subset of jquery providing the extend functionality.
+:duimanager: The game code side component of the dynamic UI.
+
+Requirements
+------------
+
+To use protolib you will need to include the following library code in your template file::
 
     /*{{ javascript('jslib/camera.js') }}*/
     /*{{ javascript('jslib/requesthandler.js') }}*/
@@ -27,6 +127,7 @@ Protolib requires::
     /*{{ javascript('jslib/services/turbulenzservices.js') }}*/
     /*{{ javascript('jslib/services/gamesession.js') }}*/
     /*{{ javascript('jslib/services/mappingtable.js') }}*/
+
     /*{{ javascript('jslib/scene.js') }}*/
     /*{{ javascript('jslib/light.js') }}*/
     /*{{ javascript('jslib/material.js') }}*/
@@ -42,14 +143,38 @@ Protolib requires::
     /*{{ javascript('jslib/shadowmapping.js') }}*/
     /*{{ javascript('jslib/draw2d.js') }}*/
 
-    /*{{ javascript('scripts/globals.js') }}*/
-    /*{{ javascript('scripts/simplesprite.js') }}*/
-    /*{{ javascript('scripts/simplefonts.js') }}*/
-    /*{{ javascript('scripts/simplesceneloader.js') }}*/
-    /*{{ javascript('scripts/debugdraw.js') }}*/
-    /*{{ javascript('scripts/sceneloader.js') }}*/
-    /*{{ javascript('scripts/soundsourcemanager.js') }}*/
-    /*{{ javascript('scripts/protolib.js') }}*/
+    /*{{ javascript('protolib/duimanager.js') }}*/
+    /*{{ javascript('protolib/jqueryextend.js') }}*/
+    /*{{ javascript('protolib/simplesprite.js') }}*/
+    /*{{ javascript('protolib/simplefonts.js') }}*/
+    /*{{ javascript('protolib/simplesceneloader.js') }}*/
+    /*{{ javascript('protolib/debugdraw.js') }}*/
+    /*{{ javascript('protolib/sceneloader.js') }}*/
+    /*{{ javascript('protolib/soundsourcemanager.js') }}*/
+    /*{{ javascript('protolib/protolib.js') }}*/
+
+And the following assets in your mapping_table.json::
+
+    - shaders/debug.cgfx
+    - shaders/shadowmapping.cgfx
+    - shaders/zonly.cgfx
+    - shaders/font.cgfx
+    - shaders/forwardrendering.cgfx
+    - shaders/forwardrenderingshadows.cgfx
+    - shaders/simplesprite.cgfx
+    - textures/default_light.png
+    - textures/opensans-8_0.png
+    - textures/opensans-16_0.png
+    - textures/opensans-32_0.png
+    - textures/opensans-64_0.png
+    - textures/opensans-128_0.png
+    - fonts/opensans-8.fnt
+    - fonts/opensans-16.fnt
+    - fonts/opensans-32.fnt
+    - fonts/opensans-64.fnt
+    - fonts/opensans-128.fnt
+
+.. _protolib-constructor:
 
 Constructor
 ===========
@@ -65,7 +190,7 @@ Creates a protolib object.
 
     var that = this;
 
-    var onInitializedFn = function()
+    var onInitialized = function onInitializedFn()
     {
         that.initGame();
         TurbulenzEngine.setInterval(function()
@@ -77,10 +202,19 @@ Creates a protolib object.
 
     var config =
     {
-        onInitialized: onInitializedFn,
-        useShadows : true,
-        maxSoundSources : 50,
-        fontPath : "fonts/opensans.fnt"
+        onInitialized: onInitialized,
+        useShadows: true,
+        maxSoundSources: 50,
+        disableSound: false,
+        fonts: {
+            regular: "opensans"
+        },
+        defaultMappingSettings: {
+            mappingTablePrefix: 'staticmax/',
+            assetPrefix: 'missing',
+            mappingTableURL: 'mapping_table.json',
+            urnMapping: {}
+        }
     };
 
     var protolib = Protolib.create(config);
@@ -95,8 +229,49 @@ Creates a protolib object.
 ``maxSoundSources`` (Optional)
     The number of sound sources to create. Determines the maximum number of sounds that can play simultaneously. Defaults to ``50``.
 
-``fontPath`` (Optional)
-    The font the :ref:`drawFont <protolib-drawfont>` function should use. Defaults to ``"fonts/opensans.fnt"``.
+``disableSound`` (Optional)
+    A boolean that determines whether to provide sound functionality. Calls to playSound will return null. Defaults to ``false``.
+
+``fonts`` (Optional)
+    An object containing the fonts to load for use with the :ref:`drawText <protolib-drawText>` function in the format::
+
+        {
+            FONTSTYLE: "FONTNAME"
+        }
+
+    Protolib will attempt to load the following variations of that font: 8, 16, 32, 64, 128 pixel height.
+    If you want to use your own font you will need to provide the following files accessible from the mapping table:
+
+    * fonts/FONTNAME-8.fnt
+    * fonts/FONTNAME-16.fnt
+    * fonts/FONTNAME-32.fnt
+    * fonts/FONTNAME-64.fnt
+    * fonts/FONTNAME-128.fnt
+    * textures/FONTNAME-8_0.png
+    * textures/FONTNAME-16_0.png
+    * textures/FONTNAME-32_0.png
+    * textures/FONTNAME-64_0.png
+    * textures/FONTNAME-128_0.png
+
+    If a font is not available or is missing a required pixel height, it will default to "opensans" 16 pixels, then the default Turbulenz font.
+    Defaults to ::
+
+        {
+            regular: "opensans"
+        }
+
+``defaultMappingSettings`` (Optional)
+    An object specifying the default mapping table settings to use.
+    If a mapping table cannot be found, Protolib will attempt to use the mapping provided by urnMapping.
+    See :ref:`createMappingTable <turbulenzservices_createmappingtable>` for more details on defaultMappingSettings.
+    Defaults to ::
+
+        {
+            mappingTablePrefix: "staticmax/",
+            assetPrefix: "missing/",
+            mappingTableURL: "mapping_table.json",
+            urnMapping: {}
+        }
 
 Game Loop
 =========
@@ -114,7 +289,7 @@ This can fail if the host window is not visible, e.g. the browser is minimized o
 
 **Syntax** ::
 
-    if(protolib.beginFrame())
+    if (protolib.beginFrame())
     {
         drawScene();
 
@@ -133,7 +308,7 @@ Signals the end of the current render frame.
 
 **Syntax** ::
 
-    if(protolib.beginFrame())
+    if (protolib.beginFrame())
     {
         drawScene();
 
@@ -217,7 +392,7 @@ Camera
     protolib.setCameraPosition(cameraPosition);
 
 ``cameraPosition``
-    A :ref:`Vector3 <v3object>` object representing the 3d position of the camera.
+    A :ref:`Vector3 <v3object>` object representing the 3D position of the camera.
 
 .. _protolib-getcameraposition:
 
@@ -545,7 +720,7 @@ Draws a 3D Sprite.
 
 **Summary**
 
-Loads a 3d mesh and adds it to the scene. Returns a :ref:`MeshWrapper <meshwrapper>` object to control the loaded mesh.
+Loads a 3D mesh and adds it to the scene. Returns a :ref:`MeshWrapper <meshwrapper>` object to control the loaded mesh.
 
 **Syntax** ::
 
@@ -927,7 +1102,7 @@ Mouse State
 
     var isMouseOnGame = protolib.isMouseOnGame();
 
-Returns true iff the mouse is currently over the game canvas.
+Returns true if the mouse is currently over the game canvas.
 
 .. _protolib-getmouseposition:
 
@@ -942,7 +1117,7 @@ Returns true iff the mouse is currently over the game canvas.
 
 Returns an array of length 2 giving the coordinates of the mouse.
 
-When the mouse is locked, the mouse position isn't well-defined. :ref:`getMouseDelta <protolib-getmousedelta>` should be used instead.
+When the mouse is locked, the mouse position is handled by :ref:`getMouseDelta <protolib-getmousedelta>` instead.
 
 .. _protolib-getmousedelta:
 
@@ -1003,6 +1178,103 @@ A dictionary specifying the possible blend modes, used by :ref:`draw2DSprite <pr
 
 Values are: ``ALPHA``, ``ADDITIVE``.
 
+.. _protolib-watchtypes:
+
+`watchTypes`
+------------
+
+A dictionary specifying the possible watch types, used by :ref:`addWatchVariable <protolib-addWatchVariable>` and :ref:`removeWatchVariable <protolib-removeWatchVariable>`.
+
+Values are: ``SLIDER``.
+
+Options are:
+
+``SLIDER`` ::
+
+    {
+        min: number,    // The minimum value of the slider.
+        max: number,    // The maximum value of the slider.
+        step: number    // The amount to move the slider by when dragging.
+    }
+
+.. _protolib-variablewatch:
+
+Variable Watch
+==============
+
+Allows variables to be exposed and manipulated by the hosting page.
+The variable uses the "Dynamic User Interface" module to expose the variable.
+To manipulate/view the result, the page must include the "duiserver.js" and the associated "dynamicui.css".
+If these are not available, the variable will not be controllable.
+For an example of this functionality in use, see the apps in the SDK.
+
+.. _protolib-addwatchvariable:
+
+`addWatchVariable`
+------------------
+
+**Summary**
+
+Adds a watchable variable to the page that contains the Protolib app.
+
+**Syntax** ::
+
+    var variableOwner = {
+        variableName: 1
+    };
+
+    var watchID = protolib.addWatchVariable({
+            title: "Variable Title",
+            object: variableOwner,
+            property: "variableName",
+            group: "Variable Group",
+            type: protolib.watchTypes.SLIDER,
+            options: {
+                min: 0.1,
+                max: 10,
+                step: 0.1
+            }
+        });
+
+``title``
+    The string title displayed on the page for the variable. This should be something to help recognise the variable.
+
+``object``
+    An object that has the variable as a property.
+
+``property``
+    The string name of the variable to expose. Property must be accessible on object.
+
+``group``
+    The name of the group to store the watch variable entry under. On the page this will be represent name of the variable to expose. Property must be accessible on *object*.
+
+``type``
+    The watchType enum for page control of the variable. This determines what you will be able to do to the variable.
+
+``options``
+    The options to pass for the :ref:`watchType <protolib-watchtypes>`.
+
+Returns a watchID for removing the watch variable later. If any of the arguments are invalid the function will return -1.
+
+.. _protolib-removewatchvariable:
+
+`removeWatchVariable`
+---------------------
+
+**Summary**
+
+Remove a watchable variable by watchID. This removes the control from the page that contains the Protolib app.
+
+**Syntax** ::
+
+    // watchID returned by addWatchVariable
+
+    protolib.removeWatchVariable(watchID);
+
+``watchID``
+    The ID to remove. Returned by the addWatchVariable.
+
+Returns a true if successfully removed. Returns false if the dynamic UI is not enabled or if the ID is not recognized.
 
 
 .. _meshwrapper:

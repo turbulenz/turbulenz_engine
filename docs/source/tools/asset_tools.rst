@@ -24,7 +24,7 @@ The engine uses Y up convention.  There is some support for conversion from X an
 Options
 -------
 
-This tools uses the `Standard Asset Tool Options`_.
+This tool uses the `Standard Asset Tool Options`_.
 
 **Added SDK 0.25.0**
 
@@ -39,6 +39,49 @@ Example
 ::
 
     dae2json -v -m -i assets/models/duck.dae -o apps/sampleapp/models/duck.dae.json
+
+.. index::
+    pair: Tools; obj2json
+
+.. _obj2json:
+
+========
+obj2json
+========
+
+-----
+Usage
+-----
+
+**Syntax** ::
+
+    obj2json [options] -i source.obj -o target.json
+
+Convert Wavefront (.obj) files into a Turbulenz JSON asset.
+
+-------
+Options
+-------
+
+This tool uses the `Standard Asset Tool Options`_.
+
+-------
+Example
+-------
+
+::
+
+    obj2json -v -m -i assets/models/watercan.obj -o samples/models/watercan.obj.json
+
+.. NOTE::
+
+    The tool does not have support for .mtl files yet, but expects any relevant materials
+    to be declared in a .material file and included as a dependancy in deps.yaml
+
+    The tool sets the default node name of the asset parsed to be the file name (without the path),
+    unless anything else is supplied. This could lead to clashes with other nodes with the same name.
+
+    Each surface is assumed to only have a single material. A new surface will be made upon requiring a new material.
 
 .. index::
     pair: Tools; material2json
@@ -61,7 +104,7 @@ Convert Material Yaml (.material) files into a Turbulenz JSON asset.
 Options
 -------
 
-This tools uses the `Standard Asset Tool Options`_.
+This tool uses the `Standard Asset Tool Options`_.
 
 -------
 Example
@@ -92,7 +135,7 @@ Convert Effect Yaml (.effect) files into a Turbulenz JSON asset.
 Options
 -------
 
-This tools uses the `Standard Asset Tool Options`_.
+This tool uses the `Standard Asset Tool Options`_.
 
 -------
 Example
