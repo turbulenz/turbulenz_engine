@@ -512,7 +512,8 @@ Setup
         1.9.1
 
 4. From the cloned repository create a VirtualEnv environment to install the required Python packages and NodeJS,
-   allowing you to use all the features of the Turbulenz Engine.
+   allowing you to use all the features of the Turbulenz Engine. Note if Python is not on your shell's path you
+   will need to specify the full path for this first command.
    ::
 
         $ python manage.py env
