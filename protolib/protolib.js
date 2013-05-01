@@ -22,6 +22,7 @@
 /*global DynamicUIManager: false*/
 /*global VMathArrayConstructor: false*/
 /*global debug: false*/
+/*global Utilities: false*/
 
 function Protolib(params)
 {
@@ -40,9 +41,44 @@ function Protolib(params)
     var INITIALIZED_CALLBACK = params.onInitialized;
     this.INITIALIZED_CALLBACK = INITIALIZED_CALLBACK;
 
-    //Utils
-    this.utils = {
-        clamp : function clampFn(value, min, max)
+    function logFn(msg)
+    {
+        var console = window.console;
+        if (console)
+        {
+            console.log(msg);
+        }
+    }
+
+    function errorFn(msg)
+    {
+        var console = window.console;
+        if (console)
+        {
+            console.log("Error: " + msg);
+        }
+    }
+
+    // Utils
+    var utilities = Utilities;
+    if (!utilities)
+    {
+        utilities = {
+            log: logFn,
+            error: errorFn
+        };
+
+        utilities.error("Error: Missing Utilities object");
+    }
+
+    this.utils = utilities;
+    if (!utilities.error)
+    {
+        utilities.error = errorFn;
+    }
+    if (!utilities.clamp)
+    {
+        utilities.clamp = function clampFn(value, min, max)
         {
             if (value < min)
             {
@@ -53,8 +89,8 @@ function Protolib(params)
                 value = max;
             }
             return value;
-        }
-    };
+        };
+    }
 
     //Devices
     var gd = TurbulenzEngine.createGraphicsDevice({});
@@ -88,7 +124,7 @@ function Protolib(params)
     //Managers & RequestHandler
     var errorCallback = function errorCallbackFn(msg)
     {
-        window.console.error("Error: ", msg);
+        protolib.utils.error(msg);
     };
 
     TurbulenzEngine.onerror = errorCallback;
