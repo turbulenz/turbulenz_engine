@@ -12,6 +12,8 @@
 /*{{ javascript("jslib/services/turbulenzservices.js") }}*/
 /*{{ javascript("jslib/services/turbulenzbridge.js") }}*/
 /*{{ javascript("jslib/services/datasharemanager.js") }}*/
+/*{{ javascript("jslib/services/notificationsmanager.js") }}*/
+/*{{ javascript("jslib/services/sessiontoken.js") }}*/
 /*{{ javascript("jslib/services/gamesession.js") }}*/
 /*{{ javascript("jslib/services/mappingtable.js") }}*/
 /*{{ javascript("jslib/shadermanager.js") }}*/
@@ -48,6 +50,7 @@ TurbulenzEngine.onload = function onloadFn()
 
     var font, fontShader;
     var dataShareManager;
+    var gameNotificationsManager;
     var userProfile;
     var gameSession;
 
@@ -55,6 +58,11 @@ TurbulenzEngine.onload = function onloadFn()
     var spriteTextureNames = ["textures/tictactoeboard.png",
                               "textures/nought.png",
                               "textures/cross.png"];
+
+    // List to store Texture objects.
+    var textures = {};
+    var numTextures = spriteTextureNames.length;
+    var loadedResources = 0;
 
     function getPieceTexture(piece: string)
     {
@@ -71,11 +79,6 @@ TurbulenzEngine.onload = function onloadFn()
             return null;
         }
     }
-
-    // List to store Texture objects.
-    var textures = {};
-    var numTextures = spriteTextureNames.length;
-    var loadedResources = 0;
 
     function mappingTableReceived(mappingTable)
     {
@@ -131,6 +134,7 @@ TurbulenzEngine.onload = function onloadFn()
         );
 
         dataShareManager = DataShareManager.create(requestHandler, gameSession);
+        gameNotificationsManager = NotificationsManager.create(requestHandler, gameSession, function () {});
 
         function profileRecievedFn(currentUser: string)
         {
@@ -157,6 +161,15 @@ TurbulenzEngine.onload = function onloadFn()
                 {
                     var ticTacToeGame = TicTacToeGame.create(userProfile.username, dataShare.owner);
                     joinedGames[dataShare.id] = ticTacToeGame;
+                    var users = dataShare.users;
+                    var usersLength = users.length;
+                    var usersIndex;
+
+                    for (usersIndex = 0; usersIndex < usersLength; usersIndex += 1)
+                    {
+                        ticTacToeGame.playerJoined(users[usersIndex]);
+                    }
+
                     if (gameStateStore)
                     {
                         ticTacToeGame.update(gameStateStore.value);
@@ -238,6 +251,18 @@ TurbulenzEngine.onload = function onloadFn()
             {
                 invalidateButtons = true;
                 currentGame.update();
+
+                gameNotificationsManager.sendInstantNotification({
+                    key: 'forfeit',
+                    msg: {
+                        dataShareId: currentDataShare.id,
+                        text: userProfile.username + ' forfeit the game',
+                        data: {
+                            sent: new Date()
+                        }
+                    },
+                    recipient: currentGame.getOtherUser()
+                });
             }
             else
             {
@@ -293,6 +318,18 @@ TurbulenzEngine.onload = function onloadFn()
                         currentGame = TicTacToeGame.create(userProfile.username, dataShare.owner);
                         joinedGames[dataShare.id] = currentGame;
                         readMoves();
+
+                        gameNotificationsManager.sendInstantNotification({
+                            key: 'player-joined',
+                            msg: {
+                                dataShareId: currentDataShare.id,
+                                text: userProfile.username + ' has joined your game',
+                                data: {
+                                    sent: new Date()
+                                }
+                            },
+                            recipient: currentGame.getOtherUser()
+                        });
                     }
                     currentDataShare.setJoinable(false, setJoinableCallback);
                 }
@@ -302,6 +339,14 @@ TurbulenzEngine.onload = function onloadFn()
                 }
             }
             dataShare.join(joinedDataShare);
+        }
+    }
+
+    function playerJoinedFn(notification)
+    {
+        if (currentGame && currentDataShare.id === notification.message.dataShareId)
+        {
+            currentGame.playerJoined(notification.sender);
         }
     }
 
@@ -324,6 +369,14 @@ TurbulenzEngine.onload = function onloadFn()
         currentDataShare.get('game-state', getMovesCallback);
     }
 
+    function yourTurnFn(notification)
+    {
+        if (currentGame && currentDataShare.id === notification.message.dataShareId)
+        {
+            readMoves();
+        }
+    }
+
     function toLobby()
     {
         currentDataShare = null;
@@ -340,6 +393,21 @@ TurbulenzEngine.onload = function onloadFn()
                 if (wasSet)
                 {
                     currentGame.update();
+                    var otherUser = currentGame.getOtherUser();
+                    if (otherUser)
+                    {
+                        gameNotificationsManager.sendInstantNotification({
+                            key: 'your-turn',
+                            msg: {
+                                dataShareId: currentDataShare.id,
+                                text: 'It\'s your turn',
+                                data: {
+                                    sent: new Date()
+                                }
+                            },
+                            recipient: otherUser
+                        });
+                    }
                     if (currentGame.roundEnd)
                     {
                         invalidateButtons = true;
@@ -551,7 +619,7 @@ TurbulenzEngine.onload = function onloadFn()
                 segmentFont(20, 0, 'Forfeit', forfeitGame);
             }
 
-            var users = currentDataShare.users;
+            var users = currentGame.getUsers();
             var usersLength = users.length;
             var usersIndex;
             var offsetY = boardOffsetY + boardSizeY + textSpacingY * 2;
@@ -597,7 +665,8 @@ TurbulenzEngine.onload = function onloadFn()
             {
                 draw2D.draw({
                     texture : textures['textures/tictactoeboard.png'],
-                    destinationRectangle : [boardOffsetX, boardOffsetY, boardOffsetX + boardSizeX, boardOffsetY + boardSizeY]
+                    destinationRectangle : [boardOffsetX, boardOffsetY,
+                                            boardOffsetX + boardSizeX, boardOffsetY + boardSizeY]
                 });
 
                 var x, y;
@@ -671,7 +740,10 @@ TurbulenzEngine.onload = function onloadFn()
 
     function loadingLoop()
     {
-        if (font && fontShader && userProfile && dataShareManager &&
+        if (font && fontShader &&
+            userProfile &&
+            dataShareManager &&
+            gameNotificationsManager && gameNotificationsManager.ready &&
             numTextures === loadedResources)
         {
             fontTechnique = fontShader.getTechnique('font');
@@ -689,6 +761,10 @@ TurbulenzEngine.onload = function onloadFn()
                 viewportRectangle : [0, 0, stageWidth, stageHeight],
                 scaleMode : 'scale'
             });
+
+            gameNotificationsManager.addNotificationListener('player-joined', playerJoinedFn);
+            gameNotificationsManager.addNotificationListener('your-turn', yourTurnFn);
+            gameNotificationsManager.addNotificationListener('forfeit', yourTurnFn);
 
             TurbulenzEngine.clearInterval(intervalID);
             TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
@@ -896,19 +972,43 @@ class TicTacToeGame
         }
     };
 
+    playerJoined(username: string): void
+    {
+        var moves = this.moves;
+        if (!moves[username])
+        {
+            moves[username] = [];
+        }
+    };
+
     getUsers(): string[]
+    {
+        var users = [this.currentUsername];
+        var otherUser = this.getOtherUser();
+        if (otherUser)
+        {
+            users.push(otherUser);
+        }
+        if (users.length < 2 && this.host !== this.currentUsername)
+        {
+            users.push(this.host);
+        }
+        return users;
+    };
+
+    getOtherUser(): string
     {
         var moves = this.moves;
         var users = [];
         var username;
         for (username in moves)
         {
-            if (moves.hasOwnProperty(username))
+            if (moves.hasOwnProperty(username) && username !== this.currentUsername)
             {
-                users.push(username);
+                return username;
             }
         }
-        return users;
+        return null;
     };
 
     static create(username: string, host: string): TicTacToeGame
@@ -923,6 +1023,11 @@ class TicTacToeGame
         ticTacToeGame.cross = 'X';
 
         ticTacToeGame.moves = {};
+        ticTacToeGame.moves[username] = [];
+        if (host !== username)
+        {
+            ticTacToeGame.moves[host] = [];
+        }
         ticTacToeGame.boardState = [];
         ticTacToeGame.otherPlayer = null;
         ticTacToeGame.currentPlayerTurn = true;
