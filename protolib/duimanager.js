@@ -1,3 +1,4 @@
+// Copyright (c) 2013 Turbulenz Limited
 var DynamicUIManager = (function () {
     function DynamicUIManager() { }
     DynamicUIManager.prototype._addUI = function (type, title, getValue, setValue, groupId, options) {
