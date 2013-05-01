@@ -1,0 +1,66 @@
+// Copyright (c) 2010-2012 Turbulenz Limited
+
+float4 color;
+float4 clipSpace;
+float  alpha;
+sampler2D diffuse = sampler_state
+{
+    MinFilter = Linear;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+struct VS_OUT
+{
+    float4 Position: POSITION;
+    float2 UV: TEXCOORD0;
+};
+float4 vp_background(float4 Position : POSITION) : POSITION
+{
+   return Position;
+}
+float4 fp_background() : COLOR
+{
+   return float4(color.xyz, smoothstep(0.0, 1.0, color.w));
+}
+VS_OUT vp_texture(float4 Position : POSITION, float2 UV : TEXCOORD0)
+{
+   VS_OUT Out;
+   float4 position = Position;
+   position.xy = position.xy * clipSpace.xy + clipSpace.zw;
+   Out.Position  = position;
+   Out.UV = UV;
+   return Out;
+}
+float4 fp_texture(float2 uv : TEXCOORD0) : COLOR
+{
+   float4 textureColor = tex2D(diffuse, uv);
+   textureColor.w *= smoothstep(0.0, 1.0, alpha);
+   return textureColor;
+}
+technique background
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_background();
+        FragmentProgram = compile latest fp_background();
+    }
+}
+technique texture
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
