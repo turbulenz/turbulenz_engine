@@ -614,6 +614,9 @@ Protolib.prototype =
         // Update input before frame
         id.update();
 
+        var simplesprite = globals.simplesprite;
+        simplesprite.clearSpriteList();
+
         var gd_begin = gd.beginFrame();
 
         this.width = gd.width;
@@ -968,7 +971,10 @@ Protolib.prototype =
             blendStyle : this.toSimpleSpriteBlendStyle[blendStyle]
         };
 
-        simplesprite.addSprite(spriteParams);
+        if (!simplesprite.addSprite(spriteParams))
+        {
+            this.utils.log("Warning: draw3DSprite: Maximum sprites reached.");
+        }
     },
     loadMesh : function addMeshFn(params)
     {

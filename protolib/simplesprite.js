@@ -7,7 +7,6 @@ function SimpleSprite(globals)
     this.globals = globals;
     var gd = globals.graphicsDevice;
 
-    debug.evaluate(this.maxSprites *= 16);
     /* jshint bitwise: false */
     debug.assert(this.maxSprites * 6 < 1<<16); // Must fit in 16 bit indicies.
     /* jshint bitwise: true */
@@ -118,7 +117,7 @@ SimpleSprite.prototype =
     {
         if (this.spriteList.length >= this.maxSprites)
         {
-            return;
+            return false;
         }
 
         var md  =   this.globals.mathDevice;
@@ -145,6 +144,7 @@ SimpleSprite.prototype =
         sprite_to_add.offsetAngle = params.offsetAngle ? params.offsetAngle : 0.0;
 
         this.spriteList.push(sprite_to_add);
+        return true;
     },
 
     drawSprites : function simpleSpriteDrawSpriteFn()
