@@ -17,10 +17,12 @@ Low-level API
 **Graphics**
 
 - Simple shader-based immediate mode API:
-    - A Shader may contain multiple Techniques, either single or multi-pass.
-    - Once a shader Technique is set on the Device, the parameters required by the program code can be updated by a TechniqueParameter object:
-    - TechniqueParameter objects hold multiple references to Textures, TechniqueParameterBuffers or individual values.
-    - Multiple TechniqueParameters can be set on the Device at once.
+
+  - A Shader may contain multiple Techniques, either single or multi-pass.
+  - Once a shader Technique is set on the Device, the parameters required by the program code can be updated by a TechniqueParameter object:
+  - TechniqueParameter objects hold multiple references to Textures, TechniqueParameterBuffers or individual values.
+  - Multiple TechniqueParameters can be set on the Device at once.
+
 - Vertex buffers, Index buffers and Textures can be created, updated and destroyed dynamically.
 - Multiple Streams of Vertex buffers can be used at the same time.
 - Support for 1D, 2D, 3D and Cube textures: Any pixel format supported by the hardware.
@@ -28,23 +30,27 @@ Low-level API
 - Multiple image file formats: DDS, JPG, PNG and TGA.
 - Support for textures archives containing multiple image files: less flexibility than individual files but better for optimal bandwidth usage.
 - Occlusion queries:
-    - Number of pixels rendered can be queried for a section of
-      rendering.
-    - Available in plugin mode only.
+
+  - Number of pixels rendered can be queried for a section of rendering.
+  - Available in plugin mode only.
+
 - Fullscreen support (Supported platforms).
 - Take screenshot feature:
 - Video playback support:
-    - WebM, MP4.
-    - Render video as texture.
-    - Playback controls play, pause, stop, resume, rewind.
+
+  - WebM, MP4.
+  - Render video as texture.
+  - Playback controls play, pause, stop, resume, rewind.
 
 **Math**
 
 - Math types:
-    - *Vector2* *Vector3*, *Vector4*
-    - *Matrix33*, *Matrix34*, *Matrix43*, *Matrix44*
-    - *Quaternion*, *QuatPos*
-    - *AABB*
+
+  - *Vector2* *Vector3*, *Vector4*
+  - *Matrix33*, *Matrix34*, *Matrix43*, *Matrix44*
+  - *Quaternion*, *QuatPos*
+  - *AABB*
+
 - Storage format optimized based on available support
 - Optimized operations support *destination parameters*, reducing object allocation.
 - Array to/from Math type conversion utilities.
@@ -54,44 +60,58 @@ Low-level API
 **3D**
 
 - Easy-to-use efficient physics simulation.
-    - Optimized JavaScript implementation.
-    - In plugin mode, this is a lightweight wrapper around the Bullet Physics Library http://bulletphysics.org/wordpress/
+
+  - Optimized JavaScript implementation.
+  - In plugin mode, this is a lightweight wrapper around the Bullet Physics Library http://bulletphysics.org/wordpress/
+
 - Rigid bodies and collision objects: Plane, Box, Sphere, Capsule, Cylinder, Cone, Triangle Mesh, Convex Hull.
 - Constraints: Point to Point, Hinge, Cone Twist, 6DOF, Slider.
 - Ray and convex sweep queries: Returning closest point of impact and surface normal.
 - Character representation.
-    - For use with 1st/3rd person games.
-    - Includes properties for velocity, position, crouch, jump height, death, on ground.
+
+  - For use with 1st/3rd person games.
+  - Includes properties for velocity, position, crouch, jump height, death, on ground.
+
 - Contact callbacks.
-    - Rigidbodies, characters, collision objects.
-    - Called on presolve, added, processed, removed.
-    - Filter responses by mask.
-    - Triggers with no collision response.
+
+  - Rigidbodies, characters, collision objects.
+  - Called on presolve, added, processed, removed.
+  - Filter responses by mask.
+  - Triggers with no collision response.
 
 **2D**
 
 - Efficient 2D physics simulation written specifically for JavaScript.
 - Shapes:
-    - Circle, Box, Rectangle, Regular Polygon, Custom Polygon.
-    - Create shapes as sensors.
-    - Shape grouping and mask interactions.
+
+  - Circle, Box, Rectangle, Regular Polygon, Custom Polygon.
+  - Create shapes as sensors.
+  - Shape grouping and mask interactions.
+
 - Collision detection:
-    - Sweep & Prune, Box Tree Broadphases.
-    - Utilities for Raytest, Signed Distance, Intersection, Contains Point, Sweep Test.
+
+  - Sweep & Prune, Box Tree Broadphases.
+  - Utilities for Raytest, Signed Distance, Intersection, Contains Point, Sweep Test.
+
 - Simulation world:
-    - Multiple simulation groups.
-    - Optional gravity.
-    - Customisable simulation iterations.
+
+  - Multiple simulation groups.
+  - Optional gravity.
+  - Customisable simulation iterations.
+
 - Rigid body simulation: Dynamic, Static, Kinematic objects.
 - Materials: Elasticity, Static/Dynamic/Rolling Friction, Density.
 - Arbiters:
-    - Contact grouping.
-    - Contact information: Position, Penetration, Normal/Tangent Impulse
+
+  - Contact grouping.
+  - Contact information: Position, Penetration, Normal/Tangent Impulse
+
 - Constraints: Point to Point, Distance, Weld, Angle, Motor, Line, Pulley, Custom Constraint.
 - Debug rendering:
-    - Rigid Bodies, Constraints, Worlds, Lines, Curves, Rectangles, Circles, Spirals, Linear/Spiral Springs.
-    - Enabling and disabling of rendering types.
-    - Scaling for Draw2D viewport.
+
+  - Rigid Bodies, Constraints, Worlds, Lines, Curves, Rectangles, Circles, Spirals, Linear/Spiral Springs.
+  - Enabling and disabling of rendering types.
+  - Scaling for Draw2D viewport.
 
 **Sound**
 
@@ -107,10 +127,13 @@ Low-level API
 **Networking**
 
 - Bi-directional, full-duplex communications channels, over a TCP socket:
-    - Utilizes browser Websocket support.
-    - Efficient native implementation of WebSockets for platforms without support:
-        - http://en.wikipedia.org/wiki/WebSocket
-        - http://dev.w3.org/html5/websockets/
+
+  - Utilizes browser Websocket support.
+  - Efficient native implementation of WebSockets for platforms without support:
+
+    - http://en.wikipedia.org/wiki/WebSocket
+    - http://dev.w3.org/html5/websockets/
+
 - HTTP-compatible handshake so that HTTP servers can share their default HTTP and HTTPS ports (80 and 443) with a WebSocket server.
 - Support for secure connections as part of the standard.
 - Support for data compression with the extension `deflate-frame`.
@@ -119,10 +142,12 @@ Low-level API
 
 - Access to input types: Keyboard, Mouse, Xbox360 Pad, Joysticks, Wheels, Touch, Multi-touch
 - Asynchronous event system when state changes:
-    - JavaScript code is notified when input changes.
-    - Events for keydown, keyup, mousedown, mouseup, mousewheel, mousemove,
-      mouseover, mouseenter, mouseleave, paddown, padup, focus, blur, mouselocklost,
-      touchstart, touchend, touchmove, touchmove, touchenter, touchleave, touchcancel.
+
+  - JavaScript code is notified when input changes.
+  - Events for keydown, keyup, mousedown, mouseup, mousewheel, mousemove,
+    mouseover, mouseenter, mouseleave, paddown, padup, focus, blur, mouselocklost,
+    touchstart, touchend, touchmove, touchmove, touchenter, touchleave, touchcancel.
+
 - Additional mouse features: hiding/showing platform icon, locking/unlocking (supported platforms).
 - Language independent keymapping.
 
@@ -133,13 +158,16 @@ High-level API
 
 - Flexible JSON file format: Could describe either a whole scene or individual meshes.
 - Asynchronous loading of external references:
-    - If a scene contains references to external meshes they are all
-      loaded in parallel and attached to the main scene when ready.
-    - Support for optimal reuse of same mesh on different locations.
+
+  - If a scene contains references to external meshes they are all loaded in parallel and attached to the main scene when ready.
+  - Support for optimal reuse of same mesh on different locations.
+
 - Pluggable renderer system:
-    - Links between geometries, effects and materials are resolved at
-      runtime.
-    - Easy swap of multiple rendering techniques for same assets.
+
+  - Links between geometries, effects and materials are resolved at
+    runtime.
+  - Easy swap of multiple rendering techniques for same assets.
+
 - Geometry sharing: Geometry information can be optimally reused on multiple scene locations with different rendering effects.
 - Flexible scene hierarchy nodes: Lights, Geometries, Animation, Physics.
 - Visibility queries: Portals, Frustum, Overlapping Box.
@@ -151,8 +179,10 @@ High-level API
 - 3D animation for scene geometry.
 - Skeleton/Skinning animation.
 - Animation controllers:
-    - Interpolation, Overloaded Node, Reference, Transition, Blend, Mask, Pose, Skin, GPU Skin, Skinned Node.
-    - Controllers can be combined for desired effect.
+
+  - Interpolation, Overloaded Node, Reference, Transition, Blend, Mask, Pose, Skin, GPU Skin, Skinned Node.
+  - Controllers can be combined for desired effect.
+
 - Dynamically update scene data.
 
 **Resource Manager**
@@ -166,9 +196,10 @@ High-level API
 **Server Requests**
 
 - HTTP & AJAX request functionality:
-    - Automatic retry and error handling.
-    - Cross-browser support.
-    - Encrypted API support.
+
+  - Automatic retry and error handling.
+  - Cross-browser support.
+  - Encrypted API support.
 
 **Deferred Renderer**
 
@@ -176,12 +207,16 @@ High-level API
 - Texture based light falloff: Allows multi-colored lights and cheap fake shadows, for example the typical fan under a light source.
 - Materials with multiple texture maps: Specular color and intensity, Normal vector, Glow color, Alpha.
 - Pluggable post effects:
-    - Easy set-up for full screen post effects as part of the final deferred shading.
-    - Copy, Fade in, Modulate, Bicolor, Blend.
+
+  - Easy set-up for full screen post effects as part of the final deferred shading.
+  - Copy, Fade in, Modulate, Bicolor, Blend.
+
 - Exponential shadow maps:
-    - Reuse of texture shadow maps to save video memory.
-    - Gaussian blur for smooth results.
-    - Exponential depth information to avoid light bleeding.
+
+  - Reuse of texture shadow maps to save video memory.
+  - Gaussian blur for smooth results.
+  - Exponential depth information to avoid light bleeding.
+
 - Volumetric fog.
 - 4 weight GPU skinning.
 - UV animation.
@@ -195,13 +230,17 @@ High-level API
 - Texture based light falloff: Allows multi-colored lights and cheap fake shadows, for example the typical fan under a light source.
 - Materials with multiple texture maps: Specular color and intensity, Normal vector, Glow color, Alpha.
 - Pluggable post effects:
-    - Easy set-up for full screen post effects as part of the final
-      deferred shading.
-    - Copy, Fade in, Modulate, Bicolor, Blend.
+
+  - Easy set-up for full screen post effects as part of the final
+    deferred shading.
+  - Copy, Fade in, Modulate, Bicolor, Blend.
+
 - Exponential shadow maps:
-    - Reuse of texture shadow maps to save video memory.
-    - Gaussian blur for smooth results.
-    - Exponential depth information to avoid light bleeding.
+
+  - Reuse of texture shadow maps to save video memory.
+  - Gaussian blur for smooth results.
+  - Exponential depth information to avoid light bleeding.
+
 - 4 weight GPU skinning.
 - UV animation.
 - Wireframe mode.
@@ -253,27 +292,32 @@ High-level API
 
 **Utilities**
 
-- Allocation and management of graphics buffers:
-    - Vertex buffers.
-    - Index buffers.
+- Allocation and management of graphics buffers: Vertex buffers, Index buffers.
 - API controlled JavaScript profiling:
-    - Per-function millisecond accuracy timing.
-    - Record top-down or bottom-up function trees.
-    - Calculate the time spent by an individual function or
-      the total spent by sub-functions.
-    - Identify the source file and line number of problematic areas.
+
+  - Per-function millisecond accuracy timing.
+  - Record top-down or bottom-up function trees.
+  - Calculate the time spent by an individual function or
+    the total spent by sub-functions.
+  - Identify the source file and line number of problematic areas.
+
 - Memory usage identification:
-    - Retrieve the object count of constructed object types.
-    - Take snapshots and compare memory fluctuations.
+
+  - Retrieve the object count of constructed object types.
+  - Take snapshots and compare memory fluctuations.
+
 - Encryption and decryption of server-side requests for TZO formats.
 - Debug utility with function stripping for performance:
-    - assert, log, abort.
-    - Complete stacktrace.
-    - Supports adding custom functions.
+
+  - assert, log, abort.
+  - Complete stacktrace.
+  - Supports adding custom functions.
+
 - Network Simulator:
-    - Simulates latency and network behaviour.
-    - Client-side manipulation of multiplayer session messages.
-    - Simulates spikes in network traffic.
+
+  - Simulates latency and network behaviour.
+  - Client-side manipulation of multiplayer session messages.
+  - Simulates spikes in network traffic.
 
 Turbulenz Service API
 ---------------------
@@ -310,8 +354,9 @@ Turbulenz Service API
 **Gameprofile**
 
 - Game status of a player:
-    - Viewable by other players a game.
-    - Custom field information decided by game.
+
+  - Viewable by other players a game.
+  - Custom field information decided by game.
 
 **Multiplayer**
 
@@ -322,10 +367,11 @@ Turbulenz Service API
 **Metrics**
 
 - Custom event submission:
-    - Can be used to gather progress during game.
-    - Exportable from developer services.
-    - Events identifiable by custom key.
-    - Allows additional numerical data.
+
+  - Can be used to gather progress during game.
+  - Exportable from developer services.
+  - Events identifiable by custom key.
+  - Allows additional numerical data.
 
 **Bridge**
 
