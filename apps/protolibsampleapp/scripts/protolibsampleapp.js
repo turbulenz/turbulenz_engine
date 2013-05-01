@@ -138,8 +138,6 @@ Application.prototype =
         var utils = protolib.utils;
         var md = protolib.getMathDevice();
 
-        protolib.update();
-
         if (protolib.beginFrame())
         {
             protolib.draw2DSprite({
