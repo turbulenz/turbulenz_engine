@@ -43,7 +43,7 @@ class TurbulenzBridge
             // TODO can remove all of these or's after gamesite and hub updates
             this.on = bridge.gameListenerOn || bridge.addListener || bridge.setListener;
 
-            // we cant use off yet becuase the function recieved on the other VM is re-wrapped each time
+            // we cant use off yet because the function received on the other VM is re-wrapped each time
             //this.off = bridge.gameListenerOff;
             // Legacy functions addListener/setListener
             this.addListener = bridge.gameListenerOn || bridge.addListener || bridge.setListener;
