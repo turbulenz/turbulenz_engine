@@ -107,7 +107,7 @@ Application.prototype =
                 object: protolib.globals.settings,
                 property: 'volume',
                 group: "Settings",
-                type: protolib.watch.SLIDER,
+                type: protolib.watchTypes.SLIDER,
                 options: volumeInput
             });
 
@@ -123,7 +123,7 @@ Application.prototype =
                 object: this.turbulenzText,
                 property: 'scale',
                 group: "Debug",
-                type: protolib.watch.SLIDER,
+                type: protolib.watchTypes.SLIDER,
                 options: {
                     min: 0.1,
                     max: 10,

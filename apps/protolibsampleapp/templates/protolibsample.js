@@ -37,7 +37,6 @@
 /*{{ javascript('jslib/shadowmapping.js') }}*/
 /*{{ javascript('jslib/draw2d.js') }}*/
 
-/*{{ javascript('protolib/debughelpers.js') }}*/
 /*{{ javascript('protolib/duimanager.js') }}*/
 /*{{ javascript('protolib/jqueryextend.js') }}*/
 /*{{ javascript('protolib/simplesprite.js') }}*/
