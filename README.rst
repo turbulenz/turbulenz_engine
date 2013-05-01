@@ -3,7 +3,10 @@ Turbulenz Engine
 ================
 
 Turbulenz is an HTML5 game engine and server-side APIs available in JavaScript and TypeScript for building and distributing 2D and 3D games that run on platforms that support HTML5 features such as modern browsers without the need for plugins.
-The Engine includes libraries for features that games require such as:
+
+.. contents::
+    :local:
+
 
 Features
 ========
@@ -336,6 +339,65 @@ Turbulenz Service API
 - Mapping between game resources references and content distribution network.
 - Uniquely identifiable gamesession.
 - Service availability notification.
+
+What Are the Design Goals of the Turbulenz Engine
+=================================================
+
+The main design goals of the Turbulenz Engine are performance, modularity and customizability. Users of the engine should be able to build any kind of game without limitations, in an efficient manner and with an end product that performs optimally when loading and during play.
+
+To achieve this target the Turbulenz team followed these rules when writing code:
+
+**Modularity**
+
+- Users should be able to pick what they want and replace what they don't.
+- When possible new functionality should be orthogonal to existing one.
+
+**High performance**
+
+- Strict coding standards to keep code efficient.
+- Keep memory allocations to minimum, reuse existing objects or arrays whenever possible, use scratch pads, combine multiple separate objects into a single one.
+- Use most efficient storage for each data, Typed Arrays when possible.
+- Reduce function calls when possible: write functions that handle arrays of objects instead of loops that make a function call per element, games rarely do a single thing to a single object.
+- Be aware of performance differences between browsers.
+- Profile often.
+
+**Asynchronous loading**
+
+- No API should block waiting for a response from the server, avoid polling whenever possible, use callbacks or Promises, to notify of data availability.
+
+**Data driven**
+
+- The target should be to make the game a simple dumb player of data, all functionality defined by simple data files.
+
+**Simple well documented file formats**
+
+- Define simple, easy to create asset formats that can trivially be connected to any tool chain.
+
+**Scalability**
+
+- Design interfaces that can be implemented with different level of detail or quality settings in order to scale from mobile to desktops.
+
+**Power without control is nothing**
+
+- Make sure users can do exactly what they want, with a helper layer put on top if required, document performance implications at every level.
+
+**Fault tolerant**
+
+- The engine should keep going even if any type of asset fails to load. The application is able to provide sensible defaults for all asset types making it easier to stay productive and diagnose issues.
+
+**Fast loading**
+
+- Reduce amount of data to be downloaded, compress data efficiently.
+- Use the browser cache efficiently, use unique file names based on content and tell the browser to cache forever.
+
+**Maintainability**
+
+- Strict coding standards to keep code readable, easy to maintain and debug.
+- Write unit tests, samples and documentation for every new code path.
+
+**Targeted**
+
+- This is a game engine, for games.
 
 
 History
