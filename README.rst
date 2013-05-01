@@ -488,9 +488,9 @@ Setup
 
 2. The Turbulenz Engine submodules the following technology in the external folder
 
-    + tzbuild: https://github.com/turbulenz/turbulenz_build
-    + DefinitelyTyped: https://github.com/borisyankov/DefinitelyTyped
-    + UglifyJS: https://github.com/mishoo/UglifyJS.git
+   + tzbuild: https://github.com/turbulenz/turbulenz_build
+   + DefinitelyTyped: https://github.com/borisyankov/DefinitelyTyped
+   + UglifyJS: https://github.com/mishoo/UglifyJS.git
 
    Initialize the Git submodules with
 ::
@@ -499,9 +499,9 @@ Setup
 
 3. Check you have the pre-requisites installed
 
-    + Python 2.7.x (2.7.3 is the current QA'd version) - if you have multiple Python versions installed e.g. 3.x
-      you may need to run commands with ``python2.7``
-    + VirtualEnv - 1.9.1 or higher recommended
+   + Python 2.7.x (2.7.3 is the current QA'd version) - if you have multiple Python versions installed e.g. 3.x
+     you may need to run commands with ``python2.7``
+   + VirtualEnv - 1.9.1 or higher recommended
 
    You can check versions with
 ::
