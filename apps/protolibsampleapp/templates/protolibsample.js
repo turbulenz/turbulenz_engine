@@ -39,6 +39,7 @@
 
 /*{{ javascript('protolib/debughelpers.js') }}*/
 /*{{ javascript('protolib/duimanager.js') }}*/
+/*{{ javascript('protolib/jqueryextend.js') }}*/
 /*{{ javascript('protolib/simplesprite.js') }}*/
 /*{{ javascript('protolib/simplefonts.js') }}*/
 /*{{ javascript('protolib/simplesceneloader.js') }}*/
