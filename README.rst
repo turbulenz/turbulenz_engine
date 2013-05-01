@@ -482,9 +482,9 @@ Setup
 
 1. Clone the repository `<http://github.com/turbulenz/turbulenz_engine>`__ (or if you wish you can fork the repository
    on GitHub and clone that). To clone the repository maintained by Turbulenz use
-::
+   ::
 
-    $ git clone git@github.com:turbulenz/turbulenz_engine.git
+        $ git clone git@github.com:turbulenz/turbulenz_engine.git
 
 2. The Turbulenz Engine submodules the following technology in the external folder
 
@@ -493,9 +493,9 @@ Setup
    + UglifyJS: https://github.com/mishoo/UglifyJS.git
 
    Initialize the Git submodules with
-::
+   ::
 
-    $ git submodule update --init
+        $ git submodule update --init
 
 3. Check you have the pre-requisites installed
 
@@ -504,31 +504,31 @@ Setup
    + VirtualEnv - 1.9.1 or higher recommended
 
    You can check versions with
-::
+   ::
 
-    $ python --version
-    Python 2.7.3
-    $ virtualenv --version
-    1.9.1
+        $ python --version
+        Python 2.7.3
+        $ virtualenv --version
+        1.9.1
 
 4. From the cloned repository create a VirtualEnv environment to install the required Python packages and NodeJS,
    allowing you to use all the features of the Turbulenz Engine.
-::
+   ::
 
-    $ python manage.py env
+        $ python manage.py env
 
 5. Activate the environment in your shell.
-::
+   ::
 
-    $ source env/bin/activate - for bash and similar shells
-    > env\scripts\activate.bat - for Windows
+        $ source env/bin/activate - for bash and similar shells
+        > env\scripts\activate.bat - for Windows
 
 6. If you want to move onto the API tutorial section next then your final command is to build the JavaScript sources
    from the TypeScript sources. The next section will detail some of the additional actions you can perform or you
    can move onto `Getting Started With The API`_
-::
+   ::
 
-    $ python manage.py jslib
+        $ python manage.py jslib
 
 Working With The Open Source Project
 ------------------------------------
@@ -540,17 +540,35 @@ described below. All the commands other than the env command expect to have the 
 as described in the setup section.
 
 - **JavaScript Sources** - The Turbulenz Engine source is written in TypeScript. To generate the JavaScript version
-  of the engine source run the command ``python manage.py jslib``
-- **Documentation** - The Turbulenz Engine documentation is based on restructured text sources. To build the output
-  documentation run the command ``python manage.py docs``
+  of the engine source run the command
+  ::
+
+    $ python manage.py jslib
+
+- **Documentation** - The Turbulenz Engine documentation is based on restructured text sources. To build the html
+  documentation run the command
+  ::
+
+    $ python manage.py docs
+
 - **Samples** - Various samples are included with the Turbulenz Engine. These can be built from their TypeScript
-  sources with the command ``python manage.py samples``. This generates a set of html files, JavaScript and asset
-  JSON files which can be served with a web server such as the Turbulenz Local Development Server.
+  sources with the command below. This generates a set of html files, JavaScript and asset JSON files which can
+  be served with a web server such as the Turbulenz Local Development Server.
+  ::
+
+    $ python manage.py samples
+
 - **Applications** - The Turbulenz Engine project includes a few larger applications and some templates for building
   your own application. These can be found in the apps folder, and can be built with the command
-  ``python manage.py apps``
+  ::
 
-  You can also build individual apps by specifying their name e.g. ``python manage.py apps multiworm``
+    $ python manage.py apps
+
+  You can also build individual apps by specifying their name e.g.
+  ::
+
+    $ python manage.py apps multiworm
+
 - **Command Line Tools** - Various command line tools for processing code and assets are installed as part of the
   virtual environment. These are available at the command line e.g. running ``dae2json`` will execute the dae2json
   tool used to convert Collada assets to a Turbulenz Engine JSON asset format. See the
