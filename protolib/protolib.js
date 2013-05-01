@@ -567,15 +567,15 @@ Protolib.prototype =
     },
 
     //Game loop
-    update : function updateFn()
-    {
-        //TODO: Add input processing and sound processing
-        this._updateSounds();
-    },
     beginFrame : function beginFrameFn()
     {
         var globals = this.globals;
         var gd = globals.graphicsDevice;
+        var id = globals.inputDevice;
+
+        // Update input before frame
+        id.update();
+
         var gd_begin = gd.beginFrame();
 
         this.width = gd.width;
@@ -591,7 +591,7 @@ Protolib.prototype =
         var simplefont = globals.simplefont;
         var debugdraw = globals.debugdraw;
         var gd = globals.graphicsDevice;
-        var id = globals.inputDevice;
+
         var sd = globals.soundDevice;
         var camera = globals.camera;
         var scene = globals.scene;
@@ -621,7 +621,6 @@ Protolib.prototype =
         this.mouseDelta[0] = 0;
         this.mouseDelta[1] = 0;
         this.mouseWheelDelta = 0;
-        id.update();
 
         soundSourceManager.checkFreeSoundSources();
         if (sd)
@@ -629,6 +628,7 @@ Protolib.prototype =
             sd.update();
             sd.listenerTransform = camera.matrix;
         }
+        this._updateSounds();
 
         return gd.endFrame();
     },
