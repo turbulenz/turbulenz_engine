@@ -1,0 +1,46 @@
+// Copyright (c) 2010-2011 Turbulenz Limited
+
+float4x4 worldViewProjection;
+
+float4 TransformPoint(float3 pt, float4x4 transform)
+{
+    return pt.xxxx * transform[0] +
+           pt.yyyy * transform[1] +
+           pt.zzzz * transform[2] +
+                     transform[3];
+}
+
+void vp(float3 INpos : POSITION,
+        float2 INuv : TEXCOORD0,
+        out float4 OUTpos : POSITION,
+        out float2 OUTuv : TEXCOORD0)
+{
+    OUTpos = TransformPoint(INpos, worldViewProjection);
+    OUTuv  = INuv;
+}
+
+sampler2D diffuse = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+};
+
+float4 fp(float2 uv : TEXCOORD0) : COLOR
+{
+    return tex2D(diffuse, uv);
+}
+
+technique textured3D
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp();
+    }
+}
