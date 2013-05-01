@@ -17,7 +17,11 @@
 - shaders/forwardrenderingshadows.cgfx
 - shaders/simplesprite.cgfx
 - textures/default_light.png
-- textures/opensans_0.png
+- textures/opensans-8_0.png
+- textures/opensans-16_0.png
+- textures/opensans-32_0.png
+- textures/opensans-64_0.png
+- textures/opensans-128_0.png
 - fonts/opensans-8.fnt
 - fonts/opensans-16.fnt
 - fonts/opensans-32.fnt

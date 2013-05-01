@@ -116,20 +116,20 @@ Application.prototype =
             text: 'Powered by Turbulenz',
             position: [180, protolib.height - 100],
             v3Color: this.white,
-            size: 0.1
+            scale: 1
         };
-        /*this.turbulenzTextScaleSliderID = protolib.addWatchVariable({
+        this.turbulenzTextScaleSliderID = protolib.addWatchVariable({
                 title: 'Text Scale',
                 object: this.turbulenzText,
-                property: 'size',
+                property: 'scale',
                 group: "Debug",
                 type: protolib.watch.SLIDER,
                 options: {
-                    min: 1,
-                    max: 120,
-                    step: 1
+                    min: 0.1,
+                    max: 10,
+                    step: 0.1
                 }
-            });*/
+            });
     },
 
     update: function updateFn()
