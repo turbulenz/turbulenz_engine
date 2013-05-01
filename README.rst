@@ -273,7 +273,12 @@ High-level API
 **Draw2D**
 
 - 2D sprite-based renderer: Batches sprites for efficiency.
-- Draw modes: **Draw:** Draw object literal, **DrawRaw:** Draw buffer data, **DrawSprite:** Draw sprite reference.
+- Draw modes:
+
+  - **Draw:** Draw object literal,
+  - **DrawRaw:** Draw buffer data,
+  - **DrawSprite:** Draw sprite reference.
+
 - Scalable viewport: Input coordinate mapping.
 - Sort modes: Immediate, Deferred, Texture.
 - Blend modes: Opaque, Additive, Alpha.
