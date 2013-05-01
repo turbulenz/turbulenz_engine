@@ -1168,7 +1168,7 @@ Protolib.prototype =
         if (!soundm)
         {
             // Sounds are disabled
-            window.console.error("Cannot play the sound, sound is not available.");
+            protolib.utils.error("Cannot play the sound, soundDevice is not available.");
             return null;
         }
 
@@ -1187,7 +1187,7 @@ Protolib.prototype =
 
         var wrapperInvalidatedFn = function soundInvalidFn()
         {
-            window.console.error("Cannot modify the sound, as it has stopped playing.");
+            protolib.utils.error("Cannot modify the sound, as it has stopped playing.");
         };
 
         var onReleasedCallback = function onReleasedCallbackFn()
@@ -1203,7 +1203,7 @@ Protolib.prototype =
 
         if (token === null)
         {
-            window.console.error("Cannot play " + soundPath + ". Too many sounds playing.");
+            protolib.utils.error("Cannot play " + soundPath + ". Too many sounds playing.");
             return null;
         }
 

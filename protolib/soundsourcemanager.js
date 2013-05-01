@@ -63,7 +63,6 @@ SoundSourceManager.prototype =
     },
     returnSoundSource : function returnSoundSourceFn(token)
     {
-        window.console.log("returnSoundSource");
         var soundSources = this.soundSources;
         var activeTokens = this.activeTokens;
         var releasedCallbacks = this.releasedCallbacks;
