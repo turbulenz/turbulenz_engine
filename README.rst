@@ -176,8 +176,7 @@ High-level API
 - Texture based light falloff: Allows multi-colored lights and cheap fake shadows, for example the typical fan under a light source.
 - Materials with multiple texture maps: Specular color and intensity, Normal vector, Glow color, Alpha.
 - Pluggable post effects:
-    - Easy set-up for full screen post effects as part of the final
-      deferred shading.
+    - Easy set-up for full screen post effects as part of the final deferred shading.
     - Copy, Fade in, Modulate, Bicolor, Blend.
 - Exponential shadow maps:
     - Reuse of texture shadow maps to save video memory.
