@@ -1750,7 +1750,7 @@ class CaptureGraphicsDevice
 
                 if (typeof value === "string")
                 {
-                    framesString += '"' + value + '"';
+                    framesString += value;
                 }
                 else if (typeof value === "number")
                 {
@@ -2103,7 +2103,15 @@ class PlaybackGraphicsDevice
 
     _resolveEntity(id)
     {
-        var entity = this.entities[parseInt(id, 10)];
+        if (typeof id === "string")
+        {
+            id = parseInt(id, 10);
+        }
+        if (typeof id !== "number")
+        {
+            return id;
+        }
+        var entity = this.entities[id];
         if (!entity)
         {
             if (this.onerror)
@@ -2399,7 +2407,7 @@ class PlaybackGraphicsDevice
         var fileFrames = framesObject.frames;
         var numFileFrames = fileFrames.length;
         var frames = this.frames;
-        var n, c, command, cmdId, a;
+        var n, c, command, cmdId;
         if (reset)
         {
             var numFrames = frames.length;
@@ -2414,16 +2422,90 @@ class PlaybackGraphicsDevice
         {
             var command = commands[n];
             var numArguments = command.length;
-            // first argument is method Id
-            for (a = 1; a < numArguments; a += 1)
+            var method = command[0];
+            if (method === CaptureGraphicsCommand.setTechniqueParameters)
             {
-                var value = command[a];
-                if (typeof value === "string")
+                command[1] = this._resolveEntity(command[1]); // TechniqueParameters
+            }
+            else if (method === CaptureGraphicsCommand.drawIndexed)
+            {
+                // Nothing to resolve
+            }
+            else if (method === CaptureGraphicsCommand.draw)
+            {
+                // Nothing to resolve
+            }
+            else if (method === CaptureGraphicsCommand.setIndexBuffer)
+            {
+                command[1] = this._resolveEntity(command[1]); // IndexBuffer
+            }
+            else if (method === CaptureGraphicsCommand.setStream)
+            {
+                command[1] = this._resolveEntity(command[1]); // VertexBuffer
+                command[2] = this._resolveEntity(command[2]); // Semantics
+            }
+            else if (method === CaptureGraphicsCommand.setTechnique)
+            {
+                command[1] = this._resolveEntity(command[1]); // Technique
+            }
+            else if (method === CaptureGraphicsCommand.setData)
+            {
+                command[1] = this._resolveEntity(command[1]); // Object
+                command[4] = this._resolveEntity(command[4]); // Data
+            }
+            else if (method === CaptureGraphicsCommand.setAllData)
+            {
+                command[1] = this._resolveEntity(command[1]); // Object
+                command[2] = this._resolveEntity(command[2]); // Data
+            }
+            else if (method === CaptureGraphicsCommand.beginRenderTarget)
+            {
+                command[1] = this._resolveEntity(command[1]); // RenderTarget
+            }
+            else if (method === CaptureGraphicsCommand.clear)
+            {
+                command[1] = this._resolveEntity(command[1]); // Color object
+            }
+            else if (method === CaptureGraphicsCommand.endRenderTarget)
+            {
+                // Nothing to resolve
+            }
+            else if (method === CaptureGraphicsCommand.beginEndDraw)
+            {
+                command[3] = this._resolveEntity(command[3]); // Formats
+                command[4] = this._resolveEntity(command[4]); // Semantics
+                command[5] = this._resolveEntity(command[5]); // Data
+            }
+            else if (method === CaptureGraphicsCommand.setViewport)
+            {
+                // Nothing to resolve
+            }
+            else if (method === CaptureGraphicsCommand.setScissor)
+            {
+                // Nothing to resolve
+            }
+            else if (method === CaptureGraphicsCommand.beginOcclusionQuery)
+            {
+                command[1] = this._resolveEntity(command[1]); // Query
+            }
+            else if (method === CaptureGraphicsCommand.endOcclusionQuery)
+            {
+                command[1] = this._resolveEntity(command[1]); // Query
+            }
+            else if (method === CaptureGraphicsCommand.destroy)
+            {
+                command[1] = this._resolveEntity(command[1]); // Object
+            }
+            else
+            {
+                if (this.onerror)
                 {
-                    command[a] = this._resolveEntity(value);
+                    this.onerror('Unknown command: ' + method);
                 }
+                break;
             }
         }
+
         for (n = 0; n < numFileFrames; n += 1)
         {
             var frame = fileFrames[n];
