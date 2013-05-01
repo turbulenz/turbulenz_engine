@@ -1,23 +1,25 @@
 // Copyright (c) 2013 Turbulenz Limited
 
-// Commands:
-// 'BD': beginDraw
-// 'BO': beginOcclusionQuery
-// 'BR': beginRenderTarget
-// 'C': clear
-// 'DV': draw
-// 'DI': drawIndexed
-// 'EO': endOcclusionQuery
-// 'ER': endRenderTarget
-// 'D': setData
-// 'DD': setData without offset and count
-// 'I': setIndexBuffer
-// 'S': setScissor
-// 'V': setStream
-// 'T': setTechnique
-// 'P': setTechniqueParameters
-// 'W': setViewport
-// 'X': destroy
+var CaptureGraphicsCommand =
+{
+    setTechniqueParameters: 1,
+    drawIndexed:            2,
+    draw:                   3,
+    setIndexBuffer:         4,
+    setStream:              5,
+    setTechnique:           6,
+    setData:                7,
+    setAllData:             8,
+    beginRenderTarget:      9,
+    clear:                  10,
+    endRenderTarget:        11,
+    beginEndDraw:           12,
+    setScissor:             13,
+    setViewport:            14,
+    beginOcclusionQuery:    15,
+    endOcclusionQuery:      16,
+    destroy:                17
+};
 
 class CaptureGraphicsDevice
 {
@@ -26,7 +28,7 @@ class CaptureGraphicsDevice
     gd:         any;
     current:    any[];
     frames:     any[];
-    commands:   { [method: string]: any[]; };
+    commands:   any[];
     numCommands: number;
     lastId:     number;
     recycledIds: number[];
@@ -73,7 +75,7 @@ class CaptureGraphicsDevice
         this.gd = gd;
         this.current = [];
         this.frames = [];
-        this.commands = {};
+        this.commands = [];
         this.numCommands = 0;
         this.lastId = -1;
         this.recycledIds = [];
@@ -604,14 +606,14 @@ class CaptureGraphicsDevice
     {
         this.gd.drawIndexed(primitive, numIndices, first);
 
-        this._addCommand('DI', primitive, numIndices, first || 0);
+        this._addCommand(CaptureGraphicsCommand.drawIndexed, primitive, numIndices, first || 0);
     }
 
     draw(primitive, numVertices, first)
     {
         this.gd.draw(primitive, numVertices, first);
 
-        this._addCommand('DV', primitive, numVertices, first || 0);
+        this._addCommand(CaptureGraphicsCommand.draw, primitive, numVertices, first || 0);
     }
 
     setTechniqueParameters(unused?)
@@ -625,7 +627,7 @@ class CaptureGraphicsDevice
                 var objectId = this._addObject(techniqueParameters);
                 if (objectId !== null)
                 {
-                    this._addCommand('P', objectId);
+                    this._addCommand(CaptureGraphicsCommand.setTechniqueParameters, objectId);
                 }
             }
         }
@@ -673,7 +675,7 @@ class CaptureGraphicsDevice
                 };
             }
         }
-        this._addCommand('T', id);
+        this._addCommand(CaptureGraphicsCommand.setTechnique, id);
     }
 
     setStream(vertexBuffer, semantics, offset)
@@ -682,14 +684,14 @@ class CaptureGraphicsDevice
         {
             offset = 0;
         }
-        this._addCommand('V', vertexBuffer._id, semantics._id, offset);
+        this._addCommand(CaptureGraphicsCommand.setStream, vertexBuffer._id, semantics._id, offset);
 
         this.gd.setStream(vertexBuffer, semantics, offset);
     }
 
     setIndexBuffer(indexBuffer)
     {
-        this._addCommand('I', indexBuffer._id);
+        this._addCommand(CaptureGraphicsCommand.setIndexBuffer, indexBuffer._id);
 
         this.gd.setIndexBuffer(indexBuffer);
     }
@@ -966,7 +968,7 @@ class CaptureGraphicsDevice
             };
             captureWriter['end'] = function captureEndDrawWriter()
             {
-                self._addCommand('BD',
+                self._addCommand(CaptureGraphicsCommand.beginEndDraw,
                                  primitive,
                                  numVertices,
                                  self._cloneVertexFormats(formats),
@@ -1000,7 +1002,7 @@ class CaptureGraphicsDevice
             w = -1;
             h = -1;
         }
-        this._addCommand('W', x, y, w, h);
+        this._addCommand(CaptureGraphicsCommand.setViewport, x, y, w, h);
     }
 
     setScissor(x, y, w, h)
@@ -1015,12 +1017,12 @@ class CaptureGraphicsDevice
             w = -1;
             h = -1;
         }
-        this._addCommand('S', x, y, w, h);
+        this._addCommand(CaptureGraphicsCommand.setScissor, x, y, w, h);
     }
 
     clear(color, depth, stencil)
     {
-        this._addCommand('C', this._clone(color), depth, stencil);
+        this._addCommand(CaptureGraphicsCommand.clear, this._clone(color), depth, stencil);
 
         this.gd.clear(color, depth, stencil);
     }
@@ -1034,28 +1036,28 @@ class CaptureGraphicsDevice
 
     beginRenderTarget(renderTarget)
     {
-        this._addCommand('BR', renderTarget._id);
+        this._addCommand(CaptureGraphicsCommand.beginRenderTarget, renderTarget._id);
 
         return this.gd.beginRenderTarget(renderTarget);
     }
 
     endRenderTarget()
     {
-        this._addCommand('ER');
+        this._addCommand(CaptureGraphicsCommand.endRenderTarget);
 
         this.gd.endRenderTarget();
     }
 
     beginOcclusionQuery(query)
     {
-        this._addCommand('BO', query._id);
+        this._addCommand(CaptureGraphicsCommand.beginOcclusionQuery, query._id);
 
         return this.gd.beginOcclusionQuery(query)
     }
 
     endOcclusionQuery(query)
     {
-        this._addCommand('EO', query._id);
+        this._addCommand(CaptureGraphicsCommand.endOcclusionQuery, query._id);
 
         this.gd.endOcclusionQuery(query)
     }
@@ -1116,11 +1118,17 @@ class CaptureGraphicsDevice
 
                 if (offset === 0 && numVertices === this.numVertices)
                 {
-                    self._addCommand('DD', id, self._addData(data, (numVertices * this.stride), false));
+                    self._addCommand(CaptureGraphicsCommand.setAllData,
+                                     id,
+                                     self._addData(data, (numVertices * this.stride), false));
                 }
                 else
                 {
-                    self._addCommand('D', id, offset, numVertices, self._addData(data, (numVertices * this.stride), false));
+                    self._addCommand(CaptureGraphicsCommand.setData,
+                                     id,
+                                     offset,
+                                     numVertices,
+                                     self._addData(data, (numVertices * this.stride), false));
                 }
 
                 setData.call(this, data, offset, numVertices);
@@ -1164,11 +1172,17 @@ class CaptureGraphicsDevice
                     {
                         if (offset === 0 && numVertices === vertexBuffer.numVertices)
                         {
-                            self._addCommand('DD', id, self._addData(data, data.length, false));
+                            self._addCommand(CaptureGraphicsCommand.setAllData,
+                                             id,
+                                             self._addData(data, data.length, false));
                         }
                         else
                         {
-                            self._addCommand('D', id, offset, numVertices, self._addData(data, data.length, false));
+                            self._addCommand(CaptureGraphicsCommand.setData,
+                                             id,
+                                             offset,
+                                             numVertices,
+                                             self._addData(data, data.length, false));
                         }
                     };
                     captureWriter['proxy'] = writer;
@@ -1190,7 +1204,7 @@ class CaptureGraphicsDevice
             vertexBuffer.destroy = function captureVBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
-                self._addCommand('X', this._id);
+                self._addCommand(CaptureGraphicsCommand.destroy, this._id);
                 destroy.call(this);
             };
 
@@ -1203,7 +1217,9 @@ class CaptureGraphicsDevice
             if (params.data)
             {
                 var data = params.data;
-                this._addCommand('DD', id, this._addData(data, data.length, false));
+                this._addCommand(CaptureGraphicsCommand.setAllData,
+                                 id,
+                                 this._addData(data, data.length, false));
                 delete params.data;
             }
             this.vertexBuffers[id] = this._cloneObject(params, true);
@@ -1234,11 +1250,17 @@ class CaptureGraphicsDevice
 
                 if (offset === 0 && numIndices === this.numIndices)
                 {
-                    self._addCommand('DD', id, self._addData(data, numIndices, true));
+                    self._addCommand(CaptureGraphicsCommand.setAllData,
+                                     id,
+                                     self._addData(data, numIndices, true));
                 }
                 else
                 {
-                    self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+                    self._addCommand(CaptureGraphicsCommand.setData,
+                                     id,
+                                     offset,
+                                     numIndices,
+                                     self._addData(data, numIndices, true));
                 }
 
                 setData.call(this, data, offset, numIndices);
@@ -1281,11 +1303,17 @@ class CaptureGraphicsDevice
                         var numIndices = data.length;
                         if (offset === 0 && numIndices === indexBuffer.numIndices)
                         {
-                            self._addCommand('DD', id, self._addData(data, numIndices, true));
+                            self._addCommand(CaptureGraphicsCommand.setAllData,
+                                             id,
+                                             self._addData(data, numIndices, true));
                         }
                         else
                         {
-                            self._addCommand('D', id, offset, numIndices, self._addData(data, numIndices, true));
+                            self._addCommand(CaptureGraphicsCommand.setData,
+                                             id,
+                                             offset,
+                                             numIndices,
+                                             self._addData(data, numIndices, true));
                         }
                     };
                     captureWriter['proxy'] = writer;
@@ -1307,7 +1335,7 @@ class CaptureGraphicsDevice
             indexBuffer.destroy = function captureIBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
-                self._addCommand('X', this._id);
+                self._addCommand(CaptureGraphicsCommand.destroy, this._id);
                 destroy.call(this);
             };
 
@@ -1318,7 +1346,9 @@ class CaptureGraphicsDevice
             if (params.data)
             {
                 var data = params.data;
-                this._addCommand('DD', id, this._addData(data, data.length, true));
+                this._addCommand(CaptureGraphicsCommand.setAllData,
+                                 id,
+                                 this._addData(data, data.length, true));
                 delete params.data;
             }
             var clonedParams = this._cloneObject(params, true);
@@ -1353,7 +1383,9 @@ class CaptureGraphicsDevice
                 var integers = !(data instanceof Float32Array ||
                                  data instanceof Float64Array ||
                                  data instanceof Array);
-                self._addCommand('DD', id, self._addData(data, data.length, integers));
+                self._addCommand(CaptureGraphicsCommand.setAllData,
+                                 id,
+                                 self._addData(data, data.length, integers));
 
                 setData.call(this, data);
             };
@@ -1363,7 +1395,9 @@ class CaptureGraphicsDevice
                 var integers = !(data instanceof Float32Array ||
                                  data instanceof Float64Array ||
                                  data instanceof Array);
-                this._addCommand('DD', id, this._addData(data, data.length, integers));
+                this._addCommand(CaptureGraphicsCommand.setAllData,
+                                 id,
+                                 this._addData(data, data.length, integers));
                 delete params.data;
             }
             if (params.cubemap === false)
@@ -1478,11 +1512,17 @@ class CaptureGraphicsDevice
 
             if (offset === 0 && numValues === this.length)
             {
-                self._addCommand('DD', id, self._addData(data, numValues, false));
+                self._addCommand(CaptureGraphicsCommand.setAllData,
+                                 id,
+                                 self._addData(data, numValues, false));
             }
             else
             {
-                self._addCommand('D', id, offset, numValues, self._addData(data, numValues, false));
+                self._addCommand(CaptureGraphicsCommand.setData,
+                                 id,
+                                 offset,
+                                 numValues,
+                                 self._addData(data, numValues, false));
             }
 
             n = 0;
@@ -1553,7 +1593,9 @@ class CaptureGraphicsDevice
         if (params.data)
         {
             var data = params.data;
-            this._addCommand('DD', id, this._addData(data, data.length, true));
+            this._addCommand(CaptureGraphicsCommand.setAllData,
+                             id,
+                             this._addData(data, data.length, true));
             delete params.data;
         }
         this.techniqueParameterBuffers[id] = this._cloneObject(params, true);
@@ -1669,14 +1711,15 @@ class CaptureGraphicsDevice
     getFramesString()
     {
         var commands = this.commands;
+        var numMethods = commands.length;
         var numCommands = this.numCommands;
         var commandsArray = new Array(numCommands);
         var p, n, commandsBin, length;
-        for (p in commands)
+        for (p = 0; p < numMethods; p += 1)
         {
-            if (commands.hasOwnProperty(p))
+            commandsBin = commands[p];
+            if (commandsBin !== undefined)
             {
-                commandsBin = commands[p];
                 length = commandsBin.length;
                 for (n = 0; n < length; n += 2)
                 {
@@ -1900,12 +1943,12 @@ class CaptureGraphicsDevice
         frames.length = 0;
 
         var commands = this.commands;
-        var p;
-        for (p in commands)
+        var numMethods = commands.length;
+        for (n = 0; n < numMethods; n += 1)
         {
-            if (commands.hasOwnProperty(p))
+            if (commands[n] !== undefined)
             {
-                commands[p].length = 0;
+                commands[n].length = 0;
             }
         }
         this.numCommands = 0;
@@ -1914,6 +1957,7 @@ class CaptureGraphicsDevice
         var recycledIds = this.recycledIds;
         var dataBins = this.data;
         var dataBin, binLength;
+        var p;
         for (p in dataBins)
         {
             if (dataBins.hasOwnProperty(p))
@@ -2436,47 +2480,61 @@ class PlaybackGraphicsDevice
         {
             var command = frame[c];
             var method = command[0];
-            if (method === 'P')
+            if (method === CaptureGraphicsCommand.setTechniqueParameters)
             {
                 gd.setTechniqueParameters(command[1]);
             }
-            else if (method === 'DI')
+            else if (method === CaptureGraphicsCommand.drawIndexed)
             {
                 gd.drawIndexed(command[1],
                                command[2],
                                command[3]);
             }
-            else if (method === 'DV')
+            else if (method === CaptureGraphicsCommand.draw)
             {
                 gd.draw(command[1],
                         command[2],
                         command[3]);
             }
-            else if (method === 'I')
+            else if (method === CaptureGraphicsCommand.setIndexBuffer)
             {
                 gd.setIndexBuffer(command[1]);
             }
-            else if (method === 'V')
+            else if (method === CaptureGraphicsCommand.setStream)
             {
                 gd.setStream(command[1],
                              command[2],
                              command[3]);
             }
-            else if (method === 'T')
+            else if (method === CaptureGraphicsCommand.setTechnique)
             {
                 gd.setTechnique(command[1]);
             }
-            else if (method === 'D')
+            else if (method === CaptureGraphicsCommand.setData)
             {
                 command[1].setData(command[4],
                                    command[2],
                                    command[3]);
             }
-            else if (method === 'DD')
+            else if (method === CaptureGraphicsCommand.setAllData)
             {
                 command[1].setData(command[2]);
             }
-            else if (method === 'BD')
+            else if (method === CaptureGraphicsCommand.beginRenderTarget)
+            {
+                gd.beginRenderTarget(command[1]);
+            }
+            else if (method === CaptureGraphicsCommand.clear)
+            {
+                gd.clear(command[1],
+                         command[2],
+                         command[3]);
+            }
+            else if (method === CaptureGraphicsCommand.endRenderTarget)
+            {
+                gd.endRenderTarget();
+            }
+            else if (method === CaptureGraphicsCommand.beginEndDraw)
             {
                 this._beginEndDraw(command[1],
                                    command[2],
@@ -2484,21 +2542,7 @@ class PlaybackGraphicsDevice
                                    command[4],
                                    command[5]);
             }
-            else if (method === 'BR')
-            {
-                gd.beginRenderTarget(command[1]);
-            }
-            else if (method === 'C')
-            {
-                gd.clear(command[1],
-                         command[2],
-                         command[3]);
-            }
-            else if (method === 'ER')
-            {
-                gd.endRenderTarget();
-            }
-            else if (method === 'W')
+            else if (method === CaptureGraphicsCommand.setViewport)
             {
                 var x = command[1];
                 var y = command[2];
@@ -2514,7 +2558,7 @@ class PlaybackGraphicsDevice
                 }
                 gd.setViewport(x, y, w, h);
             }
-            else if (method === 'S')
+            else if (method === CaptureGraphicsCommand.setScissor)
             {
                 var x = command[1];
                 var y = command[2];
@@ -2530,15 +2574,15 @@ class PlaybackGraphicsDevice
                 }
                 gd.setScissor(x, y, w, h);
             }
-            else if (method === 'BO')
+            else if (method === CaptureGraphicsCommand.beginOcclusionQuery)
             {
                 gd.beginOcclusionQuery(command[1]);
             }
-            else if (method === 'EO')
+            else if (method === CaptureGraphicsCommand.endOcclusionQuery)
             {
                 gd.endOcclusionQuery(command[1]);
             }
-            else if (method === 'X')
+            else if (method === CaptureGraphicsCommand.destroy)
             {
                 command[1].destroy();
             }
