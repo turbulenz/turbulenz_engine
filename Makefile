@@ -135,15 +135,11 @@ TSLIBS += platform debug vmath aabbtree physics_canvas platform_canvas   \
   jsengine jsengine_simplerendering jsengine_deferredrendering           \
   jsengine_forwardrendering jsengine_debug capturedevices
 
-ifneq (1,$(MODULAR))
-  TSLIBS += fontviewer
-endif
-
 # Check we haven't forgotten any tslib files
 ifeq (macosx,$(TARGET))
   all_ts_files := $(shell find tslib -iname '[^\.]*.ts' | grep -v external)
   all_ts_src_files := \
-    $(TS_BASE_FILES) $(foreach tsl,$(TSLIBS) fontviewer viewer,$($(tsl)_src))
+    $(TS_BASE_FILES) $(foreach tsl,$(TSLIBS),$($(tsl)_src))
   forgotten_ts_files := $(filter-out $(all_ts_src_files),$(all_ts_files))
   ifneq (,$(forgotten_ts_files))
     $(error THESE FILES ARE NOT USED: $(forgotten_ts_files))
