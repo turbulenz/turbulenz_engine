@@ -211,6 +211,8 @@ function Protolib(params)
     };
     globals.renderer = renderer;
 
+    protolib.loadingIntervalID = null;
+
     //After mapping table has loaded, load forwardrendering's shaders, and the default light material.
     //After the shaders have loaded, call onInitializedCallback.
     var postMappingTableRecieved = function postMappingTableRecievedFn()
@@ -241,12 +243,15 @@ function Protolib(params)
         scene.loadMaterial(gd, tm, em, "defaultLightMaterial", lightMaterialData);
         protolib.defaultLightMaterial = scene.getMaterial("defaultLightMaterial");
 
-        var intervalId;
         var waitForForwardRenderingShaders = function waitForForwardRenderingShadersFn()
         {
             if (sm.getNumPendingShaders() === 0)
             {
-                TurbulenzEngine.clearInterval(intervalId);
+                if (protolib.loadingIntervalID)
+                {
+                    TurbulenzEngine.clearInterval(protolib.loadingIntervalID);
+                    protolib.loadingIntervalID = null;
+                }
                 renderer.updateBuffers(gd, gd.width, gd.height);
                 renderer.updateShader(sm);
 
@@ -259,7 +264,7 @@ function Protolib(params)
                 }
             }
         };
-        intervalId = TurbulenzEngine.setInterval(waitForForwardRenderingShaders, 1000 / 10);
+        protolib.loadingIntervalID = TurbulenzEngine.setInterval(waitForForwardRenderingShaders, 1000 / 10);
     };
 
     var mappingTableRecieved = function mappingTableRecievedFn(mappingTable)
@@ -459,13 +464,45 @@ function Protolib(params)
     this.endFrame = function dummyEndFrameFn() {};
 
     this.registerListeners();
+
+    this.destroyed = false;
 }
 
 Protolib.prototype =
 {
     destroy: function destroyFn()
     {
-        this.unregisterListeners();
+        if (!this.destroyed)
+        {
+            this.unregisterListeners();
+
+            if (this.loadingIntervalID)
+            {
+                TurbulenzEngine.clearInterval(this.loadingIntervalID);
+                this.loadingIntervalID = null;
+            }
+
+            var globals = this.globals;
+            if (globals)
+            {
+                var graphicsDevice = globals.graphicsDevice;
+                if (graphicsDevice)
+                {
+                    graphicsDevice.destroy();
+                }
+                var inputDevice = globals.inputDevice;
+                if (inputDevice)
+                {
+                    inputDevice.destroy();
+                }
+                var soundDevice = globals.soundDevice;
+                if (soundDevice)
+                {
+                    soundDevice.destroy();
+                }
+            }
+            this.destroyed = true;
+        }
     },
 
     //Devices
@@ -473,15 +510,15 @@ Protolib.prototype =
     {
         return this.globals.mathDevice;
     },
-    getInputDevice : function getMathDeviceFn()
+    getInputDevice : function getInputDeviceFn()
     {
         return this.globals.inputDevice;
     },
-    getSoundDevice : function getMathDeviceFn()
+    getSoundDevice : function getSoundDeviceFn()
     {
         return this.globals.soundDevice;
     },
-    getGraphicsDevice : function getMathDeviceFn()
+    getGraphicsDevice : function getGraphicsDeviceFn()
     {
         return this.globals.graphicsDevice;
     },
@@ -530,15 +567,15 @@ Protolib.prototype =
     },
 
     //Game loop
-    update : function updateFn()
-    {
-        //TODO: Add input processing and sound processing
-        this._updateSounds();
-    },
     beginFrame : function beginFrameFn()
     {
         var globals = this.globals;
         var gd = globals.graphicsDevice;
+        var id = globals.inputDevice;
+
+        // Update input before frame
+        id.update();
+
         var gd_begin = gd.beginFrame();
 
         this.width = gd.width;
@@ -554,7 +591,7 @@ Protolib.prototype =
         var simplefont = globals.simplefont;
         var debugdraw = globals.debugdraw;
         var gd = globals.graphicsDevice;
-        var id = globals.inputDevice;
+
         var sd = globals.soundDevice;
         var camera = globals.camera;
         var scene = globals.scene;
@@ -584,7 +621,6 @@ Protolib.prototype =
         this.mouseDelta[0] = 0;
         this.mouseDelta[1] = 0;
         this.mouseWheelDelta = 0;
-        id.update();
 
         soundSourceManager.checkFreeSoundSources();
         if (sd)
@@ -592,6 +628,7 @@ Protolib.prototype =
             sd.update();
             sd.listenerTransform = camera.matrix;
         }
+        this._updateSounds();
 
         return gd.endFrame();
     },
