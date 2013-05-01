@@ -172,7 +172,7 @@ SimpleFontRenderer.prototype =
 
     calculateScaleFromInputParams : function calculateScaleFromInputParamsFn(inputParams)
     {
-        var scale = 1.0;
+        var scale = inputParams.scale || 1.0;
 
         if (inputParams.specialScale !== undefined)
         {

@@ -783,9 +783,10 @@ Protolib.prototype =
         var width = params.width;
         var height = params.height;
         var v3Color = params.v3Color || v3Constants.white;
-        var alpha = params.alpha || 1;
+        var alpha = params.alpha !== undefined ? params.alpha: 1;
         var rotation = params.rotation || 0;
         var blendStyle = params.blendStyle || this.blendStyle.ALPHA;
+        var sourceRectangle = params.sourceRectangle;
 
         var v4Color = md.v4Build(v3Color[0], v3Color[1], v3Color[2], alpha);
         var draw2DBlendStyle = this.toDraw2DBlendStyle[blendStyle];
@@ -793,6 +794,7 @@ Protolib.prototype =
         this.draw2DCache[draw2DBlendStyle].push({
             texture: tm.load(texture),
             destinationRectangle: [x, y, x + width, y + height],
+            sourceRectangle: sourceRectangle ? md.v4Copy(sourceRectangle): undefined,
             rotation: rotation,
             color: v4Color
         });
@@ -843,6 +845,7 @@ Protolib.prototype =
         var scale = params.scale || 1;
         var spacing = params.spacing;
         var alignment = params.alignment;
+        var fontStyle = params.fontStyle || "regular";
 
         var fontParams =
         {
@@ -855,7 +858,8 @@ Protolib.prototype =
 
             scale : scale,
             spacing : spacing,
-            alignment : alignment
+            alignment : alignment,
+            fontStyle : fontStyle
         };
 
         simplefont.drawFont(text, fontParams);
