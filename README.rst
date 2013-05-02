@@ -713,7 +713,7 @@ Make sure you have run the *tools* command to build the tools for your platform:
 
     $ python manage.py tools
 
-*Note: The requirements for building the tools is different per platform. See the `Dependencies`_ section.*
+*Note: The requirements for building the tools is different per platform. See the* `Dependencies`_ *section.*
 
 For this example you should use the `Protolib <http://docs.turbulenz.com/protolib/protolib_api.html>`__ library, which is ideal for prototyping games using Turbulenz.
 You will need these assets::
