@@ -62,6 +62,7 @@ class ForwardRendering
 
     worldView: any; // m43
     lightViewInverseProjection: any; // m43
+    lightViewInverseTransposeFalloff: TechniqueParameterBuffer;
     lightViewInverseTranspose: any; // m43
     lightFalloff: any; // v4
 
@@ -106,6 +107,7 @@ class ForwardRendering
     ambientRigidAlphaTechnique: Technique;
     ambientSkinnedAlphaTechnique: Technique;
     ambientFlatRigidTechnique: Technique;
+    ambientFlatRigidNoCullTechnique: Technique;
     ambientFlatSkinnedTechnique: Technique;
     ambientGlowmapRigidTechnique: Technique;
     ambientGlowmapSkinnedTechnique: Technique;
@@ -165,6 +167,7 @@ class ForwardRendering
             this.ambientRigidAlphaTechnique = shader.getTechnique("ambient_alphatest");
             this.ambientSkinnedAlphaTechnique = shader.getTechnique("ambient_alphatest_skinned");
             this.ambientFlatRigidTechnique = shader.getTechnique("ambient_flat");
+            this.ambientFlatRigidNoCullTechnique = shader.getTechnique("ambient_flat_nocull");
             this.ambientFlatSkinnedTechnique = shader.getTechnique("ambient_flat_skinned");
             this.ambientGlowmapRigidTechnique = shader.getTechnique("ambient_glowmap");
             this.ambientGlowmapSkinnedTechnique = shader.getTechnique("ambient_glowmap_skinned");
@@ -626,6 +629,8 @@ class ForwardRendering
         if (!lightInstanceTechniqueParameters)
         {
             lightInstanceTechniqueParameters = gd.createTechniqueParameters(light.techniqueParameters);
+            lightInstanceTechniqueParameters.lightViewInverseTransposeFalloff =
+                                               gd.createTechniqueParameterBuffer({ numFloats: 16 });
             lightInstance.techniqueParameters = lightInstanceTechniqueParameters;
         }
 
@@ -786,7 +791,9 @@ class ForwardRendering
         }
 
         var l, node, light, lightInstance, lightColor, matrix, techniqueParameters, origin, halfExtents;
-        var lightViewInverseTranspose;
+        var lightViewInverseTransposeFalloff;
+        var lightViewInverseTranspose = this.lightViewInverseTranspose;
+        var lightFalloff = this.lightFalloff;
         var worldView = this.worldView;
 
         var pointInstances = this.pointLights;
@@ -820,17 +827,21 @@ class ForwardRendering
                                                         techniqueParameters.lightColor);
 
             lightViewInverseTranspose = md.m43InverseTransposeProjection(worldView, light.halfExtents,
-                                                                         techniqueParameters.lightViewInverseTranspose);
-            techniqueParameters.lightFalloff = md.v4Build(lightViewInverseTranspose[8],
-                                                          lightViewInverseTranspose[9],
-                                                          lightViewInverseTranspose[10],
-                                                          lightViewInverseTranspose[11],
-                                                          techniqueParameters.lightFalloff);
+                                                                         lightViewInverseTranspose);
+
+            lightFalloff[0] = lightViewInverseTranspose[8];
+            lightFalloff[1] = lightViewInverseTranspose[9];
+            lightFalloff[2] = lightViewInverseTranspose[10];
+            lightFalloff[3] = lightViewInverseTranspose[11];
+
             lightViewInverseTranspose[8] = 0;
             lightViewInverseTranspose[9] = 0;
             lightViewInverseTranspose[10] = 0;
             lightViewInverseTranspose[11] = 1.0;
-            techniqueParameters.lightViewInverseTranspose = lightViewInverseTranspose;
+
+            lightViewInverseTransposeFalloff = techniqueParameters.lightViewInverseTransposeFalloff;
+            lightViewInverseTransposeFalloff.setData(lightViewInverseTranspose, 0, 12);
+            lightViewInverseTransposeFalloff.setData(lightFalloff, 12, 4);
         }
 
         var localDirectionalInstances = this.localDirectionalLights;
@@ -857,17 +868,21 @@ class ForwardRendering
                                                         techniqueParameters.lightColor);
 
             lightViewInverseTranspose = md.m43InverseTransposeProjection(worldView, light.halfExtents,
-                                                                         techniqueParameters.lightViewInverseTranspose);
-            techniqueParameters.lightFalloff = md.v4Build(lightViewInverseTranspose[8],
-                                                          lightViewInverseTranspose[9],
-                                                          lightViewInverseTranspose[10],
-                                                          lightViewInverseTranspose[11],
-                                                          techniqueParameters.lightFalloff);
+                                                                         lightViewInverseTranspose);
+
+            lightFalloff[0] = lightViewInverseTranspose[8];
+            lightFalloff[1] = lightViewInverseTranspose[9];
+            lightFalloff[2] = lightViewInverseTranspose[10];
+            lightFalloff[3] = lightViewInverseTranspose[11];
+
             lightViewInverseTranspose[8] = 0;
             lightViewInverseTranspose[9] = 0;
             lightViewInverseTranspose[10] = 0;
             lightViewInverseTranspose[11] = 1.0;
-            techniqueParameters.lightViewInverseTranspose = lightViewInverseTranspose;
+
+            lightViewInverseTransposeFalloff = techniqueParameters.lightViewInverseTransposeFalloff;
+            lightViewInverseTransposeFalloff.setData(lightViewInverseTranspose, 0, 12);
+            lightViewInverseTransposeFalloff.setData(lightFalloff, 12, 4);
         }
 
         var globalDirectionalLights = this.globalDirectionalLights;
@@ -887,18 +902,21 @@ class ForwardRendering
                                          extents[5] - extents[2]);
 
                 lightViewInverseTranspose = md.m43InverseTransposeProjection(viewMatrix, halfExtents,
-                                                                             this.lightViewInverseTranspose);
+                                                                             lightViewInverseTranspose);
 
-                var lightFalloff = md.v4Build(lightViewInverseTranspose[8],
-                                              lightViewInverseTranspose[9],
-                                              lightViewInverseTranspose[10],
-                                              lightViewInverseTranspose[11],
-                                              this.lightFalloff);
+                lightFalloff[0] = lightViewInverseTranspose[8];
+                lightFalloff[1] = lightViewInverseTranspose[9];
+                lightFalloff[2] = lightViewInverseTranspose[10];
+                lightFalloff[3] = lightViewInverseTranspose[11];
 
                 lightViewInverseTranspose[8] = 0;
                 lightViewInverseTranspose[9] = 0;
                 lightViewInverseTranspose[10] = 0;
                 lightViewInverseTranspose[11] = 1.0;
+
+                lightViewInverseTransposeFalloff = this.lightViewInverseTransposeFalloff;
+                lightViewInverseTransposeFalloff.setData(lightViewInverseTranspose, 0, 12);
+                lightViewInverseTransposeFalloff.setData(lightFalloff, 12, 4);
 
                 var lightAt = md.v3BuildZero();
 
@@ -909,9 +927,7 @@ class ForwardRendering
 
                     techniqueParameters = light.techniqueParameters;
 
-                    techniqueParameters.lightFalloff = lightFalloff;
-
-                    techniqueParameters.lightViewInverseTranspose = lightViewInverseTranspose;
+                    techniqueParameters.lightViewInverseTransposeFalloff = lightViewInverseTransposeFalloff;
 
                     md.v3Normalize(light.direction, lightAt);
                     origin = md.v3ScalarMul(lightAt, sceneDirectionalLightDistance);
@@ -979,13 +995,17 @@ class ForwardRendering
                 lightProjection[8] = invFrustumNear;
                 lightProjection[11] = -(frustumNear * invFrustumNear);
                 lightViewInverseProjection = md.m43Mul(lightViewInverse, lightProjection, lightViewInverseProjection);
-                lightViewInverseTranspose = md.m43Transpose(lightViewInverseProjection, techniqueParameters.lightViewInverseTranspose);
-                techniqueParameters.lightViewInverseTranspose = lightViewInverseTranspose;
-                techniqueParameters.lightFalloff = md.v4Build(lightViewInverseTranspose[8],
-                                                              lightViewInverseTranspose[9],
-                                                              lightViewInverseTranspose[10],
-                                                              lightViewInverseTranspose[11],
-                                                              techniqueParameters.lightFalloff);
+                lightViewInverseTranspose = md.m43Transpose(lightViewInverseProjection, lightViewInverseTranspose);
+
+                lightFalloff[0] = lightViewInverseTranspose[8];
+                lightFalloff[1] = lightViewInverseTranspose[9];
+                lightFalloff[2] = lightViewInverseTranspose[10];
+                lightFalloff[3] = lightViewInverseTranspose[11];
+
+                lightViewInverseTransposeFalloff = techniqueParameters.lightViewInverseTransposeFalloff;
+                lightViewInverseTransposeFalloff.setData(lightViewInverseTranspose, 0, 12);
+                lightViewInverseTransposeFalloff.setData(lightFalloff, 12, 4);
+
                 l += 1;
             }
             while (l < numSpotInstances);
@@ -1265,6 +1285,7 @@ class ForwardRendering
         delete this.globalDirectionalLights;
         delete this.fogLights;
 
+        delete this.lightViewInverseTransposeFalloff;
         delete this.lightViewInverseTranspose;
         delete this.lightFalloff;
 
@@ -1312,6 +1333,7 @@ class ForwardRendering
             delete this.ambientRigidAlphaTechnique
             delete this.ambientSkinnedAlphaTechnique;
             delete this.ambientFlatRigidTechnique;
+            delete this.ambientFlatRigidNoCullTechnique
             delete this.ambientFlatSkinnedTechnique;
             delete this.ambientGlowmapRigidTechnique;
             delete this.ambientGlowmapSkinnedTechnique;
@@ -1376,6 +1398,9 @@ class ForwardRendering
 
         fr.worldView = md.m43BuildIdentity();
         fr.lightViewInverseProjection = md.m43BuildIdentity();
+        fr.lightViewInverseTransposeFalloff = gd.createTechniqueParameterBuffer({
+            numFloats: 16
+        });
         fr.lightViewInverseTranspose = md.m43BuildIdentity();
         fr.lightFalloff = md.v4BuildZero();
 
@@ -1453,7 +1478,6 @@ class ForwardRendering
             }
 
             var techniqueParameters = this.techniqueParameters;
-            techniqueParameters.world = node.world;
             techniqueParameters.worldView = rendererInfo.worldView;
             techniqueParameters.worldViewInverseTranspose = rendererInfo.worldViewInverseTranspose;
         };
@@ -1469,7 +1493,6 @@ class ForwardRendering
             }
 
             var techniqueParameters = this.techniqueParameters;
-            techniqueParameters.world = node.world;
             techniqueParameters.worldView = rendererInfo.worldView;
             techniqueParameters.worldViewInverseTranspose = rendererInfo.worldViewInverseTranspose;
 
@@ -1705,7 +1728,14 @@ class ForwardRendering
                     }
                     else if (0 === techniqueName.indexOf("flat"))
                     {
-                        drawParameters.technique = fr.ambientFlatRigidTechnique;
+                        if (-1 !== techniqueName.indexOf("_nocull"))
+                        {
+                            drawParameters.technique = fr.ambientFlatRigidNoCullTechnique;
+                        }
+                        else
+                        {
+                            drawParameters.technique = fr.ambientFlatRigidTechnique;
+                        }
                     }
                     else if (-1 !== techniqueName.indexOf("_alpha"))
                     {

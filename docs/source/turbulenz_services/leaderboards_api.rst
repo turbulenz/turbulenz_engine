@@ -13,7 +13,7 @@ The ``LeaderboardManager`` object is an API for getting and setting leaderboard 
 
 A ``LeaderboardManager`` object can be created by calling :ref:`TurbulenzServices.createLeaderboardManager <turbulenzservices_createleaderboardmanager>`.
 None of the ``LeaderboardManager`` functions can be used until the :ref:`TurbulenzServices.createLeaderboardManager <turbulenzservices_createleaderboardmanager>`
-``leaderboardsRecievedFn`` callback function has been called.
+``leaderboardsReceivedFn`` callback function has been called.
 
 **Required scripts**
 

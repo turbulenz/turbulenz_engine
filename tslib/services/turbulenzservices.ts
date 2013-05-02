@@ -351,16 +351,16 @@ class TurbulenzServices
     {
     };
 
-    static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn)
+    static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn?)
     {
         return GameSession.create(requestHandler, sessionCreatedFn,
                                   errorCallbackFn);
     };
 
     static createMappingTable(requestHandler, gameSession,
-                              tableRecievedFn,
-                              defaultMappingSettings,
-                              errorCallbackFn) : MappingTable
+                              tableReceivedFn,
+                              defaultMappingSettings?,
+                              errorCallbackFn?) : MappingTable
     {
         var mappingTable;
         var mappingTableSettings = gameSession && gameSession.mappingTable;
@@ -410,7 +410,7 @@ class TurbulenzServices
             mappingTablePrefix: mappingTablePrefix,
             assetPrefix: assetPrefix,
             requestHandler: requestHandler,
-            onload: tableRecievedFn,
+            onload: tableReceivedFn,
             errorCallback: mappingTableErr
         };
 
@@ -419,11 +419,11 @@ class TurbulenzServices
     };
 
     static createLeaderboardManager(requestHandler, gameSession,
-                                    leaderboardMetaRecieved,
-                                    errorCallbackFn) : LeaderboardManager
+                                    leaderboardMetaReceived?,
+                                    errorCallbackFn?) : LeaderboardManager
     {
         return LeaderboardManager.create(requestHandler, gameSession,
-                                         leaderboardMetaRecieved,
+                                         leaderboardMetaReceived,
                                          errorCallbackFn);
     };
 
@@ -432,12 +432,12 @@ class TurbulenzServices
         return BadgeManager.create(requestHandler, gameSession);
     };
 
-    static createStoreManager(requestHandler, gameSession, storeMetaRecieved,
-                              errorCallbackFn) : StoreManager
+    static createStoreManager(requestHandler, gameSession, storeMetaReceived?,
+                              errorCallbackFn?) : StoreManager
     {
         return StoreManager.create(requestHandler,
                                    gameSession,
-                                   storeMetaRecieved,
+                                   storeMetaReceived,
                                    errorCallbackFn);
     };
 
@@ -447,8 +447,8 @@ class TurbulenzServices
         return MultiPlayerSessionManager.create(requestHandler, gameSession);
     };
 
-    static createUserProfile(requestHandler, profileRecievedFn,
-                             errorCallbackFn): UserProfile
+    static createUserProfile(requestHandler, profileReceivedFn?,
+                             errorCallbackFn?): UserProfile
     {
         var userProfile = <UserProfile><any>{};
 
@@ -491,9 +491,9 @@ class TurbulenzServices
                     {
                         errorCallbackFn("TurbulenzServices.createUserProfile error with HTTP status " + status + ": " + jsonResponse.msg, status);
                     }
-                    if (profileRecievedFn)
+                    if (profileReceivedFn)
                     {
-                        profileRecievedFn(userProfile);
+                        profileReceivedFn(userProfile);
                     }
                 },
                 requestHandler: requestHandler

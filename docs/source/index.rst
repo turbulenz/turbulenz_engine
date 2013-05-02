@@ -31,6 +31,7 @@ Welcome to the Turbulenz documentation!
     jslibrary_api/physics3d_api
     jslibrary_api/high_level_api
     turbulenz_services/index
+    protolib/index
     tools/index
     conventions
     changelog

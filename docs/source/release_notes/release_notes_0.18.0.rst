@@ -274,10 +274,10 @@ Changes
             var userDataManager = UserDataManager.create(requestHandler, gameSession);
             var badgeManager = TurbulenzServices.createBadgeManager(requestHandler, gameSession);
             var userProfile = TurbulenzServices.createUserProfile(requestHandler,
-                                                                  profileRecievedFn);
+                                                                  profileReceivedFn);
             var leaderboardManager = TurbulenzServices.createLeaderboardManager(requestHandler,
                                                                                 gameSession,
-                                                                                leaderboardsRecievedFn);
+                                                                                leaderboardsReceivedFn);
 
         };
         var gameSession = TurbulenzServices.createGameSession(requestHandler, sessionReady);

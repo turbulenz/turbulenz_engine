@@ -17,10 +17,10 @@ float4 materialColor = {1.0, 1.0, 1.0, 1.0};
 
 float3 ambientColor;
 
-float3x4 lightViewInverseTranspose;
-float4 lightFalloff;
+float4x4 lightViewInverseTransposeFalloff;
 float3 lightOrigin;
 float3 lightColor;
+
 float alphaRef = 0.5;
 float lightingScale = 2.0;
 
@@ -380,11 +380,12 @@ float4 PointToDevice(float3 pt, float4x4 transform)
                      transform[3];
 }
 
-float3 PointToLight(float4 p, float3x4 transform)
+float4 PointToLight(float4 p, float4x4 transform)
 {
-    return float3(dot(p, transform[0]),
+    return float4(dot(p, transform[0]),
                   dot(p, transform[1]),
-                  dot(p, transform[2]));
+                  dot(p, transform[2]),
+                  dot(p, transform[3]));
 }
 
 float3 TransformPoint(float3 pt, float4x3 transform)
@@ -411,9 +412,9 @@ void light_contribution(FP_NORMALMAP_IN IN,
     Ln = float3(dot(Ln, IN.ViewTangent), dot(Ln, IN.ViewBinormal), dot(Ln, IN.ViewNormal));
     Ln = normalize(Ln);
     float4 position4 = float4(position, 1.0);
-    float3 projection = PointToLight(position4, lightViewInverseTranspose);
-    float falloff = dot(position4, lightFalloff);
-    float3 attenuation = tex2DprojFix(lightprojection, projection).xyz * tex2D(lightfalloff, float2(falloff, 0.5)).y;
+    float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
+    float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
+                         tex2D(lightfalloff, float2(projection.w, 0.5)).y;
     diffContrib = (dot(Ln, Nn) * lightColor * attenuation);
     // Discard fragment if it does not contribute much actual light
     if (dot(diffContrib, float3(0.3, 0.59, 0.11)) < 0.004)
@@ -436,9 +437,9 @@ void light_contribution_specular(FP_NORMALMAP_IN IN,
     Ln = normalize(Ln);
     Hn = normalize(Hn);
     float4 position4 = float4(position, 1.0);
-    float3 projection = PointToLight(position4, lightViewInverseTranspose);
-    float falloff = dot(position4, lightFalloff);
-    float3 attenuation = tex2DprojFix(lightprojection, projection).xyz * tex2D(lightfalloff, float2(falloff, 0.5)).y;
+    float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
+    float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
+                         tex2D(lightfalloff, float2(projection.w, 0.5)).y;
     float3 lightcolor = (lightColor * attenuation);
     diffContrib = (dot(Ln, Nn) * lightcolor);
     // Discard fragment if it does not contribute much actual light
