@@ -622,7 +622,7 @@ Create a file with the following content and place it in the root of the Turbule
     </html>
 
 After defining a <canvas> element of 640x480 pixels, this code will create the TurbulenzEngine and request the GraphicDevice module.
-Using the an update function called at a frequency of 60fps, the GraphicsDevice will clear the screen yellow.
+Using an update function called at a frequency of 60fps, the GraphicsDevice will clear the screen yellow.
 To run the example, open the HTML file in your browser.
 You should see a yellow rectangle.
 
