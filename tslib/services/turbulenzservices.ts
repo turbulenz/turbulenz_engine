@@ -35,6 +35,7 @@ interface UserProfile
     language    : string;
     country     : string;
     age         : number;
+    anonymous?  : bool;
 };
 
 interface ServiceResponse
