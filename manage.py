@@ -29,10 +29,10 @@ def command_env():
 
     if not os.path.isdir(ENV):
         if TURBULENZOS == 'win32':
-            sh('%s -m virtualenv -v --no-site-packages %s' % (sys.executable, ENV))
+            sh('%s -m virtualenv --no-site-packages %s' % (sys.executable, ENV))
         else:
             print "PYTHON: %s" % PYTHON
-            cmd = 'virtualenv -v -p %s --no-site-packages %s' % (PYTHON, ENV)
+            cmd = 'virtualenv -p %s --no-site-packages %s' % (PYTHON, ENV)
             print "CMD: %s" % cmd
             sh(cmd, console=True)
 

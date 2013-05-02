@@ -581,6 +581,7 @@ as described in the setup section.
   virtual environment. These are available at the command line e.g. running ``dae2json`` will execute the dae2json
   tool used to convert Collada assets to a Turbulenz Engine JSON asset format. See the
   `tools <http://docs.turbulenz.com/tools/index.html>`__ section in the documentation for more details on the tools.
+
 - **Local Development Server** - Setting up the environment also includes a locally hosted web server which can be
   used for development of HTML5 games and applications. See the
   `Local Server <http://docs.turbulenz.com/local/index.html>`__ section in the documentation for more details.
@@ -590,7 +591,7 @@ Getting Started With The API
 ============================
 
 To try the Turbulenz APIs requires only a text editor and a browser such as Google Chrome or Mozilla Firefox.
-Create a file with the following content and place it in the root of the Turbulenz directory::
+Create an HTML file with the following content and place it in the root of the Turbulenz directory::
 
     <html>
     <head>
@@ -634,7 +635,7 @@ Any webserver will work, a quick way to try is to activate the Turbulenz environ
 This command will host the contents of the Turbulenz directory on your machine as a webserver.
 
 To demonstrate loading an asset you can try loading an image file and drawing it as a textured sprite using the Draw2D API.
-Create another file with the following content and also place it in the root of the Turbulenz directory::
+Create another HTML file with the following content and also place it in the root of the Turbulenz directory::
 
     <html>
     <head>
@@ -740,7 +741,7 @@ You will need these assets::
 Copy this text into a file called "deps.yaml" and place it in the root of the Turbulenz directory.
 Having built the tools you can now run this command with the Turbulenz environment activated::
 
-    $ python scripts\buildassets.py --root . --assets-path assets
+    $ python scripts/buildassets.py --root . --assets-path assets
 
 This will build the assets listed in the deps.yaml and output a "staticmax" directory and "mapping_table.json" file containing the processed assets and a mapping to them for the webserver.
 When a library trys to request one of these files, it will be able to find it in the staticmax directory.
@@ -887,11 +888,17 @@ Other technologies are included via Git submodules contained within the Turbulen
 Additional Python packages will be automatically installed during the initial environment creation using a
 Python package manager.
 
-To build the cgfx2json shader conversion tool ``python manage.py tools`` a compiler toolchain is required as follows
+To build the cgfx2json shader conversion tool ``python manage.py tools`` requires both a compiler toolchain
+and the `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher.
+
+The CgToolkit is included in the repository for Windows, for Mac OSX and Linux please download and install it.
+
+Compiler Toolchain Requirements
 
 - Windows : Microsoft Visual Studio 2008 w/SP1
 - Mac OSX : Xcode with the command line tools
 - Linux : GCC 4.6.x or higher
+
 
 Known Issues
 ============

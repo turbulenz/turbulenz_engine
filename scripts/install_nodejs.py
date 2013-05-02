@@ -42,7 +42,7 @@ def nodejs_get_version(allow_system_node):
         elif PLATFORM == 'win32':
             return str(check_output('env\\Scripts\\node --version', shell=True)).rstrip()
         else:
-            return str(check_output('env/bin/node --version', shell=True)).rstrip()
+            return str(check_output('test -x env/bin/node && env/bin/node --version', shell=True)).rstrip()
 
     except CalledProcessError:
         return ''
@@ -124,7 +124,7 @@ def nodejs_install_source_unix(version):
     srcdir = os.path.join(tmpd, basename)
     if 0 != docall('tar -xzf %s.tar.gz' % basename, tmpd) or \
             0 != docall('./configure --prefix=%s' % destdir, srcdir) or \
-            0 != docall('make -j 5 -s > /dev/null', srcdir) or \
+            0 != docall('make V= -j 5', srcdir) or \
             0 != docall('make install', srcdir):
         print 'Error building nodejs from source.'
         exit(1)
