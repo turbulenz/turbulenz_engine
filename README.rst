@@ -887,11 +887,17 @@ Other technologies are included via Git submodules contained within the Turbulen
 Additional Python packages will be automatically installed during the initial environment creation using a
 Python package manager.
 
-To build the cgfx2json shader conversion tool ``python manage.py tools`` a compiler toolchain is required as follows
+To build the cgfx2json shader conversion tool ``python manage.py tools`` requires both a compiler toolchain
+and the `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher.
+
+The CgToolkit is included in the repository for Windows, for Mac OSX and Linux please download and install it.
+
+Compiler Toolchain Requirements
 
 - Windows : Microsoft Visual Studio 2008 w/SP1
 - Mac OSX : Xcode with the command line tools
 - Linux : GCC 4.6.x or higher
+
 
 Known Issues
 ============
