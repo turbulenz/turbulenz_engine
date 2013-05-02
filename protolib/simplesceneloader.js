@@ -7,7 +7,6 @@
 //  also deals with multiple calls to the same asset and clones appropriately.
 //
 
-/*global Config: false*/
 /*global SceneLoader: false*/
 /*global SceneNode: false*/
 
@@ -45,7 +44,7 @@ SimpleSceneLoader.prototype =
             local: thisLocationMatrix,
             dynamic: stationary !== undefined ? !stationary : true,
             disabled: false,
-            keepVertexData : Config.debugEnableWireframe
+            keepVertexData : this.debugEnableWireframe
         };
 
         var shouldAdd   =   false;
@@ -147,7 +146,7 @@ SimpleSceneLoader.prototype =
                 postSceneLoadFn : loadAssetFinished,
                 parentNode      : thisAssetCache.rootNode,
                 name            : inputAssetPath + this.loadAssetCounter.toString() + "_child",
-                keepVertexData  : Config.debugEnableWireframe
+                keepVertexData  : this.debugEnableWireframe
             };
 
             var scratchSceneLoader = SceneLoader.create();
@@ -189,6 +188,7 @@ SimpleSceneLoader.create = function simpleSceneLoaderCreateFn(globals)
     var simpleSceneLoader               = new SimpleSceneLoader();
 
     simpleSceneLoader.globals           = globals;
+    simpleSceneLoader.debugEnableWireframe = globals.debugEnableWireframe;
 
     simpleSceneLoader.loadAssetCounter  = 0;
     simpleSceneLoader.cloneAssetCounter = 0;

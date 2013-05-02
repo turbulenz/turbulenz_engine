@@ -222,6 +222,7 @@ function Protolib(params)
     var simplesprite = SimpleSprite.create(globals);
     globals.simplesprite = simplesprite;
 
+    globals.debugEnableWireframe = false;
     var simplesceneloader = SimpleSceneLoader.create(globals);
     globals.simplesceneloader = simplesceneloader;
 
