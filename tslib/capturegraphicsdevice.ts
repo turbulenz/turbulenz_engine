@@ -135,17 +135,15 @@ class CaptureGraphicsDevice
         }
         else
         {
-            var threshold;
             if (integers)
             {
-                threshold = 0;
+                lowerIndex = this._lowerBound(dataBin, data, length, this._compareGenericArrays, 0);
             }
             else
             {
-                threshold = (length > 16 ? 0.001 : 0.0001);
+                var threshold = (length > 16 ? 0.001 : 0.0001);
+                lowerIndex = this._lowerBound(dataBin, data, length, this._compareFloatArrays, threshold);
             }
-
-            lowerIndex = this._lowerBound(dataBin, data, length, threshold);
 
             // Check if we found an identical copy
             if (lowerIndex < 0)
@@ -185,40 +183,47 @@ class CaptureGraphicsDevice
         var length = args.length;
         var method = args[0];
 
+        var lowerIndex;
+
         var commandsBin = this.commands[method];
         if (commandsBin === undefined)
         {
             this.commands[method] = commandsBin = [];
+            lowerIndex = 0;
         }
-
-        var binLength = commandsBin.length;
-        var n, command, a, cmdId;
-        for (n = 0; n < binLength; n += 2)
+        else
         {
-            command = commandsBin[n + 1];
-            // First argument is method id
-            for (a = 1; a < length; a += 1)
+            lowerIndex = this._lowerBound(commandsBin, args, length, this._compareGenericArrays, 1);
+
+            // Check if we found an identical copy
+            if (lowerIndex < 0)
             {
-                if (command[a] !== args[a])
-                {
-                    break;
-                }
-            }
-            if (a === length)
-            {
-                cmdId = commandsBin[n];
-                this.current.push(cmdId);
+                lowerIndex = ((-lowerIndex) - 1);
+                this.current.push(commandsBin[lowerIndex]);
                 return;
             }
         }
 
-        command = new Array(length);
-        for (a = 0; a < length; a += 1)
+        var command = new Array(length);
+        var a;
+
+        command[0] = method;
+        for (a = 1; a < length; a += 1)
         {
             command[a] = args[a];
         }
-        cmdId = this._getCommandId();
-        commandsBin.push(cmdId, command);
+
+        var cmdId = this._getCommandId();
+
+        if (lowerIndex < commandsBin.length)
+        {
+            commandsBin.splice(lowerIndex, 0, cmdId, command);
+        }
+        else
+        {
+            commandsBin.push(cmdId, command);
+        }
+
         this.current.push(cmdId);
     }
 
@@ -557,7 +562,7 @@ class CaptureGraphicsDevice
         this.setTechniqueParameters(techniqueParameters);
     };
 
-    _lowerBound(bin: any[], data: any[], length: number, threshold: number) : number
+    _lowerBound(bin: any[], data: any[], length: number, comp: Function, config: number) : number
     {
         var first: number = 0;
         var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
@@ -568,7 +573,7 @@ class CaptureGraphicsDevice
             step = (count >>> 1);
             middle = (first + step);
             binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
-            diff = this._compareArray(bin[binIndex], data, length, threshold);
+            diff = comp(bin[binIndex], data, length, config);
             if (diff < 0)
             {
                 first = (middle + 1);
@@ -588,7 +593,7 @@ class CaptureGraphicsDevice
         return (first << 1); // Bin elements ocupy two slots, multiply by 2
     }
 
-    _compareArray(a: any[], b: any[], length: number, positiveThreshold: number) : number
+    _compareFloatArrays(a: any[], b: any[], length: number, positiveThreshold: number) : number
     {
         var negativeThreshold: number = -positiveThreshold;
         var n: number = 0;
@@ -607,6 +612,27 @@ class CaptureGraphicsDevice
             n += 1;
         }
         while (n < length);
+        return 0;
+    }
+
+    _compareGenericArrays(a: any[], b: any[], length: number, offset: number) : number
+    {
+        var n: number = offset;
+        var av, bv;
+        while (n < length)
+        {
+            av = a[n];
+            bv = b[n];
+            if (av < bv)
+            {
+                return -1;
+            }
+            else if (av > bv)
+            {
+                return 1;
+            }
+            n += 1;
+        }
         return 0;
     }
 
