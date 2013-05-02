@@ -534,12 +534,6 @@ Setup
 Working With The Open Source Project
 ------------------------------------
 
-Before starting be sure to activate the environment in your shell.
-::
-
-        $ source env/bin/activate - for bash and similar shells
-        > env\scripts\activate.bat - for Windows
-
 The manage.py script at the top level of the repository provides a set of commands for managing the Engine, the
 script should be run as ``python manage.py command`` on Windows but can usually be shortcut to ``./manage.py command``
 on unix shells. Running the script with ``--help`` will give a list of commands available, most of these are
