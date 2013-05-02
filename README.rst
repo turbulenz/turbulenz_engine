@@ -546,6 +546,13 @@ as described in the setup section.
 
     $ python manage.py jslib
 
+- **Tools** - The Turbulenz Engine includes a number of Python tools which are installed during the env command.
+  In addition the Engine includes a CGFX shader conversion tool which can be built with the following command.
+  See the `Dependencies`_ section for details of required compiler toolchains.
+  ::
+
+    $ python manage.py tools
+
 - **Documentation** - The Turbulenz Engine documentation is based on restructured text sources. To build the html
   documentation run the command
   ::
@@ -727,6 +734,12 @@ Other technologies are included via Git submodules contained within the Turbulen
 
 Additional Python packages will be automatically installed during the initial environment creation using a
 Python package manager.
+
+To build the cgfx2json shader conversion tool ``python manage.py tools`` a compiler toolchain is required as follows
+
+- Windows : Microsoft Visual Studio 2008 w/SP1
+- Mac OSX : Xcode with the command line tools
+- Linux : GCC 4.6.x or higher
 
 Known Issues
 ============
