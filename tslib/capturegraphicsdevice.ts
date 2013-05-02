@@ -264,32 +264,37 @@ class CaptureGraphicsDevice
             return null;
         }
 
+        var lowerIndex;
+
         var objectsBin = this.objects[length];
         if (objectsBin === undefined)
         {
             this.objects[length] = objectsBin = [];
+            lowerIndex = 0;
         }
-
-        var binLength = objectsBin.length;
-        var n, object, j;
-        for (n = 0; n < binLength; n += 2)
+        else
         {
-            object = objectsBin[n + 1];
-            for (j = 0; j < length; j += 1)
+            lowerIndex = this._lowerBound(objectsBin, objectArray, length, this._compareGenericArrays, 0);
+
+            // Check if we found an identical copy
+            if (lowerIndex < 0)
             {
-                if (object[j] !== objectArray[j])
-                {
-                    break;
-                }
-            }
-            if (j === length)
-            {
-                return objectsBin[n].toString();
+                lowerIndex = ((-lowerIndex) - 1);
+                return objectsBin[lowerIndex].toString()
             }
         }
 
         var id = this._getIntegerId();
-        objectsBin.push(id, objectArray);
+
+        if (lowerIndex < objectsBin.length)
+        {
+            objectsBin.splice(lowerIndex, 0, id, objectArray);
+        }
+        else
+        {
+            objectsBin.push(id, objectArray);
+        }
+
         return id.toString();
     }
 
