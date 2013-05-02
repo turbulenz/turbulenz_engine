@@ -4,12 +4,16 @@
 #include "../common/json.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #ifdef WIN32
     #include <direct.h>
     #define GetCurrentDir _getcwd
+    #define snprintf _snprintf
 #else
     #include <unistd.h>
     #define GetCurrentDir getcwd
+    #define _stat stat
  #endif
 typedef std::map<std::string, std::string> UniformsMap;
 typedef std::pair<boost::xpressive::sregex, std::string> UniformRule;
@@ -1300,17 +1304,16 @@ int main(int argc, char **argv)
         for (itr = includePaths.begin(); itr != itrEnd; ++itr)
         {
             const char *includePath = itr->c_str();
-#ifdef WIN32
-            if (includePath[0] == '/' || strstr(includePath, ":/"))
-#else
-            if (includePath[0] == '/')
-#endif
+            char depPath[FILENAME_MAX];
+            snprintf(depPath, FILENAME_MAX, "%s%s", cwd, itr->c_str());
+            struct _stat fileState;
+            if (_stat(depPath, &fileState) == 0)
             {
-                fprintf(dependenciesFile, "%s\n", itr->c_str());
+                fprintf(dependenciesFile, "%s\n", depPath);
             }
             else
             {
-                fprintf(dependenciesFile, "%s%s\n", cwd, itr->c_str());
+                fprintf(dependenciesFile, "%s\n", itr->c_str());
             }
         }
 
