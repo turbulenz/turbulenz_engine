@@ -53,8 +53,8 @@ Installation steps
     After installing the essential and recommended software, install the SDK:
 
     1) Visit https://hub.turbulenz.com and login
-    2) Download SDK |release| for Windows
-    3) Run TurbulenzSDK-|release|.exe
+    2) Download SDK X.X.X for Windows
+    3) Run TurbulenzSDK-X.X.X.exe
     4) Follow the instructions
 
     .. NOTE::

@@ -27,7 +27,7 @@ To learn the basics of how to use Turbulenz APIs read the next section.
 If you are comfortable with how to use a basic Turbulenz JavaScript APIs, for example to draw an image to the screen, you can skip this section and move on to the finding the best way to structure a :ref:`Turbulenz application <getting_started_writing_turbulenz_games>`.
 
 
-**At this point you should done at least *one* of the following:**
+**At this point you should have done at least *one* of the following:**
 
 * Installed the latest SDK from `<https://hub.turbulenz.com>`__ and run through the setup steps mentioned :ref:`here <developer_requirements>`.
 * Cloned the Turbulenz open source git repository from `<http://github.com/turbulenz/turbulenz_engine>`__ and run through the setup steps in the README.rst.
@@ -66,7 +66,7 @@ Add the following script tags after the section marked as "Script includes go he
     <script src="jslib/webgl/turbulenzengine.js"></script>
     <script src="jslib/webgl/graphicsdevice.js"></script>
 
-To initialize create a *WebGLTurbulenzEngine* and pass a reference to the <canvas> element to the constructor::
+To initialize create a *WebGLTurbulenzEngine* and pass a reference to the <canvas> element to the constructor in the game code section::
 
     TurbulenzEngine = WebGLTurbulenzEngine.create({
         canvas: document.getElementById("canvas")
