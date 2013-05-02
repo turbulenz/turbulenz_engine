@@ -724,7 +724,6 @@ class CaptureGraphicsDevice
 
         var currentParameters = null;
         var deltaParameters = null;
-        var deltaEmpty = true;
         var validParameters = null;
         var activeIndexBuffer = null;
         var lastTechnique = null;
@@ -788,8 +787,7 @@ class CaptureGraphicsDevice
             {
                 techniqueParameters = drawParameters[t];
 
-                deltaParameters = {};
-                deltaEmpty = true;
+                deltaParameters = null;
 
                 for (p in techniqueParameters)
                 {
@@ -809,8 +807,11 @@ class CaptureGraphicsDevice
                                     continue;
                                 }
                                 currentParameters[p] = value;
+                                if (deltaParameters === null)
+                                {
+                                    deltaParameters = {};
+                                }
                                 deltaParameters[p] = value;
-                                deltaEmpty = false;
                             }
                             else
                             {
@@ -820,7 +821,7 @@ class CaptureGraphicsDevice
                     }
                 }
 
-                if (!deltaEmpty)
+                if (deltaParameters !== null)
                 {
                     this.setTechniqueParameters(deltaParameters);
                 }
