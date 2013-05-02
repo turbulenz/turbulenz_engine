@@ -564,7 +564,7 @@ class CaptureGraphicsDevice
             }
         }
 
-        this.setTechniqueParameters(techniqueParameters);
+        this._setSingleTechniqueParameters(techniqueParameters);
     };
 
     _lowerBound(bin: any[], data: any[], length: number, comp: Function, config: number) : number
@@ -669,6 +669,17 @@ class CaptureGraphicsDevice
         }
         while (n < length);
         return true;
+    }
+
+    _setSingleTechniqueParameters(techniqueParameters)
+    {
+        var objectId = this._addObject(techniqueParameters);
+        if (objectId !== null)
+        {
+            this._addCommand(CaptureGraphicsCommand.setTechniqueParameters, objectId);
+        }
+
+        this.gd.setTechniqueParameters(techniqueParameters);
     }
 
     // GraphicsDevice API
@@ -850,7 +861,7 @@ class CaptureGraphicsDevice
                     }
                 }
 
-                this.setTechniqueParameters(currentParameters);
+                this._setSingleTechniqueParameters(currentParameters);
             }
 
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
@@ -894,7 +905,7 @@ class CaptureGraphicsDevice
 
                 if (deltaParameters !== null)
                 {
-                    this.setTechniqueParameters(deltaParameters);
+                    this._setSingleTechniqueParameters(deltaParameters);
                 }
             }
 
@@ -960,7 +971,7 @@ class CaptureGraphicsDevice
                             }
                         }
 
-                        this.setTechniqueParameters(deltaParameters);
+                        this._setSingleTechniqueParameters(deltaParameters);
 
                         this.drawIndexed(primitive, count, firstIndex);
 
@@ -996,7 +1007,7 @@ class CaptureGraphicsDevice
                             }
                         }
 
-                        this.setTechniqueParameters(deltaParameters);
+                        this._setSingleTechniqueParameters(deltaParameters);
 
                         this.draw(primitive, count, firstIndex);
 
