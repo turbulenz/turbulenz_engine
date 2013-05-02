@@ -125,33 +125,33 @@ class CaptureGraphicsDevice
 
     _addData(data, length, integers) : string
     {
+        var lowerIndex;
+
         var dataBin = this.data[length];
         if (dataBin === undefined)
         {
             this.data[length] = dataBin = [];
-        }
-
-        var binLength = dataBin.length;
-        var n;
-        if (integers)
-        {
-            for (n = 0; n < binLength; n += 2)
-            {
-                if (this._equalIntegerArrays(data, dataBin[n + 1], length))
-                {
-                    return dataBin[n].toString();
-                }
-            }
+            lowerIndex = 0;
         }
         else
         {
-            var threshold = (length > 16 ? 0.001 : 0.0001);
-            for (n = 0; n < binLength; n += 2)
+            var threshold;
+            if (integers)
             {
-                if (this._equalFloatArrays(data, dataBin[n + 1], length, threshold))
-                {
-                    return dataBin[n].toString();
-                }
+                threshold = 0;
+            }
+            else
+            {
+                threshold = (length > 16 ? 0.001 : 0.0001);
+            }
+
+            lowerIndex = this._lowerBound(dataBin, data, length, threshold);
+
+            // Check if we found an identical copy
+            if (lowerIndex < 0)
+            {
+                lowerIndex = ((-lowerIndex) - 1);
+                return dataBin[lowerIndex].toString();
             }
         }
 
@@ -162,14 +162,21 @@ class CaptureGraphicsDevice
         }
         else
         {
-            clonedData = new Array(length);
-            for (n = 0; n < length; n += 1)
-            {
-                clonedData[n] = data[n];
-            }
+            // must be a typed array
+            clonedData = new data.constructor(data);
         }
+
         var id = this._getIntegerId();
-        dataBin.push(id, clonedData);
+
+        if (lowerIndex < dataBin.length)
+        {
+            dataBin.splice(lowerIndex, 0, id, clonedData);
+        }
+        else
+        {
+            dataBin.push(id, clonedData);
+        }
+
         return id.toString();
     }
 
@@ -550,25 +557,57 @@ class CaptureGraphicsDevice
         this.setTechniqueParameters(techniqueParameters);
     };
 
-    _compareArrays(a, b) : number
+    _lowerBound(bin: any[], data: any[], length: number, threshold: number) : number
     {
-        var length = Math.min(a.length, b.length);
-        var n = 0;
+        var first: number = 0;
+        var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
+        var step: number, middle : number, binIndex:number, diff: number;
+
+        while (0 < count)
+        {
+            step = (count >>> 1);
+            middle = (first + step);
+            binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
+            diff = this._compareArray(bin[binIndex], data, length, threshold);
+            if (diff < 0)
+            {
+                first = (middle + 1);
+                count -= (step + 1);
+            }
+            else if (0 < diff)
+            {
+                count = step;
+            }
+            else
+            {
+                // This would be a non-zero negative value to signal that we found an identical copy
+                return -binIndex;
+            }
+        }
+
+        return (first << 1); // Bin elements ocupy two slots, multiply by 2
+    }
+
+    _compareArray(a: any[], b: any[], length: number, positiveThreshold: number) : number
+    {
+        var negativeThreshold: number = -positiveThreshold;
+        var n: number = 0;
+        var diff: number;
         do
         {
-            var diff = (a[n] - b[n]);
-            if (diff < -0.0001)
+            diff = (a[n] - b[n]);
+            if (diff < negativeThreshold)
             {
                 return -1;
             }
-            else if (diff > 0.0001)
+            else if (diff > positiveThreshold)
             {
                 return 1;
             }
             n += 1;
         }
         while (n < length);
-        return (a.length - b.length);
+        return 0;
     }
 
     _equalFloatArrays(a, b, length, threshold) : bool
@@ -802,7 +841,8 @@ class CaptureGraphicsDevice
                                 if (currentValue !== undefined &&
                                     (value instanceof Float32Array ||
                                      value instanceof Array) &&
-                                    0 === this._compareArrays(value, currentValue))
+                                    value.length === currentValue.length &&
+                                    this._equalFloatArrays(value, currentValue, value.length, 0.0001))
                                 {
                                     continue;
                                 }
@@ -878,7 +918,8 @@ class CaptureGraphicsDevice
                                     if (currentValue !== undefined &&
                                         (value instanceof Float32Array ||
                                          value instanceof Array) &&
-                                        0 === this._compareArrays(value, currentValue))
+                                        value.length === currentValue.length &&
+                                        this._equalFloatArrays(value, currentValue, value.length, 0.0001))
                                     {
                                         continue;
                                     }
