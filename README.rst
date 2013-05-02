@@ -741,7 +741,7 @@ You will need these assets::
 Copy this text into a file called "deps.yaml" and place it in the root of the Turbulenz directory.
 Having built the tools you can now run this command with the Turbulenz environment activated::
 
-    $ python scripts\buildassets.py --root . --assets-path assets
+    $ python scripts/buildassets.py --root . --assets-path assets
 
 This will build the assets listed in the deps.yaml and output a "staticmax" directory and "mapping_table.json" file containing the processed assets and a mapping to them for the webserver.
 When a library trys to request one of these files, it will be able to find it in the staticmax directory.
