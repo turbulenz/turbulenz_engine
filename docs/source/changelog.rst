@@ -7,6 +7,6 @@
 Changelog
 ---------
 
-2013-04-20
+2013-05-02
 
     - Changes for first open source release
