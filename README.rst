@@ -707,6 +707,7 @@ For more information on the various APIs, see the following links:
 * `High-level API <http://docs.turbulenz.com/jslibrary_api/high_level_api.html>`__
 * `Turbulenz Services API <http://docs.turbulenz.com/turbulenz_services/index.html>`__
 
+
 Documentation
 =============
 
@@ -726,6 +727,16 @@ Other technologies are included via Git submodules contained within the Turbulen
 
 Additional Python packages will be automatically installed during the initial environment creation using a
 Python package manager.
+
+Known Issues
+============
+
+The following known issues exist with using the open source repository version of the Turbulenz Engine,
+additional known issues also existing in the SDK releases of the engine can be found here
+`<http://docs.turbulenz.com/known_issues/index.html>`__
+
+* The application and JavaScript build process will currently fail if the repository is cloned to a path with
+  spaces in it.
 
 
 Licensing
