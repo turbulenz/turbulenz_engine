@@ -534,6 +534,12 @@ Setup
 Working With The Open Source Project
 ------------------------------------
 
+Before starting be sure to activate the environment in your shell.
+::
+
+        $ source env/bin/activate - for bash and similar shells
+        > env\scripts\activate.bat - for Windows
+
 The manage.py script at the top level of the repository provides a set of commands for managing the Engine, the
 script should be run as ``python manage.py command`` on Windows but can usually be shortcut to ``./manage.py command``
 on unix shells. Running the script with ``--help`` will give a list of commands available, most of these are
@@ -581,6 +587,7 @@ as described in the setup section.
   virtual environment. These are available at the command line e.g. running ``dae2json`` will execute the dae2json
   tool used to convert Collada assets to a Turbulenz Engine JSON asset format. See the
   `tools <http://docs.turbulenz.com/tools/index.html>`__ section in the documentation for more details on the tools.
+
 - **Local Development Server** - Setting up the environment also includes a locally hosted web server which can be
   used for development of HTML5 games and applications. See the
   `Local Server <http://docs.turbulenz.com/local/index.html>`__ section in the documentation for more details.
@@ -590,7 +597,7 @@ Getting Started With The API
 ============================
 
 To try the Turbulenz APIs requires only a text editor and a browser such as Google Chrome or Mozilla Firefox.
-Create a file with the following content and place it in the root of the Turbulenz directory::
+Create an HTML file with the following content and place it in the root of the Turbulenz directory::
 
     <html>
     <head>
@@ -634,7 +641,7 @@ Any webserver will work, a quick way to try is to activate the Turbulenz environ
 This command will host the contents of the Turbulenz directory on your machine as a webserver.
 
 To demonstrate loading an asset you can try loading an image file and drawing it as a textured sprite using the Draw2D API.
-Create another file with the following content and also place it in the root of the Turbulenz directory::
+Create another HTML file with the following content and also place it in the root of the Turbulenz directory::
 
     <html>
     <head>
