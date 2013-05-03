@@ -265,34 +265,21 @@ class CaptureGraphicsDevice
     // We need to implement our own sort because of the way data is stored
     private _sortObjectArray(data, length)
     {
-        var sorted = false;
-        var j, k1, k2, v1, v2;
-        length -= 2;
-        do
+        var k, v, i, j;
+        for (i = 2; i < length; i += 2)
         {
-            sorted = true;
-            k1 = data[0];
-            for (j = 0; j < length; j += 2)
+            k = data[i];
+            v = data[i + 1];
+
+            for (j = (i - 2); j > -2 && data[j] > k; j -= 2)
             {
-                k2 = data[j + 2];
-                if (k1 > k2)
-                {
-                    v1 = data[j + 1];
-                    v2 = data[j + 2 + 1];
-                    data[j + 2] = k1;
-                    data[j + 2 + 1] = v1;
-                    data[j] = k2;
-                    data[j + 1] = v2;
-                    sorted = false;
-                }
-                else
-                {
-                    k1 = k2;
-                }
+                data[j + 2] = data[j];
+                data[j + 3] = data[j + 1];
             }
-            length -= 2;
+
+            data[j + 2] = k;
+            data[j + 3] = v;
         }
-        while (!sorted);
     }
 
     private _addObject(object) : string
