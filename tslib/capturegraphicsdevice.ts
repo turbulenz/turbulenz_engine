@@ -1430,28 +1430,10 @@ class CaptureGraphicsDevice
                 var writer = map.call(this, offset, numIndices);
                 if (writer)
                 {
-                    var data = [];
-                    var captureWriter = function capturIBWriter()
+                    writer['end'] = function captureIBWriterEnd()
                     {
-                        var numArguments = arguments.length;
-                        for (var a = 0; a < numArguments; a += 1)
-                        {
-                            var value = arguments[a];
-                            if (typeof value === 'number')
-                            {
-                                data.push(value);
-                            }
-                            else
-                            {
-                                data.push.apply(data, value);
-                            }
-                        }
-
-                        writer.apply(this, arguments);
-                    };
-                    captureWriter['end'] = function captureIBWriterEnd()
-                    {
-                        var numIndices = data.length;
+                        var data = writer.data;
+                        var numIndices = writer.getNumWrittenIndices();
                         if (offset === 0 && numIndices === indexBuffer.numIndices)
                         {
                             self._addCommand(CaptureGraphicsCommand.setAllData,
@@ -1467,19 +1449,14 @@ class CaptureGraphicsDevice
                                              self._addData(data, numIndices, true));
                         }
                     };
-                    captureWriter['proxy'] = writer;
-                    return captureWriter;
                 }
-                else
-                {
-                    return writer;
-                }
+                return writer;
             };
             var unmap = indexBuffer.unmap;
             indexBuffer.unmap = function captureIBunmap(writer)
             {
                 writer['end']();
-                unmap.call(this, writer['proxy']);
+                unmap.call(this, writer);
             };
 
             var destroy = indexBuffer.destroy;
