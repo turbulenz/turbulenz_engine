@@ -1960,6 +1960,7 @@ class CaptureGraphicsDevice
                     id = dataBin[n];
                     data = dataBin[n + 1];
                     length = data.length;
+
                     if (addValuesComma)
                     {
                         dataString += ',';
@@ -1968,36 +1969,54 @@ class CaptureGraphicsDevice
                     {
                         addValuesComma = true;
                     }
+
                     dataString += id + ',[';
-                    for (j = 0; j < length; j += 1)
+
+                    if (data instanceof Array ||
+                        data instanceof Float32Array ||
+                        data instanceof Float64Array)
                     {
-                        if (j)
+                        for (j = 0; j < length; j += 1)
                         {
-                            dataString += ',';
-                        }
-                        value = data[j];
-                        valueInt = (value | 0);
-                        if (Math.abs(valueInt - value) < 0.00001)
-                        {
-                            dataString += valueInt.toString();
-                        }
-                        else
-                        {
-                            if (length <= 16)
+                            if (j)
                             {
-                                if (Math.abs(value) < 0.001)
-                                {
-                                    dataString += value.toExponential(2).replace(/\.?0+e/, 'e');
-                                }
-                                else
-                                {
-                                    dataString += value.toFixed(5).replace(/\.?0+$/, '');
-                                }
+                                dataString += ',';
+                            }
+                            value = data[j];
+                            valueInt = (value | 0);
+                            if (Math.abs(valueInt - value) < 0.00001)
+                            {
+                                dataString += valueInt.toString();
                             }
                             else
                             {
-                                dataString += value.toFixed(3).replace(/\.?0+$/, '');
+                                if (length <= 16)
+                                {
+                                    if (Math.abs(value) < 0.001)
+                                    {
+                                        dataString += value.toExponential(2).replace(/\.?0+e/, 'e');
+                                    }
+                                    else
+                                    {
+                                        dataString += value.toFixed(5).replace(/\.?0+$/, '');
+                                    }
+                                }
+                                else
+                                {
+                                    dataString += value.toFixed(3).replace(/\.?0+$/, '');
+                                }
                             }
+                        }
+                    }
+                    else
+                    {
+                        for (j = 0; j < length; j += 1)
+                        {
+                            if (j)
+                            {
+                                dataString += ',';
+                            }
+                            dataString += data[j].toString();
                         }
                     }
                     dataString += ']';
