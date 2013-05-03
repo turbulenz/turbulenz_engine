@@ -863,6 +863,10 @@ class CaptureGraphicsDevice
         var t = 0;
         var p, value, currentValue;
 
+        var drawCommand = -1;
+        var current = this.current;
+        var gd = this.gd;
+
         for (var n = 0; n < numDrawParameters; n += 1)
         {
             var drawParameters = drawParametersArray[n];
@@ -994,6 +998,7 @@ class CaptureGraphicsDevice
                 t = ((16 * 3) + 8);
                 if (t < endInstances)
                 {
+                    drawCommand = -1;
                     do
                     {
                         deltaParameters = {};
@@ -1026,7 +1031,16 @@ class CaptureGraphicsDevice
 
                         this._setSingleTechniqueParameters(deltaParameters, objectArray);
 
-                        this.drawIndexed(primitive, count, firstIndex);
+                        if (drawCommand === -1)
+                        {
+                            this.drawIndexed(primitive, count, firstIndex);
+                            drawCommand = current[current.length - 1];
+                        }
+                        else
+                        {
+                            gd.drawIndexed(primitive, count, firstIndex);
+                            current.push(drawCommand);
+                        }
 
                         t += 1;
                     }
@@ -1042,6 +1056,7 @@ class CaptureGraphicsDevice
                 t = ((16 * 3) + 8);
                 if (t < endInstances)
                 {
+                    drawCommand = -1;
                     do
                     {
                         deltaParameters = {};
@@ -1064,7 +1079,16 @@ class CaptureGraphicsDevice
 
                         this._setSingleTechniqueParameters(deltaParameters, objectArray);
 
-                        this.draw(primitive, count, firstIndex);
+                        if (drawCommand === -1)
+                        {
+                            this.draw(primitive, count, firstIndex);
+                            drawCommand = current[current.length - 1];
+                        }
+                        else
+                        {
+                            gd.draw(primitive, count, firstIndex);
+                            current.push(drawCommand);
+                        }
 
                         t += 1;
                     }
