@@ -26,7 +26,7 @@ class CaptureGraphicsDevice
     public static version = 1;
 
     gd:         any;
-    current:    any[];
+    current:    number[];
     frames:     any[];
     commands:   any[];
     numCommands: number;
@@ -1887,7 +1887,7 @@ class CaptureGraphicsDevice
                     valueInt = (value | 0);
                     if (valueInt === value)
                     {
-                        framesString += valueInt.toString();
+                        framesString += valueInt;
                     }
                     else
                     {
@@ -1900,7 +1900,7 @@ class CaptureGraphicsDevice
                 }
                 else
                 {
-                    framesString += value.toString();
+                    framesString += value;
                 }
             }
             framesString += ']';
@@ -1965,7 +1965,7 @@ class CaptureGraphicsDevice
                             valueInt = (value | 0);
                             if (Math.abs(valueInt - value) < 0.00001)
                             {
-                                dataString += valueInt.toString();
+                                dataString += valueInt;
                             }
                             else
                             {
@@ -1995,7 +1995,7 @@ class CaptureGraphicsDevice
                             {
                                 dataString += ',';
                             }
-                            dataString += data[j].toString();
+                            dataString += data[j];
                         }
                     }
                     dataString += ']';
@@ -2043,7 +2043,7 @@ class CaptureGraphicsDevice
                             valueInt = (value | 0);
                             if (valueInt === value)
                             {
-                                dataString += valueInt.toString();
+                                dataString += valueInt;
                             }
                             else
                             {
@@ -2052,7 +2052,7 @@ class CaptureGraphicsDevice
                         }
                         else
                         {
-                            dataString += value.toString();
+                            dataString += value;
                         }
                     }
                     dataString += ']';
