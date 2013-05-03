@@ -141,7 +141,7 @@ class CaptureGraphicsDevice
             }
             else
             {
-                var threshold = (length > 16 ? 0.001 : 0.0001);
+                var threshold = (length > 16 ? 0.001 : 0.00001);
                 lowerIndex = this._lowerBound(dataBin, data, length, this._compareFloatArrays, threshold);
             }
 
@@ -699,12 +699,12 @@ class CaptureGraphicsDevice
         return 0;
     }
 
-    private _equalFloatArrays(a, b, length, threshold) : bool
+    private _equalFloatArrays(a, b, length) : bool
     {
         var n = 0;
         do
         {
-            if (Math.abs(a[n] - b[n]) >= threshold)
+            if (Math.abs(a[n] - b[n]) >= 0.00001)
             {
                 return false;
             }
@@ -944,8 +944,9 @@ class CaptureGraphicsDevice
                                 if (currentValue !== undefined &&
                                     (value instanceof Float32Array ||
                                      value instanceof Array) &&
+                                    value._id === undefined &&
                                     value.length === currentValue.length &&
-                                    this._equalFloatArrays(value, currentValue, value.length, 0.0001))
+                                    this._equalFloatArrays(value, currentValue, value.length))
                                 {
                                     continue;
                                 }
@@ -1024,8 +1025,9 @@ class CaptureGraphicsDevice
                                     if (currentValue !== undefined &&
                                         (value instanceof Float32Array ||
                                          value instanceof Array) &&
+                                        value._id === undefined &&
                                         value.length === currentValue.length &&
-                                        this._equalFloatArrays(value, currentValue, value.length, 0.0001))
+                                        this._equalFloatArrays(value, currentValue, value.length))
                                     {
                                         continue;
                                     }
