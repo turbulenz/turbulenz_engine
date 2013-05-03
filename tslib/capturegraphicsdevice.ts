@@ -726,6 +726,54 @@ class CaptureGraphicsDevice
         this.gd.setTechniqueParameters(techniqueParameters);
     }
 
+    private _setFilteredTechniqueParameters(techniqueParameters, validParameters, currentParameters)
+    {
+        var deltaParameters = null;
+        var objectArray = null;
+        var p, value, currentValue;
+
+        for (p in techniqueParameters)
+        {
+            if (validParameters[p] !== undefined)
+            {
+                value = techniqueParameters[p];
+                currentValue = currentParameters[p];
+                if (currentValue !== value)
+                {
+                    if (value !== undefined)
+                    {
+                        if (currentValue !== undefined &&
+                            (value instanceof Float32Array ||
+                             value instanceof Array) &&
+                            value._id === undefined &&
+                            value.length === currentValue.length &&
+                            this._equalFloatArrays(value, currentValue, value.length))
+                        {
+                            continue;
+                        }
+                        currentParameters[p] = value;
+                        if (deltaParameters === null)
+                        {
+                            deltaParameters = {};
+                            objectArray = [];
+                        }
+                        deltaParameters[p] = value;
+                        objectArray.push(p, value);
+                    }
+                    else
+                    {
+                        delete techniqueParameters[p];
+                    }
+                }
+            }
+        }
+
+        if (deltaParameters !== null)
+        {
+            this._setSingleTechniqueParameters(deltaParameters, objectArray);
+        }
+    }
+
     // GraphicsDevice API
     public drawIndexed(primitive, numIndices, first)
     {
@@ -848,20 +896,16 @@ class CaptureGraphicsDevice
         var numGlobalTechniqueParameters = globalTechniqueParametersArray.length;
 
         var currentParameters = null;
-        var deltaParameters = null;
-        var objectArray = null;
         var validParameters = null;
         var activeIndexBuffer = null;
         var lastTechnique = null;
         var lastEndStreams = -1;
         var lastDrawParameters = null;
-        var techniqueParameters = null;
         var v = 0;
         var streamsMatch = false;
         var vertexBuffer = null;
         var offset = 0;
         var t = 0;
-        var p, value, currentValue;
 
         var drawCommand = -1;
         var current = this.current;
@@ -888,79 +932,20 @@ class CaptureGraphicsDevice
                 validParameters = technique.shader.parameters;
 
                 currentParameters = {};
-                objectArray = [];
 
                 for (t = 0; t < numGlobalTechniqueParameters; t += 1)
                 {
-                    techniqueParameters = globalTechniqueParametersArray[t];
-
-                    for (p in techniqueParameters)
-                    {
-                        if (validParameters[p] !== undefined)
-                        {
-                            value = techniqueParameters[p];
-                            if (value !== undefined)
-                            {
-                                currentParameters[p] = value;
-                                objectArray.push(p, value);
-                            }
-                            else
-                            {
-                                delete techniqueParameters[p];
-                            }
-                        }
-                    }
+                    this._setFilteredTechniqueParameters(globalTechniqueParametersArray[t],
+                                                         validParameters,
+                                                         currentParameters);
                 }
-
-                this._setSingleTechniqueParameters(currentParameters, objectArray);
             }
 
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
             {
-                techniqueParameters = drawParameters[t];
-
-                deltaParameters = null;
-
-                for (p in techniqueParameters)
-                {
-                    if (validParameters[p] !== undefined)
-                    {
-                        value = techniqueParameters[p];
-                        currentValue = currentParameters[p];
-                        if (currentValue !== value)
-                        {
-                            if (value !== undefined)
-                            {
-                                if (currentValue !== undefined &&
-                                    (value instanceof Float32Array ||
-                                     value instanceof Array) &&
-                                    value._id === undefined &&
-                                    value.length === currentValue.length &&
-                                    this._equalFloatArrays(value, currentValue, value.length))
-                                {
-                                    continue;
-                                }
-                                currentParameters[p] = value;
-                                if (deltaParameters === null)
-                                {
-                                    deltaParameters = {};
-                                    objectArray = [];
-                                }
-                                deltaParameters[p] = value;
-                                objectArray.push(p, value);
-                            }
-                            else
-                            {
-                                delete techniqueParameters[p];
-                            }
-                        }
-                    }
-                }
-
-                if (deltaParameters !== null)
-                {
-                    this._setSingleTechniqueParameters(deltaParameters, objectArray);
-                }
+                this._setFilteredTechniqueParameters(drawParameters[t],
+                                                     validParameters,
+                                                     currentParameters);
             }
 
             streamsMatch = (lastEndStreams === endStreams);
@@ -1001,36 +986,9 @@ class CaptureGraphicsDevice
                     drawCommand = -1;
                     do
                     {
-                        deltaParameters = {};
-                        objectArray = [];
-
-                        techniqueParameters = drawParameters[t];
-                        for (p in techniqueParameters)
-                        {
-                            if (validParameters[p] !== undefined)
-                            {
-                                value = techniqueParameters[p];
-                                currentValue = currentParameters[p];
-                                if (currentValue !== value)
-                                {
-                                    if (currentValue !== undefined &&
-                                        (value instanceof Float32Array ||
-                                         value instanceof Array) &&
-                                        value._id === undefined &&
-                                        value.length === currentValue.length &&
-                                        this._equalFloatArrays(value, currentValue, value.length))
-                                    {
-                                        continue;
-                                    }
-                                    currentParameters[p] = value;
-                                    deltaParameters[p] = value;
-                                    objectArray.push(p, value);
-                                }
-                            }
-                        }
-
-                        this._setSingleTechniqueParameters(deltaParameters, objectArray);
-
+                        this._setFilteredTechniqueParameters(drawParameters[t],
+                                                             validParameters,
+                                                             currentParameters);
                         if (drawCommand === -1)
                         {
                             this.drawIndexed(primitive, count, firstIndex);
@@ -1059,26 +1017,9 @@ class CaptureGraphicsDevice
                     drawCommand = -1;
                     do
                     {
-                        deltaParameters = {};
-                        objectArray = [];
-
-                        techniqueParameters = drawParameters[t];
-                        for (p in techniqueParameters)
-                        {
-                            if (validParameters[p] !== undefined)
-                            {
-                                value = techniqueParameters[p];
-                                if (currentParameters[p] !== value)
-                                {
-                                    currentParameters[p] = value;
-                                    deltaParameters[p] = value;
-                                    objectArray.push(p, value);
-                                }
-                            }
-                        }
-
-                        this._setSingleTechniqueParameters(deltaParameters, objectArray);
-
+                        this._setFilteredTechniqueParameters(drawParameters[t],
+                                                             validParameters,
+                                                             currentParameters);
                         if (drawCommand === -1)
                         {
                             this.draw(primitive, count, firstIndex);
