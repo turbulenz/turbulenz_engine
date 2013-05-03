@@ -612,7 +612,13 @@ class CaptureGraphicsDevice
             }
         }
 
-        this._setSingleTechniqueParameters(techniqueParameters, objectArray);
+        var objectId = this._addObject(objectArray);
+        if (objectId !== null)
+        {
+            this._addCommand(CaptureGraphicsCommand.setTechniqueParameters, objectId);
+        }
+
+        this.gd.setTechniqueParameters(techniqueParameters);
     };
 
     private _lowerBound(bin: any[], data: any[], length: number, comp: Function, config: number) : number
@@ -719,20 +725,8 @@ class CaptureGraphicsDevice
         return true;
     }
 
-    private _setSingleTechniqueParameters(techniqueParameters, objectArray)
-    {
-        var objectId = this._addObject(objectArray);
-        if (objectId !== null)
-        {
-            this._addCommand(CaptureGraphicsCommand.setTechniqueParameters, objectId);
-        }
-
-        this.gd.setTechniqueParameters(techniqueParameters);
-    }
-
     private _setFilteredTechniqueParameters(techniqueParameters, validParameters, currentParameters)
     {
-        var deltaParameters = null;
         var objectArray = this.objectArray;
         objectArray.length = 0;
 
@@ -757,11 +751,6 @@ class CaptureGraphicsDevice
                             continue;
                         }
                         currentParameters[p] = value;
-                        if (deltaParameters === null)
-                        {
-                            deltaParameters = {};
-                        }
-                        deltaParameters[p] = value;
                         objectArray.push(p, value);
                     }
                     else
@@ -772,9 +761,15 @@ class CaptureGraphicsDevice
             }
         }
 
-        if (deltaParameters !== null)
+        if (0 < objectArray.length)
         {
-            this._setSingleTechniqueParameters(deltaParameters, objectArray);
+            var objectId = this._addObject(objectArray);
+            if (objectId !== null)
+            {
+                this._addCommand(CaptureGraphicsCommand.setTechniqueParameters, objectId);
+            }
+
+            this.gd.setTechniqueParameters(techniqueParameters);
         }
     }
 
