@@ -362,6 +362,26 @@ class CaptureGraphicsDevice
             return object._id;
         }
 
+        if (object.BYTES_PER_ELEMENT)
+        {
+            if (raw)
+            {
+                length = object.length;
+                result = new Array(length);
+                for (index = 0; index < length; index += 1)
+                {
+                    result[index] = object[index];
+                }
+                return result;
+            }
+            else
+            {
+                var integers = !(object instanceof Float32Array ||
+                                 object instanceof Float64Array);
+                return this._addData(object, object.length, integers);
+            }
+        }
+
         if (object instanceof Array)
         {
             length = object.length;
@@ -398,27 +418,6 @@ class CaptureGraphicsDevice
                 }
             }
             return result;
-        }
-
-        if (object.byteLength !== undefined &&
-            object.buffer instanceof ArrayBuffer)
-        {
-            if (raw)
-            {
-                length = object.length;
-                result = new Array(length);
-                for (index = 0; index < length; index += 1)
-                {
-                    result[index] = object[index];
-                }
-                return result;
-            }
-            else
-            {
-                var integers = !(object instanceof Float32Array ||
-                                 object instanceof Float64Array);
-                return this._addData(object, object.length, integers);
-            }
         }
 
         if (object instanceof ArrayBuffer)
