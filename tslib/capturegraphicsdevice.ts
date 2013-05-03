@@ -35,6 +35,7 @@ class CaptureGraphicsDevice
     destroyedIds: number[];
     data:       {};
     objects:    {};
+    objectArray: any[];
     vertexBuffers: {};
     indexBuffers: {};
     techniqueParameterBuffers: {};
@@ -82,6 +83,7 @@ class CaptureGraphicsDevice
         this.destroyedIds = [];
         this.data = {};
         this.objects = {};
+        this.objectArray = [];
         this.vertexBuffers = {};
         this.indexBuffers = {};
         this.techniqueParameterBuffers = {};
@@ -229,7 +231,8 @@ class CaptureGraphicsDevice
 
     private _objectToArray(object) : any[]
     {
-        var objectArray = [];
+        var objectArray = this.objectArray;
+        objectArray.length = 0;
 
         var p, value;
         for (p in object)
@@ -329,11 +332,11 @@ class CaptureGraphicsDevice
 
         if (lowerIndex < objectsBin.length)
         {
-            objectsBin.splice(lowerIndex, 0, id, objectArray);
+            objectsBin.splice(lowerIndex, 0, id, objectArray.slice());
         }
         else
         {
-            objectsBin.push(id, objectArray);
+            objectsBin.push(id, objectArray.slice());
         }
 
         return id.toString();
@@ -571,7 +574,8 @@ class CaptureGraphicsDevice
     private _checkProperties(pass)
     {
         var techniqueParameters = {};
-        var objectArray = [];
+        var objectArray = this.objectArray;
+        objectArray.length = 0;
 
         pass.dirty = false;
         var parameters = pass.parameters;
@@ -729,9 +733,10 @@ class CaptureGraphicsDevice
     private _setFilteredTechniqueParameters(techniqueParameters, validParameters, currentParameters)
     {
         var deltaParameters = null;
-        var objectArray = null;
-        var p, value, currentValue;
+        var objectArray = this.objectArray;
+        objectArray.length = 0;
 
+        var p, value, currentValue;
         for (p in techniqueParameters)
         {
             if (validParameters[p] !== undefined)
@@ -755,7 +760,6 @@ class CaptureGraphicsDevice
                         if (deltaParameters === null)
                         {
                             deltaParameters = {};
-                            objectArray = [];
                         }
                         deltaParameters[p] = value;
                         objectArray.push(p, value);
@@ -2151,6 +2155,7 @@ class CaptureGraphicsDevice
         this.destroyedIds = null;
         this.data= null;
         this.objects = null;
+        this.objectArray = null;
         this.vertexBuffers = null;
         this.indexBuffers = null;
         this.techniqueParameterBuffers = null;
