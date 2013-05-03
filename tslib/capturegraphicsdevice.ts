@@ -23,7 +23,7 @@ var CaptureGraphicsCommand =
 
 class CaptureGraphicsDevice
 {
-    static version = 1;
+    public static version = 1;
 
     gd:         any;
     current:    any[];
@@ -100,14 +100,14 @@ class CaptureGraphicsDevice
         return this;
     }
 
-    _getCommandId() : number
+    private _getCommandId() : number
     {
         var id = this.numCommands;
         this.numCommands = (id + 1);
         return id;
     }
 
-    _getIntegerId() : number
+    private _getIntegerId() : number
     {
         if (this.recycledIds.length)
         {
@@ -118,12 +118,12 @@ class CaptureGraphicsDevice
         return id;
     }
 
-    _getStringId() : string
+    private _getStringId() : string
     {
         return this._getIntegerId().toString();
     }
 
-    _addData(data, length, integers) : string
+    private _addData(data, length, integers) : string
     {
         var lowerIndex;
 
@@ -178,7 +178,7 @@ class CaptureGraphicsDevice
         return id.toString();
     }
 
-    _addCommand(...args: any[]): void
+    private _addCommand(...args: any[]): void
     {
         var length = args.length;
         var method = args[0];
@@ -227,41 +227,95 @@ class CaptureGraphicsDevice
         this.current.push(cmdId);
     }
 
-    _objectToArray(object) : any[]
+    private _objectToArray(object) : any[]
     {
-        var properties = [];
-        var p;
+        var objectArray = [];
+
+        var p, value;
         for (p in object)
         {
             if (object.hasOwnProperty(p))
             {
-                properties.push(p);
+                value = object[p];
+                if (value !== undefined && value !== null)
+                {
+                    objectArray.push(p, this._clone(value));
+                }
             }
         }
-        properties.sort();
 
-        var numProperties = properties.length;
-        var objectArray = [];
+        return objectArray;
+    }
+
+    private _patchObjectArray(objectArray)
+    {
+        var length = objectArray.length;
         var n, value;
-        for (n = 0; n < numProperties; n += 1)
+        for (n = 0; n < length; n += 2)
         {
-            p = properties[n];
-            value = object[p];
+            value = objectArray[n + 1];
             if (value !== undefined && value !== null)
             {
-                objectArray.push(p, this._clone(value));
+                objectArray[n + 1] = this._clone(value);
             }
         }
         return objectArray;
     }
 
-    _addObject(object) : string
+    // We need to implement our own sort because of the way data is stored
+    private _sortObjectArray(data, length)
     {
-        var objectArray = this._objectToArray(object);
+        var sorted = false;
+        var j, k1, k2, v1, v2;
+        length -= 2;
+        do
+        {
+            sorted = true;
+            k1 = data[0];
+            for (j = 0; j < length; j += 2)
+            {
+                k2 = data[j + 2];
+                if (k1 > k2)
+                {
+                    v1 = data[j + 1];
+                    v2 = data[j + 2 + 1];
+                    data[j + 2] = k1;
+                    data[j + 2 + 1] = v1;
+                    data[j] = k2;
+                    data[j + 1] = v2;
+                    sorted = false;
+                }
+                else
+                {
+                    k1 = k2;
+                }
+            }
+            length -= 2;
+        }
+        while (!sorted);
+    }
+
+    private _addObject(object) : string
+    {
+        var objectArray;
+        if (object instanceof Array)
+        {
+            objectArray = this._patchObjectArray(object);
+        }
+        else
+        {
+            objectArray = this._objectToArray(object);
+        }
+
         var length = objectArray.length;
         if (length === 0)
         {
             return null;
+        }
+
+        if (2 < length)
+        {
+            this._sortObjectArray(objectArray, length);
         }
 
         var lowerIndex;
@@ -298,7 +352,7 @@ class CaptureGraphicsDevice
         return id.toString();
     }
 
-    _cloneObject(object, raw)
+    private _cloneObject(object, raw)
     {
         var length, index, result, value, id;
 
@@ -403,7 +457,7 @@ class CaptureGraphicsDevice
         return result;
     }
 
-    _clone(object)
+    private _clone(object)
     {
         // boolean, numbers, strings, undefined, null
         if (!object || typeof object !== "object")
@@ -415,7 +469,7 @@ class CaptureGraphicsDevice
         return this._cloneObject(object, false);
     }
 
-    _cloneVertexFormats(formats)
+    private _cloneVertexFormats(formats)
     {
         var gd = this.gd;
         var numFormats = formats.length;
@@ -507,7 +561,7 @@ class CaptureGraphicsDevice
         return id;
     }
 
-    _cloneSemantics(semantics)
+    private _cloneSemantics(semantics)
     {
         var gd = this.gd;
         var numSemantics = semantics.length;
@@ -528,9 +582,10 @@ class CaptureGraphicsDevice
         return newSemantics;
     }
 
-    _checkProperties(pass)
+    private _checkProperties(pass)
     {
         var techniqueParameters = {};
+        var objectArray = [];
 
         pass.dirty = false;
         var parameters = pass.parameters;
@@ -547,27 +602,30 @@ class CaptureGraphicsDevice
                         null !== location)
                     {
                         var parameterValues = paramInfo.values;
+                        var value;
                         if (paramInfo.sampler !== undefined)
                         {
-                            techniqueParameters[p] = parameterValues;
+                            value = parameterValues;
                         }
                         else if (1 === paramInfo.numValues)
                         {
-                            techniqueParameters[p] = parameterValues[0];
+                            value = parameterValues[0];
                         }
                         else
                         {
-                            techniqueParameters[p] = parameterValues;
+                            value = parameterValues;
                         }
+                        techniqueParameters[p] = value;
+                        objectArray.push(p, value);
                     }
                 }
             }
         }
 
-        this._setSingleTechniqueParameters(techniqueParameters);
+        this._setSingleTechniqueParameters(techniqueParameters, objectArray);
     };
 
-    _lowerBound(bin: any[], data: any[], length: number, comp: Function, config: number) : number
+    private _lowerBound(bin: any[], data: any[], length: number, comp: Function, config: number) : number
     {
         var first: number = 0;
         var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
@@ -598,7 +656,7 @@ class CaptureGraphicsDevice
         return (first << 1); // Bin elements ocupy two slots, multiply by 2
     }
 
-    _compareFloatArrays(a: any[], b: any[], length: number, positiveThreshold: number) : number
+    private _compareFloatArrays(a: any[], b: any[], length: number, positiveThreshold: number) : number
     {
         var negativeThreshold: number = -positiveThreshold;
         var n: number = 0;
@@ -620,7 +678,7 @@ class CaptureGraphicsDevice
         return 0;
     }
 
-    _compareGenericArrays(a: any[], b: any[], length: number, offset: number) : number
+    private _compareGenericArrays(a: any[], b: any[], length: number, offset: number) : number
     {
         var n: number = offset;
         var av, bv;
@@ -641,7 +699,7 @@ class CaptureGraphicsDevice
         return 0;
     }
 
-    _equalFloatArrays(a, b, length, threshold) : bool
+    private _equalFloatArrays(a, b, length, threshold) : bool
     {
         var n = 0;
         do
@@ -656,7 +714,7 @@ class CaptureGraphicsDevice
         return true;
     }
 
-    _equalIntegerArrays(a, b, length) : bool
+    private _equalIntegerArrays(a, b, length) : bool
     {
         var n = 0;
         do
@@ -671,9 +729,9 @@ class CaptureGraphicsDevice
         return true;
     }
 
-    _setSingleTechniqueParameters(techniqueParameters)
+    private _setSingleTechniqueParameters(techniqueParameters, objectArray)
     {
-        var objectId = this._addObject(techniqueParameters);
+        var objectId = this._addObject(objectArray);
         if (objectId !== null)
         {
             this._addCommand(CaptureGraphicsCommand.setTechniqueParameters, objectId);
@@ -683,21 +741,21 @@ class CaptureGraphicsDevice
     }
 
     // GraphicsDevice API
-    drawIndexed(primitive, numIndices, first)
+    public drawIndexed(primitive, numIndices, first)
     {
         this.gd.drawIndexed(primitive, numIndices, first);
 
         this._addCommand(CaptureGraphicsCommand.drawIndexed, primitive, numIndices, first || 0);
     }
 
-    draw(primitive, numVertices, first)
+    public draw(primitive, numVertices, first)
     {
         this.gd.draw(primitive, numVertices, first);
 
         this._addCommand(CaptureGraphicsCommand.draw, primitive, numVertices, first || 0);
     }
 
-    setTechniqueParameters(unused?)
+    public setTechniqueParameters(unused?)
     {
         var numTechniqueParameters = arguments.length;
         for (var t = 0; t < numTechniqueParameters; t += 1)
@@ -716,7 +774,7 @@ class CaptureGraphicsDevice
         this.gd.setTechniqueParameters.apply(this.gd, arguments);
     }
 
-    setTechnique(technique)
+    public setTechnique(technique)
     {
         if (technique.passes.length === 1)
         {
@@ -759,7 +817,7 @@ class CaptureGraphicsDevice
         this._addCommand(CaptureGraphicsCommand.setTechnique, id);
     }
 
-    setStream(vertexBuffer, semantics, offset)
+    public setStream(vertexBuffer, semantics, offset)
     {
         if (offset === undefined)
         {
@@ -770,14 +828,14 @@ class CaptureGraphicsDevice
         this.gd.setStream(vertexBuffer, semantics, offset);
     }
 
-    setIndexBuffer(indexBuffer)
+    public setIndexBuffer(indexBuffer)
     {
         this._addCommand(CaptureGraphicsCommand.setIndexBuffer, indexBuffer._id);
 
         this.gd.setIndexBuffer(indexBuffer);
     }
 
-    drawArray(drawParametersArray, globalTechniqueParametersArray, sortMode)
+    public drawArray(drawParametersArray, globalTechniqueParametersArray, sortMode)
     {
         var numDrawParameters = drawParametersArray.length;
         if (numDrawParameters <= 0)
@@ -805,6 +863,7 @@ class CaptureGraphicsDevice
 
         var currentParameters = null;
         var deltaParameters = null;
+        var objectArray = null;
         var validParameters = null;
         var activeIndexBuffer = null;
         var lastTechnique = null;
@@ -839,6 +898,7 @@ class CaptureGraphicsDevice
                 validParameters = technique.shader.parameters;
 
                 currentParameters = {};
+                objectArray = [];
 
                 for (t = 0; t < numGlobalTechniqueParameters; t += 1)
                 {
@@ -852,6 +912,7 @@ class CaptureGraphicsDevice
                             if (value !== undefined)
                             {
                                 currentParameters[p] = value;
+                                objectArray.push(p, value);
                             }
                             else
                             {
@@ -861,7 +922,7 @@ class CaptureGraphicsDevice
                     }
                 }
 
-                this._setSingleTechniqueParameters(currentParameters);
+                this._setSingleTechniqueParameters(currentParameters, objectArray);
             }
 
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
@@ -892,8 +953,10 @@ class CaptureGraphicsDevice
                                 if (deltaParameters === null)
                                 {
                                     deltaParameters = {};
+                                    objectArray = [];
                                 }
                                 deltaParameters[p] = value;
+                                objectArray.push(p, value);
                             }
                             else
                             {
@@ -905,7 +968,7 @@ class CaptureGraphicsDevice
 
                 if (deltaParameters !== null)
                 {
-                    this._setSingleTechniqueParameters(deltaParameters);
+                    this._setSingleTechniqueParameters(deltaParameters, objectArray);
                 }
             }
 
@@ -947,6 +1010,7 @@ class CaptureGraphicsDevice
                     do
                     {
                         deltaParameters = {};
+                        objectArray = [];
 
                         techniqueParameters = drawParameters[t];
                         for (p in techniqueParameters)
@@ -967,11 +1031,12 @@ class CaptureGraphicsDevice
                                     }
                                     currentParameters[p] = value;
                                     deltaParameters[p] = value;
+                                    objectArray.push(p, value);
                                 }
                             }
                         }
 
-                        this._setSingleTechniqueParameters(deltaParameters);
+                        this._setSingleTechniqueParameters(deltaParameters, objectArray);
 
                         this.drawIndexed(primitive, count, firstIndex);
 
@@ -992,6 +1057,7 @@ class CaptureGraphicsDevice
                     do
                     {
                         deltaParameters = {};
+                        objectArray = [];
 
                         techniqueParameters = drawParameters[t];
                         for (p in techniqueParameters)
@@ -1003,11 +1069,12 @@ class CaptureGraphicsDevice
                                 {
                                     currentParameters[p] = value;
                                     deltaParameters[p] = value;
+                                    objectArray.push(p, value);
                                 }
                             }
                         }
 
-                        this._setSingleTechniqueParameters(deltaParameters);
+                        this._setSingleTechniqueParameters(deltaParameters, objectArray);
 
                         this.draw(primitive, count, firstIndex);
 
@@ -1023,7 +1090,7 @@ class CaptureGraphicsDevice
         }
     }
 
-    beginDraw(primitive, numVertices, formats, semantics)
+    public beginDraw(primitive, numVertices, formats, semantics)
     {
         var writer = this.gd.beginDraw(primitive, numVertices, formats, semantics);
         if (writer)
@@ -1068,13 +1135,13 @@ class CaptureGraphicsDevice
         }
     }
 
-    endDraw(writer)
+    public endDraw(writer)
     {
         writer['end']();
         this.gd.endDraw(writer['proxy']);
     }
 
-    setViewport(x, y, w, h)
+    public setViewport(x, y, w, h)
     {
         var gd = this.gd;
 
@@ -1089,7 +1156,7 @@ class CaptureGraphicsDevice
         this._addCommand(CaptureGraphicsCommand.setViewport, x, y, w, h);
     }
 
-    setScissor(x, y, w, h)
+    public setScissor(x, y, w, h)
     {
         var gd = this.gd;
 
@@ -1104,49 +1171,49 @@ class CaptureGraphicsDevice
         this._addCommand(CaptureGraphicsCommand.setScissor, x, y, w, h);
     }
 
-    clear(color, depth, stencil)
+    public clear(color, depth, stencil)
     {
         this._addCommand(CaptureGraphicsCommand.clear, this._clone(color), depth, stencil);
 
         this.gd.clear(color, depth, stencil);
     }
 
-    beginFrame()
+    public beginFrame()
     {
         this['width'] = this.gd.width;
         this['height'] = this.gd.height;
         return this.gd.beginFrame();
     }
 
-    beginRenderTarget(renderTarget)
+    public beginRenderTarget(renderTarget)
     {
         this._addCommand(CaptureGraphicsCommand.beginRenderTarget, renderTarget._id);
 
         return this.gd.beginRenderTarget(renderTarget);
     }
 
-    endRenderTarget()
+    public endRenderTarget()
     {
         this._addCommand(CaptureGraphicsCommand.endRenderTarget);
 
         this.gd.endRenderTarget();
     }
 
-    beginOcclusionQuery(query)
+    public beginOcclusionQuery(query)
     {
         this._addCommand(CaptureGraphicsCommand.beginOcclusionQuery, query._id);
 
         return this.gd.beginOcclusionQuery(query)
     }
 
-    endOcclusionQuery(query)
+    public endOcclusionQuery(query)
     {
         this._addCommand(CaptureGraphicsCommand.endOcclusionQuery, query._id);
 
         this.gd.endOcclusionQuery(query)
     }
 
-    endFrame()
+    public endFrame()
     {
         this.frames.push(this.current);
         this.current = [];
@@ -1156,12 +1223,12 @@ class CaptureGraphicsDevice
         this['fps'] = this.gd.fps;
     }
 
-    createTechniqueParameters(params)
+    public createTechniqueParameters(params)
     {
         return this.gd.createTechniqueParameters(params);
     }
 
-    createSemantics(attributes)
+    public createSemantics(attributes)
     {
         var semantics = this.gd.createSemantics(attributes);
         if (semantics)
@@ -1180,7 +1247,7 @@ class CaptureGraphicsDevice
         return semantics;
     }
 
-    createVertexBuffer(params)
+    public createVertexBuffer(params)
     {
         var vertexBuffer = this.gd.createVertexBuffer(params);
         if (vertexBuffer)
@@ -1312,7 +1379,7 @@ class CaptureGraphicsDevice
         return vertexBuffer;
     }
 
-    createIndexBuffer(params)
+    public createIndexBuffer(params)
     {
         var indexBuffer = this.gd.createIndexBuffer(params);
         if (indexBuffer)
@@ -1453,7 +1520,7 @@ class CaptureGraphicsDevice
         return indexBuffer;
     }
 
-    createTexture(params)
+    public createTexture(params)
     {
         var texture = this.gd.createTexture(params);
         if (texture)
@@ -1512,7 +1579,7 @@ class CaptureGraphicsDevice
         return texture;
     }
 
-    createVideo(params)
+    public createVideo(params)
     {
         var video = this.gd.createVideo(params);
         if (video)
@@ -1524,7 +1591,7 @@ class CaptureGraphicsDevice
         return video;
     }
 
-    createShader(params)
+    public createShader(params)
     {
         // Need to clone before calling createShader because that function modifies the input object...
         var clonedParams = this._cloneObject(params, true);
@@ -1538,7 +1605,7 @@ class CaptureGraphicsDevice
         return shader;
     }
 
-    createTechniqueParameterBuffer(params)
+    public createTechniqueParameterBuffer(params)
     {
         var techniqueParameterBuffer = new Float32Array(params.numFloats);
         var id = this._getStringId();
@@ -1686,7 +1753,7 @@ class CaptureGraphicsDevice
         return techniqueParameterBuffer;
     }
 
-    createRenderBuffer(params)
+    public createRenderBuffer(params)
     {
         var renderBuffer = this.gd.createRenderBuffer(params);
         if (renderBuffer)
@@ -1706,7 +1773,7 @@ class CaptureGraphicsDevice
         return renderBuffer;
     }
 
-    createRenderTarget(params)
+    public createRenderTarget(params)
     {
         var renderTarget = this.gd.createRenderTarget(params);
         if (renderTarget)
@@ -1718,7 +1785,7 @@ class CaptureGraphicsDevice
         return renderTarget;
     }
 
-    createOcclusionQuery(params)
+    public createOcclusionQuery(params)
     {
         var query = this.gd.createOcclusionQuery(params);
         if (query)
@@ -1730,22 +1797,22 @@ class CaptureGraphicsDevice
         return query;
     }
 
-    createDrawParameters(params)
+    public createDrawParameters(params)
     {
         return this.gd.createDrawParameters(params);
     }
 
-    isSupported(name)
+    public isSupported(name)
     {
         return this.gd.isSupported(name);
     }
 
-    maxSupported(name)
+    public maxSupported(name)
     {
         return this.gd.maxSupported(name);
     }
 
-    loadTexturesArchive(params)
+    public loadTexturesArchive(params)
     {
         var clonedParams = this._cloneObject(params, true);
         clonedParams.archive = {};
@@ -1776,23 +1843,23 @@ class CaptureGraphicsDevice
         return this.gd.loadTexturesArchive(params);
     }
 
-    getScreenshot(compress, x?, y?, width?, height?)
+    public getScreenshot(compress, x?, y?, width?, height?)
     {
         return this.gd.getScreenshot(compress, x, y, width, height);
     }
 
-    flush()
+    public flush()
     {
         this.gd.flush();
     }
 
-    finish()
+    public finish()
     {
         this.gd.finish();
     }
 
     // Capture device API
-    getFramesString()
+    public getFramesString()
     {
         var commands = this.commands;
         var numMethods = commands.length;
@@ -1875,7 +1942,7 @@ class CaptureGraphicsDevice
         return framesString;
     }
 
-    getDataString()
+    public getDataString()
     {
         var dataString = '{"version":1,"data":[';
         var addValuesComma = false;
@@ -1998,7 +2065,7 @@ class CaptureGraphicsDevice
         return dataString;
     }
 
-    getResourcesString()
+    public getResourcesString()
     {
         return JSON.stringify({
             version: 1,
@@ -2018,7 +2085,7 @@ class CaptureGraphicsDevice
         });
     }
 
-    reset()
+    public reset()
     {
         // Try forcing a memory release
         var frames = this.frames;
@@ -2122,7 +2189,7 @@ class CaptureGraphicsDevice
         this.occlusionQueries = {};
     }
 
-    destroy()
+    public destroy()
     {
         this.gd.destroy();
         this.gd = null;
@@ -2150,7 +2217,7 @@ class CaptureGraphicsDevice
         this.reverseSemantic = null;
     }
 
-    static create(gd) : CaptureGraphicsDevice
+    public static create(gd) : CaptureGraphicsDevice
     {
         return new CaptureGraphicsDevice(gd);
     }
@@ -2159,7 +2226,7 @@ class CaptureGraphicsDevice
 // Playback
 class PlaybackGraphicsDevice
 {
-    static version = 1;
+    public static version = 1;
 
     gd:         any;
     frames:     any[];
@@ -2178,7 +2245,7 @@ class PlaybackGraphicsDevice
         this.onerror = null;
     }
 
-    _storeEntity(id, value)
+    private _storeEntity(id, value)
     {
         if (value === null || value === undefined)
         {
@@ -2190,7 +2257,7 @@ class PlaybackGraphicsDevice
         this.entities[parseInt(id, 10)] = value;
     }
 
-    _resolveEntity(id)
+    private _resolveEntity(id)
     {
         if (typeof id === "string")
         {
@@ -2211,7 +2278,7 @@ class PlaybackGraphicsDevice
         return entity;
     }
 
-    addResources(resourcesObject, baseURL)
+    public addResources(resourcesObject, baseURL)
     {
         var resources = resourcesObject.resources;
         var gd = this.gd;
@@ -2444,7 +2511,7 @@ class PlaybackGraphicsDevice
         resourcesObject.resources = {};
     }
 
-    addData(dataObject)
+    public addData(dataObject)
     {
         var data = dataObject.data;
         var length = data.length;
@@ -2489,7 +2556,7 @@ class PlaybackGraphicsDevice
         objects.length = 0;
     }
 
-    addFrames(framesObject, reset?)
+    public addFrames(framesObject, reset?)
     {
         var commands = framesObject.commands;
         var numCommands = commands.length;
@@ -2611,7 +2678,7 @@ class PlaybackGraphicsDevice
         fileFrames.length = 0;
     }
 
-    _beginEndDraw(primitive, numVertices, formats, semantics, data)
+    private _beginEndDraw(primitive, numVertices, formats, semantics, data)
     {
         var writer = this.gd.beginDraw(primitive, numVertices, formats, semantics);
         if (writer)
@@ -2636,7 +2703,7 @@ class PlaybackGraphicsDevice
         }
     }
 
-    play(frameIndex)
+    public play(frameIndex)
     {
         var frame = this.frames[frameIndex];
         if (!frame)
@@ -2770,14 +2837,14 @@ class PlaybackGraphicsDevice
         return true;
     }
 
-    destroy()
+    public destroy()
     {
         this.gd = null;
         this.frames = null;
         this.entities = null;
     }
 
-    static create(gd) : PlaybackGraphicsDevice
+    public static create(gd) : PlaybackGraphicsDevice
     {
         return new PlaybackGraphicsDevice(gd);
     }
