@@ -35,7 +35,8 @@ class CaptureGraphicsDevice
     lastId:     number;
     recycledIds: number[];
     destroyedIds: number[];
-    data:       {};
+    integerData:    {};
+    floatData:      {};
     objects:    {};
     objectArray: any[];
     names:      {};
@@ -85,7 +86,8 @@ class CaptureGraphicsDevice
         this.lastId = -1;
         this.recycledIds = [];
         this.destroyedIds = [];
-        this.data = {};
+        this.integerData = {};
+        this.floatData = {};
         this.objects = {};
         this.objectArray = [];
         this.names = {};
@@ -135,10 +137,11 @@ class CaptureGraphicsDevice
     {
         var lowerIndex;
 
-        var dataBin = this.data[length];
+        var dataBins = (integers ? this.integerData : this.floatData);
+        var dataBin = dataBins[length];
         if (dataBin === undefined)
         {
-            this.data[length] = dataBin = [];
+            dataBins[length] = dataBin = [];
             lowerIndex = 0;
         }
         else
@@ -1692,7 +1695,7 @@ class CaptureGraphicsDevice
             var data = params.data;
             this._addCommand(CaptureGraphicsCommand.setAllData,
                              id,
-                             this._addData(data, data.length, true));
+                             this._addData(data, data.length, false));
             delete params.data;
         }
         this.techniqueParameterBuffers[id] = this._cloneObject(params, true);
@@ -1888,11 +1891,11 @@ class CaptureGraphicsDevice
         return framesString;
     }
 
-    public getDataString()
+    private _getDataBinString(dataBins, integers)
     {
-        var dataString = '{"version":1,"data":[';
+        var threshold = this.precision;
+        var dataString = '';
         var addValuesComma = false;
-        var dataBins = this.data;
         var p, dataBin, binLength, n, j;
         for (p in dataBins)
         {
@@ -1918,11 +1921,19 @@ class CaptureGraphicsDevice
 
                     dataString += id + ',[';
 
-                    if (data instanceof Array ||
-                        data instanceof Float32Array ||
-                        data instanceof Float64Array)
+                    if (integers)
                     {
-                        var threshold = this.precision;
+                        for (j = 0; j < length; j += 1)
+                        {
+                            if (j)
+                            {
+                                dataString += ',';
+                            }
+                            dataString += data[j];
+                        }
+                    }
+                    else
+                    {
                         for (j = 0; j < length; j += 1)
                         {
                             if (j)
@@ -1948,26 +1959,28 @@ class CaptureGraphicsDevice
                             }
                         }
                     }
-                    else
-                    {
-                        for (j = 0; j < length; j += 1)
-                        {
-                            if (j)
-                            {
-                                dataString += ',';
-                            }
-                            dataString += data[j];
-                        }
-                    }
                     dataString += ']';
                 }
             }
         }
+        return dataString;
+    }
+
+    public getDataString()
+    {
+        var dataString = '{"version":1,';
+
+        dataString += '"integers":[';
+        dataString += this._getDataBinString(this.integerData, true);
+
+        dataString += '],"floats":[';
+        dataString += this._getDataBinString(this.floatData, false);
 
         dataString += '],"names":[';
         var names = this.names;
         var numNames = this.numNames;
         var namesArray = new Array(numNames);
+        var p;
         for (p in names)
         {
             if (names.hasOwnProperty(p))
@@ -1975,7 +1988,8 @@ class CaptureGraphicsDevice
                 namesArray[names[p]] = p;
             }
         }
-        addValuesComma = false;
+        var addValuesComma = false;
+        var n;
         for (n = 0; n < numNames; n += 1)
         {
             if (addValuesComma)
@@ -1992,7 +2006,7 @@ class CaptureGraphicsDevice
         dataString += '],"objects":[';
         var objects = this.objects;
         addValuesComma = false;
-        var objectsBin, object;
+        var objectsBin, object, binLength, id, j, valueInt;
         for (p in objects)
         {
             if (objects.hasOwnProperty(p))
@@ -2069,6 +2083,25 @@ class CaptureGraphicsDevice
         });
     }
 
+    private _recycleDataBinIds(dataBins)
+    {
+        var recycledIds = this.recycledIds;
+        var dataBin, binLength, p, n;
+        for (p in dataBins)
+        {
+            if (dataBins.hasOwnProperty(p))
+            {
+                dataBin = dataBins[p];
+                binLength = dataBin.length;
+                for (n = 0; n < binLength; n += 2)
+                {
+                    recycledIds.push(dataBin[n]);
+                }
+                dataBin.length = 0;
+            }
+        }
+    }
+
     public reset()
     {
         // Try forcing a memory release
@@ -2093,42 +2126,12 @@ class CaptureGraphicsDevice
         }
         this.numCommands = 0;
 
-        // Clean data array and reclaim the ids for reuse
+        // Clean data bins and reclaim the ids for reuse
+        this._recycleDataBinIds(this.integerData);
+        this._recycleDataBinIds(this.floatData);
+        this._recycleDataBinIds(this.objects);
+
         var recycledIds = this.recycledIds;
-        var dataBins = this.data;
-        var dataBin, binLength;
-        var p;
-        for (p in dataBins)
-        {
-            if (dataBins.hasOwnProperty(p))
-            {
-                dataBin = dataBins[p];
-                binLength = dataBin.length;
-                for (n = 0; n < binLength; n += 2)
-                {
-                    recycledIds.push(dataBin[n]);
-                }
-                dataBin.length = 0;
-            }
-        }
-
-        // Clean the objects dictionary and reclaim the ids for reuse
-        var objects = this.objects;
-        var objectsBin;
-        for (p in objects)
-        {
-            if (objects.hasOwnProperty(p))
-            {
-                objectsBin = objects[p];
-                binLength = objectsBin.length;
-                for (n = 0; n < binLength; n += 2)
-                {
-                    recycledIds.push(objectsBin[n]);
-                }
-                objectsBin.length = 0;
-            }
-        }
-
         if (this.destroyedIds.length)
         {
             recycledIds.push.apply(recycledIds, this.destroyedIds);
@@ -2187,7 +2190,8 @@ class CaptureGraphicsDevice
         this.lastId = -1;
         this.recycledIds = null;
         this.destroyedIds = null;
-        this.data= null;
+        this.integerData = null;
+        this.floatData = null;
         this.objects = null;
         this.objectArray = null;
         this.names = null;
@@ -2503,9 +2507,17 @@ class PlaybackGraphicsDevice
 
     public addData(dataObject)
     {
-        var data = dataObject.data;
+        var data = dataObject.floats;
         var length = data.length;
         var n;
+        for (n = 0; n < length; n += 2)
+        {
+            this._storeEntity(data[n], new Float32Array(data[n + 1]));
+        }
+        data.length = 0;
+
+        data = dataObject.integers;
+        length = data.length;
         for (n = 0; n < length; n += 2)
         {
             this._storeEntity(data[n], data[n + 1]);
@@ -2529,13 +2541,7 @@ class PlaybackGraphicsDevice
                 v = fileObject[j + 1];
                 if (typeof v === "string")
                 {
-                    entity = this._resolveEntity(v);
-                    if (entity instanceof Array)
-                    {
-                        entity = new Float32Array(entity);
-                        this._storeEntity(v, entity);
-                    }
-                    object[k] = entity;
+                    object[k] = this._resolveEntity(v);
                 }
                 else
                 {
