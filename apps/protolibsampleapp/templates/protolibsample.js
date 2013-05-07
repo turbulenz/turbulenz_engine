@@ -36,6 +36,8 @@
 /*{{ javascript('jslib/forwardrendering.js') }}*/
 /*{{ javascript('jslib/shadowmapping.js') }}*/
 /*{{ javascript('jslib/draw2d.js') }}*/
+/*{{ javascript('jslib/assettracker.js') }}*/
+/*{{ javascript('jslib/loadingscreen.js') }}*/
 
 /*{{ javascript('protolib/duimanager.js') }}*/
 /*{{ javascript('protolib/jqueryextend.js') }}*/
