@@ -254,7 +254,7 @@ function Protolib(params)
 
     //After mapping table has loaded, load forwardrendering's shaders, and the default light material.
     //After the shaders have loaded, call onInitializedCallback.
-    var postMappingTableRecieved = function postMappingTableRecievedFn()
+    var postMappingTableReceived = function postMappingTableReceivedFn()
     {
         globals.mappingTable = mappingTable;
 
@@ -306,7 +306,7 @@ function Protolib(params)
         protolib.loadingIntervalID = TurbulenzEngine.setInterval(waitForForwardRenderingShaders, 1000 / 10);
     };
 
-    var mappingTableRecieved = function mappingTableRecievedFn(mappingTable)
+    var mappingTableReceived = function mappingTableReceivedFn(mappingTable)
     {
         if (mappingTable)
         {
@@ -321,28 +321,26 @@ function Protolib(params)
             simplesceneloader.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
         }
 
-        postMappingTableRecieved();
+        postMappingTableReceived();
     };
     var mappingTableError = function mappingTableErrorFn(msg)
     {
         errorCallback(msg);
-        mappingTableRecieved(mappingTable);
+        mappingTableReceived(mappingTable);
     };
 
-    var gamesessionRecieved = function gamesessionRecievedFn(gamesession)
+    var gamesessionReceived = function gamesessionReceivedFn(gamesession)
     {
         protolib.gameSession = gamesession;
 
         mappingTable = TurbulenzServices.createMappingTable(
             requestHandler,
             gamesession,
-            mappingTableRecieved,
+            mappingTableReceived,
             mappingTableSettings,
             mappingTableError
         );
     };
-
-    TurbulenzServices.createGameSession(requestHandler, gamesessionRecieved);
 
     this.draw2DCache = {
         'alpha': [],
@@ -503,6 +501,8 @@ function Protolib(params)
     this.endFrame = function dummyEndFrameFn() {};
 
     this.registerListeners();
+
+    TurbulenzServices.createGameSession(requestHandler, gamesessionReceived);
 
     this.destroyed = false;
 }
