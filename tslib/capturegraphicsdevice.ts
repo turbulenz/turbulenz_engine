@@ -164,14 +164,42 @@ class CaptureGraphicsDevice
         }
 
         var clonedData;
-        if (data.slice)
+        if (integers)
         {
-            clonedData = data.slice(0, length);
+            if (data.slice)
+            {
+                clonedData = data.slice(0, length);
+            }
+            else
+            {
+                // must be a typed array
+                if (length < data.length)
+                {
+                    clonedData = new data.constructor(data.subarray(0, length));
+                }
+                else
+                {
+                    clonedData = new data.constructor(data);
+                }
+            }
         }
         else
         {
-            // must be a typed array
-            clonedData = new data.constructor(data);
+            if (length < data.length)
+            {
+                if (data.subarray)
+                {
+                    clonedData = new Float32Array(data.subarray(0, length));
+                }
+                else
+                {
+                    clonedData = new Float32Array(data.slice(0, length));
+                }
+            }
+            else
+            {
+                clonedData = new Float32Array(data);
+            }
         }
 
         var id = this._getIntegerId();
