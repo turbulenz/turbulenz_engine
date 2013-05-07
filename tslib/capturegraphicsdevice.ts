@@ -25,6 +25,8 @@ class CaptureGraphicsDevice
 {
     public static version = 1;
 
+    public precision = 0.000001;
+
     gd:         any;
     current:    number[];
     frames:     any[];
@@ -147,8 +149,7 @@ class CaptureGraphicsDevice
             }
             else
             {
-                var threshold = (length > 16 ? 0.001 : 0.00001);
-                lowerIndex = this._lowerBound(dataBin, data, length, this._compareFloatArrays, threshold);
+                lowerIndex = this._lowerBound(dataBin, data, length, this._compareFloatArrays, this.precision);
             }
 
             // Check if we found an identical copy
@@ -715,9 +716,10 @@ class CaptureGraphicsDevice
     private _equalFloatArrays(a, b, length) : bool
     {
         var n = 0;
+        var threshold = this.precision;
         do
         {
-            if (Math.abs(a[n] - b[n]) >= 0.00001)
+            if (Math.abs(a[n] - b[n]) >= threshold)
             {
                 return false;
             }
@@ -1920,6 +1922,7 @@ class CaptureGraphicsDevice
                         data instanceof Float32Array ||
                         data instanceof Float64Array)
                     {
+                        var threshold = this.precision;
                         for (j = 0; j < length; j += 1)
                         {
                             if (j)
@@ -1928,26 +1931,19 @@ class CaptureGraphicsDevice
                             }
                             value = data[j];
                             valueInt = (value | 0);
-                            if (Math.abs(valueInt - value) < 0.00001)
+                            if (Math.abs(valueInt - value) < threshold)
                             {
                                 dataString += valueInt;
                             }
                             else
                             {
-                                if (length <= 16)
+                                if (Math.abs(value) < 0.001)
                                 {
-                                    if (Math.abs(value) < 0.001)
-                                    {
-                                        dataString += value.toExponential(2).replace(/\.?0+e/, 'e');
-                                    }
-                                    else
-                                    {
-                                        dataString += value.toFixed(5).replace(/\.?0+$/, '');
-                                    }
+                                    dataString += value.toExponential(3).replace(/\.?0+e/, 'e');
                                 }
                                 else
                                 {
-                                    dataString += value.toFixed(3).replace(/\.?0+$/, '');
+                                    dataString += value.toFixed(6).replace(/\.?0+$/, '');
                                 }
                             }
                         }
