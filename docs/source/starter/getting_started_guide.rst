@@ -117,7 +117,7 @@ You should now see a yellow box, which from this point will be your game window.
 To add a little variation, try cycling the color by modifying it in the *update* function. Add this code just above the *beginFrame* function::
 
     b += 0.01;
-    color[2] = b % 1; // Clamp color between 0-1
+    bgColor[2] = b % 1; // Clamp color between 0-1
 
 If you refresh the page in your browser, you will see the canvas will cycle color from yellow to white.
 The next thing to do is to draw a simple rectangle, using the Draw2D API.
