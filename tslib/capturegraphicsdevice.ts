@@ -1478,8 +1478,7 @@ class CaptureGraphicsDevice
             texture.setData = function captureTSetData(data)
             {
                 var integers = !(data instanceof Float32Array ||
-                                 data instanceof Float64Array ||
-                                 data instanceof Array);
+                                 data instanceof Float64Array);
                 self._addCommand(CaptureGraphicsCommand.setAllData,
                                  id,
                                  self._addData(data, data.length, integers));
@@ -1490,8 +1489,7 @@ class CaptureGraphicsDevice
             {
                 var data = params.data;
                 var integers = !(data instanceof Float32Array ||
-                                 data instanceof Float64Array ||
-                                 data instanceof Array);
+                                 data instanceof Float64Array);
                 this._addCommand(CaptureGraphicsCommand.setAllData,
                                  id,
                                  this._addData(data, data.length, integers));
