@@ -8,10 +8,7 @@ Application.prototype =
     // Use the properties from Config by default, otherwise use these defaults
     protolibConfig: Protolib.extend(true, {
         fps: 60,
-        useShadows: true,
-        fonts: {
-            regular: "opensans"
-        }
+        useShadows: true
     },
     Config),
 
