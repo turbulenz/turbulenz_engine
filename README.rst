@@ -484,7 +484,7 @@ Setup
    on GitHub and clone that). To clone the repository maintained by Turbulenz use
    ::
 
-        $ git clone git@github.com:turbulenz/turbulenz_engine.git
+        $ git clone git://github.com/turbulenz/turbulenz_engine.git
 
 2. The Turbulenz Engine submodules the following technology in the external folder
 
