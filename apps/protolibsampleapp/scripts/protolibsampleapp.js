@@ -107,6 +107,8 @@ Application.prototype =
                 type: protolib.watchTypes.SLIDER,
                 options: volumeInput
             });
+        this.lastVolume = protolib.globals.settings.volume;
+        protolib.globals.settings.volume = 0; // Mute by default
 
         //Text
         this.turbulenzText = {
@@ -144,12 +146,33 @@ Application.prototype =
                 height: 100
             });
 
+            var soundSpritePosition = [protolib.width - 100, protolib.height - 100];
             protolib.draw2DSprite({
                 texture: 'textures/sound.png',
-                position: [protolib.width - 100, protolib.height - 100],
+                position: soundSpritePosition,
                 width: 50,
                 height: 50
             });
+
+            var mousePosition = protolib.getMousePosition();
+            if (protolib.isMouseJustDown(protolib.mouseCodes.BUTTON_0))
+            {
+                if (mousePosition[0] > soundSpritePosition[0] &&
+                    mousePosition[0] < soundSpritePosition[0] + 50 &&
+                    mousePosition[1] > soundSpritePosition[1] &&
+                    mousePosition[1] < soundSpritePosition[1] + 50)
+                {
+                    if (protolib.globals.settings.volume > 0)
+                    {
+                        this.lastVolume = protolib.globals.settings.volume;
+                        protolib.globals.settings.volume = 0;
+                    }
+                    else
+                    {
+                        protolib.globals.settings.volume = this.lastVolume;
+                    }
+                }
+            }
 
             if (protolib.globals.settings.volume === 0)
             {
