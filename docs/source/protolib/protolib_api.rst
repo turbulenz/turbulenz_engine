@@ -142,6 +142,8 @@ To use protolib you will need to include the following library code in your temp
     /*{{ javascript('jslib/forwardrendering.js') }}*/
     /*{{ javascript('jslib/shadowmapping.js') }}*/
     /*{{ javascript('jslib/draw2d.js') }}*/
+    /*{{ javascript('jslib/assettracker.js') }}*/
+    /*{{ javascript('jslib/loadingscreen.js') }}*/
 
     /*{{ javascript('protolib/duimanager.js') }}*/
     /*{{ javascript('protolib/jqueryextend.js') }}*/

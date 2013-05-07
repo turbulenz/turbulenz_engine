@@ -25,6 +25,8 @@
 /*global Utilities: false*/
 /*global jQuery: false*/
 /*global jQueryExtend: false*/
+/*global AssetTracker: false*/
+/*global LoadingScreen: false*/
 
 function Protolib(params)
 {
@@ -252,6 +254,14 @@ function Protolib(params)
 
     protolib.loadingIntervalID = null;
 
+    var assetTracker = null;
+    var loadingScreen = null;
+
+    function updateAssetTrackerFn()
+    {
+        loadingScreen.render(protolib.loadingScreenBackgroundAlpha, protolib.loadingScreenTextureAlpha);
+    }
+
     //After mapping table has loaded, load forwardrendering's shaders, and the default light material.
     //After the shaders have loaded, call onInitializedCallback.
     var postMappingTableReceived = function postMappingTableReceivedFn()
@@ -284,7 +294,10 @@ function Protolib(params)
 
         var waitForForwardRenderingShaders = function waitForForwardRenderingShadersFn()
         {
-            if (shaderManager.getNumPendingShaders() === 0)
+            if (shaderManager.getNumPendingShaders() === 0 &&
+                textureManager.getNumPendingTextures() === 0 &&
+                fontManager.getNumPendingFonts() === 0 &&
+                (soundManager ? soundManager.getNumPendingSounds() === 0: true))
             {
                 if (protolib.loadingIntervalID)
                 {
@@ -302,7 +315,43 @@ function Protolib(params)
                     INITIALIZED_CALLBACK(protolib);
                 }
             }
+            else
+            {
+                protolib.loadingScreen.render(protolib.loadingScreenBackgroundAlpha, protolib.loadingScreenTextureAlpha);
+            }
         };
+
+        var assetCount = shaderManager.getNumPendingShaders() +
+                    textureManager.getNumPendingTextures() +
+                    fontManager.getNumPendingFonts();
+        if (soundManager)
+        {
+            assetCount += soundManager.getNumPendingSounds();
+        }
+
+        assetTracker = protolib.assetTracker = AssetTracker.create(assetCount, false);
+        assetTracker.setCallback(updateAssetTrackerFn);
+
+        requestHandler.addEventListener('eventOnload', assetTracker.eventOnLoadHandler);
+
+        var loadingScreenParameters = {
+            backgroundColor: mathDevice.v4Build(0, 0, 0, 1),
+            barColor: mathDevice.v4Build(0.749, 0.067, 0.227, 1),
+            barCenter: {
+                x: 0.5,
+                y: 0.5
+            },
+            barBorderSize: 4,
+            barBackgroundColor: mathDevice.v4Build(0.2, 0.2, 0.2, 1),
+            barBackgroundHeight: 24,
+            barBackgroundWidth: 540,
+            assetTracker: assetTracker
+        };
+
+        loadingScreen = protolib.loadingScreen = LoadingScreen.create(graphicsDevice, mathDevice, loadingScreenParameters);
+        protolib.loadingScreenBackgroundAlpha = 1.0;
+        protolib.loadingScreenTextureAlpha = 1.0;
+
         protolib.loadingIntervalID = TurbulenzEngine.setInterval(waitForForwardRenderingShaders, 1000 / 10);
     };
 
