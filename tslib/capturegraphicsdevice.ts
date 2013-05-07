@@ -36,6 +36,8 @@ class CaptureGraphicsDevice
     data:       {};
     objects:    {};
     objectArray: any[];
+    names:      {};
+    numNames:   number;
     vertexBuffers: {};
     indexBuffers: {};
     techniqueParameterBuffers: {};
@@ -84,6 +86,8 @@ class CaptureGraphicsDevice
         this.data = {};
         this.objects = {};
         this.objectArray = [];
+        this.names = {};
+        this.numNames = 0;
         this.vertexBuffers = {};
         this.indexBuffers = {};
         this.techniqueParameterBuffers = {};
@@ -242,7 +246,7 @@ class CaptureGraphicsDevice
                 value = object[p];
                 if (value !== undefined && value !== null)
                 {
-                    objectArray.push(p, this._clone(value));
+                    objectArray.push(this._addName(p), this._clone(value));
                 }
             }
         }
@@ -256,6 +260,7 @@ class CaptureGraphicsDevice
         var n, value;
         for (n = 0; n < length; n += 2)
         {
+            objectArray[n] = this._addName(objectArray[n]);
             value = objectArray[n + 1];
             if (value !== undefined && value !== null)
             {
@@ -283,6 +288,18 @@ class CaptureGraphicsDevice
             data[j + 2] = k;
             data[j + 3] = v;
         }
+    }
+
+    private _addName(name: string) : number
+    {
+        var nameId = this.names[name];
+        if (nameId === undefined)
+        {
+            nameId = this.numNames;
+            this.numNames += 1;
+            this.names[name] = nameId;
+        }
+        return nameId;
     }
 
     private _addObject(object) : string
@@ -1953,6 +1970,31 @@ class CaptureGraphicsDevice
             }
         }
 
+        dataString += '],"names":[';
+        var names = this.names;
+        var numNames = this.numNames;
+        var namesArray = new Array(numNames);
+        for (p in names)
+        {
+            if (names.hasOwnProperty(p))
+            {
+                namesArray[names[p]] = p;
+            }
+        }
+        addValuesComma = false;
+        for (n = 0; n < numNames; n += 1)
+        {
+            if (addValuesComma)
+            {
+                dataString += ',';
+            }
+            else
+            {
+                addValuesComma = true;
+            }
+            dataString += '"' + namesArray[n] + '"';
+        }
+
         dataString += '],"objects":[';
         var objects = this.objects;
         addValuesComma = false;
@@ -2123,6 +2165,9 @@ class CaptureGraphicsDevice
             }
         }
 
+        this.names = {};
+        this.numNames = 0;
+
         this.vertexBuffers = {};
         this.indexBuffers = {};
         this.techniqueParameterBuffers = {};
@@ -2151,6 +2196,8 @@ class CaptureGraphicsDevice
         this.data= null;
         this.objects = null;
         this.objectArray = null;
+        this.names = null;
+        this.numNames = 0;
         this.vertexBuffers = null;
         this.indexBuffers = null;
         this.techniqueParameterBuffers = null;
@@ -2472,6 +2519,7 @@ class PlaybackGraphicsDevice
         data.length = 0;
 
         var gd = this.gd;
+        var names = dataObject.names;
         var objects = dataObject.objects;
         length = objects.length;
         var id, fileObject, object, objectLength, j, k, v, entity;
@@ -2483,7 +2531,7 @@ class PlaybackGraphicsDevice
             object = gd.createTechniqueParameters();
             for (j = 0; j < objectLength; j += 2)
             {
-                k = fileObject[j];
+                k = names[fileObject[j]];
                 v = fileObject[j + 1];
                 if (typeof v === "string")
                 {
@@ -2503,6 +2551,7 @@ class PlaybackGraphicsDevice
             this._storeEntity(id, object);
         }
         objects.length = 0;
+        names.length = 0;
     }
 
     public addFrames(framesObject, reset?)
