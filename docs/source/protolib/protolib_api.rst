@@ -599,7 +599,7 @@ Draws the given texture to screen space.
         texture: "path/to/texture.png",
         position: [x, y],
         width: w,
-        heigth: h,
+        height: h,
         v3Color: color,
         alpha: a,
         rotation: angle

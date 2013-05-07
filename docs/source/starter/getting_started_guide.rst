@@ -13,7 +13,6 @@ Introduction
 ------------
 
 Turbulenz is an HTML5 game engine and server-side APIs available in JavaScript and TypeScript for building and distributing 2D and 3D games that run on platforms that support HTML5 features such as modern browsers without the need for plugins.
-The Engine includes libraries for features that games require such as:
 
 In This Guide
 -------------
@@ -24,27 +23,20 @@ platform.  We give a brief introduction to some important concepts and
 tools, and describe the process of writing, building and running a
 simple Turbulenz application.
 
-Turbulenz games are written in JavaScript (officially known as
-ECMAScript). JavaScript is undeniably the language of the Web and is
-the only general purpose language supported by all browsers. For more
-details about JavaScript in the Turbulenz Engine, see the
-:ref:`javascript_development`.
-
 To learn the basics of how to use Turbulenz APIs read the next section.
 If you are comfortable with how to use a basic Turbulenz JavaScript APIs, for example to draw an image to the screen, you can skip this section and move on to the finding the best way to structure a :ref:`Turbulenz application <getting_started_writing_turbulenz_games>`.
+
+
+**At this point you should have done at least *one* of the following:**
+
+* Installed the latest SDK from `<https://hub.turbulenz.com>`__ and run through the setup steps mentioned :ref:`here <developer_requirements>`.
+* Cloned the Turbulenz open source git repository from `<http://github.com/turbulenz/turbulenz_engine>`__ and run through the setup steps in the README.rst.
+
 
 Getting Started with Turbulenz APIs
 -----------------------------------
 
 To try the Turbulenz APIs requires only a text editor and a browser such as Google Chrome or Mozilla Firefox.
-
-At this point you should have already:
-
-* Installed the Turbulenz SDK
-
-*OR*
-
-* Cloned the Turbulenz repository and run the setup steps
 
 Start by creating a new file with a .html file extension e.g. turbulenz_example.html
 Place this file in the root of the Turbulenz directory.
@@ -74,7 +66,7 @@ Add the following script tags after the section marked as "Script includes go he
     <script src="jslib/webgl/turbulenzengine.js"></script>
     <script src="jslib/webgl/graphicsdevice.js"></script>
 
-To initialize create a *WebGLTurbulenzEngine* and pass a reference to the <canvas> element to the constructor::
+To initialize create a *WebGLTurbulenzEngine* and pass a reference to the <canvas> element to the constructor in the game code section::
 
     TurbulenzEngine = WebGLTurbulenzEngine.create({
         canvas: document.getElementById("canvas")
@@ -269,46 +261,10 @@ At this point you have been able to use basic drawing APIs to manipulate the <ca
 
 For more information on the various APIs, see the following links:
 
-* `Low-level API <http://docs.turbulenz.com/jslibrary_api/low_level_api.html>`__, `2D Physics API <http://docs.turbulenz.com/jslibrary_api/physics2d_api.html>`__, `3D Physics API <http://docs.turbulenz.com/jslibrary_api/physics3d_api.html>`__
-* `High-level API <http://docs.turbulenz.com/jslibrary_api/high_level_api.html>`__
-* `Turbulenz Services API <http://docs.turbulenz.com/turbulenz_services/index.html>`__
-
-You can now skip to how to write :ref:`Turbulenz games <getting_started_writing_turbulenz_games>`.
-If you want to see how the same code would work using JSFiddle, read on.
-
-.. _getting_started_jsfiddle:
-
-Trying Turbulenz APIs With JSFiddle
------------------------------------
-
-Most Turbulenz Engine APIs (with the exception of Turbulenz services) can be used without the additional tools provided with the SDK.
-For this reason, it's sometimes just easier to try things out online.
-`JSFiddle <http://jsfiddle.net/>`__ is a handy little online tool for just trying things out using HTML, JavaScript and CSS.
-
-You can try the Turbulenz APIs out using JSFiddle with a few changes to how you would do it in your own HTML file.
-Here are a few simple instructions to get you going:
-
-JSFiddle an editable pane for:
-
-* HTML
-* CSS
-* JavaScript
-
-When run the output ends up in the result pane.
-
-Since JSFiddle deals with <html> and <body> tags all you require to get started with the APIs is the <canvas> tag.
-Add the following to the HTML pane:
-
-    <canvas id="canvas" width="640px" height="480px"/>
-
-Any additional game code will go in the JavaScript pane.
-
-.. TODO: If you are using jsfiddle, just add the *src* string to the *External Resources*. You can now start adding game code.
-.. TODO: If you are using jsfiddle, just press the 'run' button.
-
-.. NOTE::
-
-    If you are trying this with jsfiddle, it will work if you specify an image hosted on a server that allows `CORS <http://en.wikipedia.org/wiki/Cross-origin_resource_sharing>`__. `corsproxy.com <http://www.corsproxy.com/>`__ will allow you to test it out with images if you do *http://www.corsproxy.com/www.website.com/img/name.png* for example, otherwise you should do host the files on your own server.
+* :ref:`Low-level API <low_level_api>`, :ref:`2D Physics API <physics2d_api>`, :ref:`3D Physics API <phys3d_api>`
+* :ref:`High-level API <high_level_api>`
+* :ref:`Turbulenz Services API <turbulenz_services_api>`
+* :ref:`Protolib API <protolib_api>`
 
 
 .. _getting_started_writing_turbulenz_games:
@@ -443,141 +399,6 @@ applications are run from a server, especially in *canvas* modes.
 
 .. TODO: Link to the HUB
 .. TODO: OK to mention emulation of the online services?
-
-.. ------------------------------------------------------------
-
------
-Setup
------
-
-Running the Turbulenz SDK Installer
------------------------------------
-
-(See :ref:`requirements` for a list of supported platforms and
-prerequisites)
-
-.. _getting_started_install:
-
-:SDK Installation:
-
-  The installation method differs depending on the development
-  platform. Follow the steps to :ref:`install the SDK <developer_requirements>` for your platform.
-
-  **Windows**:
-
-    The default install path is: *C:\\Turbulenz\\SDK\\X.X.X* where
-    X.X.X is the SDK version. It is possible to have multiple SDKs
-    installed at once and select custom install paths as long as the
-    destination permits read/write access to non-administrator
-    accounts.
-
-    .. Note ::
-
-      The Turbulenz SDK installer will offer to install the Turbulenz
-      Engine (this happens automatically under Mac and Linux).  In
-      this instance *Engine* refers to the plugin component needed to
-      provide extended browser functionality.  The Engine is only
-      considered an optional as part of the SDK install because it is
-      also available as a separate installer.  We recommend that
-      developers click 'Yes' to install the Engine packaged with the
-      SDK.
-
-    With the installation completed, the Start Menu should contain a
-    *Turbulenz* folder including these important entries:
-
-  **Mac / Linux**:
-
-    The default install path is: *~/Turbulenz/SDK/X.X.X* where *X.X.X*
-    is the SDK version (*'~'* represents the users home directory).  The
-    SDK installer allows a custom install path to be chosen.
-
-
-.. _getting_started_run_env:
-
-:Run the Environment:
-
-  This environment allows you to run the tools provided with the SDK.
-
-  **Windows**:
-
-    There is a shortcut in the start menu will start a command prompt
-    inside the SDK virtual environment.
-
-    Start Menu -> Programs -> Turbulenz -> SDK X.X.X -> Run Environment X.X.X
-
-    .. NOTE::
-
-      The starting directory of the environment is the SDK directory in which it is installed.
-
-  **Mac / Linux**:
-
-    In a terminal window, enter ::
-
-        cd *SDKINSTALLDIR*
-        source env/bin/activate
-
-    You should see an **'(env)'** tag in front of your prompt.
-
-  You are now ready to run the tools.
-
-
-:Run the Local Server:
-
-  **Windows**:
-
-    This shortcut in the start menu will allow you to start the
-    development server to test your games on your machine or on a
-    local network.
-
-  **Mac / Linux**:
-
-    In a terminal window, enter ::
-
-    *SDKINSTALLDIR*/start_local.sh
-
-  .. Note ::
-
-    When you run the Local Server for the first time, some firewalls
-    may prompt you to allow *python* or *python.exe* to listen on a
-    port. You will need to grant permission in order to run the
-    server.
-
-Verifying the Install
----------------------
-
-Turbulenz tools use a Python virtual environment with the necessary
-python packages (avoiding the need to install packages into the
-default system Python folders).
-
-To verify the install:
-
-* Run the Local Server (described above) and ensure that there are no
-  errors.  On Windows ensure that a browser opens to display the front
-  page of the development server.
-
-* Run the Turbulenz Environment (described above).  The string
-  ``(env)`` prefixed to the command prompt indicating that the
-  environment has been successfully activated.
-
-* From this environment command prompt, type::
-
-    dae2json
-
-  The command line options for the *dae2json* command should be
-  displayed.  If you see an error message instead, the environment has
-  not been correctly installed.
-
-Running a Sample
-----------------
-
-With the local development server running, open your browser and
-navigate to http://127.0.0.1:8070.
-
-Click the *Samples* project, and then click the *Play* button to show
-the list of available samples.  There are several HTML files available
-for each sample, corresponding to the different build configurations.
-Clicking on the name of an HTML file will open and run the
-corresponding sample.
 
 .. ------------------------------------------------------------
 

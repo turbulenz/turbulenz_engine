@@ -484,7 +484,7 @@ Setup
    on GitHub and clone that). To clone the repository maintained by Turbulenz use
    ::
 
-        $ git clone git@github.com:turbulenz/turbulenz_engine.git
+        $ git clone git://github.com/turbulenz/turbulenz_engine.git
 
 2. The Turbulenz Engine submodules the following technology in the external folder
 
@@ -546,6 +546,13 @@ as described in the setup section.
 
     $ python manage.py jslib
 
+- **Tools** - The Turbulenz Engine includes a number of Python tools which are installed during the env command.
+  In addition the Engine includes a CGFX shader conversion tool which can be built with the following command.
+  See the `Dependencies`_ section for details of required compiler toolchains.
+  ::
+
+    $ python manage.py tools
+
 - **Documentation** - The Turbulenz Engine documentation is based on restructured text sources. To build the html
   documentation run the command
   ::
@@ -574,6 +581,7 @@ as described in the setup section.
   virtual environment. These are available at the command line e.g. running ``dae2json`` will execute the dae2json
   tool used to convert Collada assets to a Turbulenz Engine JSON asset format. See the
   `tools <http://docs.turbulenz.com/tools/index.html>`__ section in the documentation for more details on the tools.
+
 - **Local Development Server** - Setting up the environment also includes a locally hosted web server which can be
   used for development of HTML5 games and applications. See the
   `Local Server <http://docs.turbulenz.com/local/index.html>`__ section in the documentation for more details.
@@ -583,7 +591,7 @@ Getting Started With The API
 ============================
 
 To try the Turbulenz APIs requires only a text editor and a browser such as Google Chrome or Mozilla Firefox.
-Create a file with the following content and place it in the root of the Turbulenz directory::
+Create an HTML file with the following content and place it in the root of the Turbulenz directory::
 
     <html>
     <head>
@@ -615,7 +623,7 @@ Create a file with the following content and place it in the root of the Turbule
     </html>
 
 After defining a <canvas> element of 640x480 pixels, this code will create the TurbulenzEngine and request the GraphicDevice module.
-Using the an update function called at a frequency of 60fps, the GraphicsDevice will clear the screen yellow.
+Using an update function called at a frequency of 60fps, the GraphicsDevice will clear the screen yellow.
 To run the example, open the HTML file in your browser.
 You should see a yellow rectangle.
 
@@ -627,7 +635,7 @@ Any webserver will work, a quick way to try is to activate the Turbulenz environ
 This command will host the contents of the Turbulenz directory on your machine as a webserver.
 
 To demonstrate loading an asset you can try loading an image file and drawing it as a textured sprite using the Draw2D API.
-Create another file with the following content and also place it in the root of the Turbulenz directory::
+Create another HTML file with the following content and also place it in the root of the Turbulenz directory::
 
     <html>
     <head>
@@ -699,6 +707,157 @@ Create another file with the following content and also place it in the root of 
 This time, instead of opening the file in the browser, navigate your browser to *http://127.0.0.1:8000* or *http://localhost:8000* and select the HTML file you created.
 You should see a spinning textured box in the middle of a yellow rectangle.
 
+The next step is render a simple textured mesh in 3D.
+To do this you will need to build some assets from their source files.
+Make sure you have run the *tools* command to build the tools for your platform::
+
+    $ python manage.py tools
+
+*Note: The requirements for building the tools is different per platform. See the* `Dependencies`_ *section.*
+
+For this example you should use the `Protolib <http://docs.turbulenz.com/protolib/protolib_api.html>`__ library, which is ideal for prototyping games using Turbulenz.
+You will need these assets::
+
+    - models/duck.dae
+    - textures/duck.png
+    - textures/default_light.png
+    - shaders/shadowmapping.cgfx
+    - shaders/zonly.cgfx
+    - shaders/forwardrendering.cgfx
+    - shaders/forwardrenderingshadows.cgfx
+    - shaders/debug.cgfx
+    - shaders/font.cgfx
+    - fonts/opensans-8.fnt
+    - fonts/opensans-16.fnt
+    - fonts/opensans-32.fnt
+    - fonts/opensans-64.fnt
+    - fonts/opensans-128.fnt
+    - textures/opensans-8_0.png
+    - textures/opensans-16_0.png
+    - textures/opensans-32_0.png
+    - textures/opensans-64_0.png
+    - textures/opensans-128_0.png
+
+Copy this text into a file called "deps.yaml" and place it in the root of the Turbulenz directory.
+Having built the tools you can now run this command with the Turbulenz environment activated::
+
+    $ python scripts/buildassets.py --root . --assets-path assets
+
+This will build the assets listed in the deps.yaml and output a "staticmax" directory and "mapping_table.json" file containing the processed assets and a mapping to them for the webserver.
+When a library trys to request one of these files, it will be able to find it in the staticmax directory.
+Now you can create the mesh example HTML file and place it at the root of the Turbulenz directory::
+
+    <html>
+    <head>
+        <title>Turbulenz - API - Textured Mesh Example</title>
+        <script>
+            var TurbulenzEngine = {};
+        </script>
+        <script src="jslib/debug.js"></script>
+        <script src="jslib/webgl/turbulenzengine.js"></script>
+        <script src="jslib/webgl/graphicsdevice.js"></script>
+        <script src="jslib/webgl/inputdevice.js"></script>
+        <script src="jslib/webgl/sounddevice.js"></script>
+
+        <script src="jslib/camera.js"></script>
+        <script src="jslib/requesthandler.js"></script>
+        <script src="jslib/texturemanager.js"></script>
+        <script src="jslib/shadermanager.js"></script>
+        <script src="jslib/soundmanager.js"></script>
+        <script src="jslib/effectmanager.js"></script>
+        <script src="jslib/fontmanager.js"></script>
+        <script src="jslib/observer.js"></script>
+        <script src="jslib/utilities.js"></script>
+        <script src="jslib/services/turbulenzbridge.js"></script>
+        <script src="jslib/services/turbulenzservices.js"></script>
+        <script src="jslib/services/gamesession.js"></script>
+        <script src="jslib/services/mappingtable.js"></script>
+
+        <script src="jslib/scene.js"></script>
+        <script src="jslib/light.js"></script>
+        <script src="jslib/material.js"></script>
+        <script src="jslib/geometry.js"></script>
+        <script src="jslib/aabbtree.js"></script>
+        <script src="jslib/scenenode.js"></script>
+        <script src="jslib/vertexbuffermanager.js"></script>
+        <script src="jslib/indexbuffermanager.js"></script>
+        <script src="jslib/resourceloader.js"></script>
+        <script src="jslib/vmath.js"></script>
+        <script src="jslib/renderingcommon.js"></script>
+        <script src="jslib/forwardrendering.js"></script>
+        <script src="jslib/shadowmapping.js"></script>
+        <script src="jslib/draw2d.js"></script>
+
+        <script src="protolib/duimanager.js"></script>
+        <script src="protolib/jqueryextend.js"></script>
+        <script src="protolib/simplesprite.js"></script>
+        <script src="protolib/simplefonts.js"></script>
+        <script src="protolib/simplesceneloader.js"></script>
+        <script src="protolib/debugdraw.js"></script>
+        <script src="protolib/sceneloader.js"></script>
+        <script src="protolib/soundsourcemanager.js"></script>
+        <script src="protolib/protolib.js"></script>
+
+    </head>
+    <body>
+        <canvas id="canvas" width="640px" height="480px"/>
+        <script>
+            var TurbulenzEngine = WebGLTurbulenzEngine.create({
+                canvas: document.getElementById("canvas")
+            });
+            var mathDevice = null;
+
+            var mesh = null;
+            var rotationMatrix = null;
+            var rotationAngleMatrix = null;
+
+            var protolib = Protolib.create({
+                onInitialized: function onIntializedFn(protolib)
+                {
+                    mathDevice = protolib.getMathDevice();
+                    protolib.setCameraPosition(mathDevice.v3Build(0, 1, -2));
+                    protolib.setCameraDirection(mathDevice.v3Build(0, 0, 1));
+                    protolib.setAmbientLightColor(mathDevice.v3Build(1, 1, 1));
+                    protolib.addPointLight({
+                        v3Position: mathDevice.v3Build(-1, 1, -1),
+                        v3Color: mathDevice.v3Build(1, 1, 1),
+                        radius: 10
+                    });
+                    mesh = protolib.loadMesh({
+                        mesh: "models/duck.dae"
+                    });
+                    rotationMatrix = mathDevice.m43BuildIdentity();
+                    rotationAngleMatrix = mathDevice.m43BuildIdentity();
+                    mathDevice.m43SetAxisRotation(rotationAngleMatrix,
+                                                  mathDevice.v3Build(0, 1, 0),
+                                                  (Math.PI * 2) / 360);
+                }
+            })
+
+            function update() {
+
+                if (protolib.beginFrame())
+                {
+                    if (mesh)
+                    {
+                        mesh.getRotationMatrix(rotationMatrix);
+                        mathDevice.m43Mul(rotationMatrix, rotationAngleMatrix, rotationMatrix);
+                        mesh.setRotationMatrix(rotationMatrix);
+                    }
+                    protolib.endFrame();
+                }
+            }
+
+            TurbulenzEngine.setInterval(update, 1000 / 60);
+        </script>
+    </body>
+    </html>
+
+This file is quite similar to the previous examples, but it requires a few more Turbulenz libraries to run.
+This time you should see a spinning duck with a yellow texture on a white background and lit by a static point light.
+
+For more information on how to build your own assets see the `assets section <http://docs.turbulenz.com/starter/getting_started_guide.html#assets>`__ in the getting started guide.
+
 If you would like to learn more or work through this example step-by-step (with troubleshooting hints), see the `Getting Started Guide <http://docs.turbulenz.com/starter/getting_started_guide.html>`__ in the documentation.
 
 For more information on the various APIs, see the following links:
@@ -706,6 +865,8 @@ For more information on the various APIs, see the following links:
 * `Low-level API <http://docs.turbulenz.com/jslibrary_api/low_level_api.html>`__, `2D Physics API <http://docs.turbulenz.com/jslibrary_api/physics2d_api.html>`__, `3D Physics API <http://docs.turbulenz.com/jslibrary_api/physics3d_api.html>`__
 * `High-level API <http://docs.turbulenz.com/jslibrary_api/high_level_api.html>`__
 * `Turbulenz Services API <http://docs.turbulenz.com/turbulenz_services/index.html>`__
+* `Protolib API <http://docs.turbulenz.com/protolib/protolib_api.html>`__
+
 
 Documentation
 =============
@@ -721,11 +882,33 @@ build/docs/html folder.
 Dependencies
 ============
 
-The prerequisits for setting up the Turbulenz Engine are Python 2.7.x and VirtualEnv.
+The prerequisites for setting up the Turbulenz Engine are Python 2.7.x and VirtualEnv.
 Other technologies are included via Git submodules contained within the Turbulenz Engine repository.
 
 Additional Python packages will be automatically installed during the initial environment creation using a
 Python package manager.
+
+To build the cgfx2json shader conversion tool ``python manage.py tools`` requires both a compiler toolchain
+and the `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher.
+
+The CgToolkit is included in the repository for Windows, for Mac OSX and Linux please download and install it.
+
+Compiler Toolchain Requirements
+
+- Windows : Microsoft Visual Studio 2008 w/SP1
+- Mac OSX : Xcode with the command line tools
+- Linux : GCC 4.6.x or higher
+
+
+Known Issues
+============
+
+The following known issues exist with using the open source repository version of the Turbulenz Engine,
+additional known issues also existing in the SDK releases of the engine can be found here
+`<http://docs.turbulenz.com/known_issues/index.html>`__
+
+* The application and JavaScript build process will currently fail if the repository is cloned to a path with
+  spaces in it.
 
 
 Licensing

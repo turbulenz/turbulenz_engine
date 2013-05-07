@@ -25,6 +25,7 @@ arguments:
     * :ref:`Low Level API <low_level_api>`
     * :ref:`High Level API <high_level_api>`
     * :ref:`Turbulenz Services API <turbulenz_services_api>`
+    * :ref:`Protolib API <protolib_api>`
 
 **Changes since the Previous Release**
 

@@ -1,3 +1,5 @@
+.. _protolib_api:
+
 Protolib API
 ============
 

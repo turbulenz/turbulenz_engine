@@ -398,6 +398,7 @@ interface TechniqueParameterBuffer
     map(firstValueToMap?: number,
         numValuesToMap?: number): ParameterWriteIterator;
     unmap(writer: ParameterWriteIterator): void;
+    setData(data: any, offset: number, numVertices: number): void;
 };
 
 interface RenderBuffer

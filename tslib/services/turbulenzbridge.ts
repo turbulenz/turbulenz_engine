@@ -65,7 +65,7 @@ class TurbulenzBridge
         return (this._bridge !== undefined);
     };
 
-    static emit(serviceName: string, request: string)
+    static emit(serviceName: string, request?: string)
     {
     };
 
