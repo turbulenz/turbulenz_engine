@@ -178,7 +178,7 @@ function Protolib(params)
     //Load mapping table.
     var mappingTableSettings = Protolib.extend(true, {
         mappingTablePrefix: 'staticmax/',
-        assetPrefix: 'missing',
+        assetPrefix: 'missing/',
         mappingTableURL: 'mapping_table.json',
         urnMapping: {}
     }, params.defaultMappingSettings);
