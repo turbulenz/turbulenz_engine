@@ -38,6 +38,11 @@ interface UserProfile
     anonymous   : bool;
 };
 
+interface UserProfileReceivedCB
+{
+    (userProfile: UserProfile): void;
+};
+
 // Called when the user has upgraded from a guest or anonymous account
 // to a full one.  This callback does not guarantee that the upgrade
 // complete successfully, so TurbulenzServices shoudl be requeried for
@@ -456,7 +461,8 @@ class TurbulenzServices
         return MultiPlayerSessionManager.create(requestHandler, gameSession);
     };
 
-    static createUserProfile(requestHandler, profileReceivedFn?,
+    static createUserProfile(requestHandler: RequestHandler,
+                             profileReceivedFn?: UserProfileReceivedCB,
                              errorCallbackFn?): UserProfile
     {
         var userProfile = <UserProfile><any>{};
