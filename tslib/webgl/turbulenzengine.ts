@@ -14,6 +14,7 @@
 /// <reference path="inputdevice.ts" />
 /// <reference path="sounddevice.ts" />
 /// <reference path="graphicsdevice.ts" />
+/// <reference path="debug.ts" />
 
 interface Window
 {
@@ -391,6 +392,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 xhr = null;
                 callback = null;
             }
+        }
+
+        if (!!debug)
+        {
+            url += "?" + Math.random().toString().substr(2);
         }
 
         xhr.open('GET', url, true);
