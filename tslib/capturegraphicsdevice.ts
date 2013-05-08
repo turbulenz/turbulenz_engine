@@ -166,11 +166,7 @@ class CaptureGraphicsDevice
         var clonedData;
         if (integers)
         {
-            if (data.slice)
-            {
-                clonedData = data.slice(0, length);
-            }
-            else
+            if (data.BYTES_PER_ELEMENT)
             {
                 // must be a typed array
                 if (length < data.length)
@@ -180,6 +176,60 @@ class CaptureGraphicsDevice
                 else
                 {
                     clonedData = new data.constructor(data);
+                }
+            }
+            else
+            {
+                // Find extents to choose best container
+                var min = data[0];
+                var max = data[0];
+                var n;
+                for (n = 1; n < length; n += 1)
+                {
+                    var value = data[n];
+                    if (min > value)
+                    {
+                        min = value;
+                    }
+                    else if (max < value)
+                    {
+                        max = value;
+                    }
+                }
+
+                var typedConstructor;
+                if (0 <= min && max <= 255)
+                {
+                    typedConstructor = Uint8Array;
+                }
+                else if (-128 <= min && max <= 127)
+                {
+                    typedConstructor = Int8Array;
+                }
+                else if (0 <= min && max <= 65535)
+                {
+                    typedConstructor = Uint16Array;
+                }
+                else if (-32768 <= min && max <= 32767)
+                {
+                    typedConstructor = Int16Array;
+                }
+                else if (0 <= min)
+                {
+                    typedConstructor = Uint32Array;
+                }
+                else
+                {
+                    typedConstructor = Int32Array;
+                }
+
+                if (length < data.length)
+                {
+                    clonedData = new typedConstructor(data.slice(0, length));
+                }
+                else
+                {
+                    clonedData = new typedConstructor(data);
                 }
             }
         }
@@ -403,9 +453,9 @@ class CaptureGraphicsDevice
 
         if (object.BYTES_PER_ELEMENT)
         {
-            if (raw)
+            length = object.length;
+            if (raw || length == 0)
             {
-                length = object.length;
                 result = new Array(length);
                 for (index = 0; index < length; index += 1)
                 {
@@ -417,14 +467,14 @@ class CaptureGraphicsDevice
             {
                 var integers = !(object instanceof Float32Array ||
                                  object instanceof Float64Array);
-                return this._addData(object, object.length, integers);
+                return this._addData(object, length, integers);
             }
         }
 
         if (object instanceof Array)
         {
             length = object.length;
-            if (!raw)
+            if (!raw && length !== 0)
             {
                 for (index = 0; index < length; index += 1)
                 {
@@ -1121,12 +1171,15 @@ class CaptureGraphicsDevice
             };
             captureWriter['end'] = function captureEndDrawWriter()
             {
-                self._addCommand(CaptureGraphicsCommand.beginEndDraw,
-                                 primitive,
-                                 numVertices,
-                                 self._cloneVertexFormats(formats),
-                                 semantics._id,
-                                 self._addData(data, data.length, false));
+                if (0 < numVertices)
+                {
+                    self._addCommand(CaptureGraphicsCommand.beginEndDraw,
+                                     primitive,
+                                     numVertices,
+                                     self._cloneVertexFormats(formats),
+                                     semantics._id,
+                                     self._addData(data, data.length, false));
+                }
             };
             captureWriter['proxy'] = writer;
             return captureWriter;
@@ -1275,7 +1328,7 @@ class CaptureGraphicsDevice
                                      id,
                                      self._addData(data, (numVertices * this.stride), false));
                 }
-                else
+                else (0 < numVertices)
                 {
                     self._addCommand(CaptureGraphicsCommand.setData,
                                      id,
@@ -1329,7 +1382,7 @@ class CaptureGraphicsDevice
                                              id,
                                              self._addData(data, data.length, false));
                         }
-                        else
+                        else if (0 < numVertices)
                         {
                             self._addCommand(CaptureGraphicsCommand.setData,
                                              id,
@@ -1407,7 +1460,7 @@ class CaptureGraphicsDevice
                                      id,
                                      self._addData(data, numIndices, true));
                 }
-                else
+                else if (0 < numIndices)
                 {
                     self._addCommand(CaptureGraphicsCommand.setData,
                                      id,
@@ -1442,7 +1495,7 @@ class CaptureGraphicsDevice
                                              id,
                                              self._addData(data, numIndices, true));
                         }
-                        else
+                        else if (0 < numIndices)
                         {
                             self._addCommand(CaptureGraphicsCommand.setData,
                                              id,
@@ -1838,11 +1891,97 @@ class CaptureGraphicsDevice
     // Capture device API
     public getFramesString()
     {
+        var framesString = '{"version":1,';
+
+        framesString += '"names":[';
+        var names = this.names;
+        var numNames = this.numNames;
+        var namesArray = new Array(numNames);
+        var p;
+        for (p in names)
+        {
+            if (names.hasOwnProperty(p))
+            {
+                namesArray[names[p]] = p;
+            }
+        }
+        var addValuesComma = false;
+        var n;
+        for (n = 0; n < numNames; n += 1)
+        {
+            if (addValuesComma)
+            {
+                framesString += ',';
+            }
+            else
+            {
+                addValuesComma = true;
+            }
+            framesString += '"' + namesArray[n] + '"';
+        }
+
+        framesString += '],"objects":[';
+        var objects = this.objects;
+        addValuesComma = false;
+        var objectsBin, object, binLength, id, j, valueInt;
+        for (p in objects)
+        {
+            if (objects.hasOwnProperty(p))
+            {
+                objectsBin = objects[p];
+                binLength = objectsBin.length;
+                for (n = 0; n < binLength; n += 2)
+                {
+                    id = objectsBin[n];
+                    object = objectsBin[n + 1];
+                    length = object.length;
+                    if (addValuesComma)
+                    {
+                        framesString += ',';
+                    }
+                    else
+                    {
+                        addValuesComma = true;
+                    }
+                    framesString += id + ',[';
+                    for (j = 0; j < length; j += 1)
+                    {
+                        if (j)
+                        {
+                            framesString += ',';
+                        }
+                        var value = object[j];
+                        if (typeof value === "string")
+                        {
+                            framesString += '"' + value + '"';
+                        }
+                        else if (typeof value === "number")
+                        {
+                            valueInt = (value | 0);
+                            if (valueInt === value)
+                            {
+                                framesString += valueInt;
+                            }
+                            else
+                            {
+                                framesString += value.toFixed(4).replace(/\.?0+$/, '');
+                            }
+                        }
+                        else
+                        {
+                            framesString += value;
+                        }
+                    }
+                    framesString += ']';
+                }
+            }
+        }
+
         var commands = this.commands;
         var numMethods = commands.length;
         var numCommands = this.numCommands;
         var commandsArray = new Array(numCommands);
-        var p, n, commandsBin, length;
+        var commandsBin, length;
         for (p = 0; p < numMethods; p += 1)
         {
             commandsBin = commands[p];
@@ -1856,7 +1995,7 @@ class CaptureGraphicsDevice
             }
         }
 
-        var framesString = '{"version":1,"commands":[';
+        framesString += '],"commands":[';
         for (n = 0; n < numCommands; n += 1)
         {
             if (n)
@@ -1867,7 +2006,7 @@ class CaptureGraphicsDevice
             framesString += '[';
             var command = commandsArray[n];
             var numArguments = command.length;
-            var a, value, valueInt;
+            var a, value;
             for (a = 0; a < numArguments; a += 1)
             {
                 value = command[a];
@@ -1916,14 +2055,42 @@ class CaptureGraphicsDevice
             framesString += '[' + frames[n].join(',') + ']';
         }
         framesString += ']}';
+
         return framesString;
     }
 
-    private _getDataBinString(dataBins, integers)
+    private _getDataBinSize(dataBins: {}, integers: bool) : number
     {
-        var threshold = this.precision;
-        var dataString = '';
-        var addValuesComma = false;
+        var totalSize = 0;
+        var p, dataBin, binLength, n, data;
+        for (p in dataBins)
+        {
+            if (dataBins.hasOwnProperty(p))
+            {
+                dataBin = dataBins[p];
+                binLength = dataBin.length;
+                for (n = 0; n < binLength; n += 2)
+                {
+                    data = dataBin[n + 1];
+
+                    totalSize += 4; // id
+                    totalSize += 4; // length
+                    if (integers)
+                    {
+                        totalSize += 4; // type
+                    }
+
+                    // pad element size to multiple of 4
+                    totalSize += ((data.byteLength + 3) & 0x7ffffffc);
+                }
+            }
+        }
+        totalSize += 4; // sentinel
+        return totalSize;
+    }
+
+    private _getDataBinBuffer(ints: any, offset: number, dataBins: {}, integers: bool) : number
+    {
         var p, dataBin, binLength, n, j;
         for (p in dataBins)
         {
@@ -1931,164 +2098,104 @@ class CaptureGraphicsDevice
             {
                 dataBin = dataBins[p];
                 binLength = dataBin.length;
-                var id, data, length, value, valueInt;
+                var id, data, length, type, value, valueInt;
                 for (n = 0; n < binLength; n += 2)
                 {
-                    id = dataBin[n];
+                    ints[offset] = dataBin[n];
+                    offset += 1;
+
                     data = dataBin[n + 1];
                     length = data.length;
 
-                    if (addValuesComma)
-                    {
-                        dataString += ',';
-                    }
-                    else
-                    {
-                        addValuesComma = true;
-                    }
-
-                    dataString += id + ',[';
+                    ints[offset] = length;
+                    offset += 1;
 
                     if (integers)
                     {
-                        for (j = 0; j < length; j += 1)
+                        if (data instanceof Uint8Array)
                         {
-                            if (j)
-                            {
-                                dataString += ',';
-                            }
-                            dataString += data[j];
+                            type = 8;
                         }
-                    }
-                    else
-                    {
-                        for (j = 0; j < length; j += 1)
+                        else if (data instanceof Int8Array)
                         {
-                            if (j)
-                            {
-                                dataString += ',';
-                            }
-                            value = data[j];
-                            valueInt = (value | 0);
-                            if (Math.abs(valueInt - value) < threshold)
-                            {
-                                dataString += valueInt;
-                            }
-                            else
-                            {
-                                if (Math.abs(value) < 0.001)
-                                {
-                                    dataString += value.toExponential(3).replace(/\.?0+e/, 'e');
-                                }
-                                else
-                                {
-                                    dataString += value.toFixed(6).replace(/\.?0+$/, '');
-                                }
-                            }
+                            type = -8;
                         }
-                    }
-                    dataString += ']';
-                }
-            }
-        }
-        return dataString;
-    }
-
-    public getDataString()
-    {
-        var dataString = '{"version":1,';
-
-        dataString += '"integers":[';
-        dataString += this._getDataBinString(this.integerData, true);
-
-        dataString += '],"floats":[';
-        dataString += this._getDataBinString(this.floatData, false);
-
-        dataString += '],"names":[';
-        var names = this.names;
-        var numNames = this.numNames;
-        var namesArray = new Array(numNames);
-        var p;
-        for (p in names)
-        {
-            if (names.hasOwnProperty(p))
-            {
-                namesArray[names[p]] = p;
-            }
-        }
-        var addValuesComma = false;
-        var n;
-        for (n = 0; n < numNames; n += 1)
-        {
-            if (addValuesComma)
-            {
-                dataString += ',';
-            }
-            else
-            {
-                addValuesComma = true;
-            }
-            dataString += '"' + namesArray[n] + '"';
-        }
-
-        dataString += '],"objects":[';
-        var objects = this.objects;
-        addValuesComma = false;
-        var objectsBin, object, binLength, id, j, valueInt;
-        for (p in objects)
-        {
-            if (objects.hasOwnProperty(p))
-            {
-                objectsBin = objects[p];
-                binLength = objectsBin.length;
-                for (n = 0; n < binLength; n += 2)
-                {
-                    id = objectsBin[n];
-                    object = objectsBin[n + 1];
-                    length = object.length;
-                    if (addValuesComma)
-                    {
-                        dataString += ',';
-                    }
-                    else
-                    {
-                        addValuesComma = true;
-                    }
-                    dataString += id + ',[';
-                    for (j = 0; j < length; j += 1)
-                    {
-                        if (j)
+                        else if (data instanceof Uint16Array)
                         {
-                            dataString += ',';
+                            type = 16;
                         }
-                        var value = object[j];
-                        if (typeof value === "string")
+                        else if (data instanceof Int16Array)
                         {
-                            dataString += '"' + value + '"';
+                            type = -16;
                         }
-                        else if (typeof value === "number")
+                        else if (data instanceof Uint32Array)
                         {
-                            valueInt = (value | 0);
-                            if (valueInt === value)
-                            {
-                                dataString += valueInt;
-                            }
-                            else
-                            {
-                                dataString += value.toFixed(4).replace(/\.?0+$/, '');
-                            }
+                            type = 32;
                         }
                         else
                         {
-                            dataString += value;
+                            type = -32;
+                        }
+
+                        ints[offset] = type;
+                        offset += 1;
+                    }
+
+                    if (integers)
+                    {
+                        var out = new data.constructor(ints.buffer, (offset * 4), length);
+                        for (j = 0; j < length; j += 1)
+                        {
+                            out[j] = data[j];
+                        }
+
+                        // pad element size to multiple of 4
+                        offset += ((data.byteLength + 3) >>> 2);
+                    }
+                    else
+                    {
+                        data = new Int32Array(data.buffer, 0, data.length);
+                        for (j = 0; j < length; j += 1)
+                        {
+                            ints[offset] = data[j];
+                            offset += 1;
                         }
                     }
-                    dataString += ']';
                 }
             }
         }
-        dataString += ']}';
-        return dataString;
+
+        // sentinel
+        ints[offset] = -1;
+        offset += 1;
+
+        return offset;
+    }
+
+    public getDataBuffer()
+    {
+        var totalSize = 4 + 4; // header + version
+        totalSize += this._getDataBinSize(this.integerData, true);
+        totalSize += this._getDataBinSize(this.floatData, false);
+
+        var buffer = new ArrayBuffer(totalSize);
+
+        var bytes = new Uint8Array(buffer);
+
+        var header = 'TZBD';
+        bytes[0] = header.charCodeAt(0);
+        bytes[1] = header.charCodeAt(1);
+        bytes[2] = header.charCodeAt(2);
+        bytes[3] = header.charCodeAt(3);
+
+        var ints = new Int32Array(buffer);
+        ints[1] = 1; // version
+
+        var offset = 2;
+        offset = this._getDataBinBuffer(ints, offset, this.integerData, true);
+        offset = this._getDataBinBuffer(ints, offset, this.floatData, false);
+
+        return bytes;
     }
 
     public getResourcesString()
@@ -2533,30 +2640,89 @@ class PlaybackGraphicsDevice
         resourcesObject.resources = {};
     }
 
-    public addData(dataObject)
+    public addData(dataBuffer)
     {
-        var data = dataObject.floats;
-        var length = data.length;
-        var n;
-        for (n = 0; n < length; n += 2)
-        {
-            this._storeEntity(data[n], new Float32Array(data[n + 1]));
-        }
-        data.length = 0;
+        var ints = new Int32Array(dataBuffer);
 
-        data = dataObject.integers;
-        length = data.length;
-        for (n = 0; n < length; n += 2)
-        {
-            this._storeEntity(data[n], data[n + 1]);
-        }
-        data.length = 0;
+        // TODO: chech version number and endianness
+        var offset = 2;
+        var id, length, type, data;
 
+        // Integers
+        while (true)
+        {
+            id = ints[offset];
+            offset += 1;
+            if (id < 0)
+            {
+                break;
+            }
+
+            length = ints[offset];
+            offset += 1;
+
+            type = ints[offset];
+            offset += 1;
+
+            if (type === 8)
+            {
+                data = new Uint8Array(dataBuffer, (offset * 4), length);
+            }
+            else if (type === -8)
+            {
+                data = new Int8Array(dataBuffer, (offset * 4), length);
+            }
+            else if (type === 16)
+            {
+                data = new Uint16Array(dataBuffer, (offset * 4), length);
+            }
+            else if (type === -16)
+            {
+                data = new Int16Array(dataBuffer, (offset * 4), length);
+            }
+            else if (type === 32)
+            {
+                data = new Uint32Array(dataBuffer, (offset * 4), length);
+            }
+            else
+            {
+                data = new Int32Array(dataBuffer, (offset * 4), length);
+            }
+
+            this._storeEntity(id, data);
+
+            // pad element size to multiple of 4
+            offset += ((data.byteLength + 3) >>> 2);
+        }
+
+        // Floats
+        while (true)
+        {
+            id = ints[offset];
+            offset += 1;
+            if (id < 0)
+            {
+                break;
+            }
+
+            length = ints[offset];
+            offset += 1;
+
+            data = new Float32Array(dataBuffer, (offset * 4), length);
+
+            this._storeEntity(id, data);
+
+            offset += length;
+        }
+    }
+
+    public addFrames(framesObject, reset?)
+    {
         var gd = this.gd;
-        var names = dataObject.names;
-        var objects = dataObject.objects;
-        length = objects.length;
-        var id, fileObject, object, objectLength, j, k, v, entity;
+        var names = framesObject.names;
+        var objects = framesObject.objects;
+        var length = objects.length;
+        var id, fileObject, object, objectLength, n, j, k, v, entity;
         for (n = 0; n < length; n += 2)
         {
             id = objects[n];
@@ -2580,16 +2746,13 @@ class PlaybackGraphicsDevice
         }
         objects.length = 0;
         names.length = 0;
-    }
 
-    public addFrames(framesObject, reset?)
-    {
         var commands = framesObject.commands;
         var numCommands = commands.length;
         var fileFrames = framesObject.frames;
         var numFileFrames = fileFrames.length;
         var frames = this.frames;
-        var n, c, command, cmdId;
+        var c, command, cmdId;
         if (reset)
         {
             var numFrames = frames.length;
