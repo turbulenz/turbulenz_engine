@@ -93,7 +93,7 @@ Application.prototype =
                 max : 1,
                 step : 0.05
             };
-        if (Config.disableSound)
+        if (this.protolibConfig.disableSound)
         {
             volumeInput.disabled = true;
         }
