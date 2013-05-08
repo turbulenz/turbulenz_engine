@@ -1904,24 +1904,19 @@ class CaptureGraphicsDevice
                 namesArray[names[p]] = p;
             }
         }
-        var addValuesComma = false;
         var n;
         for (n = 0; n < numNames; n += 1)
         {
-            if (addValuesComma)
+            if (n)
             {
                 framesString += ',';
-            }
-            else
-            {
-                addValuesComma = true;
             }
             framesString += '"' + namesArray[n] + '"';
         }
 
         framesString += '],"objects":[';
         var objects = this.objects;
-        addValuesComma = false;
+        var addValuesComma = false;
         var objectsBin, object, binLength, id, j, valueInt;
         for (p in objects)
         {
@@ -2068,12 +2063,19 @@ class CaptureGraphicsDevice
             {
                 dataBin = dataBins[p];
                 binLength = dataBin.length;
+                if (binLength === 0)
+                {
+                    continue;
+                }
+
+                totalSize += 4; // number of arrays on this bin
+                totalSize += 4; // length of each array on this bin
+
                 for (n = 0; n < binLength; n += 2)
                 {
                     data = dataBin[n + 1];
 
                     totalSize += 4; // id
-                    totalSize += 4; // length
                     if (integers)
                     {
                         totalSize += 4; // type
@@ -2097,17 +2099,25 @@ class CaptureGraphicsDevice
             {
                 dataBin = dataBins[p];
                 binLength = dataBin.length;
+                if (binLength === 0)
+                {
+                    continue;
+                }
+
+                ints[offset] = (binLength >>> 1);
+                offset += 1;
+
+                ints[offset] = parseInt(p, 10);
+                offset += 1;
+
                 var id, data, length, type, value, valueInt;
                 for (n = 0; n < binLength; n += 2)
                 {
-                    ints[offset] = dataBin[n];
+                    ints[offset] = dataBin[n]; // id
                     offset += 1;
 
                     data = dataBin[n + 1];
                     length = data.length;
-
-                    ints[offset] = length;
-                    offset += 1;
 
                     if (integers)
                     {
@@ -2645,14 +2655,14 @@ class PlaybackGraphicsDevice
 
         // TODO: chech version number and endianness
         var offset = 2;
-        var id, length, type, data;
+        var binLength, length, n, id, type, data;
 
         // Integers
         while (true)
         {
-            id = ints[offset];
+            binLength = ints[offset];
             offset += 1;
-            if (id < 0)
+            if (binLength < 0)
             {
                 break;
             }
@@ -2660,46 +2670,52 @@ class PlaybackGraphicsDevice
             length = ints[offset];
             offset += 1;
 
-            type = ints[offset];
-            offset += 1;
+            for (n = 0; n < binLength; n += 1)
+            {
+                id = ints[offset];
+                offset += 1;
 
-            if (type === 8)
-            {
-                data = new Uint8Array(dataBuffer, (offset * 4), length);
-            }
-            else if (type === -8)
-            {
-                data = new Int8Array(dataBuffer, (offset * 4), length);
-            }
-            else if (type === 16)
-            {
-                data = new Uint16Array(dataBuffer, (offset * 4), length);
-            }
-            else if (type === -16)
-            {
-                data = new Int16Array(dataBuffer, (offset * 4), length);
-            }
-            else if (type === 32)
-            {
-                data = new Uint32Array(dataBuffer, (offset * 4), length);
-            }
-            else
-            {
-                data = new Int32Array(dataBuffer, (offset * 4), length);
-            }
+                type = ints[offset];
+                offset += 1;
 
-            this._storeEntity(id, data);
+                if (type === 8)
+                {
+                    data = new Uint8Array(dataBuffer, (offset * 4), length);
+                }
+                else if (type === -8)
+                {
+                    data = new Int8Array(dataBuffer, (offset * 4), length);
+                }
+                else if (type === 16)
+                {
+                    data = new Uint16Array(dataBuffer, (offset * 4), length);
+                }
+                else if (type === -16)
+                {
+                    data = new Int16Array(dataBuffer, (offset * 4), length);
+                }
+                else if (type === 32)
+                {
+                    data = new Uint32Array(dataBuffer, (offset * 4), length);
+                }
+                else
+                {
+                    data = new Int32Array(dataBuffer, (offset * 4), length);
+                }
 
-            // pad element size to multiple of 4
-            offset += ((data.byteLength + 3) >>> 2);
+                this._storeEntity(id, data);
+
+                // pad element size to multiple of 4
+                offset += ((data.byteLength + 3) >>> 2);
+            }
         }
 
         // Floats
         while (true)
         {
-            id = ints[offset];
+            binLength = ints[offset];
             offset += 1;
-            if (id < 0)
+            if (binLength < 0)
             {
                 break;
             }
@@ -2707,11 +2723,17 @@ class PlaybackGraphicsDevice
             length = ints[offset];
             offset += 1;
 
-            data = new Float32Array(dataBuffer, (offset * 4), length);
+            for (n = 0; n < binLength; n += 1)
+            {
+                id = ints[offset];
+                offset += 1;
 
-            this._storeEntity(id, data);
+                data = new Float32Array(dataBuffer, (offset * 4), length);
 
-            offset += length;
+                this._storeEntity(id, data);
+
+                offset += length;
+            }
         }
     }
 
