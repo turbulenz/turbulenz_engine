@@ -1904,24 +1904,19 @@ class CaptureGraphicsDevice
                 namesArray[names[p]] = p;
             }
         }
-        var addValuesComma = false;
         var n;
         for (n = 0; n < numNames; n += 1)
         {
-            if (addValuesComma)
+            if (n)
             {
                 framesString += ',';
-            }
-            else
-            {
-                addValuesComma = true;
             }
             framesString += '"' + namesArray[n] + '"';
         }
 
         framesString += '],"objects":[';
         var objects = this.objects;
-        addValuesComma = false;
+        var addValuesComma = false;
         var objectsBin, object, binLength, id, j, valueInt;
         for (p in objects)
         {
