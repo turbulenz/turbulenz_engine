@@ -266,10 +266,9 @@ class CaptureGraphicsDevice
         return id.toString();
     }
 
-    private _addCommand(...args: any[]): void
+    private _addCommand(method, arg1?, arg2?, arg3?, arg4?, arg5?): void
     {
-        var length = args.length;
-        var method = args[0];
+        var length = arguments.length;
 
         var lowerIndex;
 
@@ -281,7 +280,7 @@ class CaptureGraphicsDevice
         }
         else
         {
-            lowerIndex = this._lowerBound(commandsBin, args, length, this._compareGenericArrays, 1);
+            lowerIndex = this._lowerBound(commandsBin, arguments, length, this._compareGenericArrays, 1);
 
             // Check if we found an identical copy
             if (lowerIndex < 0)
@@ -298,7 +297,7 @@ class CaptureGraphicsDevice
         command[0] = method;
         for (a = 1; a < length; a += 1)
         {
-            command[a] = args[a];
+            command[a] = arguments[a];
         }
 
         var cmdId = this._getCommandId();
@@ -720,7 +719,7 @@ class CaptureGraphicsDevice
         this.gd.setTechniqueParameters(techniqueParameters);
     };
 
-    private _lowerBound(bin: any[], data: any[], length: number, comp: Function, config: number) : number
+    private _lowerBound(bin: any[], data: any, length: number, comp: Function, config: number) : number
     {
         var first: number = 0;
         var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
