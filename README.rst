@@ -648,7 +648,7 @@ Create another HTML file with the following content and also place it in the roo
     <body>
         <canvas id="canvas" width="640px" height="480px"/>
         <script>
-            var TurbulenzEngine = WebGLTurbulenzEngine.create({
+            TurbulenzEngine = WebGLTurbulenzEngine.create({
                 canvas: document.getElementById("canvas")
             });
             var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
@@ -688,7 +688,7 @@ Create another HTML file with the following content and also place it in the roo
                 sprite.rotation += rotateAngle;
                 sprite.rotation %= PI2; // Wrap rotation at PI * 2
 
-                if (graphicsDevice) {
+                if (graphicsDevice.beginFrame()) {
                     graphicsDevice.clear(bgColor, 1.0);
 
                     draw2D.begin();
@@ -802,7 +802,7 @@ Now you can create the mesh example HTML file and place it at the root of the Tu
     <body>
         <canvas id="canvas" width="640px" height="480px"/>
         <script>
-            var TurbulenzEngine = WebGLTurbulenzEngine.create({
+            TurbulenzEngine = WebGLTurbulenzEngine.create({
                 canvas: document.getElementById("canvas")
             });
             var mathDevice = null;
