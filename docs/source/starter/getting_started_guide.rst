@@ -41,6 +41,8 @@ To try the Turbulenz APIs requires only a text editor and a browser such as Goog
 Start by creating a new file with a .html file extension e.g. turbulenz_example.html
 Place this file in the root of the Turbulenz directory.
 
+.. highlight:: html
+
 In that file add the following basic HTML tags::
 
     <html>
@@ -65,6 +67,8 @@ Add the following script tags after the section marked as "Script includes go he
     <script src="jslib/debug.js"></script>
     <script src="jslib/webgl/turbulenzengine.js"></script>
     <script src="jslib/webgl/graphicsdevice.js"></script>
+
+.. highlight:: javascript
 
 To initialize create a *WebGLTurbulenzEngine* and pass a reference to the <canvas> element to the constructor in the game code section::
 
@@ -116,6 +120,8 @@ To run the JavaScript code in the browser, navigating to the page by opening the
 If you want to reload the code, refresh the page.
 You should now see a yellow box, which from this point will be your game window.
 
+.. highlight:: html
+
 So far your code should look like this::
 
     <html>
@@ -157,6 +163,8 @@ So far your code should look like this::
     </body>
     </html>
 
+.. highlight:: javascript
+
 To add a little variation, try cycling the color by modifying it in the *update* function. Add this code just above the *beginFrame* function::
 
     b += 0.01;
@@ -164,9 +172,14 @@ To add a little variation, try cycling the color by modifying it in the *update*
 
 If you refresh the page in your browser, you will see the canvas will cycle color from yellow to white.
 The next thing to do is to draw a simple rectangle, using the Draw2D API.
+
+.. highlight:: html
+
 Include the Draw2D library by adding the following script tag below the other includes::
 
     <script src="jslib/draw2d.js"></script>
+
+.. highlight:: javascript
 
 After creating the GraphicsDevice, you can create the Draw2D module::
 
@@ -228,6 +241,8 @@ To rotate the sprite add the following in the *update* function after the code t
     sprite.rotation %= PI2; //Wrap rotation at PI * 2
 
 Reload now and you should see the sprite spinning.
+
+.. highlight:: html
 
 Your code should now look like this::
 
@@ -309,6 +324,7 @@ Your code should now look like this::
     </body>
     </html>
 
+.. highlight:: javascript
 
 The next step is to start using assets such as images to make the sprite more interesting.
 To do this you will need to start hosting the files on a web server.
@@ -381,6 +397,8 @@ In the update function add the following::
     sprite.setScale(scale);
 
 This will shrink and grow the sprite between 1.0 and 2.0 by manipulating the scale.
+
+.. highlight:: html
 
 Your file should now look like this::
 
@@ -482,6 +500,8 @@ Your file should now look like this::
         </script>
     </body>
     </html>
+
+.. highlight:: javascript
 
 At this point you have been able to use basic drawing APIs to manipulate the <canvas> element using the Turbulenz Engine!
 
