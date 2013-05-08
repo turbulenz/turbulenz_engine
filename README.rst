@@ -459,8 +459,7 @@ in April 2013.
 The latest release is 1.0 which is tagged in the repository or a tarball/zip can be can be downloaded from
 `here <https://github.com/turbulenz/turbulenz_engine/archive/release_1.0.tar.gz>`__
 
-A full history of changes can be found in the
-`Changelog <http://github.com/turbulenz/turbulenz_engine/blob/master/docs/source/changelog.rst>`__
+A full history of changes can be found in the `Changelog <docs/source/changelog.rst>`__
 
 
 Setup Guide
@@ -914,15 +913,13 @@ additional known issues also existing in the SDK releases of the engine can be f
 Licensing
 =========
 
-The Turbulenz Engine is licensed under the
-`MIT license <http://github.com/turbulenz/turbulenz_engine/raw/master/LICENSE>`__
+The Turbulenz Engine is licensed under the `MIT license <LICENSE>`__
 
 
 Contributing
 ============
 
-Our contributors are listed
-`here <http://github.com/turbulenz/turbulenz_engine/blob/master/docs/source/contributors.rst>`__
+Our contributors are listed `here <docs/source/contributors.rst>`__
 
 Contributions are always encouraged whether they are small documentation tweaks, bug fixes or suggestions for larger
 changes. You can check the `issues <http://github.com/turbulenz/turbulenz_engine/issues>`__ or `discussion forums
@@ -937,8 +934,7 @@ the documentation.
 
 Note: by contributing code to the Turbulenz Engine project in any form, including sending a pull request via Github,
 a code fragment or patch via private email or public discussion groups, you agree to release your code under the
-terms of the MIT license that you can find in the
-`LICENSE <http://github.com/turbulenz/turbulenz_engine/raw/master/LICENSE>`__ file included in the source distribution.
+terms of the MIT license that you can find in the `LICENSE <LICENSE>`__ file included in the source distribution.
 
 
 Links
