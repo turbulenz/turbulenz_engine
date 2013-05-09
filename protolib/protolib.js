@@ -95,6 +95,15 @@ function Protolib(params)
             return value;
         };
     }
+    var currentTime = TurbulenzEngine.time;
+    this.time = {
+        app: {
+            current: currentTime,
+            previous: currentTime,
+            delta: 0,
+            maxDeltaTime: 1 / 10 //Maximum deltaTime to step in seconds
+        }
+    };
 
     //Devices
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
@@ -672,6 +681,11 @@ Protolib.prototype =
         this.width = graphicsDevice.width;
         this.height = graphicsDevice.height;
 
+        var appTime = this.time.app;
+        appTime.current = TurbulenzEngine.time;
+        appTime.delta = appTime.current - appTime.previous;
+        appTime.delta = this.utils.clamp(appTime.delta, 0, appTime.maxDeltaTime);
+
         return gd_begin;
     },
     endFrame : function endFrameFn()
@@ -720,6 +734,9 @@ Protolib.prototype =
             soundDevice.listenerTransform = camera.matrix;
         }
         this._updateSounds();
+
+        var appTime = this.time.app;
+        appTime.previous = appTime.current;
 
         return graphicsDevice.endFrame();
     },
