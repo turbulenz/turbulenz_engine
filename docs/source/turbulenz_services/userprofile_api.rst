@@ -158,3 +158,33 @@ True if the current user is a guest.
     }
 
 .. note:: Read Only
+
+.. index::
+    pair: UserProfile; anonymous
+
+.. _userprofile_anonymous:
+
+`anonymous`
+-----------
+
+**Summary**
+
+True if the current user is an anonymous user.  Anonymous users have
+access to most online functionality (such as UserData, StoreManager),
+but are unable to use any social features of the engine such as
+Leaderboards or Badges.  The anonymous user functionality is intended
+for mobile platforms to make Turbulenz games behave more like
+traditional installed apps - it cannot be used from the browser.
+
+**Syntax** ::
+
+    var anonymous = userProfile.anonymous;
+    if (anonymous)
+    {
+        // Ask user to upgrade to a full account (see Turb
+
+        TurbulenzServices.upgradeAnonymousUser(upgradeCB: UserUpgradeCB)
+
+    }
+
+.. note:: Read Only
