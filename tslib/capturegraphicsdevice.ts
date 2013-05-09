@@ -2,23 +2,23 @@
 
 var CaptureGraphicsCommand =
 {
-    setTechniqueParameters: 1,
-    drawIndexed:            2,
-    draw:                   3,
-    setIndexBuffer:         4,
-    setStream:              5,
-    setTechnique:           6,
-    setData:                7,
-    setAllData:             8,
-    beginRenderTarget:      9,
-    clear:                  10,
-    endRenderTarget:        11,
-    beginEndDraw:           12,
-    setScissor:             13,
-    setViewport:            14,
-    beginOcclusionQuery:    15,
-    endOcclusionQuery:      16,
-    destroy:                17
+    setTechniqueParameters: 0,
+    drawIndexed:            1,
+    draw:                   2,
+    setIndexBuffer:         3,
+    setStream:              4,
+    setTechnique:           5,
+    setData:                6,
+    setAllData:             7,
+    beginRenderTarget:      8,
+    clear:                  9,
+    endRenderTarget:        10,
+    beginEndDraw:           11,
+    setScissor:             12,
+    setViewport:            13,
+    beginOcclusionQuery:    14,
+    endOcclusionQuery:      15,
+    destroy:                16
 };
 
 class CaptureGraphicsDevice
