@@ -181,9 +181,8 @@ traditional installed apps - it cannot be used from the browser.
     var anonymous = userProfile.anonymous;
     if (anonymous)
     {
-        // Ask user to upgrade to a full account (see Turb
-
-        TurbulenzServices.upgradeAnonymousUser(upgradeCB: UserUpgradeCB)
+        // Ask user to upgrade to full account.
+        // See TurbulenzServices.upgradeAnonymousUser()
 
     }
 
