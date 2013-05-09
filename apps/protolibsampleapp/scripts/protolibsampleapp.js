@@ -143,8 +143,6 @@ Application.prototype =
                 }
             });
 
-        this.currentTime = TurbulenzEngine.time;
-        this.previousTime = 0;
     },
 
     update: function updateFn()
@@ -204,17 +202,12 @@ Application.prototype =
             this.turbulenzText.position[1] = protolib.height - 100;
             protolib.drawText(this.turbulenzText);
 
-            this.currentTime = TurbulenzEngine.time;
-            var deltaTime = this.currentTime - this.previousTime;
-            if (deltaTime > 0.1)
-            {
-                deltaTime = 0.1;
-            }
-            this.previousTime = this.currentTime;
+            var currentTime = protolib.time.app.current; // The current time since the start of the app (seconds)
+            var deltaTime = protolib.time.app.delta; // The delta time since the previous call to protolib.beginFrame
 
             if (this.lastMeshRotation === this.meshRotation)
             {
-                if (this.lastMeshRotateTime + 3 < this.currentTime)
+                if (this.lastMeshRotateTime + 3 < currentTime)
                 {
                     this.meshRotation += Math.PI * 2 * deltaTime * this.meshRotateSpeed;
                     this.meshRotation %= Math.PI * 2;
@@ -224,7 +217,7 @@ Application.prototype =
             else
             {
                 this.lastMeshRotation = this.meshRotation;
-                this.lastMeshRotateTime = this.currentTime;
+                this.lastMeshRotateTime = currentTime;
             }
 
             mathDevice.m43SetAxisRotation(this.spinningLogoRotationMatrix, mathDevice.v3BuildYAxis(), this.meshRotation);
