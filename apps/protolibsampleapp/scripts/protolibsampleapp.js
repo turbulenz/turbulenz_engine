@@ -55,13 +55,17 @@ Application.prototype =
             v3Color : this.lightColor
         });
 
-        //Meshes
+        //Mesh
+        this.meshRotation = 0;
+        this.lastMeshRotation = 0;
+        this.lastMeshRotateTime = 0;
         this.spinningLogo = protolib.loadMesh({
             mesh: 'models/tz_logo.dae',
             v3Size: mathDevice.v3Build(0.5, 0.5, 0.5),
             v3Position: mathDevice.v3Build(0, 1, 0)
         });
 
+        //Floor
         this.whiteFloor = protolib.loadMesh({
             mesh: 'models/white_cube.dae',
             v3Size: mathDevice.v3Build(50, 0.1, 50),
@@ -125,6 +129,21 @@ Application.prototype =
                     step: 0.1
                 }
             });
+        this.rotationScaleSliderID = protolib.addWatchVariable({
+                title: 'Mesh Rotation',
+                object: this,
+                property: 'meshRotation',
+                group: "Debug",
+                type: protolib.watchTypes.SLIDER,
+                options: {
+                    min: 0,
+                    max: Math.PI * 2,
+                    step: Math.PI * 2 / 360 //1 degree
+                }
+            });
+
+        this.currentTime = TurbulenzEngine.time;
+        this.previousTime = 0;
     },
 
     update: function updateFn()
@@ -184,8 +203,30 @@ Application.prototype =
             this.turbulenzText.position[1] = protolib.height - 100;
             protolib.drawText(this.turbulenzText);
 
+            this.currentTime = TurbulenzEngine.time;
+            var deltaTime = this.currentTime - this.previousTime;
+            if (deltaTime > 0.1)
+            {
+                deltaTime = 0.1;
+            }
+            this.previousTime = this.currentTime;
 
-            mathDevice.m43SetAxisRotation(this.spinningLogoRotationMatrix, mathDevice.v3BuildYAxis(), this.frameCount / 250);
+            if (this.lastMeshRotation === this.meshRotation)
+            {
+                if (this.lastMeshRotateTime + 3 < this.currentTime)
+                {
+                    this.meshRotation += Math.PI * 2 * deltaTime * this.meshRotateSpeed;
+                    this.meshRotation %= Math.PI * 2;
+                    this.lastMeshRotation = this.meshRotation;
+                }
+            }
+            else
+            {
+                this.lastMeshRotation = this.meshRotation;
+                this.lastMeshRotateTime = this.currentTime;
+            }
+
+            mathDevice.m43SetAxisRotation(this.spinningLogoRotationMatrix, mathDevice.v3BuildYAxis(), this.meshRotation);
             this.spinningLogo.setRotationMatrix(this.spinningLogoRotationMatrix);
 
             //Camera controller: Rotate camera around y axis.
