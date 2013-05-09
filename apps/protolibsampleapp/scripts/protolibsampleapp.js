@@ -56,9 +56,10 @@ Application.prototype =
         });
 
         //Mesh
+        this.meshRotateSpeed = 0.1; //Rotations per second
         this.meshRotation = 0;
         this.lastMeshRotation = 0;
-        this.lastMeshRotateTime = 0;
+        this.lastMeshRotateTime = -3;
         this.spinningLogo = protolib.loadMesh({
             mesh: 'models/tz_logo.dae',
             v3Size: mathDevice.v3Build(0.5, 0.5, 0.5),
