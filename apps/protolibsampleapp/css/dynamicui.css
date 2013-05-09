@@ -75,8 +75,9 @@
 .dui-control-widget .ui-slider {
     position: relative;
     display: inline-block;
-    padding-left: 3px;
-    padding-right: 3px;
+    margin-left: 3px;
+    margin-right: 3px;
+    vertical-align: middle;
     width: 120px;
     border-top:4px solid #b4b4b4;
     border-bottom:4px solid #b4b4b4;
@@ -86,7 +87,9 @@
 {
     display: inline-block;
     vertical-align: middle;
-    min-width: 3em;
+    overflow: hidden;
+    max-width: 5em;
+    min-width: 5em;
 }
 
 .dui-control-widget select {
@@ -122,5 +125,5 @@
 
 .dui-control-widget .ui-slider a{
     position: absolute;
-    top: -4px;
+    top: -3px;
 }
