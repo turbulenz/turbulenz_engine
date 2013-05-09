@@ -148,11 +148,11 @@ class CaptureGraphicsDevice
         {
             if (integers)
             {
-                lowerIndex = this._lowerBound(dataBin, data, length, this._compareGenericArrays, 0);
+                lowerIndex = this._lowerBoundGeneric(dataBin, data, length, 0);
             }
             else
             {
-                lowerIndex = this._lowerBound(dataBin, data, length, this._compareFloatArrays, this.precision);
+                lowerIndex = this._lowerBoundFloat(dataBin, data, length);
             }
 
             // Check if we found an identical copy
@@ -280,14 +280,30 @@ class CaptureGraphicsDevice
         }
         else
         {
-            lowerIndex = this._lowerBound(commandsBin, arguments, length, this._compareGenericArrays, 1);
-
-            // Check if we found an identical copy
-            if (lowerIndex < 0)
+            if (length === 1)
             {
-                lowerIndex = ((-lowerIndex) - 1);
-                this.current.push(commandsBin[lowerIndex]);
-                return;
+                // The method is the same for all the commands on the bin
+                if (0 < commandsBin.length)
+                {
+                    this.current.push(commandsBin[0]);
+                    return;
+                }
+                else
+                {
+                    lowerIndex = 0;
+                }
+            }
+            else
+            {
+                lowerIndex = this._lowerBoundGeneric(commandsBin, arguments, length, 1);
+
+                // Check if we found an identical copy
+                if (lowerIndex < 0)
+                {
+                    lowerIndex = ((-lowerIndex) - 1);
+                    this.current.push(commandsBin[lowerIndex]);
+                    return;
+                }
             }
         }
 
@@ -416,7 +432,7 @@ class CaptureGraphicsDevice
         }
         else
         {
-            lowerIndex = this._lowerBound(objectsBin, objectArray, length, this._compareGenericArrays, 0);
+            lowerIndex = this._lowerBoundGeneric(objectsBin, objectArray, length, 0);
 
             // Check if we found an identical copy
             if (lowerIndex < 0)
@@ -719,78 +735,93 @@ class CaptureGraphicsDevice
         this.gd.setTechniqueParameters(techniqueParameters);
     };
 
-    private _lowerBound(bin: any[], data: any, length: number, comp: Function, config: number) : number
+    private _lowerBoundGeneric(bin: any[], data: any, length: number, offset: number) : number
     {
         var first: number = 0;
         var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
-        var step: number, middle : number, binIndex:number, diff: number;
+        var step: number, middle : number, binIndex:number;
+        var n: number;
+        var a, av, bv;
 
         while (0 < count)
         {
             step = (count >>> 1);
             middle = (first + step);
             binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
-            diff = comp(bin[binIndex], data, length, config);
-            if (diff < 0)
+
+            a = bin[binIndex];
+            n = offset;
+            for (;;)
             {
-                first = (middle + 1);
-                count -= (step + 1);
-            }
-            else if (0 < diff)
-            {
-                count = step;
-            }
-            else
-            {
-                // This would be a non-zero negative value to signal that we found an identical copy
-                return -binIndex;
+                av = a[n];
+                bv = data[n];
+                if (av < bv)
+                {
+                    first = (middle + 1);
+                    count -= (step + 1);
+                    break;
+                }
+                else if (av > bv)
+                {
+                    count = step;
+                    break;
+                }
+
+                n += 1;
+                if (n >= length)
+                {
+                    // This would be a non-zero negative value to signal that we found an identical copy
+                    return -binIndex;
+                }
             }
         }
 
         return (first << 1); // Bin elements ocupy two slots, multiply by 2
     }
 
-    private _compareFloatArrays(a: any[], b: any[], length: number, positiveThreshold: number) : number
+    private _lowerBoundFloat(bin: any[], data: any, length: number) : number
     {
+        var first: number = 0;
+        var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
+        var step: number, middle : number, binIndex:number, diff: number;
+        var positiveThreshold: number = this.precision;
         var negativeThreshold: number = -positiveThreshold;
-        var n: number = 0;
-        var diff: number;
-        do
-        {
-            diff = (a[n] - b[n]);
-            if (diff < negativeThreshold)
-            {
-                return -1;
-            }
-            else if (diff > positiveThreshold)
-            {
-                return 1;
-            }
-            n += 1;
-        }
-        while (n < length);
-        return 0;
-    }
+        var diff: number, n: number;
+        var a;
 
-    private _compareGenericArrays(a: any[], b: any[], length: number, offset: number) : number
-    {
-        var n: number = offset;
-        var av, bv;
-        while (n < length)
+        while (0 < count)
         {
-            av = a[n];
-            bv = b[n];
-            if (av < bv)
+            step = (count >>> 1);
+            middle = (first + step);
+            binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
+
+            n = 0;
+            a = bin[binIndex];
+            for (;;)
             {
-                return -1;
+                diff = (a[n] - data[n]);
+                if (diff < negativeThreshold)
+                {
+                    first = (middle + 1);
+                    count -= (step + 1);
+                    break;
+                }
+                else if (diff > positiveThreshold)
+                {
+                    count = step;
+                    break;
+                }
+
+                n += 1;
+                if (n >= length)
+                {
+                    // This would be a non-zero negative value to signal that we found an identical copy
+                    return -binIndex;
+                }
             }
-            else if (av > bv)
-            {
-                return 1;
-            }
-            n += 1;
         }
-        return 0;
+
+        return (first << 1); // Bin elements ocupy two slots, multiply by 2
     }
 
     private _equalFloatArrays(a, b, length) : bool
@@ -2662,7 +2693,7 @@ class PlaybackGraphicsDevice
         var binLength, length, n, id, type, data;
 
         // Integers
-        while (true)
+        for (;;)
         {
             binLength = ints[offset];
             offset += 1;
@@ -2715,7 +2746,7 @@ class PlaybackGraphicsDevice
         }
 
         // Floats
-        while (true)
+        for (;;)
         {
             binLength = ints[offset];
             offset += 1;
