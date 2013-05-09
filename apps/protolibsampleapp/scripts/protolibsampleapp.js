@@ -116,7 +116,7 @@ Application.prototype =
             text: 'Powered by Turbulenz',
             position: [180, protolib.height - 100],
             v3Color: [1.0, 1.0, 1.0],
-            scale: 1
+            scale: 2
         };
         this.turbulenzTextScaleSliderID = protolib.addWatchVariable({
                 title: 'Text Scale',
@@ -142,7 +142,6 @@ Application.prototype =
                     step: Math.PI * 2 / 360 //1 degree
                 }
             });
-
     },
 
     update: function updateFn()
