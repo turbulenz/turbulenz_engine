@@ -2392,7 +2392,11 @@ class PlaybackGraphicsDevice
                 this.onerror("Failed to create entity: " + id);
             }
         }
-        this.entities[parseInt(id, 10)] = value;
+        if (typeof id === "string")
+        {
+            id = parseInt(id, 10);
+        }
+        this.entities[id] = value;
     }
 
     private _resolveEntity(id)
