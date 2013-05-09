@@ -21,32 +21,35 @@ Application.prototype =
         this.frameCount = 0;
         this.degToRad = Math.PI / 180;
 
-        this.cameraPosition = mathDevice.v3Build(0, 0, 0);
-        this.cameraDirection = mathDevice.v3Build(0, 0, 0);
-
-        this.cameraRotation = 0;
-        this.cameraRadius = 3;
-        this.cameraFocus = mathDevice.v3Build(0, 1, 0);
-
-        this.lightPosition = mathDevice.v3Build(1, 3, -1);
-        this.lightDirection = mathDevice.v3Build(-1, -3, 1);
-        this.lightColor = mathDevice.v3Build(1, 1, 1);
-        this.lightRotation = 0;
+        //Intermediate variables
+        this.tempCameraPosition = mathDevice.v3Build(0, 0, 0);
+        this.tempCameraDirection = mathDevice.v3Build(0, 0, 0);
+        this.tempCameraRotation = 0;
+        this.tempLightPosition = mathDevice.v3Build(1, 3, -1);
+        this.tempLightDirection = mathDevice.v3Build(-1, -3, 1);
 
         this.spinningLogoRotationMatrix = mathDevice.m43BuildIdentity();
 
-        //Camera
-        protolib.setCameraFOV(90 * this.degToRad, 90 * this.degToRad);
-        protolib.setNearFarPlanes(0.01, 10);
-
-        //Lights
+        //Background
         var bgColor = mathDevice.v3Build(0.5, 0.5, 0.5);
         protolib.setClearColor(bgColor);
         protolib.setAmbientLightColor(bgColor);
 
+        //Camera
+        this.cameraRadius = 3;
+        this.cameraFocus = mathDevice.v3Build(0, 1, 0);
+        this.minCameraRadius = 2;
+        this.maxCameraRadius = 6;
+        protolib.setCameraFOV(90 * this.degToRad, 90 * this.degToRad);
+        protolib.setNearFarPlanes(0.01, 10);
+
+        //Lights
+        this.lightRotation = 0;
+        this.lightColor = mathDevice.v3Build(1, 1, 1);
+
         this.spotLight = protolib.addSpotLight({
-            v3Position : this.lightPosition,
-            v3Direction : this.lightDirection,
+            v3Position : this.tempLightPosition,
+            v3Direction : this.tempLightDirection,
             range : 5,
             spreadAngle: Math.PI / 2,
             v3Color : this.lightColor
@@ -181,14 +184,6 @@ Application.prototype =
             this.turbulenzText.position[1] = protolib.height - 100;
             protolib.drawText(this.turbulenzText);
 
-            //Light sprite.
-            protolib.draw3DSprite({
-                texture: "textures/dot.png",
-                blendStyle: protolib.blendStyle.ADDITIVE,
-                v3Position: this.lightPosition,
-                size: 0.2,
-                v3Color: this.lightColor
-            });
 
             mathDevice.m43SetAxisRotation(this.spinningLogoRotationMatrix, mathDevice.v3BuildYAxis(), this.frameCount / 250);
             this.spinningLogo.setRotationMatrix(this.spinningLogoRotationMatrix);
@@ -198,20 +193,19 @@ Application.prototype =
 
             if (protolib.isMouseDown(protolib.mouseCodes.BUTTON_0))
             {
-                this.cameraRotation += mouseDelta[0] / 100;
+                this.tempCameraRotation += mouseDelta[0] / 100;
             }
 
             var mouseWheelDelta = protolib.getMouseWheelDelta();
-            this.cameraRadius += 0.2 * mouseWheelDelta;
-            this.cameraRadius = utils.clamp(this.cameraRadius, 2, 6);
+            var cameraRadius = this.cameraRadius = utils.clamp(this.cameraRadius + (0.2 * mouseWheelDelta), this.minCameraRadius, this.maxCameraRadius);
 
-            var x = this.cameraRadius * Math.sin(this.cameraRotation);
-            var z = this.cameraRadius * Math.cos(this.cameraRotation);
-            mathDevice.v3Build(x, 2.5, z, this.cameraPosition);
-            protolib.setCameraPosition(this.cameraPosition);
+            var x = cameraRadius * Math.sin(this.tempCameraRotation);
+            var z = cameraRadius * Math.cos(this.tempCameraRotation);
+            mathDevice.v3Build(x, 2.5, z, this.tempCameraPosition);
+            protolib.setCameraPosition(this.tempCameraPosition);
 
-            mathDevice.v3Sub(this.cameraFocus, this.cameraPosition, this.cameraDirection);
-            protolib.setCameraDirection(this.cameraDirection);
+            mathDevice.v3Sub(this.cameraFocus, this.tempCameraPosition, this.tempCameraDirection);
+            protolib.setCameraDirection(this.tempCameraDirection);
 
             //Rotate light around y axis.
             if (protolib.isKeyDown(protolib.keyCodes.LEFT))
@@ -222,10 +216,19 @@ Application.prototype =
             {
                 this.lightRotation += 0.05;
             }
-            mathDevice.v3Build(Math.cos(this.lightRotation), 3, Math.sin(this.lightRotation), this.lightPosition);
-            this.spotLight.setPosition(this.lightPosition);
-            mathDevice.v3ScalarMul(this.lightPosition, -1, this.lightDirection);
-            this.spotLight.setDirection(this.lightDirection);
+            mathDevice.v3Build(Math.cos(this.lightRotation), 3, Math.sin(this.lightRotation), this.tempLightPosition);
+            this.spotLight.setPosition(this.tempLightPosition);
+            mathDevice.v3ScalarMul(this.tempLightPosition, -1, this.tempLightDirection);
+            this.spotLight.setDirection(this.tempLightDirection);
+
+            //Light sprite.
+            protolib.draw3DSprite({
+                texture: "textures/dot.png",
+                blendStyle: protolib.blendStyle.ADDITIVE,
+                v3Position: this.tempLightPosition,
+                size: 0.2,
+                v3Color: this.lightColor
+            });
 
             //3D Axis
             protolib.draw3DLine({pos1: [0, 0, 0], pos2: [1, 0, 0], v3Color: [1, 0, 0]});
