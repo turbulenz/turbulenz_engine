@@ -193,7 +193,7 @@ $(function ()
         });
         item.pushValue = function (value)
         {
-            inputElement.attr('value', value);
+            inputElement.slider('value', value);
             valueElement.html(value);
         };
     }
