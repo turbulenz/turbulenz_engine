@@ -163,6 +163,19 @@ TurbulenzEngine.onload = function onloadFn()
         storeManager.emptyBasket();
     };
 
+    var userProfile = TurbulenzServices.createUserProfile(requestHandler);
+    var upgrade = function upgradeFn()
+    {
+        debug.log("Upgrade button pressed ...");
+
+        var onUpgrade = function onUpgradeFn()
+        {
+            debug.log("User returned from upgrade screen, regetting profile");
+            userProfile = TurbulenzServices.createUserProfile(requestHandler);
+        }
+        TurbulenzServices.upgradeAnonymousUser(onUpgrade);
+    };
+
     var setButtons = false;
     var oldWidth = 0;
     var oldHeight = 0;
@@ -321,6 +334,11 @@ TurbulenzEngine.onload = function onloadFn()
 
         writeFont('Purchase', normalScale, purchase, 'purchase');
         writeFont('Reset', normalScale, reset, 'reset');
+
+        if (userProfile && userProfile.anonymous)
+        {
+            writeFont('Upgrade User', normalScale, upgrade, 'upgrade');
+        }
 
         yPaddingTop = 7;
         yOffset = yPaddingTop;

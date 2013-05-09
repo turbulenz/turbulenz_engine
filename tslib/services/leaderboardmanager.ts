@@ -369,9 +369,9 @@ class LeaderboardManager
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
-                  leaderboardMetaRecieved:
+                  leaderboardMetaReceived?:
                   { (mngr: LeaderboardManager): void; },
-                  errorCallbackFn: { (errMsg: string): void; }
+                  errorCallbackFn?: { (errMsg: string): void; }
                  ): LeaderboardManager
     {
         if (!TurbulenzServices.available())
@@ -414,9 +414,9 @@ class LeaderboardManager
                         }
                     }
                     leaderboardManager.ready = true;
-                    if (leaderboardMetaRecieved)
+                    if (leaderboardMetaReceived)
                     {
-                        leaderboardMetaRecieved(leaderboardManager);
+                        leaderboardMetaReceived(leaderboardManager);
                     }
                 }
                 else

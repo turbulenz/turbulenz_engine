@@ -37,7 +37,22 @@ interface UserProfile
     language    : string;
     country     : string;
     age         : number;
+    anonymous   : bool;
 };
+
+interface UserProfileReceivedCB
+{
+    (userProfile: UserProfile): void;
+};
+
+// Called when the user has upgraded from a guest or anonymous account
+// to a full one.  This callback does not guarantee that the upgrade
+// complete successfully, so TurbulenzServices shoudl be requeried for
+// a new UserProfile object to check the updated status of the user.
+interface UserUpgradeCB
+{
+    (): void;
+}
 
 interface ServiceResponse
 {
@@ -359,7 +374,7 @@ class TurbulenzServices
     };
 
     static createMappingTable(requestHandler, gameSession,
-                              tableRecievedFn,
+                              tableReceivedFn,
                               defaultMappingSettings?,
                               errorCallbackFn?) : MappingTable
     {
@@ -411,7 +426,7 @@ class TurbulenzServices
             mappingTablePrefix: mappingTablePrefix,
             assetPrefix: assetPrefix,
             requestHandler: requestHandler,
-            onload: tableRecievedFn,
+            onload: tableReceivedFn,
             errorCallback: mappingTableErr
         };
 
@@ -420,11 +435,11 @@ class TurbulenzServices
     };
 
     static createLeaderboardManager(requestHandler, gameSession,
-                                    leaderboardMetaRecieved,
-                                    errorCallbackFn) : LeaderboardManager
+                                    leaderboardMetaReceived?,
+                                    errorCallbackFn?) : LeaderboardManager
     {
         return LeaderboardManager.create(requestHandler, gameSession,
-                                         leaderboardMetaRecieved,
+                                         leaderboardMetaReceived,
                                          errorCallbackFn);
     };
 
@@ -433,12 +448,12 @@ class TurbulenzServices
         return BadgeManager.create(requestHandler, gameSession);
     };
 
-    static createStoreManager(requestHandler, gameSession, storeMetaRecieved,
-                              errorCallbackFn) : StoreManager
+    static createStoreManager(requestHandler, gameSession, storeMetaReceived?,
+                              errorCallbackFn?) : StoreManager
     {
         return StoreManager.create(requestHandler,
                                    gameSession,
-                                   storeMetaRecieved,
+                                   storeMetaReceived,
                                    errorCallbackFn);
     };
 
@@ -454,8 +469,9 @@ class TurbulenzServices
         return MultiPlayerSessionManager.create(requestHandler, gameSession);
     };
 
-    static createUserProfile(requestHandler, profileRecievedFn,
-                             errorCallbackFn): UserProfile
+    static createUserProfile(requestHandler: RequestHandler,
+                             profileReceivedFn?: UserProfileReceivedCB,
+                             errorCallbackFn?): UserProfile
     {
         var userProfile = <UserProfile><any>{};
 
@@ -498,9 +514,9 @@ class TurbulenzServices
                     {
                         errorCallbackFn("TurbulenzServices.createUserProfile error with HTTP status " + status + ": " + jsonResponse.msg, status);
                     }
-                    if (profileRecievedFn)
+                    if (profileReceivedFn)
                     {
-                        profileRecievedFn(userProfile);
+                        profileReceivedFn(userProfile);
                     }
                 },
                 requestHandler: requestHandler
@@ -508,6 +524,21 @@ class TurbulenzServices
         }
 
         return userProfile;
+    };
+
+    // This should only be called if UserProfile.anonymous is true.
+    static upgradeAnonymousUser(upgradeCB: UserUpgradeCB)
+    {
+        if (upgradeCB)
+        {
+            var onUpgrade = function onUpgradeFn(_signal: string)
+            {
+                upgradeCB();
+            };
+            TurbulenzBridge.on('user.upgrade.occurred', onUpgrade);
+        }
+
+        TurbulenzBridge.emit('user.upgrade.show');
     };
 
     static sendCustomMetricEvent(eventKey,

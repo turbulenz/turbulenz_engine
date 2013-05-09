@@ -267,7 +267,7 @@ Get a list of all badges.
 
 ``callbackFn``
     A JavaScript function.
-    Called once a successful listBadges HTTP response is recieved.
+    Called once a successful listBadges HTTP response is received.
 
 ``errorCallbackFn`` :ref:`(Optional) <badgemanager_errorcallback>`
 
@@ -385,7 +385,7 @@ Award a badge to a player.
 
 ``callbackFn``
     A JavaScript function.
-    Called once a successful awardUserBadge HTTP response is recieved.
+    Called once a successful awardUserBadge HTTP response is received.
 
 ``errorCallbackFn`` :ref:`(Optional) <badgemanager_errorcallback>`
 
@@ -442,7 +442,7 @@ Update the progress of a badge on a player.
 
 ``callbackFn``
     A JavaScript function.
-    Called once a successful updateUserBadgeProgress HTTP response is recieved.
+    Called once a successful updateUserBadgeProgress HTTP response is received.
 
 ``errorCallbackFn`` (Optional)
     :ref:`Error Callback <badgemanager_errorcallback>`

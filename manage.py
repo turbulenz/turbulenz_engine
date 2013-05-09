@@ -29,10 +29,10 @@ def command_env():
 
     if not os.path.isdir(ENV):
         if TURBULENZOS == 'win32':
-            sh('%s -m virtualenv -v --no-site-packages %s' % (sys.executable, ENV))
+            sh('%s -m virtualenv --no-site-packages %s' % (sys.executable, ENV))
         else:
             print "PYTHON: %s" % PYTHON
-            cmd = 'virtualenv -v -p %s --no-site-packages %s' % (PYTHON, ENV)
+            cmd = 'virtualenv -p %s --no-site-packages %s' % (PYTHON, ENV)
             print "CMD: %s" % cmd
             sh(cmd, console=True)
 
@@ -60,8 +60,8 @@ def command_env():
     _easy_install('docutils>=0.9.1')
     _easy_install('Sphinx>=1.1.3')
 
-    _easy_install('turbulenz_tools>=0.26.0')
-    _easy_install('turbulenz_local>=0.9')
+    _easy_install('turbulenz_tools>=1.0')
+    _easy_install('turbulenz_local>=1.0')
 
     cmd = [os.path.join(env_bin, 'python'), os.path.join('scripts', 'install_nodejs.py'), '--typescript']
     if not TURBULENZOS in [ 'linux32', 'linux64' ]:
@@ -252,10 +252,12 @@ def command_apps(options):
                 #cmd += " BUILDVERBOSE=%d" % args.verbose
                 cmd += " CMDVERBOSE=%d" % args.verbose
                 cmd += " --no-print-directory"
-                call(cmd, shell=True)
+                if 0 != call(cmd, shell=True):
+                    return 1
 
             rmdir('%s/_build' % app_dir)
             rmdir('%s/staticmax' % app_dir)
+            rmdir('%s/mapping_table.json' % app_dir)
 
         elif args.refcheck:
             make_cmd = "%s -C %s jslib TS_REFCHECK=1 -j %s" \
@@ -278,7 +280,10 @@ def command_apps(options):
             if args.verbose:
                 buildassets_cmd.append('--verbose')
 
-            sh(buildassets_cmd, cwd=app_dir, console=True)
+            try:
+                sh(buildassets_cmd, cwd=app_dir, console=True)
+            except CalledProcessError as e:
+                return e.retcode
 
             for mode in modes:
                 cmd = _get_make_command() + " -C " + app_dir + " build"
@@ -288,7 +293,8 @@ def command_apps(options):
                 #cmd += " BUILDVERBOSE=%d" % args.verbose
                 cmd += " CMDVERBOSE=%d" % args.verbose
                 cmd += " --no-print-directory"
-                call(cmd, shell=True)
+                if 0 != call(cmd, shell=True):
+                    return 1
 
     print "BUILD TOOK: %.6f seconds" % (time.time() - start_time)
 

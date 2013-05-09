@@ -15,7 +15,7 @@ It is recommended that you read the :ref:`creating a mapping table
 The MappingTable object allows the Turbulenz Services to control where
 your game assets are hosted without requiring changes to your game's
 code.  Subsequently, all requests for game assets **must** be made
-with a URL recieved from a :ref:`getURL <mappingtable_geturl>` call.
+with a URL received from a :ref:`getURL <mappingtable_geturl>` call.
 
 A mapping table can be created with the
 :ref:`TurbulenzServices.createMappingTable

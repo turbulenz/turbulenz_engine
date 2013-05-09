@@ -154,7 +154,8 @@ class Tool(object):
         else:
             return self.changed
 
-    def run_sh(self, cmd, verbose):
+    @staticmethod
+    def run_sh(cmd, verbose):
         try:
             sh(cmd, verbose=verbose)
             return True
@@ -162,8 +163,10 @@ class Tool(object):
             error('command %s failed\n%s' % (' '.join(e.cmd), e.output))
             raise
 
+# pylint: disable=R0201
     def check_external_deps(self, src, dst, args):
         return False
+# pylint: enable=R0201
 
 class CopyTool(object):
     def __init__(self, name='copy', path=None):
@@ -269,8 +272,10 @@ class Cgfx2JsonTool(Tool):
         except CalledProcessError as e:
             error('deps command %s failed ignoring external deps\n%s' % (' '.join(e.cmd), e.output))
             return False
+        if not dep_files:
+            return False
         dst_mtime = getmtime(dst)
-        for filename in dep_files.split('\n'):
+        for filename in dep_files.replace('\r\n', '\n').split('\n'):
             if getmtime(filename) > dst_mtime:
                 return True
 
