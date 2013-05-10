@@ -337,6 +337,12 @@ function Protolib(params)
                 var missingAssets = [];
                 if (protolib._checkAssets(missingAssets))
                 {
+                    if (!protolib._warnAssets(missingAssets))
+                    {
+                        protolib.utils.warn("Protolib could not find requested assets");
+                        protolib.utils.warn("Missing: " + missingAssets);
+                    }
+
                     renderer.updateBuffers(graphicsDevice, graphicsDevice.width, graphicsDevice.height);
                     renderer.updateShader(shaderManager);
 
@@ -1557,6 +1563,50 @@ Protolib.prototype =
             {
                 assetMissing = true;
                 listOfMissingAssets.push(fonts[i]);
+            }
+        }
+
+        return !assetMissing;
+    },
+    _warnAssets: function _warnAssetsFn(listOfMissingAssets)
+    {
+        var assetMissing = false;
+        var i, length;
+
+        var fonts = this.globals.fonts;
+        var fontResources = [];
+        var fontNames = {
+            "opensans": true
+        };
+        var fontName;
+        for (var f in fonts)
+        {
+            if (fonts.hasOwnProperty(f))
+            {
+                fontName = fonts[f];
+                if (!fontNames[fontName])
+                {
+                    fontResources.push("fonts/" + fontName + "-8.fnt");
+                    fontResources.push("fonts/" + fontName + "-16.fnt");
+                    fontResources.push("fonts/" + fontName + "-32.fnt");
+                    fontResources.push("fonts/" + fontName + "-64.fnt");
+                    fontResources.push("fonts/" + fontName + "-128.fnt");
+                    fontNames[fontName] = true;
+                }
+            }
+        }
+
+        //Fonts
+        var fontManager = this.globals.fontManager;
+        //NOTE: Missing font textures, result in missing fonts
+
+        length = fontResources.length;
+        for (i = 0; i < length; i += 1)
+        {
+            if (fontManager.isFontMissing(fontResources[i]))
+            {
+                assetMissing = true;
+                listOfMissingAssets.push(fontResources[i]);
             }
         }
 
