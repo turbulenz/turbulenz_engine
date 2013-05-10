@@ -254,8 +254,9 @@ def command_protolib_init(options):
 
     def _generate_makefile(filepath, args, dummy=False):
 
+        relpath = os.path.relpath(os.path.normpath(TURBULENZROOT), os.path.normpath(args.dir))
         makefile_data = ['# Location of the Turbulenz checkout root',
-                        'TZROOT := %s' % TURBULENZROOT,
+                        'TZROOT := %s' % relpath,
                         '',
                         '# Location of templates.  Each .js file in the templates dir',
                         '# represents an application to be built',
