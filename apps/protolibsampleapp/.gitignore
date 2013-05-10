@@ -8,3 +8,6 @@ jslib
 protolib
 staticmax
 manifest.yaml
+Makefile
+deps.yaml
+canvasdeps.yaml
