@@ -241,6 +241,10 @@ function Protolib(params)
     var fonts = params.fonts || {
         regular: "opensans"
     };
+    if (!fonts.regular)
+    {
+        fonts.regular = "opensans";
+    }
     globals.fonts = fonts;
 
     var simplefont = SimpleFontRenderer.create(globals);
