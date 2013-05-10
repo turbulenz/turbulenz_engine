@@ -59,7 +59,16 @@ function Protolib(params)
         var console = window.console;
         if (console)
         {
-            console.log("Error: " + msg);
+            console.error("Error: " + msg);
+        }
+    }
+
+    function warnFn(msg)
+    {
+        var console = window.console;
+        if (console)
+        {
+            console.log("Warning: " + msg);
         }
     }
 
@@ -69,7 +78,8 @@ function Protolib(params)
     {
         utilities = {
             log: logFn,
-            error: errorFn
+            error: errorFn,
+            warn: warnFn
         };
 
         utilities.error("Error: Missing Utilities object");
@@ -79,6 +89,10 @@ function Protolib(params)
     if (!utilities.error)
     {
         utilities.error = errorFn;
+    }
+    if (!utilities.warn)
+    {
+        utilities.warn = warnFn;
     }
     if (!utilities.clamp)
     {
@@ -1056,7 +1070,7 @@ Protolib.prototype =
 
         if (!simplesprite.addSprite(spriteParams))
         {
-            this.utils.log("Warning: draw3DSprite: Maximum sprites reached.");
+            this.utils.warn("draw3DSprite: Maximum sprites reached.");
         }
     },
     loadMesh : function addMeshFn(params)
@@ -1881,7 +1895,7 @@ else
         var console = window.console;
         if (console)
         {
-            console.log("Error: jquery extend is missing. Have you included jqueryextend.js?");
+            console.error("Error: jquery extend is missing. Have you included jqueryextend.js?");
         }
     }
 }
