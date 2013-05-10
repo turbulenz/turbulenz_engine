@@ -147,6 +147,11 @@ SimpleSprite.prototype =
         return true;
     },
 
+    preload : function preloadFn()
+    {
+        this.globals.shaderManager.load("shaders/simplesprite.cgfx");
+    },
+
     drawSprites : function simpleSpriteDrawSpriteFn()
     {
         if (this.spriteList.length === 0)

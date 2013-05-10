@@ -285,6 +285,8 @@ function Protolib(params)
 
         simplefont.preload();
 
+        simplesprite.preload();
+
         var rendererOptions = {
             shadowRendering: protolib.USE_SHADOWS
         };
