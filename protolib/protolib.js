@@ -319,15 +319,25 @@ function Protolib(params)
                     TurbulenzEngine.clearInterval(protolib.loadingIntervalID);
                     protolib.loadingIntervalID = null;
                 }
-                renderer.updateBuffers(graphicsDevice, graphicsDevice.width, graphicsDevice.height);
-                renderer.updateShader(shaderManager);
 
-                protolib.beginFrame = Protolib.prototype.beginFrame;
-                protolib.endFrame = Protolib.prototype.endFrame;
-
-                if (INITIALIZED_CALLBACK)
+                var missingAssets = [];
+                if (protolib._checkAssets(missingAssets))
                 {
-                    INITIALIZED_CALLBACK(protolib);
+                    renderer.updateBuffers(graphicsDevice, graphicsDevice.width, graphicsDevice.height);
+                    renderer.updateShader(shaderManager);
+
+                    protolib.beginFrame = Protolib.prototype.beginFrame;
+                    protolib.endFrame = Protolib.prototype.endFrame;
+
+                    if (INITIALIZED_CALLBACK)
+                    {
+                        INITIALIZED_CALLBACK(protolib);
+                    }
+                }
+                else
+                {
+                    protolib.utils.error("Protolib could not find the minimum set of required assets");
+                    protolib.utils.error("Missing: " + missingAssets);
                 }
             }
             else
@@ -1471,6 +1481,72 @@ Protolib.prototype =
         dst[1] = a[1];
         dst[2] = a[2];
         return dst;
+    },
+    _checkAssets: function _checkAssetsFn(listOfMissingAssets)
+    {
+        var assetMissing = false;
+        var i, length;
+
+        //Shaders
+        var shaderManager = this.globals.shaderManager;
+        var shaders = [
+            "shaders/debug.cgfx",
+            "shaders/shadowmapping.cgfx",
+            "shaders/zonly.cgfx",
+            "shaders/font.cgfx",
+            "shaders/forwardrendering.cgfx",
+            "shaders/forwardrenderingshadows.cgfx",
+            "shaders/simplesprite.cgfx"
+        ];
+
+        length = shaders.length;
+        for (i = 0; i < length; i += 1)
+        {
+            if (shaderManager.isShaderMissing(shaders[i]))
+            {
+                assetMissing = true;
+                listOfMissingAssets.push(shaders[i]);
+            }
+        }
+
+        //Textures
+        var textureManager = this.globals.textureManager;
+        var textures = [
+            "textures/default_light.png"
+        ];
+
+        length = textures.length;
+        for (i = 0; i < length; i += 1)
+        {
+            if (textureManager.isTextureMissing(textures[i]))
+            {
+                assetMissing = true;
+                listOfMissingAssets.push(textures[i]);
+            }
+        }
+
+        //Fonts
+        var fontManager = this.globals.fontManager;
+        var fonts = [
+            "fonts/opensans-8.fnt",
+            "fonts/opensans-16.fnt",
+            "fonts/opensans-32.fnt",
+            "fonts/opensans-64.fnt",
+            "fonts/opensans-128.fnt"
+        ];
+        //NOTE: Missing font textures, result in missing fonts
+
+        length = fonts.length;
+        for (i = 0; i < length; i += 1)
+        {
+            if (fontManager.isFontMissing(fonts[i]))
+            {
+                assetMissing = true;
+                listOfMissingAssets.push(fonts[i]);
+            }
+        }
+
+        return !assetMissing;
     }
 };
 
