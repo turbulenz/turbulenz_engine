@@ -1097,7 +1097,14 @@ class CaptureGraphicsDevice
 
                 this.setTechnique(technique);
 
-                validParameters = technique.shader.parameters;
+                if (technique.passes.length === 1)
+                {
+                    validParameters = technique.passes[0].parameters;
+                }
+                else
+                {
+                    validParameters = technique.shader.parameters;
+                }
 
                 currentParameters = {};
 
