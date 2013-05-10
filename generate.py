@@ -186,7 +186,11 @@ def command_protolib_init(options):
             'shaders/forwardrenderingshadows.cgfx',
             'shaders/simplesprite.cgfx',
             'textures/default_light.png',
-            'textures/opensans_0.png',
+            'textures/opensans-8_0.png',
+            'textures/opensans-16_0.png',
+            'textures/opensans-32_0.png',
+            'textures/opensans-64_0.png',
+            'textures/opensans-128_0.png',
             'fonts/opensans-8.fnt',
             'fonts/opensans-16.fnt',
             'fonts/opensans-32.fnt',
@@ -194,7 +198,7 @@ def command_protolib_init(options):
             'fonts/opensans-128.fnt'
         ]
 
-        if args.template[0] == 'protolibsample':
+        if args.template[0] == 'protolibsampleapp':
             deps_data.extend([
                 'textures/tz-logo.png',
                 'textures/dot.png',
@@ -290,7 +294,7 @@ def command_protolib_init(options):
     parser.add_argument('--title', action='store', help="The title of the app (Use by the local server)")
     parser.add_argument('--force', action='store_true', help="Overwrite existing configuration files")
     parser.add_argument('--template', nargs=1, action='store', help="The template to use for generation",
-                        choices=['protolibskeleton', 'protolibsample'])
+                        choices=['protolibskeletonapp', 'protolibsampleapp'])
     parser.add_argument('app', default='app', nargs='?', help="Select an individual app to build")
 
     args = parser.parse_args(options)
