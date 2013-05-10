@@ -31,6 +31,21 @@ import yaml
 @command_with_arguments
 def command_protolib_init(options):
 
+    app_dirs = ['assets',
+                'assets/models',
+                'assets/textures',
+                'assets/shaders',
+                'assets/fonts',
+                'assets/sounds',
+                'css',
+                'img',
+                'js',
+                'templates',
+                'scripts']
+
+    app_yaml = ['deps.yaml',
+                'manifest.yaml']
+
     def mkdir_p(path):
         try:
             os.makedirs(path)
@@ -51,17 +66,6 @@ def command_protolib_init(options):
 
     def _generate_dirs(root, dummy=False):
 
-        app_dirs = ['assets/models',
-                    'assets/textures',
-                    'assets/shaders',
-                    'assets/fonts',
-                    'assets/sounds',
-                    'css',
-                    'img',
-                    'js',
-                    'templates',
-                    'scripts']
-
         app_full_dirs = []
         for d in app_dirs:
             app_full_dirs.append(os.path.normpath(os.path.join(root, d)))
@@ -70,6 +74,43 @@ def command_protolib_init(options):
             log("Creating %s" % d)
             if not dummy:
                 mkdir_p(d)
+
+    def _remove_empty_dirs(dir, dummy=False):
+        if not os.path.isdir(dir):
+            return True
+
+        files = os.listdir(dir)
+        if len(files):
+            for f in files:
+                fullpath = os.path.join(dir, f)
+                if os.path.isdir(fullpath):
+                    _remove_empty_dirs(fullpath, dummy)
+
+        files = os.listdir(dir)
+        if len(files) == 0:
+            log("Removing: %s" % dir)
+            if not dummy:
+                try:
+                    os.rmdir(dir)
+                    return True
+                except OSError as e:
+                    warning("%s" % e)
+        return False
+
+    def _remove_dirs(root, dummy=False):
+
+        remove_success = True
+
+        app_full_dirs = []
+        for d in app_dirs:
+            app_full_dirs.append(os.path.normpath(os.path.join(root, d)))
+
+        for d in app_full_dirs:
+            log("Cleaning %s" % d)
+            if not _remove_empty_dirs(d, dummy):
+                remove_success = False
+
+        return remove_success
 
     def _generate_yaml_manifest(filepath, args, root=None, dummy=False):
 
@@ -229,15 +270,12 @@ def command_protolib_init(options):
 
     def _generate_yaml(root, args, dummy=False):
 
-        app_yaml = ['deps.yaml',
-                    'manifest.yaml']
-
-        if 'canvas' in args.mode or 'canvas-debug' in args.mode or 'all' in args.mode:
-            app_yaml.append('canvasdeps.yaml')
-
         app_full_yaml = []
         for y in app_yaml:
             app_full_yaml.append(os.path.normpath(os.path.join(root, y)))
+
+        if 'canvas' in args.mode or 'canvas-debug' in args.mode or 'all' in args.mode:
+            app_full_yaml.append(os.path.normpath(os.path.join(root, 'canvasdeps.yaml')))
 
         for y in app_full_yaml:
             log("Creating %s" % y)
@@ -251,6 +289,28 @@ def command_protolib_init(options):
             else:
                 if not dummy:
                     open(y, 'a').close()
+
+    def _remove_yaml(root, args, dummy=False):
+
+        remove_success = True
+        app_full_yaml = []
+        for y in app_yaml:
+            app_full_yaml.append(os.path.normpath(os.path.join(root, y)))
+
+        if 'canvas' in args.mode or 'canvas-debug' in args.mode or 'all' in args.mode:
+            app_full_yaml.append(os.path.normpath(os.path.join(root, 'canvasdeps.yaml')))
+
+        for y in app_full_yaml:
+            if os.path.exists(y):
+                log("Removing %s" % y)
+                if not dummy:
+                    try:
+                        os.remove(y)
+                    except OSError as e:
+                        warning("%s" % e)
+                        remove_success = False
+
+        return remove_success
 
     def _generate_makefile(filepath, args, dummy=False):
 
@@ -282,6 +342,17 @@ def command_protolib_init(options):
             warning('Makefile exists: %s' % filepath)
             return False
 
+        return True
+
+    def _remove_makefile(filepath, args, dummy=False):
+        if os.path.exists(filepath):
+            log('Removing: %s' % filepath)
+            if not dummy:
+                try:
+                    os.remove(filepath)
+                except OSError as e:
+                    warning("%s" % e)
+                    return False
         return True
 
     parser = argparse.ArgumentParser(description=" Initializes a protolib app, generating the files required "
@@ -324,6 +395,27 @@ def command_protolib_init(options):
     if args.template is None:
         args.template = ['protolibskeleton']
 
+    if args.clean:
+        if not _choice('Clean directory: %s\n Is this correct?' % (args.dir)):
+            error('Failed to clean')
+            return
+
+        command_protolib_build(["protolib-build", "--clean", "--dir", args.dir])
+
+        remove_success = True
+
+        if not _remove_dirs(args.dir):
+            remove_success = False
+
+        if not _remove_yaml(args.dir, args):
+            remove_success = False
+
+        if not _remove_makefile(os.path.normpath(os.path.join(args.dir, 'Makefile')), args):
+            remove_success = False
+
+        if not remove_success:
+            warning("Not all files were successfully removed")
+
     if not _choice('Create "%s" in directory: %s\n Is this correct?' % (args.app, args.dir)):
         error('Failed to create')
         return
@@ -335,81 +427,6 @@ def command_protolib_init(options):
     _generate_makefile(os.path.normpath(os.path.join(args.dir, 'Makefile')), args)
 
     return
-
-    if args.app == 'all_apps':
-        # If no app given, build all apps except samples
-        apps = [ app for app in all_apps.keys() if app != 'samples' ]
-    else:
-        if args.app not in all_apps and not os.path.exists(args.app):
-            print "ERROR: app name not recognised: %s" % args.app
-        apps = [ args.app ]
-
-    if not args.mode:
-        modes = ['canvas-debug', 'canvas']
-    elif 'all' in args.mode:
-        modes = ['all']
-    else:
-        modes = args.mode
-
-    options = ' '.join(args.options) if args.options else ''
-
-    start_time = time.time()
-
-    # Build / clean each app
-    for app in apps:
-        try:
-            app_dir = all_apps[app]
-        except KeyError:
-            app_dir = app
-        print "APP: %s, DIR: %s, BUILDOPTIONS: %s" \
-            % (app, app_dir, options)
-
-        if args.clean:
-            for mode in modes:
-                cmd = _get_make_command() + " -C " + app_dir + " clean"
-                cmd += " MODE=%s" % mode
-                #cmd += " BUILDVERBOSE=%d" % args.verbose
-                cmd += " CMDVERBOSE=%d" % args.verbose
-                cmd += " --no-print-directory"
-                call(cmd, shell=True)
-
-            rmdir('%s/_build' % app_dir)
-            rmdir('%s/staticmax' % app_dir)
-
-        elif args.refcheck:
-            make_cmd = "%s -C %s jslib TS_REFCHECK=1 -j %s" \
-                % (_get_make_command(), app_dir, _get_num_cpus() + 1)
-            print "BUILD CMD IS: %s" % make_cmd
-            if 0 != call(make_cmd, shell=True):
-                return 1
-
-        else:
-            if 0 != command_jslib([]):
-                return 1
-
-            buildassets_cmd = ['python', os.path.join(TURBULENZROOT, 'scripts', 'buildassets.py')]
-            buildassets_cmd.extend([
-                                '--root', TURBULENZROOT,
-                                '--assets-path', os.path.join(TURBULENZROOT, 'assets') ])
-            if args.assets_path:
-                for p in args.assets_path:
-                    buildassets_cmd.extend(['--assets-path', p])
-            if args.verbose:
-                buildassets_cmd.append('--verbose')
-
-            sh(buildassets_cmd, cwd=app_dir, console=True)
-
-            for mode in modes:
-                cmd = _get_make_command() + " -C " + app_dir + " build"
-                cmd += " -j %d" % (_get_num_cpus() + 1)
-                cmd += " MODE=%s" % mode
-                cmd += " COMPACTOR=" + args.compactor
-                #cmd += " BUILDVERBOSE=%d" % args.verbose
-                cmd += " CMDVERBOSE=%d" % args.verbose
-                cmd += " --no-print-directory"
-                call(cmd, shell=True)
-
-    print "BUILD TOOK: %.6f seconds" % (time.time() - start_time)
 
 @command_requires_env
 @command_with_arguments
@@ -431,9 +448,12 @@ def command_protolib_build(options):
     try:
         if args.clean:
             sh("python manage.py apps-clean " + args.dir,  console=args.verbose, shell=True)
-            protolib_dir = os.path.join(args.dir, 'protolib')
+            protolib_dir = os.path.abspath(os.path.normpath(os.path.join(args.dir, 'protolib')))
             if os.path.isdir(protolib_dir):
-                rmdir(protolib_dir)
+                try:
+                    os.rmdir(protolib_dir)
+                except OSError as e:
+                    warning("%s" % e)
         else:
             if not args.no_copy:
                 sh(os.path.join(os.getcwd(), "external", "gnumake-win32", "3.81", "bin", "make") + " do_install_protolib", cwd=args.dir,  console=args.verbose, shell=True)
