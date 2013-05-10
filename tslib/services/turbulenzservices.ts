@@ -566,11 +566,11 @@ class TurbulenzServices
         TurbulenzBridge.emit('user.upgrade.show');
     };
 
-    static sendCustomMetricEvent(eventKey,
-                                 eventValue,
-                                 requestHandler,
-                                 gameSession,
-                                 errorCallbackFn)
+    static sendCustomMetricEvent(eventKey: string,
+                                 eventValue: any,
+                                 requestHandler: RequestHandler,
+                                 gameSession: GameSession,
+                                 errorCallbackFn?)
     {
         if (!errorCallbackFn)
         {
@@ -599,7 +599,7 @@ class TurbulenzServices
             return;
         }
 
-        if (isNaN(parseFloat(eventValue)) || !isFinite(eventValue))
+        if ('number' !== typeof eventValue || isNaN(eventValue) || !isFinite(eventValue))
         {
             if ('[object Array]' !== Object.prototype.toString.call(eventValue))
             {
@@ -614,7 +614,7 @@ class TurbulenzServices
             var i, valuesLength = eventValue.length;
             for (i = 0; i < valuesLength; i += 1)
             {
-                if (isNaN(parseFloat(eventValue[i])) || !isFinite(eventValue[i]))
+                if ('number' !== typeof eventValue[i] || isNaN(eventValue[i]) || !isFinite(eventValue[i]))
                 {
                     if (errorCallbackFn)
                     {
@@ -641,12 +641,12 @@ class TurbulenzServices
             requestHandler: requestHandler,
             encrypt: true
         });
-    },
+    };
 
-    sendCustomMetricEventBatch: function turbulenzServicesSendCustomMetricEventBatch(eventBatch,
-                                                                                     requestHandler,
-                                                                                     gameSession,
-                                                                                     errorCallbackFn)
+    static sendCustomMetricEventBatch(eventBatch: CustomMetricEventBatch,
+                                      requestHandler: RequestHandler,
+                                      gameSession: GameSession,
+                                      errorCallbackFn?)
     {
         if (!errorCallbackFn)
         {
@@ -686,7 +686,7 @@ class TurbulenzServices
                 return;
             }
 
-            if (isNaN(parseFloat(eventValue)) || !isFinite(eventValue))
+            if ('number' !== typeof eventValue || isNaN(eventValue) || !isFinite(eventValue))
             {
                 if ('[object Array]' !== Object.prototype.toString.call(eventValue))
                 {
@@ -701,7 +701,7 @@ class TurbulenzServices
                 var i, valuesLength = eventValue.length;
                 for (i = 0; i < valuesLength; i += 1)
                 {
-                    if (isNaN(parseFloat(eventValue[i])) || !isFinite(eventValue[i]))
+                    if ('number' !== typeof eventValue[i] || isNaN(eventValue[i]) || !isFinite(eventValue[i]))
                     {
                         if (errorCallbackFn)
                         {
@@ -714,7 +714,7 @@ class TurbulenzServices
             }
 
             // Check the time value hasn't been manipulated by the developer
-            if (isNaN(parseInt(eventTime, 10)) || !isFinite(eventTime))
+            if ('number' !== typeof eventTime || isNaN(eventTime) || !isFinite(eventTime))
             {
                 if (errorCallbackFn)
                 {
@@ -745,7 +745,7 @@ class TurbulenzServices
         });
     };
 
-    static services=  {};
+    static services = {};
     static waitingServices = {};
     static pollingServiceStatus = false;
     // milliseconds
