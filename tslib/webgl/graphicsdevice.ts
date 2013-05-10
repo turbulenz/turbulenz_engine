@@ -245,6 +245,23 @@ TZWebGLTexture.prototype =
                 }
             }
         }
+        else if (format === gd.PIXELFORMAT_R4G4B4A4)
+        {
+            internalFormat = gl.RGBA;
+            gltype = gl.UNSIGNED_SHORT_4_4_4_4;
+            srcStep = 1;
+            if (data && !data.src)
+            {
+                if (data instanceof Uint16Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Uint16Array(data);
+                }
+            }
+        }
         else if (format === gd.PIXELFORMAT_R8G8B8A8)
         {
             internalFormat = gl.RGBA;
@@ -611,7 +628,8 @@ TZWebGLTexture.prototype =
                      4 * this.width * this.height * this.depth);
             }
             if ((format === gd.PIXELFORMAT_R5G5B5A1) ||
-                (format === gd.PIXELFORMAT_R5G6B5))
+                (format === gd.PIXELFORMAT_R5G6B5) ||
+                (format === gd.PIXELFORMAT_R4G4B4A4))
             {
                 return (typedArray instanceof Uint16Array) &&
                     (typedArray.length ===
@@ -4275,13 +4293,14 @@ WebGLGraphicsDevice.prototype =
     PIXELFORMAT_L8A8: 2,
     PIXELFORMAT_R5G5B5A1: 3,
     PIXELFORMAT_R5G6B5: 4,
-    PIXELFORMAT_R8G8B8A8: 5,
-    PIXELFORMAT_R8G8B8: 6,
-    PIXELFORMAT_D24S8: 7,
-    PIXELFORMAT_D16: 8,
-    PIXELFORMAT_DXT1: 9,
-    PIXELFORMAT_DXT3: 10,
-    PIXELFORMAT_DXT5: 11,
+    PIXELFORMAT_R4G4B4A4: 5,
+    PIXELFORMAT_R8G8B8A8: 6,
+    PIXELFORMAT_R8G8B8: 7,
+    PIXELFORMAT_D24S8: 8,
+    PIXELFORMAT_D16: 9,
+    PIXELFORMAT_DXT1: 10,
+    PIXELFORMAT_DXT3: 11,
+    PIXELFORMAT_DXT5: 12,
 
     drawIndexed : function drawIndexedFn(primitive, numIndices, first)
     {
