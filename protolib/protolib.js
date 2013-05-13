@@ -619,17 +619,17 @@ Protolib.prototype =
             if (globals)
             {
                 var graphicsDevice = globals.graphicsDevice;
-                if (graphicsDevice)
+                if (graphicsDevice && graphicsDevice.destroy)
                 {
                     graphicsDevice.destroy();
                 }
                 var inputDevice = globals.inputDevice;
-                if (inputDevice)
+                if (inputDevice && inputDevice.destroy)
                 {
                     inputDevice.destroy();
                 }
                 var soundDevice = globals.soundDevice;
-                if (soundDevice)
+                if (soundDevice && soundDevice.destroy)
                 {
                     soundDevice.destroy();
                 }
