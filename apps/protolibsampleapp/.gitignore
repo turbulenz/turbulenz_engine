@@ -2,6 +2,8 @@
 *.release.html
 *.canvas.js
 *.tzjs
+templates/*.js
+templates/*.html
 _build
 mapping_table.json
 jslib

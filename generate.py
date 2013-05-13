@@ -482,6 +482,21 @@ def command_protolib_init(options):
 
         return True
 
+    def _remove_templates(root, dummy=False):
+
+        remove_success = True
+
+        template_dir = os.path.normpath(os.path.join(root, 'templates'))
+        if os.path.isdir(template_dir):
+            log("Cleaning %s" % template_dir)
+            if not dummy:
+                try:
+                    rmdir(template_dir)
+                except Exception as e:
+                    remove_success = False
+
+        return remove_success
+
 
 
     parser = argparse.ArgumentParser(description=" Initializes a protolib app, generating the files required "
@@ -536,13 +551,16 @@ def command_protolib_init(options):
 
         remove_success = True
 
-        if not _remove_dirs(args.dir):
+        if not _remove_templates(args.dir):
+            remove_success = False
+
+        if not _remove_makefile(os.path.normpath(os.path.join(args.dir, 'Makefile')), args):
             remove_success = False
 
         if not _remove_yaml(args.dir, args):
             remove_success = False
 
-        if not _remove_makefile(os.path.normpath(os.path.join(args.dir, 'Makefile')), args):
+        if not _remove_dirs(args.dir):
             remove_success = False
 
         if not remove_success:
