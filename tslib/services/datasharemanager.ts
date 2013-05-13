@@ -199,11 +199,8 @@ class DataShare
         };
 
         this.service.request({
-                url: '/api/v1/data-share/join/' + this.id,
+                url: '/api/v1/data-share/join/' + this.gameSession.gameSlug + '/' + this.id,
                 method: 'POST',
-                data: {
-                    gameSessionId: this.gameSessionId
-                },
                 callback: dataShareJoinCallback,
                 requestHandler: this.requestHandler
             });
@@ -240,10 +237,9 @@ class DataShare
         }
 
         this.service.request({
-                url: '/api/v1/data-share/set-properties/' + this.id,
+                url: '/api/v1/data-share/set-properties/' + this.gameSession.gameSlug + '/' + this.id,
                 method: 'POST',
                 data: {
-                    gameSessionId: this.gameSessionId,
                     joinable: joinable
                 },
                 callback: dataShareSetJoinableCallback,
@@ -278,11 +274,8 @@ class DataShare
         };
 
         this.service.request({
-                url: '/api/v1/data-share/leave/' + this.id,
+                url: '/api/v1/data-share/leave/' + this.gameSession.gameSlug + '/' + this.id,
                 method: 'POST',
-                data: {
-                    gameSessionId: this.gameSessionId
-                },
                 callback: dataShareLeaveCallback,
                 requestHandler: this.requestHandler
             });
@@ -608,7 +601,7 @@ class DataShareManager
         };
 
         this.service.request({
-                url: '/api/v1/data-share/create',
+                url: '/api/v1/data-share/create/' + this.gameSession.gameSlug,
                 method: 'POST',
                 data: dataSpec,
                 callback: createDataShareCallback,
@@ -655,9 +648,7 @@ class DataShareManager
             }
         };
 
-        var dataSpec: any = {
-            gameSessionId: this.gameSessionId
-        };
+        var dataSpec: any = {};
 
         if (params.user)
         {
@@ -665,7 +656,7 @@ class DataShareManager
         }
 
         this.service.request({
-                url: '/api/v1/data-share/find',
+                url: '/api/v1/data-share/find/' + this.gameSession.gameSlug,
                 method: 'GET',
                 data: dataSpec,
                 callback: findDataSharesCallback,

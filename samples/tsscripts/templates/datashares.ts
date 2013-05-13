@@ -543,7 +543,7 @@ TurbulenzEngine.onload = function onloadFn()
         function renderLobby()
         {
             var offsetY = 0;
-            if (joinedDataShares.length > 0)
+            if (joinedDataShares && joinedDataShares.length > 0)
             {
                 segmentFont(0, 0, 'Playing:');
                 offsetY += textSpacingY;
