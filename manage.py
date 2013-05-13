@@ -16,7 +16,7 @@ import argparse
 from scripts import TURBULENZ_ENGINE_VERSION
 from scripts.utils import TURBULENZOS, TURBULENZROOT, PYTHON, ENV
 from scripts.utils import command_no_arguments, command_with_arguments, command_requires_env
-from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, find_devenv
+from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, find_devenv, rm, mkdir, cp
 from scripts.utils import check_documentation_links
 
 #######################################################################################################################
@@ -165,24 +165,38 @@ def _get_make_command():
 @command_no_arguments
 def command_tools():
     tools = 'tools'
+    tools_bin = 'tools/bin/%s' % TURBULENZOS
 
+    mkdir(tools_bin)
     if TURBULENZOS == 'win32':
-        project_file = os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj')
-        project_file = os.path.normpath(project_file)
         devenv = find_devenv()
-        sh([devenv, project_file, '/build', 'Release'], console=True)
+
+        cgfx2json_proj = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj'))
+        sh([devenv, cgfx2json_proj, '/build', 'Release'], console=True)
+        cp('tools/cgfx2json/bin/release/cgfx2json.exe', tools_bin)
+        cp('external/Cg/bin/cg.dll', tools_bin)
+        cp('external/Cg/bin/cgGL.dll', tools_bin)
+
+        nvtristrip_sln = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip.sln'))
+        sh([devenv, nvtristrip_sln, '/build', 'Release'], console=True)
+        cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper.exe', tools_bin)
 
     else:
         sh('make', tools, console=True)
+        cp('tools/cgfx2json/bin/release/cgfx2json', tools_bin)
+        cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper', tools_bin)
+
 
 @command_no_arguments
 def command_tools_clean():
     tools = 'tools'
     if TURBULENZOS == 'win32':
-        project_file = os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj')
-        project_file = os.path.normpath(project_file)
         devenv = find_devenv()
-        sh([devenv, project_file, '/clean', 'Release'], console=True)
+        cgfx2json_proj = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj'))
+        sh([devenv, cgfx2json_proj, '/clean', 'Release'], console=True)
+
+        nvtristrip_sln = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip.sln'))
+        sh([devenv, nvtristrip_sln, '/clean', 'Release'], console=True)
     else:
         sh('make clean', cwd=tools)
 
@@ -257,7 +271,7 @@ def command_apps(options):
 
             rmdir('%s/_build' % app_dir)
             rmdir('%s/staticmax' % app_dir)
-            rmdir('%s/mapping_table.json' % app_dir)
+            rm('%s/mapping_table.json' % app_dir)
 
         elif args.refcheck:
             make_cmd = "%s -C %s jslib TS_REFCHECK=1 -j %s" \

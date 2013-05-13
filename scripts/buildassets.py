@@ -141,7 +141,7 @@ class Tool(object):
 
         version = self.get_version(version_file_path)
         self.changed = (version != old_version)
-        if self.changed and verbose:
+        if verbose and version and self.changed:
             print self.name + ' tool version changed ' + version
         return self.changed
 
@@ -154,7 +154,8 @@ class Tool(object):
         else:
             return self.changed
 
-    def run_sh(self, cmd, verbose):
+    @staticmethod
+    def run_sh(cmd, verbose):
         try:
             sh(cmd, verbose=verbose)
             return True
@@ -162,8 +163,10 @@ class Tool(object):
             error('command %s failed\n%s' % (' '.join(e.cmd), e.output))
             raise
 
+# pylint: disable=R0201
     def check_external_deps(self, src, dst, args):
         return False
+# pylint: enable=R0201
 
 class CopyTool(object):
     def __init__(self, name='copy', path=None):
@@ -308,7 +311,7 @@ class Tools(object):
                 default_convert_path = 'convert'
             imagemagick_convert_path = os_getenv('TURBULENZ_IMAGEMAGICK_CONVERT', default_convert_path)
 
-        nvtristrip = path_join(root, 'external', 'NvTriStrip', 'bin', turbulenz_os, 'NvTriStripper' + exe)
+        nvtristrip = path_join(root, 'tools', 'bin', turbulenz_os, 'NvTriStripper' + exe)
 
         copy = CopyTool()
         tga2png = Tga2Json('tga2png', imagemagick_convert_path)

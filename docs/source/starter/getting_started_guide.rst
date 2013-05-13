@@ -41,6 +41,8 @@ To try the Turbulenz APIs requires only a text editor and a browser such as Goog
 Start by creating a new file with a .html file extension e.g. turbulenz_example.html
 Place this file in the root of the Turbulenz directory.
 
+.. highlight:: html
+
 In that file add the following basic HTML tags::
 
     <html>
@@ -65,6 +67,8 @@ Add the following script tags after the section marked as "Script includes go he
     <script src="jslib/debug.js"></script>
     <script src="jslib/webgl/turbulenzengine.js"></script>
     <script src="jslib/webgl/graphicsdevice.js"></script>
+
+.. highlight:: javascript
 
 To initialize create a *WebGLTurbulenzEngine* and pass a reference to the <canvas> element to the constructor in the game code section::
 
@@ -100,11 +104,13 @@ Declare an *update* function, this will act as the game loop::
 
 Having declared the function and passed it to *setInterval* function of TurbulenzEngine, this will attempt to call the function at the interval specified in milliseconds.
 In this case 1/60th of a second or 60 frames-per-second (fps).
-Now add the code to clear the <canvas> element, which will happen every frame::
+Now add this code inside the update function to clear the <canvas> element, which will happen every frame::
 
     if (graphicsDevice.beginFrame())
     {
         graphicsDevice.clear(bgColor, 1.0);
+        /* Rendering code goes here */
+
         graphicsDevice.endFrame();
     }
 
@@ -114,6 +120,51 @@ To run the JavaScript code in the browser, navigating to the page by opening the
 If you want to reload the code, refresh the page.
 You should now see a yellow box, which from this point will be your game window.
 
+.. highlight:: html
+
+So far your code should look like this::
+
+    <html>
+    <head>
+        <title>Turbulenz - Getting Started Guide - API Example</title>
+        <!-- Script includes go here -->
+        <script src="jslib/debug.js"></script>
+        <script src="jslib/webgl/turbulenzengine.js"></script>
+        <script src="jslib/webgl/graphicsdevice.js"></script>
+    </head>
+    <body>
+        <canvas id="canvas" width="640px" height="480px"/>
+        <script>
+            /* Game code goes here */
+
+            TurbulenzEngine = WebGLTurbulenzEngine.create({
+                canvas: document.getElementById("canvas")
+            });
+
+            var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
+
+            var r = 1.0, g = 1.0, b = 0.0, a = 1.0;
+            var bgColor = [r, g, b, a];
+
+            function update() {
+                /* Update code goes here */
+
+                if (graphicsDevice.beginFrame())
+                {
+                    graphicsDevice.clear(bgColor, 1.0);
+                    /* Rendering code goes here */
+
+                    graphicsDevice.endFrame();
+                }
+            }
+
+            TurbulenzEngine.setInterval(update, 1000 / 60);
+        </script>
+    </body>
+    </html>
+
+.. highlight:: javascript
+
 To add a little variation, try cycling the color by modifying it in the *update* function. Add this code just above the *beginFrame* function::
 
     b += 0.01;
@@ -121,9 +172,14 @@ To add a little variation, try cycling the color by modifying it in the *update*
 
 If you refresh the page in your browser, you will see the canvas will cycle color from yellow to white.
 The next thing to do is to draw a simple rectangle, using the Draw2D API.
-Include the Draw2D library by adding the following script tag::
+
+.. highlight:: html
+
+Include the Draw2D library by adding the following script tag below the other includes::
 
     <script src="jslib/draw2d.js"></script>
+
+.. highlight:: javascript
 
 After creating the GraphicsDevice, you can create the Draw2D module::
 
@@ -147,7 +203,7 @@ After creating the bgColor array, construct the rectangle to draw::
 
 This will create a rectangle with coordinates (x1, y1) and (x2, y2) where (0, 0) is the top left of the screen.
 The rectangle will start 50px from the edges of the canvas and will be colored red.
-To draw this rectangle with Draw2D add the following code after the *clear()* in the update loop::
+To draw this rectangle with Draw2D add the following code between the *clear()* and the *endFrame()* in the update loop::
 
     draw2D.begin();
     draw2D.draw(drawObject);
@@ -185,6 +241,91 @@ To rotate the sprite add the following in the *update* function after the code t
     sprite.rotation %= PI2; //Wrap rotation at PI * 2
 
 Reload now and you should see the sprite spinning.
+
+.. highlight:: html
+
+Your code should now look like this::
+
+    <html>
+    <head>
+        <title>Turbulenz - Getting Started Guide - API Example</title>
+        <!-- Script includes go here -->
+        <script src="jslib/debug.js"></script>
+        <script src="jslib/webgl/turbulenzengine.js"></script>
+        <script src="jslib/webgl/graphicsdevice.js"></script>
+        <script src="jslib/draw2d.js"></script>
+    </head>
+    <body>
+        <canvas id="canvas" width="640px" height="480px"/>
+        <script>
+            /* Game code goes here */
+
+            TurbulenzEngine = WebGLTurbulenzEngine.create({
+                canvas: document.getElementById("canvas")
+            });
+
+            var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
+
+            var draw2D = Draw2D.create({
+                graphicsDevice: graphicsDevice
+            });
+
+            var r = 1.0, g = 1.0, b = 0.0, a = 1.0;
+            var bgColor = [r, g, b, a];
+
+            var x1 = 50;
+            var y1 = 50;
+            var x2 = graphicsDevice.width - 50;
+            var y2 = graphicsDevice.height - 50;
+
+            var rectangle = [x1, y1, x2, y2];
+
+            var drawObject = {
+                color: [1.0, 0.0, 0.0, 1.0],
+                destinationRectangle: rectangle
+            };
+
+            var sprite = Draw2DSprite.create({
+                width: 100,
+                height: 100,
+                x: graphicsDevice.width / 2,
+                y: graphicsDevice.height / 2,
+                color: [1.0, 1.0, 1.0, 1.0],
+                rotation: Math.PI / 4
+            });
+
+            var PI2 = Math.PI * 2;
+            var rotateAngle = Math.PI / 32;
+
+            function update() {
+                /* Update code goes here */
+                b += 0.01;
+                bgColor[2] = b % 1; // Clamp color between 0-1
+
+                sprite.rotation += rotateAngle;
+                sprite.rotation %= PI2; //Wrap rotation at PI * 2
+
+                if (graphicsDevice.beginFrame())
+                {
+                    graphicsDevice.clear(bgColor, 1.0);
+                    /* Rendering code goes here */
+
+                    draw2D.begin();
+                    draw2D.draw(drawObject);
+                    draw2D.drawSprite(sprite);
+                    draw2D.end();
+
+                    graphicsDevice.endFrame();
+                }
+            }
+
+            TurbulenzEngine.setInterval(update, 1000 / 60);
+        </script>
+    </body>
+    </html>
+
+.. highlight:: javascript
+
 The next step is to start using assets such as images to make the sprite more interesting.
 To do this you will need to start hosting the files on a web server.
 There are many ways to do this, since you have *Python* installed as part of the setup, you can start a basic webserver from the command-line in the current directory using the following command::
@@ -256,6 +397,111 @@ In the update function add the following::
     sprite.setScale(scale);
 
 This will shrink and grow the sprite between 1.0 and 2.0 by manipulating the scale.
+
+.. highlight:: html
+
+Your file should now look like this::
+
+    <html>
+    <head>
+        <title>Turbulenz - Getting Started Guide - API Example</title>
+        <!-- Script includes go here -->
+        <script src="jslib/debug.js"></script>
+        <script src="jslib/webgl/turbulenzengine.js"></script>
+        <script src="jslib/webgl/graphicsdevice.js"></script>
+        <script src="jslib/draw2d.js"></script>
+    </head>
+    <body>
+        <canvas id="canvas" width="640px" height="480px"/>
+        <script>
+            /* Game code goes here */
+
+            TurbulenzEngine = WebGLTurbulenzEngine.create({
+                canvas: document.getElementById("canvas")
+            });
+
+            var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
+
+            var draw2D = Draw2D.create({
+                graphicsDevice: graphicsDevice
+            });
+
+            var r = 1.0, g = 1.0, b = 0.0, a = 1.0;
+            var bgColor = [r, g, b, a];
+
+            var x1 = 50;
+            var y1 = 50;
+            var x2 = graphicsDevice.width - 50;
+            var y2 = graphicsDevice.height - 50;
+
+            var rectangle = [x1, y1, x2, y2];
+
+            var drawObject = {
+                color: [1.0, 0.0, 0.0, 1.0],
+                destinationRectangle: rectangle
+            };
+
+            var sprite = Draw2DSprite.create({
+                width: 100,
+                height: 100,
+                x: graphicsDevice.width / 2,
+                y: graphicsDevice.height / 2,
+                color: [1.0, 1.0, 1.0, 1.0],
+                rotation: Math.PI / 4
+            });
+
+            var texture = graphicsDevice.createTexture({
+                src: "assets/textures/particle_spark.png",
+                mipmaps: true,
+                onload: function (texture)
+                {
+                    if (texture)
+                    {
+                        sprite.setTexture(texture);
+                        sprite.setTextureRectangle([0, 0, texture.width, texture.height]);
+                    }
+                }
+            });
+
+            var PI2 = Math.PI * 2;
+            var rotateAngle = Math.PI / 32;
+
+            var scale = [1, 1];
+
+            function update() {
+                /* Update code goes here */
+                b += 0.01;
+                bgColor[2] = b % 1; // Clamp color between 0-1
+
+                sprite.rotation += rotateAngle;
+                sprite.rotation %= PI2; //Wrap rotation at PI * 2
+
+                scale[0] = scale[1] = Math.cos(sprite.rotation) + 2;
+                sprite.setScale(scale);
+
+                if (graphicsDevice.beginFrame())
+                {
+                    graphicsDevice.clear(bgColor, 1.0);
+                    /* Rendering code goes here */
+
+                    draw2D.begin(); // Opaque
+                    draw2D.draw(drawObject);
+                    draw2D.end();
+
+                    draw2D.begin('additive'); // Additive
+                    draw2D.drawSprite(sprite);
+                    draw2D.end();
+
+                    graphicsDevice.endFrame();
+                }
+            }
+
+            TurbulenzEngine.setInterval(update, 1000 / 60);
+        </script>
+    </body>
+    </html>
+
+.. highlight:: javascript
 
 At this point you have been able to use basic drawing APIs to manipulate the <canvas> element using the Turbulenz Engine!
 

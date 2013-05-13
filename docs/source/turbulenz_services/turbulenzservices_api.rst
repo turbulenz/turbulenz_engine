@@ -396,6 +396,43 @@ Returns a :ref:`UserProfile <userprofile>` object.
 The :ref:`UserProfile <userprofile>` object cannot be used until ``profileReceivedFn`` is called.
 
 .. index::
+    pair: TurbulenzServices; upgradeAnonymousUser
+
+.. _turbulenzservices_upgradeanonymoususer:
+
+`upgradeAnonymousUser`
+----------------------
+
+**Summary**
+
+Present the user with options for upgrading their account from
+anonymous to a full user.  If supported a dialog or login screen will
+be presented listing the options available to upgrade to a full
+turbulenz account.
+
+
+**Syntax** ::
+
+    var accountUpgraded = function accountUpgradedFn()
+    {
+        // Re-request the UserProfile and check the 'anonymous'
+        // property to determine the user's new status.
+    }
+
+    TurbulenzServices.upgradeAnonymousUser(accountUpgraded);
+
+
+``accountUpgraded``
+    A callback made only if the user upgrades the account.  If the
+    user dismisses the upgrade dialog or otherwise cancels the upgrade
+    process this callback may not be invoked.  Even if the callback is
+    invoked, the game should re-request the UserProfile data
+    :ref:`UserProfile <userprofile>` object via
+    :ref:`createuserProfile <turbulenzservices_createuserprofile>` and
+    check the value of the `anonymous` property.
+
+
+.. index::
     pair: TurbulenzServices; sendCustomMetricEvent
 
 .. _turbulenzservices_sendcustommetricevent:

@@ -245,6 +245,23 @@ TZWebGLTexture.prototype =
                 }
             }
         }
+        else if (format === gd.PIXELFORMAT_R4G4B4A4)
+        {
+            internalFormat = gl.RGBA;
+            gltype = gl.UNSIGNED_SHORT_4_4_4_4;
+            srcStep = 1;
+            if (data && !data.src)
+            {
+                if (data instanceof Uint16Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Uint16Array(data);
+                }
+            }
+        }
         else if (format === gd.PIXELFORMAT_R8G8B8A8)
         {
             internalFormat = gl.RGBA;
@@ -611,7 +628,8 @@ TZWebGLTexture.prototype =
                      4 * this.width * this.height * this.depth);
             }
             if ((format === gd.PIXELFORMAT_R5G5B5A1) ||
-                (format === gd.PIXELFORMAT_R5G6B5))
+                (format === gd.PIXELFORMAT_R5G6B5) ||
+                (format === gd.PIXELFORMAT_R4G4B4A4))
             {
                 return (typedArray instanceof Uint16Array) &&
                     (typedArray.length ===
@@ -4275,13 +4293,14 @@ WebGLGraphicsDevice.prototype =
     PIXELFORMAT_L8A8: 2,
     PIXELFORMAT_R5G5B5A1: 3,
     PIXELFORMAT_R5G6B5: 4,
-    PIXELFORMAT_R8G8B8A8: 5,
-    PIXELFORMAT_R8G8B8: 6,
-    PIXELFORMAT_D24S8: 7,
-    PIXELFORMAT_D16: 8,
-    PIXELFORMAT_DXT1: 9,
-    PIXELFORMAT_DXT3: 10,
-    PIXELFORMAT_DXT5: 11,
+    PIXELFORMAT_R4G4B4A4: 5,
+    PIXELFORMAT_R8G8B8A8: 6,
+    PIXELFORMAT_R8G8B8: 7,
+    PIXELFORMAT_D24S8: 8,
+    PIXELFORMAT_D16: 9,
+    PIXELFORMAT_DXT1: 10,
+    PIXELFORMAT_DXT3: 11,
+    PIXELFORMAT_DXT5: 12,
 
     drawIndexed : function drawIndexedFn(primitive, numIndices, first)
     {
@@ -4775,6 +4794,7 @@ WebGLGraphicsDevice.prototype =
 
 
         var activeIndexBuffer = this.activeIndexBuffer;
+        var attributeMask = this.attributeMask;
         var setParameters = null;
         var lastTechnique = null;
         var lastEndStreams = -1;
@@ -4787,11 +4807,17 @@ WebGLGraphicsDevice.prototype =
         var passes = null;
         var p = null;
         var pass = null;
-        var format = 0;
+        var indexFormat = 0;
+        var indexStride = 0;
         var numPasses = 0;
         var mask = 0;
-        var attributeMask = 0;
         var t = 0;
+
+        if (activeIndexBuffer)
+        {
+            indexFormat = activeIndexBuffer.format;
+            indexStride = activeIndexBuffer.stride;
+        }
 
         for (var n = 0; n < numDrawParameters; n += 1)
         {
@@ -4815,6 +4841,12 @@ WebGLGraphicsDevice.prototype =
                 {
                     this.setTechniqueCaching(technique);
                     setParameters = setParametersCaching;
+
+                    mask = (passes[0].semanticsMask & attributeMask);
+                    if (mask !== this.clientStateMask)
+                    {
+                        this.enableClientState(mask);
+                    }
                 }
                 else
                 {
@@ -4865,6 +4897,14 @@ WebGLGraphicsDevice.prototype =
                 }
 
                 attributeMask = this.attributeMask;
+                if (1 === numPasses)
+                {
+                    mask = (passes[0].semanticsMask & attributeMask);
+                    if (mask !== this.clientStateMask)
+                    {
+                        this.enableClientState(mask);
+                    }
+                }
             }
 
             /*jshint bitwise: false*/
@@ -4875,28 +4915,19 @@ WebGLGraphicsDevice.prototype =
                     activeIndexBuffer = indexBuffer;
                     gl.bindBuffer(ELEMENT_ARRAY_BUFFER, indexBuffer.glBuffer);
 
+                    indexFormat = indexBuffer.format;
+                    indexStride = indexBuffer.stride;
+
                     if (debug)
                     {
                         this.metrics.indexBufferChanges += 1;
                     }
                 }
 
-                offset = firstIndex;
-                if (offset)
-                {
-                    offset *= indexBuffer.stride;
-                }
-
-                format = indexBuffer.format;
+                offset = (firstIndex * indexStride);
 
                 if (1 === numPasses)
                 {
-                    mask = (passes[0].semanticsMask & attributeMask);
-                    if (mask !== this.clientStateMask)
-                    {
-                        this.enableClientState(mask);
-                    }
-
                     t = ((16 * 3) + 8);
                     if (t < endInstances)
                     {
@@ -4904,7 +4935,7 @@ WebGLGraphicsDevice.prototype =
                         {
                             setParameters(this, passes, drawParameters[t]);
 
-                            gl.drawElements(primitive, count, format, offset);
+                            gl.drawElements(primitive, count, indexFormat, offset);
 
                             if (debug)
                             {
@@ -4917,7 +4948,7 @@ WebGLGraphicsDevice.prototype =
                     }
                     else
                     {
-                        gl.drawElements(primitive, count, format, offset);
+                        gl.drawElements(primitive, count, indexFormat, offset);
 
                         if (debug)
                         {
@@ -4946,7 +4977,7 @@ WebGLGraphicsDevice.prototype =
 
                                 this.setPass(pass);
 
-                                gl.drawElements(primitive, count, format, offset);
+                                gl.drawElements(primitive, count, indexFormat, offset);
 
                                 if (debug)
                                 {
@@ -4972,7 +5003,7 @@ WebGLGraphicsDevice.prototype =
 
                             this.setPass(pass);
 
-                            gl.drawElements(primitive, count, format, offset);
+                            gl.drawElements(primitive, count, indexFormat, offset);
 
                             if (debug)
                             {
@@ -4986,12 +5017,6 @@ WebGLGraphicsDevice.prototype =
             {
                 if (1 === numPasses)
                 {
-                    mask = (passes[0].semanticsMask & attributeMask);
-                    if (mask !== this.clientStateMask)
-                    {
-                        this.enableClientState(mask);
-                    }
-
                     t = ((16 * 3) + 8);
                     if (t < endInstances)
                     {

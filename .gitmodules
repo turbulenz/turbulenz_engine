@@ -7,3 +7,6 @@
 [submodule "external/tzbuild"]
 	path = external/tzbuild
 	url = git://github.com/turbulenz/turbulenz_build.git
+[submodule "tools/NvTriStrip"]
+	path = tools/NvTriStrip
+	url = git://github.com/turbulenz/NvTriStrip.git
