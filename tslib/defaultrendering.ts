@@ -321,8 +321,14 @@ class DefaultRendering
         // do this once instead of for every update
         var rendererInfo = node.rendererInfo;
         techniqueParameters.worldViewProjection = rendererInfo.worldViewProjection;
-        techniqueParameters.eyePosition = rendererInfo.eyePosition;
         techniqueParameters.lightPosition = rendererInfo.lightPosition;
+
+        var techniqueName = this.technique.name;
+        if (techniqueName.indexOf("flat") === -1 &&
+            techniqueName.indexOf("lambert") === -1)
+        {
+            techniqueParameters.eyePosition = rendererInfo.eyePosition;
+        }
 
         var skinController = geometryInstance.skinController;
         if (skinController)

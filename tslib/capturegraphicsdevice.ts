@@ -2,23 +2,23 @@
 
 var CaptureGraphicsCommand =
 {
-    setTechniqueParameters: 1,
-    drawIndexed:            2,
-    draw:                   3,
-    setIndexBuffer:         4,
-    setStream:              5,
-    setTechnique:           6,
-    setData:                7,
-    setAllData:             8,
-    beginRenderTarget:      9,
-    clear:                  10,
-    endRenderTarget:        11,
-    beginEndDraw:           12,
-    setScissor:             13,
-    setViewport:            14,
-    beginOcclusionQuery:    15,
-    endOcclusionQuery:      16,
-    destroy:                17
+    setTechniqueParameters: 0,
+    drawIndexed:            1,
+    draw:                   2,
+    setIndexBuffer:         3,
+    setStream:              4,
+    setTechnique:           5,
+    setData:                6,
+    setAllData:             7,
+    beginRenderTarget:      8,
+    clear:                  9,
+    endRenderTarget:        10,
+    beginEndDraw:           11,
+    setScissor:             12,
+    setViewport:            13,
+    beginOcclusionQuery:    14,
+    endOcclusionQuery:      15,
+    destroy:                16
 };
 
 class CaptureGraphicsDevice
@@ -148,11 +148,11 @@ class CaptureGraphicsDevice
         {
             if (integers)
             {
-                lowerIndex = this._lowerBound(dataBin, data, length, this._compareGenericArrays, 0);
+                lowerIndex = this._lowerBoundGeneric(dataBin, data, length, 0);
             }
             else
             {
-                lowerIndex = this._lowerBound(dataBin, data, length, this._compareFloatArrays, this.precision);
+                lowerIndex = this._lowerBoundFloat(dataBin, data, length);
             }
 
             // Check if we found an identical copy
@@ -278,17 +278,37 @@ class CaptureGraphicsDevice
             this.commands[method] = commandsBin = [];
             lowerIndex = 0;
         }
-        else
+        else if (0 < commandsBin.length)
         {
-            lowerIndex = this._lowerBound(commandsBin, arguments, length, this._compareGenericArrays, 1);
-
-            // Check if we found an identical copy
-            if (lowerIndex < 0)
+            if (length === 1)
             {
-                lowerIndex = ((-lowerIndex) - 1);
-                this.current.push(commandsBin[lowerIndex]);
+                // The method is the same for all the commands on the bin
+                this.current.push(commandsBin[0]);
                 return;
             }
+            else
+            {
+                if (length === 2)
+                {
+                    lowerIndex = this._lowerBoundSimpleCommand(commandsBin, arguments);
+                }
+                else
+                {
+                    lowerIndex = this._lowerBoundGeneric(commandsBin, arguments, length, 1);
+                }
+
+                // Check if we found an identical copy
+                if (lowerIndex < 0)
+                {
+                    lowerIndex = ((-lowerIndex) - 1);
+                    this.current.push(commandsBin[lowerIndex]);
+                    return;
+                }
+            }
+        }
+        else
+        {
+            lowerIndex = 0;
         }
 
         var command = new Array(length);
@@ -416,7 +436,7 @@ class CaptureGraphicsDevice
         }
         else
         {
-            lowerIndex = this._lowerBound(objectsBin, objectArray, length, this._compareGenericArrays, 0);
+            lowerIndex = this._lowerBoundGeneric(objectsBin, objectArray, length, 0);
 
             // Check if we found an identical copy
             if (lowerIndex < 0)
@@ -719,24 +739,72 @@ class CaptureGraphicsDevice
         this.gd.setTechniqueParameters(techniqueParameters);
     };
 
-    private _lowerBound(bin: any[], data: any, length: number, comp: Function, config: number) : number
+    private _lowerBoundGeneric(bin: any[], data: any, length: number, offset: number) : number
     {
         var first: number = 0;
         var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
-        var step: number, middle : number, binIndex:number, diff: number;
+        var step: number, middle : number, binIndex:number;
+        var n: number;
+        var a, av, bv;
 
         while (0 < count)
         {
             step = (count >>> 1);
             middle = (first + step);
             binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
-            diff = comp(bin[binIndex], data, length, config);
-            if (diff < 0)
+
+            a = bin[binIndex];
+            n = offset;
+            for (;;)
+            {
+                av = a[n];
+                bv = data[n];
+                if (av < bv)
+                {
+                    first = (middle + 1);
+                    count -= (step + 1);
+                    break;
+                }
+                else if (av > bv)
+                {
+                    count = step;
+                    break;
+                }
+
+                n += 1;
+                if (n >= length)
+                {
+                    // This would be a non-zero negative value to signal that we found an identical copy
+                    return -binIndex;
+                }
+            }
+        }
+
+        return (first << 1); // Bin elements ocupy two slots, multiply by 2
+    }
+
+    private _lowerBoundSimpleCommand(bin: any[], data: any) : number
+    {
+        var first: number = 0;
+        var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
+        var step: number, middle : number, binIndex:number;
+        var av, bv;
+
+        while (0 < count)
+        {
+            step = (count >>> 1);
+            middle = (first + step);
+            binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
+
+            // Simple commands only have one parameter after method
+            av = bin[binIndex][1];
+            bv = data[1];
+            if (av < bv)
             {
                 first = (middle + 1);
                 count -= (step + 1);
             }
-            else if (0 < diff)
+            else if (av > bv)
             {
                 count = step;
             }
@@ -750,47 +818,49 @@ class CaptureGraphicsDevice
         return (first << 1); // Bin elements ocupy two slots, multiply by 2
     }
 
-    private _compareFloatArrays(a: any[], b: any[], length: number, positiveThreshold: number) : number
+    private _lowerBoundFloat(bin: any[], data: any, length: number) : number
     {
+        var first: number = 0;
+        var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
+        var step: number, middle : number, binIndex:number, diff: number;
+        var positiveThreshold: number = this.precision;
         var negativeThreshold: number = -positiveThreshold;
-        var n: number = 0;
-        var diff: number;
-        do
-        {
-            diff = (a[n] - b[n]);
-            if (diff < negativeThreshold)
-            {
-                return -1;
-            }
-            else if (diff > positiveThreshold)
-            {
-                return 1;
-            }
-            n += 1;
-        }
-        while (n < length);
-        return 0;
-    }
+        var diff: number, n: number;
+        var a;
 
-    private _compareGenericArrays(a: any[], b: any[], length: number, offset: number) : number
-    {
-        var n: number = offset;
-        var av, bv;
-        while (n < length)
+        while (0 < count)
         {
-            av = a[n];
-            bv = b[n];
-            if (av < bv)
+            step = (count >>> 1);
+            middle = (first + step);
+            binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
+
+            n = 0;
+            a = bin[binIndex];
+            for (;;)
             {
-                return -1;
+                diff = (a[n] - data[n]);
+                if (diff < negativeThreshold)
+                {
+                    first = (middle + 1);
+                    count -= (step + 1);
+                    break;
+                }
+                else if (diff > positiveThreshold)
+                {
+                    count = step;
+                    break;
+                }
+
+                n += 1;
+                if (n >= length)
+                {
+                    // This would be a non-zero negative value to signal that we found an identical copy
+                    return -binIndex;
+                }
             }
-            else if (av > bv)
-            {
-                return 1;
-            }
-            n += 1;
         }
-        return 0;
+
+        return (first << 1); // Bin elements ocupy two slots, multiply by 2
     }
 
     private _equalFloatArrays(a, b, length) : bool
@@ -1027,7 +1097,14 @@ class CaptureGraphicsDevice
 
                 this.setTechnique(technique);
 
-                validParameters = technique.shader.parameters;
+                if (technique.passes.length === 1)
+                {
+                    validParameters = technique.passes[0].parameters;
+                }
+                else
+                {
+                    validParameters = technique.shader.parameters;
+                }
 
                 currentParameters = {};
 
@@ -2392,7 +2469,11 @@ class PlaybackGraphicsDevice
                 this.onerror("Failed to create entity: " + id);
             }
         }
-        this.entities[parseInt(id, 10)] = value;
+        if (typeof id === "string")
+        {
+            id = parseInt(id, 10);
+        }
+        this.entities[id] = value;
     }
 
     private _resolveEntity(id)
@@ -2658,7 +2739,7 @@ class PlaybackGraphicsDevice
         var binLength, length, n, id, type, data;
 
         // Integers
-        while (true)
+        for (;;)
         {
             binLength = ints[offset];
             offset += 1;
@@ -2711,7 +2792,7 @@ class PlaybackGraphicsDevice
         }
 
         // Floats
-        while (true)
+        for (;;)
         {
             binLength = ints[offset];
             offset += 1;

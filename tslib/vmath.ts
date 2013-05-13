@@ -5041,6 +5041,16 @@ var VMath : MathDevice =
 
         if (cosom > VMath.cosMinSlerpAngle)
         {
+            if (cosom > (1.0 - 1e-6))
+            {
+                dst[0] =  q1x;
+                dst[1] =  q1y;
+                dst[2] =  q1z;
+                dst[3] =  q1w;
+
+                return dst;
+            }
+
             var delta = t;
             if (dotq1q2 <= 0.0)
             {

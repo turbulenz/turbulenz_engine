@@ -1900,126 +1900,123 @@ class Scene
 
             if (0 < distance)
             {
-                if (!node.disabled)
+                var renderable, i, lightInstance, l;
+                var renderables = node.renderables;
+                var numRenderables = (renderables ? renderables.length : 0);
+
+                var lights = node.lightInstances;
+                var numLights = (lights ? lights.length : 0);
+
+                var fullyVisible = (1 < (numLights + numRenderables) ?
+                                    isFullyInsidePlanesAABB(extents, planes) :
+                                    false);
+
+                if (renderables)
                 {
-                    var renderable, i, lightInstance, l;
-                    var renderables = node.renderables;
-                    var numRenderables = (renderables ? renderables.length : 0);
-
-                    var lights = node.lightInstances;
-                    var numLights = (lights ? lights.length : 0);
-
-                    var fullyVisible = (1 < (numLights + numRenderables) ?
-                                        isFullyInsidePlanesAABB(extents, planes) :
-                                        false);
-
-                    if (renderables)
+                    if (numRenderables === 1 && !lights)
                     {
-                        if (numRenderables === 1 && !lights)
+                        renderable = renderables[0];
+                        if (!renderable.disabled &&
+                            renderable.queryCounter !== queryCounter)
                         {
-                            renderable = renderables[0];
+                            if (maxDistance < distance)
+                            {
+                                maxDistance = distance;
+                            }
+                            renderable.distance = distance;
+                            renderable.frameVisible = frameIndex;
+                            renderable.queryCounter = queryCounter;
+                            visibleRenderables[numVisibleRenderables] = renderable;
+                            numVisibleRenderables += 1;
+                        }
+                    }
+                    else
+                    {
+                        for (i = 0; i < numRenderables; i += 1)
+                        {
+                            renderable = renderables[i];
                             if (!renderable.disabled &&
                                 renderable.queryCounter !== queryCounter)
                             {
-                                if (maxDistance < distance)
+                                extents = renderable.getWorldExtents();
+                                if (fullyVisible || isInsidePlanesAABB(extents, planes))
                                 {
-                                    maxDistance = distance;
-                                }
-                                renderable.distance = distance;
-                                renderable.frameVisible = frameIndex;
-                                renderable.queryCounter = queryCounter;
-                                visibleRenderables[numVisibleRenderables] = renderable;
-                                numVisibleRenderables += 1;
-                            }
-                        }
-                        else
-                        {
-                            for (i = 0; i < numRenderables; i += 1)
-                            {
-                                renderable = renderables[i];
-                                if (!renderable.disabled &&
-                                    renderable.queryCounter !== queryCounter)
-                                {
-                                    extents = renderable.getWorldExtents();
-                                    if (fullyVisible || isInsidePlanesAABB(extents, planes))
+                                    distance = ((d0 * (d0 > 0 ? extents[3] : extents[0])) +
+                                                (d1 * (d1 > 0 ? extents[4] : extents[1])) +
+                                                (d2 * (d2 > 0 ? extents[5] : extents[2])) - offset);
+                                    if (0 < distance)
                                     {
-                                        distance = ((d0 * (d0 > 0 ? extents[3] : extents[0])) +
-                                                    (d1 * (d1 > 0 ? extents[4] : extents[1])) +
-                                                    (d2 * (d2 > 0 ? extents[5] : extents[2])) - offset);
-                                        if (0 < distance)
+                                        if (maxDistance < distance)
                                         {
-                                            if (maxDistance < distance)
-                                            {
-                                                maxDistance = distance;
-                                            }
-                                            renderable.distance = distance;
-                                            renderable.frameVisible = frameIndex;
-                                            renderable.queryCounter = queryCounter;
-                                            visibleRenderables[numVisibleRenderables] = renderable;
-                                            numVisibleRenderables += 1;
+                                            maxDistance = distance;
                                         }
-                                        else
-                                        {
-                                            allVisible = false;
-                                        }
+                                        renderable.distance = distance;
+                                        renderable.frameVisible = frameIndex;
+                                        renderable.queryCounter = queryCounter;
+                                        visibleRenderables[numVisibleRenderables] = renderable;
+                                        numVisibleRenderables += 1;
                                     }
                                     else
                                     {
                                         allVisible = false;
                                     }
+                                }
+                                else
+                                {
+                                    allVisible = false;
                                 }
                             }
                         }
                     }
+                }
 
-                    if (lights)
+                if (lights)
+                {
+                    if (numLights === 1 && !renderables)
                     {
-                        if (numLights === 1 && !renderables)
+                        lightInstance = lights[0];
+                        if (!lightInstance.disabled &&
+                            lightInstance.queryCounter !== queryCounter &&
+                            !lightInstance.light.isGlobal())
                         {
-                            lightInstance = lights[0];
+                            lightInstance.distance = distance;
+                            lightInstance.frameVisible = frameIndex;
+                            lightInstance.queryCounter = queryCounter;
+                            visibleLights[numVisibleLights] = lightInstance;
+                            numVisibleLights += 1;
+                        }
+                    }
+                    else
+                    {
+                        for (l = 0; l < numLights; l += 1)
+                        {
+                            lightInstance = lights[l];
                             if (!lightInstance.disabled &&
                                 lightInstance.queryCounter !== queryCounter &&
                                 !lightInstance.light.isGlobal())
                             {
-                                lightInstance.distance = distance;
-                                lightInstance.frameVisible = frameIndex;
-                                lightInstance.queryCounter = queryCounter;
-                                visibleLights[numVisibleLights] = lightInstance;
-                                numVisibleLights += 1;
-                            }
-                        }
-                        else
-                        {
-                            for (l = 0; l < numLights; l += 1)
-                            {
-                                lightInstance = lights[l];
-                                if (!lightInstance.disabled &&
-                                    lightInstance.queryCounter !== queryCounter &&
-                                    !lightInstance.light.isGlobal())
+                                extents = lightInstance.getWorldExtents();
+                                if (fullyVisible || isInsidePlanesAABB(extents, planes))
                                 {
-                                    extents = lightInstance.getWorldExtents();
-                                    if (fullyVisible || isInsidePlanesAABB(extents, planes))
+                                    distance = ((d0 * (d0 > 0 ? extents[3] : extents[0])) +
+                                                (d1 * (d1 > 0 ? extents[4] : extents[1])) +
+                                                (d2 * (d2 > 0 ? extents[5] : extents[2])) - offset);
+                                    if (0 < distance)
                                     {
-                                        distance = ((d0 * (d0 > 0 ? extents[3] : extents[0])) +
-                                                    (d1 * (d1 > 0 ? extents[4] : extents[1])) +
-                                                    (d2 * (d2 > 0 ? extents[5] : extents[2])) - offset);
-                                        if (0 < distance)
-                                        {
-                                            lightInstance.distance = distance;
-                                            lightInstance.frameVisible = frameIndex;
-                                            lightInstance.queryCounter = queryCounter;
-                                            visibleLights[numVisibleLights] = lightInstance;
-                                            numVisibleLights += 1;
-                                        }
-                                        else
-                                        {
-                                            allVisible = false;
-                                        }
+                                        lightInstance.distance = distance;
+                                        lightInstance.frameVisible = frameIndex;
+                                        lightInstance.queryCounter = queryCounter;
+                                        visibleLights[numVisibleLights] = lightInstance;
+                                        numVisibleLights += 1;
                                     }
                                     else
                                     {
                                         allVisible = false;
                                     }
+                                }
+                                else
+                                {
+                                    allVisible = false;
                                 }
                             }
                         }
@@ -2112,7 +2109,7 @@ class Scene
                 {
                     node = nodes[n];
                     node.queryCounter = queryCounter;
-                    if (isInsidePlanesAABB(node.worldExtents, frustumPlanes))
+                    if (!node.disabled && isInsidePlanesAABB(node.worldExtents, frustumPlanes))
                     {
                         sceneProcessVisibleNode(node, frustumPlanes);
                     }
@@ -2158,7 +2155,11 @@ class Scene
                             node = nodes[n];
                             if (node.queryCounter !== queryCounter)
                             {
-                                if (isInsidePlanesAABB(node.worldExtents, portalPlanes))
+                                if (node.disabled)
+                                {
+                                    node.queryCounter = queryCounter;
+                                }
+                                else if (isInsidePlanesAABB(node.worldExtents, portalPlanes))
                                 {
                                     sceneProcessVisibleNode(node, portalPlanes);
                                 }
@@ -2185,15 +2186,13 @@ class Scene
             this.staticSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes);
             this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes);
             var numQueryVisibleNodes = queryVisibleNodes.length;
-            if (numQueryVisibleNodes)
+            for (n = 0; n < numQueryVisibleNodes; n += 1)
             {
-                n = 0;
-                do
+                node = queryVisibleNodes[n];
+                if (!node.disabled)
                 {
-                    sceneProcessVisibleNode(queryVisibleNodes[n], frustumPlanes);
-                    n += 1;
+                    sceneProcessVisibleNode(node, frustumPlanes);
                 }
-                while (n < numQueryVisibleNodes);
             }
         }
 

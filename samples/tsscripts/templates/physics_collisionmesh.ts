@@ -107,7 +107,7 @@ TurbulenzEngine.onload = function onloadFn()
     var duckMesh;
 
     // Setup world space
-    var clearColor = mathDevice.v4Build(1.0, 1.0, 1.0, 1.0);
+    var clearColor = mathDevice.v4Build(0.95, 0.95, 1.0, 1.0);
     var loadingClearColor = mathDevice.v4Build(0.8, 0.8, 0.8, 1.0);
     var worldUp = mathDevice.v3BuildYAxis();
 
