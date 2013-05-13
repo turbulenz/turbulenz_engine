@@ -3,25 +3,20 @@
 /*global Protolib: false*/
 
 /*{% if tz_development %}*/
-/*{{ javascript("scripts/configdebug.js") }}*/
+/*{{ javascript('scripts/configdebug.js') }}*/
 /*{% elif not tz_development %}*/
-/*{{ javascript("scripts/configrelease.js") }}*/
+/*{{ javascript('scripts/configrelease.js') }}*/
 /*{% endif %}*/
 
 /*{{ javascript('jslib/camera.js') }}*/
 /*{{ javascript('jslib/requesthandler.js') }}*/
 /*{{ javascript('jslib/texturemanager.js') }}*/
 /*{{ javascript('jslib/shadermanager.js') }}*/
-/*{{ javascript('jslib/soundmanager.js') }}*/
 /*{{ javascript('jslib/effectmanager.js') }}*/
 /*{{ javascript('jslib/fontmanager.js') }}*/
+/*{{ javascript('jslib/soundmanager.js') }}*/
 /*{{ javascript('jslib/observer.js') }}*/
 /*{{ javascript('jslib/utilities.js') }}*/
-/*{{ javascript('jslib/services/turbulenzbridge.js') }}*/
-/*{{ javascript('jslib/services/turbulenzservices.js') }}*/
-/*{{ javascript('jslib/services/gamesession.js') }}*/
-/*{{ javascript('jslib/services/mappingtable.js') }}*/
-
 /*{{ javascript('jslib/scene.js') }}*/
 /*{{ javascript('jslib/light.js') }}*/
 /*{{ javascript('jslib/material.js') }}*/
@@ -38,6 +33,11 @@
 /*{{ javascript('jslib/draw2d.js') }}*/
 /*{{ javascript('jslib/assettracker.js') }}*/
 /*{{ javascript('jslib/loadingscreen.js') }}*/
+
+/*{{ javascript('jslib/services/turbulenzbridge.js') }}*/
+/*{{ javascript('jslib/services/turbulenzservices.js') }}*/
+/*{{ javascript('jslib/services/gamesession.js') }}*/
+/*{{ javascript('jslib/services/mappingtable.js') }}*/
 
 /*{{ javascript('protolib/duimanager.js') }}*/
 /*{{ javascript('protolib/jqueryextend.js') }}*/

@@ -132,9 +132,6 @@ def command_protolib_init(options):
             warning('manifest.yaml: Missing root')
             return False
 
-        if title is None:
-            title = appname
-
         if 'canvas' in args.mode or 'all' in args.mode:
             canvas_main = '%s.canvas.js' % appname
         else:
@@ -355,6 +352,138 @@ def command_protolib_init(options):
                     return False
         return True
 
+    def _generate_template_js(filepath, args, dummy=False):
+
+        template_newline_text = [""]
+
+        template_globals_protolib = ["TurbulenzEngine", "Application", "Protolib"]
+        template_globals_protolib_text = [("/*global %s: false*/" % g) for g in template_globals_protolib]
+
+        template_config_protolib_text = ["/*{% if tz_development %}*/",
+                                        "/*{{ javascript('scripts/configdebug.js') }}*/",
+                                        "/*{% elif not tz_development %}*/",
+                                        "/*{{ javascript('scripts/configrelease.js') }}*/",
+                                        "/*{% endif %}*/"]
+
+        template_jslib_protolib = ["camera",
+                                "requesthandler",
+                                "texturemanager", "shadermanager", "effectmanager", "fontmanager", "soundmanager",
+                                "observer", "utilities",
+                                "scene", "light", "material", "geometry", "aabbtree", "scenenode",
+                                "vertexbuffermanager", "indexbuffermanager", "resourceloader", "vmath",
+                                "renderingcommon", "forwardrendering", "shadowmapping",
+                                "draw2d",
+                                "assettracker", "loadingscreen"]
+        template_jslib_protolib_text = [("/*{{ javascript('jslib/%s.js') }}*/" % jslib) for jslib in template_jslib_protolib]
+
+        template_jslib_services_protolib = ["turbulenzbridge", "turbulenzservices", "gamesession", "mappingtable"]
+        template_jslib_services_protolib_text = [("/*{{ javascript('jslib/services/%s.js') }}*/" % service) for service in template_jslib_services_protolib]
+
+        template_protolib = ["duimanager", "jqueryextend",
+                            "simplesprite", "simplefonts", "simplesceneloader",
+                            "debugdraw", "sceneloader", "soundsourcemanager",
+                            "protolib"]
+        template_protolib_text = [("/*{{ javascript('protolib/%s.js') }}*/" % protolib) for protolib in template_protolib]
+
+        template_app = ["%s" % args.app]
+        template_app_text = [("/*{{ javascript('scripts/%s.js') }}*/" % app) for app in template_app]
+
+        template_onload_protolib_text = ["TurbulenzEngine.onload = function onloadFn()",
+                                        "{",
+                                        "    var protolibConfig = Application.prototype.protolibConfig || {};",
+                                        "    var intervalID;",
+                                        "    protolibConfig.onInitialized = function onInitializedFn(protolib)",
+                                        "    {",
+                                        "        var application = Application.create(protolib);",
+                                        "        var fps = protolibConfig.fps || 60;",
+                                        "        intervalID = TurbulenzEngine.setInterval(function ()",
+                                        "        {",
+                                        "            application.update();",
+                                        "        }, 1000 / fps);",
+                                        "",
+                                        "        TurbulenzEngine.onunload = function onUnloadFn()",
+                                        "        {",
+                                        "            if (intervalID)",
+                                        "            {",
+                                        "                TurbulenzEngine.clearInterval(intervalID);",
+                                        "                intervalID = null;",
+                                        "            }",
+                                        "            if (application && application.destroy)",
+                                        "            {",
+                                        "                application.destroy();",
+                                        "                application = null;",
+                                        "            }",
+                                        "        };",
+                                        "",
+                                        "    };",
+                                        "    Protolib.create(protolibConfig);",
+                                        "};"]
+
+        template_text = template_globals_protolib_text + template_newline_text + \
+                        template_config_protolib_text + template_newline_text + \
+                        template_jslib_protolib_text + template_newline_text + \
+                        template_jslib_services_protolib_text + template_newline_text + \
+                        template_protolib_text + template_newline_text + \
+                        template_app_text + template_newline_text + \
+                        template_onload_protolib_text
+
+        if not os.path.exists(filepath) or args.force:
+            log('Creating: %s' % filepath)
+            if not dummy:
+                f = open(filepath, 'w')
+                for line in template_text:
+                    f.write("%s\n" % line)
+                f.close()
+        else:
+            warning('template.js exists: %s' % filepath)
+            return False
+
+        return True
+
+    def _generate_template_html(filepath, args, dummy=False):
+
+        title = args.title
+
+        template_html_newline_text = [""]
+
+        template_html_extends_text = ['/*{% extends "default" %}*/']
+
+        template_html_app_header_text = ['/*{% block tz_app_header %}*/',
+                                        '<link rel="stylesheet" type="text/css" href="css/base_template.css">',
+                                        '<link rel="stylesheet" type="text/css" href="css/dynamicui.css">',
+                                        '<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>',
+                                        '<script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>',
+                                        '<script type="text/javascript" src="js/duiserver.js"></script>',
+                                        '<link rel="shortcut icon" href="img/favicon.ico">',
+                                        '/*{% endblock %}*/']
+
+        template_html_app_title = ['/*{% block tz_app_title %}*/' + title + '/*{% endblock %}*/',
+                                '/*{% block tz_app_title_name %}*/' + title + '/*{% endblock %}*/']
+
+        template_html_app_html_controls = ['/*{% block tz_app_html_controls %}*/',
+                                        '<div id="dynamicui" class="dynamicui"></div>',
+                                        '/*{% endblock %}*/']
+
+        template_html_text = template_html_extends_text + template_html_newline_text + \
+                        template_html_app_header_text + template_html_newline_text + \
+                        template_html_app_title + template_html_newline_text + \
+                        template_html_app_html_controls
+
+        if not os.path.exists(filepath) or args.force:
+            log('Creating: %s' % filepath)
+            if not dummy:
+                f = open(filepath, 'w')
+                for line in template_html_text:
+                    f.write("%s\n" % line)
+                f.close()
+        else:
+            warning('template.html exists: %s' % filepath)
+            return False
+
+        return True
+
+
+
     parser = argparse.ArgumentParser(description=" Initializes a protolib app, generating the files required "
                                                  " such as build files, directory structure, protolib, etc.")
     parser.add_argument('--clean', action='store_true', help="Clean specified apps (same as apps-clean)")
@@ -370,6 +499,9 @@ def command_protolib_init(options):
     parser.add_argument('app', default='app', nargs='?', help="Select an individual app to build")
 
     args = parser.parse_args(options)
+
+    if args.title is None:
+        args.title = args.app
 
     log('app: %r' % args.app)
     log('clean: %r' % args.clean)
@@ -425,6 +557,10 @@ def command_protolib_init(options):
     _generate_yaml(args.dir, args)
 
     _generate_makefile(os.path.normpath(os.path.join(args.dir, 'Makefile')), args)
+
+    _generate_template_js(os.path.normpath(os.path.join(args.dir, 'templates', args.app + '.js')), args)
+
+    _generate_template_html(os.path.normpath(os.path.join(args.dir, 'templates', args.app + '.html')), args)
 
     return
 
