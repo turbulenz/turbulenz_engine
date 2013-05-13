@@ -1,9 +1,9 @@
 [submodule "external/definitelytyped"]
 	path = external/definitelytyped
-	url = git@github.com:borisyankov/DefinitelyTyped.git
+	url = git://github.com/borisyankov/DefinitelyTyped.git
 [submodule "external/uglifyjs"]
 	path = external/uglifyjs
-	url = git@github.com:mishoo/UglifyJS.git
+	url = git://github.com/mishoo/UglifyJS.git
 [submodule "external/tzbuild"]
 	path = external/tzbuild
-	url = git@github.com:turbulenz/turbulenz_build.git
+	url = git://github.com/turbulenz/turbulenz_build.git

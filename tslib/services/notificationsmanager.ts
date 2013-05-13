@@ -200,6 +200,11 @@ class NotificationsManager
 
         this.notificationPromises[token] = promise;
 
+        if (!params.recipient)
+        {
+            throw new Error('Notification recipient is null');
+        }
+
         var params = {
             token: token,
             session: this.gameSession,

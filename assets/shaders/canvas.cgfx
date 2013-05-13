@@ -1,0 +1,803 @@
+// Copyright (c) 2011-2012 Turbulenz Limited
+
+//
+// Uniform variables
+//
+float4 screen;
+float3 uvtransform[2];
+float4 color;
+float alpha;
+
+sampler2D texture = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D pattern = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Linear;
+    WrapS = Repeat;
+    WrapT = Repeat;
+};
+
+sampler2D gradient = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D image = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+//
+// Vertex programs
+//
+struct VS_TEXTURE_OUT
+{
+    float4 Position: POSITION;
+    float2 UV: TEXCOORD0;
+};
+
+float4 vp_flat(float2 InPosition : POSITION) : POSITION
+{
+    return float4(((InPosition * screen.xy) + screen.zw), 0.0, 1.0);
+}
+
+VS_TEXTURE_OUT vp_texture(float2 InPosition: POSITION, float2 InUV: TEXCOORD0)
+{
+    VS_TEXTURE_OUT Out;
+    Out.Position = float4(((InPosition * screen.xy) + screen.zw), 0.0, 1.0);
+    Out.UV = InUV;
+    return Out;
+}
+
+VS_TEXTURE_OUT vp_texture_uvtransform(float2 InPosition: POSITION)
+{
+    VS_TEXTURE_OUT Out;
+    Out.Position = float4(((InPosition * screen.xy) + screen.zw), 0.0, 1.0);
+    float3 position = float3(InPosition, 1);
+    Out.UV.x = dot(position, uvtransform[0]);
+    Out.UV.y = dot(position, uvtransform[1]);
+    return Out;
+}
+
+VS_TEXTURE_OUT vp_image(float2 InPosition: POSITION, float2 InUV: TEXCOORD0)
+{
+    VS_TEXTURE_OUT Out;
+    Out.Position = float4(InPosition, 0.0, 1.0);
+    Out.UV = InUV;
+    return Out;
+}
+
+//
+// Fragment programs
+//
+float4 fp_flat() : COLOR
+{
+    // Alpha is premultiplied on the CPU
+    return color;
+}
+
+float4 fp_texture(float2 InUV: TEXCOORD0) : COLOR
+{
+    float4 fg = (tex2D(texture, InUV) * color);
+    fg.rgb *= fg.a;
+    return fg;
+}
+
+float4 fp_pattern(float2 InUV: TEXCOORD0) : COLOR
+{
+    float4 fg = tex2D(pattern, InUV);
+    fg.a *= alpha;
+    fg.rgb *= fg.a;
+    return fg;
+}
+
+float4 fp_gradient(float2 InUV: TEXCOORD0) : COLOR
+{
+    float4 fg = tex2D(gradient, InUV);
+    fg.a *= alpha;
+    fg.rgb *= fg.a;
+    return fg;
+}
+
+float4 fp_image(float2 InUV: TEXCOORD0) : COLOR
+{
+    return tex2D(image, InUV);
+}
+
+float4 fp_texture_shadow(float2 InUV: TEXCOORD0) : COLOR
+{
+    return (color * (tex2D(texture, InUV).a));
+}
+
+float4 fp_pattern_shadow(float2 InUV: TEXCOORD0) : COLOR
+{
+    return (color * (tex2D(pattern, InUV).a));
+}
+
+float4 fp_gradient_shadow(float2 InUV: TEXCOORD0) : COLOR
+{
+    return (color * (tex2D(gradient, InUV).a));
+}
+
+//
+// Techniques
+//
+technique flat_source_atop
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(DstAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_source_in
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(DstAlpha, Zero);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_source_out
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, Zero);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_source_over
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, InvSrcAlpha);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_destination_atop
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, SrcAlpha);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_destination_in
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, SrcAlpha);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_destination_out
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, InvSrcAlpha);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_destination_over
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, One);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_lighter
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_xor
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique texture_source_atop
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(DstAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_source_in
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(DstAlpha, Zero);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_source_out
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, Zero);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_source_over
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_destination_atop
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, SrcAlpha);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_destination_in
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, SrcAlpha);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_destination_out
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_destination_over
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, One);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_lighter
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique texture_xor
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture();
+    }
+}
+
+technique pattern_source_atop
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(DstAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_source_in
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(DstAlpha, Zero);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_source_out
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, Zero);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_source_over
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_destination_atop
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, SrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_destination_in
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, SrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_destination_out
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_destination_over
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, One);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_lighter
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique pattern_xor
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern();
+    }
+}
+
+technique gradient_source_atop
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(DstAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_source_in
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(DstAlpha, Zero);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_source_out
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, Zero);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_source_over
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_destination_atop
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, SrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_destination_in
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, SrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_destination_out
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(Zero, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_destination_over
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, One);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_lighter
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique gradient_xor
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(InvDestAlpha, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient();
+    }
+}
+
+technique texture_shadow
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture();
+        FragmentProgram = compile latest fp_texture_shadow();
+    }
+}
+
+technique pattern_shadow
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_pattern_shadow();
+    }
+}
+
+technique gradient_shadow
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, InvSrcAlpha);
+        VertexProgram   = compile latest vp_texture_uvtransform();
+        FragmentProgram = compile latest fp_gradient_shadow();
+    }
+}
+
+technique image
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_image();
+        FragmentProgram = compile latest fp_image();
+    }
+}

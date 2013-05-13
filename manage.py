@@ -29,10 +29,10 @@ def command_env():
 
     if not os.path.isdir(ENV):
         if TURBULENZOS == 'win32':
-            sh('%s -m virtualenv -v --no-site-packages %s' % (sys.executable, ENV))
+            sh('%s -m virtualenv --no-site-packages %s' % (sys.executable, ENV))
         else:
             print "PYTHON: %s" % PYTHON
-            cmd = 'virtualenv -v -p %s --no-site-packages %s' % (PYTHON, ENV)
+            cmd = 'virtualenv -p %s --no-site-packages %s' % (PYTHON, ENV)
             print "CMD: %s" % cmd
             sh(cmd, console=True)
 
@@ -60,8 +60,8 @@ def command_env():
     _easy_install('docutils>=0.9.1')
     _easy_install('Sphinx>=1.1.3')
 
-    _easy_install('turbulenz_tools>=0.26.0')
-    _easy_install('turbulenz_local>=0.9')
+    _easy_install('turbulenz_tools>=1.0')
+    _easy_install('turbulenz_local>=1.0')
 
     cmd = [os.path.join(env_bin, 'python'), os.path.join('scripts', 'install_nodejs.py'), '--typescript']
     if not TURBULENZOS in [ 'linux32', 'linux64' ]:

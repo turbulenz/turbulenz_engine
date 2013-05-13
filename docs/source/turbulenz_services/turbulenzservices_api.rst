@@ -113,15 +113,15 @@ See the :ref:`creating a mapping table <creating-a-mapping-table>` for more info
 
 **Syntax** ::
 
-    function tableRecievedFn(mappingTable) {}
+    function tableReceivedFn(mappingTable) {}
     var mappingTable = TurbulenzServices.createMappingTable(requestHandler,
                                                             gameSession,
-                                                            tableRecievedFn,
+                                                            tableReceivedFn,
                                                             defaultMappingSettings,
                                                             errorCallbackFn);
 
     // example usage:
-    var tableRecieved = function tableRecievedFn(mappingTable)
+    var tableReceived = function tableReceivedFn(mappingTable)
     {
         // load assets here
         textureManager.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
@@ -135,7 +135,7 @@ See the :ref:`creating a mapping table <creating-a-mapping-table>` for more info
     {
         mappingTable = TurbulenzServices.createMappingTable(requestHandler
                                                             gameSession,
-                                                            tableRecieved);
+                                                            tableReceived);
     }
 
     var gameSession = TurbulenzServices.createGameSession(requestHandler, gameSessionCreatedFn);
@@ -146,7 +146,7 @@ See the :ref:`creating a mapping table <creating-a-mapping-table>` for more info
 ``gameSession``
     A :ref:`GameSession <gamesession>` object.
 
-``tableRecievedFn``
+``tableReceivedFn``
     A JavaScript function.
     Once this function is called the :ref:`MappingTable <mappingtable>` object is ready to be used.
 
@@ -171,7 +171,7 @@ See the :ref:`creating a mapping table <creating-a-mapping-table>` for more info
 ``errorCallbackFn`` :ref:`(Optional) <turbulenzservices_errorcallbackfn>`
 
 Returns a :ref:`MappingTable <mappingtable>` object with ``defaultMappingSettings`` values.
-The :ref:`MappingTable <mappingtable>` object methods cannot be called until the ``tableRecievedFn`` is called.
+The :ref:`MappingTable <mappingtable>` object methods cannot be called until the ``tableReceivedFn`` is called.
 
 
 .. index::
@@ -217,15 +217,15 @@ The :ref:`LeaderboardManager <leaderboardmanager>` object retrieves leaderboards
 
 **Syntax** ::
 
-    function leaderboardsRecievedFn(leaderboardManager) {}
+    function leaderboardsReceivedFn(leaderboardManager) {}
     var leaderboardManager = TurbulenzServices.createLeaderboardManager(requestHandler,
                                                                         gameSession,
-                                                                        leaderboardsRecievedFn,
+                                                                        leaderboardsReceivedFn,
                                                                         errorCallbackFn);
 
     // example usage:
     var leaderboardsReady = false;
-    var leaderboardsRecieved = function leaderboardsRecievedFn(leaderboardManager)
+    var leaderboardsReceived = function leaderboardsReceivedFn(leaderboardManager)
     {
         leaderboardsReady = true;
     };
@@ -235,7 +235,7 @@ The :ref:`LeaderboardManager <leaderboardmanager>` object retrieves leaderboards
     {
         leaderboardManager = TurbulenzServices.createLeaderboardManager(requestHandler,
                                                                         gameSession,
-                                                                        leaderboardsRecieved,
+                                                                        leaderboardsReceived,
                                                                         errorCallbackFn);
     }
 
@@ -247,14 +247,14 @@ The :ref:`LeaderboardManager <leaderboardmanager>` object retrieves leaderboards
 ``gameSession``
     A :ref:`GameSession <gamesession>` object.
 
-``leaderboardsRecievedFn``
+``leaderboardsReceivedFn``
     A JavaScript function.
     Once this function is called the :ref:`LeaderboardManager <leaderboardmanager>` object is ready to be used.
 
 ``errorCallbackFn`` :ref:`(Optional) <turbulenzservices_errorcallbackfn>`
 
 Returns a :ref:`LeaderboardManager <leaderboardmanager>` object.
-The :ref:`LeaderboardManager <leaderboardmanager>` object methods cannot be called until the ``leaderboardsRecievedFn`` is called.
+The :ref:`LeaderboardManager <leaderboardmanager>` object methods cannot be called until the ``leaderboardsReceivedFn`` is called.
 
 .. index::
     pair: TurbulenzServices; createBadgeManager
@@ -307,15 +307,15 @@ The :ref:`StoreManager <storemanager>` object retrieves store items meta data, u
 
 **Syntax** ::
 
-    function storeMetaRecievedFn(storeManager) {}
+    function storeMetaReceivedFn(storeManager) {}
     var storeManager = TurbulenzServices.createStoreManager(requestHandler,
                                                             gameSession,
-                                                            storeMetaRecievedFn,
+                                                            storeMetaReceivedFn,
                                                             errorCallbackFn);
 
     // example usage:
     var storeManagerReady = false;
-    var storeManagerRecieved = function storeManagerRecievedFn(storeManager)
+    var storeManagerReceived = function storeManagerReceivedFn(storeManager)
     {
         storeManagerReady = true;
     };
@@ -325,7 +325,7 @@ The :ref:`StoreManager <storemanager>` object retrieves store items meta data, u
     {
         storeManager = TurbulenzServices.createStoreManager(requestHandler,
                                                             gameSession,
-                                                            storeManagerRecieved,
+                                                            storeManagerReceived,
                                                             errorCallbackFn);
     }
 
@@ -337,14 +337,14 @@ The :ref:`StoreManager <storemanager>` object retrieves store items meta data, u
 ``gameSession``
     A :ref:`GameSession <gamesession>` object.
 
-``storeManagerRecievedFn``
+``storeManagerReceivedFn``
     A JavaScript function.
     Once this function is called the :ref:`StoreManager <storemanager>` object is ready to be used.
 
 ``errorCallbackFn`` :ref:`(Optional) <turbulenzservices_errorcallbackfn>`
 
 Returns a :ref:`StoreManager <storemanager>` object.
-The :ref:`StoreManager <storemanager>` object methods cannot be called until the ``storeManagerRecievedFn`` is called.
+The :ref:`StoreManager <storemanager>` object methods cannot be called until the ``storeManagerReceivedFn`` is called.
 
 .. index::
     pair: TurbulenzServices; createUserProfile
@@ -361,26 +361,63 @@ The :ref:`UserProfile <userprofile>` object contains user profile information.
 
 **Syntax** ::
 
-    function profileRecievedFn(userProfile)
+    function profileReceivedFn(userProfile)
     {
         // Use profile information here
     }
 
     var userProfile = TurbulenzServices.createUserProfile(requestHandler,
-                                                          profileRecievedFn,
+                                                          profileReceivedFn,
                                                           errorCallbackFn);
 
 ``requestHandler``
     A :ref:`RequestHandler <requesthandler>` object.
 
-``profileRecievedFn``
+``profileReceivedFn``
     A JavaScript function.
     Once this function is called the :ref:`UserProfile <userprofile>` object is ready to be used.
 
 ``errorCallbackFn`` :ref:`(Optional) <turbulenzservices_errorcallbackfn>`
 
 Returns a :ref:`UserProfile <userprofile>` object.
-The :ref:`UserProfile <userprofile>` object cannot be used until ``profileRecievedFn`` is called.
+The :ref:`UserProfile <userprofile>` object cannot be used until ``profileReceivedFn`` is called.
+
+.. index::
+    pair: TurbulenzServices; upgradeAnonymousUser
+
+.. _turbulenzservices_upgradeanonymoususer:
+
+`upgradeAnonymousUser`
+----------------------
+
+**Summary**
+
+Present the user with options for upgrading their account from
+anonymous to a full user.  If supported a dialog or login screen will
+be presented listing the options available to upgrade to a full
+turbulenz account.
+
+
+**Syntax** ::
+
+    var accountUpgraded = function accountUpgradedFn()
+    {
+        // Re-request the UserProfile and check the 'anonymous'
+        // property to determine the user's new status.
+    }
+
+    TurbulenzServices.upgradeAnonymousUser(accountUpgraded);
+
+
+``accountUpgraded``
+    A callback made only if the user upgrades the account.  If the
+    user dismisses the upgrade dialog or otherwise cancels the upgrade
+    process this callback may not be invoked.  Even if the callback is
+    invoked, the game should re-request the UserProfile data
+    :ref:`UserProfile <userprofile>` object via
+    :ref:`createuserProfile <turbulenzservices_createuserprofile>` and
+    check the value of the `anonymous` property.
+
 
 .. index::
     pair: TurbulenzServices; sendCustomMetricEvent

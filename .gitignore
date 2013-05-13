@@ -10,3 +10,7 @@ jslib/
 jslib-modular/
 jslib-refcheck/
 .mkdir
+.tssyntaxcheck/
+
+# Temporary files
+*~

@@ -16,7 +16,7 @@ The ``StoreManager`` object is an API for getting store item meta data, user own
 
 A ``StoreManager`` object can be created by calling :ref:`TurbulenzServices.createStoreManager <turbulenzservices_createstoremanager>`.
 None of the ``StoreManager`` functions or properties can be used until the :ref:`TurbulenzServices.createStoreManager <turbulenzservices_createstoremanager>`
-``storeMetaRecieved`` callback function has been called.
+``storeMetaReceived`` callback function has been called.
 
 **Required scripts**
 
