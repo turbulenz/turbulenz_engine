@@ -590,6 +590,8 @@ def command_protolib_build(options):
                                                  " such as build files, directory structure, protolib, etc.")
     parser.add_argument('--clean', action='store_true', help="Clean the app")
     parser.add_argument('--no-copy', action='store_true', help="Don't attempt to copy protolib")
+    parser.add_argument('--mode', action='append', help="Add build mode (default canvas & canvas-debug)",
+                        choices=['all', 'plugin', 'plugin-debug', 'canvas', 'canvas-debug'])
     parser.add_argument('--verbose', action='store_true', help="Display verbose build output")
     parser.add_argument('--dir', action='store', help="Directory to build the app")
     parser.add_argument('app', default='app', nargs='?', help="Select an individual app to build")
@@ -611,7 +613,7 @@ def command_protolib_build(options):
         else:
             if not args.no_copy:
                 sh(os.path.join(os.getcwd(), "external", "gnumake-win32", "3.81", "bin", "make") + " do_install_protolib", cwd=args.dir,  console=args.verbose, shell=True)
-            sh("python manage.py apps " + args.dir + " --assets-path " + os.path.abspath(os.path.join(args.dir, "assets")),  console=args.verbose, shell=True)
+            sh("python manage.py apps " + args.dir + ''.join([(" --mode %s" % mode) for mode in args.mode]) + " --assets-path " + os.path.abspath(os.path.join(args.dir, "assets")),  console=args.verbose, shell=True)
 
     except CalledProcessError as e:
         error("Command: %s" % e.cmd)
