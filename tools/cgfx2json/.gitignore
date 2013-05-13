@@ -9,6 +9,4 @@ Debug
 Release
 x64
 obj
-linux32
-linux64
-macosx
+bin
