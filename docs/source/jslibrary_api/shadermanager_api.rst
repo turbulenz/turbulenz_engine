@@ -294,6 +294,38 @@ Both arguments for ``setPathRemapping`` are properties on the :ref:`MappingTable
 
 
 .. index::
+    pair: ShaderManager; setAutomaticParameterResize
+
+`setAutomaticParameterResize`
+-----------------------------
+
+**Summary**
+
+Enables automatic resizing of a parameter arrays.
+
+The resizing is done during loading, existing shaders will not be updated.
+
+Ideally developers should modify the source shader code instead of patching it at runtime
+but this method is provided for convenience for those cases where the shader code may be
+used for separate applications with different requirements.
+
+**Syntax** ::
+
+    shaderManager.setAutomaticParameterResize(name, size);
+
+    // example usage:
+    // The model used for this sample only has 20 bones so we optimize for it.
+    // Each bone has 3 V4s.
+    shaderManager.setAutomaticParameterResize("skinBones", 20 * 3);
+
+``name``
+    The name of the parameter to be resized.
+
+``size``
+    The size the parameter will be resized to.
+
+
+.. index::
     pair: ShaderManager; destroy
 
 `destroy`
