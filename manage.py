@@ -16,7 +16,7 @@ import argparse
 from scripts import TURBULENZ_ENGINE_VERSION
 from scripts.utils import TURBULENZOS, TURBULENZROOT, PYTHON, ENV
 from scripts.utils import command_no_arguments, command_with_arguments, command_requires_env
-from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, find_devenv
+from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, find_devenv, rm
 from scripts.utils import check_documentation_links
 
 #######################################################################################################################
@@ -257,7 +257,7 @@ def command_apps(options):
 
             rmdir('%s/_build' % app_dir)
             rmdir('%s/staticmax' % app_dir)
-            rmdir('%s/mapping_table.json' % app_dir)
+            rm('%s/mapping_table.json' % app_dir)
 
         elif args.refcheck:
             make_cmd = "%s -C %s jslib TS_REFCHECK=1 -j %s" \
