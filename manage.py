@@ -191,10 +191,12 @@ def command_tools():
 def command_tools_clean():
     tools = 'tools'
     if TURBULENZOS == 'win32':
-        project_file = os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj')
-        project_file = os.path.normpath(project_file)
         devenv = find_devenv()
-        sh([devenv, project_file, '/clean', 'Release'], console=True)
+        cgfx2json_proj = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj'))
+        sh([devenv, cgfx2json_proj, '/clean', 'Release'], console=True)
+
+        nvtristrip_sln = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip.sln'))
+        sh([devenv, nvtristrip_sln, '/clean', 'Release'], console=True)
     else:
         sh('make clean', cwd=tools)
 
