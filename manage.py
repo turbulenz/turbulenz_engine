@@ -173,13 +173,13 @@ def command_tools():
 
         cgfx2json_proj = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj'))
         sh([devenv, cgfx2json_proj, '/build', 'Release'], console=True)
-        cp('tools/cgfx2json/Release/cgfx2json.exe', tools_bin)
+        cp('tools/cgfx2json/bin/release/cgfx2json.exe', tools_bin)
         cp('external/Cg/bin/cg.dll', tools_bin)
         cp('external/Cg/bin/cgGL.dll', tools_bin)
 
         nvtristrip_sln = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip.sln'))
         sh([devenv, nvtristrip_sln, '/build', 'Release'], console=True)
-        cp('tools/NvTriStrip/NvTriStripper/Release/NvTriStripper.exe', tools_bin)
+        cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper.exe', tools_bin)
 
     else:
         sh('make', tools, console=True)
