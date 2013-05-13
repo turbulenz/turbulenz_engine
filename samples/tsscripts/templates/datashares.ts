@@ -204,9 +204,8 @@ TurbulenzEngine.onload = function onloadFn()
             }
             invalidateButtons = true;
         }
-        dataShareManager.findDataShares({
-                callback: foundDataSharesCallback // find any joinable datashares
-            });
+        // find any joinable datashares
+        dataShareManager.findDataShares({callback: foundDataSharesCallback});
     }
 
     var currentGame: TicTacToeGame;
@@ -252,17 +251,21 @@ TurbulenzEngine.onload = function onloadFn()
                 invalidateButtons = true;
                 currentGame.update();
 
-                gameNotificationsManager.sendInstantNotification({
-                    key: 'forfeit',
-                    msg: {
-                        dataShareId: currentDataShare.id,
-                        text: userProfile.username + ' forfeit the game',
-                        data: {
-                            sent: new Date()
-                        }
-                    },
-                    recipient: currentGame.getOtherUser()
-                });
+                var otherUser = currentGame.getOtherUser();
+                if (otherUser)
+                {
+                    gameNotificationsManager.sendInstantNotification({
+                        key: 'forfeit',
+                        msg: {
+                            dataShareId: currentDataShare.id,
+                            text: userProfile.username + ' forfeit the game',
+                            data: {
+                                sent: new Date()
+                            }
+                        },
+                        recipient: otherUser
+                    });
+                }
             }
             else
             {
@@ -319,17 +322,21 @@ TurbulenzEngine.onload = function onloadFn()
                         joinedGames[dataShare.id] = currentGame;
                         readMoves();
 
-                        gameNotificationsManager.sendInstantNotification({
-                            key: 'player-joined',
-                            msg: {
-                                dataShareId: currentDataShare.id,
-                                text: userProfile.username + ' has joined your game',
-                                data: {
-                                    sent: new Date()
-                                }
-                            },
-                            recipient: currentGame.getOtherUser()
-                        });
+                        var otherUser = currentGame.getOtherUser();
+                        if (otherUser)
+                        {
+                            gameNotificationsManager.sendInstantNotification({
+                                key: 'player-joined',
+                                msg: {
+                                    dataShareId: currentDataShare.id,
+                                    text: userProfile.username + ' has joined your game',
+                                    data: {
+                                        sent: new Date()
+                                    }
+                                },
+                                recipient: otherUser
+                            });
+                        }
                     }
                     currentDataShare.setJoinable(false, setJoinableCallback);
                 }
