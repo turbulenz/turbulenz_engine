@@ -16,7 +16,7 @@ import argparse
 from scripts import TURBULENZ_ENGINE_VERSION
 from scripts.utils import TURBULENZOS, TURBULENZROOT, PYTHON, ENV
 from scripts.utils import command_no_arguments, command_with_arguments, command_requires_env
-from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, find_devenv, rm
+from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, find_devenv, rm, mkdir, cp
 from scripts.utils import check_documentation_links
 
 #######################################################################################################################
@@ -165,7 +165,9 @@ def _get_make_command():
 @command_no_arguments
 def command_tools():
     tools = 'tools'
+    tools_bin = 'tools/bin/%s' % TURBULENZOS
 
+    mkdir(tools_bin)
     if TURBULENZOS == 'win32':
         project_file = os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj')
         project_file = os.path.normpath(project_file)
@@ -174,6 +176,9 @@ def command_tools():
 
     else:
         sh('make', tools, console=True)
+        cp('tools/cgfx2json/bin/release/cgfx2json', tools_bin)
+        cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper', tools_bin)
+
 
 @command_no_arguments
 def command_tools_clean():
