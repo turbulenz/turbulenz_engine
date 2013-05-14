@@ -404,7 +404,7 @@ TurbulenzEngine.onload = function onloadFn()
             storeManager.onSitePurchaseRejected = onSitePurchaseDialogCompleted;
 
             TurbulenzEngine.clearInterval(intervalID);
-            TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
+            intervalID = TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
         }
     }
     intervalID = TurbulenzEngine.setInterval(loadingLoop, 100);

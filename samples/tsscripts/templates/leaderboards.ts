@@ -440,7 +440,7 @@ TurbulenzEngine.onload = function onloadFn()
             });
 
             TurbulenzEngine.clearInterval(intervalID);
-            TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
+            intervalID = TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
 
             leaderboardManager.get(leaderboardKeys[currentLeaderboardIndex], {'type': 'top', 'size': leaderboardSize}, gotLeaderboard);
         }
