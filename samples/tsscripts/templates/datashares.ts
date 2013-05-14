@@ -136,7 +136,7 @@ TurbulenzEngine.onload = function onloadFn()
         dataShareManager = DataShareManager.create(requestHandler, gameSession);
         gameNotificationsManager = NotificationsManager.create(requestHandler, gameSession, function () {});
 
-        function profileRecievedFn(currentUser: string)
+        function profileRecievedFn(currentUser: UserProfile)
         {
             userProfile = currentUser;
             findDataShares();
