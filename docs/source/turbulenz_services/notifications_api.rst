@@ -145,8 +145,8 @@ Methods
 
 .. _notificationsmanager_sendInstantNotification:
 
-`sendNotification`
---------------------
+`sendInstantNotification`
+-------------------------
 
 **Summary**
 
@@ -158,7 +158,7 @@ Sends an instant notification to a user.
     var params = {
         key: key,
         msg: message,
-        recipients: string
+        recipient: string
     };
 
     var promise = gameNotificationsManager.sendInstantNotification(params);
@@ -189,8 +189,8 @@ Sends an instant notification to a user.
 
 .. _notificationsmanager_sendDelayedNotification:
 
-`sendNotification`
---------------------
+`sendDelayedNotification`
+-------------------------
 
 **Summary**
 
