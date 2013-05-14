@@ -774,7 +774,7 @@ TurbulenzEngine.onload = function onloadFn()
             gameNotificationsManager.addNotificationListener('forfeit', yourTurnFn);
 
             TurbulenzEngine.clearInterval(intervalID);
-            TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
+            intervalID = TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
         }
     }
     intervalID = TurbulenzEngine.setInterval(loadingLoop, 100);
