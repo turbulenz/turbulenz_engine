@@ -1930,7 +1930,7 @@ SpotLightWrapper.prototype =
     }
 };
 
-if (window.jQuery !== undefined)
+if (window.jQuery !== undefined && window.jQuery.extend !== undefined)
 {
     Protolib.extend = jQuery.extend;
 }
