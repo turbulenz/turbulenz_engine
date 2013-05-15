@@ -1749,20 +1749,27 @@ WebGLSoundDevice.create = function webGLSoundDeviceFn(params)
     // Need a temporary Audio element to test capabilities
     var audio = new Audio();
 
-    if (audio.mozSetup)
+    if (sd.audioContext)
     {
-        try
-        {
-            audio.mozSetup(1, 22050);
-        }
-        catch (e)
-        {
-            return null;
-        }
+        sd.loopingSupported = true;
     }
+    else
+    {
+        if (audio.mozSetup)
+        {
+            try
+            {
+                audio.mozSetup(1, 22050);
+            }
+            catch (e)
+            {
+                return null;
+            }
+        }
 
-    // Check for looping support
-    sd.loopingSupported = (typeof audio.loop === 'boolean');
+        // Check for looping support
+        sd.loopingSupported = (typeof audio.loop === 'boolean');
+    }
 
     // Check for supported extensions
     var supportedExtensions = {
