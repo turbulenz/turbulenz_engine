@@ -345,7 +345,7 @@ TurbulenzEngine.onload = function onloadFn()
 
     function playerJoinedFn(notification)
     {
-        if (currentGame && currentDataShare.id === notification.message.dataShareId)
+        if (currentGame && currentDataShare.id === notification.msg.dataShareId)
         {
             currentGame.playerJoined(notification.sender);
         }
@@ -372,7 +372,7 @@ TurbulenzEngine.onload = function onloadFn()
 
     function yourTurnFn(notification)
     {
-        if (currentGame && currentDataShare.id === notification.message.dataShareId)
+        if (currentGame && currentDataShare.id === notification.msg.dataShareId)
         {
             readMoves();
         }
