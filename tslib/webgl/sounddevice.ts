@@ -974,13 +974,24 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
 
         if (sd.linearDistance)
         {
-            if (typeof pannerNode.LINEAR_DISTANCE === "number")
+            if (typeof pannerNode.distanceModel === "string")
+            {
+                pannerNode.distanceModel = "linear";
+            }
+            else if (typeof pannerNode.LINEAR_DISTANCE === "number")
             {
                 pannerNode.distanceModel = pannerNode.LINEAR_DISTANCE;
             }
         }
 
-        pannerNode.panningModel = pannerNode.EQUALPOWER;
+        if (typeof pannerNode.panningModel === "string")
+        {
+            pannerNode.panningModel = "equalpower";
+        }
+        else
+        {
+            pannerNode.panningModel = pannerNode.EQUALPOWER;
+        }
 
         Object.defineProperty(source, "position", {
                 get : function getPositionFn() {
