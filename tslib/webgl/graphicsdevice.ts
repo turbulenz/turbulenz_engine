@@ -5371,7 +5371,7 @@ WebGLGraphicsDevice.prototype =
             this.metrics.primitives = 0;
         }
 
-        return true;
+        return !(document.hidden || document['webkitHidden']);
     },
 
     beginRenderTarget : function beginRenderTargetFn(renderTarget)
