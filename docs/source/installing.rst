@@ -209,7 +209,7 @@ prerequisites)
     In a terminal window, enter ::
 
         cd *SDKINSTALLDIR*
-        source env/bin/activate
+        source start_env
 
     You should see an **'(env)'** tag in front of your prompt.
 
