@@ -763,13 +763,13 @@ Protolib.prototype =
         this.mouseDelta[1] = 0;
         this.mouseWheelDelta = 0;
 
+        this._updateSounds();
         soundSourceManager.checkFreeSoundSources();
         if (soundDevice)
         {
             soundDevice.update();
             soundDevice.listenerTransform = camera.matrix;
         }
-        this._updateSounds();
 
         var appTime = this.time.app;
         appTime.previous = appTime.current;
@@ -1281,7 +1281,7 @@ Protolib.prototype =
         var looping = params.looping || false;
         var position = params.v3Position || v3Constants.origin;
         var minDistance = params.minDistance || 1;
-        var maxDistance = params.maxDistance || Infinity;
+        var maxDistance = params.maxDistance;
         var rollOff = params.rollOff || 1;
         var background = params.background || false;
 
@@ -1315,7 +1315,10 @@ Protolib.prototype =
         soundSource.looping = looping;
         soundSource.position = mathDevice.v3Build(position[0], position[1], position[2]);
         soundSource.minDistance = minDistance;
-        soundSource.maxDistance = maxDistance;
+        if (maxDistance !== undefined)
+        {
+            soundSource.maxDistance = maxDistance;
+        }
         soundSource.rollOff = rollOff;
         soundSource.relative = background;
         soundWrapper = new SoundWrapper(protolib, token, soundSourceManager, volume);
