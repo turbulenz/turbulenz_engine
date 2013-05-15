@@ -316,7 +316,7 @@ This allows the game to react to a notification arriving while the player is pla
         The game key of this notification. (key from gamenotifications.yaml)
     ``sender``
         The username of the user who sent the notification.
-    ``message``
+    ``msg``
         The message body of the notification, this is the 'msg' parameter of :ref:`send***Notification <notificationsmanager_sendInstantNotification>` or
     ``sent``
         The time the notification was sent out in seconds since 1970
