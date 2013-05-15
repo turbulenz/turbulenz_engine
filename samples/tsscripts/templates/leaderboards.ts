@@ -440,7 +440,7 @@ TurbulenzEngine.onload = function onloadFn()
             });
 
             TurbulenzEngine.clearInterval(intervalID);
-            TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
+            intervalID = TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
 
             leaderboardManager.get(leaderboardKeys[currentLeaderboardIndex], {'type': 'top', 'size': leaderboardSize}, gotLeaderboard);
         }
@@ -478,6 +478,26 @@ TurbulenzEngine.onload = function onloadFn()
     addRadioControl(0);
     addRadioControl(1);
 
+    function scoresSetFn()
+    {
+        clearStatus();
+        try
+        {
+            document.getElementById('button-setscore').disabled = false;
+        }
+        catch (e) {}
+        currentLeaderboardResult.refresh(gotLeaderboard);
+        disableMoving(true);
+    }
+
+    function scoresSetErrorFn()
+    {
+        scoresSetFn();
+
+        setStatus("Error setting score");
+        TurbulenzEngine.setTimeout(function () { clearStatus(); }, 1000);
+    }
+
     htmlControls.addButtonControl({
         id: "button-setscore",
         value: "Set score",
@@ -491,19 +511,8 @@ TurbulenzEngine.onload = function onloadFn()
                 clearStatus(1000);
                 return;
             }
-            function scoresSetFn()
-            {
-                clearStatus();
-                try
-                {
-                    document.getElementById('button-setscore').disabled = false;
-                }
-                catch (e) {}
-                currentLeaderboardResult.refresh(gotLeaderboard);
-                disableMoving(true);
-            }
             setStatus('Setting score');
-            leaderboardManager.set(leaderboardKeys[currentLeaderboardIndex], score, scoresSetFn);
+            leaderboardManager.set(leaderboardKeys[currentLeaderboardIndex], score, scoresSetFn, scoresSetErrorFn);
             try
             {
                 document.getElementById('button-setscore').disabled = true;
@@ -673,8 +682,18 @@ TurbulenzEngine.onload = function onloadFn()
         }
     };
 
+    var scoreOnClick = 71;
+    var onMouseUp = function onMouseUpFn(button, x, y)
+    {
+        setStatus('Setting score');
+        leaderboardManager.set(leaderboardKeys[currentLeaderboardIndex],
+                               scoreOnClick, scoresSetFn, scoresSetErrorFn);
+        scoreOnClick += 10;
+    }
+
     inputDevice.addEventListener('mousewheel', onMouseWheel);
     inputDevice.addEventListener("keyup", keyUp);
+    inputDevice.addEventListener('mouseup', onMouseUp);
 
     // Create a scene destroy callback to run when the window is closed
     TurbulenzEngine.onunload = function destroyScene()

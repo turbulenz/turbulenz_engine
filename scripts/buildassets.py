@@ -141,7 +141,7 @@ class Tool(object):
 
         version = self.get_version(version_file_path)
         self.changed = (version != old_version)
-        if self.changed and verbose:
+        if verbose and version and self.changed:
             print self.name + ' tool version changed ' + version
         return self.changed
 
@@ -311,7 +311,7 @@ class Tools(object):
                 default_convert_path = 'convert'
             imagemagick_convert_path = os_getenv('TURBULENZ_IMAGEMAGICK_CONVERT', default_convert_path)
 
-        nvtristrip = path_join(root, 'external', 'NvTriStrip', 'bin', turbulenz_os, 'NvTriStripper' + exe)
+        nvtristrip = path_join(root, 'tools', 'bin', turbulenz_os, 'NvTriStripper' + exe)
 
         copy = CopyTool()
         tga2png = Tga2Json('tga2png', imagemagick_convert_path)

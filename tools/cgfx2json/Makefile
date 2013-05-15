@@ -33,10 +33,11 @@ endif
 
 ifeq ($(DEBUG), 1)
 OBJDIR=obj/debug
+BINDIR=bin/debug
 else
 OBJDIR=obj/release
+BINDIR=bin/release
 endif
-BINDIR=../bin/$(LIBTYPE)
 
 dummy := $(shell test -d $(OBJDIR) || mkdir -p $(OBJDIR))
 dummy := $(shell test -d $(BINDIR) || mkdir -p $(BINDIR))

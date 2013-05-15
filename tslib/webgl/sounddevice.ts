@@ -1242,6 +1242,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 },
                 set : function setGainFn(newGain) {
                     gain = newGain;
+                    source.gainFactor = -1;
                 },
                 enumerable : true,
                 configurable : false
