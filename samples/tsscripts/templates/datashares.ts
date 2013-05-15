@@ -258,10 +258,7 @@ TurbulenzEngine.onload = function onloadFn()
                         key: 'forfeit',
                         msg: {
                             dataShareId: currentDataShare.id,
-                            text: userProfile.username + ' forfeit the game',
-                            data: {
-                                sent: new Date()
-                            }
+                            text: userProfile.username + ' forfeit the game'
                         },
                         recipient: otherUser
                     });
@@ -329,10 +326,7 @@ TurbulenzEngine.onload = function onloadFn()
                                 key: 'player-joined',
                                 msg: {
                                     dataShareId: currentDataShare.id,
-                                    text: userProfile.username + ' has joined your game',
-                                    data: {
-                                        sent: new Date()
-                                    }
+                                    text: userProfile.username + ' has joined your game'
                                 },
                                 recipient: otherUser
                             });
@@ -407,10 +401,7 @@ TurbulenzEngine.onload = function onloadFn()
                             key: 'your-turn',
                             msg: {
                                 dataShareId: currentDataShare.id,
-                                text: 'It\'s your turn',
-                                data: {
-                                    sent: new Date()
-                                }
+                                text: 'It\'s your turn'
                             },
                             recipient: otherUser
                         });
