@@ -4074,6 +4074,12 @@ class CanvasContext
         }
         else
         {
+            var totalArea = this.calculateArea(points, numSegments);
+            if (totalArea === 0)
+            {
+                return numVertices;
+            }
+
             var numPoints = (numSegments + 1);
             for (n = 0; n < numPoints; n += 1)
             {
@@ -4081,7 +4087,10 @@ class CanvasContext
             }
 
             var oldNumVertices = numVertices;
-            numVertices = this.triangulateConcave(points, numSegments, vertices, 0, false);
+            numVertices = this.triangulateConcave(points, numSegments,
+                                                  vertices, numVertices,
+                                                  false,
+                                                  totalArea);
 
             numCachedIndices = (numVertices - oldNumVertices);
             cachedIndices = [];
@@ -4110,15 +4119,12 @@ class CanvasContext
         return numVertices;
     };
 
-    triangulateConcave(points, numSegments, vertices, numVertices, ownPoints)
+    triangulateConcave(points: any[], numSegments: number,
+                       vertices: any[], numVertices: number,
+                       ownPoints: bool,
+                       totalArea: number)
     {
         var isConvex = this.isConvex;
-
-        var totalArea = this.calculateArea(points, numSegments);
-        if (totalArea === 0)
-        {
-            return numVertices;
-        }
 
         if (ownPoints)
         {
@@ -4351,7 +4357,10 @@ class CanvasContext
                             }
                             else
                             {
-                                numVertices = this.triangulateConcave(pointsA, numSegmentsA, vertices, numVertices, true);
+                                numVertices = this.triangulateConcave(pointsA, numSegmentsA,
+                                                                      vertices, numVertices,
+                                                                      true,
+                                                                      totalArea);
                             }
                         }
                         pointsA = null;
@@ -4373,12 +4382,6 @@ class CanvasContext
                             points = pointsB;
                             numSegments = numSegmentsB;
                             pointsB = null;
-
-                            totalArea = this.calculateArea(points, numSegments);
-                            if (totalArea === 0)
-                            {
-                                return numVertices;
-                            }
 
                             points.length = numSegments;
 
