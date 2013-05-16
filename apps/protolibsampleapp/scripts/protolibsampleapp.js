@@ -273,7 +273,6 @@ Application.prototype =
 
     destroy: function destroyFn()
     {
-        // Destruction code goes here
         var protolib = this.protolib;
         if (protolib)
         {
@@ -284,10 +283,19 @@ Application.prototype =
 };
 
 // Application constructor function
-Application.create = function applicationCreateFn(protolib)
+Application.create = function applicationCreateFn(params)
 {
     var app = new Application();
-    app.protolib = protolib;
+    app.protolib = params.protolib;
+    if (!app.protolib)
+    {
+        var console = window.console;
+        if (console)
+        {
+            console.error("Protolib could not be found");
+        }
+        return null;
+    }
     app.init();
     return app;
 };
