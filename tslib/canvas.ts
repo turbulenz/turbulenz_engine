@@ -1333,7 +1333,7 @@ class CanvasContext
             numCurrentSubPathElements += 1;
         }
 
-        currentSubPath[numCurrentSubPathElements] = [x2, y2];
+        currentSubPath[numCurrentSubPathElements] = p2;
     };
 
     bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
@@ -1384,7 +1384,7 @@ class CanvasContext
             }
         }
 
-        currentSubPath[numCurrentSubPathElements] = [x2, y2];
+        currentSubPath[numCurrentSubPathElements] = p2;
     };
 
     arcTo(x1, y1, x2, y2, radius)
