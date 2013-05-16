@@ -59,6 +59,7 @@ class DefaultRendering
     eyePositionUpdated        : bool;
     eyePosition               : any; // v3
     globalTechniqueParameters : TechniqueParameters;
+    globalTechniqueParametersArray : TechniqueParameters[];
     passes                    : any[];  // (Pass/[])[]
     defaultSkinBufferSize     : number;
     camera                    : Camera;
@@ -176,8 +177,7 @@ class DefaultRendering
          drawTransparentFn,
          drawDebugFn)
     {
-        var globalTechniqueParameters = this.globalTechniqueParameters;
-        var globalTechniqueParametersArray = [globalTechniqueParameters];
+        var globalTechniqueParametersArray = this.globalTechniqueParametersArray;
 
         gd.clear(clearColor, 1.0, 0);
 
@@ -259,6 +259,7 @@ class DefaultRendering
 
     destroy()
     {
+        delete this.globalTechniqueParametersArray;
         delete this.globalTechniqueParameters;
         delete this.lightPosition;
         delete this.eyePosition;
@@ -321,8 +322,14 @@ class DefaultRendering
         // do this once instead of for every update
         var rendererInfo = node.rendererInfo;
         techniqueParameters.worldViewProjection = rendererInfo.worldViewProjection;
-        techniqueParameters.eyePosition = rendererInfo.eyePosition;
         techniqueParameters.lightPosition = rendererInfo.lightPosition;
+
+        var techniqueName = this.technique.name;
+        if (techniqueName.indexOf("flat") === -1 &&
+            techniqueName.indexOf("lambert") === -1)
+        {
+            techniqueParameters.eyePosition = rendererInfo.eyePosition;
+        }
 
         var skinController = geometryInstance.skinController;
         if (skinController)
@@ -370,6 +377,7 @@ class DefaultRendering
             ambientColor : md.v3Build(0.2, 0.2, 0.3),
             time : 0.0
         });
+        dr.globalTechniqueParametersArray = [dr.globalTechniqueParameters];
 
         dr.passes = [[], [], []];
 

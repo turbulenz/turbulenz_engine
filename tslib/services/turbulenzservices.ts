@@ -47,7 +47,7 @@ interface UserProfileReceivedCB
 
 // Called when the user has upgraded from a guest or anonymous account
 // to a full one.  This callback does not guarantee that the upgrade
-// complete successfully, so TurbulenzServices shoudl be requeried for
+// complete successfully, so TurbulenzServices should be required for
 // a new UserProfile object to check the updated status of the user.
 interface UserUpgradeCB
 {

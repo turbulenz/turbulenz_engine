@@ -489,17 +489,17 @@ TurbulenzEngine.onload = function onloadFn()
         }
     }
 
-    var loadingID;
+    var intervalID;
     function loadingLoop()
     {
         if (loadedResources === numResources)
         {
-            TurbulenzEngine.clearInterval(loadingID);
-            TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
+            TurbulenzEngine.clearInterval(intervalID);
+            intervalID = TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
         }
     }
 
-    loadingID = TurbulenzEngine.setInterval(loadingLoop, 100);
+    intervalID = TurbulenzEngine.setInterval(loadingLoop, 100);
 
     //==========================================================================
 
@@ -731,9 +731,9 @@ TurbulenzEngine.onload = function onloadFn()
     // Create a scene destroy callback to run when the window is closed
     TurbulenzEngine.onunload = function destroyScene()
     {
-        if (loadingID)
+        if (intervalID)
         {
-            TurbulenzEngine.clearInterval(loadingID);
+            TurbulenzEngine.clearInterval(intervalID);
         }
 
         if (gameSession)

@@ -215,35 +215,32 @@ if platform.system() == "Windows":
     # pylint: disable=W0404
 
     # pylint: disable=F0401, E0602
-    def _get_reg_software_value(store, path, key):
-        import _winreg
-
-        value = None
-        try:
-            install_key = _winreg.OpenKey(store, 'SOFTWARE\%s' % path)
-            (value, _) = _winreg.QueryValueEx(install_key, key)
-        except WindowsError:
-            try:
-                install_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
-                                              'SOFTWARE\Wow6432Node\%s' % path)
-                (value, _) = _winreg.QueryValueEx(install_key, key)
-            except WindowsError:
-                pass
-        return value
-    # pylint: enable=F0401, E0602
-
-    # pylint: disable=F0401, E0602
     def find_devenv():
-        from _winreg import HKEY_LOCAL_MACHINE
-        devenv_path = _get_reg_software_value(HKEY_LOCAL_MACHINE, 'Microsoft\VisualStudio\9.0', 'InstallDir')
+        from _winreg import OpenKey, QueryValueEx, HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY, KEY_READ
+        sxs_key = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
+                          0, KEY_READ | KEY_WOW64_32KEY)
+        if not sxs_key:
+            return None, None
 
+        devenv_path, _ = QueryValueEx(sxs_key, '11.0')
         if devenv_path is not None:
-            devenv_path = os.path.join(devenv_path, 'devenv.com')
+            devenv_path = os.path.join(devenv_path, 'Common7', 'IDE', 'devenv.com')
+            return (devenv_path, '2012')
 
-        return devenv_path
+        devenv_path, _ = QueryValueEx(sxs_key, '10.0')
+        if devenv_path is not None:
+            devenv_path = os.path.join(devenv_path, 'Common7', 'IDE', 'devenv.com')
+            return (devenv_path, '2010')
+
+        devenv_path, _ = QueryValueEx(sxs_key, '9.0')
+        if devenv_path is not None:
+            devenv_path = os.path.join(devenv_path, 'Common7', 'IDE', 'devenv.com')
+            return (devenv_path, '2008')
+
+        return None, None
     # pylint: enable=F0401, E0602
     # pylint: enable=W0404
 else:
     def find_devenv():
-        return None
+        return None, None
 

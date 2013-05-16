@@ -99,11 +99,6 @@
 			<Tool
 				Name="VCAppVerifierTool"
 			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying tool"
-				CommandLine="if not exist &quot;$(ProjectDir)..\bin\win32\nul&quot; mkdir &quot;$(ProjectDir)..\bin\win32&quot;&#x0D;&#x0A;xcopy &quot;$(OutDir)\$(ProjectName).exe&quot; &quot;$(ProjectDir)..\bin\win32&quot; /Q /Y&#x0D;&#x0A;xcopy &quot;$(ProjectDir)..\..\external\Cg\bin\*.dll&quot; &quot;$(ProjectDir)..\bin\win32&quot; /Q /D /Y&#x0D;&#x0A;"
-			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
@@ -185,11 +180,6 @@
 			<Tool
 				Name="VCAppVerifierTool"
 			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying tool"
-				CommandLine="if not exist &quot;$(ProjectDir)..\bin\win64\nul&quot; mkdir &quot;$(ProjectDir)..\bin\win64&quot;&#x0D;&#x0A;xcopy &quot;$(OutDir)\$(ProjectName).exe&quot; &quot;$(ProjectDir)..\bin\win64&quot; /Q /Y&#x0D;&#x0A;xcopy &quot;$(ProjectDir)..\..\external\Cg\bin\*.dll&quot; &quot;$(ProjectDir)..\bin\win64&quot; /Q /D /Y&#x0D;&#x0A;"
-			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -270,11 +260,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying tool"
-				CommandLine="if not exist &quot;$(ProjectDir)..\bin\win32\nul&quot; mkdir &quot;$(ProjectDir)..\bin\win32&quot;&#x0D;&#x0A;xcopy &quot;$(OutDir)\$(ProjectName).exe&quot; &quot;$(ProjectDir)..\bin\win32&quot; /Q /Y&#x0D;&#x0A;xcopy &quot;$(ProjectDir)..\..\external\Cg\bin\*.dll&quot; &quot;$(ProjectDir)..\bin\win32&quot; /Q /D /Y&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -358,11 +343,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying tool"
-				CommandLine="if not exist &quot;$(ProjectDir)..\bin\win64\nul&quot; mkdir &quot;$(ProjectDir)..\bin\win64&quot;&#x0D;&#x0A;xcopy &quot;$(OutDir)\$(ProjectName).exe&quot; &quot;$(ProjectDir)..\bin\win64&quot; /Q /Y&#x0D;&#x0A;xcopy &quot;$(ProjectDir)..\..\external\Cg\bin\*.dll&quot; &quot;$(ProjectDir)..\bin\win64&quot; /Q /D /Y&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

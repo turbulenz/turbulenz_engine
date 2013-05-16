@@ -545,9 +545,12 @@ DDSLoader.prototype = {
     decode565: function decode565Fn(value, color)
     {
         /*jshint bitwise: false*/
-        color[0] = ((value >> 11) & 31) * (255 / 31);
-        color[1] = ((value >> 5)  & 63) * (255 / 63);
-        color[2] = ((value)       & 31) * (255 / 31);
+        var r = ((value >> 11) & 31);
+        var g = ((value >> 5) & 63);
+        var b = ((value) & 31);
+        color[0] = ((r << 3) | (r >> 2));
+        color[1] = ((g << 2) | (g >> 4));
+        color[2] = ((b << 3) | (b >> 2));
         color[3] = 255;
         /*jshint bitwise: true*/
         return color;
@@ -571,7 +574,7 @@ DDSLoader.prototype = {
             c2 = cache[2];
             c3 = cache[3];
 
-            if (!isDXT1 || col0 > col1)
+            if (col0 > col1)
             {
                 for (i = 0; i < 3; i += 1)
                 {
@@ -755,10 +758,22 @@ DDSLoader.prototype = {
         var scratchpad = { cache: [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
                            colorArray: new Array(4)
                          };
-        data = this.convertToRGBA(data, function decodeDXT1(data, src, out) {
+
+        var encode;
+        if (this.hasDXT1Alpha(data))
+        {
+            this.format = this.gd.PIXELFORMAT_R5G5B5A1;
+            encode = this.encodeR5G5B5A1;
+        }
+        else
+        {
+            this.format = this.gd.PIXELFORMAT_R5G6B5;
+            encode = this.encodeR5G6B5;
+        }
+
+        data = this.convertToRGBA16(data, function decodeDXT1(data, src, out) {
             decodeColor(data, src, true, out, scratchpad);
-        }, 8);
-        this.format = this.gd.PIXELFORMAT_R8G8B8A8;
+        }, encode, 8);
         return data;
     },
 
@@ -769,11 +784,11 @@ DDSLoader.prototype = {
         var scratchpad = { cache: [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
                            colorArray: new Array(4)
                          };
-        data = this.convertToRGBA(data, function decodeDXT3(data, src, out) {
+        data = this.convertToRGBA16(data, function decodeDXT3(data, src, out) {
             decodeColor(data, (src + 8), false, out, scratchpad);
             decodeDXT3Alpha(data, src, out);
-        }, 16);
-        this.format = this.gd.PIXELFORMAT_R8G8B8A8;
+        }, this.encodeR4G4B4A4, 16);
+        this.format = this.gd.PIXELFORMAT_R4G4B4A4;
         return data;
     },
 
@@ -785,15 +800,15 @@ DDSLoader.prototype = {
                            colorArray: new Array(4),
                            alphaArray: new Uint8Array(8)
                          };
-        data = this.convertToRGBA(data, function decodeDXT5(data, src, out) {
+        data = this.convertToRGBA16(data, function decodeDXT5(data, src, out) {
             decodeColor(data, (src + 8), false, out, scratchpad);
             decodeDXT5Alpha(data, src, out, scratchpad);
-        }, 16);
-        this.format = this.gd.PIXELFORMAT_R8G8B8A8;
+        }, this.encodeR4G4B4A4, 16);
+        this.format = this.gd.PIXELFORMAT_R4G4B4A4;
         return data;
     },
 
-    convertToRGBA : function convertToRGBAFn(data, decode, srcStride)
+    convertToRGBA32 : function convertToRGBA32Fn(data, decode, srcStride)
     {
         //var bpp = 4;
         var level;
@@ -851,6 +866,132 @@ DDSLoader.prototype = {
                                 dst[destRGBA + 2] = rgba[2];
                                 dst[destRGBA + 3] = rgba[3];
                                 destRGBA += 4;
+                            }
+                            destLine += desinationStride;
+                        }
+                        src += srcStride;
+                        dest += desinationLineStride;
+                    }
+                    dest += desinationBlockStride;
+                }
+
+                width = (width > 1 ? (width >> 1) : 1);
+                height = (height > 1 ? (height >> 1) : 1);
+            }
+        }
+        /*jshint bitwise: true*/
+
+        return dst;
+    },
+
+    hasDXT1Alpha: function hasDXT1AlphaFn(data)
+    {
+        var length = data.length;
+        var n, i, row;
+        for (n = 0; n < length; n += 8)
+        {
+            var col0 = ((data[n + 1] << 8) | data[n]);
+            var col1 = ((data[n + 3] << 8) | data[n + 2]);
+            if (col0 <= col1)
+            {
+                for (i = 0; i < 4; i += 1)
+                {
+                    row = data[n + 4 + i];
+                    if (row === 0)
+                    {
+                        continue;
+                    }
+                    if (((row)      & 3) === 3 ||
+                        ((row >> 2) & 3) === 3 ||
+                        ((row >> 4) & 3) === 3 ||
+                        ((row >> 6) & 3) === 3)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    },
+
+    encodeR5G6B5: function encodeR5G6B5Fn(rgba)
+    {
+        return (((rgba[2] & 0xf8) >>> 3) |
+                ((rgba[1] & 0xfc) << 3) |
+                ((rgba[0] & 0xf8) << 8));
+    },
+
+    encodeR5G5B5A1 : function encodeR5G5B5A1Fn(rgba)
+    {
+        return ((rgba[3] >>> 7) |
+                ((rgba[2] & 0xf8) >>> 2) |
+                ((rgba[1] & 0xf8) << 3) |
+                ((rgba[0] & 0xf8) << 8));
+    },
+
+    encodeR4G4B4A4 : function encodeR4G4B4A4Fn(rgba)
+    {
+        return ((rgba[3] >>> 4) |
+                (rgba[2] & 0xf0) |
+                ((rgba[1] & 0xf0) << 4) |
+                ((rgba[0] & 0xf0) << 8));
+    },
+
+    convertToRGBA16 : function convertToRGBA16Fn(data, decode, encode, srcStride)
+    {
+        //var bpp = 2;
+        var level;
+        var width = this.width;
+        var height = this.height;
+        var numLevels = this.numLevels;
+        var numFaces = this.numFaces;
+
+        /*jshint bitwise: false*/
+        var numPixels = 0;
+        for (level = 0; level < numLevels; level += 1)
+        {
+            numPixels += (width * height);
+            width = (width > 1 ? (width >> 1) : 1);
+            height = (height > 1 ? (height >> 1) : 1);
+        }
+
+        var dst = new Uint16Array(numPixels * 1 * numFaces);
+
+        var src = 0, dest = 0;
+
+        var color = [[new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+                     [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+                     [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+                     [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)]
+                    ];
+        for (var face = 0; face < numFaces; face += 1)
+        {
+            width = this.width;
+            height = this.height;
+            for (var n = 0; n < numLevels; n += 1)
+            {
+                var numColumns = (width > 4 ? 4 : width);
+                var numLines = (height > 4 ? 4 : height);
+                var heightInBlocks = ((height + 3) >> 2);
+                var widthInBlocks = ((width + 3) >> 2);
+                var desinationStride = (width * 1);
+                var desinationLineStride = (numColumns * 1);
+                var desinationBlockStride = (desinationStride * (numLines - 1));
+                for (var y = 0; y < heightInBlocks; y += 1)
+                {
+                    for (var x = 0; x < widthInBlocks; x += 1)
+                    {
+                        decode(data, src, color);
+                        var destLine = dest;
+                        for (var line = 0; line < numLines; line += 1)
+                        {
+                            var colorLine = color[line];
+                            var destRGBA = destLine;
+                            for (var i = 0 ; i < numColumns; i += 1)
+                            {
+                                var rgba = colorLine[i];
+                                dst[destRGBA] = encode(rgba);
+                                destRGBA += 1;
                             }
                             destLine += desinationStride;
                         }
