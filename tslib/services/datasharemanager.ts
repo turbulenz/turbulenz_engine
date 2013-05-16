@@ -311,7 +311,8 @@ class DataShare
                     gameSessionId: this.gameSessionId
                 },
                 callback: dataShareGetKeysCallback,
-                requestHandler: this.requestHandler
+                requestHandler: this.requestHandler,
+                encrypt: true
             });
     };
 
@@ -355,7 +356,8 @@ class DataShare
                     gameSessionId: this.gameSessionId
                 },
                 callback: dataShareGetCallback,
-                requestHandler: this.requestHandler
+                requestHandler: this.requestHandler,
+                encrypt: true
             });
     };
 
@@ -437,7 +439,8 @@ class DataShare
                 method: 'POST',
                 data: dataSpec,
                 callback: dataShareSetCallback,
-                requestHandler: this.requestHandler
+                requestHandler: this.requestHandler,
+                encrypt: true
             });
     };
 
@@ -511,7 +514,8 @@ class DataShare
                 method: 'POST',
                 data: dataSpec,
                 callback: dataShareCompareAndSetCallback,
-                requestHandler: this.requestHandler
+                requestHandler: this.requestHandler,
+                encrypt: true
             });
     };
 
