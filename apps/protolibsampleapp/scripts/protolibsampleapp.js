@@ -18,7 +18,6 @@ Application.prototype =
         var mathDevice = protolib.getMathDevice();
 
         //Vars
-        this.frameCount = 0;
         this.degToRad = Math.PI / 180;
 
         //Intermediate variables
@@ -118,18 +117,6 @@ Application.prototype =
             v3Color: [1.0, 1.0, 1.0],
             scale: 2
         };
-        this.turbulenzTextScaleSliderID = protolib.addWatchVariable({
-                title: 'Text Scale',
-                object: this.turbulenzText,
-                property: 'scale',
-                group: "Debug",
-                type: protolib.watchTypes.SLIDER,
-                options: {
-                    min: 0.1,
-                    max: 10,
-                    step: 0.1
-                }
-            });
         this.rotationScaleSliderID = protolib.addWatchVariable({
                 title: 'Mesh Rotation',
                 object: this,
@@ -276,7 +263,6 @@ Application.prototype =
                 height: 40
             });
 
-            this.frameCount += 1;
             protolib.endFrame();
         }
     },
