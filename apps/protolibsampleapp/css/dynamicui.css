@@ -72,17 +72,6 @@
     padding-right: 3px;
 }
 
-.dui-control-widget .ui-slider {
-    position: relative;
-    display: inline-block;
-    margin-left: 3px;
-    margin-right: 3px;
-    vertical-align: middle;
-    width: 120px;
-    border-top:4px solid #b4b4b4;
-    border-bottom:4px solid #b4b4b4;
-}
-
 .dui-control-value
 {
     display: inline-block;
@@ -96,34 +85,36 @@
     font-size: 10px;
 }
 
-.dui-control-widget input[type=range],.dui-control-widget .ui-slider {
-    -webkit-appearance: none !important;
+.dui-control-widget .ui-slider {
     height:2px;
     background: black;
     cursor: pointer;
+    position: relative;
+    display: inline-block;
+    margin-left: 3px;
+    margin-right: 3px;
+    vertical-align: middle;
+    width: 120px;
+    border-top:4px solid #b4b4b4;
+    border-bottom:4px solid #b4b4b4;
 }
 
-.dui-control-widget input[type=range]:disabled,.dui-control-widget .ui-slider.ui-disabled {
+.dui-control-widget .ui-slider.ui-disabled {
     background: grey;
     border: 1px solid grey;
     cursor: default;
 }
 
-.dui-control-widget input[type=range]::-webkit-slider-thumb, .dui-control-widget .ui-slider a{
-    -webkit-appearance:none;
-    -moz-apperance:none;
+.dui-control-widget .ui-slider a{
     width:3px;
     height:8px;
     background: grey;
     cursor: pointer;
-}
-
-.dui-control-widget input[type=range]:disabled::-webkit-slider-thumb, .dui-control-widget .ui-slider.ui-disabled a{
-    display: none;
-    cursor: default;
-}
-
-.dui-control-widget .ui-slider a{
     position: absolute;
     top: -3px;
+}
+
+.dui-control-widget .ui-slider.ui-disabled a{
+    display: none;
+    cursor: default;
 }
