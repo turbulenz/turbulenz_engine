@@ -27,7 +27,7 @@ Application.prototype =
         this.tempLightPosition = mathDevice.v3Build(1, 3, -1);
         this.tempLightDirection = mathDevice.v3Build(-1, -3, 1);
 
-        this.spinningLogoRotationMatrix = mathDevice.m43BuildIdentity();
+        this.meshRotationMatrix = mathDevice.m43BuildIdentity();
 
         //Background
         var bgColor = mathDevice.v3Build(0.5, 0.5, 0.5);
@@ -59,7 +59,7 @@ Application.prototype =
         this.meshRotation = 0;
         this.lastMeshRotation = 0;
         this.lastMeshRotateTime = -3;
-        this.spinningLogo = protolib.loadMesh({
+        this.mesh = protolib.loadMesh({
             mesh: 'models/tz_logo.dae',
             v3Size: mathDevice.v3Build(0.5, 0.5, 0.5),
             v3Position: mathDevice.v3Build(0, 1, 0)
@@ -210,8 +210,8 @@ Application.prototype =
                 this.lastMeshRotateTime = currentTime;
             }
 
-            mathDevice.m43SetAxisRotation(this.spinningLogoRotationMatrix, mathDevice.v3BuildYAxis(), this.meshRotation);
-            this.spinningLogo.setRotationMatrix(this.spinningLogoRotationMatrix);
+            mathDevice.m43SetAxisRotation(this.meshRotationMatrix, mathDevice.v3BuildYAxis(), this.meshRotation);
+            this.mesh.setRotationMatrix(this.meshRotationMatrix);
 
             //Camera controller: Rotate camera around y axis.
             var mouseDelta = protolib.getMouseDelta();
