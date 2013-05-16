@@ -601,6 +601,9 @@ def command_protolib_build(options):
     if args.dir is None:
         args.dir = os.path.normpath(os.path.join("apps", args.app))
 
+    if args.mode is None:
+        args.mode = ['canvas', 'canvas-debug']
+
     try:
         if args.clean:
             sh("python manage.py apps-clean " + args.dir,  console=args.verbose, shell=True)
