@@ -615,7 +615,10 @@ def command_protolib_build(options):
                     warning("%s" % e)
         else:
             if not args.no_copy:
-                sh(os.path.join(os.getcwd(), "external", "gnumake-win32", "3.81", "bin", "make") + " do_install_protolib", cwd=args.dir,  console=args.verbose, shell=True)
+                if TURBULENZOS in [ 'win32' ]:
+                    sh(os.path.join(os.getcwd(), "external", "gnumake-win32", "3.81", "bin", "make") + " do_install_protolib", cwd=args.dir,  console=args.verbose, shell=True)
+                else:
+                    sh("make do_install_protolib", cwd=args.dir,  console=args.verbose, shell=True)
             sh("python manage.py apps " + args.dir + ''.join([(" --mode %s" % mode) for mode in args.mode]) + " --assets-path " + os.path.abspath(os.path.join(args.dir, "assets")),  console=args.verbose, shell=True)
 
     except CalledProcessError as e:
