@@ -117,7 +117,10 @@ Application.prototype =
             v3Color: [1.0, 1.0, 1.0],
             scale: 2
         };
-        this.rotationScaleSliderID = protolib.addWatchVariable({
+
+        if (protolib.globals.config.debugMeshRotation)
+        {
+            this.rotationScaleSliderID = protolib.addWatchVariable({
                 title: 'Mesh Rotation',
                 object: this,
                 property: 'meshRotation',
@@ -129,6 +132,7 @@ Application.prototype =
                     step: Math.PI * 2 / 360 //1 degree
                 }
             });
+        }
     },
 
     update: function updateFn()

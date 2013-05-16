@@ -34,7 +34,7 @@ function Protolib(params)
     this.globals = {};
     var globals = this.globals;
 
-    params = params || {};
+    globals.config = params = params || {};
 
     var MAX_SOUND_SOURCES = params.maxSoundSources !== undefined ? params.maxSoundSources : 50;
     this.MAX_SOUND_SOURCES = MAX_SOUND_SOURCES;
