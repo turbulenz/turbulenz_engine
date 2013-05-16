@@ -193,7 +193,7 @@ To allow any user who can :ref:`join <datashare_join>` to the data share write a
 
 Once a key has been set using :ref:`dataShare.compareAndSet <datashare_compareandset>` the
 :ref:`dataShare.set <datashare_set>` function cannot be used on that key until it is deleted.
-Compare and set operations will fail if another user has changed the key value since it was last
+Compare and set operations will fail if another user has written to the key value since it was last
 read using :ref:`dataShare.get <datashare_get>`.
 
 **Tic-tac-toe**
@@ -571,7 +571,8 @@ Set a :ref:`public read only <datashare_publicreadonly>` value in the :ref:`Data
 **Summary**
 
 Set a :ref:`public read and write <datashare_publicreadandwrite>` value in the :ref:`DataShare <datashare>` key-value
-store if it is unchanged since the last :ref:`dataShare.get <datashare_get>` request for the same key.
+store if it has not been set by another user since the last :ref:`dataShare.get <datashare_get>` request for the
+same key.
 
 **Syntax** ::
 
@@ -615,6 +616,9 @@ store if it is unchanged since the last :ref:`dataShare.get <datashare_get>` req
         true.
 
 ``errorCallback`` :ref:`(Optional) <datasharemanager_errorcallback>`
+
+The ``reason`` argument will return ``DataShare.notSetReason.changed`` if the key has been set by another user
+since the key was last read with :ref:`dataShare.get <datashare_get>`.
 
 .. NOTE::
     The user must be :ref:`joined <datashare_join>` to the data share before calling ``DataShare.compareAndSet``.
