@@ -969,13 +969,14 @@ class CanvasContext
     matrix                   : any; // m33?
     clipExtents              : any; // v4?
 
-    //
     defaultStates            : any; // TODO: States
-
 
     bufferDataCache             : any;
     bufferDataCacheNumVertices  : number;
     prevBufferData              : any;
+
+    cachedTriangulation      : {};
+    tempAngles               : number[];
 
     // On prototype
     arrayConstructor         : any;
@@ -2121,7 +2122,7 @@ class CanvasContext
                         }
                         else
                         {
-                            numVertices = this.triangulateConcave(points, numSegments, vertices, numVertices);
+                            numVertices = this.triangulateConcaveCached(points, numSegments, vertices, numVertices);
                         }
                     }
                 }
@@ -2138,7 +2139,7 @@ class CanvasContext
                     }
                     else
                     {
-                        numVertices = this.triangulateConcave(points, numSegments, vertices, numVertices);
+                        numVertices = this.triangulateConcaveCached(points, numSegments, vertices, numVertices);
                     }
                 }
             }
@@ -2169,7 +2170,7 @@ class CanvasContext
                     {
                         primitive = this.trianglePrimitive;
                         vertices = this.tempVertices;
-                        numVertices = this.triangulateConcave(points, numSegments, vertices, 0);
+                        numVertices = this.triangulateConcaveCached(points, numSegments, vertices, 0);
                     }
                 }
             }
@@ -3860,14 +3861,18 @@ class CanvasContext
         var p0y = p0[1];
         var p1x = p1[0];
         var p1y = p1[1];
+        var d10x = (p1x - p0x);
+        var d10y = (p1y - p0y);
         var n = 0;
         do
         {
             var p2 = points[n];
             var p2x = p2[0];
             var p2y = p2[1];
+            var d21x = (p2x - p1x);
+            var d21y = (p2y - p1y);
 
-            var z = (((p1x - p0x) * (p2y - p1y)) - ((p1y - p0y) * (p2x - p1x)));
+            var z = ((d10x * d21y) - (d10y * d21x));
             if (z < 0)
             {
                 flag |= 1;
@@ -3882,10 +3887,10 @@ class CanvasContext
                 return false;
             }
 
-            p0x = p1x;
-            p0y = p1y;
             p1x = p2x;
             p1y = p2y;
+            d10x = d21x;
+            d10y = d21y;
 
             n += 1;
         }
@@ -3940,7 +3945,172 @@ class CanvasContext
         return numVertices;
     };
 
-    triangulateConcave(points, numSegments, vertices, numVertices, ownPoints?)
+    getAngles(points, numSegments, angles)
+    {
+        var p0 = points[numSegments - 2];
+        var p1 = points[numSegments - 1];
+        var p0x = p0[0];
+        var p0y = p0[1];
+        var p1x = p1[0];
+        var p1y = p1[1];
+        var d10x = (p1x - p0x);
+        var d10y = (p1y - p0y);
+        var n = 0;
+        var maxAngle = -Number.MAX_VALUE;
+        var abs = Math.abs;
+        var angle, absAngle;
+        do
+        {
+            var p2 = points[n];
+            var p2x = p2[0];
+            var p2y = p2[1];
+            var d21x = (p2x - p1x);
+            var d21y = (p2y - p1y);
+
+            angle = ((d10x * d21y) - (d10y * d21x));
+            absAngle = abs(angle);
+            if (maxAngle < absAngle)
+            {
+                maxAngle = absAngle;
+            }
+            angles[n] = angle;
+
+            p1x = p2x;
+            p1y = p2y;
+            d10x = d21x;
+            d10y = d21y;
+
+            n += 1;
+        }
+        while (n < numSegments);
+
+        // Increase the 100 to increase precision if caching matches too dissimilar shapes
+        var invScale = (100 / maxAngle);
+        n = 0;
+        do
+        {
+            angles[n] = ((angles[n] * invScale) | 0);
+            n += 1;
+        }
+        while (n < numSegments);
+    };
+
+    lowerBound(bin: any[], data: number[], length: number) : number
+    {
+        var first: number = 0;
+        var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
+        var step: number, middle : number, binIndex:number, diff: number;
+        var diff: number, n: number;
+        var a: number[];
+
+        while (0 < count)
+        {
+            step = (count >>> 1);
+            middle = (first + step);
+            binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
+
+            n = 0;
+            a = bin[binIndex];
+            for (;;)
+            {
+                diff = (a[n] - data[n]);
+                if (diff < 0)
+                {
+                    first = (middle + 1);
+                    count -= (step + 1);
+                    break;
+                }
+                else if (diff > 0)
+                {
+                    count = step;
+                    break;
+                }
+
+                n += 1;
+                if (n >= length)
+                {
+                    // This would be a non-zero negative value to signal that we found an identical copy
+                    return -binIndex;
+                }
+            }
+        }
+
+        return (first << 1); // Bin elements ocupy two slots, multiply by 2
+    }
+
+    triangulateConcaveCached(points, numSegments, vertices, numVertices)
+    {
+        var lowerIndex;
+        var cachedIndices;
+        var numCachedIndices;
+        var n;
+
+        var angles = this.tempAngles;
+        this.getAngles(points, numSegments, angles);
+
+        var dataBins = this.cachedTriangulation;
+        var dataBin = dataBins[numSegments];
+        if (dataBin === undefined)
+        {
+            dataBins[numSegments] = dataBin = [];
+            lowerIndex = 0;
+        }
+        else
+        {
+            lowerIndex = this.lowerBound(dataBin, angles, numSegments);
+        }
+
+        // Check if we found an identical copy
+        if (lowerIndex < 0)
+        {
+            lowerIndex = ((-lowerIndex) - 1);
+            cachedIndices = dataBin[lowerIndex];
+            numCachedIndices = cachedIndices.length;
+            for (n = 0; n < numCachedIndices; n += 1)
+            {
+                vertices[numVertices] = points[cachedIndices[n]];
+                numVertices += 1;
+            }
+        }
+        else
+        {
+            var numPoints = (numSegments + 1);
+            for (n = 0; n < numPoints; n += 1)
+            {
+                points[n]._id = n;
+            }
+
+            var oldNumVertices = numVertices;
+            numVertices = this.triangulateConcave(points, numSegments, vertices, 0, false);
+
+            numCachedIndices = (numVertices - oldNumVertices);
+            cachedIndices = [];
+            cachedIndices.length = numCachedIndices;
+            for (n = 0; n < numCachedIndices; n += 1)
+            {
+                cachedIndices[n] = vertices[oldNumVertices + n]._id;
+            }
+
+            for (n = 0; n < numPoints; n += 1)
+            {
+                delete points[n]._id;
+            }
+
+            var clonedAngles = angles.slice(0, numSegments);
+            if (lowerIndex < dataBin.length)
+            {
+                dataBin.splice(lowerIndex, 0, cachedIndices, clonedAngles);
+            }
+            else
+            {
+                dataBin.push(cachedIndices, clonedAngles);
+            }
+        }
+
+        return numVertices;
+    };
+
+    triangulateConcave(points, numSegments, vertices, numVertices, ownPoints)
     {
         var isConvex = this.isConvex;
 
@@ -4137,18 +4307,28 @@ class CanvasContext
                     else
                     {
                          // Found a diagonal
-                        var d0 = i1;
-                        var d1 = overlappingPoint;
-
-                        var pointsA, pointsB;
-                        if (d0 < d1)
+                        var d0, d1;
+                        if (i1 < overlappingPoint)
                         {
-                            pointsA = points.splice(d0, (d1 - d0 + 1), points[d0], points[d1]);
+                            d0 = i1;
+                            d1 = overlappingPoint;
+                        }
+                        else
+                        {
+                            d0 = overlappingPoint;
+                            d1 = i1;
+                        }
+
+                        var dn = (d1 - d0 + 1);
+                        var pointsA, pointsB;
+                        if (dn <= (points.length - dn + 2))
+                        {
+                            pointsA = points.splice(d0, dn, points[d0], points[d1]);
                             pointsB = points;
                         }
                         else
                         {
-                            pointsB = points.splice(d1, (d0 - d1 + 1), points[d1], points[d0]);
+                            pointsB = points.splice(d0, dn, points[d0], points[d1]);
                             pointsA = points;
                         }
                         points = null;
@@ -5596,6 +5776,9 @@ class CanvasContext
 
         //
         c.defaultStates = c.setStates(c.createStatesObject(), c);
+
+        c.cachedTriangulation = {};
+        c.tempAngles = [];
 
         return c;
     };
