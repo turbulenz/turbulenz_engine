@@ -53,6 +53,7 @@ TurbulenzEngine.onload = function onloadFn()
     var requestHandler = RequestHandler.create({});
 
     var draw2DTexture;
+    var gameSession;
     function sessionCreated(gameSession)
     {
         TurbulenzServices.createMappingTable(
@@ -73,7 +74,7 @@ TurbulenzEngine.onload = function onloadFn()
             }
         );
     }
-    TurbulenzServices.createGameSession(requestHandler, sessionCreated);
+    gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreated);
 
     //==========================================================================
     // Physics2D/Draw2D
@@ -561,7 +562,7 @@ TurbulenzEngine.onload = function onloadFn()
 
         reset();
         TurbulenzEngine.clearInterval(intervalID);
-        TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
+        intervalID = TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
     }
     intervalID = TurbulenzEngine.setInterval(loadingLoop, 10);
 
@@ -594,4 +595,19 @@ TurbulenzEngine.onload = function onloadFn()
     }
 
     loadHtmlControls();
+
+    // Create a scene destroy callback to run when the window is closed
+    TurbulenzEngine.onunload = function destroyScene()
+    {
+        if (intervalID)
+        {
+            TurbulenzEngine.clearInterval(intervalID);
+        }
+
+        if (gameSession)
+        {
+            gameSession.destroy();
+            gameSession = null;
+        }
+    };
 };

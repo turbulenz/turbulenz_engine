@@ -100,6 +100,11 @@ TurbulenzEngine.onload = function onloadFn()
     var effectManager = EffectManager.create();
     var animationManager = AnimationManager.create(errorCallback);
 
+    // The model used for this sample only has 20 bones so we optimize for it.
+    // Ideally you will modify the source shader code instead of patching at runtime
+    // but this is done here for convenience.
+    shaderManager.setAutomaticParameterResize("skinBones", 20 * 3);
+
     var resourceLoader = ResourceLoader.create();
     var scene = <CustomScene>(Scene.create(mathDevice));
     var sceneLoader = SceneLoader.create();

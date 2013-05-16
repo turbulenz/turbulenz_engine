@@ -28,6 +28,7 @@ class ShaderManager
     isShaderLoaded: (path: string) => bool;
     isShaderMissing: (path: string) => bool;
     setPathRemapping: (prm, assetUrl) => void;
+    setAutomaticParameterResize: (name: string, size: number) => void;
     destroy: () => void;
 
     /**
@@ -125,8 +126,65 @@ class ShaderManager
         var numLoadingShaders = 0;
         var pathRemapping = null;
         var pathPrefix = "";
+        var doPreprocess = false;
+        var resizeParameters = {};
 
         shaders[defaultShaderName] = defaultShader;
+
+        function preprocessShader(shader)
+        {
+            var parameters = shader.parameters;
+            var techniques = shader.techniques;
+            var programs = shader.programs;
+            var p, resize, programsToUpdate, t;
+            var passes, numPasses, a, pass, passPrograms;
+            var  length, n, reg, rep, u, program;
+            for (p in parameters)
+            {
+                if (parameters.hasOwnProperty(p))
+                {
+                    resize = resizeParameters[p];
+                    if (resize !== undefined)
+                    {
+                        parameters[p].rows = resize;
+
+                        programsToUpdate = {};
+                        for (t in techniques)
+                        {
+                            if (techniques.hasOwnProperty(t))
+                            {
+                                passes = techniques[t];
+                                numPasses = passes.length;
+                                for (a = 0; a < numPasses; a += 1)
+                                {
+                                    pass = passes[a];
+                                    if (pass.parameters.indexOf(p) !== -1)
+                                    {
+                                        passPrograms = pass.programs;
+                                        length = passPrograms.length;
+                                        for (n = 0; n < length; n += 1)
+                                        {
+                                            programsToUpdate[passPrograms[n]] = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        reg = new RegExp("uniform\\s+(\\w+)\\s+" + p + "\\s*\\[[^\\]]+\\]", "mg");
+                        rep = "uniform $1 " + p + "[" + resize + "]";
+                        for (u in programsToUpdate)
+                        {
+                            if (programsToUpdate.hasOwnProperty(u))
+                            {
+                                program = programs[u];
+                                program.code = program.code.replace(reg, rep);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         /**
            Creates shader from an cgfx file
@@ -166,6 +224,10 @@ class ShaderManager
                         if (shaderText)
                         {
                             var shaderParameters = JSON.parse(shaderText);
+                            if (doPreprocess)
+                            {
+                                preprocessShader(shaderParameters);
+                            }
                             var s = gd.createShader(shaderParameters);
                             if (s)
                             {
@@ -429,6 +491,12 @@ class ShaderManager
         {
             pathRemapping = prm;
             pathPrefix = assetUrl;
+        };
+
+        sm.setAutomaticParameterResize = function setAutomaticParameterResizeFn(name: string, size: number)
+        {
+            doPreprocess = true;
+            resizeParameters[name] = size;
         };
 
         sm.destroy = function shaderManagerDestroyFn()
