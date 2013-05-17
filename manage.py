@@ -169,15 +169,26 @@ def command_tools():
 
     mkdir(tools_bin)
     if TURBULENZOS == 'win32':
-        devenv = find_devenv()
+        devenv, vs_version = find_devenv()
+        if vs_version == '2008':
+            proj_postfix = '.vcproj'
+            sln_postfix = '.sln'
+        elif vs_version == '2010':
+            proj_postfix = '-2010.vcxproj'
+            sln_postfix = '-2010.sln'
+        elif vs_version == '2012':
+            proj_postfix = '-2012.vcxproj'
+            sln_postfix = '-2012.sln'
 
-        cgfx2json_proj = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj'))
+        cgfx2json_proj = os.path.normpath(
+                            os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json%s' % proj_postfix))
         sh([devenv, cgfx2json_proj, '/build', 'Release'], console=True)
-        cp('tools/cgfx2json/bin/release/cgfx2json.exe', tools_bin)
+        cp('tools/cgfx2json/Release/cgfx2json.exe', tools_bin)
         cp('external/Cg/bin/cg.dll', tools_bin)
         cp('external/Cg/bin/cgGL.dll', tools_bin)
 
-        nvtristrip_sln = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip.sln'))
+        nvtristrip_sln = os.path.normpath(
+                            os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip%s' % sln_postfix))
         sh([devenv, nvtristrip_sln, '/build', 'Release'], console=True)
         cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper.exe', tools_bin)
 
@@ -191,11 +202,23 @@ def command_tools():
 def command_tools_clean():
     tools = 'tools'
     if TURBULENZOS == 'win32':
-        devenv = find_devenv()
-        cgfx2json_proj = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json.vcproj'))
+        devenv, vs_version = find_devenv()
+        if vs_version == '2008':
+            proj_postfix = '.vcproj'
+            sln_postfix = '.sln'
+        elif vs_version == '2010':
+            proj_postfix = '-2010.vxproj'
+            sln_postfix = '-2010.sln'
+        elif vs_version == '2012':
+            proj_postfix = '-2012.vcxproj'
+            sln_postfix = '-2012.sln'
+
+        cgfx2json_proj = os.path.normpath(
+                            os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json%s' % proj_postfix))
         sh([devenv, cgfx2json_proj, '/clean', 'Release'], console=True)
 
-        nvtristrip_sln = os.path.normpath(os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip.sln'))
+        nvtristrip_sln = os.path.normpath(
+                            os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip%s' % sln_postfix))
         sh([devenv, nvtristrip_sln, '/clean', 'Release'], console=True)
     else:
         sh('make clean', cwd=tools)

@@ -4803,7 +4803,6 @@ WebGLGraphicsDevice.prototype =
         var v = 0;
         var streamsMatch = false;
         var vertexBuffer = null;
-        var offset = 0;
         var passes = null;
         var p = null;
         var pass = null;
@@ -4924,7 +4923,7 @@ WebGLGraphicsDevice.prototype =
                     }
                 }
 
-                offset = (firstIndex * indexStride);
+                firstIndex *= indexStride;
 
                 if (1 === numPasses)
                 {
@@ -4935,7 +4934,7 @@ WebGLGraphicsDevice.prototype =
                         {
                             setParameters(this, passes, drawParameters[t]);
 
-                            gl.drawElements(primitive, count, indexFormat, offset);
+                            gl.drawElements(primitive, count, indexFormat, firstIndex);
 
                             if (debug)
                             {
@@ -4948,7 +4947,7 @@ WebGLGraphicsDevice.prototype =
                     }
                     else
                     {
-                        gl.drawElements(primitive, count, indexFormat, offset);
+                        gl.drawElements(primitive, count, indexFormat, firstIndex);
 
                         if (debug)
                         {
@@ -4977,7 +4976,7 @@ WebGLGraphicsDevice.prototype =
 
                                 this.setPass(pass);
 
-                                gl.drawElements(primitive, count, indexFormat, offset);
+                                gl.drawElements(primitive, count, indexFormat, firstIndex);
 
                                 if (debug)
                                 {
@@ -5003,7 +5002,7 @@ WebGLGraphicsDevice.prototype =
 
                             this.setPass(pass);
 
-                            gl.drawElements(primitive, count, indexFormat, offset);
+                            gl.drawElements(primitive, count, indexFormat, firstIndex);
 
                             if (debug)
                             {
@@ -5372,7 +5371,7 @@ WebGLGraphicsDevice.prototype =
             this.metrics.primitives = 0;
         }
 
-        return true;
+        return !(document.hidden || document['webkitHidden']);
     },
 
     beginRenderTarget : function beginRenderTargetFn(renderTarget)
