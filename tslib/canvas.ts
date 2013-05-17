@@ -2261,14 +2261,16 @@ class CanvasContext
                         numSegments = (numPoints - 1);
 
                         numSegments = this.simplifyShape(points, 0, numSegments);
-
-                        if (isConvex(points, numSegments))
+                        if (numSegments > 1)
                         {
-                            numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
-                        }
-                        else
-                        {
-                            numVertices = this.triangulateConcaveCached(points, numSegments, vertices, numVertices);
+                            if (isConvex(points, numSegments))
+                            {
+                                numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
+                            }
+                            else
+                            {
+                                numVertices = this.triangulateConcaveCached(points, numSegments, vertices, numVertices);
+                            }
                         }
                     }
                 }
@@ -2281,14 +2283,16 @@ class CanvasContext
                     numSegments = (numPoints - 1);
 
                     numSegments = this.simplifyShape(points, 0, numSegments);
-
-                    if (isConvex(points, numSegments))
+                    if (numSegments > 1)
                     {
-                        numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
-                    }
-                    else
-                    {
-                        numVertices = this.triangulateConcaveCached(points, numSegments, vertices, numVertices);
+                        if (isConvex(points, numSegments))
+                        {
+                            numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
+                        }
+                        else
+                        {
+                            numVertices = this.triangulateConcaveCached(points, numSegments, vertices, numVertices);
+                        }
                     }
                 }
             }
@@ -2310,18 +2314,20 @@ class CanvasContext
                     numSegments = (numPoints - 1);
 
                     numSegments = this.simplifyShape(points, 0, numSegments);
-
-                    if (isConvex(points, numSegments))
+                    if (numSegments > 1)
                     {
-                        primitive = this.triangleFanPrimitive;
-                        vertices = points;
-                        numVertices = numSegments;
-                    }
-                    else
-                    {
-                        primitive = this.trianglePrimitive;
-                        vertices = this.tempVertices;
-                        numVertices = this.triangulateConcaveCached(points, numSegments, vertices, 0);
+                        if (isConvex(points, numSegments))
+                        {
+                            primitive = this.triangleFanPrimitive;
+                            vertices = points;
+                            numVertices = numSegments;
+                        }
+                        else
+                        {
+                            primitive = this.trianglePrimitive;
+                            vertices = this.tempVertices;
+                            numVertices = this.triangulateConcaveCached(points, numSegments, vertices, 0);
+                        }
                     }
                 }
             }
