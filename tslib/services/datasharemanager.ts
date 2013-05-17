@@ -254,9 +254,9 @@ class DataShare
             function dataShareLeaveCallbackFn(jsonResponse, status)
         {
             var errorCallback = errorCallbackFn || that.errorCallbackFn;
-            // 401 Unauthorized - the player is not joined to the data share
+            // 403 Forbidden - the player is not joined to the data share
             // 404 Missing - the data share no longer exists
-            if (status === 200 || status === 401 || status === 404)
+            if (status === 200 || status === 403 || status === 404)
             {
                 if (callbackFn)
                 {
@@ -363,7 +363,8 @@ class DataShare
 
     checkUnauthoizedError(jsonResponse: any, status: number): string
     {
-        if (status === 401 && jsonResponse.data && jsonResponse.data.reason)
+        // 403 - Forbidden
+        if (status === 403 && jsonResponse.data && jsonResponse.data.reason)
         {
             if (jsonResponse.data.reason === 'read_only')
             {
