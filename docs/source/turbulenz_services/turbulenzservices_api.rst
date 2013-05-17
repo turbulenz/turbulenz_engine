@@ -9,8 +9,10 @@
 The TurbulenzServices Object
 ----------------------------
 
-The TurbulenzServices object provides a set of functions for creating objects that require communication with Turbulenz Services in-order to be populated.
-If the game is running in an environment without access to the Turbulenz Services then these objects will be created with their default settings.
+The TurbulenzServices object provides a set of functions for creating objects that require communication with Turbulenz
+Services in-order to be populated.
+If the game is running in an environment without access to the Turbulenz Services then these objects will be created
+with their default settings.
 
 Turbulenz Services are only available when running in local, hub or game site.
 All requests made by the Turbulenz Services are asynchronous.
@@ -41,7 +43,8 @@ If this is the case then the method will have one of the following notices:
 
 This means that any HTTP requests made by the API are encrypted or signed to avoid simple alteration by malicious users.
 
-If these notes are not included in the documentation for the API then the results of the API call can be easily manipulated by an attacker.
+If these notes are not included in the documentation for the API then the results of the API call can be easily
+manipulated by an attacker.
 Please keep this in mind when using the API.
 
 **Example**
@@ -55,11 +58,13 @@ For example, when adding a "Most bullets fired" leaderboard a developer might tr
 However, the API call in step 1 is unprotected so an attacker can easily alter this value by changing the HTTP response.
 This allows an attacker to set any score they like on the leaderboards.
 Instead the developer should use a protected API to get the leaderboard scores.
-In this case the developer should have used the protected API calls on the :ref:`UserDataManager <userdatamanager>` to store the "Most bullets fired" score:
+In this case the developer should have used the protected API calls on the :ref:`UserDataManager <userdatamanager>` to
+store the "Most bullets fired" score:
 
 1. Read the current leaderboard score using the protected API :ref:`UserDataManager.get <userdatamanager_get>`.
 2. Increment the score by the bullets fired in the current game.
-3. Save the game data and update the saved leaderboard score using the protected API :ref:`UserDataManager.set <userdatamanager_set>`.
+3. Save the game data and update the saved leaderboard score using the protected API
+   :ref:`UserDataManager.set <userdatamanager_set>`.
 4. Set the leaderboard score using the protected API :ref:`LeaderboardManager.set <leaderboardmanager_set>`.
 
 It is now not easy for an attacker to modify any of the HTTP requests without invalidating the signatures.
@@ -94,8 +99,10 @@ Create a :ref:`GameSession <gamesession>` object.
 
 ``errorCallbackFn`` :ref:`(Optional) <turbulenzservices_errorcallbackfn>`
 
-The :ref:`GameSession <gamesession>` returned contains no information about the game session until ``sessionCreatedFn`` is called.
-Once ``sessionCreatedFn`` is called the :ref:`GameSession <gamesession>` returned **must** be :ref:`destroyed <gamesession_destroy>` before the game is closed.
+The :ref:`GameSession <gamesession>` returned contains no information about the game session until ``sessionCreatedFn``
+is called.
+Once ``sessionCreatedFn`` is called the :ref:`GameSession <gamesession>` returned **must** be
+:ref:`destroyed <gamesession_destroy>` before the game is closed.
 
 .. index::
     pair: TurbulenzServices; createMappingTable
@@ -199,8 +206,11 @@ Creates a :ref:`MultiPlayerSessionManager <multiplayersessionmanager>` object.
 
 Returns a :ref:`MultiPlayerSessionManager <multiplayersessionmanager>` object.
 The :ref:`MultiPlayerSessionManager <multiplayersessionmanager>` object is ready to use upon creation.
-You **must** dispose of this object by calling :ref:`MultiPlayerSessionManager.destroy <multiplayersessionmanager_destroy>`, either when you finish using the object or in :ref:`TurbulenzEngine.onunload <turbulenzengine_unload>`.
-This will :ref:`destroy <multiplayersession_destroy>` any :ref:`MultiPlayerSession <multiplayersession>` objects which have not yet been destroyed.
+You **must** dispose of this object by calling
+:ref:`MultiPlayerSessionManager.destroy <multiplayersessionmanager_destroy>`, either when you finish using the object
+or in :ref:`TurbulenzEngine.onunload <turbulenzengine_unload>`.
+This will :ref:`destroy <multiplayersession_destroy>` any :ref:`MultiPlayerSession <multiplayersession>` objects which
+have not yet been destroyed.
 
 .. index::
     pair: TurbulenzServices; createLeaderboardManager
@@ -213,7 +223,8 @@ This will :ref:`destroy <multiplayersession_destroy>` any :ref:`MultiPlayerSessi
 **Summary**
 
 Create a :ref:`LeaderboardManager <leaderboardmanager>` object.
-The :ref:`LeaderboardManager <leaderboardmanager>` object retrieves leaderboards meta data and provides an API for querying the leaderboards.
+The :ref:`LeaderboardManager <leaderboardmanager>` object retrieves leaderboards meta data and provides an API for
+querying the leaderboards.
 
 **Syntax** ::
 
@@ -254,7 +265,8 @@ The :ref:`LeaderboardManager <leaderboardmanager>` object retrieves leaderboards
 ``errorCallbackFn`` :ref:`(Optional) <turbulenzservices_errorcallbackfn>`
 
 Returns a :ref:`LeaderboardManager <leaderboardmanager>` object.
-The :ref:`LeaderboardManager <leaderboardmanager>` object methods cannot be called until the ``leaderboardsReceivedFn`` is called.
+The :ref:`LeaderboardManager <leaderboardmanager>` object methods cannot be called until the ``leaderboardsReceivedFn``
+is called.
 
 .. index::
     pair: TurbulenzServices; createBadgeManager
@@ -303,7 +315,8 @@ The :ref:`BadgeManager <badgemanager>` object is ready upon creation.
 **Summary**
 
 Create a :ref:`StoreManager <storemanager>` object.
-The :ref:`StoreManager <storemanager>` object retrieves store items meta data, user owned items and provides an API for managing the game store basket.
+The :ref:`StoreManager <storemanager>` object retrieves store items meta data, user owned items and provides an API for
+managing the game store basket.
 
 **Syntax** ::
 
@@ -433,7 +446,8 @@ Send a custom event to be tracked for the game.
 
 The event contributes to the metrics for the game with the event value being saved as an aggregate for each unique key.
 
-These metrics can be seen on the Hub once a game has been published, and the events themselves can be downloaded using the :ref:`exportevents <exportevents>` tool.
+These metrics can be seen on the Hub once a game has been published, and the events themselves can be downloaded using
+the :ref:`exportevents <exportevents>` tool.
 
 **Syntax** ::
 
@@ -458,6 +472,64 @@ These metrics can be seen on the Hub once a game has been published, and the eve
 .. NOTE::
     Custom events are only recorded for the game on the game site and not on Turbulenz Local Server or the Hub.
     These events contribute to the custom metrics only when eventValue is a number and not an array.
+
+.. NOTE::
+    Turbulenz already provides a variety of metrics it tracks for your game by default.
+    For more information see the :ref:`Hub User Guide <hub_metrics>`.
+
+.. index::
+    pair: TurbulenzServices; sendCustomMetricEventBatch
+
+.. _turbulenzservices_sendcustommetriceventbatch:
+
+`sendCustomMetricEventBatch`
+----------------------------
+
+**Summary**
+
+Send a batch of custom events to be tracked for the game. Sending a custom metrics in a batch rather than individually
+with :ref:`TurbulenzServices.sendCustomMetricEvent <turbulenzservices_sendcustommetricevent>` allows an application
+to reduce the number of requests made to the servers.
+This can reduce both cpu cost and bandwidth cost from an application.
+
+Each event in the batch will preserve a timestamp based on the time it is added to the batch meaning metrics from
+batches lose no information versus individual metrics.
+
+Sending individual metrics may still be preferred in cases where you have high importance low frequency metrics
+(started level, level complete) versus tracking high frequency metrics (such as collected pickup, killed enemy).
+When higher frequency metrics are batched it's possible that some could be lost in situations where a user closes the
+browser in the middle of a game session, as a result more important events may still want to be tracked immediately
+when they happen.
+
+The ideal number of events in a batch can vary depending on the size of the event data (e.g. large event arrays
+vs single values). Batches of 10 to 20 metrics will normally be reasonable but consider looking at
+:ref:`Working with HTTP requests<userdatamanager_working_with_http>` for some comments on sizes of HTTP requests.
+
+The events contribute to the metrics for the game with the event values being saved as aggregates for each unique key.
+
+These metrics can be seen on the Hub once a game has been published, and the events themselves can be downloaded using
+the :ref:`exportevents <exportevents>` tool.
+
+**Syntax** ::
+
+    TurbulenzServices.sendCustomMetricEventBatch(eventBatch, requestHandler, gameSession);
+
+``eventBatch``
+    A :ref:`CustomMetricEventBatch <customMetricEventBatch>` object.
+    A batch of metrics to be sent to the server, for details on creating and adding metrics to the batch see
+    :ref:`CustomMetricEventBatch <customMetricEventBatch>`
+
+``requestHandler``
+    A :ref:`RequestHandler <requesthandler>` object.
+
+``gameSession``
+    A :ref:`GameSession <gamesession>` object.
+
+``errorCallbackFn`` :ref:`(Optional) <turbulenzservices_errorcallbackfn>`
+
+.. NOTE::
+    Custom events are only recorded for the game on the game site and not on Turbulenz Local Server or the Hub.
+    Events from the batch contribute to the custom metrics only when eventValue is a number and not an array.
 
 .. NOTE::
     Turbulenz already provides a variety of metrics it tracks for your game by default.
