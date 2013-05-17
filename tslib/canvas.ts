@@ -1735,9 +1735,6 @@ class CanvasContext
         {
             // Skip whitespace
             var c = skipWhiteSpace();
-
-            commands.push(c);
-
             if (c < 0)
             {
                 // end of string
@@ -1773,6 +1770,8 @@ class CanvasContext
                 currentCommand = c;
                 i += 1;
             }
+
+            commands.push(currentCommand);
 
             switch (currentCommand)
             {
@@ -1889,42 +1888,9 @@ class CanvasContext
 
         while (i < end)
         {
-            // Skip whitespace
-            var c = commands[i];
-            if (c < 0)
-            {
-                // end of string
-                return;
-            }
-
+            previousCommand = currentCommand;
+            currentCommand = commands[i];
             i += 1;
-
-            // Same command, new arguments?
-            if (c === 43 || //+
-                c === 45 || //-
-                c === 46 || //.
-                (c >= 48 && c <= 57)) //0-9
-            {
-                // Implicit lineTo after moveTo?
-                if (currentCommand === 77) //M
-                {
-                    currentCommand = 76; //L
-                }
-                else if (currentCommand === 109) //m
-                {
-                    currentCommand = 108; //l
-                }
-                else
-                {
-                    // should never happen
-                    return;
-                }
-            }
-            else
-            {
-                previousCommand = currentCommand;
-                currentCommand = c;
-            }
 
             switch (currentCommand)
             {
