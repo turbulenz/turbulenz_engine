@@ -908,6 +908,7 @@ class CanvasContext
     target                   : Texture;
     viewport                 : number[];
 
+    pixelRatio               : number;
     forceFatLines            : bool;
 
     width                    : number;
@@ -2116,6 +2117,9 @@ class CanvasContext
                     {
                         numPoints = autoClose(points, numPoints);
                         numSegments = (numPoints - 1);
+
+                        numSegments = this.simplifyShape(points, 0, numSegments);
+
                         if (isConvex(points, numSegments))
                         {
                             numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
@@ -2133,6 +2137,9 @@ class CanvasContext
                 {
                     numPoints = autoClose(points, numPoints);
                     numSegments = (numPoints - 1);
+
+                    numSegments = this.simplifyShape(points, 0, numSegments);
+
                     if (isConvex(points, numSegments))
                     {
                         numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
@@ -2159,6 +2166,8 @@ class CanvasContext
                 {
                     numPoints = autoClose(points, numPoints);
                     numSegments = (numPoints - 1);
+
+                    numSegments = this.simplifyShape(points, 0, numSegments);
 
                     if (isConvex(points, numSegments))
                     {
@@ -2878,8 +2887,8 @@ class CanvasContext
             this.clearRect(0, 0, width, height);
         }
 
-        this.forceFatLines = ((2 * width) <= viewport[2] ||
-                              (2 * height) <= viewport[3]);
+        this.pixelRatio = Math.max((viewport[2] / width), (viewport[3] / height));
+        this.forceFatLines = (2 <= this.pixelRatio);
 
         this.updateScissor();
 
@@ -3904,6 +3913,97 @@ class CanvasContext
 
         return false;
     };
+
+    simplifyShape(points: any[], first: number, last: number) : number
+    {
+        var abs = Math.abs;
+        var epsilon = (0.5 * this.pixelRatio);
+        var p2 = points[last];
+        var p2x = p2[0];
+        var p2y = p2[1];
+        var n, dist;
+
+        for (;;)
+        {
+            var p0 = points[first];
+            var p0x = p0[0];
+            var p0y = p0[1];
+
+            var maxDist = epsilon;
+            var middle = -1;
+
+            if (p0x === p2x)
+            {
+                for (n = (first + 1); n < last; n += 1)
+                {
+                    dist = abs(points[n][0] - p2x);
+                    if (maxDist < dist)
+                    {
+                        maxDist = dist;
+                        middle = n;
+                    }
+                }
+            }
+            else if (p0y === p2y)
+            {
+                for (n = (first + 1); n < last; n += 1)
+                {
+                    dist = abs(points[n][1] - p2y);
+                    if (maxDist < dist)
+                    {
+                        maxDist = dist;
+                        middle = n;
+                    }
+                }
+            }
+            else
+            {
+                var slope = (p2y - p0y) / (p2x - p0x);
+                var invSlope = 1.0 / Math.sqrt((slope * slope) + 1);
+                var intercept = (p0y - (slope * p0x));
+                var p1;
+                for (n = (first + 1); n < last; n += 1)
+                {
+                    p1 = points[n];
+
+                    dist = abs((slope * p1[0]) - p1[1] + intercept) * invSlope;
+
+                    if (maxDist < dist)
+                    {
+                        maxDist = dist;
+                        middle = n;
+                    }
+                }
+            }
+
+            if (middle === -1)
+            {
+                points.splice((first + 1), (last - first - 1));
+                return (first + 1);
+            }
+            else
+            {
+                if ((first + 1) < middle)
+                {
+                    var newMiddle = this.simplifyShape(points, first, middle);
+                    last -= (middle - newMiddle);
+                    middle = newMiddle;
+                }
+
+                if ((middle + 1) < last)
+                {
+                    // restart loop to avoid recursion
+                    first = middle;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        return last;
+    }
 
     calculateArea(points, numPoints): number
     {
@@ -5509,6 +5609,7 @@ class CanvasContext
         c.target = null;
         c.viewport = [0, 0, width, height];
 
+        c.pixelRatio = 1;
         c.forceFatLines = false;
 
         c.width = width;
