@@ -758,7 +758,7 @@ interface GraphicsDevice
 
     setViewport(x: number, y: number, width: number, height: number): void;
     setScissor(x: number, y: number, width: number, height: number): void;
-    setStream(vertexBuffer: VertexBuffer, semantics: Semantics);
+    setStream(vertexBuffer: VertexBuffer, semantics: Semantics, offset?: number): void;
     setTechnique(technique: Technique);
     setTechniqueParameters(techniqueParameters: TechniqueParameters): void;
     setIndexBuffer(indexBuffer: IndexBuffer): void;
