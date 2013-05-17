@@ -4304,7 +4304,7 @@ class CanvasContext
             var numPoints = (numSegments + 1);
             for (n = 0; n < numPoints; n += 1)
             {
-                points[n]._id = n;
+                points[n][2] = n;
             }
 
             var oldNumVertices = numVertices;
@@ -4318,12 +4318,7 @@ class CanvasContext
             cachedIndices.length = numCachedIndices;
             for (n = 0; n < numCachedIndices; n += 1)
             {
-                cachedIndices[n] = vertices[oldNumVertices + n]._id;
-            }
-
-            for (n = 0; n < numPoints; n += 1)
-            {
-                delete points[n]._id;
+                cachedIndices[n] = vertices[oldNumVertices + n][2];
             }
 
             if (dataBin.length >= 1024)
