@@ -3658,7 +3658,7 @@ class CanvasContext
             return color;
         }
 
-        if (this.numCachedColors > 1024)
+        if (this.numCachedColors >= 1024)
         {
             this.cachedColors = {};
             this.numCachedColors = 0;
@@ -4324,6 +4324,12 @@ class CanvasContext
             for (n = 0; n < numPoints; n += 1)
             {
                 delete points[n]._id;
+            }
+
+            if (dataBin.length >= 1024)
+            {
+                dataBin.length = 0;
+                lowerIndex = 0;
             }
 
             var clonedAngles = angles.slice(0, numSegments);
