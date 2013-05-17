@@ -1857,7 +1857,14 @@ class CanvasContext
         var commands = this.cachedPaths[path];
         if (commands === undefined)
         {
+            if (this.numCachedPaths >= 1024)
+            {
+                this.cachedPaths = {};
+                this.numCachedPaths = 0;
+            }
+
             commands = this._parsePath(path);
+
             this.cachedPaths[path] = commands;
             this.numCachedPaths += 1;
         }
