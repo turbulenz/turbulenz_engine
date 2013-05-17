@@ -979,6 +979,9 @@ class CanvasContext
     cachedTriangulation      : {};
     tempAngles               : number[];
 
+    cachedPaths              : {};
+    numCachedPaths           : number;
+
     // On prototype
     arrayConstructor         : any;
 
@@ -1589,8 +1592,10 @@ class CanvasContext
         this.currentSubPath = [p0];
     };
 
-    path(path)
+    private _parsePath(path: string) : any[]
     {
+        var commands = [];
+
         var end = path.length;
         var currentCommand = -1, previousCommand = -1;
         var i = 0;
@@ -1726,34 +1731,17 @@ class CanvasContext
             }
         };
 
-        var getRatio = function getRatioFn(u, v)
-        {
-            var u0 = u[0];
-            var u1 = u[1];
-            var v0 = v[0];
-            var v1 = v[1];
-            return ((u0 * v0) + (u1 * v1)) / Math.sqrt(((u0 * u0) + (u1 * u1)) * ((v0 * v0) + (v1 * v1)));
-        };
-
-        var getAngle = function getAngleFn(u, v)
-        {
-            return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
-        };
-
-        var lx = 0;
-        var ly = 0;
-
-        var x, y, x1, y1, x2, y2;
-        var rx, ry, angle, largeArcFlag, sweepFlag;
-
         while (i < end)
         {
             // Skip whitespace
             var c = skipWhiteSpace();
+
+            commands.push(c);
+
             if (c < 0)
             {
                 // end of string
-                return;
+                return commands;
             }
 
             // Same command, new arguments?
@@ -1790,8 +1778,160 @@ class CanvasContext
             {
             case 77: //M
             case 109: //m
-                x = readNumber();
-                y = readNumber();
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 76: //L
+            case 108: //l
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 72: //H
+            case 104: //h
+                commands.push(readNumber());
+                break;
+
+            case 86: //V
+            case 118: //v
+                commands.push(readNumber());
+                break;
+
+            case 67: //C
+            case 99: //c
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 83: //S
+            case 115: //s
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 81: //Q
+            case 113: //q
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 84: //T
+            case 116: //t
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 65: //A
+            case 97: //a
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readFlag());
+                commands.push(readFlag());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 90: //Z
+            case 122: //z
+                break;
+
+            default:
+                throw "Unknown command: " + path.slice(i);
+            }
+        }
+
+        return commands;
+    };
+
+    path(path: string)
+    {
+        var commands = this.cachedPaths[path];
+        if (commands === undefined)
+        {
+            commands = this._parsePath(path);
+            this.cachedPaths[path] = commands;
+            this.numCachedPaths += 1;
+        }
+
+        var end = commands.length;
+        var currentCommand = -1, previousCommand = -1;
+        var i = 0;
+
+        var getRatio = function getRatioFn(u, v)
+        {
+            var u0 = u[0];
+            var u1 = u[1];
+            var v0 = v[0];
+            var v1 = v[1];
+            return ((u0 * v0) + (u1 * v1)) / Math.sqrt(((u0 * u0) + (u1 * u1)) * ((v0 * v0) + (v1 * v1)));
+        };
+
+        var getAngle = function getAngleFn(u, v)
+        {
+            return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
+        };
+
+        var lx = 0;
+        var ly = 0;
+
+        var x, y, x1, y1, x2, y2;
+        var rx, ry, angle, largeArcFlag, sweepFlag;
+
+        while (i < end)
+        {
+            // Skip whitespace
+            var c = commands[i];
+            if (c < 0)
+            {
+                // end of string
+                return;
+            }
+
+            i += 1;
+
+            // Same command, new arguments?
+            if (c === 43 || //+
+                c === 45 || //-
+                c === 46 || //.
+                (c >= 48 && c <= 57)) //0-9
+            {
+                // Implicit lineTo after moveTo?
+                if (currentCommand === 77) //M
+                {
+                    currentCommand = 76; //L
+                }
+                else if (currentCommand === 109) //m
+                {
+                    currentCommand = 108; //l
+                }
+                else
+                {
+                    // should never happen
+                    return;
+                }
+            }
+            else
+            {
+                previousCommand = currentCommand;
+                currentCommand = c;
+            }
+
+            switch (currentCommand)
+            {
+            case 77: //M
+            case 109: //m
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 109) //m
                 {
                     x += lx;
@@ -1802,8 +1942,8 @@ class CanvasContext
 
             case 76: //L
             case 108: //l
-                x = readNumber();
-                y = readNumber();
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 108) //l
                 {
                     x += lx;
@@ -1814,7 +1954,7 @@ class CanvasContext
 
             case 72: //H
             case 104: //h
-                x = readNumber();
+                x = commands[i]; i += 1;
                 if (currentCommand === 104) //h
                 {
                     x += lx;
@@ -1826,7 +1966,7 @@ class CanvasContext
             case 86: //V
             case 118: //v
                 x = lx;
-                y = readNumber();
+                y = commands[i]; i += 1;
                 if (currentCommand === 118) //v
                 {
                     y += ly;
@@ -1836,12 +1976,12 @@ class CanvasContext
 
             case 67: //C
             case 99: //c
-                x1 = readNumber();
-                y1 = readNumber();
-                x2 = readNumber();
-                y2 = readNumber();
-                x = readNumber();
-                y = readNumber();
+                x1 = commands[i]; i += 1;
+                y1 = commands[i]; i += 1;
+                x2 = commands[i]; i += 1;
+                y2 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 99) //c
                 {
                     x1 += lx;
@@ -1869,10 +2009,10 @@ class CanvasContext
                     x1 = lx;
                     y1 = ly;
                 }
-                x2 = readNumber();
-                y2 = readNumber();
-                x = readNumber();
-                y = readNumber();
+                x2 = commands[i]; i += 1;
+                y2 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 115) //s
                 {
                     x2 += lx;
@@ -1885,10 +2025,10 @@ class CanvasContext
 
             case 81: //Q
             case 113: //q
-                x1 = readNumber();
-                y1 = readNumber();
-                x = readNumber();
-                y = readNumber();
+                x1 = commands[i]; i += 1;
+                y1 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 113) //q
                 {
                     x1 += lx;
@@ -1914,8 +2054,8 @@ class CanvasContext
                     x1 = lx;
                     y1 = ly;
                 }
-                x = readNumber();
-                y = readNumber();
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 116) //t
                 {
                     x += lx;
@@ -1929,13 +2069,14 @@ class CanvasContext
                 var pi = Math.PI;
                 x1 = lx;
                 y1 = ly;
-                rx = readNumber();
-                ry = readNumber();
-                angle = (readNumber() * (pi / 180.0));
-                largeArcFlag = readFlag();
-                sweepFlag = readFlag();
-                x = readNumber();
-                y = readNumber();
+                rx = commands[i]; i += 1;
+                ry = commands[i]; i += 1;
+                angle = commands[i]; i += 1;
+                angle = (angle * (pi / 180.0));
+                largeArcFlag = commands[i]; i += 1;
+                sweepFlag = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 97) //a
                 {
                     x += lx;
@@ -2076,7 +2217,8 @@ class CanvasContext
                 break;
 
             default:
-                throw "Unknown command: " + path.slice(i);
+                // should never happen
+                return;
             }
 
             lx = x;
@@ -5883,6 +6025,9 @@ class CanvasContext
 
         c.cachedTriangulation = {};
         c.tempAngles = [];
+
+        c.cachedPaths = {};
+        c.numCachedPaths = 0;
 
         return c;
     };
