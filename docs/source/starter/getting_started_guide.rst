@@ -78,13 +78,13 @@ To initialize create a *WebGLTurbulenzEngine* and pass a reference to the <canva
 
 The TurbulenzEngine variable will allow you to create instances of the low-level modules such as GraphicsDevice, SoundDevice, NetworkDevice, InputDevice and PhysicsDevice.
 You can usually assume the existence of TurbulenzEngine and debug variables because they are automatically added by the Turbulenz build tools when you get to :ref:`creating Turbulenz apps <getting_started_creating_turbulenz_app>`. In this example we will declare them manually.
-To create an graphics module instance add the following code::
+To create a graphics module instance add the following code::
 
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
 
 These creation functions take parameters with construct options (An object literal with properties).
 In this case just use an empty object to denote no options.
-Now the graphicsDevice is created the <canvas> element can be cleared with a color.
+Now the graphicsDevice is created and the <canvas> element can be cleared with a color.
 
 Now initialize a color array for background color to be set::
 
@@ -385,7 +385,7 @@ In this example move the *drawSprite* call to its own draw2D.begin and end and s
 
     If the image already has alpha transparency, set the mode to 'alpha' to use the alpha channel.
 
-You can the size of the sprite in a number of different ways.
+You can change the size of the sprite in a number of different ways.
 Changing the scale is one option.
 After the rotationAngle declaration, define the following variable::
 
@@ -519,7 +519,7 @@ Writing Turbulenz Games
 -----------------------
 
 Once you are familiar with how the Turbulenz APIs can be used you can start creating games against those APIs yourself.
-To help you better structure your first app, Turbulenz provide a range of tools, examples and features to make supporting modern and older browsers easier.
+To help you better structure your first app, Turbulenz provides a range of tools, examples and features to make supporting modern and older browsers easier.
 These come in the form of file/API servers, code/asset processing tools, build configurations and more.
 
 This section will start to introduce you to these tools and explain some of the terminology Turbulenz use when describing apps.
