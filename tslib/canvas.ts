@@ -4233,10 +4233,11 @@ class CanvasContext
         var p1y = p1[1];
         var d10x = (p1x - p0x);
         var d10y = (p1y - p0y);
+        var d10l = ((d10x * d10x) + (d10y * d10y));
         var n = 0;
-        var maxAngle = -Number.MAX_VALUE;
+        var sqrt = Math.sqrt;
         var abs = Math.abs;
-        var angle, absAngle;
+        var angle;
         do
         {
             var p2 = points[n];
@@ -4244,30 +4245,18 @@ class CanvasContext
             var p2y = p2[1];
             var d21x = (p2x - p1x);
             var d21y = (p2y - p1y);
+            var d21l = ((d21x * d21x) + (d21y * d21y));
 
-            angle = ((d10x * d21y) - (d10y * d21x));
-            absAngle = abs(angle);
-            if (maxAngle < absAngle)
-            {
-                maxAngle = absAngle;
-            }
-            angles[n] = angle;
+            angle = (((d10x * d21y) - (d10y * d21x)) / sqrt(d10l * d21l));
+            angles[n] = ((angle * 100) | 0);
+            // Increase the 100 to increase precision if caching matches too dissimilar shapes
 
             p1x = p2x;
             p1y = p2y;
             d10x = d21x;
             d10y = d21y;
+            d10l = d21l;
 
-            n += 1;
-        }
-        while (n < numSegments);
-
-        // Increase the 100 to increase precision if caching matches too dissimilar shapes
-        var invScale = (100 / maxAngle);
-        n = 0;
-        do
-        {
-            angles[n] = ((angles[n] * invScale) | 0);
             n += 1;
         }
         while (n < numSegments);
