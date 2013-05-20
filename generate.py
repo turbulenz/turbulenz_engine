@@ -394,18 +394,18 @@ def command_protolib_init(options):
                                         "    var intervalID;",
                                         "    protolibConfig.onInitialized = function onInitializedFn(protolib)",
                                         "    {",
-                                        "        var application = Application.create({"
-                                        "            protolib: protolib"
-                                        "        });"
-                                        "        if (!application)"
-                                        "        {"
-                                        "            var console = window.console;"
-                                        "            if (console)"
-                                        "            {"
-                                        "                console.error(\"Application not created correctly, make sure Protolib is initialized correctly\");"
-                                        "            }"
-                                        "            return;"
-                                        "        }"
+                                        "        var application = Application.create({",
+                                        "            protolib: protolib",
+                                        "        });",
+                                        "        if (!application)",
+                                        "        {",
+                                        "            var console = window.console;",
+                                        "            if (console)",
+                                        "            {",
+                                        "                console.error(\"Application not created correctly, make sure Protolib is initialized correctly\");",
+                                        "            }",
+                                        "            return;",
+                                        "        }",
                                         "        var fps = protolibConfig.fps || 60;",
                                         "        intervalID = TurbulenzEngine.setInterval(function ()",
                                         "        {",
