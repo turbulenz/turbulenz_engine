@@ -17,8 +17,7 @@ var CaptureGraphicsCommand =
     setScissor:             12,
     setViewport:            13,
     beginOcclusionQuery:    14,
-    endOcclusionQuery:      15,
-    destroy:                16
+    endOcclusionQuery:      15
 };
 
 class CaptureGraphicsDevice
@@ -1486,7 +1485,6 @@ class CaptureGraphicsDevice
             vertexBuffer.destroy = function captureVBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
-                self._addCommand(CaptureGraphicsCommand.destroy, this._id);
                 destroy.call(this);
             };
 
@@ -1594,7 +1592,6 @@ class CaptureGraphicsDevice
             indexBuffer.destroy = function captureIBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
-                self._addCommand(CaptureGraphicsCommand.destroy, this._id);
                 destroy.call(this);
             };
 
@@ -2482,6 +2479,14 @@ class PlaybackGraphicsDevice
         {
             id = parseInt(id, 10);
         }
+        var oldEntity = this.entities[id];
+        if (oldEntity)
+        {
+            if (oldEntity.destroy)
+            {
+                oldEntity.destroy();
+            }
+        }
         this.entities[id] = value;
     }
 
@@ -2948,10 +2953,6 @@ class PlaybackGraphicsDevice
             {
                 command[1] = this._resolveEntity(command[1]); // Query
             }
-            else if (method === CaptureGraphicsCommand.destroy)
-            {
-                command[1] = this._resolveEntity(command[1]); // Object
-            }
             else
             {
                 if (this.onerror)
@@ -3169,10 +3170,6 @@ class PlaybackGraphicsDevice
             else if (method === CaptureGraphicsCommand.endOcclusionQuery)
             {
                 gd.endOcclusionQuery(command[1]);
-            }
-            else if (method === CaptureGraphicsCommand.destroy)
-            {
-                command[1].destroy();
             }
             else
             {
