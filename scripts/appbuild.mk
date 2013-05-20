@@ -567,8 +567,12 @@ $(foreach app,$(JSAPPS), $(eval                              \
 # Create the build target
 ############################################################
 
+ifeq ($(USE_PROTOLIB), 1)
+PROTOLIB_DEPS = install_protolib
+endif
+
 .PHONY : build
-build : $(JSAPPS) | install_jslib
+build : $(JSAPPS) | install_jslib $(PROTOLIB_DEPS)
 
 ############################################################
 # Create the clean and distclean targets
