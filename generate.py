@@ -365,7 +365,7 @@ def command_protolib_init(options):
                                         "/*{{ javascript('scripts/configrelease.js') }}*/",
                                         "/*{% endif %}*/"]
 
-        template_jslib_protolib = ["camera",
+        template_jslib_protolib = sorted(["camera",
                                 "requesthandler",
                                 "texturemanager", "shadermanager", "effectmanager", "fontmanager", "soundmanager",
                                 "observer", "utilities",
@@ -373,16 +373,16 @@ def command_protolib_init(options):
                                 "vertexbuffermanager", "indexbuffermanager", "resourceloader", "vmath",
                                 "renderingcommon", "forwardrendering", "shadowmapping",
                                 "draw2d",
-                                "assettracker", "loadingscreen"]
+                                "assettracker", "loadingscreen"])
         template_jslib_protolib_text = [("/*{{ javascript('jslib/%s.js') }}*/" % jslib) for jslib in template_jslib_protolib]
 
-        template_jslib_services_protolib = ["turbulenzbridge", "turbulenzservices", "gamesession", "mappingtable"]
+        template_jslib_services_protolib = sorted(["turbulenzbridge", "turbulenzservices", "gamesession", "mappingtable"])
         template_jslib_services_protolib_text = [("/*{{ javascript('jslib/services/%s.js') }}*/" % service) for service in template_jslib_services_protolib]
 
-        template_protolib = ["duimanager", "jqueryextend",
+        template_protolib = sorted(["duimanager", "jqueryextend",
                             "simplesprite", "simplefonts", "simplesceneloader",
                             "debugdraw", "sceneloader", "soundsourcemanager",
-                            "protolib"]
+                            "protolib"])
         template_protolib_text = [("/*{{ javascript('protolib/%s.js') }}*/" % protolib) for protolib in template_protolib]
 
         template_app = ["%s" % args.app]
@@ -394,7 +394,18 @@ def command_protolib_init(options):
                                         "    var intervalID;",
                                         "    protolibConfig.onInitialized = function onInitializedFn(protolib)",
                                         "    {",
-                                        "        var application = Application.create(protolib);",
+                                        "        var application = Application.create({"
+                                        "            protolib: protolib"
+                                        "        });"
+                                        "        if (!application)"
+                                        "        {"
+                                        "            var console = window.console;"
+                                        "            if (console)"
+                                        "            {"
+                                        "                console.error(\"Application not created correctly, make sure Protolib is initialized correctly\");"
+                                        "            }"
+                                        "            return;"
+                                        "        }"
                                         "        var fps = protolibConfig.fps || 60;",
                                         "        intervalID = TurbulenzEngine.setInterval(function ()",
                                         "        {",
