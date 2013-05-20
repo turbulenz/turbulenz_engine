@@ -426,6 +426,10 @@ class NotificationsManager
                    successCallbackFn?: (nm: NotificationsManager) => void,
                    errorCallbackFn?: (error: NotificationError) => void ): NotificationsManager
     {
+        if (!errorCallbackFn)
+        {
+            errorCallbackFn = function () {};
+        }
 
         if (!TurbulenzServices.available())
         {
@@ -470,7 +474,11 @@ class NotificationsManager
             notificationsManager.requestUserNotificationSettings(function () {
 
                 notificationsManager.onInit();
-                successCallbackFn(notificationsManager);
+
+                if (successCallbackFn)
+                {
+                    successCallbackFn(notificationsManager);
+                }
 
             }, errorCallbackFn)
         }, errorCallbackFn);
