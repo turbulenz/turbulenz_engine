@@ -1841,15 +1841,12 @@ class Scene
     updateVisibleNodes(camera)
     {
         var visibleNodes = this.visibleNodes;
-        visibleNodes.length = 0;
         var numVisibleNodes = 0;
 
         var visibleRenderables = this.visibleRenderables;
-        visibleRenderables.length = 0;
         var numVisibleRenderables = 0;
 
         var visibleLights = this.visibleLights;
-        visibleLights.length = 0;
         var numVisibleLights = 0;
 
         this.extractFrustumPlanes(camera);
@@ -2274,9 +2271,6 @@ class Scene
             if (oldNumVisibleRenderables !== numVisibleRenderables ||
                 oldNumVisibleLights !== numVisibleLights)
             {
-                visibleRenderables.length = numVisibleRenderables;
-                visibleLights.length = numVisibleLights;
-
                 n = 0;
                 while (n < numVisibleNodes)
                 {
@@ -2306,9 +2300,12 @@ class Scene
                     }
                 }
 
-                visibleNodes.length = numVisibleNodes;
             }
         }
+
+        visibleRenderables.length = numVisibleRenderables;
+        visibleLights.length = numVisibleLights;
+        visibleNodes.length = numVisibleNodes;
 
         this.frameIndex += 1;
     };
