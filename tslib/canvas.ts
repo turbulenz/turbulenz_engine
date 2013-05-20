@@ -920,7 +920,8 @@ class CanvasContext
     numStatesInStack         : number;
 
     subPaths                 : any[];
-    currentSubPath           : any;
+    currentSubPath           : any[];
+    needToSimplifyPath       : bool[];
 
     shader                   : Shader;
 
@@ -1249,6 +1250,8 @@ class CanvasContext
     {
         this.subPaths.length = 0;
         this.currentSubPath.length = 0;
+        this.needToSimplifyPath.length = 1;
+        this.needToSimplifyPath[0] = true;
     };
 
     closePath()
@@ -1269,24 +1272,37 @@ class CanvasContext
                 {
                     currentSubPath[numCurrentSubPathElements] = firstPoint;
                 }
+
+                this.simplifyShape(currentSubPath, 0, (currentSubPath.length - 1));
             }
 
             var subPaths = this.subPaths;
-            subPaths[subPaths.length] = currentSubPath;
+            var numSubPaths = subPaths.length;
+            subPaths[numSubPaths] = currentSubPath;
 
             this.currentSubPath = [firstPoint];
+
+            var needToSimplifyPath = this.needToSimplifyPath;
+            needToSimplifyPath[numSubPaths] = false;
+            needToSimplifyPath[numSubPaths + 1] = true;
         }
     };
 
     moveTo(x, y)
     {
         var currentSubPath = this.currentSubPath;
-        if (currentSubPath.length > 1)
+        var numCurrentSubPathElements = currentSubPath.length;
+        if (numCurrentSubPathElements > 1)
         {
             var subPaths = this.subPaths;
-            subPaths[subPaths.length] = currentSubPath;
+            var numSubPaths = subPaths.length;
+            subPaths[numSubPaths] = currentSubPath;
 
             this.currentSubPath = [this.transformPoint(x, y)];
+
+            var needToSimplifyPath = this.needToSimplifyPath;
+            needToSimplifyPath[numSubPaths] = (numCurrentSubPathElements > 2);
+            needToSimplifyPath[numSubPaths + 1] = true;
         }
         else
         {
@@ -1575,9 +1591,14 @@ class CanvasContext
         var subPaths = this.subPaths;
         var numSubPaths = subPaths.length;
         var currentSubPath = this.currentSubPath;
-        if (currentSubPath.length > 1)
+        var numCurrentSubPathElements = currentSubPath.length;
+        var needToSimplifyPath = this.needToSimplifyPath;
+        if (numCurrentSubPathElements > 1)
         {
             subPaths[numSubPaths] = currentSubPath;
+
+            needToSimplifyPath[numSubPaths] = (numCurrentSubPathElements > 2);
+
             numSubPaths += 1;
         }
 
@@ -1590,6 +1611,9 @@ class CanvasContext
         subPaths[numSubPaths] = [p2, p3, p1, p0, p2];
 
         this.currentSubPath = [p0];
+
+        needToSimplifyPath[numSubPaths] = (w < 1 || h < 1);
+        needToSimplifyPath[numSubPaths + 1] = true;
     };
 
     private _parsePath(path: string) : any[]
@@ -2204,6 +2228,7 @@ class CanvasContext
         var subPaths = this.subPaths;
         var numSubPaths = subPaths.length;
         var currentSubPath = this.currentSubPath;
+        var needToSimplifyPath = this.needToSimplifyPath;
         if (numSubPaths > 0 ||
             currentSubPath.length > 2)
         {
@@ -2233,7 +2258,12 @@ class CanvasContext
                         numPoints = autoClose(points, numPoints);
                         numSegments = (numPoints - 1);
 
-                        numSegments = this.simplifyShape(points, 0, numSegments);
+                        if (needToSimplifyPath[i])
+                        {
+                            needToSimplifyPath[i] = false;
+                            numSegments = this.simplifyShape(points, 0, numSegments);
+                        }
+
                         if (numSegments > 1)
                         {
                             if (isConvex(points, numSegments))
@@ -2255,7 +2285,12 @@ class CanvasContext
                     numPoints = autoClose(points, numPoints);
                     numSegments = (numPoints - 1);
 
-                    numSegments = this.simplifyShape(points, 0, numSegments);
+                    if (needToSimplifyPath[numSubPaths])
+                    {
+                        needToSimplifyPath[numSubPaths] = false;
+                        numSegments = this.simplifyShape(points, 0, numSegments);
+                    }
+
                     if (numSegments > 1)
                     {
                         if (isConvex(points, numSegments))
@@ -2286,7 +2321,12 @@ class CanvasContext
                     numPoints = autoClose(points, numPoints);
                     numSegments = (numPoints - 1);
 
-                    numSegments = this.simplifyShape(points, 0, numSegments);
+                    if (needToSimplifyPath[0])
+                    {
+                        needToSimplifyPath[0] = false;
+                        numSegments = this.simplifyShape(points, 0, numSegments);
+                    }
+
                     if (numSegments > 1)
                     {
                         if (isConvex(points, numSegments))
@@ -2328,6 +2368,7 @@ class CanvasContext
         var subPaths = this.subPaths;
         var numSubPaths = subPaths.length;
         var currentSubPath = this.currentSubPath;
+        var needToSimplifyPath = this.needToSimplifyPath;
         if (numSubPaths > 0 ||
             currentSubPath.length > 0)
         {
@@ -2342,6 +2383,13 @@ class CanvasContext
             {
                 points = subPaths[i];
                 numPoints = points.length;
+
+                if (needToSimplifyPath[i])
+                {
+                    needToSimplifyPath[i] = false;
+                    numPoints = (1 + this.simplifyShape(points, 0, (numPoints - 1)));
+                }
+
                 if (thinLines)
                 {
                     primitive = this.lineStripPrimitive;
@@ -2372,6 +2420,15 @@ class CanvasContext
             numPoints = points.length;
             if (numPoints > 0)
             {
+                if (needToSimplifyPath[numSubPaths])
+                {
+                    needToSimplifyPath[numSubPaths] = false;
+                    if (numPoints > 2)
+                    {
+                        numPoints = (1 + this.simplifyShape(points, 0, (numPoints - 1)));
+                    }
+                }
+
                 if (thinLines)
                 {
                     primitive = this.lineStripPrimitive;
@@ -2446,7 +2503,7 @@ class CanvasContext
         var currentSubPath = this.currentSubPath;
         if (currentSubPath.length > 2)
         {
-            clipSubPaths[numClipSubPaths] = currentSubPath.slice();
+            clipSubPaths[numClipSubPaths] = currentSubPath.slice(0);
             numClipSubPaths += 1;
         }
 
@@ -5743,6 +5800,7 @@ class CanvasContext
         c.numStatesInStack = 0;
 
         c.subPaths = [];
+        c.needToSimplifyPath = [];
         c.currentSubPath = [];
 
         var shader = gd.createShader(c.shaderDefinition);
