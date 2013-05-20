@@ -974,13 +974,24 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
 
         if (sd.linearDistance)
         {
-            if (typeof pannerNode.LINEAR_DISTANCE === "number")
+            if (typeof pannerNode.distanceModel === "string")
+            {
+                pannerNode.distanceModel = "linear";
+            }
+            else if (typeof pannerNode.LINEAR_DISTANCE === "number")
             {
                 pannerNode.distanceModel = pannerNode.LINEAR_DISTANCE;
             }
         }
 
-        pannerNode.panningModel = pannerNode.EQUALPOWER;
+        if (typeof pannerNode.panningModel === "string")
+        {
+            pannerNode.panningModel = "equalpower";
+        }
+        else
+        {
+            pannerNode.panningModel = pannerNode.EQUALPOWER;
+        }
 
         Object.defineProperty(source, "position", {
                 get : function getPositionFn() {
@@ -1738,20 +1749,27 @@ WebGLSoundDevice.create = function webGLSoundDeviceFn(params)
     // Need a temporary Audio element to test capabilities
     var audio = new Audio();
 
-    if (audio.mozSetup)
+    if (sd.audioContext)
     {
-        try
-        {
-            audio.mozSetup(1, 22050);
-        }
-        catch (e)
-        {
-            return null;
-        }
+        sd.loopingSupported = true;
     }
+    else
+    {
+        if (audio.mozSetup)
+        {
+            try
+            {
+                audio.mozSetup(1, 22050);
+            }
+            catch (e)
+            {
+                return null;
+            }
+        }
 
-    // Check for looping support
-    sd.loopingSupported = (typeof audio.loop === 'boolean');
+        // Check for looping support
+        sd.loopingSupported = (typeof audio.loop === 'boolean');
+    }
 
     // Check for supported extensions
     var supportedExtensions = {

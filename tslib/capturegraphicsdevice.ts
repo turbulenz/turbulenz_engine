@@ -17,8 +17,7 @@ var CaptureGraphicsCommand =
     setScissor:             12,
     setViewport:            13,
     beginOcclusionQuery:    14,
-    endOcclusionQuery:      15,
-    destroy:                16
+    endOcclusionQuery:      15
 };
 
 class CaptureGraphicsDevice
@@ -1486,7 +1485,6 @@ class CaptureGraphicsDevice
             vertexBuffer.destroy = function captureVBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
-                self._addCommand(CaptureGraphicsCommand.destroy, this._id);
                 destroy.call(this);
             };
 
@@ -1594,7 +1592,6 @@ class CaptureGraphicsDevice
             indexBuffer.destroy = function captureIBDestroy()
             {
                 self.destroyedIds.push(parseInt(this._id, 10));
-                self._addCommand(CaptureGraphicsCommand.destroy, this._id);
                 destroy.call(this);
             };
 
@@ -1968,6 +1965,9 @@ class CaptureGraphicsDevice
     public getFramesString()
     {
         var framesString = '{"version":1,';
+
+        framesString += '"width":' + this.gd.width + ',';
+        framesString += '"height":' + this.gd.height + ',';
 
         framesString += '"names":[';
         var names = this.names;
@@ -2443,7 +2443,11 @@ class PlaybackGraphicsDevice
 {
     public static version = 1;
 
+    black = [0, 0, 0, 1];
+
     gd:         any;
+    srcWidth:   number;
+    srcHeight:  number;
     frames:     any[];
     writerData: any[];
     entities:   any[];
@@ -2453,6 +2457,8 @@ class PlaybackGraphicsDevice
     constructor(gd)
     {
         this.gd = gd;
+        this.srcWidth = 0;
+        this.srcHeight = 0;
         this.frames = [];
         this.entities = [];
         this.writerData = [];
@@ -2472,6 +2478,14 @@ class PlaybackGraphicsDevice
         if (typeof id === "string")
         {
             id = parseInt(id, 10);
+        }
+        var oldEntity = this.entities[id];
+        if (oldEntity)
+        {
+            if (oldEntity.destroy)
+            {
+                oldEntity.destroy();
+            }
         }
         this.entities[id] = value;
     }
@@ -2939,10 +2953,6 @@ class PlaybackGraphicsDevice
             {
                 command[1] = this._resolveEntity(command[1]); // Query
             }
-            else if (method === CaptureGraphicsCommand.destroy)
-            {
-                command[1] = this._resolveEntity(command[1]); // Object
-            }
             else
             {
                 if (this.onerror)
@@ -2967,6 +2977,9 @@ class PlaybackGraphicsDevice
         }
         commands.length = 0;
         fileFrames.length = 0;
+
+        this.srcWidth = framesObject.width;
+        this.srcHeight = framesObject.height;
     }
 
     private _beginEndDraw(primitive, numVertices, formats, semantics, data)
@@ -3002,7 +3015,50 @@ class PlaybackGraphicsDevice
             return false;
         }
 
+        // Adjust aspect ratio
         var gd = this.gd;
+        var destWidth = gd.width;
+        var destHeight = gd.height;
+        var aspectRatioConversion = ((destWidth / destHeight) / (this.srcWidth / this.srcHeight));
+        var offsetX, offsetY, width, height;
+        if (aspectRatioConversion < (1 - (1 / destHeight)))
+        {
+            offsetX = 0;
+            width = destWidth;
+            height = ((destHeight * aspectRatioConversion) | 0);
+            offsetY = ((destHeight - height) >> 1);
+
+            gd.setScissor(0, 0, width, offsetY);
+            gd.clear(this.black);
+            gd.setScissor(0, (height - offsetY), width, offsetY);
+            gd.clear(this.black);
+        }
+        else if (aspectRatioConversion > (1 + (1 / destWidth)))
+        {
+            offsetY = 0;
+            height = destHeight;
+            width = ((destWidth / aspectRatioConversion) | 0);
+            offsetX = ((destWidth - width) >> 1);
+
+            gd.setScissor(0, 0, offsetX, height);
+            gd.clear(this.black);
+            gd.setScissor((width - offsetX), 0, offsetX, height);
+            gd.clear(this.black);
+        }
+        else
+        {
+            offsetY = 0;
+            height = destHeight;
+            width = destWidth;
+            offsetX = 0;
+        }
+
+        if (offsetX || offsetY)
+        {
+            gd.setScissor(offsetX, offsetY, width, height);
+            gd.setViewport(offsetX, offsetY, width, height);
+        }
+
         var numCommands = frame.length;
         var c;
         for (c = 0; c < numCommands; c += 1)
@@ -3079,11 +3135,13 @@ class PlaybackGraphicsDevice
                 var h = command[4];
                 if (w === -1)
                 {
-                    w = gd.width;
+                    x = offsetX;
+                    w = width;
                 }
                 if (h === -1)
                 {
-                    h = gd.height;
+                    y = offsetY;
+                    h = height;
                 }
                 gd.setViewport(x, y, w, h);
             }
@@ -3095,11 +3153,13 @@ class PlaybackGraphicsDevice
                 var h = command[4];
                 if (w === -1)
                 {
-                    w = gd.width;
+                    x = offsetX;
+                    w = width;
                 }
                 if (h === -1)
                 {
-                    h = gd.height;
+                    y = offsetY;
+                    h = height;
                 }
                 gd.setScissor(x, y, w, h);
             }
@@ -3110,10 +3170,6 @@ class PlaybackGraphicsDevice
             else if (method === CaptureGraphicsCommand.endOcclusionQuery)
             {
                 gd.endOcclusionQuery(command[1]);
-            }
-            else if (method === CaptureGraphicsCommand.destroy)
-            {
-                command[1].destroy();
             }
             else
             {

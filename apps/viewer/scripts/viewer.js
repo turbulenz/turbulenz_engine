@@ -634,23 +634,39 @@ Viewer.create = function viewerCreateFn()
             }
         };
 
-        var mappingReceived = function mappingReceivedFn(mappingTable)
+        if (mappingTable && mappingTable !== '')
         {
-            tm.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
-            //sm.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);   // viewer doesn't load any more shaders
-            animationManager.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
+            var mappingReceived = function mappingReceivedFn(mappingTable)
+            {
+                tm.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
+                //sm.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);   // viewer doesn't load any more shaders
+                animationManager.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
 
-            urlMapping = mappingTable.urlMapping;
+                urlMapping = mappingTable.urlMapping;
+                urlMappingReceived = true;
+            };
+            var mappingError = function mappingErrorFn()
+            {
+                window.alert("Error loading asset mapping table: " + mappingTable +
+                             " will attempt to continue without it");
+                urlMapping = {};
+                urlMappingReceived = true;
+            };
+
+            var mappingSettings = {
+                mappingTablePrefix: urlBase + "staticmax/",
+                assetPrefix: urlBase,
+                mappingTableURL: urlBase + mappingTable
+            };
+
+            TurbulenzServices.createMappingTable(requestHandler, null, mappingReceived,
+                                                 mappingSettings, mappingError);
+        }
+        else
+        {
+            urlMapping = {};
             urlMappingReceived = true;
-        };
-
-        var mappingSettings = {
-            mappingTablePrefix: urlBase + "staticmax/",
-            assetPrefix: urlBase,
-            mappingTableURL: urlBase + mappingTable
-        };
-        TurbulenzServices.createMappingTable(requestHandler, null, mappingReceived,
-                                                                    mappingSettings);
+        }
 
         checkMapping();
     };
@@ -1440,12 +1456,12 @@ function createSceneFn()
             var search = '?baseurl=' + baseURL + '&assetpath=' + assetPath;
             if (mappingTable !== 'mapping_table.json')
             {
-                search = search + '&mappingtable=' + mappingTable;
+                search = search + '&mapping_table=' + mappingTable;
             }
             var path = document.location.pathname + search;
             var state = { baseurl: baseURL,
                           assetpath: assetPath,
-                          mappingtable: mappingTable };
+                          mapping_table: mappingTable };
             if (lastSearch !== search)
             {
                 lastSearch = search;
@@ -1467,7 +1483,10 @@ function createSceneFn()
         {
             fileInputElement.value = qsValues.assetpath;
             baseurlInputElement.value = qsValues.baseurl || baseurlInputElement.value;
-            mappingInputElement.value = qsValues.mappingtable || mappingInputElement.value;
+            if (qsValues.mapping_table !== undefined)
+            {
+                mappingInputElement.value = qsValues.mapping_table;
+            }
             doLoad();
         }
     }
@@ -1482,7 +1501,7 @@ function createSceneFn()
             {
                 fileInputElement.value = state.assetpath;
                 baseurlInputElement.value = state.baseurl;
-                mappingInputElement.value = state.mappingtable;
+                mappingInputElement.value = state.mapping_table;
                 doLoad();
             }
             else

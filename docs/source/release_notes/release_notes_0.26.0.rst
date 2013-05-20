@@ -18,6 +18,7 @@ New Features
 ------------
 
 * Added :ref:`GraphicsDevice  <graphicsdevice>` :ref:`finish <graphicsdevice_finish>` and :ref:`flush <graphicsdevice_flush>`.
+* Added :ref:`ShaderManager  <shadermanager>` :ref:`setAutomaticParameterResize <shadermanager_setautomaticparameterresize>`.
 
 Changes
 -------

@@ -11,6 +11,9 @@ from hashlib import md5
 from base64 import urlsafe_b64encode
 from subprocess import Popen, PIPE, STDOUT
 from platform import system, machine
+from threading import Thread, Lock
+from time import sleep
+import multiprocessing
 import argparse
 
 import platform
@@ -92,6 +95,7 @@ class Source():
             self.hash = self.calculate_hash()
             self.hash_checked = True
             self.changed = True
+        self.built = False
 
     def has_changed(self):
         if self.hash_checked:
@@ -405,10 +409,12 @@ def build_asset(asset_info, source_list, tools, build_path, verbose):
     deps = [ source_list.get_source(path) for path in asset_info.deps ]
     if any([dep.has_changed() for dep in deps]) or asset_tool.has_changed() or not path_exists(dst_path) \
             or asset_tool.check_external_deps(source.asset_path, dst_path, asset_info.args):
-        print '[%s] %s' % (asset_tool.name.upper(), src)
+        stdout.write('[%s] %s\n' % (asset_tool.name.upper(), src))
         asset_tool.run(source.asset_path, dst_path, verbose, asset_info.args)
+        source.built = True
         return True
     else:
+        source.built = True
         return False
 
 def install(install_asset_info, install_path):
@@ -475,6 +481,12 @@ def main():
     parser.add_argument('--install-path', default='staticmax', help="Path to install output assets into")
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--imagemagick-convert', help="Path to ImageMagick convert executable (enables TGA support)")
+    try:
+        default_num_threads = multiprocessing.cpu_count()
+    except NotImplementedError:
+        default_num_threads = 1
+    parser.add_argument('-j', '--num-threads', help="Specify how many threads to use for building",
+                        default=default_num_threads, type=int)
 
     args = parser.parse_args(argv[1:])
 
@@ -512,29 +524,113 @@ def main():
             print 'No source hash file'
         source_list = SourceList({}, assets_paths)
 
-    try:
-        assets_rebuilt = 0
-        for asset_info in asset_build_info:
-            rebuild = build_asset(asset_info, source_list, tools, base_build_path, args.verbose)
-            if rebuild:
-                assets_rebuilt += 1
-    except CalledProcessError as e:
-        error('Tool failed - %s' % str(e))
-        return 1
-    except IOError as e:
-        error(str(e))
+    # Ensure all sources are in the source list so that the threads aren't writing to the list
+    for a in asset_build_info:
+        source_list.get_source(a.path)
 
+    class AssetBuildThread(Thread):
+        def __init__(self, asset_list, asset_list_mutex):
+            Thread.__init__(self)
+            self.asset_list = asset_list
+            self.mutex = asset_list_mutex
+            self.assets_rebuilt = 0
+            self.exit = False
+            self.error = None
+
+        def run(self):
+            while True:
+                if self.exit:
+                    return 0
+                self.mutex.acquire(True)
+                try:
+                    # Try and pull the head off the list and if all it's dependencies are already built then
+                    # build it. This could iterate down the remaining list in case the head isn't buildable but
+                    # things later in the list are
+                    asset_info = self.asset_list[0]
+                    deps = [ source_list.get_source(path) for path in asset_info.deps if path != asset_info.path ]
+                    if any([not d.built for d in deps]):
+                        self.mutex.release()
+                        sleep(0.01)
+                        continue
+                    self.asset_list.pop(0)
+                    self.mutex.release()
+                except IndexError:
+                    self.mutex.release()
+                    return 0
+                try:
+                    rebuild = build_asset(asset_info, source_list, tools, base_build_path, args.verbose)
+                except CalledProcessError as e:
+                    self.error = '%s - Tool failed - %s' % (asset_info.path, str(e))
+                    return 1
+                except IOError as e:
+                    self.error = str(e)
+                    return 1
+
+                if rebuild:
+                    self.assets_rebuilt += 1
+
+    num_threads = args.num_threads
+
+    # Sort assets by dependencies
+    assets_to_build = []
+    while len(assets_to_build) != len(asset_build_info):
+        num_assets_sorted = len(assets_to_build)
+        for asset in asset_build_info:
+            if asset in assets_to_build:
+                continue
+            for dep in asset.deps:
+                if dep != asset.path and dep not in [ a.path for a in assets_to_build ]:
+                    break
+            else:
+                assets_to_build.append(asset)
+        if num_assets_sorted == len(assets_to_build):
+            assets_left = [ a for a in asset_build_info if a not in assets_to_build ]
+            error('Detected cyclic dependencies between assets within - \n%s' %
+                '\n'.join([ a.path for a in assets_left ]))
+            return 1
+
+
+    # Create and start threads to build the assets in the sorted dependency list
+    asset_threads = []
+    asset_list_mutex = Lock()
+    for t in xrange(num_threads):
+        asset_threads.append(AssetBuildThread(assets_to_build, asset_list_mutex))
+
+    for t in xrange(num_threads):
+        asset_threads[t].start()
+
+    while any(a.isAlive() for a in asset_threads):
+        for t in xrange(num_threads):
+            asset_threads[t].join(0.1)
+            if not asset_threads[t].isAlive() and asset_threads[t].error:
+                # One thread has an error ask all the others to finish asap
+                for o in xrange(num_threads):
+                    asset_threads[o].exit = True
+
+    # Update the stats on number of assets rebuilt
+    assets_rebuilt = 0
+    for t in xrange(num_threads):
+        assets_rebuilt += asset_threads[t].assets_rebuilt
+
+    # Dump the state of the build for partial rebuilds
     with open(path_join(base_build_path, 'sourcehashes.json'), 'wt') as f:
         f.write(dump_json(source_list.get_hashes()))
 
+    # Check if any build threads failed and if so exit with an error
+    for t in xrange(num_threads):
+        if asset_threads[t].error:
+            error(asset_threads[t].error)
+            return 1
+
+    # Dump the mapping table for the built assets
     print 'Installing assets and building mapping table...'
     mapping = install(asset_build_info, args.install_path)
-
     with open('mapping_table.json', 'wt') as f:
         f.write(dump_json({
                 'urnmapping': mapping
             }))
 
+    # Cleanup any built files no longer referenced by the new mapping table
     remove_old_build_files(asset_build_info, build_paths)
 
     print '%d assets rebuilt' % assets_rebuilt
