@@ -220,27 +220,51 @@ if platform.system() == "Windows":
         sxs_key = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
                           0, KEY_READ | KEY_WOW64_32KEY)
         if not sxs_key:
-            return None, None
+            return None, None, None
 
-        devenv_path, _ = QueryValueEx(sxs_key, '11.0')
-        if devenv_path is not None:
-            devenv_path = os.path.join(devenv_path, 'Common7', 'IDE', 'devenv.com')
-            return (devenv_path, '2012')
+        def _query_key_value(key, value):
+            try:
+                result, _ = QueryValueEx(key, value)
+            except WindowsError:
+                result = None
+            return result
 
-        devenv_path, _ = QueryValueEx(sxs_key, '10.0')
-        if devenv_path is not None:
-            devenv_path = os.path.join(devenv_path, 'Common7', 'IDE', 'devenv.com')
-            return (devenv_path, '2010')
+        vs_path = _query_key_value(sxs_key, '11.0')
+        if vs_path is not None:
+            devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
+            if os.path.exists(devenv_path):
+                return (devenv_path, '2012', None)
 
-        devenv_path, _ = QueryValueEx(sxs_key, '9.0')
-        if devenv_path is not None:
-            devenv_path = os.path.join(devenv_path, 'Common7', 'IDE', 'devenv.com')
-            return (devenv_path, '2008')
+        vs_path = _query_key_value(sxs_key, '10.0')
+        if vs_path is not None:
+            devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
+            if os.path.exists(devenv_path):
+                return (devenv_path, '2010', None)
+            devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'VCExpress.exe')
+            if os.path.exists(devenv_path):
+                return (devenv_path, '2010', None)
 
-        return None, None
+        vs_path = _query_key_value(sxs_key, '9.0')
+        if vs_path is not None:
+            devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
+            if os.path.exists(devenv_path):
+                return (devenv_path, '2008', None)
+
+        # If we didn't find a devenv like tool try msbuild for Visual Studio 11.0
+        vs_path = _query_key_value(sxs_key, '11.0')
+        if vs_path is not None:
+            # Query the key in two steps because Python can't seem to read the 4.0 key in a
+            msbuild_basekey = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\MSBuild\ToolsVersions',
+                                      0, KEY_READ | KEY_WOW64_32KEY)
+            msbuild_key = OpenKey(msbuild_basekey, '4.0', 0, KEY_READ | KEY_WOW64_32KEY)
+            msbuild_path = _query_key_value(msbuild_key, 'MSBuildToolsPath')
+            if msbuild_path:
+                return None, '2012', os.path.join(msbuild_path, 'MSBuild.exe')
+
+        return None, None, None
     # pylint: enable=F0401, E0602
     # pylint: enable=W0404
 else:
     def find_devenv():
-        return None, None
+        return None, None, None
 

@@ -500,7 +500,9 @@ Pre-requisites for building the tools cgfx2json and NvTriStrip via ``python mana
 
     - Microsoft Visual Studio 2008 with SP1
     - Microsoft Visual Studio 2010
+    - Visual C++ 2010 Express
     - Microsoft Visual Studio 2012 with update 2
+    - Microsoft Visual Studio Express 2012 for Windows Desktop with update 2
 
   - Mac OSX : Xcode with the command line tools
 
