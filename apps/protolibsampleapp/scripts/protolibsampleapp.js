@@ -30,7 +30,7 @@ Application.prototype =
         this.meshRotationMatrix = mathDevice.m43BuildIdentity();
 
         //Background
-        var bgColor = mathDevice.v3Build(0.5, 0.5, 0.5);
+        var bgColor = mathDevice.v3Build(0.25, 0.25, 0.25);
         protolib.setClearColor(bgColor);
         protolib.setAmbientLightColor(bgColor);
 
