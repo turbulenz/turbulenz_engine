@@ -286,7 +286,10 @@ function Protolib(params)
 
     function updateAssetTrackerFn()
     {
-        loadingScreen.render(protolib.loadingScreenBackgroundAlpha, protolib.loadingScreenTextureAlpha);
+        if (protolib.loadingScreen)
+        {
+            protolib.loadingScreen.render(protolib.loadingScreenBackgroundAlpha, protolib.loadingScreenTextureAlpha);
+        }
     }
 
     //After mapping table has loaded, load forwardrendering's shaders, and the default light material.
@@ -346,6 +349,8 @@ function Protolib(params)
                     renderer.updateBuffers(graphicsDevice, graphicsDevice.width, graphicsDevice.height);
                     renderer.updateShader(shaderManager);
 
+                    protolib.loadingScreen = null;
+
                     protolib.beginFrame = Protolib.prototype.beginFrame;
                     protolib.endFrame = Protolib.prototype.endFrame;
 
@@ -362,7 +367,10 @@ function Protolib(params)
             }
             else
             {
-                protolib.loadingScreen.render(protolib.loadingScreenBackgroundAlpha, protolib.loadingScreenTextureAlpha);
+                if (protolib.loadingScreen)
+                {
+                    protolib.loadingScreen.render(protolib.loadingScreenBackgroundAlpha, protolib.loadingScreenTextureAlpha);
+                }
             }
         };
 
