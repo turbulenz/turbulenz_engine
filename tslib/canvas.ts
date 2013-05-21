@@ -2207,10 +2207,21 @@ class CanvasContext
 
             case 90: //Z
             case 122: //z
-                var firstPoint = this.currentSubPath[0];
-                x = firstPoint[0];
-                y = firstPoint[1];
-                this.closePath();
+                if (i < end)
+                {
+                    if (commands[i] !== 77) //M
+                    {
+                        var firstPoint = this.untransformPoint(this.currentSubPath[0]);
+                        x = firstPoint[0];
+                        y = firstPoint[1];
+                    }
+                    this.closePath();
+                }
+                else
+                {
+                    this.closePath();
+                    return;
+                }
                 break;
 
             default:
