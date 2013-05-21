@@ -567,8 +567,8 @@ $(foreach app,$(JSAPPS), $(eval                              \
 # Create the build target
 ############################################################
 
-ifeq ($(USE_PROTOLIB), 1)
-PROTOLIB_DEPS = install_protolib
+ifeq ($(USE_PROTOLIB),1)
+PROTOLIB_DEPS := install_protolib
 endif
 
 .PHONY : build
