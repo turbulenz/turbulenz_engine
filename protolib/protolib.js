@@ -760,6 +760,12 @@ Protolib.prototype =
         simplesprite.drawSprites();
         simplefont.render();
         debugdraw.drawDebugLines();
+
+        if (this.postRendererDrawFn)
+        {
+            this.postRendererDrawFn();
+        }
+
         this._draw2DSprites();
 
         if (this.postDrawFn)
@@ -793,6 +799,10 @@ Protolib.prototype =
     setPreDraw : function setPreDrawFn(callbackFn)
     {
         this.preDrawFn = callbackFn;
+    },
+    setPostRendererDraw : function setPostRendererDrawFn(callbackFn)
+    {
+        this.postRendererDrawFn = callbackFn;
     },
     setPostDraw : function setPostDrawFn(callbackFn)
     {
