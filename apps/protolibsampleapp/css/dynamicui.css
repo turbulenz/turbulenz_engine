@@ -1,0 +1,120 @@
+
+.dynamicui
+{
+    padding: 3px;
+}
+
+.dui-group
+{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    width: 100%;
+    padding-left: 6px;
+    display: table;
+}
+
+.dui-group-contents
+{
+    display: table-row-group;
+}
+
+.dynamicui .collapsed .dui-group-contents
+{
+    display: none;
+}
+
+.dynamicui .collapsed .dui-group-title:before {
+    content: "▸ ";
+}
+
+.dynamicui .dui-group-title:before {
+    content: "▾ ";
+}
+
+.dynamicui .hidden
+{
+    display: none;
+}
+
+.dui-group-title
+{
+    height: 13px;
+    font-size: 12px;
+    font-weight: bold;
+    display: table-caption;
+    cursor: pointer;
+    text-shadow: 0 0;
+}
+
+.dui-control
+{
+    display: table-row;
+    font-weight: bold;
+    font-size: 10px;
+    text-shadow: 0 0;
+    text-align: right;
+}
+
+.dui-control-title
+{
+    display: table-cell;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.dui-control-widget input
+{
+    height: 11px;
+    font-size: 10px;
+    border: 1px solid black;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.dui-control-value
+{
+    display: inline-block;
+    vertical-align: middle;
+    overflow: hidden;
+    max-width: 5em;
+    min-width: 5em;
+}
+
+.dui-control-widget select {
+    font-size: 10px;
+}
+
+.dui-control-widget .ui-slider {
+    height:2px;
+    background: black;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    margin-left: 3px;
+    margin-right: 3px;
+    vertical-align: middle;
+    width: 120px;
+    border-top:4px solid #b4b4b4;
+    border-bottom:4px solid #b4b4b4;
+}
+
+.dui-control-widget .ui-slider.ui-disabled {
+    background: grey;
+    border: 1px solid grey;
+    cursor: default;
+}
+
+.dui-control-widget .ui-slider a{
+    width:3px;
+    height:8px;
+    background: grey;
+    cursor: pointer;
+    position: absolute;
+    top: -3px;
+}
+
+.dui-control-widget .ui-slider.ui-disabled a{
+    display: none;
+    cursor: default;
+}

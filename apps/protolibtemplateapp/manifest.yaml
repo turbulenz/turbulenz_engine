@@ -1,0 +1,19 @@
+aspect_ratio: '16:9'
+canvas_main: app.canvas.js
+cover_art: 'cover_art.png'
+deploy_files:
+- app.canvas.js
+- mapping_table.json
+- staticmax/*
+deployed: Never
+engine_version: '0.26'
+flash_main: ''
+is_multiplayer: false
+is_temp: false
+mapping_table: mapping_table.json
+modified: Never
+path: apps/protolibtemplateapp
+plugin_main: ''
+slug: app
+title: App
+title_logo: ''
