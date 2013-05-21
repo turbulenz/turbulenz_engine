@@ -1,0 +1,19 @@
+aspect_ratio: '16:9'
+canvas_main: protolibsampleapp.canvas.js
+cover_art: ''
+deploy_files:
+- protolibsampleapp.canvas.js
+- mapping_table.json
+- staticmax/*
+deployed: Never
+engine_version: '0.26'
+flash_main: ''
+is_multiplayer: false
+is_temp: false
+mapping_table: mapping_table.json
+modified: Never
+path: apps/protolibsampleapp
+plugin_main: ''
+slug: protolibsampleapp
+title: Protolib Sample App
+title_logo: ''

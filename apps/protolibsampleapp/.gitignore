@@ -2,14 +2,8 @@
 *.release.html
 *.canvas.js
 *.tzjs
-templates/*.js
-templates/*.html
 _build
 mapping_table.json
 jslib
 protolib
 staticmax
-manifest.yaml
-Makefile
-deps.yaml
-canvasdeps.yaml
