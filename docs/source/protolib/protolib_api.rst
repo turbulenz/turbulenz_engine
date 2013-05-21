@@ -213,10 +213,11 @@ Creates a protolib object.
         },
         defaultMappingSettings: {
             mappingTablePrefix: 'staticmax/',
-            assetPrefix: 'missing',
+            assetPrefix: 'missing/',
             mappingTableURL: 'mapping_table.json',
             urnMapping: {}
-        }
+        },
+        enableDynamicUI: false
     };
 
     var protolib = Protolib.create(config);
@@ -274,6 +275,11 @@ Creates a protolib object.
             mappingTableURL: "mapping_table.json",
             urnMapping: {}
         }
+
+``enableDynamicUI`` (Optional)
+    Initialises the dynamic UI module.
+    Required to use the :ref:`addWatchVariable <protolib-addWatchVariable>`.
+    Defaults to ``false``.
 
 Game Loop
 =========
@@ -1218,6 +1224,7 @@ For an example of this functionality in use, see the apps in the SDK.
 **Summary**
 
 Adds a watchable variable to the page that contains the Protolib app.
+*Note:* Requires enableDynamicUI to be ``true`` as a parameter to the :ref:`create <protolib-constructor>` function.
 
 **Syntax** ::
 
@@ -1277,6 +1284,63 @@ Remove a watchable variable by watchID. This removes the control from the page t
     The ID to remove. Returned by the addWatchVariable.
 
 Returns a true if successfully removed. Returns false if the dynamic UI is not enabled or if the ID is not recognized.
+
+
+Advanced
+========
+
+Advanced functionality of Protolib is to give developers more control of how the library works if they need to operate beyond the default behaviour.
+These functions should only be used by advanced users who understand the behaviour and need to extend it.
+
+.. _protolib-setpredraw:
+
+`setPreDraw`
+------------
+
+**Summary**
+
+Set a function to call, after the clear call of the renderer, but before any 3D or 2D rendering has happened in a frame.
+This function allows you to render before the scene has rendered.
+This function will be called during :ref:`protolib.endFrame <protolib-endframe>` function.
+
+**Syntax** ::
+
+    function preDrawFn()
+    {
+        // A 2D sprite to manually draw behind 3D content.
+        draw2D.begin();
+        draw2D.drawSprite(sprite);
+        draw2D.end();
+    }
+
+    protolib.setPreDraw(preDrawFn);
+
+``callback``
+    The function to call after clearing the screen.
+
+.. _protolib-setpostdraw:
+
+`setPostDraw`
+-------------
+
+**Summary**
+
+Set a function to call, after the protolib has rendered the current frame, but before graphicsDevice.endFrame().
+This function allows you to render on top of the final scene content.
+This function will be called after 2D and 3D rendering, but before graphicsDevice.endFrame().
+
+**Syntax** ::
+
+    function postDrawFn()
+    {
+        // Draw a layer of debug on top of the scene
+        debug.draw();
+    }
+
+    protolib.setPostDraw(postDrawFn);
+
+``callback``
+    The function to call before graphicsDevice.endFrame().
 
 
 .. _meshwrapper:
