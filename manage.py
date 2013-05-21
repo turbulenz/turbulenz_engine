@@ -172,6 +172,7 @@ def command_tools():
         devenv, vs_version_name, msbuild = find_devenv()
         if not devenv and not msbuild:
             error('Could not find a valid install of Visual Studio')
+            return 1
         if vs_version_name == '2008':
             proj_postfix = '.vcproj'
             sln_postfix = '.sln'
@@ -215,6 +216,7 @@ def command_tools_clean():
         devenv, vs_version_name, msbuild = find_devenv()
         if not devenv and not msbuild:
             error('Could not find a valid install of Visual Studio')
+            return 1
         if vs_version_name == '2008':
             proj_postfix = '.vcproj'
             sln_postfix = '.sln'
