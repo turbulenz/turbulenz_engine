@@ -1,6 +1,6 @@
 aspect_ratio: '16:9'
 canvas_main: app.canvas.js
-cover_art: ''
+cover_art: 'cover_art.png'
 deploy_files:
 - app.canvas.js
 - mapping_table.json

@@ -1,6 +1,6 @@
 aspect_ratio: '16:9'
 canvas_main: protolibsampleapp.canvas.js
-cover_art: ''
+cover_art: 'cover_art.png'
 deploy_files:
 - protolibsampleapp.canvas.js
 - mapping_table.json
