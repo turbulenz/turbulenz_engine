@@ -2233,7 +2233,7 @@ class CanvasContext
             currentSubPath.length > 2)
         {
             var autoClose = this.autoClose;
-            var isConvex = this.isConvex;
+            var canTriangulateAsFan = this.canTriangulateAsFan;
             var points, numPoints, numSegments;
 
             var style = this.fillStyle;
@@ -2266,9 +2266,9 @@ class CanvasContext
 
                         if (numSegments > 1)
                         {
-                            if (isConvex(points, numSegments))
+                            if (canTriangulateAsFan(points, numSegments))
                             {
-                                numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
+                                numVertices = this.triangulateAsFan(points, numSegments, vertices, numVertices);
                             }
                             else
                             {
@@ -2293,9 +2293,9 @@ class CanvasContext
 
                     if (numSegments > 1)
                     {
-                        if (isConvex(points, numSegments))
+                        if (canTriangulateAsFan(points, numSegments))
                         {
-                            numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
+                            numVertices = this.triangulateAsFan(points, numSegments, vertices, numVertices);
                         }
                         else
                         {
@@ -2329,7 +2329,7 @@ class CanvasContext
 
                     if (numSegments > 1)
                     {
-                        if (isConvex(points, numSegments))
+                        if (canTriangulateAsFan(points, numSegments))
                         {
                             primitive = this.triangleFanPrimitive;
                             vertices = points;
@@ -4032,7 +4032,7 @@ class CanvasContext
         return false;
     };
 
-    isConvex(points, numSegments): bool
+    canTriangulateAsFan(points, numSegments): bool
     {
         if (numSegments < 4)
         {
@@ -4042,24 +4042,24 @@ class CanvasContext
         var flag = 0;
 
         /*jshint bitwise: false*/
-        var p0 = points[numSegments - 2];
-        var p1 = points[numSegments - 1];
+        var p0 = points[0];
+        var p1 = points[1];
         var p0x = p0[0];
         var p0y = p0[1];
         var p1x = p1[0];
         var p1y = p1[1];
         var d10x = (p1x - p0x);
         var d10y = (p1y - p0y);
-        var n = 0;
+        var n = 2;
         do
         {
             var p2 = points[n];
             var p2x = p2[0];
             var p2y = p2[1];
-            var d21x = (p2x - p1x);
-            var d21y = (p2y - p1y);
+            var d20x = (p2x - p0x);
+            var d20y = (p2y - p0y);
 
-            var z = ((d10x * d21y) - (d10y * d21x));
+            var z = ((d10x * d20y) - (d10y * d20x));
             if (z < 0)
             {
                 flag |= 1;
@@ -4074,10 +4074,8 @@ class CanvasContext
                 return false;
             }
 
-            p1x = p2x;
-            p1y = p2y;
-            d10x = d21x;
-            d10y = d21y;
+            d10x = d20x;
+            d10y = d20y;
 
             n += 1;
         }
@@ -4203,7 +4201,7 @@ class CanvasContext
         return (area * 0.5);
     };
 
-    triangulateConvex(points, numSegments, vertices, numVertices)
+    triangulateAsFan(points, numSegments, vertices, numVertices)
     {
         var p0 = points[0];
         var p1 = points[1];
@@ -4223,10 +4221,10 @@ class CanvasContext
         return numVertices;
     };
 
-    getAngles(points, numSegments, angles)
+    getAngles(points: any[], numSegments: number, angles: any[]): number
     {
-        var p0 = points[numSegments - 2];
-        var p1 = points[numSegments - 1];
+        var p0 = points[0];
+        var p1 = points[1];
         var p0x = p0[0];
         var p0y = p0[1];
         var p1x = p1[0];
@@ -4234,7 +4232,7 @@ class CanvasContext
         var d10x = (p1x - p0x);
         var d10y = (p1y - p0y);
         var d10l = ((d10x * d10x) + (d10y * d10y));
-        var n = 0;
+        var n = 2;
         var sqrt = Math.sqrt;
         var abs = Math.abs;
         var angle;
@@ -4243,23 +4241,23 @@ class CanvasContext
             var p2 = points[n];
             var p2x = p2[0];
             var p2y = p2[1];
-            var d21x = (p2x - p1x);
-            var d21y = (p2y - p1y);
-            var d21l = ((d21x * d21x) + (d21y * d21y));
+            var d20x = (p2x - p0x);
+            var d20y = (p2y - p0y);
+            var d20l = ((d20x * d20x) + (d20y * d20y));
 
-            angle = (((d10x * d21y) - (d10y * d21x)) / sqrt(d10l * d21l));
-            angles[n] = ((angle * 100) | 0);
+            angle = (((d10x * d20y) - (d10y * d20x)) / sqrt(d10l * d20l));
+            angles[n - 2] = ((angle * 100) | 0);
             // Increase the 100 to increase precision if caching matches too dissimilar shapes
 
-            p1x = p2x;
-            p1y = p2y;
-            d10x = d21x;
-            d10y = d21y;
-            d10l = d21l;
+            d10x = d20x;
+            d10y = d20y;
+            d10l = d20l;
 
             n += 1;
         }
         while (n < numSegments);
+
+        return (n - 2);
     };
 
     lowerBound(bin: any[], data: number[], length: number) : number
@@ -4313,18 +4311,18 @@ class CanvasContext
         var n;
 
         var angles = this.tempAngles;
-        this.getAngles(points, numSegments, angles);
+        var numAngles = this.getAngles(points, numSegments, angles);
 
         var dataBins = this.cachedTriangulation;
-        var dataBin = dataBins[numSegments];
+        var dataBin = dataBins[numAngles];
         if (dataBin === undefined)
         {
-            dataBins[numSegments] = dataBin = [];
+            dataBins[numAngles] = dataBin = [];
             lowerIndex = 0;
         }
         else
         {
-            lowerIndex = this.lowerBound(dataBin, angles, numSegments);
+            lowerIndex = this.lowerBound(dataBin, angles, numAngles);
         }
 
         // Check if we found an identical copy
@@ -4373,7 +4371,7 @@ class CanvasContext
                 lowerIndex = 0;
             }
 
-            var clonedAngles = angles.slice(0, numSegments);
+            var clonedAngles = angles.slice(0, numAngles);
             if (lowerIndex < dataBin.length)
             {
                 dataBin.splice(lowerIndex, 0, cachedIndices, clonedAngles);
@@ -4392,7 +4390,7 @@ class CanvasContext
                        ownPoints: bool,
                        totalArea: number)
     {
-        var isConvex = this.isConvex;
+        var canTriangulateAsFan = this.canTriangulateAsFan;
 
         if (ownPoints)
         {
@@ -4619,9 +4617,9 @@ class CanvasContext
                         {
                             pointsA[numSegmentsA] = pointsA[0];
 
-                            if (isConvex(pointsA, numSegmentsA))
+                            if (canTriangulateAsFan(pointsA, numSegmentsA))
                             {
-                                numVertices = this.triangulateConvex(pointsA, numSegmentsA, vertices, numVertices);
+                                numVertices = this.triangulateAsFan(pointsA, numSegmentsA, vertices, numVertices);
                             }
                             else
                             {
@@ -4723,7 +4721,7 @@ class CanvasContext
             }
             while (i2 < numSegments);
         }
-        while (valid && !isConvex(points, numSegments));
+        while (valid && !canTriangulateAsFan(points, numSegments));
 
         if (!valid)
         {
