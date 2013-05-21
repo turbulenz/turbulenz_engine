@@ -234,7 +234,8 @@ def command_apps(options):
                  'apps/multiworm',
                  'apps/sampleapp',
                  'apps/templateapp',
-                 'apps/viewer' ]
+                 'apps/viewer',
+                 'apps/protolibsampleapp' ]
     all_apps = {}
     for d in app_dirs:
         all_apps[os.path.split(d)[1]] = d
@@ -311,6 +312,11 @@ def command_apps(options):
             buildassets_cmd.extend([
                                 '--root', TURBULENZROOT,
                                 '--assets-path', os.path.join(TURBULENZROOT, 'assets') ])
+
+            app_assets = os.path.abspath(os.path.join(app_dir, 'assets'))
+            if os.path.isdir(app_assets):
+                buildassets_cmd.extend(['--assets-path', app_assets])
+
             if args.assets_path:
                 for p in args.assets_path:
                     buildassets_cmd.extend(['--assets-path', p])
