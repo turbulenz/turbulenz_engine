@@ -1,5 +1,5 @@
 # Location of the Turbulenz checkout root
-TZROOT := ..\..
+TZROOT := ../..
 
 # Location of templates.  Each .js file in the templates dir
 # represents an application to be built
