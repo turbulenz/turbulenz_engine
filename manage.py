@@ -27,21 +27,22 @@ def command_env():
         error('Turbulenz requires python 2.7')
         return -1
 
-    if not os.path.isdir(ENV):
+    env_dir = os.path.join(TURBULENZROOT, ENV)
+    if not os.path.isdir(env_dir):
         if TURBULENZOS == 'win32':
-            sh('%s -m virtualenv --no-site-packages %s' % (sys.executable, ENV))
+            sh('%s -m virtualenv --no-site-packages %s' % (sys.executable, env_dir))
         else:
             print "PYTHON: %s" % PYTHON
-            cmd = 'virtualenv -p %s --no-site-packages %s' % (PYTHON, ENV)
+            cmd = 'virtualenv -p %s --no-site-packages %s' % (PYTHON, env_dir)
             print "CMD: %s" % cmd
             sh(cmd, console=True)
 
     if TURBULENZOS == 'win32':
-        env_bin = os.path.join('env', 'scripts')
+        env_bin = os.path.join(TURBULENZROOT, 'env', 'scripts')
         with open(os.path.join(env_bin, 'activate.bat'), 'a') as f:
             f.write('set PATH=%PATH%;%VIRTUAL_ENV%\\..\\tools\\scripts\n')
     else:
-        env_bin = os.path.join('env', 'bin')
+        env_bin = os.path.join(TURBULENZROOT, 'env', 'bin')
         with open(os.path.join(env_bin, 'activate'), 'a') as f:
             f.write('export PATH=$PATH:$VIRTUAL_ENV/../tools/scripts\n')
 
@@ -63,14 +64,16 @@ def command_env():
     _easy_install('turbulenz_tools>=1.0.1')
     _easy_install('turbulenz_local>=1.0.2')
 
-    cmd = [os.path.join(env_bin, 'python'), os.path.join('scripts', 'install_nodejs.py'), '--typescript']
+    cmd = [os.path.join(env_bin, 'python'),
+           os.path.join(TURBULENZROOT, 'scripts', 'install_nodejs.py'),
+            '--typescript']
     if not TURBULENZOS in [ 'linux32', 'linux64' ]:
         cmd.append('-f')
     sh(cmd, console=True)
 
 @command_no_arguments
 def command_env_clean():
-    rmdir(ENV)
+    rmdir(os.path.join(TURBULENZROOT, ENV))
 
 #######################################################################################################################
 
@@ -108,7 +111,7 @@ def command_jslib(options):
     cmd = "%s -j %s" % (_get_make_command(), args.j)
 
     # Explicitly run make in the root of the engine folder
-    cmd += ' -C %s' % os.path.dirname(os.path.abspath(__file__))
+    cmd += ' -C %s' % TURBULENZROOT
 
     if args.outdir:
         cmd += " TZ_OUTPUT_DIR=%s" % args.outdir
@@ -160,7 +163,7 @@ def _get_num_cpus():
 
 def _get_make_command():
     if TURBULENZOS in ['win32', 'win64']:
-        return "external\\gnumake-win32\\3.81\\bin\\make.exe"
+        return os.path.join(TURBULENZROOT, 'external', 'gnumake-win32', '3.81', 'bin', 'make.exe')
     return "make"
 
 #######################################################################################################################
@@ -197,19 +200,19 @@ def command_tools():
         cgfx2json_proj = os.path.join(tools, 'cgfx2json', 'cgfx2json%s' % proj_postfix)
         cmd = base_cmd + [cgfx2json_proj]
         sh(cmd, console=True, shell=True)
-        cp('tools/cgfx2json/Release/cgfx2json.exe', tools_bin)
-        cp('external/Cg/bin/cg.dll', tools_bin)
-        cp('external/Cg/bin/cgGL.dll', tools_bin)
+        cp('%s/cgfx2json/Release/cgfx2json.exe' % tools, tools_bin)
+        cp('%s/external/Cg/bin/cg.dll' % TURBULENZROOT, tools_bin)
+        cp('%s/external/Cg/bin/cgGL.dll' % TURBULENZROOT, tools_bin)
 
         nvtristrip_sln = os.path.join(tools, 'NvTriStrip', 'NvTriStrip%s' % sln_postfix)
         cmd = base_cmd + [nvtristrip_sln]
         sh(cmd, console=True, shell=True)
-        cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper.exe', tools_bin)
+        cp('%s/NvTriStrip/NvTriStripper/bin/release/NvTriStripper.exe' % tools, tools_bin)
 
     else:
         sh('make', cwd=tools, console=True)
-        cp('tools/cgfx2json/bin/release/cgfx2json', tools_bin)
-        cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper', tools_bin)
+        cp('%s/cgfx2json/bin/release/cgfx2json' % tools, tools_bin)
+        cp('%s/NvTriStrip/NvTriStripper/bin/release/NvTriStripper' % tools, tools_bin)
 
 
 @command_no_arguments
@@ -253,7 +256,6 @@ def command_tools_clean():
 @command_requires_env
 @command_with_arguments
 def command_apps(options):
-
     app_dirs = [ 'samples',
                  'apps/inputapp',
                  'apps/multiworm',
@@ -261,6 +263,7 @@ def command_apps(options):
                  'apps/templateapp',
                  'apps/viewer',
                  'apps/protolibsampleapp' ]
+    app_dirs = [ os.path.join(TURBULENZROOT, p) for p in app_dirs ]
     all_apps = {}
     for d in app_dirs:
         all_apps[os.path.split(d)[1]] = d
@@ -386,8 +389,11 @@ def command_samples_clean():
 
 def _docs_build_command():
     docs_version_opts = '-D version=%s -D release=%s-dev' % (TURBULENZ_ENGINE_VERSION, TURBULENZ_ENGINE_VERSION)
-    build_command = 'sphinx-build -b html -d build/docs/doctrees %s -c docs/source ' \
-                            'docs/source build/docs/html' % docs_version_opts
+    docs_src = os.path.join(TURBULENZROOT, 'docs', 'source')
+    docs_build = os.path.join(TURBULENZROOT, 'build', 'docs')
+    build_command = 'sphinx-build -b html -d ' + os.path.join(docs_build, 'doctrees') + ' ' + \
+                    docs_version_opts + ' -c ' + docs_src + ' ' + docs_src + \
+                    ' ' + os.path.join(docs_build, 'html')
     return build_command
 
 @command_requires_env
@@ -397,8 +403,8 @@ def command_docs(args):
 
 @command_no_arguments
 def command_docs_clean():
-    rmdir('build/docs')
-    rmdir('build/docs/doctrees')
+    rmdir(os.path.join(TURBULENZROOT, 'build', 'docs', 'doctrees'))
+    rmdir(os.path.join(TURBULENZROOT, 'build', 'docs'))
 
 @command_requires_env
 @command_no_arguments
