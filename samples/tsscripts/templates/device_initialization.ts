@@ -1,7 +1,7 @@
 /*{# Copyright (c) 2010-2012 Turbulenz Limited #}*/
 
 /*
- * @title: Device initialisation
+ * @title: Device initialization
  * @description:
  * This sample shows how to create all the Turbulenz devices and how to discover the OS version and the hardware capabilities.
 */

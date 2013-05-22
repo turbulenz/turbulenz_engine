@@ -2,9 +2,10 @@
 
 /*
  * @title: 3D Physics rigid body constraints
- * @subTitle: How to create phyiscal constraints for physics rigid bodies.
+ * @subTitle: How to create physical constraints for physics rigid bodies.
  * @description:
- * This sample shows how to create each of the physics constraints (point to point, hinge, slider, cone twist, 6 degrees of freedom).
+ * This sample shows how to create each of the physics constraints (point to point, hinge, slider, cone twist,
+ * 6 degrees of freedom).
  * Each object in the scene can be manipulated with the mouse to see how the constraints work.
 */
 

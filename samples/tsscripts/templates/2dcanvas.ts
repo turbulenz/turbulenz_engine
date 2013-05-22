@@ -5,7 +5,7 @@
  * @description:
  * This sample demonstrates some of the capabilities of the Canvas 2D API.
  * It shows how to render lines, rectangles, circles, arcs, polygons, textures and linear and radial gradients using the Canvas 2D API.
- * It also shows a frames per second counter to get a messure of the API performance.
+ * It also shows a frames per second counter to get a measure of the API performance.
 */
 
 /*{# Import additional JS files here #}*/

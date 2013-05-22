@@ -5,7 +5,7 @@
  * @description:
  * This sample is an introduction to the Turbulenz API.
  * It shows the Turbulenz Engine entry and exit points and how to set up a simple render loop that clears the background.
- * You can enable or disable the animation of the background clear colour.
+ * You can enable or disable the animation of the background clear color.
 */
 
 /*{# Import additional JS files here #}*/

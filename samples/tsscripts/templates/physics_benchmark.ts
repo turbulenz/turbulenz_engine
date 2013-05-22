@@ -3,10 +3,12 @@
 /*
  * @title: 3D Physics benchmark
  * @description:
- * This sample is a benchmark for rigid body physics simulation with randomly generated boxes, spheres, cones, cylinders, capsules and convex hulls.
+ * This sample is a benchmark for rigid body physics simulation with randomly generated boxes, spheres, cones,
+ * cylinders, capsules and convex hulls.
  * The rigid bodies fall into a procedurally generated triangle mesh bowl that can be animated.
  * The sample also shows the time spent on the different physics simulation phases.
- * Disabling the debug rendering will show its impact on the framerate, the physics simulation will continue but without any graphics update.
+ * Disabling the debug rendering will show its impact on the framerate, the physics simulation will continue but
+ * without any graphics update.
 */
 
 /*{{ javascript("jslib/aabbtree.js") }}*/

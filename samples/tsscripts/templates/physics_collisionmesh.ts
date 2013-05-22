@@ -3,11 +3,11 @@
 /*
  * @title: 3D Physics collision meshes
  * @description:
- * This sample shows how to create rigid body physics nodes with each of the collision mesh types (boxes, spheres, cones, cylinders, capsules and convex hulls)
- * and a static triangle mesh.
+ * This sample shows how to create rigid body physics nodes with each of the collision mesh types (boxes, spheres,
+ * cones, cylinders, capsules and convex hulls) and a static triangle mesh.
  *
- * Rigid body cubes with an initial velocity can be fired into the scene from first person perspective by pressing space.
- * Click on the rendering window to move and rotate the camera around.
+ * Rigid body cubes with an initial velocity can be fired into the scene from first person perspective by pressing
+ * space. Click on the rendering window to move and rotate the camera around.
 */
 
 /*{{ javascript("jslib/aabbtree.js") }}*/

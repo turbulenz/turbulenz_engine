@@ -4,8 +4,8 @@
  * @title: Texture effects
  * @description:
  * This sample shows how to use advanced texture effects with the Draw2D API.
- * You can select, customise and combine the following effects to be applied to the rendered texture:
- * Distortion, Colour Matrix, Bloom and Gaussian blur.
+ * You can select, customize and combine the following effects to be applied to the rendered texture:
+ * Distortion, Color Matrix, Bloom and Gaussian blur.
 */
 
 /*{{ javascript("jslib/observer.js") }}*/

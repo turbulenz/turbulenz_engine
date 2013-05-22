@@ -4,7 +4,7 @@
  * @title: Post effects
  * @description:
  * This sample shows how to use render targets to apply post processing effects to a dynamically rendered image.
- * You can select between simple copy, inverted colours or light bloom post effects.
+ * You can select between simple copy, inverted colors or light bloom post effects.
 */
 
 /*{{ javascript("jslib/aabbtree.js") }}*/
