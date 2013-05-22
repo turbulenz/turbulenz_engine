@@ -3389,6 +3389,8 @@ class CanvasContext
         }
 
         var m = this.matrix;
+        var x = p[0];
+        var y = p[1];
 
         if (this.transformPoint === this.transformPointTranslate)
         {
@@ -3402,9 +3404,6 @@ class CanvasContext
         var m3 = m[3];
         var m4 = m[4];
         var m5 = m[5];
-
-        var x = p[0];
-        var y = p[1];
 
         // invert matrix
         var r0, r1, r2, r3, r4, r5;
