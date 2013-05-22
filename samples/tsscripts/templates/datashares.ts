@@ -1,5 +1,11 @@
 /*{# Copyright (c) 2013 Turbulenz Limited #}*/
 
+interface PieceTextures
+{
+    X: Draw2DSprite[]; // an array of cross texture sprites one for each grid square
+    O: Draw2DSprite[]; // an array of nought texture sprites one for each grid square
+};
+
 /*
 * @title: Data shares
 * @description:
@@ -23,7 +29,6 @@
 
 /*{{ javascript("scripts/htmlcontrols.js") }}*/
 /*{{ javascript("scripts/simplebuttons.js") }}*/
-
 
 /*global TurbulenzEngine: true */
 /*global TurbulenzServices: false */
@@ -54,31 +59,23 @@ TurbulenzEngine.onload = function onloadFn()
     var userProfile;
     var gameSession;
 
+    var noughtTextureName = 'textures/nought.png';
+    var crossTextureName = 'textures/cross.png';
+
     // Textures to load:
-    var spriteTextureNames = ["textures/tictactoeboard.png",
-                              "textures/nought.png",
-                              "textures/cross.png"];
+    var spriteTextureNames = ['textures/tictactoeboard.png',
+                              noughtTextureName,
+                              crossTextureName];
+
 
     // List to store Texture objects.
     var textures = {};
+    var pieceTextures: PieceTextures = {
+        'X': [],
+        'O': []
+    };
     var numTextures = spriteTextureNames.length;
     var loadedResources = 0;
-
-    function getPieceTexture(piece: string)
-    {
-        if (piece === 'O')
-        {
-            return textures['textures/nought.png'];
-        }
-        else if (piece === 'X')
-        {
-            return textures['textures/cross.png'];
-        }
-        else
-        {
-            return null;
-        }
-    }
 
     function mappingTableReceived(mappingTable)
     {
@@ -121,8 +118,11 @@ TurbulenzEngine.onload = function onloadFn()
     }
 
     var currentDataShare: DataShare;
+
     var joinedDataShares: DataShare[];
     var joinedGames: { [id: string]: TicTacToeGame; } = {};
+    var currentGame: TicTacToeGame;
+
     var foundDataShares: DataShare[];
 
     function sessionCreated()
@@ -134,7 +134,7 @@ TurbulenzEngine.onload = function onloadFn()
         );
 
         dataShareManager = DataShareManager.create(requestHandler, gameSession);
-        gameNotificationsManager = NotificationsManager.create(requestHandler, gameSession, function () {});
+        gameNotificationsManager = NotificationsManager.create(requestHandler, gameSession);
 
         function profileRecievedFn(currentUser: UserProfile)
         {
@@ -147,6 +147,7 @@ TurbulenzEngine.onload = function onloadFn()
     var invalidateButtons = false;
 
     gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreated);
+    var maxPlayers = 2;
 
     function findDataShares()
     {
@@ -165,15 +166,23 @@ TurbulenzEngine.onload = function onloadFn()
                     var usersLength = users.length;
                     var usersIndex;
 
-                    for (usersIndex = 0; usersIndex < usersLength; usersIndex += 1)
+                    // only list the first 2 players as joined (possible race condition in joining)
+                    for (usersIndex = 0; usersIndex < maxPlayers; usersIndex += 1)
                     {
                         ticTacToeGame.playerJoined(users[usersIndex]);
+                    }
+
+                    // don't allow any more players to join
+                    if (dataShare.joinable && users.length >= maxPlayers)
+                    {
+                        dataShare.setJoinable(false);
                     }
 
                     if (gameStateStore)
                     {
                         ticTacToeGame.update(gameStateStore.value);
                     }
+                    invalidateButtons = true;
                 };
             }
             for (dataSharesIndex = 0; dataSharesIndex < dataSharesLength; dataSharesIndex += 1)
@@ -207,8 +216,6 @@ TurbulenzEngine.onload = function onloadFn()
         // find any joinable datashares
         dataShareManager.findDataShares({callback: foundDataSharesCallback});
     }
-
-    var currentGame: TicTacToeGame;
 
     function createGame()
     {
@@ -251,7 +258,7 @@ TurbulenzEngine.onload = function onloadFn()
                 invalidateButtons = true;
                 currentGame.update();
 
-                var otherUser = currentGame.getOtherUser();
+                var otherUser = currentGame.otherUser;
                 if (otherUser)
                 {
                     gameNotificationsManager.sendInstantNotification({
@@ -273,7 +280,7 @@ TurbulenzEngine.onload = function onloadFn()
                 }
                 else
                 {
-                    // something has gone wrong
+                    // the key must be readOnly so just leave the game
                     leaveGame();
                 }
             }
@@ -283,7 +290,6 @@ TurbulenzEngine.onload = function onloadFn()
         currentDataShare.compareAndSet({
                 key: 'game-state',
                 value: currentGame.serialize(),
-                access: DataShare.publicReadAndWrite,
                 callback: gameStateSet
             });
     }
@@ -312,6 +318,8 @@ TurbulenzEngine.onload = function onloadFn()
                         // only 2 players should join a game
                         // this possible if 2 people click to join a game at the same time
                         leaveGame();
+                        currentDataShare.setJoinable(false);
+                        return;
                     }
                     function setJoinableCallback()
                     {
@@ -319,7 +327,7 @@ TurbulenzEngine.onload = function onloadFn()
                         joinedGames[dataShare.id] = currentGame;
                         readMoves();
 
-                        var otherUser = currentGame.getOtherUser();
+                        var otherUser = currentGame.otherUser;
                         if (otherUser)
                         {
                             gameNotificationsManager.sendInstantNotification({
@@ -343,11 +351,14 @@ TurbulenzEngine.onload = function onloadFn()
         }
     }
 
-    function playerJoinedFn(notification)
+    function playerJoined(notification)
     {
         if (currentGame && currentDataShare.id === notification.msg.dataShareId)
         {
             currentGame.playerJoined(notification.sender);
+            // since only 1 notification can be sent at a time read the datashare to check if the other player
+            // has moved
+            readMoves();
         }
     }
 
@@ -370,7 +381,7 @@ TurbulenzEngine.onload = function onloadFn()
         currentDataShare.get('game-state', getMovesCallback);
     }
 
-    function yourTurnFn(notification)
+    function yourTurn(notification)
     {
         if (currentGame && currentDataShare.id === notification.msg.dataShareId)
         {
@@ -394,7 +405,7 @@ TurbulenzEngine.onload = function onloadFn()
                 if (wasSet)
                 {
                     currentGame.update();
-                    var otherUser = currentGame.getOtherUser();
+                    var otherUser = currentGame.otherUser;
                     if (otherUser)
                     {
                         gameNotificationsManager.sendInstantNotification({
@@ -420,7 +431,7 @@ TurbulenzEngine.onload = function onloadFn()
                     }
                     else
                     {
-                        // something has gone wrong
+                        // the key must be readOnly so just leave the game
                         leaveGame();
                     }
                 }
@@ -436,7 +447,6 @@ TurbulenzEngine.onload = function onloadFn()
                     currentDataShare.compareAndSet({
                             key: 'game-state',
                             value: currentGame.serialize(),
-                            access: DataShare.publicReadAndWrite,
                             callback: gameStateSet
                         });
                 }
@@ -480,6 +490,11 @@ TurbulenzEngine.onload = function onloadFn()
     var boardSizeX = 10;
     var boardSizeY = 10;
 
+    var pieceSprites = {
+        'O': [],
+        'X': []
+    };
+    var boardSprite;
     var setButtons = false;
     var oldWidth = 0;
     var oldHeight = 0;
@@ -580,19 +595,28 @@ TurbulenzEngine.onload = function onloadFn()
             var dataSharesIndex;
             if (foundDataShares)
             {
+                var noGamesToJoin = true;
                 dataSharesLength = foundDataShares.length;
                 if (dataSharesLength > 0)
                 {
-                    segmentFont(0, offsetY, 'Games to join:');
-                    offsetY += textSpacingY;
                     for (dataSharesIndex = 0; dataSharesIndex < dataSharesLength; dataSharesIndex += 1)
                     {
                         var dataShare = foundDataShares[dataSharesIndex];
-                        segmentFont(3, offsetY, dataShare.owner, getJoinGameFn(dataShare));
-                        offsetY += textSpacingY;
+                        if (dataShare.users.length === 1)
+                        {
+                            if (noGamesToJoin)
+                            {
+                                segmentFont(0, offsetY, 'Games to join:');
+                                offsetY += textSpacingY;
+                                noGamesToJoin = false;
+                            }
+                            segmentFont(3, offsetY, dataShare.owner, getJoinGameFn(dataShare));
+                            offsetY += textSpacingY;
+                        }
                     }
                 }
-                else
+
+                if (noGamesToJoin)
                 {
                     segmentFont(0, offsetY, 'No new games to join');
                     offsetY += textSpacingY;
@@ -661,31 +685,24 @@ TurbulenzEngine.onload = function onloadFn()
 
             if (draw2D.begin(draw2D.blend.alpha))
             {
-                draw2D.draw({
-                    texture : textures['textures/tictactoeboard.png'],
-                    destinationRectangle : [boardOffsetX, boardOffsetY,
-                                            boardOffsetX + boardSizeX, boardOffsetY + boardSizeY]
-                });
+                draw2D.drawSprite(boardSprite);
 
                 var x, y;
                 for (x = 0; x < 3; x += 1)
                 {
                     for (y = 0; y < 3; y += 1)
                     {
-                        var destRectangle = [boardOffsetX + (boardSizeX / 3) * x,
-                                             boardOffsetY + (boardSizeY / 3) * y,
-                                             boardOffsetX + (boardSizeX / 3) * (x + 1),
-                                             boardOffsetY + (boardSizeY / 3) * (y + 1)];
-                        var pieceTexture = getPieceTexture(currentGame.boardState[x + y * 3]);
-                        if (pieceTexture)
+                        var piece = currentGame.boardState[x + y * 3];
+                        if (piece)
                         {
-                            draw2D.draw({
-                                texture : pieceTexture,
-                                destinationRectangle : destRectangle
-                            });
+                            draw2D.drawSprite(pieceSprites[piece][x + y * 3]);
                         }
                         if (setButtons)
                         {
+                            var destRectangle = [boardOffsetX + (boardSizeX / 3) * x,
+                                                 boardOffsetY + (boardSizeY / 3) * y,
+                                                 boardOffsetX + (boardSizeX / 3) * (x + 1),
+                                                 boardOffsetY + (boardSizeY / 3) * (y + 1)];
                             var topLeft = draw2D.viewportUnmap(destRectangle[0],
                                                                destRectangle[1]);
                             var bottomRight = draw2D.viewportUnmap(destRectangle[2],
@@ -701,12 +718,10 @@ TurbulenzEngine.onload = function onloadFn()
                 offsetY = boardOffsetY + boardSizeY + textSpacingY * 2;
                 for (usersIndex = 0; usersIndex < usersLength; usersIndex += 1)
                 {
-                    destRectangle = [0,
-                                     offsetY,
-                                     textSpacingY,
-                                     offsetY + textSpacingY];
+                    destRectangle = [0, offsetY,
+                                     textSpacingY, offsetY + textSpacingY];
                     offsetY += textSpacingY;
-                    var pieceTexture = getPieceTexture(currentGame.getPlayerPiece(users[usersIndex]));
+                    var pieceTexture = pieceTextures[currentGame.getPlayerPiece(users[usersIndex])];
                     if (pieceTexture)
                     {
                         draw2D.draw({
@@ -760,9 +775,49 @@ TurbulenzEngine.onload = function onloadFn()
                 scaleMode : 'scale'
             });
 
-            gameNotificationsManager.addNotificationListener('player-joined', playerJoinedFn);
-            gameNotificationsManager.addNotificationListener('your-turn', yourTurnFn);
-            gameNotificationsManager.addNotificationListener('forfeit', yourTurnFn);
+            boardSprite = Draw2DSprite.create({
+                texture : textures['textures/tictactoeboard.png'],
+                x: boardOffsetX,
+                y: boardOffsetY,
+                width : boardSizeX,
+                height: boardSizeY,
+                origin: [0, 0]
+            });
+
+            pieceTextures.O = textures['textures/nought.png'];
+            pieceTextures.X = textures['textures/cross.png'];
+
+            var x, y;
+            var pieceWidth = boardSizeX / 3;
+            var pieceHeight = boardSizeY / 3;
+            for (x = 0; x < 3; x += 1)
+            {
+                for (y = 0; y < 3; y += 1)
+                {
+                    var pieceX = boardOffsetX + pieceWidth * x;
+                    var pieceY = boardOffsetY + pieceHeight * y;
+                    pieceSprites.O[x + y * 3] = Draw2DSprite.create({
+                        texture : pieceTextures.O,
+                        x: pieceX,
+                        y: pieceY,
+                        width : pieceWidth,
+                        height: pieceHeight,
+                        origin: [0, 0]
+                    });
+                    pieceSprites.X[x + y * 3] = Draw2DSprite.create({
+                        texture : pieceTextures.X,
+                        x: pieceX,
+                        y: pieceY,
+                        width : pieceWidth,
+                        height: pieceHeight,
+                        origin: [0, 0]
+                    });
+                }
+            }
+
+            gameNotificationsManager.addNotificationListener('player-joined', playerJoined);
+            gameNotificationsManager.addNotificationListener('your-turn', yourTurn);
+            gameNotificationsManager.addNotificationListener('forfeit', yourTurn);
 
             TurbulenzEngine.clearInterval(intervalID);
             intervalID = TurbulenzEngine.setInterval(mainLoop, 1000 / 60);
@@ -792,9 +847,10 @@ class TicTacToeGame
     cross = 'X';
 
     currentUsername: string;
+    otherUser: string;
     host: string;
 
-    moves: { [id: string]: any; };
+    moves: { [username: string]: any; };
     boardState: string[];
     otherPlayer: string;
     currentPlayerTurn: bool;
@@ -976,37 +1032,19 @@ class TicTacToeGame
         if (!moves[username])
         {
             moves[username] = [];
+            this.otherUser = username;
         }
     };
 
     getUsers(): string[]
     {
         var users = [this.currentUsername];
-        var otherUser = this.getOtherUser();
+        var otherUser = this.otherUser;
         if (otherUser)
         {
             users.push(otherUser);
         }
-        if (users.length < 2 && this.host !== this.currentUsername)
-        {
-            users.push(this.host);
-        }
         return users;
-    };
-
-    getOtherUser(): string
-    {
-        var moves = this.moves;
-        var users = [];
-        var username;
-        for (username in moves)
-        {
-            if (moves.hasOwnProperty(username) && username !== this.currentUsername)
-            {
-                return username;
-            }
-        }
-        return null;
     };
 
     static create(username: string, host: string): TicTacToeGame
@@ -1017,14 +1055,16 @@ class TicTacToeGame
         ticTacToeGame.currentUsername = username;
         ticTacToeGame.host = host;
 
-        ticTacToeGame.nought = 'O';
-        ticTacToeGame.cross = 'X';
-
         ticTacToeGame.moves = {};
         ticTacToeGame.moves[username] = [];
         if (host !== username)
         {
             ticTacToeGame.moves[host] = [];
+            ticTacToeGame.otherUser = host;
+        }
+        else
+        {
+            ticTacToeGame.otherUser = null;
         }
         ticTacToeGame.boardState = [];
         ticTacToeGame.otherPlayer = null;
