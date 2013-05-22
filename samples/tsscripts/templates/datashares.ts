@@ -1,6 +1,6 @@
 /*{# Copyright (c) 2013 Turbulenz Limited #}*/
 
-interface PieceTextures
+interface PieceSprites
 {
     X: Draw2DSprite[]; // an array of cross texture sprites one for each grid square
     O: Draw2DSprite[]; // an array of nought texture sprites one for each grid square
@@ -70,9 +70,9 @@ TurbulenzEngine.onload = function onloadFn()
 
     // List to store Texture objects.
     var textures = {};
-    var pieceTextures: PieceTextures = {
-        'X': [],
-        'O': []
+    var pieceTextures: any = {
+        'X': null,
+        'O': null
     };
     var numTextures = spriteTextureNames.length;
     var loadedResources = 0;
@@ -172,7 +172,7 @@ TurbulenzEngine.onload = function onloadFn()
                         ticTacToeGame.playerJoined(users[usersIndex]);
                     }
 
-                    // don't allow any more players to join
+                    // don't allow any more players to join full games
                     if (dataShare.joinable && users.length >= maxPlayers)
                     {
                         dataShare.setJoinable(false);
@@ -460,19 +460,6 @@ TurbulenzEngine.onload = function onloadFn()
 
     var draw2D;
 
-    var status = [];
-    function setStatus(msg: string)
-    {
-        status.push(msg);
-    }
-
-    function clearStatus(delay?: number)
-    {
-        TurbulenzEngine.setTimeout(function () {
-                status.shift();
-            }, delay || 500);
-    }
-
     var clearColor = mathDevice.v4Build(1.0, 1.0, 1.0, 1.0);
     var fontColor = mathDevice.v4Build(0.5, 0.5, 0.5, 1.0);
     var fontBoldColor = mathDevice.v4Build(0.3, 0.3, 0.3, 1.0);
@@ -490,7 +477,7 @@ TurbulenzEngine.onload = function onloadFn()
     var boardSizeX = 10;
     var boardSizeY = 10;
 
-    var pieceSprites = {
+    var pieceSprites: PieceSprites = {
         'O': [],
         'X': []
     };
