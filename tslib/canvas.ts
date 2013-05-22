@@ -1944,7 +1944,7 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                this.lineTo(x, y);
+                this.currentSubPath.push(this.transformPoint(x, y));
                 break;
 
             case 72: //H
@@ -1955,7 +1955,7 @@ class CanvasContext
                     x += lx;
                 }
                 y = ly;
-                this.lineTo(x, y);
+                this.currentSubPath.push(this.transformPoint(x, y));
                 break;
 
             case 86: //V
@@ -1966,7 +1966,7 @@ class CanvasContext
                 {
                     y += ly;
                 }
-                this.lineTo(x, y);
+                this.currentSubPath.push(this.transformPoint(x, y));
                 break;
 
             case 67: //C
