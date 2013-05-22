@@ -1008,6 +1008,8 @@ class TicTacToeGame
             moves[currentUsername] = [];
         }
         moves[currentUsername].push([x, y]);
+        this.boardState[x + y * 3] = this.getPlayerPiece(currentUsername);
+        this.currentPlayerTurn = false;
         if (this.firstMove === null)
         {
             this.firstMove = currentUsername;
