@@ -2385,8 +2385,16 @@ class CanvasContext
             var style = this.strokeStyle;
             var lineWidth = this.lineWidth;
             var thinLines = (lineWidth < 2 && !this.forceFatLines);
-
             var points, numPoints, primitive, numVertices;
+
+            if (thinLines)
+            {
+                primitive = this.lineStripPrimitive;
+            }
+            else
+            {
+                primitive = this.triangleStripPrimitive;
+            }
 
             for (var i = 0; i < numSubPaths; i += 1)
             {
@@ -2401,13 +2409,11 @@ class CanvasContext
 
                 if (thinLines)
                 {
-                    primitive = this.lineStripPrimitive;
                     numVertices = numPoints;
                     this.fillFlatVertices(points, numPoints);
                 }
                 else if (numPoints > 1)
                 {
-                    primitive = this.triangleStripPrimitive;
                     numVertices = this.fillFatStrip(points, numPoints, lineWidth);
                 }
                 else
@@ -2440,13 +2446,11 @@ class CanvasContext
 
                 if (thinLines)
                 {
-                    primitive = this.lineStripPrimitive;
                     numVertices = numPoints;
                     this.fillFlatVertices(points, numPoints);
                 }
                 else if (numPoints > 1)
                 {
-                    primitive = this.triangleStripPrimitive;
                     numVertices = this.fillFatStrip(points, numPoints, lineWidth);
                 }
                 else
@@ -3905,11 +3909,10 @@ class CanvasContext
         var bufferData = this.getFlatBuffer(numPoints * 2);
         if (bufferData)
         {
-            var p, point, xB, yB, xC, yC, xAB, yAB, xBC, yBC, ln, dx, dy, n;
+            var p, point, xB, yB, xC, yC, xAB, yAB, xBC, yBC, ln, dx, dy, n, inl, outl;
             var sqrt = Math.sqrt;
             var abs = Math.abs;
-
-            lineWidth *= 0.5;
+            var halfLineWidth = (lineWidth * 0.5);
 
             point = points[0];
             xB = point[0];
@@ -3928,18 +3931,20 @@ class CanvasContext
                 point = points[numPoints - 2];
                 xAB = (xB - point[0]);
                 yAB = (yB - point[1]);
-                ln = ((xAB * xAB) + (yAB * yAB));
-                if (ln > 0.0)
-                {
-                    ln = (1.0 / sqrt(ln));
-                    xAB *= ln;
-                    yAB *= ln;
-                }
             }
             else
             {
-                xAB = 0;
-                yAB = 0;
+                point = points[1];
+                xAB = (point[0] - xB);
+                yAB = (point[1] - yB);
+            }
+
+            ln = ((xAB * xAB) + (yAB * yAB));
+            if (ln > 0.0)
+            {
+                ln = (1.0 / sqrt(ln));
+                xAB *= ln;
+                yAB *= ln;
             }
 
             p = 0;
@@ -3962,8 +3967,8 @@ class CanvasContext
                 else
                 {
                     // use perpendicular vector to (xAB, yAB) -> (yAB, -xAB)
-                    xAB *= lineWidth;
-                    yAB *= lineWidth;
+                    xAB *= halfLineWidth;
+                    yAB *= halfLineWidth;
                     bufferData[n + 0] = xB - yAB;
                     bufferData[n + 1] = yB + xAB;
                     bufferData[n + 2] = xB + yAB;
@@ -3985,21 +3990,33 @@ class CanvasContext
                     dx = (xAB + xBC);
                     dy = (yAB + yBC);
                     ln = ((dx * dx) + (dy * dy));
-                    if (ln > 0.0)
+                    if (ln > 0.001)
                     {
-                        ln = (lineWidth / sqrt(ln));
-                        dx *= ln;
-                        dy *= ln;
-
-                        // use perpendicular vector to (dx, dy) -> (dy, -dx)
-                        bufferData[n + 0] = xB - dy;
-                        bufferData[n + 1] = yB + dx;
-                        bufferData[n + 2] = xB + dy;
-                        bufferData[n + 3] = yB - dx;
-
-                        n += 4;
-                        numVertices += 2;
+                        inl = (lineWidth / ln);
+                        outl = (halfLineWidth / sqrt(ln));
+                        if ((yAB * xBC) > (xAB * yBC))
+                        {
+                            ln = inl;
+                            inl = outl;
+                            outl = ln;
+                        }
                     }
+                    else
+                    {
+                        dx = -yAB;
+                        dy = xAB;
+                        inl = halfLineWidth;
+                        outl = halfLineWidth;
+                    }
+
+                    // use perpendicular vector to (dx, dy) -> (dy, -dx)
+                    bufferData[n + 0] = (xB - (dy * inl));
+                    bufferData[n + 1] = (yB + (dx * inl));
+                    bufferData[n + 2] = (xB + (dy * outl));
+                    bufferData[n + 3] = (yB - (dx * outl));
+
+                    n += 4;
+                    numVertices += 2;
 
                     xB = xC;
                     yB = yC;
