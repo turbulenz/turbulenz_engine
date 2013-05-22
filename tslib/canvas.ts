@@ -4115,11 +4115,13 @@ class CanvasContext
             var p0 = points[first];
             var p0x = p0[0];
             var p0y = p0[1];
+            var d20x = (p2x - p0x);
+            var d20y = (p2y - p0y);
 
             var maxDist = epsilon;
             var middle = -1;
 
-            if (p0x === p2x)
+            if (abs(d20x) < epsilon)
             {
                 for (n = (first + 1); n < last; n += 1)
                 {
@@ -4131,7 +4133,7 @@ class CanvasContext
                     }
                 }
             }
-            else if (p0y === p2y)
+            else if (abs(d20y) < epsilon)
             {
                 for (n = (first + 1); n < last; n += 1)
                 {
@@ -4145,8 +4147,8 @@ class CanvasContext
             }
             else
             {
-                var slope = (p2y - p0y) / (p2x - p0x);
-                var invSlope = 1.0 / Math.sqrt((slope * slope) + 1);
+                var slope = (d20y / d20x);
+                var invSlope = (1.0 / Math.sqrt((slope * slope) + 1));
                 var intercept = (p0y - (slope * p0x));
                 var p1;
                 for (n = (first + 1); n < last; n += 1)
