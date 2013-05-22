@@ -177,16 +177,22 @@ class DataShare
             function dataShareJoinCallbackFn(jsonResponse, status)
         {
             var errorCallback = errorCallbackFn || that.errorCallbackFn;
-            if (status === 200 && callbackFn)
+            if (status === 200)
             {
                 that.users = <string[]> jsonResponse.data.users;
                 that.joinable = true;
-                callbackFn(true);
+                if (callbackFn)
+                {
+                    callbackFn(true);
+                }
             }
             else if (status === 403) // 403 Forbidden
             {
                 that.joinable = false;
-                callbackFn(false);
+                if (callbackFn)
+                {
+                    callbackFn(false);
+                }
             }
             else if (errorCallback)
             {
@@ -206,16 +212,19 @@ class DataShare
             });
     };
 
-    setJoinable(joinable, callbackFn: {(): void;}, errorCallbackFn?: DataShareManagerErrorCB): void
+    setJoinable(joinable, callbackFn?: {(): void;}, errorCallbackFn?: DataShareManagerErrorCB): void
     {
         var that = this;
         var dataShareSetJoinableCallback =
             function dataShareSetJoinableCallbackFn(jsonResponse, status)
         {
             var errorCallback = errorCallbackFn || that.errorCallbackFn;
-            if (status === 200 && callbackFn)
+            if (status === 200)
             {
-                callbackFn();
+                if (callbackFn)
+                {
+                    callbackFn();
+                }
             }
             else if (errorCallback)
             {
