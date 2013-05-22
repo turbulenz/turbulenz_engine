@@ -4117,13 +4117,14 @@ class CanvasContext
             var p0y = p0[1];
             var d20x = (p2x - p0x);
             var d20y = (p2y - p0y);
+            var second = (first + 1);
 
             var maxDist = epsilon;
             var middle = -1;
 
             if (abs(d20x) < epsilon)
             {
-                for (n = (first + 1); n < last; n += 1)
+                for (n = second; n < last; n += 1)
                 {
                     dist = abs(points[n][0] - p2x);
                     if (maxDist < dist)
@@ -4135,7 +4136,7 @@ class CanvasContext
             }
             else if (abs(d20y) < epsilon)
             {
-                for (n = (first + 1); n < last; n += 1)
+                for (n = second; n < last; n += 1)
                 {
                     dist = abs(points[n][1] - p2y);
                     if (maxDist < dist)
@@ -4151,7 +4152,7 @@ class CanvasContext
                 var invSlope = (1.0 / Math.sqrt((slope * slope) + 1));
                 var intercept = (p0y - (slope * p0x));
                 var p1;
-                for (n = (first + 1); n < last; n += 1)
+                for (n = second; n < last; n += 1)
                 {
                     p1 = points[n];
 
@@ -4167,12 +4168,21 @@ class CanvasContext
 
             if (middle === -1)
             {
-                points.splice((first + 1), (last - first - 1));
-                return (first + 1);
+                if (last === (points.length - 1))
+                {
+                    points[second] = p2;
+                    points.length = (second + 1);
+                }
+                else
+                {
+                    points.splice(second, (last - second));
+                }
+                last = second;
+                break;
             }
             else
             {
-                if ((first + 1) < middle)
+                if (second < middle)
                 {
                     var newMiddle = this.simplifyShape(points, first, middle);
                     last -= (middle - newMiddle);
