@@ -107,6 +107,9 @@ def command_jslib(options):
     # Determine the make command line
     cmd = "%s -j %s" % (_get_make_command(), args.j)
 
+    # Explicitly run make in the root of the engine folder
+    cmd += ' -C %s' % os.path.dirname(__file__)
+
     if args.outdir:
         cmd += " TZ_OUTPUT_DIR=%s" % args.outdir
     if args.verbose:
