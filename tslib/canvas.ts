@@ -3332,9 +3332,70 @@ class CanvasContext
         return rect;
     };
 
-    untransformPoint(p)
+    transformPointTranslate(x: number, y: number) : any[]
     {
         var m = this.matrix;
+        return [(x + m[2]),
+                (y + m[5])];
+    };
+
+    transformRectTranslate(x: number, y: number, w: number, h: number, rect: any[]) : any[]
+    {
+        var m = this.matrix;
+        var x0 = (x + m[2]);
+        var y0 = (y + m[5]);
+        var x1 = (x0 + w);
+        var y1 = (y0 + h);
+
+        rect[0] = x0;
+        rect[1] = y1;
+        rect[2] = x1;
+        rect[3] = y1;
+        rect[4] = x0;
+        rect[5] = y0;
+        rect[6] = x1;
+        rect[7] = y0;
+
+        return rect;
+    };
+
+    transformPointIdentity(x: number, y: number) : any[]
+    {
+        return [x, y];
+    };
+
+    transformRectIdentity(x: number, y: number, w: number, h: number, rect: any[]) : any[]
+    {
+        var x1 = (x + w);
+        var y1 = (y + h);
+
+        rect[0] = x;
+        rect[1] = y1;
+        rect[2] = x1;
+        rect[3] = y1;
+        rect[4] = x;
+        rect[5] = y;
+        rect[6] = x1;
+        rect[7] = y;
+
+        return rect;
+    };
+
+    untransformPoint(p)
+    {
+        if (this.transformPoint === this.transformPointIdentity)
+        {
+            return p;
+        }
+
+        var m = this.matrix;
+
+        if (this.transformPoint === this.transformPointTranslate)
+        {
+            return [(x - m[2]),
+                    (y - m[5])];
+        }
+
         var m0 = m[0];
         var m1 = m[1];
         var m2 = m[2];
@@ -5991,32 +6052,6 @@ class CanvasContext
             resetTransformMethods();
         };
 
-        var transformPointTranslate = function transformPointTranslateFn(x, y)
-        {
-            var m = this.matrix;
-            return [(x + m[2]), (y + m[5])];
-        };
-
-        var transformRectTranslate = function transformRectTranslateFn(x, y, w, h, rect)
-        {
-            var m = this.matrix;
-            var x0 = (x + m[2]);
-            var y0 = (y + m[5]);
-            var x1 = (x0 + w);
-            var y1 = (y0 + h);
-
-            rect[0] = x0;
-            rect[1] = y1;
-            rect[2] = x1;
-            rect[3] = y1;
-            rect[4] = x0;
-            rect[5] = y0;
-            rect[6] = x1;
-            rect[7] = y0;
-
-            return rect;
-        };
-
         var scaleIdentity = function scaleIdentityFn(x, y)
         {
             if (x !== 1 || y !== 1)
@@ -6039,8 +6074,8 @@ class CanvasContext
 
                 this.translate = translate;
                 this.transform = transformTranslate;
-                this.transformPoint = transformPointTranslate;
-                this.transformRect = transformRectTranslate;
+                this.transformPoint = this.transformPointTranslate;
+                this.transformRect = this.transformRectTranslate;
             }
         };
 
@@ -6057,34 +6092,12 @@ class CanvasContext
             resetTransformMethods();
         };
 
-        var transformPointIdentity = function transformPointIdentityFn(x, y)
-        {
-            return [x, y];
-        };
-
-        var transformRectIdentity = function transformRectIdentityFn(x, y, w, h, rect)
-        {
-            var x1 = (x + w);
-            var y1 = (y + h);
-
-            rect[0] = x;
-            rect[1] = y1;
-            rect[2] = x1;
-            rect[3] = y1;
-            rect[4] = x;
-            rect[5] = y;
-            rect[6] = x1;
-            rect[7] = y;
-
-            return rect;
-        };
-
         c.scale = scaleIdentity;
         c.translate = translateIdentity;
         c.transform = setTransformIdentity;
         c.setTransform = setTransformIdentity;
-        c.transformPoint = transformPointIdentity;
-        c.transformRect = transformRectIdentity;
+        c.transformPoint = c.transformPointIdentity;
+        c.transformRect = c.transformRectIdentity;
 
         //
         // Clipping
