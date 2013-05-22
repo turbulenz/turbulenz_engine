@@ -293,6 +293,8 @@ If the remapping is done afterwards then some shaders may not load correctly.
 Both arguments for ``setPathRemapping`` are properties on the :ref:`MappingTable <mappingtable>` object.
 
 
+.. _shadermanager_setautomaticparameterresize:
+
 .. index::
     pair: ShaderManager; setAutomaticParameterResize
 

@@ -462,6 +462,60 @@ The latest release is 1.0 which is tagged in the repository or a tarball/zip can
 A full history of changes can be found in the `Changelog <docs/source/changelog.rst>`__
 
 
+Pre-Requisites
+==============
+
+The pre-requisites for the open source version of the Turbulenz Engine allowing you to use the various
+commands are
+
+- Python 2.7.x.
+
+  - For Windows we recommend a 32bit install of Python.
+  - If you have multiple Python versions installed e.g. 3.x you may need to run commands with ``python2.7``
+  - On Windows if you didn't add Python to your path in the installer you may need to run C:\Python27\python.exe
+  You can check your version with
+  ::
+
+        $ python --version
+        Python 2.7.3
+
+- VirtualEnv - version 1.9.1 or higher recommended
+  You can check your version with
+  ::
+
+        $ virtualenv --version
+        1.9.1
+
+- UglifyJS, turbulenz_build, DefinitelyTyped and NvTriStrip which are included via Git submodules contained
+  within the Turbulenz Engine repository.
+
+- Additional Python packages which will be automatically installed during the initial environment creation
+  using a Python package manager.
+
+Pre-requisites for building the tools cgfx2json and NvTriStrip via ``python manage.py tools``
+
+- Compiler Toolchain
+
+  - Windows : Any one of
+
+    - Microsoft Visual Studio 2008 with SP1
+    - Microsoft Visual Studio 2010
+    - Visual C++ 2010 Express
+    - Microsoft Visual Studio 2012 with update 2
+    - Microsoft Visual Studio Express 2012 for Windows Desktop with update 2
+
+  - Mac OSX : Xcode with the command line tools
+
+  - Linux : GCC 4.6.x or higher
+
+- `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher. This is included in
+  the repository for Windows, for Mac OSX and Linux please download and install it.
+
+- OpenGL development libraries, these are included on Windows and Mac OSX with the compiler toolchains. For
+  debian based linux distributions the libgl1-mesa-dev package will provide the required files (e.g. ``sudo
+  apt-get install libg1-mesa-dev``), for other linux distributions find the package supplying GL/gl.h and libGL.so
+
+
 Setup Guide
 ===========
 
@@ -496,19 +550,7 @@ Setup
 
         $ git submodule update --init
 
-3. Check you have the pre-requisites installed
-
-   + Python 2.7.x (2.7.3 is the current QA'd version) - if you have multiple Python versions installed e.g. 3.x
-     you may need to run commands with ``python2.7``
-   + VirtualEnv - 1.9.1 or higher recommended
-
-   You can check versions with
-   ::
-
-        $ python --version
-        Python 2.7.3
-        $ virtualenv --version
-        1.9.1
+3. Check you have the `pre-requisites`_ installed
 
 4. From the cloned repository create a VirtualEnv environment to install the required Python packages and NodeJS,
    allowing you to use all the features of the Turbulenz Engine. Note if Python is not on your shell's path you
@@ -876,27 +918,6 @@ This documentation is built from the source restructured text in the docs/source
 version online is maintained from the latest release tag in the repository. If you wish to build up to date
 documentation follow the setup guide and the run the ``manage.py docs`` command, this will generate html docs in the
 build/docs/html folder.
-
-
-Dependencies
-============
-
-The prerequisites for setting up the Turbulenz Engine are Python 2.7.x and VirtualEnv.
-Other technologies are included via Git submodules contained within the Turbulenz Engine repository.
-
-Additional Python packages will be automatically installed during the initial environment creation using a
-Python package manager.
-
-To build the cgfx2json shader conversion tool ``python manage.py tools`` requires both a compiler toolchain
-and the `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher.
-
-The CgToolkit is included in the repository for Windows, for Mac OSX and Linux please download and install it.
-
-Compiler Toolchain Requirements
-
-- Windows : Microsoft Visual Studio 2008 w/SP1
-- Mac OSX : Xcode with the command line tools
-- Linux : GCC 4.6.x or higher
 
 
 Known Issues

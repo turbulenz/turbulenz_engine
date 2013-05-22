@@ -1,0 +1,9 @@
+*.debug.html
+*.release.html
+*.canvas.js
+*.tzjs
+_build
+mapping_table.json
+jslib
+protolib
+staticmax

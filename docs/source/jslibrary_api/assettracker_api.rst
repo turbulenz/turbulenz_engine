@@ -9,7 +9,7 @@
 The AssetTracker Object
 -----------------------
 
-Utility object that provides a means to count the number of assets loaded at start up during development. Once game startup requirments have been finalised, this information can then
+Utility object that provides a means to count the number of assets loaded at start up during development. Once game startup requirements have been finalised, this information can then
 be used to calculate the loading progress as the game downloads its assets.
 
 Constructor

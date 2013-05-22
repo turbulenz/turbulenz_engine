@@ -1,0 +1,29 @@
+# Syntax:
+#
+# Either:
+# - assetpath
+#
+# or:
+# - path: path to input asset
+# - logical_path: [Optional] Change the logical mapping table name (defaults to path)
+# - install: [Optional] copy the built asset to staticmax (defaults to true)
+# - deps: [Optional] extra definitions that the build tool requires
+# - args: [Optional] extra arguments for the build tool]
+- shaders/debug.cgfx
+- shaders/shadowmapping.cgfx
+- shaders/zonly.cgfx
+- shaders/font.cgfx
+- shaders/forwardrendering.cgfx
+- shaders/forwardrenderingshadows.cgfx
+- shaders/simplesprite.cgfx
+- textures/default_light.png
+- textures/opensans-8_0.png
+- textures/opensans-16_0.png
+- textures/opensans-32_0.png
+- textures/opensans-64_0.png
+- textures/opensans-128_0.png
+- fonts/opensans-8.fnt
+- fonts/opensans-16.fnt
+- fonts/opensans-32.fnt
+- fonts/opensans-64.fnt
+- fonts/opensans-128.fnt

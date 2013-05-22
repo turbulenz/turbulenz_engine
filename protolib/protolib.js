@@ -25,6 +25,8 @@
 /*global Utilities: false*/
 /*global jQuery: false*/
 /*global jQueryExtend: false*/
+/*global AssetTracker: false*/
+/*global LoadingScreen: false*/
 
 function Protolib(params)
 {
@@ -32,7 +34,7 @@ function Protolib(params)
     this.globals = {};
     var globals = this.globals;
 
-    params = params || {};
+    globals.config = params = params || {};
 
     var MAX_SOUND_SOURCES = params.maxSoundSources !== undefined ? params.maxSoundSources : 50;
     this.MAX_SOUND_SOURCES = MAX_SOUND_SOURCES;
@@ -57,7 +59,16 @@ function Protolib(params)
         var console = window.console;
         if (console)
         {
-            console.log("Error: " + msg);
+            console.error("Error: " + msg);
+        }
+    }
+
+    function warnFn(msg)
+    {
+        var console = window.console;
+        if (console)
+        {
+            console.log("Warning: " + msg);
         }
     }
 
@@ -67,7 +78,8 @@ function Protolib(params)
     {
         utilities = {
             log: logFn,
-            error: errorFn
+            error: errorFn,
+            warn: warnFn
         };
 
         utilities.error("Error: Missing Utilities object");
@@ -77,6 +89,10 @@ function Protolib(params)
     if (!utilities.error)
     {
         utilities.error = errorFn;
+    }
+    if (!utilities.warn)
+    {
+        utilities.warn = warnFn;
     }
     if (!utilities.clamp)
     {
@@ -93,35 +109,44 @@ function Protolib(params)
             return value;
         };
     }
+    var currentTime = TurbulenzEngine.time;
+    this.time = {
+        app: {
+            current: currentTime,
+            previous: currentTime,
+            delta: 0,
+            maxDeltaTime: 1 / 10 //Maximum deltaTime to step in seconds
+        }
+    };
 
     //Devices
-    var gd = TurbulenzEngine.createGraphicsDevice({});
-    if (!gd)
+    var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
+    if (!graphicsDevice)
     {
-        gd = TurbulenzEngine.getGraphicsDevice();
+        graphicsDevice = TurbulenzEngine.getGraphicsDevice();
     }
-    globals.graphicsDevice = gd;
+    globals.graphicsDevice = graphicsDevice;
 
-    var md = TurbulenzEngine.createMathDevice({});
-    if (!md)
+    var mathDevice = TurbulenzEngine.createMathDevice({});
+    if (!mathDevice)
     {
-        md = TurbulenzEngine.getMathDevice();
+        mathDevice = TurbulenzEngine.getMathDevice();
     }
-    globals.mathDevice = md;
+    globals.mathDevice = mathDevice;
 
-    var id = TurbulenzEngine.createInputDevice({});
-    if (!id)
+    var inputDevice = TurbulenzEngine.createInputDevice({});
+    if (!inputDevice)
     {
-        id = TurbulenzEngine.getInputDevice();
+        inputDevice = TurbulenzEngine.getInputDevice();
     }
-    globals.inputDevice = id;
+    globals.inputDevice = inputDevice;
 
-    var sd = params.disableSound ? null: TurbulenzEngine.createSoundDevice({});
-    if (!sd && !params.disableSound)
+    var soundDevice = params.disableSound ? null: TurbulenzEngine.createSoundDevice({});
+    if (!soundDevice && !params.disableSound)
     {
-        sd = TurbulenzEngine.getSoundDevice();
+        soundDevice = TurbulenzEngine.getSoundDevice();
     }
-    globals.soundDevice = sd;
+    globals.soundDevice = soundDevice;
 
     //Managers & RequestHandler
     var errorCallback = function errorCallbackFn(msg)
@@ -134,22 +159,22 @@ function Protolib(params)
     var requestHandler = RequestHandler.create({});
     globals.requestHandler = requestHandler;
 
-    var tm = TextureManager.create(gd, requestHandler, null, errorCallback);
-    globals.textureManager = tm;
+    var textureManager = TextureManager.create(graphicsDevice, requestHandler, null, errorCallback);
+    globals.textureManager = textureManager;
 
-    var sm = ShaderManager.create(gd, requestHandler, null, errorCallback);
-    globals.shaderManager = sm;
+    var shaderManager = ShaderManager.create(graphicsDevice, requestHandler, null, errorCallback);
+    globals.shaderManager = shaderManager;
 
-    var fm = FontManager.create(gd, requestHandler);
-    globals.fontManager = fm;
+    var fontManager = FontManager.create(graphicsDevice, requestHandler);
+    globals.fontManager = fontManager;
 
-    var em = EffectManager.create();
-    globals.effectManager = em;
+    var effectManager = EffectManager.create();
+    globals.effectManager = effectManager;
 
-    var soundm = sd ? SoundManager.create(sd, requestHandler, null, errorCallback): null;
-    globals.soundManager = soundm;
+    var soundManager = soundDevice ? SoundManager.create(soundDevice, requestHandler, null, errorCallback): null;
+    globals.soundManager = soundManager;
 
-    globals.soundSourceManager = SoundSourceManager.create(sd, MAX_SOUND_SOURCES);
+    globals.soundSourceManager = SoundSourceManager.create(soundDevice, MAX_SOUND_SOURCES);
 
     this.soundWrappers = [];
 
@@ -176,13 +201,13 @@ function Protolib(params)
     //Load mapping table.
     var mappingTableSettings = Protolib.extend(true, {
         mappingTablePrefix: 'staticmax/',
-        assetPrefix: 'missing',
+        assetPrefix: 'missing/',
         mappingTableURL: 'mapping_table.json',
         urnMapping: {}
     }, params.defaultMappingSettings);
 
     //Camera
-    var camera = Camera.create(md);
+    var camera = Camera.create(mathDevice);
     globals.camera = camera;
     camera.farPlane = 3000;
     camera.updateProjectionMatrix();
@@ -191,29 +216,29 @@ function Protolib(params)
     //v3 constants
     this.v3Constants = {};
     var v3Constants = this.v3Constants;
-    v3Constants.unitX  = md.v3Build(1, 0, 0);
-    v3Constants.unitY  = md.v3Build(0, 1, 0);
-    v3Constants.unitZ  = md.v3Build(0, 0, 1);
-    v3Constants.origin = md.v3Build(0, 0, 0);
+    v3Constants.unitX  = mathDevice.v3Build(1, 0, 0);
+    v3Constants.unitY  = mathDevice.v3Build(0, 1, 0);
+    v3Constants.unitZ  = mathDevice.v3Build(0, 0, 1);
+    v3Constants.origin = mathDevice.v3Build(0, 0, 0);
 
     v3Constants.red   = v3Constants.unitX;
     v3Constants.green = v3Constants.unitY;
     v3Constants.blue  = v3Constants.unitZ;
     v3Constants.black = v3Constants.origin;
-    v3Constants.white = md.v3Build(1, 1, 1);
+    v3Constants.white = mathDevice.v3Build(1, 1, 1);
 
     //Setup Lights.
-    var scene = Scene.create(md);
+    var scene = Scene.create(mathDevice);
     globals.scene = scene;
 
     var light = Light.create({
             name : "protoAmbientLight",
             ambient: true,
-            color: md.v3Build(0.2, 0.2, 0.2)
+            color: mathDevice.v3Build(0.2, 0.2, 0.2)
         });
     scene.addLight(light);
 
-    this.clearColor = md.v4Build(1, 1, 1, 1);
+    this.clearColor = mathDevice.v4Build(1, 1, 1, 1);
 
     this._numPointLights = 0;
     this._numSpotLights  = 0;
@@ -230,6 +255,10 @@ function Protolib(params)
     var fonts = params.fonts || {
         regular: "opensans"
     };
+    if (!fonts.regular)
+    {
+        fonts.regular = "opensans";
+    }
     globals.fonts = fonts;
 
     var simplefont = SimpleFontRenderer.create(globals);
@@ -239,7 +268,7 @@ function Protolib(params)
     globals.debugdraw = debugdraw;
 
     var draw2D = Draw2D.create({
-            graphicsDevice: gd
+            graphicsDevice: graphicsDevice
         });
     globals.draw2D = draw2D;
 
@@ -252,9 +281,20 @@ function Protolib(params)
 
     protolib.loadingIntervalID = null;
 
+    var assetTracker = null;
+    var loadingScreen = null;
+
+    function updateAssetTrackerFn()
+    {
+        if (protolib.loadingScreen)
+        {
+            protolib.loadingScreen.render(protolib.loadingScreenBackgroundAlpha, protolib.loadingScreenTextureAlpha);
+        }
+    }
+
     //After mapping table has loaded, load forwardrendering's shaders, and the default light material.
     //After the shaders have loaded, call onInitializedCallback.
-    var postMappingTableRecieved = function postMappingTableRecievedFn()
+    var postMappingTableReceived = function postMappingTableReceivedFn()
     {
         globals.mappingTable = mappingTable;
 
@@ -262,10 +302,12 @@ function Protolib(params)
 
         simplefont.preload();
 
+        simplesprite.preload();
+
         var rendererOptions = {
             shadowRendering: protolib.USE_SHADOWS
         };
-        var renderer = ForwardRendering.create(gd, md, sm, em, rendererOptions);
+        var renderer = ForwardRendering.create(graphicsDevice, mathDevice, shaderManager, effectManager, rendererOptions);
         globals.renderer = renderer;
         renderer.setLightingScale(1.0);
 
@@ -279,70 +321,128 @@ function Protolib(params)
             }
         };
 
-        scene.loadMaterial(gd, tm, em, "defaultLightMaterial", lightMaterialData);
+        scene.loadMaterial(graphicsDevice, textureManager, effectManager, "defaultLightMaterial", lightMaterialData);
         protolib.defaultLightMaterial = scene.getMaterial("defaultLightMaterial");
 
         var waitForForwardRenderingShaders = function waitForForwardRenderingShadersFn()
         {
-            if (sm.getNumPendingShaders() === 0)
+            if (shaderManager.getNumPendingShaders() === 0 &&
+                textureManager.getNumPendingTextures() === 0 &&
+                fontManager.getNumPendingFonts() === 0 &&
+                (soundManager ? soundManager.getNumPendingSounds() === 0: true))
             {
                 if (protolib.loadingIntervalID)
                 {
                     TurbulenzEngine.clearInterval(protolib.loadingIntervalID);
                     protolib.loadingIntervalID = null;
                 }
-                renderer.updateBuffers(gd, gd.width, gd.height);
-                renderer.updateShader(sm);
 
-                protolib.beginFrame = Protolib.prototype.beginFrame;
-                protolib.endFrame = Protolib.prototype.endFrame;
-
-                if (INITIALIZED_CALLBACK)
+                var missingAssets = [];
+                if (protolib._checkAssets(missingAssets))
                 {
-                    INITIALIZED_CALLBACK(protolib);
+                    if (!protolib._warnAssets(missingAssets))
+                    {
+                        protolib.utils.warn("Protolib could not find requested assets");
+                        protolib.utils.warn("Missing: " + missingAssets);
+                    }
+
+                    renderer.updateBuffers(graphicsDevice, graphicsDevice.width, graphicsDevice.height);
+                    renderer.updateShader(shaderManager);
+
+                    protolib.loadingScreen = null;
+
+                    protolib.beginFrame = Protolib.prototype.beginFrame;
+                    protolib.endFrame = Protolib.prototype.endFrame;
+
+                    if (INITIALIZED_CALLBACK)
+                    {
+                        INITIALIZED_CALLBACK(protolib);
+                    }
+                }
+                else
+                {
+                    protolib.utils.error("Protolib could not find the minimum set of required assets");
+                    protolib.utils.error("Missing: " + missingAssets);
+                }
+            }
+            else
+            {
+                if (protolib.loadingScreen)
+                {
+                    protolib.loadingScreen.render(protolib.loadingScreenBackgroundAlpha, protolib.loadingScreenTextureAlpha);
                 }
             }
         };
+
+        var assetCount = shaderManager.getNumPendingShaders() +
+                    textureManager.getNumPendingTextures() +
+                    fontManager.getNumPendingFonts();
+        if (soundManager)
+        {
+            assetCount += soundManager.getNumPendingSounds();
+        }
+
+        assetTracker = protolib.assetTracker = AssetTracker.create(assetCount, false);
+        assetTracker.setCallback(updateAssetTrackerFn);
+
+        requestHandler.addEventListener('eventOnload', assetTracker.eventOnLoadHandler);
+
+        var loadingScreenParameters = {
+            backgroundColor: mathDevice.v4Build(0, 0, 0, 1),
+            barColor: mathDevice.v4Build(0.749, 0.067, 0.227, 1),
+            barCenter: {
+                x: 0.5,
+                y: 0.5
+            },
+            barBorderSize: 4,
+            barBackgroundColor: mathDevice.v4Build(0.2, 0.2, 0.2, 1),
+            barBackgroundHeight: 24,
+            barBackgroundWidth: 540,
+            assetTracker: assetTracker
+        };
+
+        loadingScreen = protolib.loadingScreen = LoadingScreen.create(graphicsDevice, mathDevice, loadingScreenParameters);
+        protolib.loadingScreenBackgroundAlpha = 1.0;
+        protolib.loadingScreenTextureAlpha = 1.0;
+
         protolib.loadingIntervalID = TurbulenzEngine.setInterval(waitForForwardRenderingShaders, 1000 / 10);
     };
 
-    var mappingTableRecieved = function mappingTableRecievedFn(mappingTable)
+    var mappingTableReceived = function mappingTableReceivedFn(mappingTable)
     {
         if (mappingTable)
         {
-            tm.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
-            sm.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
-            fm.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
+            textureManager.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
+            shaderManager.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
+            fontManager.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
 
-            if (soundm)
+            if (soundManager)
             {
-                soundm.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
+                soundManager.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
             }
             simplesceneloader.setPathRemapping(mappingTable.urlMapping, mappingTable.assetPrefix);
         }
 
-        postMappingTableRecieved();
+        postMappingTableReceived();
     };
     var mappingTableError = function mappingTableErrorFn(msg)
     {
         errorCallback(msg);
-        mappingTableRecieved(mappingTable);
+        mappingTableReceived(mappingTable);
     };
 
-    var gamesessionRecieved = function gamesessionRecievedFn(gamesession)
+    var gamesessionReceived = function gamesessionReceivedFn(gamesession)
     {
         protolib.gameSession = gamesession;
 
         mappingTable = TurbulenzServices.createMappingTable(
             requestHandler,
             gamesession,
-            mappingTableRecieved,
+            mappingTableReceived,
             mappingTableSettings,
             mappingTableError
         );
     };
-
-    TurbulenzServices.createGameSession(requestHandler, gamesessionRecieved);
 
     this.draw2DCache = {
         'alpha': [],
@@ -364,8 +464,8 @@ function Protolib(params)
         ALPHA : 'alpha',
         ADDITIVE : 'additive'
     };
-    this.keyCodes = id.keyCodes;
-    this.mouseCodes = id.mouseCodes;
+    this.keyCodes = inputDevice.keyCodes;
+    this.mouseCodes = inputDevice.mouseCodes;
 
     //Mapping from our blendStyle dictionary to SimpleSprite's and Draw2D's.
     this.toSimpleSpriteBlendStyle = {};
@@ -396,6 +496,7 @@ function Protolib(params)
     this.cursorSettings = {};
 
     this.preDrawFn = null;
+    this.postDrawFn = null;
 
     function onKeyDown(keycode)
     {
@@ -466,36 +567,36 @@ function Protolib(params)
     this.registerListeners = function registerListenersFn()
     {
         //Keyboard event listeners
-        id.addEventListener('keydown', onKeyDown);
-        id.addEventListener('keyup', onKeyUp);
+        inputDevice.addEventListener('keydown', onKeyDown);
+        inputDevice.addEventListener('keyup', onKeyUp);
 
         //Mouse event listeners
-        id.addEventListener('mouseup', onMouseUp);
-        id.addEventListener('mousedown', onMouseDown);
-        id.addEventListener('mouseover', onMouseOver);
-        id.addEventListener('mousemove', onMouseMove);
-        id.addEventListener('mouseenter', onMouseEnter);
-        id.addEventListener('mouseleave', onMouseLeave);
-        id.addEventListener('mousewheel', onMouseWheel);
+        inputDevice.addEventListener('mouseup', onMouseUp);
+        inputDevice.addEventListener('mousedown', onMouseDown);
+        inputDevice.addEventListener('mouseover', onMouseOver);
+        inputDevice.addEventListener('mousemove', onMouseMove);
+        inputDevice.addEventListener('mouseenter', onMouseEnter);
+        inputDevice.addEventListener('mouseleave', onMouseLeave);
+        inputDevice.addEventListener('mousewheel', onMouseWheel);
     };
 
     this.unregisterListeners = function unregisterListenersFn()
     {
-        var id = this.globals.inputDevice;
-        if (id)
+        var inputDevice = this.globals.inputDevice;
+        if (inputDevice)
         {
             //Keyboard event listeners
-            id.removeEventListener('keydown', onKeyDown);
-            id.removeEventListener('keyup', onKeyUp);
+            inputDevice.removeEventListener('keydown', onKeyDown);
+            inputDevice.removeEventListener('keyup', onKeyUp);
 
             //Mouse event listeners
-            id.removeEventListener('mouseup', onMouseUp);
-            id.removeEventListener('mousedown', onMouseDown);
-            id.removeEventListener('mouseover', onMouseOver);
-            id.removeEventListener('mousemove', onMouseMove);
-            id.removeEventListener('mouseenter', onMouseEnter);
-            id.removeEventListener('mouseleave', onMouseLeave);
-            id.removeEventListener('mousewheel', onMouseWheel);
+            inputDevice.removeEventListener('mouseup', onMouseUp);
+            inputDevice.removeEventListener('mousedown', onMouseDown);
+            inputDevice.removeEventListener('mouseover', onMouseOver);
+            inputDevice.removeEventListener('mousemove', onMouseMove);
+            inputDevice.removeEventListener('mouseenter', onMouseEnter);
+            inputDevice.removeEventListener('mouseleave', onMouseLeave);
+            inputDevice.removeEventListener('mousewheel', onMouseWheel);
         }
     };
 
@@ -503,6 +604,8 @@ function Protolib(params)
     this.endFrame = function dummyEndFrameFn() {};
 
     this.registerListeners();
+
+    TurbulenzServices.createGameSession(requestHandler, gamesessionReceived);
 
     this.destroyed = false;
 }
@@ -525,17 +628,17 @@ Protolib.prototype =
             if (globals)
             {
                 var graphicsDevice = globals.graphicsDevice;
-                if (graphicsDevice)
+                if (graphicsDevice && graphicsDevice.destroy)
                 {
                     graphicsDevice.destroy();
                 }
                 var inputDevice = globals.inputDevice;
-                if (inputDevice)
+                if (inputDevice && inputDevice.destroy)
                 {
                     inputDevice.destroy();
                 }
                 var soundDevice = globals.soundDevice;
-                if (soundDevice)
+                if (soundDevice && soundDevice.destroy)
                 {
                     soundDevice.destroy();
                 }
@@ -609,19 +712,24 @@ Protolib.prototype =
     beginFrame : function beginFrameFn()
     {
         var globals = this.globals;
-        var gd = globals.graphicsDevice;
-        var id = globals.inputDevice;
+        var graphicsDevice = globals.graphicsDevice;
+        var inputDevice = globals.inputDevice;
 
         // Update input before frame
-        id.update();
+        inputDevice.update();
 
         var simplesprite = globals.simplesprite;
         simplesprite.clearSpriteList();
 
-        var gd_begin = gd.beginFrame();
+        var gd_begin = graphicsDevice.beginFrame();
 
-        this.width = gd.width;
-        this.height = gd.height;
+        this.width = graphicsDevice.width;
+        this.height = graphicsDevice.height;
+
+        var appTime = this.time.app;
+        appTime.current = TurbulenzEngine.time;
+        appTime.delta = appTime.current - appTime.previous;
+        appTime.delta = this.utils.clamp(appTime.delta, 0, appTime.maxDeltaTime);
 
         return gd_begin;
     },
@@ -632,9 +740,9 @@ Protolib.prototype =
         var simplesprite = globals.simplesprite;
         var simplefont = globals.simplefont;
         var debugdraw = globals.debugdraw;
-        var gd = globals.graphicsDevice;
+        var graphicsDevice = globals.graphicsDevice;
 
-        var sd = globals.soundDevice;
+        var soundDevice = globals.soundDevice;
         var camera = globals.camera;
         var scene = globals.scene;
         var renderer = globals.renderer;
@@ -646,13 +754,24 @@ Protolib.prototype =
         camera.updateViewProjectionMatrix();
         scene.update();
 
-        renderer.update(gd, camera, scene, TurbulenzEngine.time);
-        renderer.draw(gd, clear, this.preDrawFn);
+        renderer.update(graphicsDevice, camera, scene, TurbulenzEngine.time);
+        renderer.draw(graphicsDevice, clear, this.preDrawFn);
 
         simplesprite.drawSprites();
         simplefont.render();
         debugdraw.drawDebugLines();
+
+        if (this.postRendererDrawFn)
+        {
+            this.postRendererDrawFn();
+        }
+
         this._draw2DSprites();
+
+        if (this.postDrawFn)
+        {
+            this.postDrawFn();
+        }
 
         this.keysJustPressed = {};
         this.keysJustReleased = {};
@@ -664,21 +783,31 @@ Protolib.prototype =
         this.mouseDelta[1] = 0;
         this.mouseWheelDelta = 0;
 
-        soundSourceManager.checkFreeSoundSources();
-        if (sd)
-        {
-            sd.update();
-            sd.listenerTransform = camera.matrix;
-        }
         this._updateSounds();
+        soundSourceManager.checkFreeSoundSources();
+        if (soundDevice)
+        {
+            soundDevice.update();
+            soundDevice.listenerTransform = camera.matrix;
+        }
 
-        return gd.endFrame();
+        var appTime = this.time.app;
+        appTime.previous = appTime.current;
+
+        return graphicsDevice.endFrame();
     },
     setPreDraw : function setPreDrawFn(callbackFn)
     {
         this.preDrawFn = callbackFn;
     },
-
+    setPostRendererDraw : function setPostRendererDrawFn(callbackFn)
+    {
+        this.postRendererDrawFn = callbackFn;
+    },
+    setPostDraw : function setPostDrawFn(callbackFn)
+    {
+        this.postDrawFn = callbackFn;
+    },
     setClearColor : function setClearColor(v3Color)
     {
         this._v3CopyAsV4(v3Color, this.clearColor);
@@ -692,9 +821,9 @@ Protolib.prototype =
     {
         var globals = this.globals;
         var camera = globals.camera;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
 
-        md.m43SetPos(camera.matrix, v3Position);
+        mathDevice.m43SetPos(camera.matrix, v3Position);
         camera.updateViewMatrix();
         camera.updateViewProjectionMatrix();
     },
@@ -702,18 +831,18 @@ Protolib.prototype =
     {
         var globals = this.globals;
         var camera = globals.camera;
-        var md = globals.mathDevice;
-        md.m43Pos(camera.matrix, v3Position);
+        var mathDevice = globals.mathDevice;
+        mathDevice.m43Pos(camera.matrix, v3Position);
     },
     setCameraDirection : function setCameraDirectionFn(v3Direction)
     {
         var globals = this.globals;
         var v3Constants = this.v3Constants;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
         var camera = globals.camera;
-        var cameraPosition = md.m43Pos(camera.matrix);
+        var cameraPosition = mathDevice.m43Pos(camera.matrix);
         var cameraDirection = v3Direction;
-        var cameraFocus = md.v3Add(cameraPosition, cameraDirection);
+        var cameraFocus = mathDevice.v3Add(cameraPosition, cameraDirection);
 
         var upDir = v3Constants.unitY;
 
@@ -731,46 +860,46 @@ Protolib.prototype =
     getCameraDirection : function getCameraDirectionFn(v3Direction)
     {
         var globals = this.globals;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
         var camera = globals.camera;
 
-        md.v3ScalarMul(md.m43At(camera.matrix), -1, v3Direction);
+        mathDevice.v3ScalarMul(mathDevice.m43At(camera.matrix), -1, v3Direction);
     },
     getCameraUp : function getCameraDirectionFn(v3Up)
     {
         var globals = this.globals;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
         var camera = globals.camera;
 
-        md.m43Up(camera.matrix, v3Up);
+        mathDevice.m43Up(camera.matrix, v3Up);
     },
     getCameraRight : function getCameraDirectionFn(v3Right)
     {
         var globals = this.globals;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
         var camera = globals.camera;
 
-        md.m43Right(camera.matrix, v3Right);
+        mathDevice.m43Right(camera.matrix, v3Right);
     },
     moveCamera : function moveCameraFn(v3Direction)
     {
         var globals = this.globals;
         var camera = globals.camera;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
 
         var cameraMatrix = camera.matrix;
-        var pos = md.m43Pos(cameraMatrix);
+        var pos = mathDevice.m43Pos(cameraMatrix);
 
         var right   = v3Direction[0];
         var up      = v3Direction[1];
         var forward = v3Direction[2];
 
-        md.v3Add4(pos,
-                md.v3ScalarMul(md.m43Right(cameraMatrix), right),
-                md.v3ScalarMul(md.m43Up(cameraMatrix),    up),
-                md.v3ScalarMul(md.m43At(cameraMatrix),   -forward),
+        mathDevice.v3Add4(pos,
+                mathDevice.v3ScalarMul(mathDevice.m43Right(cameraMatrix), right),
+                mathDevice.v3ScalarMul(mathDevice.m43Up(cameraMatrix),    up),
+                mathDevice.v3ScalarMul(mathDevice.m43At(cameraMatrix),   -forward),
                 pos);
-        md.m43SetPos(cameraMatrix, pos);
+        mathDevice.m43SetPos(cameraMatrix, pos);
         camera.updateViewMatrix();
         camera.updateViewProjectionMatrix();
     },
@@ -778,30 +907,30 @@ Protolib.prototype =
     {
         var globals = this.globals;
         var v3Constants = this.v3Constants;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
         var camera = globals.camera;
         var cameraMatrix = camera.matrix;
-        var cameraPos = md.m43Pos(cameraMatrix);
+        var cameraPos = mathDevice.m43Pos(cameraMatrix);
 
-        md.m43SetPos(cameraMatrix, md.v3BuildZero());
+        mathDevice.m43SetPos(cameraMatrix, mathDevice.v3BuildZero());
 
         var rotate;
         if (pitchDelta !== 0)
         {
-            var right = md.v3Normalize(md.m43Right(cameraMatrix));
-            md.m43SetRight(cameraMatrix, right);
+            var right = mathDevice.v3Normalize(mathDevice.m43Right(cameraMatrix));
+            mathDevice.m43SetRight(cameraMatrix, right);
 
-            rotate = md.m43FromAxisRotation(right, pitchDelta);
+            rotate = mathDevice.m43FromAxisRotation(right, pitchDelta);
 
-            md.m43Mul(cameraMatrix, rotate, cameraMatrix);
+            mathDevice.m43Mul(cameraMatrix, rotate, cameraMatrix);
         }
         if (yawDelta !== 0)
         {
-            rotate = md.m43FromAxisRotation(v3Constants.unitY, yawDelta);
+            rotate = mathDevice.m43FromAxisRotation(v3Constants.unitY, yawDelta);
 
-            md.m43Mul(cameraMatrix, rotate, cameraMatrix);
+            mathDevice.m43Mul(cameraMatrix, rotate, cameraMatrix);
         }
-        md.m43SetPos(cameraMatrix, cameraPos);
+        mathDevice.m43SetPos(cameraMatrix, cameraPos);
 
         camera.updateViewMatrix();
         camera.updateViewProjectionMatrix();
@@ -853,8 +982,8 @@ Protolib.prototype =
     {
         var globals = this.globals;
         var v3Constants = this.v3Constants;
-        var md = globals.mathDevice;
-        var tm = globals.textureManager;
+        var mathDevice = globals.mathDevice;
+        var textureManager = globals.textureManager;
 
         var texture = params.texture;
         var x = params.position[0];
@@ -867,13 +996,13 @@ Protolib.prototype =
         var blendStyle = params.blendStyle || this.blendStyle.ALPHA;
         var sourceRectangle = params.sourceRectangle;
 
-        var v4Color = md.v4Build(v3Color[0], v3Color[1], v3Color[2], alpha);
+        var v4Color = mathDevice.v4Build(v3Color[0], v3Color[1], v3Color[2], alpha);
         var draw2DBlendStyle = this.toDraw2DBlendStyle[blendStyle];
 
         this.draw2DCache[draw2DBlendStyle].push({
-            texture: tm.load(texture),
+            texture: textureManager.load(texture),
             destinationRectangle: [x, y, x + width, y + height],
-            sourceRectangle: sourceRectangle ? md.v4Copy(sourceRectangle): undefined,
+            sourceRectangle: sourceRectangle ? mathDevice.v4Copy(sourceRectangle): undefined,
             rotation: rotation,
             color: v4Color
         });
@@ -949,7 +1078,7 @@ Protolib.prototype =
     {
         var globals = this.globals;
         var v3Constants = this.v3Constants;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
         var simplesprite = globals.simplesprite;
 
         var alpha = params.alpha || 1;
@@ -965,7 +1094,7 @@ Protolib.prototype =
         {
             out : v3Out,
             v3Location : v3Position,
-            v4color : md.v4Build(v3Color[0], v3Color[1], v3Color[2], alpha),
+            v4color : mathDevice.v4Build(v3Color[0], v3Color[1], v3Color[2], alpha),
             texture : texture,
             size : size,
             angle: rotation,
@@ -974,7 +1103,7 @@ Protolib.prototype =
 
         if (!simplesprite.addSprite(spriteParams))
         {
-            this.utils.log("Warning: draw3DSprite: Maximum sprites reached.");
+            this.utils.warn("draw3DSprite: Maximum sprites reached.");
         }
     },
     loadMesh : function addMeshFn(params)
@@ -983,9 +1112,9 @@ Protolib.prototype =
         var globals = this.globals;
         var simplesceneloader = globals.simplesceneloader;
 
-        var md = globals.mathDevice;
-        var v3Position = params.v3Position || md.v3BuildZero();
-        var v3Size = params.v3Size || md.v3Build(1, 1, 1);
+        var mathDevice = globals.mathDevice;
+        var v3Position = params.v3Position || mathDevice.v3BuildZero();
+        var v3Size = params.v3Size || mathDevice.v3Build(1, 1, 1);
         var meshPath = params.mesh;
 
         var node = simplesceneloader.load(meshPath);
@@ -1038,19 +1167,19 @@ Protolib.prototype =
     {
         var globals = this.globals;
         var scene = globals.scene;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
 
         var ambientLight = scene.getLight("protoAmbientLight");
-        md.v3Copy(v3Color, ambientLight.color);
+        mathDevice.v3Copy(v3Color, ambientLight.color);
     },
     getAmbientLightColor : function getAmbientLightColorFn(v3Color)
     {
         var globals = this.globals;
         var scene = globals.scene;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
 
         var ambientLight = scene.getLight("protoAmbientLight");
-        md.v3Copy(ambientLight.color, v3Color);
+        mathDevice.v3Copy(ambientLight.color, v3Color);
     },
     _genPointLightId : function genPointLightIdFn()
     {
@@ -1064,11 +1193,11 @@ Protolib.prototype =
         this._numSpotLights += 1;
         return id;
     },
-    _addLight : function addLightFn(md, scene, name, light)
+    _addLight : function addLightFn(mathDevice, scene, name, light)
     {
         var lightNode = SceneNode.create({
                 name: name + "_scenenode",
-                local: md.m43BuildIdentity(),
+                local: mathDevice.m43BuildIdentity(),
                 dynamic: true,
                 disabled: false
             });
@@ -1085,7 +1214,7 @@ Protolib.prototype =
         var protolib = this;
         var globals = this.globals;
         var scene = globals.scene;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
 
         var v3Color = params.v3Color;
         var radius = params.radius;
@@ -1098,14 +1227,14 @@ Protolib.prototype =
         var light = Light.create({
                 name : name,
                 point : true,
-                color : md.v3Copy(v3Color),
+                color : mathDevice.v3Copy(v3Color),
                 shadows : true,
-                halfExtents : md.v3Build(radius, radius, radius),
-                origin : md.v3Build(0, 0, 0),
+                halfExtents : mathDevice.v3Build(radius, radius, radius),
+                origin : mathDevice.v3Build(0, 0, 0),
                 material : lightMaterial
             });
 
-        var lightNode = this._addLight(md, scene, name, light);
+        var lightNode = this._addLight(mathDevice, scene, name, light);
 
         var wrapper = new PointLightWrapper(protolib, lightNode, light);
         wrapper.setPosition(v3Position);
@@ -1120,7 +1249,7 @@ Protolib.prototype =
         var globals = this.globals;
         var v3Constants = this.v3Constants;
         var scene = globals.scene;
-        var md = globals.mathDevice;
+        var mathDevice = globals.mathDevice;
 
         var v3Position = params.v3Position;
         var v3Direction = params.v3Direction;
@@ -1135,18 +1264,18 @@ Protolib.prototype =
 
         var light = Light.create({
                 name : name,
-                color : md.v3Copy(v3Color),
+                color : mathDevice.v3Copy(v3Color),
                 spot : true,
                 shadows : true,
                 material : lightMaterial,
                 origin : v3Constants.origin,
                 start : v3Constants.origin,
-                target : md.v3Build(0, 0, -range),
-                up : md.v3Build(0, radius, 0),
-                right : md.v3Build(radius, 0, 0)
+                target : mathDevice.v3Build(0, 0, -range),
+                up : mathDevice.v3Build(0, radius, 0),
+                right : mathDevice.v3Build(radius, 0, 0)
             });
 
-        var lightNode = this._addLight(md, scene, name, light);
+        var lightNode = this._addLight(mathDevice, scene, name, light);
 
         var wrapper = new SpotLightWrapper(protolib, lightNode, light);
         wrapper.setPosition(v3Position);
@@ -1162,11 +1291,11 @@ Protolib.prototype =
         var protolib = this;
         var globals = this.globals;
         var v3Constants = this.v3Constants;
-        var md = globals.mathDevice;
-        var soundm = globals.soundManager;
+        var mathDevice = globals.mathDevice;
+        var soundManager = globals.soundManager;
         var soundSourceManager = globals.soundSourceManager;
 
-        if (!soundm)
+        if (!soundManager)
         {
             // Sounds are disabled
             protolib.utils.error("Cannot play the sound, soundDevice is not available.");
@@ -1179,7 +1308,7 @@ Protolib.prototype =
         var looping = params.looping || false;
         var position = params.v3Position || v3Constants.origin;
         var minDistance = params.minDistance || 1;
-        var maxDistance = params.maxDistance || Infinity;
+        var maxDistance = params.maxDistance;
         var rollOff = params.rollOff || 1;
         var background = params.background || false;
 
@@ -1211,15 +1340,18 @@ Protolib.prototype =
         soundSource = soundSourceManager.getSoundSource(token);
         soundSource.pitch = pitch;
         soundSource.looping = looping;
-        soundSource.position = md.v3Build(position[0], position[1], position[2]);
+        soundSource.position = mathDevice.v3Build(position[0], position[1], position[2]);
         soundSource.minDistance = minDistance;
-        soundSource.maxDistance = maxDistance;
+        if (maxDistance !== undefined)
+        {
+            soundSource.maxDistance = maxDistance;
+        }
         soundSource.rollOff = rollOff;
         soundSource.relative = background;
         soundWrapper = new SoundWrapper(protolib, token, soundSourceManager, volume);
 
         soundSourceManager.setSoundSourceLoading(token, true);
-        soundm.load(soundPath, null, function (sound) {
+        soundManager.load(soundPath, null, function (sound) {
                 if (soundSource)
                 {
                     soundSource.play(sound);
@@ -1399,6 +1531,116 @@ Protolib.prototype =
         dst[1] = a[1];
         dst[2] = a[2];
         return dst;
+    },
+    _checkAssets: function _checkAssetsFn(listOfMissingAssets)
+    {
+        var assetMissing = false;
+        var i, length;
+
+        //Shaders
+        var shaderManager = this.globals.shaderManager;
+        var shaders = [
+            "shaders/debug.cgfx",
+            "shaders/shadowmapping.cgfx",
+            "shaders/zonly.cgfx",
+            "shaders/font.cgfx",
+            "shaders/forwardrendering.cgfx",
+            "shaders/forwardrenderingshadows.cgfx",
+            "shaders/simplesprite.cgfx"
+        ];
+
+        length = shaders.length;
+        for (i = 0; i < length; i += 1)
+        {
+            if (shaderManager.isShaderMissing(shaders[i]))
+            {
+                assetMissing = true;
+                listOfMissingAssets.push(shaders[i]);
+            }
+        }
+
+        //Textures
+        var textureManager = this.globals.textureManager;
+        var textures = [
+            "textures/default_light.png"
+        ];
+
+        length = textures.length;
+        for (i = 0; i < length; i += 1)
+        {
+            if (textureManager.isTextureMissing(textures[i]))
+            {
+                assetMissing = true;
+                listOfMissingAssets.push(textures[i]);
+            }
+        }
+
+        //Fonts
+        var fontManager = this.globals.fontManager;
+        var fonts = [
+            "fonts/opensans-8.fnt",
+            "fonts/opensans-16.fnt",
+            "fonts/opensans-32.fnt",
+            "fonts/opensans-64.fnt",
+            "fonts/opensans-128.fnt"
+        ];
+        //NOTE: Missing font textures, result in missing fonts
+
+        length = fonts.length;
+        for (i = 0; i < length; i += 1)
+        {
+            if (fontManager.isFontMissing(fonts[i]))
+            {
+                assetMissing = true;
+                listOfMissingAssets.push(fonts[i]);
+            }
+        }
+
+        return !assetMissing;
+    },
+    _warnAssets: function _warnAssetsFn(listOfMissingAssets)
+    {
+        var assetMissing = false;
+        var i, length;
+
+        var fonts = this.globals.fonts;
+        var fontResources = [];
+        var fontNames = {
+            "opensans": true
+        };
+        var fontName;
+        for (var f in fonts)
+        {
+            if (fonts.hasOwnProperty(f))
+            {
+                fontName = fonts[f];
+                if (!fontNames[fontName])
+                {
+                    fontResources.push("fonts/" + fontName + "-8.fnt");
+                    fontResources.push("fonts/" + fontName + "-16.fnt");
+                    fontResources.push("fonts/" + fontName + "-32.fnt");
+                    fontResources.push("fonts/" + fontName + "-64.fnt");
+                    fontResources.push("fonts/" + fontName + "-128.fnt");
+                    fontNames[fontName] = true;
+                }
+            }
+        }
+
+        //Fonts
+        var fontManager = this.globals.fontManager;
+        //NOTE: Missing font textures, result in missing fonts
+
+        length = fontResources.length;
+        for (i = 0; i < length; i += 1)
+        {
+            if (fontManager.isFontMissing(fontResources[i]))
+            {
+                assetMissing = true;
+                listOfMissingAssets.push(fontResources[i]);
+            }
+        }
+
+        return !assetMissing;
     }
 };
 
@@ -1514,14 +1756,14 @@ function MeshWrapper(protolib, node)
     this.mathDevice = protolib.globals.mathDevice;
     this.v3Constants = protolib.v3Constants;
 
-    var md = this.mathDevice;
+    var mathDevice = this.mathDevice;
     this.node = node;
 
-    this.localTransform = md.m43BuildIdentity();
-    this.rotationMatrix = md.m43BuildIdentity();
-    this.scaleMatrix = md.m43BuildIdentity();
-    this.v3Position = md.v3Build(0, 0, 0);
-    this.v3Size = md.v3Build(0, 0, 0);
+    this.localTransform = mathDevice.m43BuildIdentity();
+    this.rotationMatrix = mathDevice.m43BuildIdentity();
+    this.scaleMatrix = mathDevice.m43BuildIdentity();
+    this.v3Position = mathDevice.v3Build(0, 0, 0);
+    this.v3Size = mathDevice.v3Build(0, 0, 0);
     this.valid = true;
 }
 
@@ -1540,28 +1782,28 @@ MeshWrapper.prototype =
 
     getPosition : function getPositionFn(v3Position)
     {
-        var md = this.mathDevice;
+        var mathDevice = this.mathDevice;
 
-        md.v3Copy(this.v3Position, v3Position);
+        mathDevice.v3Copy(this.v3Position, v3Position);
     },
     setPosition : function setPositionFn(v3Position)
     {
-        var md = this.mathDevice;
-        md.v3Copy(v3Position, this.v3Position);
+        var mathDevice = this.mathDevice;
+        mathDevice.v3Copy(v3Position, this.v3Position);
 
         this.update();
     },
 
     getSize : function getSizeFn(v3Size)
     {
-        var md = this.mathDevice;
+        var mathDevice = this.mathDevice;
 
-        md.v3Copy(this.v3Size, v3Size);
+        mathDevice.v3Copy(this.v3Size, v3Size);
     },
     setSize : function setSizeFn(v3Size)
     {
-        var md = this.mathDevice;
-        md.v3Copy(v3Size, this.v3Size);
+        var mathDevice = this.mathDevice;
+        mathDevice.v3Copy(v3Size, this.v3Size);
 
         this.update();
     },
@@ -1577,45 +1819,45 @@ MeshWrapper.prototype =
 
     setRotationMatrix : function setRotationMatrixFn(rotationMatrix)
     {
-        var md = this.mathDevice;
-        md.m43Copy(rotationMatrix, this.rotationMatrix);
+        var mathDevice = this.mathDevice;
+        mathDevice.m43Copy(rotationMatrix, this.rotationMatrix);
         this.update();
     },
     getRotationMatrix : function getRotationMatrixFn(rotationMatrix)
     {
-        var md = this.mathDevice;
-        md.m43Copy(this.rotationMatrix, rotationMatrix);
+        var mathDevice = this.mathDevice;
+        mathDevice.m43Copy(this.rotationMatrix, rotationMatrix);
     },
 
 
     _buildLocalTransform : function _buildLocalTransformFn()
     {
-        var md = this.mathDevice;
+        var mathDevice = this.mathDevice;
         var rotationMatrix = this.rotationMatrix;
         var scaleMatrix  = this.scaleMatrix;
         var v3Position = this.v3Position;
         var v3Size = this.v3Size;
         var localTransform = this.localTransform;
 
-        md.m43BuildIdentity(scaleMatrix);
-        md.m43Scale(scaleMatrix, v3Size, scaleMatrix);
+        mathDevice.m43BuildIdentity(scaleMatrix);
+        mathDevice.m43Scale(scaleMatrix, v3Size, scaleMatrix);
 
-        md.m43Mul(rotationMatrix, scaleMatrix, localTransform);
+        mathDevice.m43Mul(rotationMatrix, scaleMatrix, localTransform);
 
-        md.m43SetPos(localTransform, v3Position);
+        mathDevice.m43SetPos(localTransform, v3Position);
     }
 };
 
 function PointLightWrapper(protolib, lightNode, light)
 {
     this.mathDevice = protolib.globals.mathDevice;
-    var md = this.mathDevice;
+    var mathDevice = this.mathDevice;
     this.v3Constants = protolib.v3Constants;
 
     this.lightNode = lightNode;
     this.light = light;
     this.localTransform = lightNode.getLocalTransform();
-    this.v3Position = md.m43Pos(this.localTransform);
+    this.v3Position = mathDevice.m43Pos(this.localTransform);
     this.valid = true;
 }
 
@@ -1623,34 +1865,34 @@ PointLightWrapper.prototype =
 {
     setPosition : function setPositionFn(v3Position)
     {
-        var md = this.mathDevice;
+        var mathDevice = this.mathDevice;
         var lightNode = this.lightNode;
         var localTransform = this.localTransform;
 
-        md.v3Copy(v3Position, this.v3Position);
+        mathDevice.v3Copy(v3Position, this.v3Position);
 
-        md.m43SetPos(localTransform, v3Position);
+        mathDevice.m43SetPos(localTransform, v3Position);
         lightNode.setLocalTransform(localTransform);
     },
     getPosition : function getPositionFn(v3Position)
     {
-        var md = this.mathDevice;
+        var mathDevice = this.mathDevice;
 
-        md.v3Copy(this.v3Position, v3Position);
+        mathDevice.v3Copy(this.v3Position, v3Position);
     },
     setColor : function setColorFn(v3Color)
     {
-        var md = this.mathDevice;
+        var mathDevice = this.mathDevice;
         var light = this.light;
 
-        md.v3Copy(v3Color, light.color);
+        mathDevice.v3Copy(v3Color, light.color);
     },
     getColor : function getColorFn(v3Color)
     {
-        var md = this.mathDevice;
+        var mathDevice = this.mathDevice;
         var light = this.light;
 
-        md.v3Copy(light.color, v3Color);
+        mathDevice.v3Copy(light.color, v3Color);
     },
 
     getEnabled : function getEnabledFn()
@@ -1667,14 +1909,14 @@ PointLightWrapper.prototype =
 function SpotLightWrapper(protolib, lightNode, light)
 {
     this.mathDevice = protolib.globals.mathDevice;
-    var md = this.mathDevice;
+    var mathDevice = this.mathDevice;
     this.v3Constants = protolib.v3Constants;
 
     this.lightNode = lightNode;
     this.light = light;
     this.localTransform = lightNode.getLocalTransform();
-    this.v3Direction = md.v3Build(0, 0, 0);
-    this.v3Position = md.v3Build(0, 0, 0);
+    this.v3Direction = mathDevice.v3Build(0, 0, 0);
+    this.v3Position = mathDevice.v3Build(0, 0, 0);
     this.valid = true;
 }
 SpotLightWrapper.prototype =
@@ -1687,16 +1929,16 @@ SpotLightWrapper.prototype =
     setEnabled : PointLightWrapper.prototype.setEnabled,
     setDirection : function setDirectionFn(v3Direction)
     {
-        var md = this.mathDevice;
+        var mathDevice = this.mathDevice;
         var v3Constants = this.v3Constants;
         var v3Position = this.v3Position;
         var localTransform = this.localTransform;
         var lightNode = this.lightNode;
 
-        md.v3Copy(v3Direction, this.v3Direction);
+        mathDevice.v3Copy(v3Direction, this.v3Direction);
 
-        var zaxis = md.v3ScalarMul(v3Direction, -1);
-        md.v3Normalize(zaxis, zaxis);
+        var zaxis = mathDevice.v3ScalarMul(v3Direction, -1);
+        mathDevice.v3Normalize(zaxis, zaxis);
 
         var up = v3Constants.unitY;
         if ((Math.abs(v3Direction[0]) < 0.000001) &&
@@ -1705,20 +1947,20 @@ SpotLightWrapper.prototype =
             up = v3Constants.unitZ;
         }
 
-        var xaxis = md.v3Cross(md.v3Normalize(up, up), zaxis);
-        md.v3Normalize(xaxis, xaxis);
-        var yaxis = md.v3Cross(zaxis, xaxis);
-        md.m43Build(xaxis, yaxis, zaxis, v3Position, localTransform);
+        var xaxis = mathDevice.v3Cross(mathDevice.v3Normalize(up, up), zaxis);
+        mathDevice.v3Normalize(xaxis, xaxis);
+        var yaxis = mathDevice.v3Cross(zaxis, xaxis);
+        mathDevice.m43Build(xaxis, yaxis, zaxis, v3Position, localTransform);
         lightNode.setLocalTransform(localTransform);
     },
     getDirection : function getDirectionFn(v3Direction)
     {
-        var md = this.mathDevice;
-        md.v3Copy(this.v3Direction, v3Direction);
+        var mathDevice = this.mathDevice;
+        mathDevice.v3Copy(this.v3Direction, v3Direction);
     }
 };
 
-if (window.jQuery !== undefined)
+if (window.jQuery !== undefined && window.jQuery.extend !== undefined)
 {
     Protolib.extend = jQuery.extend;
 }
@@ -1733,7 +1975,7 @@ else
         var console = window.console;
         if (console)
         {
-            console.log("Error: jquery extend is missing. Have you included jqueryextend.js?");
+            console.error("Error: jquery extend is missing. Have you included jqueryextend.js?");
         }
     }
 }

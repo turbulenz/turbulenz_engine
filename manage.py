@@ -60,8 +60,8 @@ def command_env():
     _easy_install('docutils>=0.9.1')
     _easy_install('Sphinx>=1.1.3')
 
-    _easy_install('turbulenz_tools>=1.0')
-    _easy_install('turbulenz_local>=1.0')
+    _easy_install('turbulenz_tools>=1.0.1')
+    _easy_install('turbulenz_local>=1.0.2')
 
     cmd = [os.path.join(env_bin, 'python'), os.path.join('scripts', 'install_nodejs.py'), '--typescript']
     if not TURBULENZOS in [ 'linux32', 'linux64' ]:
@@ -164,62 +164,84 @@ def _get_make_command():
 
 @command_no_arguments
 def command_tools():
-    tools = 'tools'
-    tools_bin = 'tools/bin/%s' % TURBULENZOS
-
+    tools = os.path.normpath(os.path.join(TURBULENZROOT, 'tools'))
+    tools_bin = os.path.normpath(os.path.join(tools, 'bin', TURBULENZOS))
     mkdir(tools_bin)
+
     if TURBULENZOS == 'win32':
-        devenv, vs_version = find_devenv()
-        if vs_version == '2008':
+        devenv, vs_version_name, msbuild = find_devenv()
+        if not devenv and not msbuild:
+            error('Could not find a valid install of Visual Studio')
+            return 1
+        if vs_version_name == '2008':
             proj_postfix = '.vcproj'
             sln_postfix = '.sln'
-        elif vs_version == '2010':
+            vs_version = '9.0'
+        elif vs_version_name == '2010':
             proj_postfix = '-2010.vcxproj'
             sln_postfix = '-2010.sln'
-        elif vs_version == '2012':
+            vs_version = '10.0'
+        elif vs_version_name == '2012':
             proj_postfix = '-2012.vcxproj'
             sln_postfix = '-2012.sln'
+            vs_version = '11.0'
+        if devenv:
+            base_cmd = [devenv, '/build', 'Release']
+        elif msbuild:
+            base_cmd = [msbuild, '/t:build', '/p:Configuration=Release',
+                        '/p:Platform=Win32', '/p:VisualStudioVersion=%s' % vs_version]
 
-        cgfx2json_proj = os.path.normpath(
-                            os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json%s' % proj_postfix))
-        sh([devenv, cgfx2json_proj, '/build', 'Release'], console=True)
+        cgfx2json_proj = os.path.join(tools, 'cgfx2json', 'cgfx2json%s' % proj_postfix)
+        cmd = base_cmd + [cgfx2json_proj]
+        sh(cmd, console=True, shell=True)
         cp('tools/cgfx2json/Release/cgfx2json.exe', tools_bin)
         cp('external/Cg/bin/cg.dll', tools_bin)
         cp('external/Cg/bin/cgGL.dll', tools_bin)
 
-        nvtristrip_sln = os.path.normpath(
-                            os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip%s' % sln_postfix))
-        sh([devenv, nvtristrip_sln, '/build', 'Release'], console=True)
+        nvtristrip_sln = os.path.join(tools, 'NvTriStrip', 'NvTriStrip%s' % sln_postfix)
+        cmd = base_cmd + [nvtristrip_sln]
+        sh(cmd, console=True, shell=True)
         cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper.exe', tools_bin)
 
     else:
-        sh('make', tools, console=True)
+        sh('make', cwd=tools, console=True)
         cp('tools/cgfx2json/bin/release/cgfx2json', tools_bin)
         cp('tools/NvTriStrip/NvTriStripper/bin/release/NvTriStripper', tools_bin)
 
 
 @command_no_arguments
 def command_tools_clean():
-    tools = 'tools'
+    tools = os.path.normpath(os.path.join(TURBULENZROOT, 'tools'))
     if TURBULENZOS == 'win32':
-        devenv, vs_version = find_devenv()
-        if vs_version == '2008':
+        devenv, vs_version_name, msbuild = find_devenv()
+        if not devenv and not msbuild:
+            error('Could not find a valid install of Visual Studio')
+            return 1
+        if vs_version_name == '2008':
             proj_postfix = '.vcproj'
             sln_postfix = '.sln'
-        elif vs_version == '2010':
-            proj_postfix = '-2010.vxproj'
+            vs_version = '9.0'
+        elif vs_version_name == '2010':
+            proj_postfix = '-2010.vcxproj'
             sln_postfix = '-2010.sln'
-        elif vs_version == '2012':
+            vs_version = '10.0'
+        elif vs_version_name == '2012':
             proj_postfix = '-2012.vcxproj'
             sln_postfix = '-2012.sln'
+            vs_version = '11.0'
+        if devenv:
+            base_cmd = [devenv, '/clean', 'Release']
+        elif msbuild:
+            base_cmd = [msbuild, '/t:clean', '/p:Configuration=Release',
+                        '/p:Platform=Win32', '/p:VisualStudioVersion=%s' % vs_version]
 
-        cgfx2json_proj = os.path.normpath(
-                            os.path.join(TURBULENZROOT, tools, 'cgfx2json', 'cgfx2json%s' % proj_postfix))
-        sh([devenv, cgfx2json_proj, '/clean', 'Release'], console=True)
+        cgfx2json_proj = os.path.join(tools, 'cgfx2json', 'cgfx2json%s' % proj_postfix)
+        cmd = base_cmd + [cgfx2json_proj]
+        sh(cmd, console=True, shell=True)
 
-        nvtristrip_sln = os.path.normpath(
-                            os.path.join(TURBULENZROOT, tools, 'NvTriStrip', 'NvTriStrip%s' % sln_postfix))
-        sh([devenv, nvtristrip_sln, '/clean', 'Release'], console=True)
+        nvtristrip_sln = os.path.join(tools, 'NvTriStrip', 'NvTriStrip%s' % sln_postfix)
+        cmd = base_cmd + [nvtristrip_sln]
+        sh(cmd, console=True, shell=True)
     else:
         sh('make clean', cwd=tools)
 
@@ -234,7 +256,8 @@ def command_apps(options):
                  'apps/multiworm',
                  'apps/sampleapp',
                  'apps/templateapp',
-                 'apps/viewer' ]
+                 'apps/viewer',
+                 'apps/protolibsampleapp' ]
     all_apps = {}
     for d in app_dirs:
         all_apps[os.path.split(d)[1]] = d
@@ -311,6 +334,11 @@ def command_apps(options):
             buildassets_cmd.extend([
                                 '--root', TURBULENZROOT,
                                 '--assets-path', os.path.join(TURBULENZROOT, 'assets') ])
+
+            app_assets = os.path.abspath(os.path.join(app_dir, 'assets'))
+            if os.path.isdir(app_assets):
+                buildassets_cmd.extend(['--assets-path', app_assets])
+
             if args.assets_path:
                 for p in args.assets_path:
                     buildassets_cmd.extend(['--assets-path', p])

@@ -28,3 +28,4 @@ Turbulenz Services API
    gameprofile_api
    datashare_api
    notifications_api
+   custommetricsbatch_api

@@ -6,6 +6,7 @@ function SimpleSprite(globals)
 {
     this.globals = globals;
     var gd = globals.graphicsDevice;
+    var md = globals.mathDevice;
 
     /* jshint bitwise: false */
     debug.assert(this.maxSprites * 6 < 1<<16); // Must fit in 16 bit indicies.
@@ -60,15 +61,13 @@ function SimpleSprite(globals)
     this.primitive = gd.PRIMITIVE_TRIANGLES;
     this.globalTechniqueParameters = gd.createTechniqueParameters(
         {
-            worldViewProjection: null
+            worldViewProjection: null,
+            materialColor: md.v4BuildOne()
         });
     this.localTechniqueParameters = gd.createTechniqueParameters(
         {
             diffuse: null
         });
-
-
-    var md = globals.mathDevice;
 
     this.spriteList = [];
     this.spriteCache = [];
@@ -145,6 +144,11 @@ SimpleSprite.prototype =
 
         this.spriteList.push(sprite_to_add);
         return true;
+    },
+
+    preload : function preloadFn()
+    {
+        this.globals.shaderManager.load("shaders/simplesprite.cgfx");
     },
 
     drawSprites : function simpleSpriteDrawSpriteFn()

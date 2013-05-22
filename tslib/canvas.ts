@@ -908,6 +908,7 @@ class CanvasContext
     target                   : Texture;
     viewport                 : number[];
 
+    pixelRatio               : number;
     forceFatLines            : bool;
 
     width                    : number;
@@ -919,7 +920,8 @@ class CanvasContext
     numStatesInStack         : number;
 
     subPaths                 : any[];
-    currentSubPath           : any;
+    currentSubPath           : any[];
+    needToSimplifyPath       : bool[];
 
     shader                   : Shader;
 
@@ -969,13 +971,17 @@ class CanvasContext
     matrix                   : any; // m33?
     clipExtents              : any; // v4?
 
-    //
     defaultStates            : any; // TODO: States
-
 
     bufferDataCache             : any;
     bufferDataCacheNumVertices  : number;
     prevBufferData              : any;
+
+    cachedTriangulation      : {};
+    tempAngles               : number[];
+
+    cachedPaths              : {};
+    numCachedPaths           : number;
 
     // On prototype
     arrayConstructor         : any;
@@ -1244,6 +1250,8 @@ class CanvasContext
     {
         this.subPaths.length = 0;
         this.currentSubPath.length = 0;
+        this.needToSimplifyPath.length = 1;
+        this.needToSimplifyPath[0] = true;
     };
 
     closePath()
@@ -1264,24 +1272,37 @@ class CanvasContext
                 {
                     currentSubPath[numCurrentSubPathElements] = firstPoint;
                 }
+
+                this.simplifyShape(currentSubPath, 0, (currentSubPath.length - 1));
             }
 
             var subPaths = this.subPaths;
-            subPaths[subPaths.length] = currentSubPath;
+            var numSubPaths = subPaths.length;
+            subPaths[numSubPaths] = currentSubPath;
 
             this.currentSubPath = [firstPoint];
+
+            var needToSimplifyPath = this.needToSimplifyPath;
+            needToSimplifyPath[numSubPaths] = false;
+            needToSimplifyPath[numSubPaths + 1] = true;
         }
     };
 
     moveTo(x, y)
     {
         var currentSubPath = this.currentSubPath;
-        if (currentSubPath.length > 1)
+        var numCurrentSubPathElements = currentSubPath.length;
+        if (numCurrentSubPathElements > 1)
         {
             var subPaths = this.subPaths;
-            subPaths[subPaths.length] = currentSubPath;
+            var numSubPaths = subPaths.length;
+            subPaths[numSubPaths] = currentSubPath;
 
             this.currentSubPath = [this.transformPoint(x, y)];
+
+            var needToSimplifyPath = this.needToSimplifyPath;
+            needToSimplifyPath[numSubPaths] = (numCurrentSubPathElements > 2);
+            needToSimplifyPath[numSubPaths + 1] = true;
         }
         else
         {
@@ -1332,7 +1353,7 @@ class CanvasContext
             numCurrentSubPathElements += 1;
         }
 
-        currentSubPath[numCurrentSubPathElements] = [x2, y2];
+        currentSubPath[numCurrentSubPathElements] = p2;
     };
 
     bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
@@ -1383,7 +1404,7 @@ class CanvasContext
             }
         }
 
-        currentSubPath[numCurrentSubPathElements] = [x2, y2];
+        currentSubPath[numCurrentSubPathElements] = p2;
     };
 
     arcTo(x1, y1, x2, y2, radius)
@@ -1570,9 +1591,14 @@ class CanvasContext
         var subPaths = this.subPaths;
         var numSubPaths = subPaths.length;
         var currentSubPath = this.currentSubPath;
-        if (currentSubPath.length > 1)
+        var numCurrentSubPathElements = currentSubPath.length;
+        var needToSimplifyPath = this.needToSimplifyPath;
+        if (numCurrentSubPathElements > 1)
         {
             subPaths[numSubPaths] = currentSubPath;
+
+            needToSimplifyPath[numSubPaths] = (numCurrentSubPathElements > 2);
+
             numSubPaths += 1;
         }
 
@@ -1585,10 +1611,15 @@ class CanvasContext
         subPaths[numSubPaths] = [p2, p3, p1, p0, p2];
 
         this.currentSubPath = [p0];
+
+        needToSimplifyPath[numSubPaths] = (w < 1 || h < 1);
+        needToSimplifyPath[numSubPaths + 1] = true;
     };
 
-    path(path)
+    private _parsePath(path: string) : any[]
     {
+        var commands = [];
+
         var end = path.length;
         var currentCommand = -1, previousCommand = -1;
         var i = 0;
@@ -1724,26 +1755,6 @@ class CanvasContext
             }
         };
 
-        var getRatio = function getRatioFn(u, v)
-        {
-            var u0 = u[0];
-            var u1 = u[1];
-            var v0 = v[0];
-            var v1 = v[1];
-            return ((u0 * v0) + (u1 * v1)) / Math.sqrt(((u0 * u0) + (u1 * u1)) * ((v0 * v0) + (v1 * v1)));
-        };
-
-        var getAngle = function getAngleFn(u, v)
-        {
-            return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
-        };
-
-        var lx = 0;
-        var ly = 0;
-
-        var x, y, x1, y1, x2, y2;
-        var rx, ry, angle, largeArcFlag, sweepFlag;
-
         while (i < end)
         {
             // Skip whitespace
@@ -1751,7 +1762,7 @@ class CanvasContext
             if (c < 0)
             {
                 // end of string
-                return;
+                return commands;
             }
 
             // Same command, new arguments?
@@ -1784,12 +1795,140 @@ class CanvasContext
                 i += 1;
             }
 
+            commands.push(currentCommand);
+
             switch (currentCommand)
             {
             case 77: //M
             case 109: //m
-                x = readNumber();
-                y = readNumber();
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 76: //L
+            case 108: //l
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 72: //H
+            case 104: //h
+                commands.push(readNumber());
+                break;
+
+            case 86: //V
+            case 118: //v
+                commands.push(readNumber());
+                break;
+
+            case 67: //C
+            case 99: //c
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 83: //S
+            case 115: //s
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 81: //Q
+            case 113: //q
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 84: //T
+            case 116: //t
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 65: //A
+            case 97: //a
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                commands.push(readFlag());
+                commands.push(readFlag());
+                commands.push(readNumber());
+                commands.push(readNumber());
+                break;
+
+            case 90: //Z
+            case 122: //z
+                break;
+
+            default:
+                throw "Unknown command: " + path.slice(i);
+            }
+        }
+
+        return commands;
+    };
+
+    path(path: string)
+    {
+        var commands = this.cachedPaths[path];
+        if (commands === undefined)
+        {
+            if (this.numCachedPaths >= 1024)
+            {
+                this.cachedPaths = {};
+                this.numCachedPaths = 0;
+            }
+
+            commands = this._parsePath(path);
+
+            this.cachedPaths[path] = commands;
+            this.numCachedPaths += 1;
+        }
+
+        var end = commands.length;
+        var currentCommand = -1, previousCommand = -1;
+        var i = 0;
+
+        var getRatio = function getRatioFn(u, v)
+        {
+            var u0 = u[0];
+            var u1 = u[1];
+            var v0 = v[0];
+            var v1 = v[1];
+            return ((u0 * v0) + (u1 * v1)) / Math.sqrt(((u0 * u0) + (u1 * u1)) * ((v0 * v0) + (v1 * v1)));
+        };
+
+        var getAngle = function getAngleFn(u, v)
+        {
+            return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
+        };
+
+        var lx = 0;
+        var ly = 0;
+
+        var x, y, x1, y1, x2, y2;
+        var rx, ry, angle, largeArcFlag, sweepFlag;
+
+        while (i < end)
+        {
+            previousCommand = currentCommand;
+            currentCommand = commands[i];
+            i += 1;
+
+            switch (currentCommand)
+            {
+            case 77: //M
+            case 109: //m
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 109) //m
                 {
                     x += lx;
@@ -1800,8 +1939,8 @@ class CanvasContext
 
             case 76: //L
             case 108: //l
-                x = readNumber();
-                y = readNumber();
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 108) //l
                 {
                     x += lx;
@@ -1812,7 +1951,7 @@ class CanvasContext
 
             case 72: //H
             case 104: //h
-                x = readNumber();
+                x = commands[i]; i += 1;
                 if (currentCommand === 104) //h
                 {
                     x += lx;
@@ -1824,7 +1963,7 @@ class CanvasContext
             case 86: //V
             case 118: //v
                 x = lx;
-                y = readNumber();
+                y = commands[i]; i += 1;
                 if (currentCommand === 118) //v
                 {
                     y += ly;
@@ -1834,12 +1973,12 @@ class CanvasContext
 
             case 67: //C
             case 99: //c
-                x1 = readNumber();
-                y1 = readNumber();
-                x2 = readNumber();
-                y2 = readNumber();
-                x = readNumber();
-                y = readNumber();
+                x1 = commands[i]; i += 1;
+                y1 = commands[i]; i += 1;
+                x2 = commands[i]; i += 1;
+                y2 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 99) //c
                 {
                     x1 += lx;
@@ -1867,10 +2006,10 @@ class CanvasContext
                     x1 = lx;
                     y1 = ly;
                 }
-                x2 = readNumber();
-                y2 = readNumber();
-                x = readNumber();
-                y = readNumber();
+                x2 = commands[i]; i += 1;
+                y2 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 115) //s
                 {
                     x2 += lx;
@@ -1883,10 +2022,10 @@ class CanvasContext
 
             case 81: //Q
             case 113: //q
-                x1 = readNumber();
-                y1 = readNumber();
-                x = readNumber();
-                y = readNumber();
+                x1 = commands[i]; i += 1;
+                y1 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 113) //q
                 {
                     x1 += lx;
@@ -1912,8 +2051,8 @@ class CanvasContext
                     x1 = lx;
                     y1 = ly;
                 }
-                x = readNumber();
-                y = readNumber();
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 116) //t
                 {
                     x += lx;
@@ -1927,13 +2066,14 @@ class CanvasContext
                 var pi = Math.PI;
                 x1 = lx;
                 y1 = ly;
-                rx = readNumber();
-                ry = readNumber();
-                angle = (readNumber() * (pi / 180.0));
-                largeArcFlag = readFlag();
-                sweepFlag = readFlag();
-                x = readNumber();
-                y = readNumber();
+                rx = commands[i]; i += 1;
+                ry = commands[i]; i += 1;
+                angle = commands[i]; i += 1;
+                angle = (angle * (pi / 180.0));
+                largeArcFlag = commands[i]; i += 1;
+                sweepFlag = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
                 if (currentCommand === 97) //a
                 {
                     x += lx;
@@ -2067,14 +2207,26 @@ class CanvasContext
 
             case 90: //Z
             case 122: //z
-                var firstPoint = this.currentSubPath[0];
-                x = firstPoint[0];
-                y = firstPoint[1];
-                this.closePath();
+                if (i < end)
+                {
+                    if (commands[i] !== 77) //M
+                    {
+                        var firstPoint = this.untransformPoint(this.currentSubPath[0]);
+                        x = firstPoint[0];
+                        y = firstPoint[1];
+                    }
+                    this.closePath();
+                }
+                else
+                {
+                    this.closePath();
+                    return;
+                }
                 break;
 
             default:
-                throw "Unknown command: " + path.slice(i);
+                // should never happen
+                return;
             }
 
             lx = x;
@@ -2087,11 +2239,12 @@ class CanvasContext
         var subPaths = this.subPaths;
         var numSubPaths = subPaths.length;
         var currentSubPath = this.currentSubPath;
+        var needToSimplifyPath = this.needToSimplifyPath;
         if (numSubPaths > 0 ||
             currentSubPath.length > 2)
         {
             var autoClose = this.autoClose;
-            var isConvex = this.isConvex;
+            var canTriangulateAsFan = this.canTriangulateAsFan;
             var points, numPoints, numSegments;
 
             var style = this.fillStyle;
@@ -2115,13 +2268,23 @@ class CanvasContext
                     {
                         numPoints = autoClose(points, numPoints);
                         numSegments = (numPoints - 1);
-                        if (isConvex(points, numSegments))
+
+                        if (needToSimplifyPath[i])
                         {
-                            numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
+                            needToSimplifyPath[i] = false;
+                            numSegments = this.simplifyShape(points, 0, numSegments);
                         }
-                        else
+
+                        if (numSegments > 1)
                         {
-                            numVertices = this.triangulateConcave(points, numSegments, vertices, numVertices);
+                            if (canTriangulateAsFan(points, numSegments))
+                            {
+                                numVertices = this.triangulateAsFan(points, numSegments, vertices, numVertices);
+                            }
+                            else
+                            {
+                                numVertices = this.triangulateConcaveCached(points, numSegments, vertices, numVertices);
+                            }
                         }
                     }
                 }
@@ -2132,13 +2295,23 @@ class CanvasContext
                 {
                     numPoints = autoClose(points, numPoints);
                     numSegments = (numPoints - 1);
-                    if (isConvex(points, numSegments))
+
+                    if (needToSimplifyPath[numSubPaths])
                     {
-                        numVertices = this.triangulateConvex(points, numSegments, vertices, numVertices);
+                        needToSimplifyPath[numSubPaths] = false;
+                        numSegments = this.simplifyShape(points, 0, numSegments);
                     }
-                    else
+
+                    if (numSegments > 1)
                     {
-                        numVertices = this.triangulateConcave(points, numSegments, vertices, numVertices);
+                        if (canTriangulateAsFan(points, numSegments))
+                        {
+                            numVertices = this.triangulateAsFan(points, numSegments, vertices, numVertices);
+                        }
+                        else
+                        {
+                            numVertices = this.triangulateConcaveCached(points, numSegments, vertices, numVertices);
+                        }
                     }
                 }
             }
@@ -2159,17 +2332,26 @@ class CanvasContext
                     numPoints = autoClose(points, numPoints);
                     numSegments = (numPoints - 1);
 
-                    if (isConvex(points, numSegments))
+                    if (needToSimplifyPath[0])
                     {
-                        primitive = this.triangleFanPrimitive;
-                        vertices = points;
-                        numVertices = numSegments;
+                        needToSimplifyPath[0] = false;
+                        numSegments = this.simplifyShape(points, 0, numSegments);
                     }
-                    else
+
+                    if (numSegments > 1)
                     {
-                        primitive = this.trianglePrimitive;
-                        vertices = this.tempVertices;
-                        numVertices = this.triangulateConcave(points, numSegments, vertices, 0);
+                        if (canTriangulateAsFan(points, numSegments))
+                        {
+                            primitive = this.triangleFanPrimitive;
+                            vertices = points;
+                            numVertices = numSegments;
+                        }
+                        else
+                        {
+                            primitive = this.trianglePrimitive;
+                            vertices = this.tempVertices;
+                            numVertices = this.triangulateConcaveCached(points, numSegments, vertices, 0);
+                        }
                     }
                 }
             }
@@ -2197,6 +2379,7 @@ class CanvasContext
         var subPaths = this.subPaths;
         var numSubPaths = subPaths.length;
         var currentSubPath = this.currentSubPath;
+        var needToSimplifyPath = this.needToSimplifyPath;
         if (numSubPaths > 0 ||
             currentSubPath.length > 0)
         {
@@ -2211,6 +2394,13 @@ class CanvasContext
             {
                 points = subPaths[i];
                 numPoints = points.length;
+
+                if (needToSimplifyPath[i])
+                {
+                    needToSimplifyPath[i] = false;
+                    numPoints = (1 + this.simplifyShape(points, 0, (numPoints - 1)));
+                }
+
                 if (thinLines)
                 {
                     primitive = this.lineStripPrimitive;
@@ -2241,6 +2431,15 @@ class CanvasContext
             numPoints = points.length;
             if (numPoints > 0)
             {
+                if (needToSimplifyPath[numSubPaths])
+                {
+                    needToSimplifyPath[numSubPaths] = false;
+                    if (numPoints > 2)
+                    {
+                        numPoints = (1 + this.simplifyShape(points, 0, (numPoints - 1)));
+                    }
+                }
+
                 if (thinLines)
                 {
                     primitive = this.lineStripPrimitive;
@@ -2315,7 +2514,7 @@ class CanvasContext
         var currentSubPath = this.currentSubPath;
         if (currentSubPath.length > 2)
         {
-            clipSubPaths[numClipSubPaths] = currentSubPath.slice();
+            clipSubPaths[numClipSubPaths] = currentSubPath.slice(0);
             numClipSubPaths += 1;
         }
 
@@ -2877,8 +3076,8 @@ class CanvasContext
             this.clearRect(0, 0, width, height);
         }
 
-        this.forceFatLines = ((2 * width) <= viewport[2] ||
-                              (2 * height) <= viewport[3]);
+        this.pixelRatio = Math.max((viewport[2] / width), (viewport[3] / height));
+        this.forceFatLines = (2 <= this.pixelRatio);
 
         this.updateScissor();
 
@@ -3527,7 +3726,7 @@ class CanvasContext
             return color;
         }
 
-        if (this.numCachedColors > 1024)
+        if (this.numCachedColors >= 1024)
         {
             this.cachedColors = {};
             this.numCachedColors = 0;
@@ -3844,7 +4043,7 @@ class CanvasContext
         return false;
     };
 
-    isConvex(points, numSegments): bool
+    canTriangulateAsFan(points, numSegments): bool
     {
         if (numSegments < 4)
         {
@@ -3854,20 +4053,24 @@ class CanvasContext
         var flag = 0;
 
         /*jshint bitwise: false*/
-        var p0 = points[numSegments - 2];
-        var p1 = points[numSegments - 1];
+        var p0 = points[0];
+        var p1 = points[1];
         var p0x = p0[0];
         var p0y = p0[1];
         var p1x = p1[0];
         var p1y = p1[1];
-        var n = 0;
+        var d10x = (p1x - p0x);
+        var d10y = (p1y - p0y);
+        var n = 2;
         do
         {
             var p2 = points[n];
             var p2x = p2[0];
             var p2y = p2[1];
+            var d20x = (p2x - p0x);
+            var d20y = (p2y - p0y);
 
-            var z = (((p1x - p0x) * (p2y - p1y)) - ((p1y - p0y) * (p2x - p1x)));
+            var z = ((d10x * d20y) - (d10y * d20x));
             if (z < 0)
             {
                 flag |= 1;
@@ -3882,10 +4085,8 @@ class CanvasContext
                 return false;
             }
 
-            p0x = p1x;
-            p0y = p1y;
-            p1x = p2x;
-            p1y = p2y;
+            d10x = d20x;
+            d10y = d20y;
 
             n += 1;
         }
@@ -3899,6 +4100,97 @@ class CanvasContext
 
         return false;
     };
+
+    simplifyShape(points: any[], first: number, last: number) : number
+    {
+        var abs = Math.abs;
+        var epsilon = (0.5 * this.pixelRatio);
+        var p2 = points[last];
+        var p2x = p2[0];
+        var p2y = p2[1];
+        var n, dist;
+
+        for (;;)
+        {
+            var p0 = points[first];
+            var p0x = p0[0];
+            var p0y = p0[1];
+
+            var maxDist = epsilon;
+            var middle = -1;
+
+            if (p0x === p2x)
+            {
+                for (n = (first + 1); n < last; n += 1)
+                {
+                    dist = abs(points[n][0] - p2x);
+                    if (maxDist < dist)
+                    {
+                        maxDist = dist;
+                        middle = n;
+                    }
+                }
+            }
+            else if (p0y === p2y)
+            {
+                for (n = (first + 1); n < last; n += 1)
+                {
+                    dist = abs(points[n][1] - p2y);
+                    if (maxDist < dist)
+                    {
+                        maxDist = dist;
+                        middle = n;
+                    }
+                }
+            }
+            else
+            {
+                var slope = (p2y - p0y) / (p2x - p0x);
+                var invSlope = 1.0 / Math.sqrt((slope * slope) + 1);
+                var intercept = (p0y - (slope * p0x));
+                var p1;
+                for (n = (first + 1); n < last; n += 1)
+                {
+                    p1 = points[n];
+
+                    dist = abs((slope * p1[0]) - p1[1] + intercept) * invSlope;
+
+                    if (maxDist < dist)
+                    {
+                        maxDist = dist;
+                        middle = n;
+                    }
+                }
+            }
+
+            if (middle === -1)
+            {
+                points.splice((first + 1), (last - first - 1));
+                return (first + 1);
+            }
+            else
+            {
+                if ((first + 1) < middle)
+                {
+                    var newMiddle = this.simplifyShape(points, first, middle);
+                    last -= (middle - newMiddle);
+                    middle = newMiddle;
+                }
+
+                if ((middle + 1) < last)
+                {
+                    // restart loop to avoid recursion
+                    first = middle;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        return last;
+    }
 
     calculateArea(points, numPoints): number
     {
@@ -3920,7 +4212,7 @@ class CanvasContext
         return (area * 0.5);
     };
 
-    triangulateConvex(points, numSegments, vertices, numVertices)
+    triangulateAsFan(points, numSegments, vertices, numVertices)
     {
         var p0 = points[0];
         var p1 = points[1];
@@ -3940,15 +4232,176 @@ class CanvasContext
         return numVertices;
     };
 
-    triangulateConcave(points, numSegments, vertices, numVertices, ownPoints?)
+    getAngles(points: any[], numSegments: number, angles: any[]): number
     {
-        var isConvex = this.isConvex;
-
-        var totalArea = this.calculateArea(points, numSegments);
-        if (totalArea === 0)
+        var p0 = points[0];
+        var p1 = points[1];
+        var p0x = p0[0];
+        var p0y = p0[1];
+        var p1x = p1[0];
+        var p1y = p1[1];
+        var d10x = (p1x - p0x);
+        var d10y = (p1y - p0y);
+        var d10l = ((d10x * d10x) + (d10y * d10y));
+        var n = 2;
+        var sqrt = Math.sqrt;
+        var abs = Math.abs;
+        var angle;
+        do
         {
-            return numVertices;
+            var p2 = points[n];
+            var p2x = p2[0];
+            var p2y = p2[1];
+            var d20x = (p2x - p0x);
+            var d20y = (p2y - p0y);
+            var d20l = ((d20x * d20x) + (d20y * d20y));
+
+            angle = (((d10x * d20y) - (d10y * d20x)) / sqrt(d10l * d20l));
+            angles[n - 2] = ((angle * 100) | 0);
+            // Increase the 100 to increase precision if caching matches too dissimilar shapes
+
+            d10x = d20x;
+            d10y = d20y;
+            d10l = d20l;
+
+            n += 1;
         }
+        while (n < numSegments);
+
+        return (n - 2);
+    };
+
+    lowerBound(bin: any[], data: number[], length: number) : number
+    {
+        var first: number = 0;
+        var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
+        var step: number, middle : number, binIndex:number, diff: number;
+        var diff: number, n: number;
+        var a: number[];
+
+        while (0 < count)
+        {
+            step = (count >>> 1);
+            middle = (first + step);
+            binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
+
+            n = 0;
+            a = bin[binIndex];
+            for (;;)
+            {
+                diff = (a[n] - data[n]);
+                if (diff < 0)
+                {
+                    first = (middle + 1);
+                    count -= (step + 1);
+                    break;
+                }
+                else if (diff > 0)
+                {
+                    count = step;
+                    break;
+                }
+
+                n += 1;
+                if (n >= length)
+                {
+                    // This would be a non-zero negative value to signal that we found an identical copy
+                    return -binIndex;
+                }
+            }
+        }
+
+        return (first << 1); // Bin elements ocupy two slots, multiply by 2
+    }
+
+    triangulateConcaveCached(points, numSegments, vertices, numVertices)
+    {
+        var lowerIndex;
+        var cachedIndices;
+        var numCachedIndices;
+        var n;
+
+        var angles = this.tempAngles;
+        var numAngles = this.getAngles(points, numSegments, angles);
+
+        var dataBins = this.cachedTriangulation;
+        var dataBin = dataBins[numAngles];
+        if (dataBin === undefined)
+        {
+            dataBins[numAngles] = dataBin = [];
+            lowerIndex = 0;
+        }
+        else
+        {
+            lowerIndex = this.lowerBound(dataBin, angles, numAngles);
+        }
+
+        // Check if we found an identical copy
+        if (lowerIndex < 0)
+        {
+            lowerIndex = ((-lowerIndex) - 1);
+            cachedIndices = dataBin[lowerIndex];
+            numCachedIndices = cachedIndices.length;
+            for (n = 0; n < numCachedIndices; n += 1)
+            {
+                vertices[numVertices] = points[cachedIndices[n]];
+                numVertices += 1;
+            }
+        }
+        else
+        {
+            var totalArea = this.calculateArea(points, numSegments);
+            if (totalArea === 0)
+            {
+                return numVertices;
+            }
+
+            var numPoints = (numSegments + 1);
+            for (n = 0; n < numPoints; n += 1)
+            {
+                points[n][2] = n;
+            }
+
+            var oldNumVertices = numVertices;
+            numVertices = this.triangulateConcave(points, numSegments,
+                                                  vertices, numVertices,
+                                                  false,
+                                                  totalArea);
+
+            numCachedIndices = (numVertices - oldNumVertices);
+            cachedIndices = [];
+            cachedIndices.length = numCachedIndices;
+            for (n = 0; n < numCachedIndices; n += 1)
+            {
+                cachedIndices[n] = vertices[oldNumVertices + n][2];
+            }
+
+            if (dataBin.length >= 1024)
+            {
+                dataBin.length = 0;
+                lowerIndex = 0;
+            }
+
+            var clonedAngles = angles.slice(0, numAngles);
+            if (lowerIndex < dataBin.length)
+            {
+                dataBin.splice(lowerIndex, 0, cachedIndices, clonedAngles);
+            }
+            else
+            {
+                dataBin.push(cachedIndices, clonedAngles);
+            }
+        }
+
+        return numVertices;
+    };
+
+    triangulateConcave(points: any[], numSegments: number,
+                       vertices: any[], numVertices: number,
+                       ownPoints: bool,
+                       totalArea: number)
+    {
+        var canTriangulateAsFan = this.canTriangulateAsFan;
 
         if (ownPoints)
         {
@@ -4137,18 +4590,28 @@ class CanvasContext
                     else
                     {
                          // Found a diagonal
-                        var d0 = i1;
-                        var d1 = overlappingPoint;
-
-                        var pointsA, pointsB;
-                        if (d0 < d1)
+                        var d0, d1;
+                        if (i1 < overlappingPoint)
                         {
-                            pointsA = points.splice(d0, (d1 - d0 + 1), points[d0], points[d1]);
+                            d0 = i1;
+                            d1 = overlappingPoint;
+                        }
+                        else
+                        {
+                            d0 = overlappingPoint;
+                            d1 = i1;
+                        }
+
+                        var dn = (d1 - d0 + 1);
+                        var pointsA, pointsB;
+                        if (dn <= (points.length - dn + 2))
+                        {
+                            pointsA = points.splice(d0, dn, points[d0], points[d1]);
                             pointsB = points;
                         }
                         else
                         {
-                            pointsB = points.splice(d1, (d0 - d1 + 1), points[d1], points[d0]);
+                            pointsB = points.splice(d0, dn, points[d0], points[d1]);
                             pointsA = points;
                         }
                         points = null;
@@ -4165,13 +4628,16 @@ class CanvasContext
                         {
                             pointsA[numSegmentsA] = pointsA[0];
 
-                            if (isConvex(pointsA, numSegmentsA))
+                            if (canTriangulateAsFan(pointsA, numSegmentsA))
                             {
-                                numVertices = this.triangulateConvex(pointsA, numSegmentsA, vertices, numVertices);
+                                numVertices = this.triangulateAsFan(pointsA, numSegmentsA, vertices, numVertices);
                             }
                             else
                             {
-                                numVertices = this.triangulateConcave(pointsA, numSegmentsA, vertices, numVertices, true);
+                                numVertices = this.triangulateConcave(pointsA, numSegmentsA,
+                                                                      vertices, numVertices,
+                                                                      true,
+                                                                      totalArea);
                             }
                         }
                         pointsA = null;
@@ -4193,12 +4659,6 @@ class CanvasContext
                             points = pointsB;
                             numSegments = numSegmentsB;
                             pointsB = null;
-
-                            totalArea = this.calculateArea(points, numSegments);
-                            if (totalArea === 0)
-                            {
-                                return numVertices;
-                            }
 
                             points.length = numSegments;
 
@@ -4272,7 +4732,7 @@ class CanvasContext
             }
             while (i2 < numSegments);
         }
-        while (valid && !isConvex(points, numSegments));
+        while (valid && !canTriangulateAsFan(points, numSegments));
 
         if (!valid)
         {
@@ -5326,6 +5786,7 @@ class CanvasContext
         c.target = null;
         c.viewport = [0, 0, width, height];
 
+        c.pixelRatio = 1;
         c.forceFatLines = false;
 
         c.width = width;
@@ -5337,6 +5798,7 @@ class CanvasContext
         c.numStatesInStack = 0;
 
         c.subPaths = [];
+        c.needToSimplifyPath = [];
         c.currentSubPath = [];
 
         var shader = gd.createShader(c.shaderDefinition);
@@ -5596,6 +6058,12 @@ class CanvasContext
 
         //
         c.defaultStates = c.setStates(c.createStatesObject(), c);
+
+        c.cachedTriangulation = {};
+        c.tempAngles = [];
+
+        c.cachedPaths = {};
+        c.numCachedPaths = 0;
 
         return c;
     };

@@ -10,6 +10,31 @@
 # - deps: [Optional] extra definitions that the build tool requires
 # - args: [Optional] extra arguments for the build tool
 
+- path: materials/samples.material
+  install: false
+
+- path: models/watercan.obj
+  args: ['-d', '_build/assets/materials/samples.material.json']
+  deps: ['materials/samples.material']
+- path: models/Seymour.dae
+  args: ['-d', '_build/assets/materials/samples.material.json']
+  deps: ['materials/samples.material']
+- path: models/Seymour_anim2.dae
+  args: ['-d', '_build/assets/materials/samples.material.json']
+  deps: ['materials/samples.material']
+- path: models/diningroom.dae
+  args: ['-d', '_build/assets/materials/samples.material.json']
+  deps: ['materials/samples.material']
+- path: models/Seymour_anim2_rot90.dae
+  args: ['-d', '_build/assets/materials/samples.material.json', '-I', 'animations']
+  deps: ['materials/samples.material']
+  logical_path: models/Seymour_anim2_rot90_anim_only.dae
+- models/duck.dae
+- models/duck_trianglemesh.dae
+- models/duck_morph.dae
+- models/cube.dae
+- models/sphere.dae
+
 - textures/duck.png
 - textures/texture_carpet.dds
 - textures/texture_cha_0063.dds
@@ -48,32 +73,6 @@
 - sounds/duck.mp3
 - sounds/furelise.ogg
 - sounds/furelise.mp3
-
-- models/cube.dae
-- models/sphere.dae
-
-- path: materials/samples.material
-  install: false
-
-- models/duck.dae
-- models/duck_trianglemesh.dae
-- models/duck_morph.dae
-- path: models/watercan.obj
-  args: ['-d', '_build/assets/materials/samples.material.json']
-  deps: ['materials/samples.material']
-- path: models/Seymour.dae
-  args: ['-d', '_build/assets/materials/samples.material.json']
-  deps: ['materials/samples.material']
-- path: models/Seymour_anim2.dae
-  args: ['-d', '_build/assets/materials/samples.material.json']
-  deps: ['materials/samples.material']
-- path: models/diningroom.dae
-  args: ['-d', '_build/assets/materials/samples.material.json']
-  deps: ['materials/samples.material']
-- path: models/Seymour_anim2_rot90.dae
-  args: ['-d', '_build/assets/materials/samples.material.json', '-I', 'animations']
-  deps: ['materials/samples.material']
-  logical_path: models/Seymour_anim2_rot90_anim_only.dae
 
 - shaders/debug.cgfx
 - shaders/draw2D.cgfx
