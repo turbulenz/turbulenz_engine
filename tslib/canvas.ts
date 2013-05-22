@@ -943,6 +943,8 @@ class CanvasContext
     flatTechniques           : { [name: string]: Technique; };
 
     bufferData               : any; // arrayConstructor(512);
+    subBufferDataCache       : {};
+
     tempRect                 : any; // arrayConstructor(8);
 
     tempVertices             : number[];
@@ -972,10 +974,6 @@ class CanvasContext
     clipExtents              : any; // v4?
 
     defaultStates            : any; // TODO: States
-
-    bufferDataCache             : any;
-    bufferDataCacheNumVertices  : number;
-    prevBufferData              : any;
 
     cachedTriangulation      : {};
     tempAngles               : number[];
@@ -3814,12 +3812,21 @@ class CanvasContext
     {
         var bufferData = this.bufferData;
 
-        if (bufferData.length < (numVertices * 2))
+        var numFloats = (2 * numVertices);
+        if (bufferData.length < numFloats)
         {
-            this.bufferData = bufferData = new this.arrayConstructor(numVertices * 2);
-            this.bufferDataCache = bufferData;
-            this.bufferDataCacheNumVertices = numVertices;
-            this.prevBufferData = bufferData;
+            this.bufferData = bufferData = new this.arrayConstructor(numFloats);
+            this.subBufferDataCache = {};
+        }
+        else if (numFloats < bufferData.length)
+        {
+            var subBuffer = this.subBufferDataCache[numFloats];
+            if (subBuffer === undefined)
+            {
+                subBuffer = bufferData.subarray(0, numFloats);
+                this.subBufferDataCache[numFloats] = subBuffer;
+            }
+            bufferData = subBuffer;
         }
 
         return bufferData;
@@ -3841,15 +3848,7 @@ class CanvasContext
             });
         }
 
-        if (this.bufferDataCacheNumVertices !== numVertices ||
-            this.prevBufferData !== bufferData)
-        {
-            this.bufferDataCacheNumVertices = numVertices;
-            this.bufferDataCache = bufferData.subarray(0, 2 * numVertices);
-            this.prevBufferData = bufferData;
-        }
-
-        flatVertexBuffer.setData(this.bufferDataCache, 0, numVertices);
+        flatVertexBuffer.setData(bufferData, 0, numVertices);
 
         this.gd.setStream(flatVertexBuffer, this.flatSemantics);
     };
@@ -3858,9 +3857,21 @@ class CanvasContext
     {
         var bufferData = this.bufferData;
 
-        if (bufferData.length < (numVertices * 4))
+        var numFloats = (4 * numVertices);
+        if (bufferData.length < numFloats)
         {
-            this.bufferData = bufferData = new this.arrayConstructor(numVertices * 4);
+            this.bufferData = bufferData = new this.arrayConstructor(numFloats);
+            this.subBufferDataCache = {};
+        }
+        else if (numFloats < bufferData.length)
+        {
+            var subBuffer = this.subBufferDataCache[numFloats];
+            if (subBuffer === undefined)
+            {
+                subBuffer = bufferData.subarray(0, numFloats);
+                this.subBufferDataCache[numFloats] = subBuffer;
+            }
+            bufferData = subBuffer;
         }
 
         return bufferData;
@@ -5846,6 +5857,7 @@ class CanvasContext
         var arrayConstructor = c.arrayConstructor;
 
         c.bufferData = new arrayConstructor(512);
+        c.subBufferDataCache = {};
 
         c.tempRect = new arrayConstructor(8);
         /*jshint newcap: true*/
