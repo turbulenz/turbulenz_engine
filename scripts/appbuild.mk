@@ -155,7 +155,7 @@ define _create_html_rule
 
   # Command to build <app>_out_html_deps file
   $($(1)_out_html_deps) : $($(1)_js) $($(1)_html) $(external_scriptfiles) \
-   | install_jslib $(call _dir_marker,$(dir $($(1)_out_html_deps)))
+   | install_libraries $(call _dir_marker,$(dir $($(1)_out_html_deps)))
 	@echo "[HTML ] (dep)" $$@
 	$(CMDPREFIX)$(MAKEHTML) $(TEMPLATE_FLAGS)    \
       --mode=$(MODE) -M --MF $$@     \
@@ -163,7 +163,7 @@ define _create_html_rule
 
   # Command to build the final html file
   $($(1)_out_html) : $($(1)_js) $($(1)_html) $(external_scriptfiles) $(makehtml_version) \
-   | install_jslib
+   | install_libraries
 	@echo "[HTML ]" $$@
 	$(CMDPREFIX)$(MAKEHTML) $(TEMPLATE_FLAGS) --mode=$(MODE)  \
       -o $$@ $($(1)_js) $($(1)_html)                          \
@@ -195,7 +195,7 @@ define _create_code_rule
 
   # Command to build <app>_out_tzjs_deps
   $($(1)_out_code_deps) : $($(1)_js) $(external_scriptfiles) \
-   | install_jslib $(call _dir_marker,$(dir $($(1)_out_code_deps)))
+   | install_libraries $(call _dir_marker,$(dir $($(1)_out_code_deps)))
 	@echo "[TZJS ] (dep)" $$@
 	$(CMDPREFIX)$(MAKETZJS) $(TEMPLATE_FLAGS)         \
       --mode=$(MODE)                      \
@@ -211,7 +211,7 @@ define _create_code_rule
 
   # Command to build the final html file
   $($(1)_out_code) : $($(1)_js) $(external_scriptfiles) $(maketzjs_version) \
-   | install_jslib
+   | install_libraries
 	@echo "[TZJS ]" $$@
 	$(CMDPREFIX)$(MAKETZJS) $(TEMPLATE_FLAGS)         \
       $(COMPACTOR_FLAGS)                  \
@@ -376,6 +376,17 @@ endef
 $(foreach s,$(_protolib_src_files),$(eval                          \
   $(call _copy_protolib_file,$(s),$(subst $(PROTOLIBDIR),protolib,$(s))) \
 ))
+
+############################################################
+# 'install_libraries' target
+############################################################
+
+ifeq ($(USE_PROTOLIB),1)
+PROTOLIB_DEPS := install_protolib
+endif
+
+.PHONY : install_libraries
+install_libraries : install_jslib $(PROTOLIB_DEPS)
 
 ############################################################
 # Main Logic
@@ -567,12 +578,8 @@ $(foreach app,$(JSAPPS), $(eval                              \
 # Create the build target
 ############################################################
 
-ifeq ($(USE_PROTOLIB),1)
-PROTOLIB_DEPS := install_protolib
-endif
-
 .PHONY : build
-build : $(JSAPPS) | install_jslib $(PROTOLIB_DEPS)
+build : $(JSAPPS) | install_libraries
 
 ############################################################
 # Create the clean and distclean targets
