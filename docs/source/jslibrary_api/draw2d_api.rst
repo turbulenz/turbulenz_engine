@@ -11,6 +11,7 @@ The Draw2DSprite Object
 =======================
 
 Provides a more efficient path for sprite rendering in Draw2D.
+Rendered with a call to :ref:`draw2D.drawSprite <draw2d_drawsprite>`.
 
 Constructor
 ===========
@@ -1050,6 +1051,8 @@ For performance reasons, this method does not perform any checking of input para
 .. index::
     pair: Draw2D; drawSprite
 
+.. _draw2d_drawsprite:
+
 `drawSprite`
 ------------
 
@@ -1059,7 +1062,7 @@ Draw a :ref:`Draw2DSprite <draw2dsprite>` object to draw2D.
 
 **Syntax** ::
 
-    draw2D.draw(sprite);
+    draw2D.drawSprite(sprite);
 
 ``sprite``
     The :ref:`Draw2DSprite <draw2dsprite>` to be drawn.
