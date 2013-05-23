@@ -1753,6 +1753,30 @@ class CanvasContext
             }
         };
 
+        var getRatio = function getRatioFn(u, v)
+        {
+            var u0 = u[0];
+            var u1 = u[1];
+            var v0 = v[0];
+            var v1 = v[1];
+            return ((u0 * v0) + (u1 * v1)) / Math.sqrt(((u0 * u0) + (u1 * u1)) * ((v0 * v0) + (v1 * v1)));
+        };
+
+        var getAngle = function getAngleFn(u, v)
+        {
+            return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
+        };
+
+        var pi = Math.PI;
+
+        var lx = 0;
+        var ly = 0;
+        var fx = 0;
+        var fy = 0;
+
+        var x, y, x1, y1, x2, y2;
+        var rx, ry, angle, largeArcFlag, sweepFlag;
+
         while (i < end)
         {
             // Skip whitespace
@@ -1793,190 +1817,64 @@ class CanvasContext
                 i += 1;
             }
 
-            commands.push(currentCommand);
-
             switch (currentCommand)
             {
             case 77: //M
             case 109: //m
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 76: //L
-            case 108: //l
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 72: //H
-            case 104: //h
-                commands.push(readNumber());
-                break;
-
-            case 86: //V
-            case 118: //v
-                commands.push(readNumber());
-                break;
-
-            case 67: //C
-            case 99: //c
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 83: //S
-            case 115: //s
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 81: //Q
-            case 113: //q
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 84: //T
-            case 116: //t
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 65: //A
-            case 97: //a
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readFlag());
-                commands.push(readFlag());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 90: //Z
-            case 122: //z
-                break;
-
-            default:
-                throw "Unknown command: " + path.slice(i);
-            }
-        }
-
-        return commands;
-    };
-
-    path(path: string)
-    {
-        var commands = this.cachedPaths[path];
-        if (commands === undefined)
-        {
-            if (this.numCachedPaths >= 1024)
-            {
-                this.cachedPaths = {};
-                this.numCachedPaths = 0;
-            }
-
-            commands = this._parsePath(path);
-
-            this.cachedPaths[path] = commands;
-            this.numCachedPaths += 1;
-        }
-
-        var end = commands.length;
-        var currentCommand = -1, previousCommand = -1;
-        var i = 0;
-
-        var getRatio = function getRatioFn(u, v)
-        {
-            var u0 = u[0];
-            var u1 = u[1];
-            var v0 = v[0];
-            var v1 = v[1];
-            return ((u0 * v0) + (u1 * v1)) / Math.sqrt(((u0 * u0) + (u1 * u1)) * ((v0 * v0) + (v1 * v1)));
-        };
-
-        var getAngle = function getAngleFn(u, v)
-        {
-            return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
-        };
-
-        var lx = 0;
-        var ly = 0;
-
-        var x, y, x1, y1, x2, y2;
-        var rx, ry, angle, largeArcFlag, sweepFlag;
-
-        while (i < end)
-        {
-            previousCommand = currentCommand;
-            currentCommand = commands[i];
-            i += 1;
-
-            switch (currentCommand)
-            {
-            case 77: //M
-            case 109: //m
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 109) //m
                 {
                     x += lx;
                     y += ly;
                 }
-                this.moveTo(x, y);
+                fx = x;
+                fy = y;
+                commands.push(77, x, y);
                 break;
 
             case 76: //L
             case 108: //l
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 108) //l
                 {
                     x += lx;
                     y += ly;
                 }
-                this.currentSubPath.push(this.transformPoint(x, y));
+                commands.push(76, x, y);
                 break;
 
             case 72: //H
             case 104: //h
-                x = commands[i]; i += 1;
+                x = readNumber();
                 if (currentCommand === 104) //h
                 {
                     x += lx;
                 }
                 y = ly;
-                this.currentSubPath.push(this.transformPoint(x, y));
+                commands.push(76, x, y);
                 break;
 
             case 86: //V
             case 118: //v
                 x = lx;
-                y = commands[i]; i += 1;
+                y = readNumber();
                 if (currentCommand === 118) //v
                 {
                     y += ly;
                 }
-                this.currentSubPath.push(this.transformPoint(x, y));
+                commands.push(76, x, y);
                 break;
 
             case 67: //C
             case 99: //c
-                x1 = commands[i]; i += 1;
-                y1 = commands[i]; i += 1;
-                x2 = commands[i]; i += 1;
-                y2 = commands[i]; i += 1;
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x1 = readNumber();
+                y1 = readNumber();
+                x2 = readNumber();
+                y2 = readNumber();
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 99) //c
                 {
                     x1 += lx;
@@ -1986,7 +1884,7 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                this.bezierCurveTo(x1, y1, x2, y2, x, y);
+                commands.push(67, x1, y1, x2, y2, x, y);
                 break;
 
             case 83: //S
@@ -2004,10 +1902,10 @@ class CanvasContext
                     x1 = lx;
                     y1 = ly;
                 }
-                x2 = commands[i]; i += 1;
-                y2 = commands[i]; i += 1;
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x2 = readNumber();
+                y2 = readNumber();
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 115) //s
                 {
                     x2 += lx;
@@ -2015,15 +1913,15 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                this.bezierCurveTo(x1, y1, x2, y2, x, y);
+                commands.push(67, x1, y1, x2, y2, x, y);
                 break;
 
             case 81: //Q
             case 113: //q
-                x1 = commands[i]; i += 1;
-                y1 = commands[i]; i += 1;
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x1 = readNumber();
+                y1 = readNumber();
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 113) //q
                 {
                     x1 += lx;
@@ -2031,7 +1929,7 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                this.quadraticCurveTo(x1, y1, x, y);
+                commands.push(81, x1, y1, x, y);
                 break;
 
             case 84: //T
@@ -2049,29 +1947,28 @@ class CanvasContext
                     x1 = lx;
                     y1 = ly;
                 }
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 116) //t
                 {
                     x += lx;
                     y += ly;
                 }
-                this.quadraticCurveTo(x1, y1, x, y);
+                commands.push(81, x1, y1, x, y);
                 break;
 
             case 65: //A
             case 97: //a
-                var pi = Math.PI;
                 x1 = lx;
                 y1 = ly;
-                rx = commands[i]; i += 1;
-                ry = commands[i]; i += 1;
-                angle = commands[i]; i += 1;
+                rx = readNumber();
+                ry = readNumber();
+                angle = readNumber();
                 angle = (angle * (pi / 180.0));
-                largeArcFlag = commands[i]; i += 1;
-                sweepFlag = commands[i]; i += 1;
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                largeArcFlag = readFlag();
+                sweepFlag = readFlag();
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 97) //a
                 {
                     x += lx;
@@ -2173,6 +2070,97 @@ class CanvasContext
                     sy = 1;
                 }
 
+                commands.push(65, angle, sx, sy, cx, cy, radius, a1, (a1 + ad), (true - sweepFlag));
+                break;
+
+            case 90: //Z
+            case 122: //z
+                x = fx;
+                y = fy;
+                commands.push(90);
+                break;
+
+            default:
+                throw "Unknown command: " + path.slice(i);
+            }
+
+            lx = x;
+            ly = y;
+        }
+
+        return commands;
+    };
+
+    path(path: string)
+    {
+        var commands = this.cachedPaths[path];
+        if (commands === undefined)
+        {
+            if (this.numCachedPaths >= 1024)
+            {
+                this.cachedPaths = {};
+                this.numCachedPaths = 0;
+            }
+
+            commands = this._parsePath(path);
+
+            this.cachedPaths[path] = commands;
+            this.numCachedPaths += 1;
+        }
+
+        var end = commands.length;
+        var currentCommand = -1;
+        var i = 0;
+
+        var x, y, x1, y1, x2, y2;
+
+        while (i < end)
+        {
+            currentCommand = commands[i];
+            i += 1;
+
+            switch (currentCommand)
+            {
+            case 77: //M
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
+                this.moveTo(x, y);
+                break;
+
+            case 76: //L
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
+                this.currentSubPath.push(this.transformPoint(x, y));
+                break;
+
+            case 67: //C
+                x1 = commands[i]; i += 1;
+                y1 = commands[i]; i += 1;
+                x2 = commands[i]; i += 1;
+                y2 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
+                this.bezierCurveTo(x1, y1, x2, y2, x, y);
+                break;
+
+            case 81: //Q
+                x1 = commands[i]; i += 1;
+                y1 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
+                this.quadraticCurveTo(x1, y1, x, y);
+                break;
+
+            case 65: //A
+                var angle = commands[i]; i += 1;
+                var sx = commands[i]; i += 1;
+                var sy = commands[i]; i += 1;
+                var cx = commands[i]; i += 1;
+                var cy = commands[i]; i += 1;
+                var radius = commands[i]; i += 1;
+                var startAngle = commands[i]; i += 1;
+                var endAngle = commands[i]; i += 1;
+                var anticlockwise = commands[i]; i += 1;
                 if (angle !== 0 || sx !== 1 || sy !== 1)
                 {
                     this.translate(cx, cy);
@@ -2185,7 +2173,7 @@ class CanvasContext
                         this.scale(sx, sy);
                     }
 
-                    this.arc(0, 0, radius, a1, (a1 + ad), (true - sweepFlag));
+                    this.arc(0, 0, radius, startAngle, endAngle, anticlockwise);
 
                     if (sx !== 1 || sy !== 1)
                     {
@@ -2199,36 +2187,18 @@ class CanvasContext
                 }
                 else
                 {
-                    this.arc(cx, cy, radius, a1, (a1 + ad), (true - sweepFlag));
+                    this.arc(cx, cy, radius, startAngle, endAngle, anticlockwise);
                 }
                 break;
 
             case 90: //Z
-            case 122: //z
-                if (i < end)
-                {
-                    if (commands[i] !== 77) //M
-                    {
-                        var firstPoint = this.untransformPoint(this.currentSubPath[0]);
-                        x = firstPoint[0];
-                        y = firstPoint[1];
-                    }
-                    this.closePath();
-                }
-                else
-                {
-                    this.closePath();
-                    return;
-                }
+                this.closePath();
                 break;
 
             default:
                 // should never happen
-                return;
+                break;
             }
-
-            lx = x;
-            ly = y;
         }
     };
 
