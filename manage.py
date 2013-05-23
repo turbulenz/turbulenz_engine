@@ -257,7 +257,8 @@ def command_apps(options):
                  'apps/sampleapp',
                  'apps/templateapp',
                  'apps/viewer',
-                 'apps/protolibsampleapp' ]
+                 'apps/protolibsampleapp',
+                 'apps/tictactoe' ]
     all_apps = {}
     for d in app_dirs:
         all_apps[os.path.split(d)[1]] = d
