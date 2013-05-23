@@ -1,0 +1,21 @@
+aspect_ratio: '16:9'
+canvas_main: tictactoe.canvas.js
+cover_art: cover_art.png
+deploy_files:
+- tictactoe.tzjs
+- tictactoe.canvas.js
+- mapping_table.json
+- staticmax/*
+deployed: Never
+engine_version: '0.26'
+flash_main: ''
+has_notifications: false
+is_multiplayer: true
+is_temp: false
+mapping_table: mapping_table.json
+modified: 14:40 | 23/05/2013
+path: ../../engine/apps/tictactoe
+plugin_main: tictactoe.tzjs
+slug: tic-tac-toe
+title: Tic-tac-toe
+title_logo: ''
