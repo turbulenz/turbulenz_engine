@@ -923,6 +923,7 @@ class CanvasContext
     currentSubPath           : any[];
     needToSimplifyPath       : bool[];
 
+    activeVertexBuffer       : VertexBuffer;
     activeTechnique          : Technique;
     activeScreen             : any; // v4
     activeColor              : any; // v4
@@ -3074,6 +3075,7 @@ class CanvasContext
 
         this.updateScissor();
 
+        this.activeVertexBuffer = null;
         this.activeTechnique = null;
         this.flatOffset = 0;
 
@@ -3756,6 +3758,15 @@ class CanvasContext
         }
     };
 
+    setStream(vertexBuffer: VertexBuffer, semantics: Semantics) : void
+    {
+        if (this.activeVertexBuffer !== vertexBuffer)
+        {
+            this.activeVertexBuffer = vertexBuffer;
+            this.gd.setStream(vertexBuffer, semantics, 0);
+        }
+    };
+
     setTechniqueWithAlpha(technique: Technique, screen: any, alpha: number) : void
     {
         var activeScreen = this.activeScreen;
@@ -3995,7 +4006,7 @@ class CanvasContext
 
         flatVertexBuffer.setData(bufferData, this.flatOffset, numVertices);
 
-        this.gd.setStream(this.flatVertexBuffer, this.flatSemantics, 0);
+        this.setStream(flatVertexBuffer, this.flatSemantics);
     };
 
     getTextureBuffer(numVertices)
@@ -4040,7 +4051,7 @@ class CanvasContext
 
         textureVertexBuffer.setData(bufferData, 0, numVertices);
 
-        this.gd.setStream(textureVertexBuffer, this.textureSemantics);
+        this.setStream(textureVertexBuffer, this.textureSemantics);
     };
 
     fillFatStrip(points, numPoints, lineWidth)
@@ -5985,6 +5996,7 @@ class CanvasContext
         /*jshint newcap: false*/
         var arrayConstructor = c.arrayConstructor;
 
+        c.activeVertexBuffer = null;
         c.activeTechnique = null;
         c.activeScreen = new arrayConstructor(4);
         c.activeColor = new arrayConstructor(4);
