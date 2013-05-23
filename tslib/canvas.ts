@@ -1337,18 +1337,22 @@ class CanvasContext
 
         var abs = Math.abs;
         /*jshint bitwise: false*/
-        var numSteps = ((0.5 * (abs(x2 - x1) + abs(y2 - y1))) | 0);
+        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
         /*jshint bitwise: true*/
-        var dt = (1.0 / numSteps);
-        for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
+
+        if (1 < numSteps)
         {
-            var invt = (1.0 - t);
-            var invt2 = (invt * invt);
-            var t2 = (t * t);
-            var tinvt = (2 * t * invt);
-            currentSubPath[numCurrentSubPathElements] = [((invt2 * x1) + (tinvt * xq) + (t2 * x2)),
-                                                         ((invt2 * y1) + (tinvt * yq) + (t2 * y2))];
-            numCurrentSubPathElements += 1;
+            var dt = (1.0 / numSteps);
+            for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
+            {
+                var invt = (1.0 - t);
+                var invt2 = (invt * invt);
+                var t2 = (t * t);
+                var tinvt = (2 * t * invt);
+                currentSubPath[numCurrentSubPathElements] = [((invt2 * x1) + (tinvt * xq) + (t2 * x2)),
+                                                             ((invt2 * y1) + (tinvt * yq) + (t2 * y2))];
+                numCurrentSubPathElements += 1;
+            }
         }
 
         currentSubPath[numCurrentSubPathElements] = p2;
@@ -1373,7 +1377,7 @@ class CanvasContext
 
         var abs = Math.abs;
         /*jshint bitwise: false*/
-        var numSteps = ((0.5 * (abs(x2 - x1) + abs(y2 - y1))) | 0);
+        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
         /*jshint bitwise: true*/
 
         if (1 < numSteps)
@@ -3869,7 +3873,7 @@ class CanvasContext
         var numPoints = points.length;
         var angle, angleDiff, i, j;
 
-        var angleStep = (2.0 / radius);
+        var angleStep = (2.0 / (radius * this.pixelRatio));
 
         var m = this.matrix;
         var m0 = (m[0] * radius);
@@ -4244,7 +4248,7 @@ class CanvasContext
     simplifyShape(points: any[], first: number, last: number) : number
     {
         var abs = Math.abs;
-        var epsilon = (0.5 * this.pixelRatio);
+        var epsilon = (0.5 / this.pixelRatio);
         var p2 = points[last];
         var p2x = p2[0];
         var p2y = p2[1];
