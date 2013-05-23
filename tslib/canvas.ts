@@ -923,6 +923,10 @@ class CanvasContext
     currentSubPath           : any[];
     needToSimplifyPath       : bool[];
 
+    activeTechnique          : Technique;
+    activeScreen             : any; // v4
+    activeColor              : any; // v4
+
     shader                   : Shader;
 
     triangleStripPrimitive   : number;
@@ -1153,10 +1157,7 @@ class CanvasContext
 
                 var technique = this.flatTechniques['copy'];
 
-                gd.setTechnique(technique);
-
-                technique['screen'] = this.screen;
-                technique['color'] = this.v4Zero;
+                this.setTechniqueWithColor(technique, this.screen, this.v4Zero);
 
                 gd.draw(this.triangleStripPrimitive, 4);
             }
@@ -2648,11 +2649,7 @@ class CanvasContext
             throw "Unknown composite operation: " + this.globalCompositeOperation;
         }
 
-        var gd = this.gd;
-
-        gd.setTechnique(technique);
-
-        technique['color'] = color;
+        this.setTechniqueWithColor(technique, this.screen, color);
 
         var rect = this.transformRect(x, y, maxWidth, maxWidth, this.tempRect);
         x = rect[4];
@@ -2824,19 +2821,20 @@ class CanvasContext
                     throw "Unknown composite operation: " + this.globalCompositeOperation;
                 }
 
-                gd.setTechnique(technique);
-
-                technique['texture'] = image;
-
                 var globalAlpha = this.globalAlpha;
+                var color;
                 if (globalAlpha < 1.0)
                 {
-                    technique['color'] = this.md.v4Build(1.0, 1.0, 1.0, globalAlpha, this.tempColor);
+                    color = this.md.v4Build(1.0, 1.0, 1.0, globalAlpha, this.tempColor);
                 }
                 else
                 {
-                    technique['color'] = this.v4One;
+                    color = this.v4One;
                 }
+
+                this.setTechniqueWithColor(technique, this.screen, color);
+
+                technique['texture'] = image;
 
                 gd.draw(primitive, 4);
             }
@@ -2982,6 +2980,7 @@ class CanvasContext
                 var technique = this.imageTechnique;
 
                 gd.setTechnique(technique);
+                this.activeTechnique = null;
 
                 technique['image'] = tempImage;
 
@@ -3052,6 +3051,8 @@ class CanvasContext
         this.forceFatLines = (2 <= this.pixelRatio);
 
         this.updateScissor();
+
+        this.activeTechnique = null;
 
         return true;
     };
@@ -3569,8 +3570,6 @@ class CanvasContext
                                 (screen[3] + (shadowOffsetY * screenScaleY)),
                                 this.tempScreen);
 
-        var gd = this.gd;
-
         var technique;
 
         if (typeof style !== 'string' &&
@@ -3580,13 +3579,13 @@ class CanvasContext
             {
                 technique = this.textureShadowTechnique;
 
-                gd.setTechnique(technique);
+                this.setTechniqueWithColor(technique, screen, color);
 
                 technique.texture = style;
             }
             else if (style.stops) // Gradient
             {
-                var texture = style.updateTexture(gd);
+                var texture = style.updateTexture(this.gd);
                 var gradientWidth = texture.width;
                 var gradientHeight = texture.height;
 
@@ -3597,7 +3596,7 @@ class CanvasContext
 
                 technique = this.gradientShadowTechnique;
 
-                gd.setTechnique(technique);
+                this.setTechniqueWithColor(technique, screen, color);
 
                 technique.uvtransform = this.calculateGradientUVtransform(style.matrix);
                 technique.gradient = texture;
@@ -3614,7 +3613,7 @@ class CanvasContext
 
                 technique = this.patternShadowTechnique;
 
-                gd.setTechnique(technique);
+                this.setTechniqueWithColor(technique, screen, color);
 
                 technique.uvtransform = this.calculatePatternUVtransform(imageWidth, imageHeight);
                 technique.pattern = style;
@@ -3631,12 +3630,8 @@ class CanvasContext
                 technique = this.flatTechniques['copy'];
             }
 
-            gd.setTechnique(technique);
+            this.setTechniqueWithColor(technique, screen, color);
         }
-
-        technique.screen = screen;
-
-        technique.color = color;
 
         return true;
     };
@@ -3650,7 +3645,6 @@ class CanvasContext
 
         var globalCompositeOperation = this.globalCompositeOperation;
         var screen = this.screen;
-        var gd = this.gd;
 
         var technique;
 
@@ -3682,15 +3676,11 @@ class CanvasContext
                 technique = this.flatTechniques['copy'];
             }
 
-            gd.setTechnique(technique);
-
-            technique.screen = screen;
-
-            technique.color = color;
+            this.setTechniqueWithColor(technique, screen, color);
         }
         else if (style.stops) // Gradient
         {
-            var texture = style.updateTexture(gd);
+            var texture = style.updateTexture(this.gd);
             var gradientWidth = texture.width;
             var gradientHeight = texture.height;
 
@@ -3715,14 +3705,10 @@ class CanvasContext
                 technique = this.gradientTechniques['copy'];
             }
 
-            gd.setTechnique(technique);
-
-            technique.screen = screen;
+            this.setTechniqueWithAlpha(technique, screen, globalAlpha);
 
             technique.uvtransform = this.calculateGradientUVtransform(style.matrix);
-
             technique.gradient = texture;
-            technique.alpha = globalAlpha;
         }
         else // Pattern
         {
@@ -3740,13 +3726,109 @@ class CanvasContext
                 throw "Unknown composite operation: " + globalCompositeOperation;
             }
 
-            gd.setTechnique(technique);
-
-            technique.screen = screen;
+            this.setTechniqueWithAlpha(technique, screen, this.globalAlpha);
 
             technique.uvtransform = this.calculatePatternUVtransform(imageWidth, imageHeight);
             technique.pattern = style;
-            technique.alpha = this.globalAlpha;
+        }
+    };
+
+    setTechniqueWithAlpha(technique: Technique, screen: any, alpha: number) : void
+    {
+        var activeScreen = this.activeScreen;
+        var activeColor = this.activeColor;
+
+        if (this.activeTechnique !== technique)
+        {
+            this.activeTechnique = technique;
+
+            this.gd.setTechnique(technique);
+
+            technique['screen'] = screen;
+            technique['alpha'] = alpha;
+
+            activeScreen[0] = screen[0];
+            activeScreen[1] = screen[1];
+            activeScreen[2] = screen[2];
+            activeScreen[3] = screen[3];
+
+            activeColor[3] = alpha;
+        }
+        else
+        {
+            if (activeScreen[0] !== screen[0] ||
+                activeScreen[1] !== screen[1] ||
+                activeScreen[2] !== screen[2] ||
+                activeScreen[3] !== screen[3])
+            {
+                activeScreen[0] = screen[0];
+                activeScreen[1] = screen[1];
+                activeScreen[2] = screen[2];
+                activeScreen[3] = screen[3];
+
+                technique['screen'] = screen;
+            }
+
+            if (activeColor[3] !== alpha)
+            {
+                activeColor[3] = alpha;
+
+                technique['alpha'] = alpha;
+            }
+        }
+    };
+
+    setTechniqueWithColor(technique: Technique, screen: any, color: any) : void
+    {
+        var activeScreen = this.activeScreen;
+        var activeColor = this.activeColor;
+
+        if (this.activeTechnique !== technique)
+        {
+            this.activeTechnique = technique;
+
+            this.gd.setTechnique(technique);
+
+            technique['screen'] = screen;
+            technique['color'] = color;
+
+            activeScreen[0] = screen[0];
+            activeScreen[1] = screen[1];
+            activeScreen[2] = screen[2];
+            activeScreen[3] = screen[3];
+
+            activeColor[0] = color[0];
+            activeColor[1] = color[1];
+            activeColor[2] = color[2];
+            activeColor[3] = color[3];
+        }
+        else
+        {
+            if (activeScreen[0] !== screen[0] ||
+                activeScreen[1] !== screen[1] ||
+                activeScreen[2] !== screen[2] ||
+                activeScreen[3] !== screen[3])
+            {
+                activeScreen[0] = screen[0];
+                activeScreen[1] = screen[1];
+                activeScreen[2] = screen[2];
+                activeScreen[3] = screen[3];
+
+                technique['screen'] = screen;
+            }
+
+            if (activeColor[0] !== color[0] ||
+                activeColor[1] !== color[1] ||
+                activeColor[2] !== color[2] ||
+                activeColor[3] !== color[3])
+            {
+                activeColor[0] = color[0];
+                activeColor[1] = color[1];
+                activeColor[2] = color[2];
+                activeColor[3] = color[3];
+
+                technique['color'] = color;
+            }
         }
     };
 
@@ -5871,6 +5953,13 @@ class CanvasContext
         c.needToSimplifyPath = [];
         c.currentSubPath = [];
 
+        /*jshint newcap: false*/
+        var arrayConstructor = c.arrayConstructor;
+
+        c.activeTechnique = null;
+        c.activeScreen = new arrayConstructor(4);
+        c.activeColor = new arrayConstructor(4);
+
         var shader = gd.createShader(c.shaderDefinition);
         c.shader = shader;
 
@@ -5899,9 +5988,6 @@ class CanvasContext
             dynamic: true,
             'transient': true
         });
-
-        /*jshint newcap: false*/
-        var arrayConstructor = c.arrayConstructor;
 
         c.bufferData = new arrayConstructor(512);
         c.subBufferDataCache = {};
