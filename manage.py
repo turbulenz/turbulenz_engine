@@ -66,7 +66,8 @@ def command_env():
 
     cmd = [os.path.join(env_bin, 'python'),
            os.path.join(TURBULENZROOT, 'scripts', 'install_nodejs.py'),
-            '--typescript']
+           '--prefix', env_dir,
+           '--typescript']
     if not TURBULENZOS in [ 'linux32', 'linux64' ]:
         cmd.append('-f')
     sh(cmd, console=True)
