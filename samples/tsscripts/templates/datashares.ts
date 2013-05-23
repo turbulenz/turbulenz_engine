@@ -151,6 +151,10 @@ TurbulenzEngine.onload = function onloadFn()
 
     function findDataShares()
     {
+        foundDataShares = null;
+        joinedDataShares = null;
+        invalidateButtons = true;
+
         function joinedDataSharesCallback(dataShares: DataShare[])
         {
             joinedDataShares = dataShares;
@@ -231,7 +235,7 @@ TurbulenzEngine.onload = function onloadFn()
         dataShareManager.createDataShare(dataShareCreated);
     }
 
-    function leaveGame(callback?)
+    function leaveGame()
     {
         function dataShareLeft()
         {
@@ -240,10 +244,6 @@ TurbulenzEngine.onload = function onloadFn()
 
             currentDataShare = null;
             invalidateButtons = true;
-            if (callback)
-            {
-                callback();
-            }
             findDataShares();
         }
         currentDataShare.leave(dataShareLeft);
@@ -255,7 +255,6 @@ TurbulenzEngine.onload = function onloadFn()
         {
             if (wasSet)
             {
-                invalidateButtons = true;
                 currentGame.update();
 
                 var otherUser = currentGame.otherUser;
@@ -270,6 +269,7 @@ TurbulenzEngine.onload = function onloadFn()
                         recipient: otherUser
                     });
                 }
+                invalidateButtons = true;
             }
             else
             {
