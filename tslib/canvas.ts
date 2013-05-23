@@ -944,6 +944,8 @@ class CanvasContext
     flatVertexFormats        : number[];
     flatSemantics            : Semantics;
     flatVertexBuffer         : VertexBuffer;
+    flatOffset               : number;
+
     flatTechniques           : { [name: string]: Technique; };
 
     bufferData               : any; // arrayConstructor(512);
@@ -1159,7 +1161,9 @@ class CanvasContext
 
                 this.setTechniqueWithColor(technique, this.screen, this.v4Zero);
 
-                gd.draw(this.triangleStripPrimitive, 4);
+                gd.draw(this.triangleStripPrimitive, 4, this.flatOffset);
+
+                this.flatOffset += 4;
             }
         }
     };
@@ -1177,12 +1181,14 @@ class CanvasContext
 
             if (this.setShadowStyle(style))
             {
-                gd.draw(primitive, 4);
+                gd.draw(primitive, 4, this.flatOffset);
             }
 
             this.setStyle(style);
 
-            gd.draw(primitive, 4);
+            gd.draw(primitive, 4, this.flatOffset);
+
+            this.flatOffset += 4;
         }
     };
 
@@ -1236,12 +1242,14 @@ class CanvasContext
 
             if (this.setShadowStyle(style))
             {
-                gd.draw(primitive, numVertices);
+                gd.draw(primitive, numVertices, this.flatOffset);
             }
 
             this.setStyle(style);
 
-            gd.draw(primitive, numVertices);
+            gd.draw(primitive, numVertices, this.flatOffset);
+
+            this.flatOffset += numVertices;
         }
     };
 
@@ -2341,12 +2349,14 @@ class CanvasContext
 
                 if (this.setShadowStyle(style))
                 {
-                    gd.draw(primitive, numVertices);
+                    gd.draw(primitive, numVertices, this.flatOffset);
                 }
 
                 this.setStyle(style);
 
-                gd.draw(primitive, numVertices);
+                gd.draw(primitive, numVertices, this.flatOffset);
+
+                this.flatOffset += numVertices;
             }
         }
     };
@@ -2402,12 +2412,14 @@ class CanvasContext
 
                 if (this.setShadowStyle(style))
                 {
-                    gd.draw(primitive, numVertices);
+                    gd.draw(primitive, numVertices, this.flatOffset);
                 }
 
                 this.setStyle(style);
 
-                gd.draw(primitive, numVertices);
+                gd.draw(primitive, numVertices, this.flatOffset);
+
+                this.flatOffset += numVertices;
             }
 
             points = currentSubPath;
@@ -2439,12 +2451,14 @@ class CanvasContext
 
                 if (this.setShadowStyle(style))
                 {
-                    gd.draw(primitive, numVertices);
+                    gd.draw(primitive, numVertices, this.flatOffset);
                 }
 
                 this.setStyle(style);
 
-                gd.draw(primitive, numVertices);
+                gd.draw(primitive, numVertices, this.flatOffset);
+
+                this.flatOffset += numVertices;
             }
         }
     };
@@ -3061,6 +3075,7 @@ class CanvasContext
         this.updateScissor();
 
         this.activeTechnique = null;
+        this.flatOffset = 0;
 
         return true;
     };
@@ -3963,18 +3978,24 @@ class CanvasContext
         if (flatVertexBuffer.numVertices < numVertices)
         {
             flatVertexBuffer.destroy();
-            this.flatVertexBuffer = flatVertexBuffer = null;
+
             this.flatVertexBuffer = flatVertexBuffer = this.gd.createVertexBuffer({
                 numVertices: numVertices,
                 attributes: this.flatVertexFormats,
                 dynamic: true,
                 'transient': true
             });
+
+            this.flatOffset = 0;
+        }
+        else if ((this.flatOffset + numVertices) > flatVertexBuffer.numVertices)
+        {
+            this.flatOffset = 0;
         }
 
-        flatVertexBuffer.setData(bufferData, 0, numVertices);
+        flatVertexBuffer.setData(bufferData, this.flatOffset, numVertices);
 
-        this.gd.setStream(flatVertexBuffer, this.flatSemantics);
+        this.gd.setStream(this.flatVertexBuffer, this.flatSemantics, 0);
     };
 
     getTextureBuffer(numVertices)
@@ -5996,6 +6017,8 @@ class CanvasContext
             dynamic: true,
             'transient': true
         });
+
+        c.flatOffset = 0;
 
         c.bufferData = new arrayConstructor(512);
         c.subBufferDataCache = {};
