@@ -472,7 +472,7 @@ commands are
 
   - For Windows we recommend a 32bit install of Python.
   - If you have multiple Python versions installed e.g. 3.x you may need to run commands with ``python2.7``
-  - On Windows if you didn't add Python to your path in the installer you may need to run C:\Python27\python.exe
+  - On Windows if you didn't add Python to your path in the installer you may need to run ``C:\Python27\python.exe``
   You can check your version with
   ::
 
@@ -589,7 +589,7 @@ as described in the setup section.
 
 - **Tools** - The Turbulenz Engine includes a number of Python tools which are installed during the env command.
   In addition the Engine includes a CGFX shader conversion tool which can be built with the following command.
-  See the `Dependencies`_ section for details of required compiler toolchains.
+  See the `pre-requisites`_ section for details of required compiler toolchains.
   ::
 
     $ python manage.py tools
