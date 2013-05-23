@@ -1327,10 +1327,6 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
-        var q = this.transformPoint(cpx, cpy);
-        var xq = q[0];
-        var yq = q[1];
-
         var p2 = this.transformPoint(x, y);
         var x2 = p2[0];
         var y2 = p2[1];
@@ -1342,6 +1338,12 @@ class CanvasContext
 
         if (1 < numSteps)
         {
+            currentSubPath.length += numSteps;
+
+            var q = this.transformPoint(cpx, cpy);
+            var xq = q[0];
+            var yq = q[1];
+
             var dt = (1.0 / numSteps);
             for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
             {
@@ -1382,6 +1384,8 @@ class CanvasContext
 
         if (1 < numSteps)
         {
+            currentSubPath.length += numSteps;
+
             var q1 = this.transformPoint(cp1x, cp1y);
             var xq1 = q1[0];
             var yq1 = q1[1];
