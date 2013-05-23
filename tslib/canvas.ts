@@ -1248,7 +1248,6 @@ class CanvasContext
     {
         this.subPaths.length = 0;
         this.currentSubPath.length = 0;
-        this.needToSimplifyPath.length = 1;
         this.needToSimplifyPath[0] = true;
     };
 
@@ -2213,6 +2212,7 @@ class CanvasContext
         {
             var autoClose = this.autoClose;
             var canTriangulateAsFan = this.canTriangulateAsFan;
+            var triangulateAsFan = this.triangulateAsFan;
             var points, numPoints, numSegments;
 
             var style = this.fillStyle;
@@ -2247,7 +2247,7 @@ class CanvasContext
                         {
                             if (canTriangulateAsFan(points, numSegments))
                             {
-                                numVertices = this.triangulateAsFan(points, numSegments, vertices, numVertices);
+                                numVertices = triangulateAsFan(points, numSegments, vertices, numVertices);
                             }
                             else
                             {
@@ -2274,7 +2274,7 @@ class CanvasContext
                     {
                         if (canTriangulateAsFan(points, numSegments))
                         {
-                            numVertices = this.triangulateAsFan(points, numSegments, vertices, numVertices);
+                            numVertices = triangulateAsFan(points, numSegments, vertices, numVertices);
                         }
                         else
                         {
