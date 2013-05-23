@@ -3219,22 +3219,6 @@ class CanvasContext
         clipExtents[1] = 0;
         clipExtents[2] = this.width;
         clipExtents[3] = this.height;
-
-        this.resetTechniqueParameters();
-    };
-
-    resetTechniqueParameters()
-    {
-        // The screen value of texture techniques is updated here
-        var screen = this.screen;
-        var textureTechniques = this.textureTechniques;
-        for (var p in textureTechniques)
-        {
-            if (textureTechniques.hasOwnProperty(p))
-            {
-                textureTechniques[p]['screen'] = screen;
-            }
-        }
     };
 
     updateScissor()
@@ -6086,8 +6070,6 @@ class CanvasContext
         c.textureShadowTechnique = shader.getTechnique('texture_shadow');
         c.patternShadowTechnique = shader.getTechnique('pattern_shadow');
         c.gradientShadowTechnique = shader.getTechnique('gradient_shadow');
-
-        c.resetTechniqueParameters();
 
         /*
           c.renderTexture = gd.createTexture({
