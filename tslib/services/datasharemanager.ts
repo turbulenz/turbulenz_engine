@@ -19,7 +19,7 @@ interface DataShareManagerErrorCB
 
 interface DataShareManagerFindDataSharesCB
 {
-    user: string;
+    user?: string;
     callback: {
         (dataShares: DataShare[]): void;
     };
