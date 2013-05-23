@@ -503,7 +503,7 @@ when they happen.
 
 The ideal number of events in a batch can vary depending on the size of the event data (e.g. large event arrays
 vs single values). Batches of 10 to 20 metrics will normally be reasonable but consider looking at
-:ref:`Working with HTTP requests<userdatamanager_working_with_http>` for some comments on sizes of HTTP requests.
+:ref:`Working with HTTP requests<working_with_http>` for some comments on sizes of HTTP requests.
 
 The events contribute to the metrics for the game with the event values being saved as aggregates for each unique key.
 
