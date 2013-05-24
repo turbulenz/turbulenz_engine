@@ -144,9 +144,9 @@ TurbulenzEngine.onload = function onloadFn()
         TurbulenzServices.createUserProfile(requestHandler, profileRecievedFn);
     }
 
-    var invalidateButtons = false;
-
     gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreated);
+
+    var invalidateButtons = false;
     var maxPlayers = 2;
 
     function findDataShares()
@@ -465,7 +465,6 @@ TurbulenzEngine.onload = function onloadFn()
     var fontBoldColor = mathDevice.v4Build(0.3, 0.3, 0.3, 1.0);
 
     var fontTechnique, fontTechniqueParameters;
-    var scale = 0.6;
 
     SimpleButtonManager.init(inputDevice);
 
