@@ -898,6 +898,7 @@ class CanvasContext
     font                     : string;
     textAlign                : string;
     textBaseline             : string;
+    imageColor               : string;
 
     // private variables
     gd                       : GraphicsDevice;
@@ -2953,15 +2954,16 @@ class CanvasContext
                     throw "Unknown composite operation: " + this.globalCompositeOperation;
                 }
 
+                var color = this.parseColor(this.imageColor);
+
                 var globalAlpha = this.globalAlpha;
-                var color;
                 if (globalAlpha < 1.0)
                 {
-                    color = this.md.v4Build(1.0, 1.0, 1.0, globalAlpha, this.tempColor);
-                }
-                else
-                {
-                    color = this.v4One;
+                    color = this.md.v4Build(color[0],
+                                            color[1],
+                                            color[2],
+                                            (color[3] * globalAlpha),
+                                            this.tempColor);
                 }
 
                 this.setTechniqueWithColor(technique, this.screen, color);
@@ -3252,6 +3254,7 @@ class CanvasContext
             font : null,
             textAlign : null,
             textBaseline : null,
+            imageColor: null,
             matrix : new this.arrayConstructor(6),
             scale : null,
             translate : null,
@@ -3280,6 +3283,7 @@ class CanvasContext
         dest.font = src.font;
         dest.textAlign = src.textAlign;
         dest.textBaseline = src.textBaseline;
+        dest.imageColor = src.imageColor;
 
         // Have to copy array elements because if we keep a reference we modify the default ones
         var destMatrix = dest.matrix;
@@ -6094,6 +6098,7 @@ class CanvasContext
         c.font = '10px sans-serif';
         c.textAlign = 'start';
         c.textBaseline = 'alphabetic';
+        c.imageColor = '#fff';
 
         // private variables
         c.gd = gd;
