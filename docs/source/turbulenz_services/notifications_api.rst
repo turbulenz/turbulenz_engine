@@ -71,6 +71,11 @@ Sending an instant notification to a partner::
         recipient: 'peter',                 // the recipient
     });
 
+**Tic-tac-toe**
+
+The SDK contains a tic tac toe app which shows how to use instant notifications combined with data share objects from
+the :ref:`DataShareManager <datasharemanager>`.
+
 Notes
 =====
 

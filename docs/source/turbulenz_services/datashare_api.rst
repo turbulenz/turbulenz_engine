@@ -198,8 +198,8 @@ read using :ref:`dataShare.get <datashare_get>`.
 
 **Tic-tac-toe**
 
-The SDK contains a data share sample showing how to use data share objects combined with instant notifications from the
-:ref:`notifications <notificationsmanager>`.
+The SDK contains a tic tac toe app which shows how to use data share objects combined with instant notifications from
+the :ref:`notifications <notificationsmanager>`.
 
 Constructor
 ===========
