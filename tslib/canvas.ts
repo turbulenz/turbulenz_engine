@@ -1770,6 +1770,31 @@ class CanvasContext
             }
         };
 
+        // polygons are encoded with a negative number indicating the number of points
+        var polygonStart = -1;
+        var addLine = function addLineFn(commands, x, y)
+        {
+            var numCommands = commands.length;
+            if (0 < polygonStart)
+            {
+                var lastCommand = commands[polygonStart];
+                if (lastCommand < 0)
+                {
+                    commands[polygonStart] = (lastCommand - 1);
+                }
+                else //if (lastCommand === 76)
+                {
+                    commands[polygonStart] = -2;
+                }
+                commands.push(x, y);
+            }
+            else
+            {
+                polygonStart = numCommands;
+                commands.push(76, x, y);
+            }
+        };
+
         var getRatio = function getRatioFn(u, v)
         {
             var u0 = u[0];
@@ -1784,6 +1809,8 @@ class CanvasContext
             return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
         };
 
+        var sqrt = Math.sqrt;
+        var abs = Math.abs;
         var pi = Math.PI;
 
         var lx = 0;
@@ -1848,6 +1875,7 @@ class CanvasContext
                 fx = x;
                 fy = y;
                 commands.push(77, x, y);
+                polygonStart = -1;
                 break;
 
             case 76: //L
@@ -1859,7 +1887,7 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                commands.push(76, x, y);
+                addLine(commands, x, y);
                 break;
 
             case 72: //H
@@ -1870,7 +1898,7 @@ class CanvasContext
                     x += lx;
                 }
                 y = ly;
-                commands.push(76, x, y);
+                addLine(commands, x, y);
                 break;
 
             case 86: //V
@@ -1881,7 +1909,7 @@ class CanvasContext
                 {
                     y += ly;
                 }
-                commands.push(76, x, y);
+                addLine(commands, x, y);
                 break;
 
             case 67: //C
@@ -1902,6 +1930,7 @@ class CanvasContext
                     y += ly;
                 }
                 commands.push(67, x1, y1, x2, y2, x, y);
+                polygonStart = -1;
                 break;
 
             case 83: //S
@@ -1931,6 +1960,7 @@ class CanvasContext
                     y += ly;
                 }
                 commands.push(67, x1, y1, x2, y2, x, y);
+                polygonStart = -1;
                 break;
 
             case 81: //Q
@@ -1947,6 +1977,7 @@ class CanvasContext
                     y += ly;
                 }
                 commands.push(81, x1, y1, x, y);
+                polygonStart = -1;
                 break;
 
             case 84: //T
@@ -1972,6 +2003,7 @@ class CanvasContext
                     y += ly;
                 }
                 commands.push(81, x1, y1, x, y);
+                polygonStart = -1;
                 break;
 
             case 65: //A
@@ -1992,7 +2024,6 @@ class CanvasContext
                     y += ly;
                 }
 
-                var sqrt = Math.sqrt;
                 var ca = Math.cos(angle);
                 var sa = Math.sin(angle);
 
@@ -2088,13 +2119,36 @@ class CanvasContext
                 }
 
                 commands.push(65, angle, sx, sy, cx, cy, radius, a1, (a1 + ad), (true - sweepFlag));
+                polygonStart = -1;
                 break;
 
             case 90: //Z
             case 122: //z
+                if (3 <= polygonStart &&
+                    commands[polygonStart - 3] === 77)
+                {
+                    var startX = commands[polygonStart - 2];
+                    var startY = commands[polygonStart - 1];
+                    if (abs(startX - lx) < 1.0 &&
+                        abs(startY - ly) < 1.0)
+                    {
+                        // Remove last point because it is redundant
+                        // Counter is a negative value
+                        commands[polygonStart] += 1;
+                        if (commands[polygonStart] === 0)
+                        {
+                            commands.length = polygonStart;
+                        }
+                        else
+                        {
+                            commands.length -= 2;
+                        }
+                    }
+                }
                 x = fx;
                 y = fy;
                 commands.push(90);
+                polygonStart = -1;
                 break;
 
             default:
@@ -2106,6 +2160,55 @@ class CanvasContext
         }
 
         return commands;
+    };
+
+    addPoints(points: number[], offset: number, numPoints: number) : number
+    {
+        var currentSubPath = this.currentSubPath;
+        var j = currentSubPath.length;
+        var endPoints = (j + numPoints);
+        var i = offset;
+
+        currentSubPath.length = endPoints;
+
+        if (this.transformPoint === this.transformPointIdentity)
+        {
+            do
+            {
+                currentSubPath[j] = [points[i],
+                                     points[i + 1]];
+                i += 2;
+                j += 1;
+            }
+            while (j < endPoints);
+        }
+        else if (this.transformPoint === this.transformPointTranslate)
+        {
+            var m = this.matrix;
+            var dx = m[2];
+            var dy = m[5];
+            do
+            {
+                currentSubPath[j] = [points[i] + dx,
+                                     points[i + 1] + dy];
+                i += 2;
+                j += 1;
+            }
+            while (j < endPoints);
+        }
+        else
+        {
+            do
+            {
+                currentSubPath[j] = this.transformPoint(points[i],
+                                                        points[i + 1]);
+                i += 2;
+                j += 1;
+            }
+            while (j < endPoints);
+        }
+
+        return i;
     };
 
     path(path: string)
@@ -2135,6 +2238,12 @@ class CanvasContext
         {
             currentCommand = commands[i];
             i += 1;
+
+            if (currentCommand < 0)
+            {
+                i = this.addPoints(commands, i, -currentCommand);
+                continue;
+            }
 
             switch (currentCommand)
             {
