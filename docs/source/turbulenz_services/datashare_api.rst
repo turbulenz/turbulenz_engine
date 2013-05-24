@@ -63,6 +63,10 @@ Only the owner of a key (the first user to write to the key) can:
 
 For more information see the :ref:`data share access example <datashare_access_example>`.
 
+**Testing**
+
+To test with multiple users see this :ref:`guide on multiple logins <multiple_logins>`.
+
 **Manually viewing and removing the data store on the local server**
 
 You can find the data share key-value stores in the ``devserver/localdata/datashare/{game-slug}/{datashare-id}.yaml``

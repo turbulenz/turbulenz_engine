@@ -453,6 +453,24 @@ For a configured project this is as simple as:
 
 There are a few checkboxes you need to check to get it ready to do this. The :ref:`deploying to the Hub <hub_deploy_to_hub>` guide should help.
 
+.. _multiple_logins:
+
+Multiple Logins
+---------------
+
+The login button on the top right of the local server page allows you to quickly switch between users.
+The current user is stored as a cookie.
+This cookie will be shared across the tabs on your browser.
+To login as multiple users simultaneously either:
+
+- Use different browsers for each user.
+- Use private browsing or "Incognito mode" windows for each user (requires logging in again each time).
+- Set up multiple users in Chrome in Settings -> Users.
+- Create multiple profiles in Firefox using the command ``firefox -P`` in a terminal window.
+
+This is most useful when debugging and testing the :ref:`notifications <notificationsmanager>` and
+:ref:`data share <datasharemanager>` API's.
+
 .. highlight:: javascript
 
 .. _local_common_usage:

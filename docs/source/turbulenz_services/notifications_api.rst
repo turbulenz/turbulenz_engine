@@ -50,6 +50,9 @@ The NotificationsManager allows sending short messages to users to keep them inf
 - Outstanding notifications are wiped clean when the recipient logs back into the game.
 - Delivery of a notification can be cancelled by the sender via its id or by key by the recipient.
 
+**Testing**
+
+To test with multiple users see this :ref:`guide on multiple logins <multiple_logins>`.
 
 Examples
 ========
