@@ -145,6 +145,12 @@ body {
     margin: 16px 0 0 0;
 }
 
+.control-dropdownbox select {
+    float: right;
+    margin: 14px 0 0 5px;
+    padding: 0;
+}
+
 .control-button-pair input {
     font-size: 11px;
     padding: 0;

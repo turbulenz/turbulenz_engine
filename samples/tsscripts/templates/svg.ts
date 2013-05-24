@@ -31,7 +31,17 @@ TurbulenzEngine.onload = function onloadFn()
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
 
     var canvas, ctx, svg;
-    var scaleCanvas = false;
+    var zoom = 1;
+
+    var zoomElement = document.getElementById('zoom');
+    if (zoomElement)
+    {
+        function zoomChanged()
+        {
+            zoom = parseFloat(this.options[this.selectedIndex].value);
+        }
+        zoomElement.onchange = zoomChanged;
+    }
 
     function drawSVGpath(ctx)
     {
@@ -984,7 +994,6 @@ TurbulenzEngine.onload = function onloadFn()
                             {
                                 width = parseUnitValue(svg.width);
                                 height = parseUnitValue(svg.height);
-                                scaleCanvas = false;
                             }
                             else if (loadedSVG.viewBox &&
                                      loadedSVG.viewBox.baseVal &&
@@ -993,13 +1002,11 @@ TurbulenzEngine.onload = function onloadFn()
                             {
                                 width = loadedSVG.viewBox.baseVal.width;
                                 height = loadedSVG.viewBox.baseVal.height;
-                                scaleCanvas = false;
                             }
                             else
                             {
                                 width = graphicsDevice.width;
                                 height = graphicsDevice.height;
-                                scaleCanvas = true;
                             }
 
                             canvas.width = width;
@@ -1056,6 +1063,8 @@ TurbulenzEngine.onload = function onloadFn()
     var previousFrameTime = TurbulenzEngine.time;
     var fpsElement = document.getElementById("fpscounter");
     var currentFPS = "0", lastFPS = "0";
+    var viewPort = [0, 0, 0, 0];
+    var clearColor = [0.57, 0.57, 0.57, 1];
 
     //
     // Update: Should update the input, physics, sound and other js libraries used.
@@ -1069,23 +1078,21 @@ TurbulenzEngine.onload = function onloadFn()
         // Render the color
         if (graphicsDevice.beginFrame())
         {
-            var viewPort;
+            var deviceWidth = graphicsDevice.width;
+            var deviceHeight = graphicsDevice.height;
 
-            if (!scaleCanvas)
+            var canvasWidth = (zoom * canvas.width);
+            var canvasHeight = (zoom * canvas.height);
+
+            viewPort[0] = 0;
+            viewPort[1] = (deviceHeight - canvasHeight);
+            viewPort[2] = canvasWidth;
+            viewPort[3] = canvasHeight;
+
+            if (canvasWidth < deviceWidth ||
+                canvasHeight < deviceHeight)
             {
-                var canvasWidth = canvas.width;
-                var canvasHeight = canvas.height;
-
-                var deviceWidth = graphicsDevice.width;
-                var deviceHeight = graphicsDevice.height;
-
-                if (canvasWidth !== deviceWidth ||
-                    canvasHeight !== deviceHeight)
-                {
-                    graphicsDevice.clear([0.57, 0.57, 0.57, 1]);
-
-                    viewPort = [0, deviceHeight - canvasHeight, canvasWidth, canvasHeight];
-                }
+                graphicsDevice.clear(clearColor);
             }
 
             ctx.beginFrame(graphicsDevice, viewPort);
