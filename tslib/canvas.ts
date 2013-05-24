@@ -3142,8 +3142,9 @@ class CanvasContext
 
         this.target = target;
 
-        var viewport = this.viewport;
+        gd.setViewport(0, 0, target.width, target.height);
 
+        var viewport = this.viewport;
         if (viewportRect)
         {
             viewport[0] =  viewportRect[0];
@@ -3159,57 +3160,47 @@ class CanvasContext
             viewport[3] =  target.height;
         }
 
-        gd.setViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-        /* This code is required if Object.defineProperty does not work */
         var canvas = this.canvas;
         var width = canvas.width;
         var height = canvas.height;
+
+        this.updateScreenScale();
+
+        this.updateScissor();
+
+        this.pixelRatio = Math.max((viewport[2] / width), (viewport[3] / height));
+        this.forceFatLines = (2 < this.pixelRatio);
+
+        this.activeVertexBuffer = null;
+        this.activeTechnique = null;
+        this.flatOffset = 0;
+
+        /* This code is required if Object.defineProperty does not work */
         if (width !== this.width ||
             height !== this.height)
         {
             this.width = width;
             this.height = height;
 
-            this.screen[0] = (2 / width);
-            this.screen[1] = (-2 / height);
-
             this.resetState();
 
             this.clearRect(0, 0, width, height);
         }
-
-        this.pixelRatio = Math.max((viewport[2] / width), (viewport[3] / height));
-        this.forceFatLines = (2 <= this.pixelRatio);
-
-        this.updateScissor();
-
-        this.activeVertexBuffer = null;
-        this.activeTechnique = null;
-        this.flatOffset = 0;
 
         return true;
     };
 
     endFrame()
     {
-        if (!this.target)
+        var target = this.target;
+        if (!target)
         {
             throw '"beginFrame" was never called!';
         }
 
         this.target = null;
 
-        var viewport = this.viewport;
-        var v0 = viewport[0];
-        var v1 = viewport[1];
-        var v2 = viewport[2];
-        var v3 = viewport[3];
-
-        var gd = this.gd;
-
-        gd.setViewport(v0, v1, v2, v3);
-        gd.setScissor(v0, v1, v2, v3);
+        this.gd.setScissor(0, 0, target.width, target.height);
     };
 
     //
@@ -3218,12 +3209,13 @@ class CanvasContext
     setWidth(width)
     {
         this.width = width;
-        this.screen[0] = (2 / width);
 
         this.resetState();
 
         if (this.target)
         {
+            this.updateScreenScale();
+
             this.clearRect(0, 0, width, this.height);
         }
     };
@@ -3231,12 +3223,13 @@ class CanvasContext
     setHeight(height)
     {
         this.height = height;
-        this.screen[1] = (-2 / height);
 
         this.resetState();
 
         if (this.target)
         {
+            this.updateScreenScale();
+
             this.clearRect(0, 0, this.width, height);
         }
     };
@@ -3328,6 +3321,25 @@ class CanvasContext
         clipExtents[1] = 0;
         clipExtents[2] = this.width;
         clipExtents[3] = this.height;
+
+        if (this.target)
+        {
+            this.updateScissor();
+        }
+    };
+
+    updateScreenScale()
+    {
+        var screen = this.screen;
+        var target = this.target;
+        var viewport = this.viewport;
+        var targetWidth = target.width;
+        var targetHeight = target.height;
+
+        screen[0] = ( 2 * viewport[2]) / (this.width * targetWidth);
+        screen[1] = (-2 * viewport[3]) / (this.height * targetHeight);
+        screen[2] = -1 + (2 * viewport[0] / targetWidth);
+        screen[3] =  1 - (2 * (viewport[1] + viewport[3] - targetHeight) / targetHeight);
     };
 
     updateScissor()
@@ -3349,10 +3361,31 @@ class CanvasContext
         var maxClipX = (clipExtents[2] * deviceScaleX);
         var maxClipY = (clipExtents[3] * deviceScaleY);
 
-        this.gd.setScissor((viewportX + minClipX),
-                           (viewportY + (viewportHeight - maxClipY)),
-                           (maxClipX - minClipX),
-                           (maxClipY - minClipY));
+        var x = (viewportX + minClipX);
+        var y = (viewportY + (viewportHeight - maxClipY));
+        var w = (maxClipX - minClipX);
+        var h = (maxClipY - minClipY);
+
+        if (x < 0)
+        {
+            x = 0;
+        }
+        if (y < 0)
+        {
+            y = 0;
+        }
+
+        var target = this.target;
+        if ((x + w) > target.width)
+        {
+            w = (target.width - x);
+        }
+        if ((y + h) > target.height)
+        {
+            h = (target.height - y);
+        }
+
+        this.gd.setScissor(x, y, w, h);
     };
 
     setFontManager(fm)
