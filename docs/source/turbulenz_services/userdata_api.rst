@@ -137,7 +137,11 @@ For example with key value pairs::
     }
 
 You can avoid getting all of Bob's profile information by checking the ``currentProfile`` key first.
-The ``currentProfile`` value can then be prepended to the rest of the keys for the remaining requests.
+The ``currentProfile`` value can then be perpended to the rest of the keys for the remaining requests.
+
+**Testing**
+
+The user data for your game can be :ref:`viewed on the local server <viewing_userdata>`
 
 **Manually editing/removing user data**
 

@@ -412,6 +412,8 @@ Turbulenz provides a tool called the **Disassembler** for visualizing these asse
         Each of these options can be performed per object by clicking on the blue **more** or **less** text.
     8) Press the **'reset'** button to return the tree to its initial state.
 
+.. _viewing_userdata:
+
 Viewing data stored by the User Data API
 ----------------------------------------
 The :ref:`User Data API <userdatamanager>` provides the ability to save settings, game saves and other user specific data.
