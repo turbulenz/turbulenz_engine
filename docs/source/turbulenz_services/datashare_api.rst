@@ -330,6 +330,12 @@ Create a :ref:`DataShare <datashare>` object.
     A JavaScript string.
     Find data shares with the username ``user`` joined.
 
+``friendsOnly`` (Optional)
+    A JavaScript boolean.
+    Find data shares with the current user's friends joined.
+    This flag is ignored if the ``user`` property is also set.
+    This flag is currently ignored (so returns all users) on the Local and Hub as they do not yet support friends.
+
 ``callback``
     A JavaScript function.
     Returns a list of the first 64 joinable :ref:`DataShare <datashare>` objects matching the search sorted by most

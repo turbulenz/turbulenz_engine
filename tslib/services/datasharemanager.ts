@@ -20,6 +20,7 @@ interface DataShareManagerErrorCB
 interface DataShareManagerFindDataSharesCB
 {
     user?: string;
+    friendsOnly?: bool;
     callback: {
         (dataShares: DataShare[]): void;
     };
@@ -668,6 +669,11 @@ class DataShareManager
         if (params.user)
         {
             dataSpec.username = params.user;
+        }
+
+        if (params.friendsOnly)
+        {
+            dataSpec.friendsOnly = 1;
         }
 
         this.service.request({
