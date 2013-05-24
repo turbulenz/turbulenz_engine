@@ -13,7 +13,7 @@ The DataShareManager Object
 
 The ``DataShareManager`` object is an API for creating and finding data share objects.
 Data shares are public key-value stores which allow games to share data or
-communicate asynchronously (while the receiving user is offline) with other user's games.
+communicate asynchronously (while the receiving user is off-line) with other user's games.
 
 For synchronous multiplayer games (with users all playing at the same time) please use the
 :ref:`MultiPlayerSessionManager <multiplayersessionmanager>`.
@@ -61,7 +61,7 @@ Only the owner of a key (the first user to write to the key) can:
 - Delete a key (even for public read and write keys).
   This avoids malicious users deleting a key and then recreating it with themselves as the owner.
 
-For more information see the :ref:`datashare access example <datashare_access_example>`.
+For more information see the :ref:`data share access example <datashare_access_example>`.
 
 **Manually viewing and removing the data store on the local server**
 
@@ -125,10 +125,10 @@ After creating the data share the game can write to its key-value store using th
 
 Data shares can be found using the :ref:`dataShareManager.findDataShares <datasharemanager_finddatashares>` function.
 This function returns an array of data share objects which match the find parameters.
-To use a the data share :ref:`getKeys <datashare_getkeys>`, :ref:`get <datashare_get>`, :ref:`set <datashare_set>` or
+To use the data share :ref:`getKeys <datashare_getkeys>`, :ref:`get <datashare_get>`, :ref:`set <datashare_set>` or
 :ref:`compareAndSet <datashare_compareandset>` functions you first need to :ref:`join <datashare_join>` the data share.
 
-::
+The following code will find the first data share object with the user "bob" joined::
 
     var dataShare;
 
@@ -141,7 +141,7 @@ To use a the data share :ref:`getKeys <datashare_getkeys>`, :ref:`get <datashare
     };
 
     dataShareManager.findDataShares({
-        user: username,
+        user: 'bob',
         callback: function callback(dataShares)
         {
             if (dataShares.length > 0)
@@ -151,7 +151,7 @@ To use a the data share :ref:`getKeys <datashare_getkeys>`, :ref:`get <datashare
             }
             else
             {
-                Utilities.log('User not in a multiplayer game');
+                Utilities.log('Bob is not in a multiplayer game');
             }
         }
     });
@@ -163,9 +163,54 @@ To use a the data share :ref:`getKeys <datashare_getkeys>`, :ref:`get <datashare
     };
     dataShare.leave(leave);
 
-Note that the user's game can remain joined to a data share even while it is not being played.
+Note that the user's game can remain joined to a data share even while the user is off-line.
 Once the user leaves a multiplayer game or it is complete, the game must call :ref:`leave <datashare_leave>` so that the
 data share can be deleted.
+
+To find any joinable data share object remove the ``user`` filter::
+
+    dataShareManager.findDataShares({
+        callback: function callback(dataShares)
+        {
+            if (dataShares.length > 0)
+            {
+                dataShare = dataShare[0];
+                dataShare.join(joined);
+            }
+            else
+            {
+                Utilities.log('No available multiplayer games');
+            }
+        }
+    });
+
+.. _datashare_isjoined_example:
+
+To filter out the data shares with the current user already joined use the
+:ref:`dataShare.isJoined <datashare_isjoined>` function::
+
+    dataShareManager.findDataShares({
+        callback: function callback(dataShares)
+        {
+            var dataSharesLength = dataShares.length;
+            var dataSharesIndex;
+
+            for (dataSharesIndex = 0; dataSharesIndex < dataSharesLength; dataSharesIndex += 1)
+            {
+                dataShare = dataShare[dataSharesIndex];
+                if (!dataShare.isJoined(currentUsername))
+                {
+                    dataShare.join(joined);
+                    return;
+                }
+            }
+            Utilities.log('No available multiplayer games');
+        }
+    });
+
+.. NOTE::
+    The username of the current user can be found with the
+    :ref:`TurbulenzServices.createUserProfile <turbulenzservices_createuserprofile>` function.
 
 .. _datashare_access_example:
 
@@ -198,8 +243,8 @@ read using :ref:`dataShare.get <datashare_get>`.
 
 **Tic-tac-toe**
 
-The SDK contains a tic tac toe app which shows how to use data share objects combined with instant notifications from
-the :ref:`notifications <notificationsmanager>`.
+The SDK contains a tic tac toe app which shows how to use data share objects combined with
+:ref:`instant notifications <notificationsmanager>` with some simple game and lobby logic.
 
 Constructor
 ===========
@@ -283,12 +328,14 @@ Create a :ref:`DataShare <datashare>` object.
 
 ``user`` (Optional)
     A JavaScript string.
-    Find all data shares with the username ``user`` joined.
+    Find data shares with the username ``user`` joined.
 
 ``callback``
     A JavaScript function.
-    Returns a list of the first 64 :ref:`DataShare <datashare>` objects matching the search sorted by most recently
-    created.
+    Returns a list of the first 64 joinable :ref:`DataShare <datashare>` objects matching the search sorted by most
+    recently created.
+    This list can contain data shares that the current user has already joined.
+    Joined data shares can be filtered out with the :ref:`dataShare.isJoined <datashare_isjoined>` function.
 
 ``errorCallback`` :ref:`(Optional) <datasharemanager_errorcallback>`
 
@@ -638,7 +685,7 @@ since the key was last read with :ref:`dataShare.get <datashare_get>`.
 
 **Summary**
 
-Check if a user is joined to the datashare.
+Check if a user is joined to the data share.
 
 **Syntax** ::
 
@@ -649,9 +696,34 @@ Check if a user is joined to the datashare.
     The username to check.
 
 Returns a JavaScript boolean.
+Useful to filter out data shares that the current user is already joined to.
+See the :ref:`finding data shares <datashare_isjoined_example>` example.
 
 Properties
 ==========
+
+.. index::
+    pair: DataShare; id
+
+.. _datashare_id:
+
+`id`
+----
+
+**Summary**
+
+A globally unique id for this data share (this is the same for all users).
+
+**Syntax** ::
+
+    var id = dataShare.id;
+
+A JavaScript string.
+Useful when sending notifications (see :ref:`NotificationsManager <notificationsmanager>`) so the receiving user knows
+which data share the notification is about.
+
+.. NOTE::
+    This property is read only.
 
 .. index::
     pair: DataShare; publicReadOnly
