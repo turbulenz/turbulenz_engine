@@ -628,6 +628,28 @@ since the key was last read with :ref:`dataShare.get <datashare_get>`.
     :ref:`public read and write <datashare_publicreadandwrite>` access values.
     For more information see the :ref:`datashare access example <datashare_access_example>`.
 
+.. index::
+    pair: DataShare; isJoined
+
+.. _datashare_isjoined:
+
+`isJoined`
+----------
+
+**Summary**
+
+Check if a user is joined to the datashare.
+
+**Syntax** ::
+
+    dataShare.isJoined(username);
+
+``username``
+    A JavaScript string.
+    The username to check.
+
+Returns a JavaScript boolean.
+
 Properties
 ==========
 
