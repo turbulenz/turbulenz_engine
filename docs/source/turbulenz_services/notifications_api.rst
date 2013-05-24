@@ -41,14 +41,14 @@ Some examples of notifications are
 Usage guidelines
 ================
 
-The NotificationsManager allows sending short messages to users to keep them informed about game events that occur when they are not currently playing your game. (If the user is currently playing your game then notifications are surpressed, but the game itself can register a callback function with the NotificationsManager to define how it wants to react to a notification)
+The NotificationsManager allows sending short messages to users to keep them informed about game events that occur when they are not currently playing your game. (If the user is currently playing your game then notifications are suppressed, but the game itself can register a callback function with the NotificationsManager to define how it wants to react to a notification)
 
 - Notifications have to be of a certain type (called "key") that is specified in a file called gamenotifications.yaml
 - Any text sent will need to be localized by your game so users can read the notification in their own language.
-- Delayed notifications can only be sent to the current player. Up to 8 delayed notifications can be stacked up per sender/recpient and game. Only the first and last will be sent via email, but the rest will still appear in the notification panel.
+- Delayed notifications can only be sent to the current player. Up to 8 delayed notifications can be stacked up per sender / recipient and game. Only the first and last will be sent via email, but the rest will still appear in the notification panel.
 - Instant notifications can be sent to any follower of a game. Only 1 instant notification can be stacked up per sender, recipient and game.
 - Outstanding notifications are wiped clean when the recipient logs back into the game.
-- Delivery of a notification can be cancelled by the sender via its id or by key by the recipient.
+- Delivery of a notification can be canceled by the sender via its id or by key by the recipient.
 
 **Testing**
 
@@ -76,7 +76,7 @@ Sending an instant notification to a partner::
 
 **Tic-tac-toe**
 
-The SDK contains a tic tac toe app which shows how to use instant notifications combined with data share objects from
+The SDK contains a tic-tac-toe app which shows how to use instant notifications combined with data share objects from
 the :ref:`DataShareManager <datasharemanager>`.
 
 Notes
