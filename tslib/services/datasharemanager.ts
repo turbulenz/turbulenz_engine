@@ -159,10 +159,11 @@ class DataShare
         var users = this.users;
         var usersLength = users.length;
         var usersIndex;
+        var lowerUsername = username.toLowerCase();
 
         for (usersIndex = 0; usersIndex < usersLength; usersIndex += 1)
         {
-            if (username === users[usersIndex])
+            if (lowerUsername === users[usersIndex].toLowerCase())
             {
                 return true;
             }
