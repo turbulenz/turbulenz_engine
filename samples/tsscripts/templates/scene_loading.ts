@@ -3,8 +3,9 @@
 /*
  * @title: Scene loading
  * @description:
- * This sample shows the minimum steps required to set up the Turbulenz engine and how to load the required assets to display a simple scene.
- * The sample is using the Turbulenz forward renderer and it also demostrates how to add a point light to the scene.
+ * This sample shows the minimum steps required to set up the Turbulenz engine and how to load the required assets to
+ * display a simple scene.
+ * The sample is using the Turbulenz forward renderer and it also demonstrates how to add a point light to the scene.
 */
 
 /*{{ javascript("jslib/camera.js") }}*/

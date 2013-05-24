@@ -5,7 +5,7 @@
  * @description:
  * This sample shows how to create and use the Turbulenz 2D physics device.
  * The sample creates several 2D static objects with surface velocity,
- * two animated kinematic objects to push and lift objects arround,
+ * two animated kinematic objects to push and lift objects around,
  * and a hundred rigid bodies with different material properties.
  * Left click to pick up and move the rigid bodies and right click to add new ones.
 */

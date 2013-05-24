@@ -4,7 +4,7 @@
  * @title: Deferred rendering
  * @description:
  * This sample shows a scene with dynamic shadows cast by point or spot lights rendered using the Turbulenz deferred renderer.
- * You can enable multiple collored lights to see the impact on performance.
+ * You can enable multiple colored lights to see the impact on performance.
  * You can also see each of the intermediate render buffers created during the render.
 */
 

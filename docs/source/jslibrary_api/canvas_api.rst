@@ -112,6 +112,14 @@ Turbulenz 2D Context Canvas requires calls to :ref:`CanvasContext.beginFrame <Ca
 :ref:`CanvasContext.endFrame <CanvasContext_endFrame>` in order to support mixing of other 2D or 3D rendering to the
 same rendering targets.
 
+.. NOTE::
+
+    Only the Turbulenz Canvas API should be used for rendering between
+    :ref:`CanvasContext.beginFrame <CanvasContext_beginFrame>` and
+    :ref:`CanvasContext.endFrame <CanvasContext_endFrame>`,
+    using any other rendering API between those two calls will result in visual artifacts.
+
+
 **Changing width or height**
 
 Changing the width or height attributes of a browser canvas element resizes the HTML element on the page. In contrast,
@@ -258,6 +266,13 @@ Methods
 **Summary**
 
 Signals the beginning of a new render frame.
+
+.. NOTE::
+
+    Only the Turbulenz Canvas API should be used for rendering between
+    :ref:`CanvasContext.beginFrame <CanvasContext_beginFrame>` and
+    :ref:`CanvasContext.endFrame <CanvasContext_endFrame>`,
+    using any other rendering API between those two calls will result in visual artifacts.
 
 **Syntax** ::
 

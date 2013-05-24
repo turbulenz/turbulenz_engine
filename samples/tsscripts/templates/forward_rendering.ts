@@ -4,7 +4,7 @@
  * @title: Forward rendering
  * @description:
  * This sample shows a scene with dynamic shadows cast by point or spot lights rendered using the Turbulenz forward renderer.
- * You can enable multiple coloured lights to see the impact on performance.
+ * You can enable multiple colored lights to see the impact on performance.
  * Click on the rendering window to move and rotate the camera around.
 */
 

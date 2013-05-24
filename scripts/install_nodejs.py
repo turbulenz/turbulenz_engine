@@ -35,26 +35,29 @@ def download(url, filename, verbose=True):
 
 #
 #
-def nodejs_get_version(allow_system_node):
+def nodejs_get_version(allow_system_node, prefix):
     try:
         if allow_system_node:
             return str(check_output('node --version', shell=True)).rstrip()
         elif PLATFORM == 'win32':
-            return str(check_output('env\\Scripts\\node --version', shell=True)).rstrip()
+            node_path = os.path.join(prefix, 'Scripts', 'node')
+            return str(check_output('%s --version' % node_path, shell=True)).rstrip()
         else:
-            return str(check_output('test -x env/bin/node && env/bin/node --version', shell=True)).rstrip()
+            node_path = os.path.join(prefix, 'bin', 'node')
+            return str(check_output('test -x %s && %s --version' % (node_path, node_path),
+                                    shell=True)).rstrip()
 
     except CalledProcessError:
         return ''
 
 #
 #
-def nodejs_install_binary_win32(version, filename):
+def nodejs_install_binary_win32(version, filename, prefix):
     if filename is None:
         url = '%s/%s/node.exe' % (NODEJS_DIST, version)
-        download(url, 'env/Scripts/node.exe')
+        download(url, '%s/Scripts/node.exe' % prefix)
     else:
-        shutil.copyfile(filename, 'env/Scripts/node.exe')
+        shutil.copyfile(filename, '%s/Scripts/node.exe' % prefix)
 
     with tempfile.NamedTemporaryFile(suffix='.tar.gz') as f:
         tmpfile = f.name
@@ -67,7 +70,7 @@ def nodejs_install_binary_win32(version, filename):
 
         depsprefix = '%s/deps/' % basename
         npmprefix = '%snpm' % depsprefix
-        moduledir = os.path.join('env', 'Scripts', 'node_modules/')
+        moduledir = os.path.join(prefix, 'Scripts', 'node_modules/')
         with GzipFile(tmpfile, mode='rb') as gzipfile:
             tardata = gzipfile.read()
         with tarfile.open(fileobj=StringIO.StringIO(tardata), mode='r') as tarobj:
@@ -80,12 +83,13 @@ def nodejs_install_binary_win32(version, filename):
                     os.makedirs(os.path.dirname(target))
                 with open(target, 'w') as output:
                     output.write(tarentry.read())
-        shutil.copyfile('env/Scripts/node_modules/npm/bin/npm.cmd', 'env/Scripts/npm.cmd')
+        shutil.copyfile('%s/Scripts/node_modules/npm/bin/npm.cmd' % prefix,
+                        '%s/Scripts/npm.cmd' % prefix)
 
 
 #
 #
-def nodejs_install_binary_unix(version, platform):
+def nodejs_install_binary_unix(version, platform, prefix):
 
     basename = 'node-%s-%s-x86' % (version, platform)
     url = '%s/%s/%s.tar.gz' % (NODEJS_DIST, version, basename)
@@ -97,8 +101,8 @@ def nodejs_install_binary_unix(version, platform):
         download(url, filename)
 
         excludes = [ 'ChangeLog', 'LICENSE', 'README*' ]
-        tar_cmd = 'tar -xzf %s --strip-components 1 -C env %s' \
-            % (filename, ' '.join(['--exclude "%s"' % e for e in excludes]))
+        tar_cmd = 'tar -xzf %s --strip-components 1 -C %s %s' \
+            % (filename, prefix, ' '.join(['--exclude "%s"' % e for e in excludes]))
 
         print 'Executing: %s' % tar_cmd
         if 0 != call(tar_cmd, shell=True):
@@ -106,9 +110,8 @@ def nodejs_install_binary_unix(version, platform):
 
 #
 #
-def nodejs_install_source_unix(version):
+def nodejs_install_source_unix(version, prefix):
 
-    destdir = os.path.abspath('./env')
     basename = 'node-%s' % version
     url = '%s/%s/%s.tar.gz' % (NODEJS_DIST, version, basename)
 
@@ -123,7 +126,7 @@ def nodejs_install_source_unix(version):
 
     srcdir = os.path.join(tmpd, basename)
     if 0 != docall('tar -xzf %s.tar.gz' % basename, tmpd) or \
-            0 != docall('./configure --prefix=%s' % destdir, srcdir) or \
+            0 != docall('./configure --prefix=%s' % prefix, srcdir) or \
             0 != docall('make V= -j 5', srcdir) or \
             0 != docall('make install', srcdir):
         print 'Error building nodejs from source.'
@@ -136,13 +139,13 @@ def nodejs_install_source_unix(version):
 
 ############################################################
 
-def typescript_install_win32(version):
-    if 0 != call('env\\Scripts\\npm.cmd install -g typescript', shell=True):
+def typescript_install_win32(version, prefix):
+    if 0 != call('%s\\Scripts\\npm.cmd install -g typescript' % prefix, shell=True):
         raise Exception('failed to install typescript via npm')
 
-def typescript_install_unix(_version):
+def typescript_install_unix(_version, prefix):
 
-    if 0 != call('env/bin/npm install -g typescript', shell=True):
+    if 0 != call('%s/bin/npm install -g typescript' % prefix, shell=True):
         raise Exception('failed to install typescript via npm')
 
 ############################################################
@@ -158,19 +161,24 @@ def main():
     parser.add_argument('-f', '--force', action='store_true')
     parser.add_argument('--allow-system-node', action='store_true',
                         help='Allow use of an existing node install')
+    parser.add_argument('--prefix')
     parser.add_argument('downloaded_file', nargs='?', default=None)
 
     args = parser.parse_args(sys.argv[1:])
 
     filename = args.downloaded_file
     version = args.version
+    if args.prefix:
+        prefix = args.prefix
+    else:
+        prefix = os.path.abspath('env')
 
     # print 'Version: %s (current=%s), PLATFORM: %s' \
     #     % (version, current_version, PLATFORM)
 
     install_nodejs = True
     if not args.force:
-        current_version = nodejs_get_version(args.allow_system_node)
+        current_version = nodejs_get_version(args.allow_system_node, prefix)
         if version == current_version:
             print 'NodeJS version %s already installed.' % version
             install_nodejs = False
@@ -180,14 +188,14 @@ def main():
 
         if 'darwin' == PLATFORM:
             # nodejs_install_source_unix(version)
-            nodejs_install_binary_unix(version, PLATFORM)
+            nodejs_install_binary_unix(version, PLATFORM, prefix)
 
         elif PLATFORM.startswith('linux'):
-            nodejs_install_source_unix(version)
+            nodejs_install_source_unix(version, prefix)
             # nodejs_install_binary_unix(version, 'linux')
 
         elif 'win32' == PLATFORM:
-            nodejs_install_binary_win32(version, filename)
+            nodejs_install_binary_win32(version, filename, prefix)
     else:
         print 'Skipping nodejs.'
 
@@ -197,9 +205,9 @@ def main():
     else:
         print 'Installing typescript-%s' % ts_version
         if 'win32' == PLATFORM:
-            typescript_install_win32(ts_version)
+            typescript_install_win32(ts_version, prefix)
         else:
-            typescript_install_unix(ts_version)
+            typescript_install_unix(ts_version, prefix)
     return 0
 
 

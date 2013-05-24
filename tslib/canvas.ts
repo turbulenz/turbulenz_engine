@@ -923,6 +923,11 @@ class CanvasContext
     currentSubPath           : any[];
     needToSimplifyPath       : bool[];
 
+    activeVertexBuffer       : VertexBuffer;
+    activeTechnique          : Technique;
+    activeScreen             : any; // v4
+    activeColor              : any; // v4
+
     shader                   : Shader;
 
     triangleStripPrimitive   : number;
@@ -940,9 +945,13 @@ class CanvasContext
     flatVertexFormats        : number[];
     flatSemantics            : Semantics;
     flatVertexBuffer         : VertexBuffer;
+    flatOffset               : number;
+
     flatTechniques           : { [name: string]: Technique; };
 
     bufferData               : any; // arrayConstructor(512);
+    subBufferDataCache       : {};
+
     tempRect                 : any; // arrayConstructor(8);
 
     tempVertices             : number[];
@@ -972,10 +981,6 @@ class CanvasContext
     clipExtents              : any; // v4?
 
     defaultStates            : any; // TODO: States
-
-    bufferDataCache             : any;
-    bufferDataCacheNumVertices  : number;
-    prevBufferData              : any;
 
     cachedTriangulation      : {};
     tempAngles               : number[];
@@ -1155,12 +1160,11 @@ class CanvasContext
 
                 var technique = this.flatTechniques['copy'];
 
-                gd.setTechnique(technique);
+                this.setTechniqueWithColor(technique, this.screen, this.v4Zero);
 
-                technique['screen'] = this.screen;
-                technique['color'] = this.v4Zero;
+                gd.draw(this.triangleStripPrimitive, 4, this.flatOffset);
 
-                gd.draw(this.triangleStripPrimitive, 4);
+                this.flatOffset += 4;
             }
         }
     };
@@ -1178,12 +1182,14 @@ class CanvasContext
 
             if (this.setShadowStyle(style))
             {
-                gd.draw(primitive, 4);
+                gd.draw(primitive, 4, this.flatOffset);
             }
 
             this.setStyle(style);
 
-            gd.draw(primitive, 4);
+            gd.draw(primitive, 4, this.flatOffset);
+
+            this.flatOffset += 4;
         }
     };
 
@@ -1237,12 +1243,14 @@ class CanvasContext
 
             if (this.setShadowStyle(style))
             {
-                gd.draw(primitive, numVertices);
+                gd.draw(primitive, numVertices, this.flatOffset);
             }
 
             this.setStyle(style);
 
-            gd.draw(primitive, numVertices);
+            gd.draw(primitive, numVertices, this.flatOffset);
+
+            this.flatOffset += numVertices;
         }
     };
 
@@ -1250,7 +1258,6 @@ class CanvasContext
     {
         this.subPaths.length = 0;
         this.currentSubPath.length = 0;
-        this.needToSimplifyPath.length = 1;
         this.needToSimplifyPath[0] = true;
     };
 
@@ -1329,28 +1336,34 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
-        var q = this.transformPoint(cpx, cpy);
-        var xq = q[0];
-        var yq = q[1];
-
         var p2 = this.transformPoint(x, y);
         var x2 = p2[0];
         var y2 = p2[1];
 
         var abs = Math.abs;
         /*jshint bitwise: false*/
-        var numSteps = ((0.5 * (abs(x2 - x1) + abs(y2 - y1))) | 0);
+        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
         /*jshint bitwise: true*/
-        var dt = (1.0 / numSteps);
-        for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
+
+        if (1 < numSteps)
         {
-            var invt = (1.0 - t);
-            var invt2 = (invt * invt);
-            var t2 = (t * t);
-            var tinvt = (2 * t * invt);
-            currentSubPath[numCurrentSubPathElements] = [((invt2 * x1) + (tinvt * xq) + (t2 * x2)),
-                                                         ((invt2 * y1) + (tinvt * yq) + (t2 * y2))];
-            numCurrentSubPathElements += 1;
+            currentSubPath.length += numSteps;
+
+            var q = this.transformPoint(cpx, cpy);
+            var xq = q[0];
+            var yq = q[1];
+
+            var dt = (1.0 / numSteps);
+            for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
+            {
+                var invt = (1.0 - t);
+                var invt2 = (invt * invt);
+                var t2 = (t * t);
+                var tinvt = (2 * t * invt);
+                currentSubPath[numCurrentSubPathElements] = [((invt2 * x1) + (tinvt * xq) + (t2 * x2)),
+                                                             ((invt2 * y1) + (tinvt * yq) + (t2 * y2))];
+                numCurrentSubPathElements += 1;
+            }
         }
 
         currentSubPath[numCurrentSubPathElements] = p2;
@@ -1375,11 +1388,13 @@ class CanvasContext
 
         var abs = Math.abs;
         /*jshint bitwise: false*/
-        var numSteps = ((0.5 * (abs(x2 - x1) + abs(y2 - y1))) | 0);
+        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
         /*jshint bitwise: true*/
 
         if (1 < numSteps)
         {
+            currentSubPath.length += numSteps;
+
             var q1 = this.transformPoint(cp1x, cp1y);
             var xq1 = q1[0];
             var yq1 = q1[1];
@@ -1755,6 +1770,30 @@ class CanvasContext
             }
         };
 
+        var getRatio = function getRatioFn(u, v)
+        {
+            var u0 = u[0];
+            var u1 = u[1];
+            var v0 = v[0];
+            var v1 = v[1];
+            return ((u0 * v0) + (u1 * v1)) / Math.sqrt(((u0 * u0) + (u1 * u1)) * ((v0 * v0) + (v1 * v1)));
+        };
+
+        var getAngle = function getAngleFn(u, v)
+        {
+            return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
+        };
+
+        var pi = Math.PI;
+
+        var lx = 0;
+        var ly = 0;
+        var fx = 0;
+        var fy = 0;
+
+        var x, y, x1, y1, x2, y2;
+        var rx, ry, angle, largeArcFlag, sweepFlag;
+
         while (i < end)
         {
             // Skip whitespace
@@ -1795,190 +1834,64 @@ class CanvasContext
                 i += 1;
             }
 
-            commands.push(currentCommand);
-
             switch (currentCommand)
             {
             case 77: //M
             case 109: //m
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 76: //L
-            case 108: //l
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 72: //H
-            case 104: //h
-                commands.push(readNumber());
-                break;
-
-            case 86: //V
-            case 118: //v
-                commands.push(readNumber());
-                break;
-
-            case 67: //C
-            case 99: //c
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 83: //S
-            case 115: //s
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 81: //Q
-            case 113: //q
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 84: //T
-            case 116: //t
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 65: //A
-            case 97: //a
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                commands.push(readFlag());
-                commands.push(readFlag());
-                commands.push(readNumber());
-                commands.push(readNumber());
-                break;
-
-            case 90: //Z
-            case 122: //z
-                break;
-
-            default:
-                throw "Unknown command: " + path.slice(i);
-            }
-        }
-
-        return commands;
-    };
-
-    path(path: string)
-    {
-        var commands = this.cachedPaths[path];
-        if (commands === undefined)
-        {
-            if (this.numCachedPaths >= 1024)
-            {
-                this.cachedPaths = {};
-                this.numCachedPaths = 0;
-            }
-
-            commands = this._parsePath(path);
-
-            this.cachedPaths[path] = commands;
-            this.numCachedPaths += 1;
-        }
-
-        var end = commands.length;
-        var currentCommand = -1, previousCommand = -1;
-        var i = 0;
-
-        var getRatio = function getRatioFn(u, v)
-        {
-            var u0 = u[0];
-            var u1 = u[1];
-            var v0 = v[0];
-            var v1 = v[1];
-            return ((u0 * v0) + (u1 * v1)) / Math.sqrt(((u0 * u0) + (u1 * u1)) * ((v0 * v0) + (v1 * v1)));
-        };
-
-        var getAngle = function getAngleFn(u, v)
-        {
-            return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
-        };
-
-        var lx = 0;
-        var ly = 0;
-
-        var x, y, x1, y1, x2, y2;
-        var rx, ry, angle, largeArcFlag, sweepFlag;
-
-        while (i < end)
-        {
-            previousCommand = currentCommand;
-            currentCommand = commands[i];
-            i += 1;
-
-            switch (currentCommand)
-            {
-            case 77: //M
-            case 109: //m
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 109) //m
                 {
                     x += lx;
                     y += ly;
                 }
-                this.moveTo(x, y);
+                fx = x;
+                fy = y;
+                commands.push(77, x, y);
                 break;
 
             case 76: //L
             case 108: //l
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 108) //l
                 {
                     x += lx;
                     y += ly;
                 }
-                this.lineTo(x, y);
+                commands.push(76, x, y);
                 break;
 
             case 72: //H
             case 104: //h
-                x = commands[i]; i += 1;
+                x = readNumber();
                 if (currentCommand === 104) //h
                 {
                     x += lx;
                 }
                 y = ly;
-                this.lineTo(x, y);
+                commands.push(76, x, y);
                 break;
 
             case 86: //V
             case 118: //v
                 x = lx;
-                y = commands[i]; i += 1;
+                y = readNumber();
                 if (currentCommand === 118) //v
                 {
                     y += ly;
                 }
-                this.lineTo(x, y);
+                commands.push(76, x, y);
                 break;
 
             case 67: //C
             case 99: //c
-                x1 = commands[i]; i += 1;
-                y1 = commands[i]; i += 1;
-                x2 = commands[i]; i += 1;
-                y2 = commands[i]; i += 1;
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x1 = readNumber();
+                y1 = readNumber();
+                x2 = readNumber();
+                y2 = readNumber();
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 99) //c
                 {
                     x1 += lx;
@@ -1988,7 +1901,7 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                this.bezierCurveTo(x1, y1, x2, y2, x, y);
+                commands.push(67, x1, y1, x2, y2, x, y);
                 break;
 
             case 83: //S
@@ -2006,10 +1919,10 @@ class CanvasContext
                     x1 = lx;
                     y1 = ly;
                 }
-                x2 = commands[i]; i += 1;
-                y2 = commands[i]; i += 1;
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x2 = readNumber();
+                y2 = readNumber();
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 115) //s
                 {
                     x2 += lx;
@@ -2017,15 +1930,15 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                this.bezierCurveTo(x1, y1, x2, y2, x, y);
+                commands.push(67, x1, y1, x2, y2, x, y);
                 break;
 
             case 81: //Q
             case 113: //q
-                x1 = commands[i]; i += 1;
-                y1 = commands[i]; i += 1;
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x1 = readNumber();
+                y1 = readNumber();
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 113) //q
                 {
                     x1 += lx;
@@ -2033,7 +1946,7 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                this.quadraticCurveTo(x1, y1, x, y);
+                commands.push(81, x1, y1, x, y);
                 break;
 
             case 84: //T
@@ -2051,29 +1964,28 @@ class CanvasContext
                     x1 = lx;
                     y1 = ly;
                 }
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 116) //t
                 {
                     x += lx;
                     y += ly;
                 }
-                this.quadraticCurveTo(x1, y1, x, y);
+                commands.push(81, x1, y1, x, y);
                 break;
 
             case 65: //A
             case 97: //a
-                var pi = Math.PI;
                 x1 = lx;
                 y1 = ly;
-                rx = commands[i]; i += 1;
-                ry = commands[i]; i += 1;
-                angle = commands[i]; i += 1;
+                rx = readNumber();
+                ry = readNumber();
+                angle = readNumber();
                 angle = (angle * (pi / 180.0));
-                largeArcFlag = commands[i]; i += 1;
-                sweepFlag = commands[i]; i += 1;
-                x = commands[i]; i += 1;
-                y = commands[i]; i += 1;
+                largeArcFlag = readFlag();
+                sweepFlag = readFlag();
+                x = readNumber();
+                y = readNumber();
                 if (currentCommand === 97) //a
                 {
                     x += lx;
@@ -2175,6 +2087,97 @@ class CanvasContext
                     sy = 1;
                 }
 
+                commands.push(65, angle, sx, sy, cx, cy, radius, a1, (a1 + ad), (true - sweepFlag));
+                break;
+
+            case 90: //Z
+            case 122: //z
+                x = fx;
+                y = fy;
+                commands.push(90);
+                break;
+
+            default:
+                throw "Unknown command: " + path.slice(i);
+            }
+
+            lx = x;
+            ly = y;
+        }
+
+        return commands;
+    };
+
+    path(path: string)
+    {
+        var commands = this.cachedPaths[path];
+        if (commands === undefined)
+        {
+            if (this.numCachedPaths >= 1024)
+            {
+                this.cachedPaths = {};
+                this.numCachedPaths = 0;
+            }
+
+            commands = this._parsePath(path);
+
+            this.cachedPaths[path] = commands;
+            this.numCachedPaths += 1;
+        }
+
+        var end = commands.length;
+        var currentCommand = -1;
+        var i = 0;
+
+        var x, y, x1, y1, x2, y2;
+
+        while (i < end)
+        {
+            currentCommand = commands[i];
+            i += 1;
+
+            switch (currentCommand)
+            {
+            case 77: //M
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
+                this.moveTo(x, y);
+                break;
+
+            case 76: //L
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
+                this.currentSubPath.push(this.transformPoint(x, y));
+                break;
+
+            case 67: //C
+                x1 = commands[i]; i += 1;
+                y1 = commands[i]; i += 1;
+                x2 = commands[i]; i += 1;
+                y2 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
+                this.bezierCurveTo(x1, y1, x2, y2, x, y);
+                break;
+
+            case 81: //Q
+                x1 = commands[i]; i += 1;
+                y1 = commands[i]; i += 1;
+                x = commands[i]; i += 1;
+                y = commands[i]; i += 1;
+                this.quadraticCurveTo(x1, y1, x, y);
+                break;
+
+            case 65: //A
+                var angle = commands[i]; i += 1;
+                var sx = commands[i]; i += 1;
+                var sy = commands[i]; i += 1;
+                var cx = commands[i]; i += 1;
+                var cy = commands[i]; i += 1;
+                var radius = commands[i]; i += 1;
+                var startAngle = commands[i]; i += 1;
+                var endAngle = commands[i]; i += 1;
+                var anticlockwise = commands[i]; i += 1;
                 if (angle !== 0 || sx !== 1 || sy !== 1)
                 {
                     this.translate(cx, cy);
@@ -2187,7 +2190,7 @@ class CanvasContext
                         this.scale(sx, sy);
                     }
 
-                    this.arc(0, 0, radius, a1, (a1 + ad), (true - sweepFlag));
+                    this.arc(0, 0, radius, startAngle, endAngle, anticlockwise);
 
                     if (sx !== 1 || sy !== 1)
                     {
@@ -2201,36 +2204,18 @@ class CanvasContext
                 }
                 else
                 {
-                    this.arc(cx, cy, radius, a1, (a1 + ad), (true - sweepFlag));
+                    this.arc(cx, cy, radius, startAngle, endAngle, anticlockwise);
                 }
                 break;
 
             case 90: //Z
-            case 122: //z
-                if (i < end)
-                {
-                    if (commands[i] !== 77) //M
-                    {
-                        var firstPoint = this.untransformPoint(this.currentSubPath[0]);
-                        x = firstPoint[0];
-                        y = firstPoint[1];
-                    }
-                    this.closePath();
-                }
-                else
-                {
-                    this.closePath();
-                    return;
-                }
+                this.closePath();
                 break;
 
             default:
                 // should never happen
-                return;
+                break;
             }
-
-            lx = x;
-            ly = y;
         }
     };
 
@@ -2245,6 +2230,7 @@ class CanvasContext
         {
             var autoClose = this.autoClose;
             var canTriangulateAsFan = this.canTriangulateAsFan;
+            var triangulateAsFan = this.triangulateAsFan;
             var points, numPoints, numSegments;
 
             var style = this.fillStyle;
@@ -2279,7 +2265,7 @@ class CanvasContext
                         {
                             if (canTriangulateAsFan(points, numSegments))
                             {
-                                numVertices = this.triangulateAsFan(points, numSegments, vertices, numVertices);
+                                numVertices = triangulateAsFan(points, numSegments, vertices, numVertices);
                             }
                             else
                             {
@@ -2306,7 +2292,7 @@ class CanvasContext
                     {
                         if (canTriangulateAsFan(points, numSegments))
                         {
-                            numVertices = this.triangulateAsFan(points, numSegments, vertices, numVertices);
+                            numVertices = triangulateAsFan(points, numSegments, vertices, numVertices);
                         }
                         else
                         {
@@ -2364,12 +2350,14 @@ class CanvasContext
 
                 if (this.setShadowStyle(style))
                 {
-                    gd.draw(primitive, numVertices);
+                    gd.draw(primitive, numVertices, this.flatOffset);
                 }
 
                 this.setStyle(style);
 
-                gd.draw(primitive, numVertices);
+                gd.draw(primitive, numVertices, this.flatOffset);
+
+                this.flatOffset += numVertices;
             }
         }
     };
@@ -2387,8 +2375,16 @@ class CanvasContext
             var style = this.strokeStyle;
             var lineWidth = this.lineWidth;
             var thinLines = (lineWidth < 2 && !this.forceFatLines);
-
             var points, numPoints, primitive, numVertices;
+
+            if (thinLines)
+            {
+                primitive = this.lineStripPrimitive;
+            }
+            else
+            {
+                primitive = this.triangleStripPrimitive;
+            }
 
             for (var i = 0; i < numSubPaths; i += 1)
             {
@@ -2403,13 +2399,11 @@ class CanvasContext
 
                 if (thinLines)
                 {
-                    primitive = this.lineStripPrimitive;
                     numVertices = numPoints;
                     this.fillFlatVertices(points, numPoints);
                 }
                 else if (numPoints > 1)
                 {
-                    primitive = this.triangleStripPrimitive;
                     numVertices = this.fillFatStrip(points, numPoints, lineWidth);
                 }
                 else
@@ -2419,12 +2413,14 @@ class CanvasContext
 
                 if (this.setShadowStyle(style))
                 {
-                    gd.draw(primitive, numVertices);
+                    gd.draw(primitive, numVertices, this.flatOffset);
                 }
 
                 this.setStyle(style);
 
-                gd.draw(primitive, numVertices);
+                gd.draw(primitive, numVertices, this.flatOffset);
+
+                this.flatOffset += numVertices;
             }
 
             points = currentSubPath;
@@ -2442,13 +2438,11 @@ class CanvasContext
 
                 if (thinLines)
                 {
-                    primitive = this.lineStripPrimitive;
                     numVertices = numPoints;
                     this.fillFlatVertices(points, numPoints);
                 }
                 else if (numPoints > 1)
                 {
-                    primitive = this.triangleStripPrimitive;
                     numVertices = this.fillFatStrip(points, numPoints, lineWidth);
                 }
                 else
@@ -2458,12 +2452,14 @@ class CanvasContext
 
                 if (this.setShadowStyle(style))
                 {
-                    gd.draw(primitive, numVertices);
+                    gd.draw(primitive, numVertices, this.flatOffset);
                 }
 
                 this.setStyle(style);
 
-                gd.draw(primitive, numVertices);
+                gd.draw(primitive, numVertices, this.flatOffset);
+
+                this.flatOffset += numVertices;
             }
         }
     };
@@ -2676,11 +2672,7 @@ class CanvasContext
             throw "Unknown composite operation: " + this.globalCompositeOperation;
         }
 
-        var gd = this.gd;
-
-        gd.setTechnique(technique);
-
-        technique['color'] = color;
+        this.setTechniqueWithColor(technique, this.screen, color);
 
         var rect = this.transformRect(x, y, maxWidth, maxWidth, this.tempRect);
         x = rect[4];
@@ -2852,19 +2844,20 @@ class CanvasContext
                     throw "Unknown composite operation: " + this.globalCompositeOperation;
                 }
 
-                gd.setTechnique(technique);
-
-                technique['texture'] = image;
-
                 var globalAlpha = this.globalAlpha;
+                var color;
                 if (globalAlpha < 1.0)
                 {
-                    technique['color'] = this.md.v4Build(1.0, 1.0, 1.0, globalAlpha, this.tempColor);
+                    color = this.md.v4Build(1.0, 1.0, 1.0, globalAlpha, this.tempColor);
                 }
                 else
                 {
-                    technique['color'] = this.v4One;
+                    color = this.v4One;
                 }
+
+                this.setTechniqueWithColor(technique, this.screen, color);
+
+                technique['texture'] = image;
 
                 gd.draw(primitive, 4);
             }
@@ -3010,6 +3003,7 @@ class CanvasContext
                 var technique = this.imageTechnique;
 
                 gd.setTechnique(technique);
+                this.activeTechnique = null;
 
                 technique['image'] = tempImage;
 
@@ -3080,6 +3074,10 @@ class CanvasContext
         this.forceFatLines = (2 <= this.pixelRatio);
 
         this.updateScissor();
+
+        this.activeVertexBuffer = null;
+        this.activeTechnique = null;
+        this.flatOffset = 0;
 
         return true;
     };
@@ -3221,22 +3219,6 @@ class CanvasContext
         clipExtents[1] = 0;
         clipExtents[2] = this.width;
         clipExtents[3] = this.height;
-
-        this.resetTechniqueParameters();
-    };
-
-    resetTechniqueParameters()
-    {
-        // The screen value of texture techniques is updated here
-        var screen = this.screen;
-        var textureTechniques = this.textureTechniques;
-        for (var p in textureTechniques)
-        {
-            if (textureTechniques.hasOwnProperty(p))
-            {
-                textureTechniques[p]['screen'] = screen;
-            }
-        }
     };
 
     updateScissor()
@@ -3330,18 +3312,78 @@ class CanvasContext
         return rect;
     };
 
-    untransformPoint(p)
+    transformPointTranslate(x: number, y: number) : any[]
     {
         var m = this.matrix;
+        return [(x + m[2]),
+                (y + m[5])];
+    };
+
+    transformRectTranslate(x: number, y: number, w: number, h: number, rect: any[]) : any[]
+    {
+        var m = this.matrix;
+        var x0 = (x + m[2]);
+        var y0 = (y + m[5]);
+        var x1 = (x0 + w);
+        var y1 = (y0 + h);
+
+        rect[0] = x0;
+        rect[1] = y1;
+        rect[2] = x1;
+        rect[3] = y1;
+        rect[4] = x0;
+        rect[5] = y0;
+        rect[6] = x1;
+        rect[7] = y0;
+
+        return rect;
+    };
+
+    transformPointIdentity(x: number, y: number) : any[]
+    {
+        return [x, y];
+    };
+
+    transformRectIdentity(x: number, y: number, w: number, h: number, rect: any[]) : any[]
+    {
+        var x1 = (x + w);
+        var y1 = (y + h);
+
+        rect[0] = x;
+        rect[1] = y1;
+        rect[2] = x1;
+        rect[3] = y1;
+        rect[4] = x;
+        rect[5] = y;
+        rect[6] = x1;
+        rect[7] = y;
+
+        return rect;
+    };
+
+    untransformPoint(p)
+    {
+        if (this.transformPoint === this.transformPointIdentity)
+        {
+            return p;
+        }
+
+        var m = this.matrix;
+        var x = p[0];
+        var y = p[1];
+
+        if (this.transformPoint === this.transformPointTranslate)
+        {
+            return [(x - m[2]),
+                    (y - m[5])];
+        }
+
         var m0 = m[0];
         var m1 = m[1];
         var m2 = m[2];
         var m3 = m[3];
         var m4 = m[4];
         var m5 = m[5];
-
-        var x = p[0];
-        var y = p[1];
 
         // invert matrix
         var r0, r1, r2, r3, r4, r5;
@@ -3537,8 +3579,6 @@ class CanvasContext
                                 (screen[3] + (shadowOffsetY * screenScaleY)),
                                 this.tempScreen);
 
-        var gd = this.gd;
-
         var technique;
 
         if (typeof style !== 'string' &&
@@ -3548,13 +3588,13 @@ class CanvasContext
             {
                 technique = this.textureShadowTechnique;
 
-                gd.setTechnique(technique);
+                this.setTechniqueWithColor(technique, screen, color);
 
                 technique.texture = style;
             }
             else if (style.stops) // Gradient
             {
-                var texture = style.updateTexture(gd);
+                var texture = style.updateTexture(this.gd);
                 var gradientWidth = texture.width;
                 var gradientHeight = texture.height;
 
@@ -3565,7 +3605,7 @@ class CanvasContext
 
                 technique = this.gradientShadowTechnique;
 
-                gd.setTechnique(technique);
+                this.setTechniqueWithColor(technique, screen, color);
 
                 technique.uvtransform = this.calculateGradientUVtransform(style.matrix);
                 technique.gradient = texture;
@@ -3582,7 +3622,7 @@ class CanvasContext
 
                 technique = this.patternShadowTechnique;
 
-                gd.setTechnique(technique);
+                this.setTechniqueWithColor(technique, screen, color);
 
                 technique.uvtransform = this.calculatePatternUVtransform(imageWidth, imageHeight);
                 technique.pattern = style;
@@ -3599,12 +3639,8 @@ class CanvasContext
                 technique = this.flatTechniques['copy'];
             }
 
-            gd.setTechnique(technique);
+            this.setTechniqueWithColor(technique, screen, color);
         }
-
-        technique.screen = screen;
-
-        technique.color = color;
 
         return true;
     };
@@ -3618,7 +3654,6 @@ class CanvasContext
 
         var globalCompositeOperation = this.globalCompositeOperation;
         var screen = this.screen;
-        var gd = this.gd;
 
         var technique;
 
@@ -3650,15 +3685,11 @@ class CanvasContext
                 technique = this.flatTechniques['copy'];
             }
 
-            gd.setTechnique(technique);
-
-            technique.screen = screen;
-
-            technique.color = color;
+            this.setTechniqueWithColor(technique, screen, color);
         }
         else if (style.stops) // Gradient
         {
-            var texture = style.updateTexture(gd);
+            var texture = style.updateTexture(this.gd);
             var gradientWidth = texture.width;
             var gradientHeight = texture.height;
 
@@ -3683,14 +3714,10 @@ class CanvasContext
                 technique = this.gradientTechniques['copy'];
             }
 
-            gd.setTechnique(technique);
-
-            technique.screen = screen;
+            this.setTechniqueWithAlpha(technique, screen, globalAlpha);
 
             technique.uvtransform = this.calculateGradientUVtransform(style.matrix);
-
             technique.gradient = texture;
-            technique.alpha = globalAlpha;
         }
         else // Pattern
         {
@@ -3708,13 +3735,118 @@ class CanvasContext
                 throw "Unknown composite operation: " + globalCompositeOperation;
             }
 
-            gd.setTechnique(technique);
-
-            technique.screen = screen;
+            this.setTechniqueWithAlpha(technique, screen, this.globalAlpha);
 
             technique.uvtransform = this.calculatePatternUVtransform(imageWidth, imageHeight);
             technique.pattern = style;
-            technique.alpha = this.globalAlpha;
+        }
+    };
+
+    setStream(vertexBuffer: VertexBuffer, semantics: Semantics) : void
+    {
+        if (this.activeVertexBuffer !== vertexBuffer)
+        {
+            this.activeVertexBuffer = vertexBuffer;
+            this.gd.setStream(vertexBuffer, semantics, 0);
+        }
+    };
+
+    setTechniqueWithAlpha(technique: Technique, screen: any, alpha: number) : void
+    {
+        var activeScreen = this.activeScreen;
+        var activeColor = this.activeColor;
+
+        if (this.activeTechnique !== technique)
+        {
+            this.activeTechnique = technique;
+
+            this.gd.setTechnique(technique);
+
+            technique['screen'] = screen;
+            technique['alpha'] = alpha;
+
+            activeScreen[0] = screen[0];
+            activeScreen[1] = screen[1];
+            activeScreen[2] = screen[2];
+            activeScreen[3] = screen[3];
+
+            activeColor[3] = alpha;
+        }
+        else
+        {
+            if (activeScreen[0] !== screen[0] ||
+                activeScreen[1] !== screen[1] ||
+                activeScreen[2] !== screen[2] ||
+                activeScreen[3] !== screen[3])
+            {
+                activeScreen[0] = screen[0];
+                activeScreen[1] = screen[1];
+                activeScreen[2] = screen[2];
+                activeScreen[3] = screen[3];
+
+                technique['screen'] = screen;
+            }
+
+            if (activeColor[3] !== alpha)
+            {
+                activeColor[3] = alpha;
+
+                technique['alpha'] = alpha;
+            }
+        }
+    };
+
+    setTechniqueWithColor(technique: Technique, screen: any, color: any) : void
+    {
+        var activeScreen = this.activeScreen;
+        var activeColor = this.activeColor;
+
+        if (this.activeTechnique !== technique)
+        {
+            this.activeTechnique = technique;
+
+            this.gd.setTechnique(technique);
+
+            technique['screen'] = screen;
+            technique['color'] = color;
+
+            activeScreen[0] = screen[0];
+            activeScreen[1] = screen[1];
+            activeScreen[2] = screen[2];
+            activeScreen[3] = screen[3];
+
+            activeColor[0] = color[0];
+            activeColor[1] = color[1];
+            activeColor[2] = color[2];
+            activeColor[3] = color[3];
+        }
+        else
+        {
+            if (activeScreen[0] !== screen[0] ||
+                activeScreen[1] !== screen[1] ||
+                activeScreen[2] !== screen[2] ||
+                activeScreen[3] !== screen[3])
+            {
+                activeScreen[0] = screen[0];
+                activeScreen[1] = screen[1];
+                activeScreen[2] = screen[2];
+                activeScreen[3] = screen[3];
+
+                technique['screen'] = screen;
+            }
+
+            if (activeColor[0] !== color[0] ||
+                activeColor[1] !== color[1] ||
+                activeColor[2] !== color[2] ||
+                activeColor[3] !== color[3])
+            {
+                activeColor[0] = color[0];
+                activeColor[1] = color[1];
+                activeColor[2] = color[2];
+                activeColor[3] = color[3];
+
+                technique['color'] = color;
+            }
         }
     };
 
@@ -3755,7 +3887,7 @@ class CanvasContext
         var numPoints = points.length;
         var angle, angleDiff, i, j;
 
-        var angleStep = (2.0 / radius);
+        var angleStep = (2.0 / (radius * this.pixelRatio));
 
         var m = this.matrix;
         var m0 = (m[0] * radius);
@@ -3814,12 +3946,21 @@ class CanvasContext
     {
         var bufferData = this.bufferData;
 
-        if (bufferData.length < (numVertices * 2))
+        var numFloats = (2 * numVertices);
+        if (bufferData.length < numFloats)
         {
-            this.bufferData = bufferData = new this.arrayConstructor(numVertices * 2);
-            this.bufferDataCache = bufferData;
-            this.bufferDataCacheNumVertices = numVertices;
-            this.prevBufferData = bufferData;
+            this.bufferData = bufferData = new this.arrayConstructor(numFloats);
+            this.subBufferDataCache = {};
+        }
+        else if (numFloats < bufferData.length)
+        {
+            var subBuffer = this.subBufferDataCache[numFloats];
+            if (subBuffer === undefined)
+            {
+                subBuffer = bufferData.subarray(0, numFloats);
+                this.subBufferDataCache[numFloats] = subBuffer;
+            }
+            bufferData = subBuffer;
         }
 
         return bufferData;
@@ -3832,35 +3973,45 @@ class CanvasContext
         if (flatVertexBuffer.numVertices < numVertices)
         {
             flatVertexBuffer.destroy();
-            this.flatVertexBuffer = flatVertexBuffer = null;
+
             this.flatVertexBuffer = flatVertexBuffer = this.gd.createVertexBuffer({
                 numVertices: numVertices,
                 attributes: this.flatVertexFormats,
                 dynamic: true,
                 'transient': true
             });
-        }
 
-        if (this.bufferDataCacheNumVertices !== numVertices ||
-            this.prevBufferData !== bufferData)
+            this.flatOffset = 0;
+        }
+        else if ((this.flatOffset + numVertices) > flatVertexBuffer.numVertices)
         {
-            this.bufferDataCacheNumVertices = numVertices;
-            this.bufferDataCache = bufferData.subarray(0, 2 * numVertices);
-            this.prevBufferData = bufferData;
+            this.flatOffset = 0;
         }
 
-        flatVertexBuffer.setData(this.bufferDataCache, 0, numVertices);
+        flatVertexBuffer.setData(bufferData, this.flatOffset, numVertices);
 
-        this.gd.setStream(flatVertexBuffer, this.flatSemantics);
+        this.setStream(flatVertexBuffer, this.flatSemantics);
     };
 
     getTextureBuffer(numVertices)
     {
         var bufferData = this.bufferData;
 
-        if (bufferData.length < (numVertices * 4))
+        var numFloats = (4 * numVertices);
+        if (bufferData.length < numFloats)
         {
-            this.bufferData = bufferData = new this.arrayConstructor(numVertices * 4);
+            this.bufferData = bufferData = new this.arrayConstructor(numFloats);
+            this.subBufferDataCache = {};
+        }
+        else if (numFloats < bufferData.length)
+        {
+            var subBuffer = this.subBufferDataCache[numFloats];
+            if (subBuffer === undefined)
+            {
+                subBuffer = bufferData.subarray(0, numFloats);
+                this.subBufferDataCache[numFloats] = subBuffer;
+            }
+            bufferData = subBuffer;
         }
 
         return bufferData;
@@ -3884,7 +4035,7 @@ class CanvasContext
 
         textureVertexBuffer.setData(bufferData, 0, numVertices);
 
-        this.gd.setStream(textureVertexBuffer, this.textureSemantics);
+        this.setStream(textureVertexBuffer, this.textureSemantics);
     };
 
     fillFatStrip(points, numPoints, lineWidth)
@@ -3894,11 +4045,10 @@ class CanvasContext
         var bufferData = this.getFlatBuffer(numPoints * 2);
         if (bufferData)
         {
-            var p, point, xB, yB, xC, yC, xAB, yAB, xBC, yBC, ln, dx, dy, n;
+            var p, point, xB, yB, xC, yC, xAB, yAB, xBC, yBC, ln, dx, dy, n, inl, outl;
             var sqrt = Math.sqrt;
             var abs = Math.abs;
-
-            lineWidth *= 0.5;
+            var halfLineWidth = (lineWidth * 0.5);
 
             point = points[0];
             xB = point[0];
@@ -3917,18 +4067,20 @@ class CanvasContext
                 point = points[numPoints - 2];
                 xAB = (xB - point[0]);
                 yAB = (yB - point[1]);
-                ln = ((xAB * xAB) + (yAB * yAB));
-                if (ln > 0.0)
-                {
-                    ln = (1.0 / sqrt(ln));
-                    xAB *= ln;
-                    yAB *= ln;
-                }
             }
             else
             {
-                xAB = 0;
-                yAB = 0;
+                point = points[1];
+                xAB = (point[0] - xB);
+                yAB = (point[1] - yB);
+            }
+
+            ln = ((xAB * xAB) + (yAB * yAB));
+            if (ln > 0.0)
+            {
+                ln = (1.0 / sqrt(ln));
+                xAB *= ln;
+                yAB *= ln;
             }
 
             p = 0;
@@ -3951,8 +4103,8 @@ class CanvasContext
                 else
                 {
                     // use perpendicular vector to (xAB, yAB) -> (yAB, -xAB)
-                    xAB *= lineWidth;
-                    yAB *= lineWidth;
+                    xAB *= halfLineWidth;
+                    yAB *= halfLineWidth;
                     bufferData[n + 0] = xB - yAB;
                     bufferData[n + 1] = yB + xAB;
                     bufferData[n + 2] = xB + yAB;
@@ -3974,21 +4126,33 @@ class CanvasContext
                     dx = (xAB + xBC);
                     dy = (yAB + yBC);
                     ln = ((dx * dx) + (dy * dy));
-                    if (ln > 0.0)
+                    if (ln > 0.001)
                     {
-                        ln = (lineWidth / sqrt(ln));
-                        dx *= ln;
-                        dy *= ln;
-
-                        // use perpendicular vector to (dx, dy) -> (dy, -dx)
-                        bufferData[n + 0] = xB - dy;
-                        bufferData[n + 1] = yB + dx;
-                        bufferData[n + 2] = xB + dy;
-                        bufferData[n + 3] = yB - dx;
-
-                        n += 4;
-                        numVertices += 2;
+                        inl = (lineWidth / ln);
+                        outl = (halfLineWidth / sqrt(ln));
+                        if ((yAB * xBC) > (xAB * yBC))
+                        {
+                            ln = inl;
+                            inl = outl;
+                            outl = ln;
+                        }
                     }
+                    else
+                    {
+                        dx = -yAB;
+                        dy = xAB;
+                        inl = halfLineWidth;
+                        outl = halfLineWidth;
+                    }
+
+                    // use perpendicular vector to (dx, dy) -> (dy, -dx)
+                    bufferData[n + 0] = (xB - (dy * inl));
+                    bufferData[n + 1] = (yB + (dx * inl));
+                    bufferData[n + 2] = (xB + (dy * outl));
+                    bufferData[n + 3] = (yB - (dx * outl));
+
+                    n += 4;
+                    numVertices += 2;
 
                     xB = xC;
                     yB = yC;
@@ -4104,7 +4268,7 @@ class CanvasContext
     simplifyShape(points: any[], first: number, last: number) : number
     {
         var abs = Math.abs;
-        var epsilon = (0.5 * this.pixelRatio);
+        var epsilon = (0.5 / this.pixelRatio);
         var p2 = points[last];
         var p2x = p2[0];
         var p2y = p2[1];
@@ -4115,13 +4279,16 @@ class CanvasContext
             var p0 = points[first];
             var p0x = p0[0];
             var p0y = p0[1];
+            var d20x = (p2x - p0x);
+            var d20y = (p2y - p0y);
+            var second = (first + 1);
 
             var maxDist = epsilon;
             var middle = -1;
 
-            if (p0x === p2x)
+            if (abs(d20x) < epsilon)
             {
-                for (n = (first + 1); n < last; n += 1)
+                for (n = second; n < last; n += 1)
                 {
                     dist = abs(points[n][0] - p2x);
                     if (maxDist < dist)
@@ -4131,9 +4298,9 @@ class CanvasContext
                     }
                 }
             }
-            else if (p0y === p2y)
+            else if (abs(d20y) < epsilon)
             {
-                for (n = (first + 1); n < last; n += 1)
+                for (n = second; n < last; n += 1)
                 {
                     dist = abs(points[n][1] - p2y);
                     if (maxDist < dist)
@@ -4145,11 +4312,11 @@ class CanvasContext
             }
             else
             {
-                var slope = (p2y - p0y) / (p2x - p0x);
-                var invSlope = 1.0 / Math.sqrt((slope * slope) + 1);
+                var slope = (d20y / d20x);
+                var invSlope = (1.0 / Math.sqrt((slope * slope) + 1));
                 var intercept = (p0y - (slope * p0x));
                 var p1;
-                for (n = (first + 1); n < last; n += 1)
+                for (n = second; n < last; n += 1)
                 {
                     p1 = points[n];
 
@@ -4165,12 +4332,21 @@ class CanvasContext
 
             if (middle === -1)
             {
-                points.splice((first + 1), (last - first - 1));
-                return (first + 1);
+                if (last === (points.length - 1))
+                {
+                    points[second] = p2;
+                    points.length = (second + 1);
+                }
+                else
+                {
+                    points.splice(second, (last - second));
+                }
+                last = second;
+                break;
             }
             else
             {
-                if ((first + 1) < middle)
+                if (second < middle)
                 {
                     var newMiddle = this.simplifyShape(points, first, middle);
                     last -= (middle - newMiddle);
@@ -5801,6 +5977,14 @@ class CanvasContext
         c.needToSimplifyPath = [];
         c.currentSubPath = [];
 
+        /*jshint newcap: false*/
+        var arrayConstructor = c.arrayConstructor;
+
+        c.activeVertexBuffer = null;
+        c.activeTechnique = null;
+        c.activeScreen = new arrayConstructor(4);
+        c.activeColor = new arrayConstructor(4);
+
         var shader = gd.createShader(c.shaderDefinition);
         c.shader = shader;
 
@@ -5830,10 +6014,10 @@ class CanvasContext
             'transient': true
         });
 
-        /*jshint newcap: false*/
-        var arrayConstructor = c.arrayConstructor;
+        c.flatOffset = 0;
 
         c.bufferData = new arrayConstructor(512);
+        c.subBufferDataCache = {};
 
         c.tempRect = new arrayConstructor(8);
         /*jshint newcap: true*/
@@ -5886,8 +6070,6 @@ class CanvasContext
         c.textureShadowTechnique = shader.getTechnique('texture_shadow');
         c.patternShadowTechnique = shader.getTechnique('pattern_shadow');
         c.gradientShadowTechnique = shader.getTechnique('gradient_shadow');
-
-        c.resetTechniqueParameters();
 
         /*
           c.renderTexture = gd.createTexture({
@@ -5950,32 +6132,6 @@ class CanvasContext
             resetTransformMethods();
         };
 
-        var transformPointTranslate = function transformPointTranslateFn(x, y)
-        {
-            var m = this.matrix;
-            return [(x + m[2]), (y + m[5])];
-        };
-
-        var transformRectTranslate = function transformRectTranslateFn(x, y, w, h, rect)
-        {
-            var m = this.matrix;
-            var x0 = (x + m[2]);
-            var y0 = (y + m[5]);
-            var x1 = (x0 + w);
-            var y1 = (y0 + h);
-
-            rect[0] = x0;
-            rect[1] = y1;
-            rect[2] = x1;
-            rect[3] = y1;
-            rect[4] = x0;
-            rect[5] = y0;
-            rect[6] = x1;
-            rect[7] = y0;
-
-            return rect;
-        };
-
         var scaleIdentity = function scaleIdentityFn(x, y)
         {
             if (x !== 1 || y !== 1)
@@ -5998,8 +6154,8 @@ class CanvasContext
 
                 this.translate = translate;
                 this.transform = transformTranslate;
-                this.transformPoint = transformPointTranslate;
-                this.transformRect = transformRectTranslate;
+                this.transformPoint = this.transformPointTranslate;
+                this.transformRect = this.transformRectTranslate;
             }
         };
 
@@ -6016,34 +6172,12 @@ class CanvasContext
             resetTransformMethods();
         };
 
-        var transformPointIdentity = function transformPointIdentityFn(x, y)
-        {
-            return [x, y];
-        };
-
-        var transformRectIdentity = function transformRectIdentityFn(x, y, w, h, rect)
-        {
-            var x1 = (x + w);
-            var y1 = (y + h);
-
-            rect[0] = x;
-            rect[1] = y1;
-            rect[2] = x1;
-            rect[3] = y1;
-            rect[4] = x;
-            rect[5] = y;
-            rect[6] = x1;
-            rect[7] = y;
-
-            return rect;
-        };
-
         c.scale = scaleIdentity;
         c.translate = translateIdentity;
         c.transform = setTransformIdentity;
         c.setTransform = setTransformIdentity;
-        c.transformPoint = transformPointIdentity;
-        c.transformRect = transformRectIdentity;
+        c.transformPoint = c.transformPointIdentity;
+        c.transformRect = c.transformRectIdentity;
 
         //
         // Clipping
