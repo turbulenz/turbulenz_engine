@@ -62,8 +62,8 @@ class Application
     fontTechniqueParameters: any; //TechniqueParameters;
 
     maxPlayers = 2;
-    stageWidth = 30;
-    stageHeight = 20;
+    stageWidth = 40;
+    stageHeight = 30;
 
     clearColor: any; // v4
     fontColor: any; // v4
