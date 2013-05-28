@@ -166,7 +166,8 @@ Sends an instant notification to a user.
     var params = {
         key: key,
         msg: message,
-        recipient: string
+        recipient: string,
+        noNotification: bool (optional)
     };
 
     var promise = gameNotificationsManager.sendInstantNotification(params);
@@ -183,13 +184,14 @@ Sends an instant notification to a user.
     A JavaScript object.
     Must contain a 'text' property, optionally can contain additional properties.
     This text will be used for the site notification and email, with ' in <GAME>' appended, where <GAME> is the title of your game.
-    There is a special control property 'noNotification', which if present prevents this notification sending email or appearing in the users notification panel.
-    (This can be used to send messages directly to an active game, with none of the associated email or gamesite features.)
 
-``recipient`` (Optional)
+``recipient``
     String.
     The Turbulenz username of the person to receive this notification.
-    Defaults to the current user's username.
+
+``noNotification``
+    This special control property, prevents this notification from sending email or appearing in the users notification panel.
+    (This can be used to send messages directly to an active game, with none of the associated email or gamesite features.)
 
 
 .. index::
@@ -209,7 +211,8 @@ Sends a delayed notification to the current user.
     var params = {
         key: key,
         msg: message,
-        delay: integer
+        delay: integer,
+        noNotification: bool (optional)
     };
 
     var promise = gameNotificationsManager.sendDelayedNotification(params);
@@ -235,6 +238,11 @@ Sends a delayed notification to the current user.
     Integer.
     Number of seconds until the notification is sent.
     Defaults to 0.
+
+``noNotification``
+    This special control property, prevents this notification from sending email or appearing in the users notification panel.
+    (This can be used to send messages directly to an active game, with none of the associated email or gamesite features.)
+
 
 .. index::
     pair: NotificationsManager; cancelNotificationByID
