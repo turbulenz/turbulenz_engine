@@ -70,6 +70,7 @@ class Application
     fontBoldColor: any; // v4
 
     textScale = 1;
+    hoverTextScale = 1.1;
     textSpacingY = 2;
 
     boardOffsetX = 1;
@@ -468,7 +469,7 @@ class Application
         }
     };
 
-    segmentFont(x: number, y: number, text: string, clickCallback?)
+    segmentFont(x: number, y: number, text: string, clickCallback?, id?: string)
     {
         var graphicsDevice = this.graphicsDevice;
         var fontTechniqueParameters = this.fontTechniqueParameters;
@@ -483,22 +484,36 @@ class Application
         {
             fontTechniqueParameters.color = this.fontColor;
         }
-        graphicsDevice.setTechniqueParameters(fontTechniqueParameters);
-        font.drawTextRect(text, {
-            rect : [topLeft[0], topLeft[1], 0, 0], // for left-align width and height are ignored
-            scale : this.textScale,
-            spacing : 0,
-            alignment : 0
-        });
 
         if (this.setButtons && clickCallback)
         {
             var textBlockSize = font.calculateTextDimensions(text, this.textScale, 0);
-            SimpleButtonManager.addButton(
-                topLeft[0], topLeft[1],
-                topLeft[0] + textBlockSize.width, topLeft[1] + textBlockSize.height,
-                clickCallback);
+            SimpleButtonManager.addButton({
+                    id: id,
+                    left: topLeft[0],
+                    top: topLeft[1],
+                    right: topLeft[0] + textBlockSize.width,
+                    bottom: topLeft[1] + textBlockSize.height,
+                    callback: clickCallback
+                });
         }
+
+        var scale = this.textScale;
+        if (id)
+        {
+            var button = SimpleButtonManager.buttons[id];
+            if (button && button.hovering)
+            {
+                scale = this.hoverTextScale;
+            }
+        }
+        graphicsDevice.setTechniqueParameters(fontTechniqueParameters);
+        font.drawTextRect(text, {
+            rect : [topLeft[0], topLeft[1], 0, 0], // for left-align width and height are ignored
+            scale : scale,
+            spacing : 0,
+            alignment : 0
+        });
     };
 
     renderGame()
@@ -509,12 +524,12 @@ class Application
         var roundEnd = currentGame.roundEnd;
         if (roundEnd)
         {
-            this.segmentFont(0, 0, 'Leave', this.leaveGame.bind(this));
+            this.segmentFont(0, 0, 'Leave', this.leaveGame.bind(this), 'leave');
         }
         else
         {
-            this.segmentFont(0, 0, 'Back to lobby', this.toLobby.bind(this));
-            this.segmentFont(20, 0, 'Forfeit', this.forfeitGame.bind(this));
+            this.segmentFont(0, 0, 'Back to lobby', this.toLobby.bind(this), 'toLobby');
+            this.segmentFont(20, 0, 'Forfeit', this.forfeitGame.bind(this), 'forfeitGame');
         }
 
         var users = currentGame.getUsers();
@@ -593,10 +608,14 @@ class Application
                         var bottomRight = draw2D.viewportUnmap(destRectangle[2],
                                                                destRectangle[3]);
                         var onClickFn = this.getOnClickFn(x, y);
-                        SimpleButtonManager.addButton(
-                            topLeft[0], topLeft[1],
-                            bottomRight[0], bottomRight[1],
-                            onClickFn);
+                        SimpleButtonManager.addButton({
+                                id: 'click-' + x + '-' + y,
+                                left: topLeft[0],
+                                top: topLeft[1],
+                                right: bottomRight[0],
+                                bottom: bottomRight[1],
+                                callback: onClickFn
+                            });
                     }
                 }
             }
@@ -643,18 +662,21 @@ class Application
                 var playGameFn = this.getPlayGameFn(dataShare);
                 if (game && game.roundEnd)
                 {
-                    this.segmentFont(3, offsetY, 'Game finished (click to see result)', playGameFn);
+                    this.segmentFont(3, offsetY, 'Game finished (click to see result)', playGameFn,
+                        'playGame-' + joinedDataSharesIndex);
                 }
                 else
                 {
                     var users = dataShare.users;
                     if (users.length === 1)
                     {
-                        this.segmentFont(3, offsetY, 'Waiting for player', playGameFn);
+                        this.segmentFont(3, offsetY, 'Waiting for player', playGameFn,
+                            'playGame-' + joinedDataSharesIndex);
                     }
                     else
                     {
-                        this.segmentFont(3, offsetY, users[0] + ' vs ' + users[1], playGameFn);
+                        this.segmentFont(3, offsetY, users[0] + ' vs ' + users[1], playGameFn,
+                            'playGame-' + joinedDataSharesIndex);
                     }
                 }
                 offsetY += textSpacingY;
@@ -682,7 +704,7 @@ class Application
                             noGamesToJoin = false;
                         }
                         var joinGameFn = this.getJoinGameFn(dataShare)
-                        this.segmentFont(3, offsetY, dataShare.owner, joinGameFn);
+                        this.segmentFont(3, offsetY, dataShare.owner, joinGameFn, 'joinGame-' + dataSharesIndex);
                         offsetY += textSpacingY;
                     }
                 }
@@ -695,8 +717,8 @@ class Application
             }
         }
 
-        this.segmentFont(0, offsetY, 'Refresh', this.findDataShares.bind(this));
-        this.segmentFont(20, offsetY, 'Create new game', this.createGame.bind(this));
+        this.segmentFont(0, offsetY, 'Refresh', this.findDataShares.bind(this), 'refresh');
+        this.segmentFont(20, offsetY, 'Create new game', this.createGame.bind(this), 'create');
         offsetY += textSpacingY;
     };
 

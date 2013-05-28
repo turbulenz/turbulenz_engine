@@ -218,25 +218,39 @@ TurbulenzEngine.onload = function onloadFn()
             if (text)
             {
                 var topLeft = draw2D.viewportUnmap(xOffset, yOffset);
-                font.drawTextRect(text, {
-                    rect : [topLeft[0], topLeft[1], 0, 0], // for left-align width and height are ignored
-                    scale : scale,
-                    spacing : 0,
-                    alignment : 0
-                });
-
                 if (setButtons && clickCallback)
                 {
                     var textBlockSize = font.calculateTextDimensions(text, scale, 0);
                     debug.log("NEW BUTTON: " + buttonName);
-                    SimpleButtonManager.addButton(
-                        topLeft[0], topLeft[1],
-                        topLeft[0] + textBlockSize.width, topLeft[1] + textBlockSize.height,
-                        function () {
-                            debug.log("BUTTON: " + buttonName);
-                            clickCallback();
+                    SimpleButtonManager.addButton({
+                            id: buttonName,
+                            left: topLeft[0],
+                            top: topLeft[1],
+                            right: topLeft[0] + textBlockSize.width,
+                            bottom: topLeft[1] + textBlockSize.height,
+                            callback: function () {
+                                debug.log("BUTTON: " + buttonName);
+                                clickCallback();
+                            }
                         });
                 }
+
+                var textScale = scale;
+                if (buttonName)
+                {
+                    var button = SimpleButtonManager.buttons[buttonName];
+                    if (button && button.hovering)
+                    {
+                        textScale *= 1.2;
+                    }
+                }
+
+                font.drawTextRect(text, {
+                    rect : [topLeft[0], topLeft[1], 0, 0], // for left-align width and height are ignored
+                    scale : textScale,
+                    spacing : 0,
+                    alignment : 0
+                });
             }
 
             yOffset += scale;
