@@ -1336,22 +1336,20 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
+        var q = this.transformPoint(cpx, cpy);
+        var xq = q[0];
+        var yq = q[1];
+
         var p2 = this.transformPoint(x, y);
         var x2 = p2[0];
         var y2 = p2[1];
 
         var abs = Math.abs;
-        /*jshint bitwise: false*/
-        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
-        /*jshint bitwise: true*/
-
+        var numSteps = Math.ceil(this.pixelRatio * Math.sqrt(abs(xq - x1) + abs(yq - y1) +
+                                                             abs(x2 - xq) + abs(y2 - yq)));
         if (1 < numSteps)
         {
             currentSubPath.length += numSteps;
-
-            var q = this.transformPoint(cpx, cpy);
-            var xq = q[0];
-            var yq = q[1];
 
             var dt = (1.0 / numSteps);
             for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
@@ -1382,26 +1380,25 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
+        var q1 = this.transformPoint(cp1x, cp1y);
+        var xq1 = q1[0];
+        var yq1 = q1[1];
+
+        var q2 = this.transformPoint(cp2x, cp2y);
+        var xq2 = q2[0];
+        var yq2 = q2[1];
+
         var p2 = this.transformPoint(x, y);
         var x2 = p2[0];
         var y2 = p2[1];
 
         var abs = Math.abs;
-        /*jshint bitwise: false*/
-        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
-        /*jshint bitwise: true*/
-
+        var numSteps = Math.ceil(this.pixelRatio * Math.sqrt(abs(xq1 - x1) + abs(yq1 - y1) +
+                                                             abs(xq2 - xq1) + abs(yq2 - yq1) +
+                                                             abs(x2 - xq2) + abs(y2 - yq2)));
         if (1 < numSteps)
         {
             currentSubPath.length += numSteps;
-
-            var q1 = this.transformPoint(cp1x, cp1y);
-            var xq1 = q1[0];
-            var yq1 = q1[1];
-
-            var q2 = this.transformPoint(cp2x, cp2y);
-            var xq2 = q2[0];
-            var yq2 = q2[1];
 
             var dt = (1.0 / numSteps);
             for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
