@@ -17,6 +17,10 @@ Change List
 New Features
 ------------
 
+* Added the :ref:`DataShareManager <datasharemanager>` object which allows games to share data or
+  communicate asynchronously (while the receiving user is off-line) with other user's games.
+* Added a Tic-tac-toe app which demos how the :ref:`DataShareManager <datasharemanager>` and
+  :ref:`NotificationsManager <notificationsmanager>` can be used in a game.
 * Added :ref:`GraphicsDevice  <graphicsdevice>` :ref:`finish <graphicsdevice_finish>` and :ref:`flush <graphicsdevice_flush>`.
 * Added :ref:`ShaderManager  <shadermanager>` :ref:`setAutomaticParameterResize <shadermanager_setautomaticparameterresize>`.
 
