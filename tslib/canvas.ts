@@ -4489,19 +4489,34 @@ class CanvasContext
             {
                 if (second < middle)
                 {
-                    var newMiddle = this.simplifyShape(points, first, middle);
-                    last -= (middle - newMiddle);
-                    middle = newMiddle;
-                }
+                    if ((middle + 1) < last)
+                    {
+                        var newMiddle = this.simplifyShape(points, first, middle);
+                        last -= (middle - newMiddle);
 
-                if ((middle + 1) < last)
-                {
-                    // restart loop to avoid recursion
-                    first = middle;
+                        // restart loop to avoid recursion
+                        first = newMiddle;
+                    }
+                    else
+                    {
+                        // restart loop to avoid recursion
+                        last = middle;
+                        p2 = points[last];
+                        p2x = p2[0];
+                        p2y = p2[1];
+                    }
                 }
                 else
                 {
-                    break;
+                    if ((middle + 1) < last)
+                    {
+                        // restart loop to avoid recursion
+                        first = middle;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
         }
