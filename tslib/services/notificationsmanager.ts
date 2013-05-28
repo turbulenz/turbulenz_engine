@@ -128,8 +128,7 @@ interface SendNotificationParameters
 
     recipient?      : string;
     delay?          : number;
-    repeat?         : number;
-    interval?       : number;
+    noNotification? : bool;
 };
 
 
@@ -210,7 +209,8 @@ class NotificationsManager
             session: this.gameSession,
             key: key,
             msg: msg,
-            recipient: params.recipient
+            recipient: params.recipient,
+            noNotification: params.noNotification
         };
 
         TurbulenzBridge.triggerSendInstantNotification(JSON.stringify(params));
@@ -253,7 +253,8 @@ class NotificationsManager
             session: this.gameSession,
             key: key,
             msg: msg,
-            delay: delay
+            delay: delay,
+            noNotification: params.noNotification
         };
 
         TurbulenzBridge.triggerSendDelayedNotification(JSON.stringify(params));
