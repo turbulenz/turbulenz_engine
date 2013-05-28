@@ -487,7 +487,7 @@ class Application
 
         if (this.setButtons && clickCallback)
         {
-            var textBlockSize = font.calculateTextDimensions(text, this.textScale, 0);
+            var textBlockSize = font.calculateTextDimensions(text, this.hoverTextScale, 0);
             SimpleButtonManager.addButton({
                     id: id,
                     left: topLeft[0],

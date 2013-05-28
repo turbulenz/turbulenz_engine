@@ -220,7 +220,7 @@ TurbulenzEngine.onload = function onloadFn()
                 var topLeft = draw2D.viewportUnmap(xOffset, yOffset);
                 if (setButtons && clickCallback)
                 {
-                    var textBlockSize = font.calculateTextDimensions(text, scale, 0);
+                    var textBlockSize = font.calculateTextDimensions(text, scale * 1.2, 0);
                     debug.log("NEW BUTTON: " + buttonName);
                     SimpleButtonManager.addButton({
                             id: buttonName,
