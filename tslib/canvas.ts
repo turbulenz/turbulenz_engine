@@ -4459,14 +4459,14 @@ class CanvasContext
             else
             {
                 var slope = (d20y / d20x);
-                var invSlope = (1.0 / Math.sqrt((slope * slope) + 1));
                 var intercept = (p0y - (slope * p0x));
                 var p1;
+                maxDist *= Math.sqrt((slope * slope) + 1);
                 for (n = second; n < last; n += 1)
                 {
                     p1 = points[n];
 
-                    dist = abs((slope * p1[0]) - p1[1] + intercept) * invSlope;
+                    dist = abs((slope * p1[0]) - p1[1] + intercept);
 
                     if (maxDist < dist)
                     {
