@@ -1,8 +1,0 @@
-- key: player-joined
-  title: Player has joined your Tic Tac Toe game
-
-- key: your-turn
-  title: It's your turn
-
-- key: forfeit
-  title: Player forfeit
