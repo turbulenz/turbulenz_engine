@@ -910,7 +910,6 @@ class CanvasContext
     viewport                 : number[];
 
     pixelRatio               : number;
-    forceFatLines            : bool;
 
     width                    : number;
     height                   : number;
@@ -1202,7 +1201,7 @@ class CanvasContext
 
             var style = this.strokeStyle;
             var lineWidth = this.lineWidth;
-            var thinLines = (lineWidth < 2 && !this.forceFatLines);
+            var thinLines = ((this.pixelRatio * lineWidth) < 2);
 
             var primitive;
             var numVertices;
@@ -2484,7 +2483,7 @@ class CanvasContext
             var gd = this.gd;
             var style = this.strokeStyle;
             var lineWidth = this.lineWidth;
-            var thinLines = (lineWidth < 2 && !this.forceFatLines);
+            var thinLines = ((this.pixelRatio * lineWidth) < 2);
             var points, numPoints, primitive, numVertices;
 
             if (thinLines)
@@ -3171,7 +3170,6 @@ class CanvasContext
         this.updateScissor();
 
         this.pixelRatio = Math.max((viewport[2] / width), (viewport[3] / height));
-        this.forceFatLines = (2 < this.pixelRatio);
 
         this.activeVertexBuffer = null;
         this.activeTechnique = null;
@@ -6110,7 +6108,6 @@ class CanvasContext
         c.viewport = [0, 0, width, height];
 
         c.pixelRatio = 1;
-        c.forceFatLines = false;
 
         c.width = width;
         c.height = height;
