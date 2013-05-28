@@ -898,6 +898,7 @@ class CanvasContext
     font                     : string;
     textAlign                : string;
     textBaseline             : string;
+    imageColor               : string;
 
     // private variables
     gd                       : GraphicsDevice;
@@ -909,7 +910,6 @@ class CanvasContext
     viewport                 : number[];
 
     pixelRatio               : number;
-    forceFatLines            : bool;
 
     width                    : number;
     height                   : number;
@@ -1201,7 +1201,7 @@ class CanvasContext
 
             var style = this.strokeStyle;
             var lineWidth = this.lineWidth;
-            var thinLines = (lineWidth < 2 && !this.forceFatLines);
+            var thinLines = ((this.pixelRatio * lineWidth) < 2);
 
             var primitive;
             var numVertices;
@@ -1336,22 +1336,20 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
+        var q = this.transformPoint(cpx, cpy);
+        var xq = q[0];
+        var yq = q[1];
+
         var p2 = this.transformPoint(x, y);
         var x2 = p2[0];
         var y2 = p2[1];
 
         var abs = Math.abs;
-        /*jshint bitwise: false*/
-        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
-        /*jshint bitwise: true*/
-
+        var numSteps = Math.ceil(this.pixelRatio * Math.sqrt(abs(xq - x1) + abs(yq - y1) +
+                                                             abs(x2 - xq) + abs(y2 - yq)));
         if (1 < numSteps)
         {
             currentSubPath.length += numSteps;
-
-            var q = this.transformPoint(cpx, cpy);
-            var xq = q[0];
-            var yq = q[1];
 
             var dt = (1.0 / numSteps);
             for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
@@ -1382,26 +1380,25 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
+        var q1 = this.transformPoint(cp1x, cp1y);
+        var xq1 = q1[0];
+        var yq1 = q1[1];
+
+        var q2 = this.transformPoint(cp2x, cp2y);
+        var xq2 = q2[0];
+        var yq2 = q2[1];
+
         var p2 = this.transformPoint(x, y);
         var x2 = p2[0];
         var y2 = p2[1];
 
         var abs = Math.abs;
-        /*jshint bitwise: false*/
-        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
-        /*jshint bitwise: true*/
-
+        var numSteps = Math.ceil(this.pixelRatio * Math.sqrt(abs(xq1 - x1) + abs(yq1 - y1) +
+                                                             abs(xq2 - xq1) + abs(yq2 - yq1) +
+                                                             abs(x2 - xq2) + abs(y2 - yq2)));
         if (1 < numSteps)
         {
             currentSubPath.length += numSteps;
-
-            var q1 = this.transformPoint(cp1x, cp1y);
-            var xq1 = q1[0];
-            var yq1 = q1[1];
-
-            var q2 = this.transformPoint(cp2x, cp2y);
-            var xq2 = q2[0];
-            var yq2 = q2[1];
 
             var dt = (1.0 / numSteps);
             for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
@@ -1770,6 +1767,31 @@ class CanvasContext
             }
         };
 
+        // polygons are encoded with a negative number indicating the number of points
+        var polygonStart = -1;
+        var addLine = function addLineFn(commands, x, y)
+        {
+            var numCommands = commands.length;
+            if (0 < polygonStart)
+            {
+                var lastCommand = commands[polygonStart];
+                if (lastCommand < 0)
+                {
+                    commands[polygonStart] = (lastCommand - 1);
+                }
+                else //if (lastCommand === 76)
+                {
+                    commands[polygonStart] = -2;
+                }
+                commands.push(x, y);
+            }
+            else
+            {
+                polygonStart = numCommands;
+                commands.push(76, x, y);
+            }
+        };
+
         var getRatio = function getRatioFn(u, v)
         {
             var u0 = u[0];
@@ -1784,6 +1806,8 @@ class CanvasContext
             return ((u[0] * v[1]) < (u[1] * v[0]) ? -1 : 1) * Math.acos(getRatio(u, v));
         };
 
+        var sqrt = Math.sqrt;
+        var abs = Math.abs;
         var pi = Math.PI;
 
         var lx = 0;
@@ -1848,6 +1872,7 @@ class CanvasContext
                 fx = x;
                 fy = y;
                 commands.push(77, x, y);
+                polygonStart = -1;
                 break;
 
             case 76: //L
@@ -1859,7 +1884,7 @@ class CanvasContext
                     x += lx;
                     y += ly;
                 }
-                commands.push(76, x, y);
+                addLine(commands, x, y);
                 break;
 
             case 72: //H
@@ -1870,7 +1895,7 @@ class CanvasContext
                     x += lx;
                 }
                 y = ly;
-                commands.push(76, x, y);
+                addLine(commands, x, y);
                 break;
 
             case 86: //V
@@ -1881,7 +1906,7 @@ class CanvasContext
                 {
                     y += ly;
                 }
-                commands.push(76, x, y);
+                addLine(commands, x, y);
                 break;
 
             case 67: //C
@@ -1902,6 +1927,7 @@ class CanvasContext
                     y += ly;
                 }
                 commands.push(67, x1, y1, x2, y2, x, y);
+                polygonStart = -1;
                 break;
 
             case 83: //S
@@ -1931,6 +1957,7 @@ class CanvasContext
                     y += ly;
                 }
                 commands.push(67, x1, y1, x2, y2, x, y);
+                polygonStart = -1;
                 break;
 
             case 81: //Q
@@ -1947,6 +1974,7 @@ class CanvasContext
                     y += ly;
                 }
                 commands.push(81, x1, y1, x, y);
+                polygonStart = -1;
                 break;
 
             case 84: //T
@@ -1972,6 +2000,7 @@ class CanvasContext
                     y += ly;
                 }
                 commands.push(81, x1, y1, x, y);
+                polygonStart = -1;
                 break;
 
             case 65: //A
@@ -1992,7 +2021,6 @@ class CanvasContext
                     y += ly;
                 }
 
-                var sqrt = Math.sqrt;
                 var ca = Math.cos(angle);
                 var sa = Math.sin(angle);
 
@@ -2088,13 +2116,36 @@ class CanvasContext
                 }
 
                 commands.push(65, angle, sx, sy, cx, cy, radius, a1, (a1 + ad), (true - sweepFlag));
+                polygonStart = -1;
                 break;
 
             case 90: //Z
             case 122: //z
+                if (3 <= polygonStart &&
+                    commands[polygonStart - 3] === 77)
+                {
+                    var startX = commands[polygonStart - 2];
+                    var startY = commands[polygonStart - 1];
+                    if (abs(startX - lx) < 1.0 &&
+                        abs(startY - ly) < 1.0)
+                    {
+                        // Remove last point because it is redundant
+                        // Counter is a negative value
+                        commands[polygonStart] += 1;
+                        if (commands[polygonStart] === 0)
+                        {
+                            commands.length = polygonStart;
+                        }
+                        else
+                        {
+                            commands.length -= 2;
+                        }
+                    }
+                }
                 x = fx;
                 y = fy;
                 commands.push(90);
+                polygonStart = -1;
                 break;
 
             default:
@@ -2106,6 +2157,55 @@ class CanvasContext
         }
 
         return commands;
+    };
+
+    addPoints(points: number[], offset: number, numPoints: number) : number
+    {
+        var currentSubPath = this.currentSubPath;
+        var j = currentSubPath.length;
+        var endPoints = (j + numPoints);
+        var i = offset;
+
+        currentSubPath.length = endPoints;
+
+        if (this.transformPoint === this.transformPointIdentity)
+        {
+            do
+            {
+                currentSubPath[j] = [points[i],
+                                     points[i + 1]];
+                i += 2;
+                j += 1;
+            }
+            while (j < endPoints);
+        }
+        else if (this.transformPoint === this.transformPointTranslate)
+        {
+            var m = this.matrix;
+            var dx = m[2];
+            var dy = m[5];
+            do
+            {
+                currentSubPath[j] = [points[i] + dx,
+                                     points[i + 1] + dy];
+                i += 2;
+                j += 1;
+            }
+            while (j < endPoints);
+        }
+        else
+        {
+            do
+            {
+                currentSubPath[j] = this.transformPoint(points[i],
+                                                        points[i + 1]);
+                i += 2;
+                j += 1;
+            }
+            while (j < endPoints);
+        }
+
+        return i;
     };
 
     path(path: string)
@@ -2135,6 +2235,12 @@ class CanvasContext
         {
             currentCommand = commands[i];
             i += 1;
+
+            if (currentCommand < 0)
+            {
+                i = this.addPoints(commands, i, -currentCommand);
+                continue;
+            }
 
             switch (currentCommand)
             {
@@ -2374,7 +2480,7 @@ class CanvasContext
             var gd = this.gd;
             var style = this.strokeStyle;
             var lineWidth = this.lineWidth;
-            var thinLines = (lineWidth < 2 && !this.forceFatLines);
+            var thinLines = ((this.pixelRatio * lineWidth) < 2);
             var points, numPoints, primitive, numVertices;
 
             if (thinLines)
@@ -2844,15 +2950,16 @@ class CanvasContext
                     throw "Unknown composite operation: " + this.globalCompositeOperation;
                 }
 
+                var color = this.parseColor(this.imageColor);
+
                 var globalAlpha = this.globalAlpha;
-                var color;
                 if (globalAlpha < 1.0)
                 {
-                    color = this.md.v4Build(1.0, 1.0, 1.0, globalAlpha, this.tempColor);
-                }
-                else
-                {
-                    color = this.v4One;
+                    color = this.md.v4Build(color[0],
+                                            color[1],
+                                            color[2],
+                                            (color[3] * globalAlpha),
+                                            this.tempColor);
                 }
 
                 this.setTechniqueWithColor(technique, this.screen, color);
@@ -3033,8 +3140,9 @@ class CanvasContext
 
         this.target = target;
 
-        var viewport = this.viewport;
+        gd.setViewport(0, 0, target.width, target.height);
 
+        var viewport = this.viewport;
         if (viewportRect)
         {
             viewport[0] =  viewportRect[0];
@@ -3050,57 +3158,46 @@ class CanvasContext
             viewport[3] =  target.height;
         }
 
-        gd.setViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-        /* This code is required if Object.defineProperty does not work */
         var canvas = this.canvas;
         var width = canvas.width;
         var height = canvas.height;
+
+        this.updateScreenScale();
+
+        this.updateScissor();
+
+        this.pixelRatio = Math.max((viewport[2] / width), (viewport[3] / height));
+
+        this.activeVertexBuffer = null;
+        this.activeTechnique = null;
+        this.flatOffset = 0;
+
+        /* This code is required if Object.defineProperty does not work */
         if (width !== this.width ||
             height !== this.height)
         {
             this.width = width;
             this.height = height;
 
-            this.screen[0] = (2 / width);
-            this.screen[1] = (-2 / height);
-
             this.resetState();
 
             this.clearRect(0, 0, width, height);
         }
-
-        this.pixelRatio = Math.max((viewport[2] / width), (viewport[3] / height));
-        this.forceFatLines = (2 <= this.pixelRatio);
-
-        this.updateScissor();
-
-        this.activeVertexBuffer = null;
-        this.activeTechnique = null;
-        this.flatOffset = 0;
 
         return true;
     };
 
     endFrame()
     {
-        if (!this.target)
+        var target = this.target;
+        if (!target)
         {
             throw '"beginFrame" was never called!';
         }
 
         this.target = null;
 
-        var viewport = this.viewport;
-        var v0 = viewport[0];
-        var v1 = viewport[1];
-        var v2 = viewport[2];
-        var v3 = viewport[3];
-
-        var gd = this.gd;
-
-        gd.setViewport(v0, v1, v2, v3);
-        gd.setScissor(v0, v1, v2, v3);
+        this.gd.setScissor(0, 0, target.width, target.height);
     };
 
     //
@@ -3109,12 +3206,13 @@ class CanvasContext
     setWidth(width)
     {
         this.width = width;
-        this.screen[0] = (2 / width);
 
         this.resetState();
 
         if (this.target)
         {
+            this.updateScreenScale();
+
             this.clearRect(0, 0, width, this.height);
         }
     };
@@ -3122,12 +3220,13 @@ class CanvasContext
     setHeight(height)
     {
         this.height = height;
-        this.screen[1] = (-2 / height);
 
         this.resetState();
 
         if (this.target)
         {
+            this.updateScreenScale();
+
             this.clearRect(0, 0, this.width, height);
         }
     };
@@ -3150,6 +3249,7 @@ class CanvasContext
             font : null,
             textAlign : null,
             textBaseline : null,
+            imageColor: null,
             matrix : new this.arrayConstructor(6),
             scale : null,
             translate : null,
@@ -3178,6 +3278,7 @@ class CanvasContext
         dest.font = src.font;
         dest.textAlign = src.textAlign;
         dest.textBaseline = src.textBaseline;
+        dest.imageColor = src.imageColor;
 
         // Have to copy array elements because if we keep a reference we modify the default ones
         var destMatrix = dest.matrix;
@@ -3219,6 +3320,25 @@ class CanvasContext
         clipExtents[1] = 0;
         clipExtents[2] = this.width;
         clipExtents[3] = this.height;
+
+        if (this.target)
+        {
+            this.updateScissor();
+        }
+    };
+
+    updateScreenScale()
+    {
+        var screen = this.screen;
+        var target = this.target;
+        var viewport = this.viewport;
+        var targetWidth = target.width;
+        var targetHeight = target.height;
+
+        screen[0] = ( 2 * viewport[2]) / (this.width * targetWidth);
+        screen[1] = (-2 * viewport[3]) / (this.height * targetHeight);
+        screen[2] = -1 + (2 * viewport[0] / targetWidth);
+        screen[3] =  1 - (2 * (viewport[1] + viewport[3] - targetHeight) / targetHeight);
     };
 
     updateScissor()
@@ -3240,10 +3360,31 @@ class CanvasContext
         var maxClipX = (clipExtents[2] * deviceScaleX);
         var maxClipY = (clipExtents[3] * deviceScaleY);
 
-        this.gd.setScissor((viewportX + minClipX),
-                           (viewportY + (viewportHeight - maxClipY)),
-                           (maxClipX - minClipX),
-                           (maxClipY - minClipY));
+        var x = (viewportX + minClipX);
+        var y = (viewportY + (viewportHeight - maxClipY));
+        var w = (maxClipX - minClipX);
+        var h = (maxClipY - minClipY);
+
+        if (x < 0)
+        {
+            x = 0;
+        }
+        if (y < 0)
+        {
+            y = 0;
+        }
+
+        var target = this.target;
+        if ((x + w) > target.width)
+        {
+            w = (target.width - x);
+        }
+        if ((y + h) > target.height)
+        {
+            h = (target.height - y);
+        }
+
+        this.gd.setScissor(x, y, w, h);
     };
 
     setFontManager(fm)
@@ -4313,14 +4454,14 @@ class CanvasContext
             else
             {
                 var slope = (d20y / d20x);
-                var invSlope = (1.0 / Math.sqrt((slope * slope) + 1));
                 var intercept = (p0y - (slope * p0x));
                 var p1;
+                maxDist *= Math.sqrt((slope * slope) + 1);
                 for (n = second; n < last; n += 1)
                 {
                     p1 = points[n];
 
-                    dist = abs((slope * p1[0]) - p1[1] + intercept) * invSlope;
+                    dist = abs((slope * p1[0]) - p1[1] + intercept);
 
                     if (maxDist < dist)
                     {
@@ -5952,6 +6093,7 @@ class CanvasContext
         c.font = '10px sans-serif';
         c.textAlign = 'start';
         c.textBaseline = 'alphabetic';
+        c.imageColor = '#fff';
 
         // private variables
         c.gd = gd;
@@ -5963,7 +6105,6 @@ class CanvasContext
         c.viewport = [0, 0, width, height];
 
         c.pixelRatio = 1;
-        c.forceFatLines = false;
 
         c.width = width;
         c.height = height;

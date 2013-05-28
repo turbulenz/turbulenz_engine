@@ -768,6 +768,7 @@ You will need these assets::
     - shaders/forwardrenderingshadows.cgfx
     - shaders/debug.cgfx
     - shaders/font.cgfx
+    - shaders/simplesprite.cgfx
     - fonts/opensans-8.fnt
     - fonts/opensans-16.fnt
     - fonts/opensans-32.fnt
@@ -800,34 +801,36 @@ Now you can create the mesh example HTML file and place it at the root of the Tu
         <script src="jslib/webgl/inputdevice.js"></script>
         <script src="jslib/webgl/sounddevice.js"></script>
 
+        <script src="jslib/aabbtree.js"></script>
+        <script src="jslib/assettracker.js"></script>
         <script src="jslib/camera.js"></script>
-        <script src="jslib/requesthandler.js"></script>
-        <script src="jslib/texturemanager.js"></script>
-        <script src="jslib/shadermanager.js"></script>
-        <script src="jslib/soundmanager.js"></script>
+        <script src="jslib/draw2d.js"></script>
         <script src="jslib/effectmanager.js"></script>
         <script src="jslib/fontmanager.js"></script>
+        <script src="jslib/forwardrendering.js"></script>
+        <script src="jslib/geometry.js"></script>
+        <script src="jslib/indexbuffermanager.js"></script>
+        <script src="jslib/light.js"></script>
+        <script src="jslib/loadingscreen.js"></script>
+        <script src="jslib/material.js"></script>
         <script src="jslib/observer.js"></script>
+        <script src="jslib/renderingcommon.js"></script>
+        <script src="jslib/requesthandler.js"></script>
+        <script src="jslib/resourceloader.js"></script>
+        <script src="jslib/scene.js"></script>
+        <script src="jslib/scenenode.js"></script>
+        <script src="jslib/shadermanager.js"></script>
+        <script src="jslib/shadowmapping.js"></script>
+        <script src="jslib/soundmanager.js"></script>
+        <script src="jslib/texturemanager.js"></script>
         <script src="jslib/utilities.js"></script>
+        <script src="jslib/vertexbuffermanager.js"></script>
+        <script src="jslib/vmath.js"></script>
+
         <script src="jslib/services/turbulenzbridge.js"></script>
         <script src="jslib/services/turbulenzservices.js"></script>
         <script src="jslib/services/gamesession.js"></script>
         <script src="jslib/services/mappingtable.js"></script>
-
-        <script src="jslib/scene.js"></script>
-        <script src="jslib/light.js"></script>
-        <script src="jslib/material.js"></script>
-        <script src="jslib/geometry.js"></script>
-        <script src="jslib/aabbtree.js"></script>
-        <script src="jslib/scenenode.js"></script>
-        <script src="jslib/vertexbuffermanager.js"></script>
-        <script src="jslib/indexbuffermanager.js"></script>
-        <script src="jslib/resourceloader.js"></script>
-        <script src="jslib/vmath.js"></script>
-        <script src="jslib/renderingcommon.js"></script>
-        <script src="jslib/forwardrendering.js"></script>
-        <script src="jslib/shadowmapping.js"></script>
-        <script src="jslib/draw2d.js"></script>
 
         <script src="protolib/duimanager.js"></script>
         <script src="protolib/jqueryextend.js"></script>

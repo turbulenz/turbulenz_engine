@@ -349,3 +349,20 @@ The version number of the CanvasContext implementation.
 **Syntax** ::
 
     var ctxVersionNumber = ctx.version;
+
+
+.. index::
+    pair: canvascontext; imageColor
+
+`imageColor`
+------------
+
+**summary**
+
+The tint color to be applied to images when using `drawImage`,
+opaque white by default.
+
+**syntax** ::
+
+    ctx.imageColor = "red";
+    ctx.drawImage(image, 100, 100);

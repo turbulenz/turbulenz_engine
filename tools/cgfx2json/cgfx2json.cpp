@@ -23,7 +23,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.18"
+#define VERSION_STRING "cgfx2json 0.19"
 
 //
 // Utils
@@ -38,6 +38,8 @@ static const char *sCompilerArgs[] =
     "-DBLENDINDICES=ATTR7",
     "-DBLENDWEIGHT0=ATTR1",
     "-DBLENDWEIGHT=ATTR1",
+    "-unroll",
+    "all",
     NULL
 };
 
