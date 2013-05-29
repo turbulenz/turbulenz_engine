@@ -451,8 +451,17 @@ TZWebGLTexture.prototype =
                         }
                         else
                         {
-                            gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype,
-                                          new Uint8Array(levelSize));
+                            if (gltype === gl.UNSIGNED_SHORT_5_6_5 ||
+                                gltype === gl.UNSIGNED_SHORT_5_5_5_1 ||
+                                gltype === gl.UNSIGNED_SHORT_4_4_4_4)
+                            {
+                                levelData = new Uint16Array(levelSize);
+                            }
+                            else
+                            {
+                                levelData = new Uint8Array(levelSize);
+                            }
+                            gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
                         }
                     }
                     offset += levelSize;
@@ -522,8 +531,17 @@ TZWebGLTexture.prototype =
                     }
                     else
                     {
-                        gl.texImage2D(target, n, internalFormat, w, h, 0, internalFormat, gltype,
-                                      new Uint8Array(levelSize));
+                        if (gltype === gl.UNSIGNED_SHORT_5_6_5 ||
+                            gltype === gl.UNSIGNED_SHORT_5_5_5_1 ||
+                            gltype === gl.UNSIGNED_SHORT_4_4_4_4)
+                        {
+                            levelData = new Uint16Array(levelSize);
+                        }
+                        else
+                        {
+                            levelData = new Uint8Array(levelSize);
+                        }
+                        gl.texImage2D(target, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
                     }
                 }
                 offset += levelSize;
