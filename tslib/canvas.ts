@@ -910,7 +910,6 @@ class CanvasContext
     viewport                 : number[];
 
     pixelRatio               : number;
-    forceFatLines            : bool;
 
     width                    : number;
     height                   : number;
@@ -950,12 +949,14 @@ class CanvasContext
 
     flatTechniques           : { [name: string]: Technique; };
 
-    bufferData               : any; // arrayConstructor(512);
+    bufferData               : any; // floatArrayConstructor(512);
     subBufferDataCache       : {};
 
-    tempRect                 : any; // arrayConstructor(8);
+    tempRect                 : any; // floatArrayConstructor(8);
 
     tempVertices             : number[];
+
+    tempStack                : number[];
 
     v4Zero                   : any; // v4
     v4One                    : any; // v4
@@ -963,7 +964,7 @@ class CanvasContext
     cachedColors             : any; // TOOD {};
     numCachedColors          : number;
 
-    uvtransform              : any; // arrayConstructor(6);
+    uvtransform              : any; // floatArrayConstructor(6);
 
     tempColor                : any; // v4
     tempScreen               : any; // v4
@@ -990,7 +991,9 @@ class CanvasContext
     numCachedPaths           : number;
 
     // On prototype
-    arrayConstructor         : any;
+    floatArrayConstructor    : any;
+    byteArrayConstructor     : any;
+    shortArrayConstructor    : any;
 
     // TODO: can't have identifiers with '-' in them
     private compositeOperations =
@@ -1202,7 +1205,7 @@ class CanvasContext
 
             var style = this.strokeStyle;
             var lineWidth = this.lineWidth;
-            var thinLines = (lineWidth < 2 && !this.forceFatLines);
+            var thinLines = ((this.pixelRatio * lineWidth) < 2);
 
             var primitive;
             var numVertices;
@@ -1281,7 +1284,7 @@ class CanvasContext
                     currentSubPath[numCurrentSubPathElements] = firstPoint;
                 }
 
-                this.simplifyShape(currentSubPath, 0, (currentSubPath.length - 1));
+                this.simplifyShape(currentSubPath);
             }
 
             var subPaths = this.subPaths;
@@ -1337,22 +1340,20 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
+        var q = this.transformPoint(cpx, cpy);
+        var xq = q[0];
+        var yq = q[1];
+
         var p2 = this.transformPoint(x, y);
         var x2 = p2[0];
         var y2 = p2[1];
 
         var abs = Math.abs;
-        /*jshint bitwise: false*/
-        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
-        /*jshint bitwise: true*/
-
+        var numSteps = Math.ceil(this.pixelRatio * Math.sqrt(abs(xq - x1) + abs(yq - y1) +
+                                                             abs(x2 - xq) + abs(y2 - yq)));
         if (1 < numSteps)
         {
             currentSubPath.length += numSteps;
-
-            var q = this.transformPoint(cpx, cpy);
-            var xq = q[0];
-            var yq = q[1];
 
             var dt = (1.0 / numSteps);
             for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
@@ -1383,26 +1384,25 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
+        var q1 = this.transformPoint(cp1x, cp1y);
+        var xq1 = q1[0];
+        var yq1 = q1[1];
+
+        var q2 = this.transformPoint(cp2x, cp2y);
+        var xq2 = q2[0];
+        var yq2 = q2[1];
+
         var p2 = this.transformPoint(x, y);
         var x2 = p2[0];
         var y2 = p2[1];
 
         var abs = Math.abs;
-        /*jshint bitwise: false*/
-        var numSteps = ((0.5 * this.pixelRatio * (abs(x2 - x1) + abs(y2 - y1))) | 0);
-        /*jshint bitwise: true*/
-
+        var numSteps = Math.ceil(this.pixelRatio * Math.sqrt(abs(xq1 - x1) + abs(yq1 - y1) +
+                                                             abs(xq2 - xq1) + abs(yq2 - yq1) +
+                                                             abs(x2 - xq2) + abs(y2 - yq2)));
         if (1 < numSteps)
         {
             currentSubPath.length += numSteps;
-
-            var q1 = this.transformPoint(cp1x, cp1y);
-            var xq1 = q1[0];
-            var yq1 = q1[1];
-
-            var q2 = this.transformPoint(cp2x, cp2y);
-            var xq2 = q2[0];
-            var yq2 = q2[1];
 
             var dt = (1.0 / numSteps);
             for (var t = dt; 1 < numSteps; t += dt, numSteps -= 1)
@@ -2368,7 +2368,7 @@ class CanvasContext
                         if (needToSimplifyPath[i])
                         {
                             needToSimplifyPath[i] = false;
-                            numSegments = this.simplifyShape(points, 0, numSegments);
+                            numSegments = this.simplifyShape(points);
                         }
 
                         if (numSegments > 1)
@@ -2395,7 +2395,7 @@ class CanvasContext
                     if (needToSimplifyPath[numSubPaths])
                     {
                         needToSimplifyPath[numSubPaths] = false;
-                        numSegments = this.simplifyShape(points, 0, numSegments);
+                        numSegments = this.simplifyShape(points);
                     }
 
                     if (numSegments > 1)
@@ -2431,7 +2431,7 @@ class CanvasContext
                     if (needToSimplifyPath[0])
                     {
                         needToSimplifyPath[0] = false;
-                        numSegments = this.simplifyShape(points, 0, numSegments);
+                        numSegments = this.simplifyShape(points);
                     }
 
                     if (numSegments > 1)
@@ -2484,7 +2484,7 @@ class CanvasContext
             var gd = this.gd;
             var style = this.strokeStyle;
             var lineWidth = this.lineWidth;
-            var thinLines = (lineWidth < 2 && !this.forceFatLines);
+            var thinLines = ((this.pixelRatio * lineWidth) < 2);
             var points, numPoints, primitive, numVertices;
 
             if (thinLines)
@@ -2504,7 +2504,7 @@ class CanvasContext
                 if (needToSimplifyPath[i])
                 {
                     needToSimplifyPath[i] = false;
-                    numPoints = (1 + this.simplifyShape(points, 0, (numPoints - 1)));
+                    numPoints = (1 + this.simplifyShape(points));
                 }
 
                 if (thinLines)
@@ -2542,7 +2542,7 @@ class CanvasContext
                     needToSimplifyPath[numSubPaths] = false;
                     if (numPoints > 2)
                     {
-                        numPoints = (1 + this.simplifyShape(points, 0, (numPoints - 1)));
+                        numPoints = (1 + this.simplifyShape(points));
                     }
                 }
 
@@ -3171,7 +3171,6 @@ class CanvasContext
         this.updateScissor();
 
         this.pixelRatio = Math.max((viewport[2] / width), (viewport[3] / height));
-        this.forceFatLines = (2 < this.pixelRatio);
 
         this.activeVertexBuffer = null;
         this.activeTechnique = null;
@@ -3255,14 +3254,14 @@ class CanvasContext
             textAlign : null,
             textBaseline : null,
             imageColor: null,
-            matrix : new this.arrayConstructor(6),
+            matrix : new this.floatArrayConstructor(6),
             scale : null,
             translate : null,
             transform : null,
             setTransform : null,
             transformPoint : null,
             transformRect : null,
-            clipExtents : new this.arrayConstructor(4)
+            clipExtents : new this.floatArrayConstructor(4)
         };
     };
 
@@ -4095,7 +4094,7 @@ class CanvasContext
         var numFloats = (2 * numVertices);
         if (bufferData.length < numFloats)
         {
-            this.bufferData = bufferData = new this.arrayConstructor(numFloats);
+            this.bufferData = bufferData = new this.floatArrayConstructor(numFloats);
             this.subBufferDataCache = {};
         }
         else if (numFloats < bufferData.length)
@@ -4146,7 +4145,7 @@ class CanvasContext
         var numFloats = (4 * numVertices);
         if (bufferData.length < numFloats)
         {
-            this.bufferData = bufferData = new this.arrayConstructor(numFloats);
+            this.bufferData = bufferData = new this.floatArrayConstructor(numFloats);
             this.subBufferDataCache = {};
         }
         else if (numFloats < bufferData.length)
@@ -4411,10 +4410,14 @@ class CanvasContext
         return false;
     };
 
-    simplifyShape(points: any[], first: number, last: number) : number
+    simplifyShape(points: any[]) : number
     {
         var abs = Math.abs;
         var epsilon = (0.5 / this.pixelRatio);
+        var stack = this.tempStack;
+        var stackSize = 0;
+        var first = 0;
+        var last = (points.length - 1);
         var p2 = points[last];
         var p2x = p2[0];
         var p2y = p2[1];
@@ -4459,15 +4462,13 @@ class CanvasContext
             else
             {
                 var slope = (d20y / d20x);
-                var invSlope = (1.0 / Math.sqrt((slope * slope) + 1));
                 var intercept = (p0y - (slope * p0x));
                 var p1;
+                maxDist *= Math.sqrt((slope * slope) + 1);
                 for (n = second; n < last; n += 1)
                 {
                     p1 = points[n];
-
-                    dist = abs((slope * p1[0]) - p1[1] + intercept) * invSlope;
-
+                    dist = abs((slope * p1[0]) - p1[1] + intercept);
                     if (maxDist < dist)
                     {
                         maxDist = dist;
@@ -4487,31 +4488,68 @@ class CanvasContext
                 {
                     points.splice(second, (last - second));
                 }
-                last = second;
-                break;
+
+                if (stackSize === 0)
+                {
+                    break;
+                }
+                else
+                {
+                    stackSize -= 2;
+                    first = stack[stackSize];
+                    last = stack[stackSize + 1];
+                    p2 = points[last];
+                    p2x = p2[0];
+                    p2y = p2[1];
+                }
             }
             else
             {
                 if (second < middle)
                 {
-                    var newMiddle = this.simplifyShape(points, first, middle);
-                    last -= (middle - newMiddle);
-                    middle = newMiddle;
-                }
+                    if ((middle + 1) < last)
+                    {
+                        stack[stackSize] = first;
+                        stack[stackSize + 1] = middle;
+                        stackSize += 2;
 
-                if ((middle + 1) < last)
-                {
-                    // restart loop to avoid recursion
-                    first = middle;
+                        first = middle;
+                    }
+                    else
+                    {
+                        last = middle;
+                        p2 = points[last];
+                        p2x = p2[0];
+                        p2y = p2[1];
+                    }
                 }
                 else
                 {
-                    break;
+                    if ((middle + 1) < last)
+                    {
+                        first = middle;
+                    }
+                    else
+                    {
+                        if (stackSize === 0)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            stackSize -= 2;
+                            first = stack[stackSize];
+                            last = stack[stackSize + 1];
+                            p2 = points[last];
+                            p2x = p2[0];
+                            p2y = p2[1];
+                        }
+                    }
                 }
             }
         }
 
-        return last;
+        return (points.length - 1);
     }
 
     calculateArea(points, numPoints): number
@@ -4639,9 +4677,6 @@ class CanvasContext
     triangulateConcaveCached(points, numSegments, vertices, numVertices)
     {
         var lowerIndex;
-        var cachedIndices;
-        var numCachedIndices;
-        var n;
 
         var angles = this.tempAngles;
         var numAngles = this.getAngles(points, numSegments, angles);
@@ -4662,13 +4697,7 @@ class CanvasContext
         if (lowerIndex < 0)
         {
             lowerIndex = ((-lowerIndex) - 1);
-            cachedIndices = dataBin[lowerIndex];
-            numCachedIndices = cachedIndices.length;
-            for (n = 0; n < numCachedIndices; n += 1)
-            {
-                vertices[numVertices] = points[cachedIndices[n]];
-                numVertices += 1;
-            }
+            numVertices = this.expandIndices(points, vertices, numVertices, dataBin[lowerIndex]);
         }
         else
         {
@@ -4679,6 +4708,7 @@ class CanvasContext
             }
 
             var numPoints = (numSegments + 1);
+            var n;
             for (n = 0; n < numPoints; n += 1)
             {
                 points[n][2] = n;
@@ -4690,9 +4720,10 @@ class CanvasContext
                                                   false,
                                                   totalArea);
 
-            numCachedIndices = (numVertices - oldNumVertices);
-            cachedIndices = [];
-            cachedIndices.length = numCachedIndices;
+            var numCachedIndices = (numVertices - oldNumVertices);
+            var cachedIndices = (numPoints < 256 ?
+                                 new this.byteArrayConstructor(numCachedIndices) :
+                                 new this.shortArrayConstructor(numCachedIndices));
             for (n = 0; n < numCachedIndices; n += 1)
             {
                 cachedIndices[n] = vertices[oldNumVertices + n][2];
@@ -4716,6 +4747,17 @@ class CanvasContext
         }
 
         return numVertices;
+    };
+
+    expandIndices(points: any[], vertices: any[], numVertices: number, indices: any[]) : number
+    {
+        var numIndices = indices.length;
+        var n, v;
+        for (n = 0, v = numVertices; n < numIndices; n += 1, v += 1)
+        {
+            vertices[v] = points[indices[n]];
+        }
+        return v;
     };
 
     triangulateConcave(points: any[], numSegments: number,
@@ -6110,7 +6152,6 @@ class CanvasContext
         c.viewport = [0, 0, width, height];
 
         c.pixelRatio = 1;
-        c.forceFatLines = false;
 
         c.width = width;
         c.height = height;
@@ -6125,12 +6166,12 @@ class CanvasContext
         c.currentSubPath = [];
 
         /*jshint newcap: false*/
-        var arrayConstructor = c.arrayConstructor;
+        var floatArrayConstructor = c.floatArrayConstructor;
 
         c.activeVertexBuffer = null;
         c.activeTechnique = null;
-        c.activeScreen = new arrayConstructor(4);
-        c.activeColor = new arrayConstructor(4);
+        c.activeScreen = new floatArrayConstructor(4);
+        c.activeColor = new floatArrayConstructor(4);
 
         var shader = gd.createShader(c.shaderDefinition);
         c.shader = shader;
@@ -6163,13 +6204,15 @@ class CanvasContext
 
         c.flatOffset = 0;
 
-        c.bufferData = new arrayConstructor(512);
+        c.bufferData = new floatArrayConstructor(512);
         c.subBufferDataCache = {};
 
-        c.tempRect = new arrayConstructor(8);
+        c.tempRect = new floatArrayConstructor(8);
         /*jshint newcap: true*/
 
         c.tempVertices = [];
+
+        c.tempStack = [];
 
         c.v4Zero = md.v4BuildZero();
         c.v4One = md.v4BuildOne();
@@ -6178,7 +6221,7 @@ class CanvasContext
         c.numCachedColors = 0;
 
         /*jshint newcap: false*/
-        c.uvtransform = new arrayConstructor(6);
+        c.uvtransform = new floatArrayConstructor(6);
         /*jshint newcap: true*/
         c.uvtransform[0] = 1;
         c.uvtransform[1] = 0;
@@ -6239,7 +6282,7 @@ class CanvasContext
         // Transformation matrix and related operations
         //
         /*jshint newcap: false*/
-        c.matrix = new arrayConstructor(6);
+        c.matrix = new floatArrayConstructor(6);
         /*jshint newcap: true*/
         c.matrix[0] = 1;
         c.matrix[1] = 0;
@@ -6330,7 +6373,7 @@ class CanvasContext
         // Clipping
         //
         /*jshint newcap: false*/
-        c.clipExtents = new arrayConstructor(4);
+        c.clipExtents = new floatArrayConstructor(4);
         /*jshint newcap: true*/
         c.clipExtents[0] = 0;
         c.clipExtents[1] = 0;
@@ -6491,14 +6534,31 @@ class Canvas
 
 // Detect correct typed arrays
 (function () {
-    CanvasContext.prototype.arrayConstructor = Array;
+    CanvasContext.prototype.floatArrayConstructor = Array;
+    CanvasContext.prototype.byteArrayConstructor = Array;
+    CanvasContext.prototype.shortArrayConstructor = Array;
     if (typeof Float32Array !== "undefined")
     {
-        var testArray = new Float32Array(4);
-        var textDescriptor = Object.prototype.toString.call(testArray);
+        var textDescriptor = Object.prototype.toString.call(new Float32Array(4));
         if (textDescriptor === '[object Float32Array]')
         {
-            CanvasContext.prototype.arrayConstructor = Float32Array;
+            CanvasContext.prototype.floatArrayConstructor = Float32Array;
+        }
+    }
+    if (typeof Uint8Array !== "undefined")
+    {
+        var textDescriptor = Object.prototype.toString.call(new Uint8Array(4));
+        if (textDescriptor === '[object Uint8Array]')
+        {
+            CanvasContext.prototype.byteArrayConstructor = Uint8Array;
+        }
+    }
+    if (typeof Uint16Array !== "undefined")
+    {
+        var textDescriptor = Object.prototype.toString.call(new Uint16Array(4));
+        if (textDescriptor === '[object Uint16Array]')
+        {
+            CanvasContext.prototype.shortArrayConstructor = Uint16Array;
         }
     }
 }());
