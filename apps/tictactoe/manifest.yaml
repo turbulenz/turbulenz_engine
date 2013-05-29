@@ -11,10 +11,10 @@ deployed: Never
 engine_version: '0.26'
 flash_main: ''
 has_notifications: true
-is_multiplayer: true
+is_multiplayer: false
 is_temp: false
 mapping_table: mapping_table.json
-modified: 11:57 | 28/05/2013
+modified: 17:26 | 29/05/2013
 path: ../../engine/apps/tictactoe
 plugin_main: tictactoe.tzjs
 slug: tic-tac-toe
