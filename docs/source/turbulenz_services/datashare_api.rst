@@ -53,13 +53,7 @@ All keys are read only when created with the :ref:`set <datashare_set>` function
 read and write when created with the :ref:`compareAndSet <datashare_compareandset>` function.
 Giving keys read only access protects save games from malicious users who could use the API to alter other user's save
 games.
-
-Only the owner of a key (the first user to write to the key) can:
-
-- Set the value for a public read only key.
-
-- Delete a key (even for public read and write keys).
-  This avoids malicious users deleting a key and then recreating it with themselves as the owner.
+Only the owner of a key (the first user to write to the key) can set the value for a public read only key.
 
 For more information see the :ref:`data share access example <datashare_access_example>`.
 
@@ -851,12 +845,6 @@ The ``notSetReason`` properties are:
     When :ref:`publicReadAndWrite <datashare_publicreadandwrite>` access is set
     only the :ref:`dataShare.compareAndSet <datashare_compareandset>` function can be used to set the key value
     (:ref:`dataShare.set <datashare_set>` cannot be used).
-
-.. _datashare_notsetreason_unauthorizeddelete:
-
-``unauthorizedDelete``
-    The key could not be deleted because it is not owned by the current user.
-    Only the owner of a key can delete the key.
 
 .. NOTE::
     This property is read only.
