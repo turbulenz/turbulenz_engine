@@ -956,6 +956,8 @@ class CanvasContext
 
     tempVertices             : number[];
 
+    tempStack                : number[];
+
     v4Zero                   : any; // v4
     v4One                    : any; // v4
 
@@ -1282,7 +1284,7 @@ class CanvasContext
                     currentSubPath[numCurrentSubPathElements] = firstPoint;
                 }
 
-                this.simplifyShape(currentSubPath, 0, (currentSubPath.length - 1));
+                this.simplifyShape(currentSubPath);
             }
 
             var subPaths = this.subPaths;
@@ -2366,7 +2368,7 @@ class CanvasContext
                         if (needToSimplifyPath[i])
                         {
                             needToSimplifyPath[i] = false;
-                            numSegments = this.simplifyShape(points, 0, numSegments);
+                            numSegments = this.simplifyShape(points);
                         }
 
                         if (numSegments > 1)
@@ -2393,7 +2395,7 @@ class CanvasContext
                     if (needToSimplifyPath[numSubPaths])
                     {
                         needToSimplifyPath[numSubPaths] = false;
-                        numSegments = this.simplifyShape(points, 0, numSegments);
+                        numSegments = this.simplifyShape(points);
                     }
 
                     if (numSegments > 1)
@@ -2429,7 +2431,7 @@ class CanvasContext
                     if (needToSimplifyPath[0])
                     {
                         needToSimplifyPath[0] = false;
-                        numSegments = this.simplifyShape(points, 0, numSegments);
+                        numSegments = this.simplifyShape(points);
                     }
 
                     if (numSegments > 1)
@@ -2502,7 +2504,7 @@ class CanvasContext
                 if (needToSimplifyPath[i])
                 {
                     needToSimplifyPath[i] = false;
-                    numPoints = (1 + this.simplifyShape(points, 0, (numPoints - 1)));
+                    numPoints = (1 + this.simplifyShape(points));
                 }
 
                 if (thinLines)
@@ -2540,7 +2542,7 @@ class CanvasContext
                     needToSimplifyPath[numSubPaths] = false;
                     if (numPoints > 2)
                     {
-                        numPoints = (1 + this.simplifyShape(points, 0, (numPoints - 1)));
+                        numPoints = (1 + this.simplifyShape(points));
                     }
                 }
 
@@ -4408,10 +4410,14 @@ class CanvasContext
         return false;
     };
 
-    simplifyShape(points: any[], first: number, last: number) : number
+    simplifyShape(points: any[]) : number
     {
         var abs = Math.abs;
         var epsilon = (0.5 / this.pixelRatio);
+        var stack = this.tempStack;
+        var stackSize = 0;
+        var first = 0;
+        var last = (points.length - 1);
         var p2 = points[last];
         var p2x = p2[0];
         var p2y = p2[1];
@@ -4462,9 +4468,7 @@ class CanvasContext
                 for (n = second; n < last; n += 1)
                 {
                     p1 = points[n];
-
                     dist = abs((slope * p1[0]) - p1[1] + intercept);
-
                     if (maxDist < dist)
                     {
                         maxDist = dist;
@@ -4484,8 +4488,20 @@ class CanvasContext
                 {
                     points.splice(second, (last - second));
                 }
-                last = second;
-                break;
+
+                if (stackSize === 0)
+                {
+                    break;
+                }
+                else
+                {
+                    stackSize -= 2;
+                    first = stack[stackSize];
+                    last = stack[stackSize + 1];
+                    p2 = points[last];
+                    p2x = p2[0];
+                    p2y = p2[1];
+                }
             }
             else
             {
@@ -4493,15 +4509,14 @@ class CanvasContext
                 {
                     if ((middle + 1) < last)
                     {
-                        var newMiddle = this.simplifyShape(points, first, middle);
-                        last -= (middle - newMiddle);
+                        stack[stackSize] = first;
+                        stack[stackSize + 1] = middle;
+                        stackSize += 2;
 
-                        // restart loop to avoid recursion
-                        first = newMiddle;
+                        first = middle;
                     }
                     else
                     {
-                        // restart loop to avoid recursion
                         last = middle;
                         p2 = points[last];
                         p2x = p2[0];
@@ -4512,18 +4527,29 @@ class CanvasContext
                 {
                     if ((middle + 1) < last)
                     {
-                        // restart loop to avoid recursion
                         first = middle;
                     }
                     else
                     {
-                        break;
+                        if (stackSize === 0)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            stackSize -= 2;
+                            first = stack[stackSize];
+                            last = stack[stackSize + 1];
+                            p2 = points[last];
+                            p2x = p2[0];
+                            p2y = p2[1];
+                        }
                     }
                 }
             }
         }
 
-        return last;
+        return (points.length - 1);
     }
 
     calculateArea(points, numPoints): number
@@ -6185,6 +6211,8 @@ class CanvasContext
         /*jshint newcap: true*/
 
         c.tempVertices = [];
+
+        c.tempStack = [];
 
         c.v4Zero = md.v4BuildZero();
         c.v4One = md.v4BuildOne();
