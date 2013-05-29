@@ -90,8 +90,7 @@ class DataShare
     static notSetReason = {
         changed: 'changed',
         readOnly: 'readOnly',
-        readAndWrite: 'readAndWrite',
-        unauthorizedDelete: 'unauthorizedDelete',
+        readAndWrite: 'readAndWrite'
     };
 
     gameSession: GameSession;
@@ -380,10 +379,6 @@ class DataShare
             if (jsonResponse.data.reason === 'read_only')
             {
                 return DataShare.notSetReason.readOnly;
-            }
-            if (jsonResponse.data.reason === 'unauthorized_delete')
-            {
-                return DataShare.notSetReason.unauthorizedDelete;
             }
             if (jsonResponse.data.reason === 'read_and_write')
             {
