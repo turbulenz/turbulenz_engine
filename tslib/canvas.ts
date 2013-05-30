@@ -2829,6 +2829,9 @@ class CanvasContext
         }
 
         font.drawTextRect(text, params);
+
+        // Clear stream cache because drawTextRect sets its own
+        this.activeVertexBuffer = null;
     };
 
     strokeText(/* text, x, y, maxWidth */)
