@@ -10,13 +10,18 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-05-30
+    - Added Data Shares - shared public key-value stores which allow games to share data with other users.
+    - Added Notifications - send instant to other users or delayed notifications to the current user.
+    - Added Tic-tac-toe app - An app showing how to use the Data Share and Notification API's with a simple game.
+
 2013-05-21
     - Update protolib library and add two apps 'protolibsampleapp' and 'protolibtemplateapp'
 
       * Added a 'warn' function to the protolib.utils for warnings.
       * Add a 'time' property with app timers calculating current, previous, delta and maxDeltaTime times per frame.
       * endFrame, returns the result of graphicsDevice.endFrame.
-      * Made naming conventions more explicit md -> mathDevice
+      * Made naming conventions more explicit md -> mathDevice.
       * Loading now waits for essential assets to load.
       * Warning if minimum asset requirement is not met.
       * Simplesprite now preloads the shader.

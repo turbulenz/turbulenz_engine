@@ -59,15 +59,18 @@ The NetworkLatencySimulator can be configured to have independent behaviors for 
 This behavior is useful for local testing, however it should not replace testing on the Hub.
 There are many 3rd party network simulators that may be able to operate at a lower level, depending on your operating system.
 
+.. _testing_multiple_user_accouts:
+
 Testing Multiple User Accounts
 ==============================
 
 At some point during your development you will likely require multiple Turbulenz user accounts to test certain features such as multiplayer. The Turbulenz sites require users to sign-in to access some features of the site and for this reason you may need to be signed-in to multiple accounts at the same time during testing. 
 
-Some browsers provide means to create different user profiles. Using profiles will allow you to create different users with different settings for that browser. Both hub.turbulenz.com and turbulenz.com support this method.
+Some browsers provide means to create different user profiles. Using profiles will allow you to create different users with different settings for that browser. Our sites: local, hub.turbulenz.com and turbulenz.com support this method.
 
-More information about user profiles can be found here -
+To login as multiple users simultaneously either:
 
-Chrome - http://support.google.com/chrome/bin/answer.py?hl=en&answer=2364824
-
-Firefox - http://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles
+- Set up multiple users in Chrome - http://support.google.com/chrome/bin/answer.py?hl=en&answer=2364824
+- Set up multiple profiles in Firefox - http://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles
+- Use different browsers for each user.
+- Use private browsing or "Incognito mode" windows for each user (requires logging in again each time).

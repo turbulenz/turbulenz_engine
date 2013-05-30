@@ -12,9 +12,9 @@ The DataShareManager Object
 .. Added in :ref:`SDK x.x.x <added_sdk_0_25_0>`.
 
 The ``DataShareManager`` object is an API for creating and finding :ref:`data share <datashare>` objects.
-Data shares are public key-value stores which allow games to share data with other users.
+Data shares are shared public key-value stores which allow games to share data with other users.
 For example, data shares could be used to store the game state of an asynchronous multiplayer game
-(communication with users who are not required to be on-line) like Chess or Diplomacy.
+(allowing communication with users who are on-line or off-line) like Chess or Diplomacy.
 
 For real-time multiplayer games requiring low latency (games with users all playing at the same time e.g. FPS) please
 use the :ref:`MultiPlayerSessionManager <multiplayersessionmanager>`.
@@ -24,6 +24,11 @@ know which :ref:`game data <turbulenz_services_game_data>` API to use.
 The ``DataShareManager`` is the most complex of the game data API's and you should always consider
 the :ref:`user data <userdatamanager>` API or the :ref:`game profiles <gameprofilemanager>` API before using data
 shares.
+
+.. NOTE::
+    Guest users are not supported by the ``DataShareManager``.
+    This means that before using the ``DataShareManager`` games should check if the current user is a guest with the
+    ``guest`` property on the :ref:`UserProfile <userprofile>` object.
 
 **Required scripts**
 
@@ -57,7 +62,7 @@ Only the owner of a key (the first user to write to the key) can set the value f
 
 For more information see the :ref:`data share access example <datashare_access_example>`.
 
-**Testing**
+**Testing with multiple users**
 
 To test with multiple users see this :ref:`guide on multiple logins <multiple_logins>`.
 
@@ -287,6 +292,7 @@ For a more detailed example see the Tic-tac-toe app.
 The SDK contains a Tic-tac-toe app which shows how to use data share objects combined with
 :ref:`instant notifications <notificationsmanager>` with some simple game and lobby logic.
 This includes code for limiting the number of players that can join the game.
+Read the instructions for :ref:`logging in multiple accounts <multiple_logins>` in order to play.
 
 Constructor
 ===========

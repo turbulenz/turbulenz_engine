@@ -369,6 +369,18 @@ Turbulenz Service API
 - Session creation/joining.
 - Multiplayer session invite and notification.
 
+**Datashares**
+
+- Shared key-value store for turn based games and user generated content.
+- Read only and read and write access.
+- Find other users public shares or filter by username.
+
+**Notifications**
+
+- Send delayed notifications to the current user.
+- Send instant notifications to other users.
+- Notification types: Email, website pop-up and in-game.
+
 **Metrics**
 
 - Custom event submission:

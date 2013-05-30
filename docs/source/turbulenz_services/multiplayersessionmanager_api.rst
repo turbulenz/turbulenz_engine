@@ -14,6 +14,8 @@ The object can be created by calling :ref:`TurbulenzServices.createMultiPlayerSe
 You **must** dispose of this object by calling :ref:`MultiPlayerSessionManager.destroy <multiplayersessionmanager_destroy>`, either when you finish using the object or in :ref:`TurbulenzEngine.onunload <turbulenzengine_unload>`.
 This will :ref:`destroy <multiplayersession_destroy>` any :ref:`MultiPlayerSession <multiplayersession>` objects which have not yet been destroyed.
 
+For games without real-time multiplayer (e.g. turn based games) it may be easier to use :ref:`Data Shares <datasharemanager>` and :ref:`instant notifications <notificationsmanager>`.
+
 **Required scripts**
 
 The ``MultiPlayerSession`` object requires::

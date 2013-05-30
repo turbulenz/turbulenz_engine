@@ -78,6 +78,7 @@ Sending an instant notification to a partner::
 
 The SDK contains a tic-tac-toe app which shows how to use instant notifications combined with data share objects from
 the :ref:`DataShareManager <datasharemanager>`.
+Read the instructions for :ref:`logging in multiple accounts <multiple_logins>` in order to play.
 
 Notes
 =====

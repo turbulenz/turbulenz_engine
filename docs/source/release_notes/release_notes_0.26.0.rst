@@ -17,10 +17,13 @@ Change List
 New Features
 ------------
 
-* Added the :ref:`DataShareManager <datasharemanager>` object which allows games to share data or
-  communicate asynchronously (while the receiving user is off-line) with other user's games.
+* Added the :ref:`DataShareManager <datasharemanager>` object for creating and finding :ref:`data share <datashare>` objects.
+  Data shares are shared public key-value stores which allow games to share data with other users.
+  For example, data shares could be used to store the game state of an asynchronous multiplayer game
+  (allowing communication with users who are on-line or off-line) like Chess or Diplomacy.
 * Added a Tic-tac-toe app which demos how the :ref:`DataShareManager <datasharemanager>` and
-  :ref:`NotificationsManager <notificationsmanager>` can be used in a game.
+  :ref:`NotificationsManager <notificationsmanager>` API's can be used in-game.
+  Read the instructions for :ref:`logging in multiple accounts <multiple_logins>` in order to play.
 * Added :ref:`GraphicsDevice  <graphicsdevice>` :ref:`finish <graphicsdevice_finish>` and :ref:`flush <graphicsdevice_flush>`.
 * Added :ref:`ShaderManager  <shadermanager>` :ref:`setAutomaticParameterResize <shadermanager_setautomaticparameterresize>`.
 

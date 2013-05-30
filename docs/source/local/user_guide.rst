@@ -467,11 +467,11 @@ To login as multiple users simultaneously either:
 
 - Use different browsers for each user.
 - Use private browsing or "Incognito mode" windows for each user (requires logging in again each time).
-- Set up multiple users in Chrome in Settings -> Users.
-- Create multiple profiles in Firefox using the command ``firefox -P`` in a terminal window.
+- Set up multiple users in Chrome - http://support.google.com/chrome/bin/answer.py?hl=en&answer=2364824
+- Set up multiple profiles in Firefox - http://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles
 
-This is most useful when debugging and testing the :ref:`notifications <notificationsmanager>` and
-:ref:`data share <datasharemanager>` API's.
+This is most useful when debugging and testing the :ref:`multiplayer <multiplayer_games>`,
+:ref:`notifications <notificationsmanager>` and :ref:`data share <datasharemanager>` API's.
 
 .. highlight:: javascript
 
