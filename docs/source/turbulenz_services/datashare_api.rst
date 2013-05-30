@@ -253,7 +253,7 @@ read using :ref:`dataShare.get <datashare_get>`.
 
 **Limiting the number of players**
 
-The number of players that can join a data share has to be limited client-side.
+Currently, the number of players that can join a data share has to be limited client-side.
 This can be achieved by using the :ref:`dataShare.users <datashare_users>` property.
 
 ::
@@ -275,10 +275,16 @@ This can be achieved by using the :ref:`dataShare.users <datashare_users>` prope
     }
     dataShare.join(joinedDataShare);
 
+Since :ref:`dataShare.users <datashare_users>` is only updated when join is called only the last user to join will leave
+(as the first user to join will not see the last user int the users list and so will see the correct amount of users).
+
+It is also a good idea to check the number of players when starting a game (in-case a player joins and then closes
+their browser before checking the number of joined players).
+For a more detailed example see the Tic-tac-toe app.
 
 **Tic-tac-toe**
 
-The SDK contains a tic tac toe app which shows how to use data share objects combined with
+The SDK contains a Tic-tac-toe app which shows how to use data share objects combined with
 :ref:`instant notifications <notificationsmanager>` with some simple game and lobby logic.
 This includes code for limiting the number of players that can join the game.
 
