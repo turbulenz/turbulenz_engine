@@ -243,9 +243,14 @@ float3 GetFirstSceneIntersection(float3 vRayO, float3 vRayDir)
     return vRayIntersection;
 }
 
-float DecodeFloatRGBA(float4 rgba)
+float DecodeFloatRGBA32(float4 rgba)
 {
     return dot(rgba, float4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/16581375.0));
+}
+
+float DecodeFloatRGB16(float4 rgba)
+{
+    return dot(rgba.xyz, float3(63488.0 / 65535.0, 2016.0 / 65535.0, 31.0 / 65535.0));
 }
 
 float3 ApplyShadowAttenuation(float3 position, float3 attenuation)
@@ -253,7 +258,7 @@ float3 ApplyShadowAttenuation(float3 position, float3 attenuation)
     float3 shadowPosition = WorldPointToDevice(position, shadowProjection).xyw;
     float2 shadowSpace = (shadowPosition.xy / shadowPosition.z);
     float2 shadowSpaceRange = abs(shadowSpace);
-    float depth = saturate(dot(shadowDepth, float4(position, 1.0)));
+    float depth = saturate(dot(shadowDepth, float4(position, 1.0)) - 0.007);
     float2 shadowuv = (shadowSpace * 0.5 + 0.5);
 
     // emulate bilinear filtering
@@ -262,12 +267,12 @@ float3 ApplyShadowAttenuation(float3 position, float3 attenuation)
     unnormalized = floor(unnormalized);
     float shadowSizeReciprocal = (1.0 / shadowSize);
     float4 exponent;
-    exponent.x = DecodeFloatRGBA(tex2D(shadowMapTexture, (unnormalized + float2(-0.5,  0.5)) * shadowSizeReciprocal));
-    exponent.y = DecodeFloatRGBA(tex2D(shadowMapTexture, (unnormalized + float2( 0.5,  0.5)) * shadowSizeReciprocal));
-    exponent.z = DecodeFloatRGBA(tex2D(shadowMapTexture, (unnormalized + float2( 0.5, -0.5)) * shadowSizeReciprocal));
-    exponent.w = DecodeFloatRGBA(tex2D(shadowMapTexture, (unnormalized + float2(-0.5, -0.5)) * shadowSizeReciprocal));
+    exponent.x = DecodeFloatRGB16(tex2D(shadowMapTexture, (unnormalized + float2(-0.5,  0.5)) * shadowSizeReciprocal));
+    exponent.y = DecodeFloatRGB16(tex2D(shadowMapTexture, (unnormalized + float2( 0.5,  0.5)) * shadowSizeReciprocal));
+    exponent.z = DecodeFloatRGB16(tex2D(shadowMapTexture, (unnormalized + float2( 0.5, -0.5)) * shadowSizeReciprocal));
+    exponent.w = DecodeFloatRGB16(tex2D(shadowMapTexture, (unnormalized + float2(-0.5, -0.5)) * shadowSizeReciprocal));
 
-    float over_darkening_factor = 48.0;
+    const float over_darkening_factor = 48.0;
     /*
     float4 occluder4 = exponent;
     float occluder = (occluder4.w + (occluder4.x - occluder4.w) * fractional.y);
@@ -387,7 +392,7 @@ FP_LIGHT_OUT fp_spot_light(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
     float3 attenuation = tex2DprojFix(lightprojection, lightPos).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
@@ -411,7 +416,7 @@ FP_LIGHT_OUT fp_spot_light_shadow(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
     float3 attenuation = tex2DprojFix(lightprojection, lightPos).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
@@ -437,7 +442,7 @@ FP_LIGHT_OUT fp_point_light(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
     float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
@@ -460,7 +465,7 @@ FP_LIGHT_OUT fp_point_light_specular(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
     float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
@@ -484,7 +489,7 @@ FP_LIGHT_OUT fp_point_light_specular_shadow(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
     float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
@@ -512,7 +517,7 @@ float4 fp_fog_light(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 fragmentPos = LocalPointToView(position, lightViewInverseTranspose);
     float3 eyePos = float3(lightViewInverseTranspose[0].w, lightViewInverseTranspose[1].w, lightViewInverseTranspose[2].w);

@@ -214,19 +214,19 @@ class ShadowMapping
         this.depthBufferLow = gd.createRenderBuffer({
                 width: sizeLow,
                 height: sizeLow,
-                format: "D24S8"
+                format: "D16"
             });
 
         this.depthBufferHigh = gd.createRenderBuffer({
                 width: sizeHigh,
                 height: sizeHigh,
-                format: "D24S8"
+                format: "D16"
             });
 
         this.blurTextureLow = gd.createTexture({
                 width: sizeLow,
                 height: sizeLow,
-                format: "R8G8B8A8",
+                format: "R5G6B5",
                 mipmaps: false,
                 renderable: true
             });
@@ -234,7 +234,7 @@ class ShadowMapping
         this.blurTextureHigh = gd.createTexture({
                 width: sizeHigh,
                 height: sizeHigh,
-                format: "R8G8B8A8",
+                format: "R5G6B5",
                 mipmaps: false,
                 renderable: true
             });
@@ -416,7 +416,7 @@ class ShadowMapping
                 shadowMapTexture = gd.createTexture({
                         width: shadowMapSize,
                         height: shadowMapSize,
-                        format: "R8G8B8A8",
+                        format: "R5G6B5",
                         mipmaps: false,
                         renderable: true
                     });
@@ -464,7 +464,7 @@ class ShadowMapping
                 shadowMapTexture = gd.createTexture({
                         width: shadowMapSize,
                         height: shadowMapSize,
-                        format: "R8G8B8A8",
+                        format: "R5G6B5",
                         mipmaps: false,
                         renderable: true
                     });
@@ -572,7 +572,7 @@ class ShadowMapping
                 var m7 = viewMatrix[7];
                 lightViewWindowX = ((m0 < 0 ? -m0 : m0) * halfExtents0 + (m3 < 0 ? -m3 : m3) * halfExtents1 + (m6 < 0 ? -m6 : m6) * halfExtents2);
                 lightViewWindowY = ((m1 < 0 ? -m1 : m1) * halfExtents0 + (m4 < 0 ? -m4 : m4) * halfExtents1 + (m7 < 0 ? -m7 : m7) * halfExtents2);
-                lightDepth = 2 * ((halfExtents0 * halfExtents0) + (halfExtents1 * halfExtents1) + (halfExtents2 * halfExtents2));
+                lightDepth = 2 * Math.sqrt((halfExtents0 * halfExtents0) + (halfExtents1 * halfExtents1) + (halfExtents2 * halfExtents2));
             }
 
             lightInstance.lightViewWindowX = lightViewWindowX;
@@ -1151,7 +1151,7 @@ class ShadowMapping
 
         shadowMapping.gd = gd;
         shadowMapping.md = md;
-        shadowMapping.clearColor = md.v4Build(1, 0, 0, 0);
+        shadowMapping.clearColor = md.v4Build(1, 1, 1, 1);
         shadowMapping.tempMatrix43 = md.m43BuildIdentity();
         shadowMapping.tempV3Up = md.v3BuildZero();
         shadowMapping.tempV3At = md.v3BuildZero();
