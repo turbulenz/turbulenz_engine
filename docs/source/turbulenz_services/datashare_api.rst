@@ -11,12 +11,13 @@ The DataShareManager Object
 
 .. Added in :ref:`SDK x.x.x <added_sdk_0_25_0>`.
 
-The ``DataShareManager`` object is an API for creating and finding data share objects.
-Data shares are public key-value stores which allow games to share data or
-communicate asynchronously (while the receiving user is off-line) with other user's games.
+The ``DataShareManager`` object is an API for creating and finding :ref:`data share <datashare>` objects.
+Data shares are public key-value stores which allow games to share data with other users.
+For example, data shares could be used to store the game state of an asynchronous multiplayer game
+(communication with users who are not required to be on-line) like Chess or Diplomacy.
 
-For synchronous multiplayer games (with users all playing at the same time) please use the
-:ref:`MultiPlayerSessionManager <multiplayersessionmanager>`.
+For real-time multiplayer games requiring low latency (games with users all playing at the same time e.g. FPS) please
+use the :ref:`MultiPlayerSessionManager <multiplayersessionmanager>`.
 
 Before using the ``DataShareManager`` make sure you understand the :ref:`user data <userdatamanager>` API and
 know which :ref:`game data <turbulenz_services_game_data>` API to use.
@@ -35,8 +36,7 @@ The ``DataShareManager`` object requires::
 Data Shares
 ===========
 
-Data shares are public key-value stores which allow games to share data or
-communicate asynchronously (while the receiving user is offline) with other user's games.
+:ref:`Data shares <datashare>` are public key-value stores which allow games to share data with other users.
 Please read the :ref:`user data guide for using a key-value store <working_with_http>` for how to use a key-value store
 efficiently.
 
@@ -88,6 +88,8 @@ the page.
 Examples
 ========
 
+.. _creating_datashare_example:
+
 **Creating a data share**
 
 A data share can be created for the current user by calling the
@@ -119,14 +121,24 @@ After creating the data share the game can write to its key-value store using th
     }
     var gameSession = TurbulenzServices.createGameSession(requestHandler, sessionReadyFn);
 
-**Finding data share objects**
+Note that the user's game can remain joined to a data share even while the user is off-line.
+When the game has finished using the data share it should call :ref:`dataShare.leave <datashare_leave>` to remove the current user from the data share.
+Once the :ref:`dataShare.users <datashare_users>` array is empty it will be deleted.
+
+.. _finding_joining_datashare_examples:
+
+**Finding and joining data share objects**
 
 Data shares can be found using the :ref:`dataShareManager.findDataShares <datasharemanager_finddatashares>` function.
 This function returns an array of data share objects which match the find parameters.
 To use the data share :ref:`getKeys <datashare_getkeys>`, :ref:`get <datashare_get>`, :ref:`set <datashare_set>` or
 :ref:`compareAndSet <datashare_compareandset>` functions you first need to :ref:`join <datashare_join>` the data share.
 
-The following code will find the first data share object with the user "bob" joined::
+By joining a data share object the current user is added to the :ref:`dataShare.users <datashare_users>` array property of the data share.
+Once the :ref:`dataShare.users <datashare_users>` array is empty it will be deleted.
+
+The following code will find the first data share object with the user "bob" joined and, if it can find it, will join it
+and get the key "gamestate"::
 
     var dataShare;
 
@@ -239,10 +251,36 @@ Once a key has been set using :ref:`dataShare.compareAndSet <datashare_comparean
 Compare and set operations will fail if another user has written to the key value since it was last
 read using :ref:`dataShare.get <datashare_get>`.
 
+**Limiting the number of players**
+
+The number of players that can join a data share has to be limited client-side.
+This can be achieved by using the :ref:`dataShare.users <datashare_users>` property.
+
+::
+
+    function joinedDataShare(success)
+    {
+        if (success)
+        {
+            currentDataShare = dataShare;
+            if (currentDataShare.users.length > maxUsers)
+            {
+                // only maxUsers players should join a game
+                // this is possible if 2 (or more) people click to join a game at the same time
+                leaveGame();
+                currentDataShare.setJoinable(false);
+            }
+            ...
+        }
+    }
+    dataShare.join(joinedDataShare);
+
+
 **Tic-tac-toe**
 
 The SDK contains a tic tac toe app which shows how to use data share objects combined with
 :ref:`instant notifications <notificationsmanager>` with some simple game and lobby logic.
+This includes code for limiting the number of players that can join the game.
 
 Constructor
 ===========
@@ -302,6 +340,10 @@ Create a :ref:`DataShare <datashare>` object.
 ``errorCallback`` :ref:`(Optional) <datasharemanager_errorcallback>`
 
 The current user owns the returned ``dataShare`` object and is automatically :ref:`joined <datashare_join>` to it.
+Note that the user's game can remain joined to a data share even while the user is off-line.
+The game should still call :ref:`dataShare.leave <datashare_leave>` once it has stopped using the data share object.
+
+For an example using this function see :ref:`creating datashares <creating_datashare_example>`.
 
 .. index::
     pair: DataShareManager; findDataShares
@@ -326,11 +368,11 @@ Create a :ref:`DataShare <datashare>` object.
 
 ``user`` (Optional)
     A JavaScript string.
-    Find data shares with the username ``user`` joined.
+    Find only data shares with the username ``user`` joined.
 
 ``friendsOnly`` (Optional)
     A JavaScript boolean.
-    Find data shares with the current user's friends joined.
+    Find only data shares with the current user's friends joined.
     This flag is ignored if the ``user`` property is also set.
     This flag is currently ignored (so returns all users) on the Local and Hub as they do not yet support friends.
 
@@ -343,13 +385,14 @@ Create a :ref:`DataShare <datashare>` object.
 
 ``errorCallback`` :ref:`(Optional) <datasharemanager_errorcallback>`
 
-.. NOTE::
-    The user must be :ref:`joined <datashare_join>` to the data share before calling
-    :ref:`getKeys <datashare_getkeys>`,
-    :ref:`get <datashare_get>`,
-    :ref:`set <datashare_set>` or
-    :ref:`compareAndSet <datashare_compareandset>` functions.
-    When calling :ref:`createDataShare <datasharemanager_createdatashare>` the current user is joined automatically.
+The user must be :ref:`joined <datashare_join>` to the data share before calling
+:ref:`getKeys <datashare_getkeys>`,
+:ref:`get <datashare_get>`,
+:ref:`set <datashare_set>` or
+:ref:`compareAndSet <datashare_compareandset>` functions.
+When calling :ref:`createDataShare <datasharemanager_createdatashare>` the current user is joined automatically.
+
+For examples using this function see :ref:`finding and joining data shares <finding_joining_datashare_examples>`.
 
 .. index::
     single: DataShareManager
@@ -386,12 +429,18 @@ Join the :ref:`DataShare <datashare>`.
 
 **Syntax** ::
 
-    function dataShareJoined() {}
+    function dataShareJoined(success) {}
     dataShare.join(dataShareJoined, errorCallback);
 
-``dataShareJoined``
+``dataShareJoined`` (Optional)
     A JavaScript function.
     Callback function, called asynchronously once the joined to the ``dataShare`` object.
+    Called with the following properties:
+
+    ``success``
+        A JavaScript boolean.
+        True, if the current player successfully joined the data share.
+        False, if the data share is not :ref:`joinable <datashare_setjoinable>`.
 
 ``errorCallback`` :ref:`(Optional) <datasharemanager_errorcallback>`
 
@@ -400,11 +449,18 @@ The user must be joined to the data share before calling
 :ref:`get <datashare_get>`,
 :ref:`set <datashare_set>`
 or :ref:`compareAndSet <datashare_compareandset>` functions.
-Once, the game has finished using a ``dataShare`` object it must call :ref:`dataShare.leave <datashare_leave>`.
+Once the game has finished using a ``dataShare`` object it must call :ref:`dataShare.leave <datashare_leave>`.
+
+The :ref:`dataShare.users <datashare_users>` property is updated on a successful join operation.
 
 .. NOTE::
     Calling :ref:`dataShareManager.createDataShare <datasharemanager_createdatashare>` automatically joins the user to
     the created data share.
+
+.. NOTE::
+    The :ref:`dataShare.users <datashare_users>` property is updated atomically.
+    This means that the ``users`` property always lists the users in the order that they joined and that any other
+    users who join after the current user will not be listed.
 
 .. index::
     pair: DataShare; leave
@@ -423,15 +479,17 @@ Leave the :ref:`DataShare <datashare>`.
     function dataShareLeaveCallback() {}
     dataShare.leave(dataShareLeaveCallback, errorCallback);
 
-``dataShareLeaveCallback``
+``dataShareLeaveCallback`` (Optional)
     A JavaScript function.
     Callback function, called asynchronously once the user is removed from the ``dataShare`` object.
 
 ``errorCallback`` :ref:`(Optional) <datasharemanager_errorcallback>`
 
-Once, the game has finished using a ``dataShare`` object it must call :ref:`dataShare.leave <datashare_leave>`.
+Once the game has finished using a ``dataShare`` object it must call :ref:`dataShare.leave <datashare_leave>`.
 Once all joined players leave a ``dataShare`` object it will be deleted
 (so there is no need to manually delete the keys).
+
+After calling ``dataShare.leave`` the ``dataShare`` object should not be used again.
 
 .. NOTE::
     The owner of the ``dataShare`` object is joined automatically when they call
@@ -459,7 +517,7 @@ Allow other players to join the data share.
     A JavaScript boolean.
     Set the joinable flag to this value.
 
-``setJoinableCallback``
+``setJoinableCallback`` (Optional)
     A JavaScript function.
     Callback function, called asynchronously once the user is removed from the ``dataShare`` object.
 
@@ -588,7 +646,7 @@ Set a :ref:`public read only <datashare_publicreadonly>` value in the :ref:`Data
     The value to set for key ``key``.
     Setting ``value`` to an empty string will delete the key-value.
 
-``dataShareSetCallback``
+``dataShareSetCallback`` (Optional)
     A JavaScript function.
     Callback function, called asynchronously with:
 
@@ -653,7 +711,7 @@ same key.
     The value to set for key ``key``.
     Setting ``value`` to an empty string will delete the key-value.
 
-``dataShareSetCallback``
+``dataShareSetCallback`` (Optional)
     A JavaScript function.
     Callback function, called asynchronously with:
 
@@ -909,6 +967,13 @@ A list of user's usernames joined to the data share.
     var username = users[0];
 
 A JavaScript array of strings.
+This list is in order of joining with the first to join the datashare (normally the owner if they have not left the datashare) at index 0 and
+the last user to join the datashare at the end.
+
+.. NOTE::
+    This property is only updated on calls to
+    :ref:`dataShareManager.createDataShare <datasharemanager_createdatashare>`,
+    :ref:`dataShareManager.findDataShares <datasharemanager_finddatashares>` and :ref:`dataShare.join <datashare_join>`.
 
 .. NOTE::
     This property is read only.

@@ -166,6 +166,13 @@ class Application
 
     findDataShares()
     {
+        // We do 2 find requests:
+        // - Find all the data shares that the current user is joined to. These games are the games that the current
+        //   user is playing (they are still in progress).
+        // - Find with no filters to find the first 64 games that can be joined (if the player wants to join some other
+        //   users game). When processing this list of joinable games we remove any games which the current user has
+        //   already joined.
+
         this.foundDataShares = null;
         this.joinedDataShares = null;
         this.invalidateButtons = true;
@@ -180,16 +187,30 @@ class Application
                 return (gameStateStore: DataShareGetCBData) =>
                 {
                     var ticTacToeGame = TicTacToeGame.create(this.userProfile.username, dataShare.owner);
-                    this.joinedGames[dataShare.id] = ticTacToeGame;
+                    var currentUsername = this.userProfile.username;
                     var users = dataShare.users;
                     var usersLength = users.length;
                     var usersIndex;
 
                     // only list the first 2 players as joined (possible race condition in joining)
-                    for (usersIndex = 0; usersIndex < this.maxPlayers; usersIndex += 1)
+                    for (usersIndex = 0; usersIndex < usersLength; usersIndex += 1)
                     {
-                        ticTacToeGame.playerJoined(users[usersIndex]);
+                        if (usersIndex < this.maxPlayers)
+                        {
+                            ticTacToeGame.playerJoined(users[usersIndex]);
+                        }
+                        else
+                        {
+                            // if the current player has managed to join a full game then leave it
+                            if (currentUsername === users[usersIndex])
+                            {
+                                dataShare.leave();
+                                return;
+                            }
+                        }
                     }
+
+                    this.joinedGames[dataShare.id] = ticTacToeGame;
 
                     // don't allow any more players to join full games
                     if (dataShare.joinable && users.length >= this.maxPlayers)
@@ -306,7 +327,7 @@ class Application
             {
                 if (reason === DataShare.notSetReason.changed)
                 {
-                    // other player has moved so read the change and then forfeit again
+                    // other player has moved so read the change and then try to forfeit again
                     this.readMoves(this.forfeitGame.bind(this));
                 }
                 else
@@ -367,8 +388,11 @@ class Application
                     {
                         // only 2 players should join a game
                         // this possible if 2 people click to join a game at the same time
-                        this.leaveGame();
+
+                        // only the 3rd player will see 3 users (since users is only updated when join is called)
+                        // so the 3rd player should leave
                         currentDataShare.setJoinable(false);
+                        this.leaveGame();
                         return;
                     }
                     var setJoinableCallback = () =>
@@ -453,8 +477,8 @@ class Application
                 if (currentGame.canMove(x, y))
                 {
                     currentGame.doMove(x, y);
-                    // do a compare and set in case the other player has taken the first move
-                    // or has forfeit (which they can do even when it's not their turn)
+                    // compare and set can fail if the other player has taken the first move or has forfeit (which they
+                    // can do even when it's not their turn)
                     this.currentDataShare.compareAndSet({
                             key: 'game-state',
                             value: currentGame.serialize(),
@@ -464,6 +488,8 @@ class Application
             }
             else
             {
+                // for testing on local and hub where instant notifications are slow the user can click to see if there
+                // are any updates
                 this.readMoves();
             }
         }
@@ -471,6 +497,9 @@ class Application
 
     segmentFont(x: number, y: number, text: string, clickCallback?, id?: string)
     {
+        // render some simple GUI text (can be clicked if clickCallback and id are given)
+        // this cannot be called inside of the draw2d.begin and draw2d.end calls
+
         var graphicsDevice = this.graphicsDevice;
         var fontTechniqueParameters = this.fontTechniqueParameters;
         var font = this.font;

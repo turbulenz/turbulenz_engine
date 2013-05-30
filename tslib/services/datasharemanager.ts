@@ -60,7 +60,7 @@ interface DataShareCompareAndSetParams
     key: string;
     value: string;
     access?: number;
-    callback: {
+    callback?: {
         (wasSet: bool, reason?: string): void; // reason - either 'changed' or 'read_only'
     };
     errorCallback?: DataShareManagerErrorCB;
@@ -171,7 +171,7 @@ class DataShare
         return false;
     };
 
-    join(callbackFn: DataShareJoinCB, errorCallbackFn?: DataShareManagerErrorCB): void
+    join(callbackFn?: DataShareJoinCB, errorCallbackFn?: DataShareManagerErrorCB): void
     {
         var that = this;
         var dataShareJoinCallback =
@@ -257,7 +257,7 @@ class DataShare
             });
     };
 
-    leave(callbackFn: {(): void;}, errorCallbackFn?: DataShareManagerErrorCB): void
+    leave(callbackFn?: {(): void;}, errorCallbackFn?: DataShareManagerErrorCB): void
     {
         var that = this;
         var dataShareLeaveCallback =
