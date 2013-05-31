@@ -336,13 +336,18 @@ class Application
                 }
             }
         }
-        currentGame.forfeit();
-        // do a compare and set in case the other player has taken the first move
-        this.currentDataShare.compareAndSet({
-                key: 'game-state',
-                value: currentGame.serialize(),
-                callback: gameStateSet
-            });
+
+        // check the round has not already ended (possible after recursion)
+        if (!currentGame.roundEnd)
+        {
+            currentGame.forfeit();
+            // do a compare and set in case the other player has taken the first move
+            this.currentDataShare.compareAndSet({
+                    key: 'game-state',
+                    value: currentGame.serialize(),
+                    callback: gameStateSet
+                });
+        }
     };
 
     getPlayGameFn(dataShare: DataShare): { (): void; }
