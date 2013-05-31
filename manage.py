@@ -39,12 +39,17 @@ def command_env():
 
     if TURBULENZOS == 'win32':
         env_bin = os.path.join(TURBULENZROOT, 'env', 'scripts')
-        with open(os.path.join(env_bin, 'activate.bat'), 'a') as f:
-            f.write('set PATH=%PATH%;%VIRTUAL_ENV%\\..\\tools\\scripts\n')
+        activate_script = os.path.join(env_bin, 'activate.bat')
+        extra_path = 'set PATH=%PATH%;%VIRTUAL_ENV%\\..\\tools\\scripts\n'
     else:
         env_bin = os.path.join(TURBULENZROOT, 'env', 'bin')
-        with open(os.path.join(env_bin, 'activate'), 'a') as f:
-            f.write('export PATH=$PATH:$VIRTUAL_ENV/../tools/scripts\n')
+        activate_script = os.path.join(env_bin, 'activate')
+        extra_path = 'export PATH=$PATH:$VIRTUAL_ENV/../tools/scripts\n'
+
+    with open(activate_script, 'r+') as f:
+        activate_text = f.read()
+        if activate_text.find(extra_path) == -1:
+            f.write(extra_path)
 
     def _easy_install(package):
         cmd = [os.path.join(env_bin, 'easy_install'), package]
