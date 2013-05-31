@@ -11,11 +11,12 @@ The Protolib Object
 
 **Added**
 
-*2013-05-02 - 0.1.X - First BETA release (Open Source Only)*
+*2013-05-02 - 0.1.0 - First BETA release (Open Source Only)*
+*2013-05-21 - 0.1.1 - Turbulenz Webcast Build (Open Source Only)*
 
 **Updated**
 
-*SDK 0.26.0 - 0.2.X - First SDK release*
+*SDK 0.26.0 - 0.2.0 - First SDK release*
 
 **BETA**
 
@@ -704,7 +705,24 @@ Draws the given text to screen space.
 ``scale`` (Optional)
     A JavaScript number specifying the amount to scale the text by. Defaults to 1.
 
+**Added 0.2.0**
+
+``horizontalAlign`` (Optional)
+    A value in ``protolib.textHorizontalAlign``.
+    Defines whether the position given refers to the LEFT, CENTER or RIGHT of the text box.
+    Use in conjunction with verticalAlign.
+    Defaults to ``protolib.textHorizontalAlign.CENTER``.
+
+``verticalAlign`` (Optional)
+    A value in ``protolib.textVerticalAlign``.
+    Defines whether the position given refers to the TOP, MIDDLE or BOTTOM of the text box.
+    Use in conjunction with horizontalAlign.
+    Defaults to ``protolib.textVerticalAlign.MIDDLE``.
+
+**Depricated 0.2.0**
+
 ``alignment`` (Optional)
+    Use horizontalAlign and verticalAlign instead.
     A value in ``protolib.textAlignment``. Defines whether the position given refers to the top-left, top-middle or top-right of the text box. Defaults to ``protolib.textAlignment.LEFT``.
 
 
@@ -1206,14 +1224,27 @@ This is equal to :ref:`inputDevice.keyCodes <inputdevice-keycodes>`.
 
 This is equal to :ref:`inputDevice.mouseCodes <inputdevice-mousecodes>`.
 
-.. _protolib-textalignment:
+.. _protolib-texthorizontalalign:
 
-`textAlignment`
----------------
+`textHorizontalAlign`
+---------------------
 
-A dictionary with values used to specify text alignment, for use with the :ref:`drawText <protolib-drawtext>` function.
+**Added 0.2.0**
+
+A dictionary with values used to specify horizontal text alignment, for use with the :ref:`drawText <protolib-drawtext>` function.
 
 Values are: ``LEFT``, ``CENTER``, ``RIGHT``.
+
+.. _protolib-textverticalalign:
+
+`textVerticalAlign`
+-------------------
+
+**Added 0.2.0**
+
+A dictionary with values used to specify vertical text alignment, for use with the :ref:`drawText <protolib-drawtext>` function.
+
+Values are: ``TOP``, ``MIDDLE``, ``BOTTOM``.
 
 .. _protolib-blendstyles:
 
@@ -1242,6 +1273,17 @@ Options are:
         max: number,    // The maximum value of the slider.
         step: number    // The amount to move the slider by when dragging.
     }
+
+.. _protolib-textalignment:
+
+`textAlignment`
+---------------
+
+**Depricated 0.2.0** - Use textHorizontalAlign instead.
+
+A dictionary with values used to specify text alignment, for use with the :ref:`drawText <protolib-drawtext>` function.
+
+Values are: ``LEFT``, ``CENTER``, ``RIGHT``.
 
 .. _protolib-variablewatch:
 
@@ -1379,6 +1421,32 @@ This function will be called after 2D and 3D rendering, but before graphicsDevic
 
 ``callback``
     The function to call before graphicsDevice.endFrame().
+
+.. _protolib-setpostrendererdraw:
+
+`setPostRendererDraw`
+---------------------
+
+**Added 0.1.1**
+
+**Summary**
+
+Set a function to call, after the protolib has rendered the scene content, but before 2D sprites/text and before graphicsDevice.endFrame().
+This function allows you to render on top of the 3D scene content, but under the 2D content.
+This function will be called after 3D rendering, but before graphicsDevice.endFrame().
+
+**Syntax** ::
+
+    function postRendererDrawFn()
+    {
+        // Draw a layer of content post scene renderering
+        postScene.draw();
+    }
+
+    protolib.setPostRendererDraw(postRendererDrawFn);
+
+``callback``
+    The function to call before 2D content rendering.
 
 
 .. _meshwrapper:
