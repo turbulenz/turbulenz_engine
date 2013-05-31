@@ -9,7 +9,13 @@
 The Protolib Object
 -------------------
 
-**Added SDK 0.26.0**
+**Added**
+
+*2013-05-02 - 0.1.X - First BETA release (Open Source Only)*
+
+**Updated**
+
+*SDK 0.26.0 - 0.2.X - First SDK release*
 
 **BETA**
 
@@ -114,46 +120,46 @@ Requirements
 
 To use protolib you will need to include the following library code in your template file::
 
+    /*{{ javascript('jslib/aabbtree.js') }}*/
+    /*{{ javascript('jslib/assettracker.js') }}*/
     /*{{ javascript('jslib/camera.js') }}*/
-    /*{{ javascript('jslib/requesthandler.js') }}*/
-    /*{{ javascript('jslib/texturemanager.js') }}*/
-    /*{{ javascript('jslib/shadermanager.js') }}*/
-    /*{{ javascript('jslib/soundmanager.js') }}*/
+    /*{{ javascript('jslib/draw2d.js') }}*/
     /*{{ javascript('jslib/effectmanager.js') }}*/
     /*{{ javascript('jslib/fontmanager.js') }}*/
+    /*{{ javascript('jslib/forwardrendering.js') }}*/
+    /*{{ javascript('jslib/geometry.js') }}*/
+    /*{{ javascript('jslib/indexbuffermanager.js') }}*/
+    /*{{ javascript('jslib/light.js') }}*/
+    /*{{ javascript('jslib/loadingscreen.js') }}*/
+    /*{{ javascript('jslib/material.js') }}*/
     /*{{ javascript('jslib/observer.js') }}*/
+    /*{{ javascript('jslib/renderingcommon.js') }}*/
+    /*{{ javascript('jslib/requesthandler.js') }}*/
+    /*{{ javascript('jslib/resourceloader.js') }}*/
+    /*{{ javascript('jslib/scene.js') }}*/
+    /*{{ javascript('jslib/scenenode.js') }}*/
+    /*{{ javascript('jslib/shadermanager.js') }}*/
+    /*{{ javascript('jslib/shadowmapping.js') }}*/
+    /*{{ javascript('jslib/soundmanager.js') }}*/
+    /*{{ javascript('jslib/texturemanager.js') }}*/
     /*{{ javascript('jslib/utilities.js') }}*/
-    /*{{ javascript('jslib/services/turbulenzbridge.js') }}*/
-    /*{{ javascript('jslib/services/turbulenzservices.js') }}*/
+    /*{{ javascript('jslib/vertexbuffermanager.js') }}*/
+    /*{{ javascript('jslib/vmath.js') }}*/
+
     /*{{ javascript('jslib/services/gamesession.js') }}*/
     /*{{ javascript('jslib/services/mappingtable.js') }}*/
+    /*{{ javascript('jslib/services/turbulenzbridge.js') }}*/
+    /*{{ javascript('jslib/services/turbulenzservices.js') }}*/
 
-    /*{{ javascript('jslib/scene.js') }}*/
-    /*{{ javascript('jslib/light.js') }}*/
-    /*{{ javascript('jslib/material.js') }}*/
-    /*{{ javascript('jslib/geometry.js') }}*/
-    /*{{ javascript('jslib/aabbtree.js') }}*/
-    /*{{ javascript('jslib/scenenode.js') }}*/
-    /*{{ javascript('jslib/vertexbuffermanager.js') }}*/
-    /*{{ javascript('jslib/indexbuffermanager.js') }}*/
-    /*{{ javascript('jslib/resourceloader.js') }}*/
-    /*{{ javascript('jslib/vmath.js') }}*/
-    /*{{ javascript('jslib/renderingcommon.js') }}*/
-    /*{{ javascript('jslib/forwardrendering.js') }}*/
-    /*{{ javascript('jslib/shadowmapping.js') }}*/
-    /*{{ javascript('jslib/draw2d.js') }}*/
-    /*{{ javascript('jslib/assettracker.js') }}*/
-    /*{{ javascript('jslib/loadingscreen.js') }}*/
-
+    /*{{ javascript('protolib/debugdraw.js') }}*/
     /*{{ javascript('protolib/duimanager.js') }}*/
     /*{{ javascript('protolib/jqueryextend.js') }}*/
-    /*{{ javascript('protolib/simplesprite.js') }}*/
+    /*{{ javascript('protolib/protolib.js') }}*/
+    /*{{ javascript('protolib/sceneloader.js') }}*/
     /*{{ javascript('protolib/simplefonts.js') }}*/
     /*{{ javascript('protolib/simplesceneloader.js') }}*/
-    /*{{ javascript('protolib/debugdraw.js') }}*/
-    /*{{ javascript('protolib/sceneloader.js') }}*/
+    /*{{ javascript('protolib/simplesprite.js') }}*/
     /*{{ javascript('protolib/soundsourcemanager.js') }}*/
-    /*{{ javascript('protolib/protolib.js') }}*/
 
 And the following assets in your mapping_table.json::
 
@@ -175,6 +181,38 @@ And the following assets in your mapping_table.json::
     - fonts/opensans-32.fnt
     - fonts/opensans-64.fnt
     - fonts/opensans-128.fnt
+
+**Updated 0.1.1** - Now includes jslib/assettracker.js, jslib/loadingscreen.js and shaders/simplesprite.cgfx
+
+.. _protolib-properties:
+
+Properties
+==========
+
+**Added 0.2.0**
+
+`version`
+---------
+
+**Summary**
+
+Property containing the version number for the Protolib API.
+Specified as an 3-dimensional array of integer numbers in the following format::
+
+    [ MAJOR, MINOR, REVISION ]
+
+This can be used to determine the expected behaviour of the API arguments.
+
+**Syntax** ::
+
+    var version = protolib.version;
+    if (version[0] < 1 && version[1] < 2)
+    {
+        // Version 1.2 required
+        console.log("WARNING: Protolib version is incorrect");
+    }
+
+.. NOTE:: This property is not available version 0.1.X so to test for versions < 0.2, check if the property is undefined.
 
 .. _protolib-constructor:
 

@@ -34,6 +34,9 @@ function Protolib(params)
     this.globals = {};
     var globals = this.globals;
 
+    // Major, Minor, Revision
+    protolib.version = [0, 2, 0];
+
     globals.config = params = params || {};
 
     var MAX_SOUND_SOURCES = params.maxSoundSources !== undefined ? params.maxSoundSources : 50;
@@ -455,11 +458,13 @@ function Protolib(params)
         PAUSED : 'paused',
         STOPPED : 'stopped'
     };
-    this.textAlignment = {
-        LEFT: 'left',
-        CENTER: 'center',
-        RIGHT: 'right'
-    };
+
+    //Depricated: v0.2.0, replaced with textAlignmentHorz, textVerticalAlign
+    this.textAlignment = null;
+
+    this.textHorizontalAlign = simplefont.textHorizontalAlign;
+    this.textVerticalAlign = simplefont.textVerticalAlign;
+
     this.blendStyle = {
         ALPHA : 'alpha',
         ADDITIVE : 'additive'
@@ -1053,6 +1058,12 @@ Protolib.prototype =
         var scale = params.scale || 1;
         var spacing = params.spacing;
         var alignment = params.alignment;
+        if (alignment)
+        {
+            this.utils.warn("Property alignment depricated in v0.2.0, please use verticalAlign and horizontalAlign");
+        }
+        var horizontalAlign = params.horizontalAlign !== undefined ? params.horizontalAlign: this.textHorizontalAlign.CENTER;
+        var verticalAlign = params.verticalAlign !== undefined ? params.verticalAlign: this.textVerticalAlign.MIDDLE;
         var fontStyle = params.fontStyle || "regular";
 
         var fontParams =
@@ -1066,7 +1077,8 @@ Protolib.prototype =
 
             scale : scale,
             spacing : spacing,
-            alignment : alignment,
+            alignment : horizontalAlign,
+            valignment : verticalAlign,
             fontStyle : fontStyle
         };
 

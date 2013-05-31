@@ -25,13 +25,13 @@ sampler2D shadowMap = sampler_state
 // Utils
 //
 
-float4 EncodeFloatRGBA(float v)
+float4 EncodeFloatRGBA32(float v)
 {
     if (v < 1)
     {
         float4 enc = max(v, 0) * float4(1.0, 255.0, 65025.0, 16581375.0);
         enc = frac(enc);
-        enc -= enc.yzww * float4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);
+        enc.xyz -= enc.yzw * float3(1.0/255.0, 1.0/255.0, 1.0/255.0);
         return enc;
     }
     else
@@ -40,9 +40,24 @@ float4 EncodeFloatRGBA(float v)
     }
 }
 
-float DecodeFloatRGBA(float4 rgba)
+float DecodeFloatRGBA32(float4 rgba)
 {
-    return dot(rgba, float4(1.0, 1/255.0, 1/65025.0, 1/16581375.0));
+    return dot(rgba, float4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/16581375.0));
+}
+
+float4 EncodeFloatRGB16(float v)
+{
+    v = floor(saturate(v) * 65535.0);
+    float r = floor(v / 2048.0);
+    float g = floor(mod(v, 2048.0) / 32.0);
+    float b = mod(v, 32.0);
+
+    return float4(r / 31.0, g / 63.0, b / 31.0, 1.0);
+}
+
+float DecodeFloatRGB16(float4 rgba)
+{
+    return dot(rgba.xyz, float3(63488.0 / 65535.0, 2016.0 / 65535.0, 31.0 / 65535.0));
 }
 
 float log_conv(float x0, float X, float y0, float Y)
@@ -123,18 +138,20 @@ void vp_blur(in float4 INPosition : POSITION,
 //
 // Fragment programs
 //
-float4 fp(in float Depth : TEXCOORD0) : COLOR
+float4 fp(in float INDepth : TEXCOORD0) : COLOR
 {
-    return EncodeFloatRGBA(Depth); //float4(Depth, Depth, Depth, 1.0);
+    //return EncodeFloatRGBA32(Depth); //float4(Depth, Depth, Depth, 1.0);
+    //return EncodeFloatRGB16((INDepth.x / INDepth.y) * 0.5 + 0.5);
+    return EncodeFloatRGB16(INDepth);
 }
 
 float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
 {
-    float sample0 = DecodeFloatRGBA(tex2D(shadowMap, (UV - (2.0 * pixelOffset))));
-    float sample1 = DecodeFloatRGBA(tex2D(shadowMap, (UV - (1.0 * pixelOffset))));
-    float sample2 = DecodeFloatRGBA(tex2D(shadowMap,  UV));
-    float sample3 = DecodeFloatRGBA(tex2D(shadowMap, (UV + (1.0 * pixelOffset))));
-    float sample4 = DecodeFloatRGBA(tex2D(shadowMap, (UV + (2.0 * pixelOffset))));
+    float sample0 = DecodeFloatRGB16(tex2D(shadowMap, (UV - (2.0 * pixelOffset))));
+    float sample1 = DecodeFloatRGB16(tex2D(shadowMap, (UV - (1.0 * pixelOffset))));
+    float sample2 = DecodeFloatRGB16(tex2D(shadowMap,  UV));
+    float sample3 = DecodeFloatRGB16(tex2D(shadowMap, (UV + (1.0 * pixelOffset))));
+    float sample4 = DecodeFloatRGB16(tex2D(shadowMap, (UV + (2.0 * pixelOffset))));
 
     const float c = (1.0 / 5.0);
 
@@ -143,7 +160,7 @@ float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
     accum = log_conv(1.0, accum, c, sample3);
     accum = log_conv(1.0, accum, c, sample4);
 
-    return EncodeFloatRGBA(accum);
+    return EncodeFloatRGB16(accum);
 }
 
 //

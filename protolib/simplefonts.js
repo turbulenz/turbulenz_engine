@@ -10,6 +10,18 @@ function SimpleFontRenderer() {}
 
 SimpleFontRenderer.prototype =
 {
+    textHorizontalAlign : {
+        LEFT: 0,
+        CENTER: 1,
+        RIGHT: 2
+    },
+
+    textVerticalAlign : {
+        TOP: 0,
+        MIDDLE: 1,
+        BOTTOM: 2
+    },
+
     drawFontDouble : function simpleFontRendererDrawDoubleFontFn(string, inputParams)
     {
         var scratchPad = this.scratchPad;
@@ -61,9 +73,12 @@ SimpleFontRenderer.prototype =
         var params    = this.allocateParams();
         params.string = string;
 
+        var textHorizontalAlign = this.textHorizontalAlign;
+        var textVerticalAlign = this.textVerticalAlign;
+
         params.spacing    = (inputParams.spacing !== undefined) ? inputParams.spacing : 0;
-        params.alignment  = (inputParams.alignment !== undefined) ? inputParams.alignment: 0;
-        params.valignment = (inputParams.valignment !== undefined) ? inputParams.valignment: 1;
+        params.alignment  = (inputParams.alignment !== undefined) ? inputParams.alignment: textHorizontalAlign.TOP;
+        params.valignment = (inputParams.valignment !== undefined) ? inputParams.valignment: textVerticalAlign.MIDDLE;
 
         md.v4BuildOne(params.color);
         if (inputParams.color !== undefined)
@@ -100,75 +115,50 @@ SimpleFontRenderer.prototype =
     calculateRectFromInputParams : function simplefontsCalculateRectFromInputParamsFn(font, string, scale, spacing, x, y, align, valign, rect)
     {
         var textDimensions = font.calculateTextDimensions(string, scale, spacing);
+        var textHorizontalAlign = this.textHorizontalAlign;
+        var textVerticalAlign = this.textVerticalAlign;
 
         // width: width,
         // height: height,
         // numGlyphs: numGlyphs,
         // linesWidth: linesWidth
 
-        if (align === 0)
+        if (align === textHorizontalAlign.LEFT)
         {
             //Left edge should be on location
             rect[0] =   x;
             rect[2] =   textDimensions.width;
         }
-        else if (align === 2)
+        else if (align === textHorizontalAlign.RIGHT)
         {
             //Right edge should be on location
             rect[0] =   x   -   textDimensions.width;
             rect[2] =   textDimensions.width;
         }
-        else
+        else //textHorizontalAlign.CENTER
         {
             //Mid x should be on location.
             rect[0] =   x   -   textDimensions.width * 0.5;
             rect[2] =   textDimensions.width;
         }
 
-        if (valign === 0)
+        if (valign === textVerticalAlign.TOP)
         {
             //Top edge should be on location.
             rect[1] =   y;
             rect[3] =   textDimensions.height;
         }
-        else if (valign === 2)
+        else if (valign === textVerticalAlign.BOTTOM)
         {
             rect[1] =   y   -   textDimensions.height;
             rect[3] =   textDimensions.height;
         }
-        else
+        else //textVerticalAlign.MIDDLE
         {
             rect[1] =   y   -   textDimensions.height * 0.5;
             rect[3] =   textDimensions.height;
         }
         return  rect;
-
-        // params.rect =   inputParams.rect;
-        // if (inputParams.rect === undefined)
-        // {
-        //     if (inputParams.x !== undefined && inputParams.y !== undefined)
-        //     {
-        //         if (params.alignment === 0)
-        //         {
-        //             //Left.
-        //             params.rect = [inputParams.x, inputParams.y, 100, 32];
-        //         }
-        //         else if (params.alignment === 1)
-        //         {
-        //             //Middle
-        //             params.rect = [inputParams.x - 50, inputParams.y, 100, 32];
-        //         }
-        //         else if (params.alignment === 2)
-        //         {
-        //             //Right
-        //             params.rect = [inputParams.x - 100, inputParams.y, 100, 32];
-        //         }
-        //     }
-        //     else
-        //     {
-        //         params.rect = [100, 100, 100, 32];
-        //     }
-        // }
     },
 
     calculateScaleFromInputParams : function calculateScaleFromInputParamsFn(inputParams)
@@ -185,107 +175,43 @@ SimpleFontRenderer.prototype =
 
     isStandardPointSize : function simplefontsIsStandardPointSizeFn(pointSize)
     {
-        switch (pointSize)
+        var fontSizes = this.fontSizes;
+        for (var i = 0; i < fontSizes.length; i += 1)
         {
-        case 8 :
-            return true;
-        case 16 :
-            return true;
-        case 32 :
-            return true;
-        case 64 :
-            return true;
-        case 128 :
-            return true;
-        default :
-            break;
+            if (pointSize === fontSizes[i])
+            {
+                return;
+            }
         }
-        return  false;
+
+        return false;
     },
 
     getFontFromPointSize : function getFontFromPointSizeFn(pointSize, fontType)
     {
+        // pointSize is a standard point size
+        var fontStyle = fontType;
+        if (!fontStyle)
+        {
+            fontStyle = 'regular';
+        }
+
         var font;
-
-        if (!fontType || fontType === 'regular')
+        var fontSizeList = this.fonts[fontStyle];
+        if (!fontSizeList)
         {
-            switch (pointSize)
-            {
-            case 8 :
-                font =   this.fontRegular8;
-                break;
-            case 16 :
-                font =   this.fontRegular16;
-                break;
-            case 32 :
-                font =   this.fontRegular32;
-                break;
-            case 64 :
-                font =   this.fontRegular64;
-                break;
-            case 128 :
-                font =   this.fontRegular128;
-                break;
-            default :
-                font =   this.fontRegular16;
-                break;
-            }
-            return  font;
+            fontSizeList = this.fonts.regular;
         }
-
-        if (fontType === 'bold')
+        if (fontSizeList)
         {
-            switch (pointSize)
+            font = fontSizeList[pointSize];
+            if (!font)
             {
-            case 8 :
-                font =   this.fontBold8;
-                break;
-            case 16 :
-                font =   this.fontBold16;
-                break;
-            case 32 :
-                font =   this.fontBold32;
-                break;
-            case 64 :
-                font =   this.fontBold64;
-                break;
-            case 128 :
-                font =   this.fontBold128;
-                break;
-            default :
-                font =   this.fontBold16;
-                break;
+                font = this.defaultFont;
             }
-            return  font;
+            return font;
         }
-
-        if (fontType === 'styled')
-        {
-            switch (pointSize)
-            {
-            case 8 :
-                font =   this.fontStyled8;
-                break;
-            case 16 :
-                font =   this.fontStyled16;
-                break;
-            case 32 :
-                font =   this.fontStyled32;
-                break;
-            case 64 :
-                font =   this.fontStyled64;
-                break;
-            case 128 :
-                font =   this.fontStyled128;
-                break;
-            default :
-                font =   this.fontStyled16;
-                break;
-            }
-            return  font;
-        }
-
-        return this.fontRegular16;
+        return this.defaultFont;
     },
 
     calculateFontAndScaleFromInputParams : function simplefontsCalculateFontAndScaleFromInputParamsFn(inputParams, outputParams)
@@ -304,8 +230,8 @@ SimpleFontRenderer.prototype =
             var powerOf2          = Math.log(sizeProduct) / Math.LN2;
             pointSize             = Math.pow(2, Math.round(powerOf2));
 
-            pointSize             = Math.max(pointSize, 8);
-            pointSize             = Math.min(pointSize, 128);
+            pointSize             = Math.max(pointSize, this.fontSizeMax);
+            pointSize             = Math.min(pointSize, this.fontSizeMin);
 
             scale                 = sizeProduct / pointSize;
             inputParams.pointSize = pointSize;
@@ -319,34 +245,18 @@ SimpleFontRenderer.prototype =
     {
         var fontManager = this.globals.fontManager;
         //Relies on shader and font manager having their path remapping done.
-        var regular = this.regular;
-        if (regular)
-        {
-            fontManager.load('fonts/' + regular + '-8.fnt');  //regular
-            fontManager.load('fonts/' + regular + '-16.fnt');
-            fontManager.load('fonts/' + regular + '-32.fnt');
-            fontManager.load('fonts/' + regular + '-64.fnt');
-            fontManager.load('fonts/' + regular + '-128.fnt');
-        }
+        var fontsList = this.fontsList;
+        var fontSizes = this.fontSizes;
 
-        var bold = this.bold;
-        if (bold)
+        for (var f in fontsList)
         {
-            fontManager.load('fonts/' + bold + '-8.fnt'); //bold
-            fontManager.load('fonts/' + bold + '-16.fnt');
-            fontManager.load('fonts/' + bold + '-32.fnt');
-            fontManager.load('fonts/' + bold + '-64.fnt');
-            fontManager.load('fonts/' + bold + '-128.fnt');
-        }
-
-        var styled = this.styled;
-        if (styled)
-        {
-            fontManager.load('fonts/' + styled + '-8.fnt'); //styled
-            fontManager.load('fonts/' + styled + '-16.fnt');
-            fontManager.load('fonts/' + styled + '-32.fnt');
-            fontManager.load('fonts/' + styled + '-64.fnt');
-            fontManager.load('fonts/' + styled + '-128.fnt');
+            if (fontsList.hasOwnProperty(f))
+            {
+                for (var i = 0; i < fontSizes.length; i += 1)
+                {
+                    fontManager.load('fonts/' + fontsList[f] + '-' + fontSizes[i] + '.fnt');
+                }
+            }
         }
 
         this.globals.shaderManager.load('shaders/font.cgfx');
@@ -365,60 +275,23 @@ SimpleFontRenderer.prototype =
         {
             if (!this.technique2D)
             {
-                var defaultFont = fontManager.get('');
-                var regular = this.regular;
-                if (regular)
-                {
-                    this.fontRegular8 = fontManager.get('fonts/' + regular + '-8.fnt');
-                    this.fontRegular16 = fontManager.get('fonts/' + regular + '-16.fnt');
-                    this.fontRegular32 = fontManager.get('fonts/' + regular + '-32.fnt');
-                    this.fontRegular64 = fontManager.get('fonts/' + regular + '-64.fnt');
-                    this.fontRegular128 = fontManager.get('fonts/' + regular + '-128.fnt');
-                }
-                else
-                {
+                var size;
+                var fontsList = this.fontsList;
+                var fontSizes = this.fontSizes;
+                var fonts = this.fonts;
 
-                    this.fontRegular8 = defaultFont;
-                    this.fontRegular16 = defaultFont;
-                    this.fontRegular32 = defaultFont;
-                    this.fontRegular64 = defaultFont;
-                    this.fontRegular128 = defaultFont;
-                }
-
-                var bold = this.bold;
-                if (bold)
+                for (var f in fontsList)
                 {
-                    this.fontBold8 = fontManager.load('fonts/' + bold + '-8.fnt');
-                    this.fontBold16 = fontManager.load('fonts/' + bold + '-16.fnt');
-                    this.fontBold32 = fontManager.load('fonts/' + bold + '-32.fnt');
-                    this.fontBold64 = fontManager.load('fonts/' + bold + '-64.fnt');
-                    this.fontBold128 = fontManager.load('fonts/' + bold + '-128.fnt');
-                }
-                else
-                {
-                    this.fontBold8 = defaultFont;
-                    this.fontBold16 = defaultFont;
-                    this.fontBold32 = defaultFont;
-                    this.fontBold64 = defaultFont;
-                    this.fontBold128 = defaultFont;
-                }
-
-                var styled = this.styled;
-                if (styled)
-                {
-                    this.fontStyled8 = fontManager.load('fonts/' + styled + '-8.fnt');
-                    this.fontStyled16 = fontManager.load('fonts/' + styled + '-16.fnt');
-                    this.fontStyled32 = fontManager.load('fonts/' + styled + '-32.fnt');
-                    this.fontStyled64 = fontManager.load('fonts/' + styled + '-64.fnt');
-                    this.fontStyled128 = fontManager.load('fonts/' + styled + '-128.fnt');
-                }
-                else
-                {
-                    this.fontStyled8 = defaultFont;
-                    this.fontStyled16 = defaultFont;
-                    this.fontStyled32 = defaultFont;
-                    this.fontStyled64 = defaultFont;
-                    this.fontStyled128 = defaultFont;
+                    if (fontsList.hasOwnProperty(f))
+                    {
+                        var fontObjects = {};
+                        for (var i = 0; i < fontSizes.length; i += 1)
+                        {
+                            size = fontSizes[i];
+                            fontObjects[size] = fontManager.get('fonts/' + fontsList[f] + '-' + size + '.fnt');
+                        }
+                        fonts[f] = fontObjects;
+                    }
                 }
 
                 var shader = shaderManager.get('shaders/font.cgfx');
@@ -525,10 +398,16 @@ SimpleFontRenderer.create = function simpleFontRendererCreateFn(globals)
     simpleFontRenderer.textCache = [];
     simpleFontRenderer.textCacheIndex = 0;
 
-    var fonts = globals.fonts || {};
-    simpleFontRenderer.regular = fonts.regular || null;
-    simpleFontRenderer.bold = fonts.bold || null;
-    simpleFontRenderer.styled = fonts.styled || null;
+    simpleFontRenderer.fontsList = globals.fonts || {};
+    simpleFontRenderer.fonts = {};
+
+    // The standard set of sizes to request (sorted)
+    var fontSizes = simpleFontRenderer.fontSizes = [8, 16, 32, 64, 128];
+    simpleFontRenderer.fontSizeMax = fontSizes[0];
+    simpleFontRenderer.fontSizeMin = fontSizes[fontSizes.length - 1];
+
+    var fontManager = globals.fontManager;
+    simpleFontRenderer.defaultFont = fontManager.get("");
 
     simpleFontRenderer.scratchPad = {
         v4Black : globals.mathDevice.v4Build(0.0, 0.0, 0.0, 1.0)

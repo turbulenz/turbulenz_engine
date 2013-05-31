@@ -39,12 +39,17 @@ def command_env():
 
     if TURBULENZOS == 'win32':
         env_bin = os.path.join(TURBULENZROOT, 'env', 'scripts')
-        with open(os.path.join(env_bin, 'activate.bat'), 'a') as f:
-            f.write('set PATH=%PATH%;%VIRTUAL_ENV%\\..\\tools\\scripts\n')
+        activate_script = os.path.join(env_bin, 'activate.bat')
+        extra_path = 'set PATH=%PATH%;%VIRTUAL_ENV%\\..\\tools\\scripts\n'
     else:
         env_bin = os.path.join(TURBULENZROOT, 'env', 'bin')
-        with open(os.path.join(env_bin, 'activate'), 'a') as f:
-            f.write('export PATH=$PATH:$VIRTUAL_ENV/../tools/scripts\n')
+        activate_script = os.path.join(env_bin, 'activate')
+        extra_path = 'export PATH=$PATH:$VIRTUAL_ENV/../tools/scripts\n'
+
+    with open(activate_script, 'r+') as f:
+        activate_text = f.read()
+        if activate_text.find(extra_path) == -1:
+            f.write(extra_path)
 
     def _easy_install(package):
         cmd = [os.path.join(env_bin, 'easy_install'), package]
@@ -339,17 +344,18 @@ def command_apps(options):
                 return 1
 
             buildassets_cmd = ['python', os.path.join(TURBULENZROOT, 'scripts', 'buildassets.py')]
-            buildassets_cmd.extend([
-                                '--root', TURBULENZROOT,
-                                '--assets-path', os.path.join(TURBULENZROOT, 'assets') ])
+            buildassets_cmd.extend(['--root', TURBULENZROOT])
 
-            app_assets = os.path.abspath(os.path.join(app_dir, 'assets'))
-            if os.path.isdir(app_assets):
-                buildassets_cmd.extend(['--assets-path', app_assets])
-
+            # Add asset paths, start with user supplied paths, then app specific, then default assets
+            # Build assets searches the paths in order in the case of duplicate source names
             if args.assets_path:
                 for p in args.assets_path:
                     buildassets_cmd.extend(['--assets-path', p])
+            app_assets = os.path.abspath(os.path.join(app_dir, 'assets'))
+            if os.path.isdir(app_assets):
+                buildassets_cmd.extend(['--assets-path', app_assets])
+            buildassets_cmd.extend(['--assets-path', os.path.join(TURBULENZROOT, 'assets') ])
+
             if args.verbose:
                 buildassets_cmd.append('--verbose')
 
