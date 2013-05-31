@@ -343,17 +343,18 @@ def command_apps(options):
                 return 1
 
             buildassets_cmd = ['python', os.path.join(TURBULENZROOT, 'scripts', 'buildassets.py')]
-            buildassets_cmd.extend([
-                                '--root', TURBULENZROOT,
-                                '--assets-path', os.path.join(TURBULENZROOT, 'assets') ])
+            buildassets_cmd.extend(['--root', TURBULENZROOT])
 
-            app_assets = os.path.abspath(os.path.join(app_dir, 'assets'))
-            if os.path.isdir(app_assets):
-                buildassets_cmd.extend(['--assets-path', app_assets])
-
+            # Add asset paths, start with user supplied paths, then app specific, then default assets
+            # Build assets searches the paths in order in the case of duplicate source names
             if args.assets_path:
                 for p in args.assets_path:
                     buildassets_cmd.extend(['--assets-path', p])
+            app_assets = os.path.abspath(os.path.join(app_dir, 'assets'))
+            if os.path.isdir(app_assets):
+                buildassets_cmd.extend(['--assets-path', app_assets])
+            buildassets_cmd.extend(['--assets-path', os.path.join(TURBULENZROOT, 'assets') ])
+
             if args.verbose:
                 buildassets_cmd.append('--verbose')
 
