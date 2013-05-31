@@ -315,7 +315,7 @@ class Application
                             data: {
                                 dataShareId: this.currentDataShare.id,
                             },
-                            text: this.userProfile.username + ' forfeit the game'
+                            text: this.userProfile.username + ' has forfeited Tic-tac-toe'
                         },
                         recipient: otherUser
                     });
@@ -585,7 +585,7 @@ class Application
             }
             else if (roundEnd.forfeit)
             {
-                this.segmentFont(0, offsetY, roundEnd.forfeit + ' forfeit!');
+                this.segmentFont(0, offsetY, roundEnd.forfeit + ' forfeits!');
             }
             else if (roundEnd.winner)
             {
