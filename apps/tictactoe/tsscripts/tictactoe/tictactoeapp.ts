@@ -31,7 +31,6 @@ class Application
         [id: string]: TicTacToeGame;
     };
     currentGame: TicTacToeGame;
-
     spriteTextureNames: string[];
     numTextures: number;
     loadedResources: number;
@@ -774,7 +773,12 @@ class Application
 
         graphicsDevice.clear(this.clearColor);
 
-        if (this.currentGame)
+        if (this.userProfile.guest)
+        {
+            this.graphicsDevice.setTechnique(this.fontTechnique);
+            this.segmentFont(0, 0, 'Sorry, guests must register before they can play tic-tac-toe');
+        }
+        else if (this.currentGame)
         {
             this.renderGame();
         }

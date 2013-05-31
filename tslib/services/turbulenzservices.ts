@@ -38,6 +38,7 @@ interface UserProfile
     country     : string;
     age         : number;
     anonymous   : bool;
+    guest       : bool;
 };
 
 interface UserProfileReceivedCB
