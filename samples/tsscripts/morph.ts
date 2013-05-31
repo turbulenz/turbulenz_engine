@@ -1090,10 +1090,9 @@ class MorphInstance
         var effectTypeData;
         var morph = "morph";
 
-        function defaultMorphPrepareFn(morphInstance)
+        function morphPrepareFn(morphInstance)
         {
-            // Default Renderer Prepare function
-            defaultPrepareFn.call(this, morphInstance);
+            DefaultRendering.defaultPrepareFn.call(this, morphInstance);
             var techniqueParameters = morphInstance.techniqueParameters;
 
             if (!techniqueParameters.morphWeights)
@@ -1121,7 +1120,7 @@ class MorphInstance
         effect = Effect.create("morph");
         effectManager.add(effect);
 
-        effectTypeData = {  prepare : defaultMorphPrepareFn,
+        effectTypeData = {  prepare : morphPrepareFn,
                             shaderName : "shaders/morph.cgfx",
                             techniqueName : "morph",
                             update : defaultUpdateFn, // Uses the defaultUpdateFn from default renderer
@@ -1135,7 +1134,7 @@ class MorphInstance
         effect = Effect.create("debug_normals_morph");
         effectManager.add(effect);
 
-        effectTypeData = {  prepare : defaultMorphPrepareFn,
+        effectTypeData = {  prepare : morphPrepareFn,
                             shaderName : "shaders/morph.cgfx",
                             techniqueName : "debug_normals_morph",
                             update : defaultUpdateFn, // Uses the defaultUpdateFn from default renderer
@@ -1149,7 +1148,7 @@ class MorphInstance
         effect = Effect.create("blinn_morph");
         effectManager.add(effect);
 
-        effectTypeData = {  prepare : defaultMorphPrepareFn,
+        effectTypeData = {  prepare : morphPrepareFn,
                             shaderName : "shaders/morph.cgfx",
                             techniqueName : "blinn_morph",
                             update : defaultUpdateFn, // Uses the defaultUpdateFn from default renderer
