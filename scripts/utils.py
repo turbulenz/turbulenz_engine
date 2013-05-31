@@ -119,7 +119,10 @@ class CalledProcessError(Exception):
         self.cmd = cmd
         self.output = output
     def __str__(self):
-        return "Command '%s' returned non-zero exit status %d" % (self.cmd, self.retcode)
+        cmd = self.cmd
+        if isinstance(cmd, list):
+            cmd = ' '.join(cmd)
+        return "Command '%s' returned non-zero exit status %d" % (cmd, self.retcode)
 # pylint: enable=W0231
 
 # pylint: disable=C0103
