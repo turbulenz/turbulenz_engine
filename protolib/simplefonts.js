@@ -10,6 +10,18 @@ function SimpleFontRenderer() {}
 
 SimpleFontRenderer.prototype =
 {
+    textHorizontalAlign : {
+        LEFT: 0,
+        CENTER: 1,
+        RIGHT: 2
+    },
+
+    textVerticalAlign : {
+        TOP: 0,
+        MIDDLE: 1,
+        BOTTOM: 2
+    },
+
     drawFontDouble : function simpleFontRendererDrawDoubleFontFn(string, inputParams)
     {
         var scratchPad = this.scratchPad;
@@ -61,9 +73,12 @@ SimpleFontRenderer.prototype =
         var params    = this.allocateParams();
         params.string = string;
 
+        var textHorizontalAlign = this.textHorizontalAlign;
+        var textVerticalAlign = this.textVerticalAlign;
+
         params.spacing    = (inputParams.spacing !== undefined) ? inputParams.spacing : 0;
-        params.alignment  = (inputParams.alignment !== undefined) ? inputParams.alignment: 0;
-        params.valignment = (inputParams.valignment !== undefined) ? inputParams.valignment: 1;
+        params.alignment  = (inputParams.alignment !== undefined) ? inputParams.alignment: textHorizontalAlign.TOP;
+        params.valignment = (inputParams.valignment !== undefined) ? inputParams.valignment: textVerticalAlign.MIDDLE;
 
         md.v4BuildOne(params.color);
         if (inputParams.color !== undefined)
@@ -100,75 +115,50 @@ SimpleFontRenderer.prototype =
     calculateRectFromInputParams : function simplefontsCalculateRectFromInputParamsFn(font, string, scale, spacing, x, y, align, valign, rect)
     {
         var textDimensions = font.calculateTextDimensions(string, scale, spacing);
+        var textHorizontalAlign = this.textHorizontalAlign;
+        var textVerticalAlign = this.textVerticalAlign;
 
         // width: width,
         // height: height,
         // numGlyphs: numGlyphs,
         // linesWidth: linesWidth
 
-        if (align === 0)
+        if (align === textHorizontalAlign.LEFT)
         {
             //Left edge should be on location
             rect[0] =   x;
             rect[2] =   textDimensions.width;
         }
-        else if (align === 2)
+        else if (align === textHorizontalAlign.RIGHT)
         {
             //Right edge should be on location
             rect[0] =   x   -   textDimensions.width;
             rect[2] =   textDimensions.width;
         }
-        else
+        else //textHorizontalAlign.CENTER
         {
             //Mid x should be on location.
             rect[0] =   x   -   textDimensions.width * 0.5;
             rect[2] =   textDimensions.width;
         }
 
-        if (valign === 0)
+        if (valign === textVerticalAlign.TOP)
         {
             //Top edge should be on location.
             rect[1] =   y;
             rect[3] =   textDimensions.height;
         }
-        else if (valign === 2)
+        else if (valign === textVerticalAlign.BOTTOM)
         {
             rect[1] =   y   -   textDimensions.height;
             rect[3] =   textDimensions.height;
         }
-        else
+        else //textVerticalAlign.MIDDLE
         {
             rect[1] =   y   -   textDimensions.height * 0.5;
             rect[3] =   textDimensions.height;
         }
         return  rect;
-
-        // params.rect =   inputParams.rect;
-        // if (inputParams.rect === undefined)
-        // {
-        //     if (inputParams.x !== undefined && inputParams.y !== undefined)
-        //     {
-        //         if (params.alignment === 0)
-        //         {
-        //             //Left.
-        //             params.rect = [inputParams.x, inputParams.y, 100, 32];
-        //         }
-        //         else if (params.alignment === 1)
-        //         {
-        //             //Middle
-        //             params.rect = [inputParams.x - 50, inputParams.y, 100, 32];
-        //         }
-        //         else if (params.alignment === 2)
-        //         {
-        //             //Right
-        //             params.rect = [inputParams.x - 100, inputParams.y, 100, 32];
-        //         }
-        //     }
-        //     else
-        //     {
-        //         params.rect = [100, 100, 100, 32];
-        //     }
-        // }
     },
 
     calculateScaleFromInputParams : function calculateScaleFromInputParamsFn(inputParams)
