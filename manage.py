@@ -67,7 +67,7 @@ def command_env():
     _easy_install('Sphinx>=1.1.3')
 
     _easy_install('turbulenz_tools>=1.0.1')
-    _easy_install('turbulenz_local>=1.0.2')
+    _easy_install('turbulenz_local>=1.1')
 
     cmd = [os.path.join(env_bin, 'python'),
            os.path.join(TURBULENZROOT, 'scripts', 'install_nodejs.py'),
