@@ -17,10 +17,22 @@ Change List
 New Features
 ------------
 
+* Added :ref:`multiple logins to local <multiple_logins>`.
+  The login button on the top right of the local server page allows you to quickly switch between users.
+  The current user is stored as a cookie.
+  This cookie will be shared across the tabs on your browser.
+  To login as multiple users simultaneously either:
+
+  - Use different browsers for each user.
+  - Use private browsing or "Incognito mode" windows for each user (requires logging in again each time).
+  - Set up multiple users in Chrome - http://support.google.com/chrome/bin/answer.py?hl=en&answer=2364824
+  - Set up multiple profiles in Firefox - http://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles
+
 * Added the :ref:`DataShareManager <datasharemanager>` object for creating and finding :ref:`data share <datashare>` objects.
   Data shares are shared public key-value stores which allow games to share data with other users.
   For example, data shares could be used to store the game state of an asynchronous multiplayer game
   (allowing communication with users who are on-line or off-line) like Chess or Diplomacy.
+
 * Added :ref:`NotificationsManager <notificationsmanager>` object for allowing games to send notifications to users to notify them of game specific events.
   Examples include:
 
