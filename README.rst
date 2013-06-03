@@ -330,9 +330,11 @@ Turbulenz Service API
 **Leaderboards**
 
 - Submitting/retrieving ranked friend/global leaderboards.
-- Default score entries.
+- Sort by either higher or lower scores.
 - Infinitely scrollable scoreboards.
 - Friend's score notifications.
+- Aggregate scores.
+- Default score entries.
 
 **Badges**
 
