@@ -158,3 +158,25 @@ endif
 
 # EXT, LIBS, APPS are used to set up all build rules ...
 include $(BUILDDIR)/rules.mk
+
+############################################################
+# Single file with all code
+############################################################
+
+ifeq (1,$(TS_MODULAR))
+
+UGLIFY := node $(BUILDDIR)/../uglifyjs/bin/uglifyjs
+AIO_ALL_INPUT := $(foreach t,$(TSLIBS),$(_$(t)_out_js))
+turbulenz-all-min.js : $(AIO_ALL_INPUT)
+	$(CMDPREFIX)$(CAT) $^ | $(UGLIFY) -o $@
+
+AIO_ALL_DECLS := $(foreach t,$(TSLIBS),			\
+  $(if $($(t)_nodecls),,$(_$(t)_out_d_ts))		\
+)
+turbulenz-all.d.ts : $(AIO_ALL_DECLS)
+	$(CAT) $^ > $@
+
+.PHONY: allinone
+allinone : turbulenz-all-min.js turbulenz-all.d.ts
+
+endif
