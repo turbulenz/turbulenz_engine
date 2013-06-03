@@ -36,7 +36,7 @@ New Features
   Read the instructions for :ref:`logging in multiple accounts <multiple_logins>` in order to play.
 
 * Added Protolib a 2D/3D library for prototyping games rapidly using higher level functions.
-  Examples include:
+  Features include:
 
   - Setting background color.
   - Modifying 3D camera position, direction, orientation, FOV, near/far planes.
@@ -49,17 +49,15 @@ New Features
   - Live manipulation and monitoring of variables with sliders.
   - Configurable functionality with parameters e.g. fonts, providing custom asset mapping, disabling of sound/shadows.
 
-  **SDK 0.26.0 contains BETA version 0.2 of Protolib.**
-  See the :ref:`Protolib <protolib_introduction>` for more details.
+  *SDK 0.26.0 contains BETA version 0.2 of Protolib. See the* :ref:`Protolib <protolib_introduction>` *for more details.*
 
 * Added two example app structures for building Protolib apps.
-  - Protolib Sample App (apps/protolibsampleapp) - Demonstrates a wide range of API used together. The purpose is to show how to use the API for rapid prototyping.
-  - Protolib Template App (apps/protolibtemplateapp) - A basic template structure for a blank app. This app provides a skeleton structure with init, update and destroy functions. The template can be copied and used as a basis to start building an app from scratch.
 
+  - *Protolib Sample App (apps/protolibsampleapp)* - Demonstrates a wide range of API used together. The purpose is to show how to use the API for rapid prototyping.
+  - *Protolib Template App (apps/protolibtemplateapp)* - A basic template structure for a blank app. This app provides a skeleton structure with init, update and destroy functions. The template can be copied and used as a basis to start building an app from scratch.
 
 * Added :ref:`GraphicsDevice  <graphicsdevice>` :ref:`finish <graphicsdevice_finish>` and :ref:`flush <graphicsdevice_flush>`.
 * Added :ref:`ShaderManager  <shadermanager>` :ref:`setAutomaticParameterResize <shadermanager_setautomaticparameterresize>`.
-
 
 Changes
 -------
@@ -69,9 +67,9 @@ Changes
   In most cases the changes to the layout of SDK and its content should not have drastically changed.
   The method for invoking certain tools might be slightly different.
 
-* Local server is now distributed as a `python package <https://pypi.python.org/pypi/turbulenz_local>`_, which can be downloaded from pypi.
+* Local server is now distributed as a `turbulenz_local python package <https://pypi.python.org/pypi/turbulenz_local>`_, which can be downloaded from pypi.
   In the SDK, these packages are downloaded and included in the installer.
-  To update to a newer local server:
+  To update to a later local server:
 
   1) Start the environment
   2) Type: easy_install -U turbulenz_local>=X.X.X
@@ -80,16 +78,62 @@ Changes
   Each SDK will bundled with a compatible version of the local server.
   Check compatibility before updating to the latest server.
 
- * Local server is now started differently.
-   The old command 'paster serve release.ini' has been replaced by 'local_server --init' followed by 'local_server --launch'.
-   For SDK users, using the start_local.sh and run_devserver.bat commands, no changes are required.
-   See the `turbulenz_local readme <https://github.com/turbulenz/turbulenz_local/blob/master/README.rst>`__ for more details.
+  To import local server directly from python, you should now use: 'turbulenz_local.*'.
+
+* Local server is now started differently.
+  The old command 'paster serve release.ini' has been replaced by 'local_server --init' followed by 'local_server --launch'.
+  For SDK users, using the start_local.sh and run_devserver.bat commands, no changes are required.
+  See the `turbulenz_local readme <https://github.com/turbulenz/turbulenz_local/blob/master/README.rst>`__ for more details.
+
+* Turbulenz tools are now distributed as a `turbulenz_tools python package <https://pypi.python.org/pypi/turbulenz_tools>`_, which can be downloaded from pypi.
+  In the SDK, these packages are downloaded and included in the installer.
+  To update to a later tools package:
+
+  1) Start the environment
+  2) Type: easy_install -U turbulenz_tools>=X.X.X
+     where X.X.X is the required minimum version.
+
+  Each SDK will bundled with a compatible version of the tools.
+  Check compatibility before updating to the latest tools.
+
+  To import tools directly from python, you should now use: 'turbulenz_tools.tools.*'.
+
+* The viewer is now a standalone application. Models, animations, etc can be viewed directly from the application if the base asset URL and asset file are correctly selected.
+  When browsing the assets, any assets that can be viewed will launch the viewer application.
+  This will allow developers to easily find the viewer and try it out on their models.
+  The viewer now has canvas-debug, canvas, plugin-debug, plugin modes.
 
 * Performance improvements to the renderers, mainly about reducing CPU cost when preparing the renderables for rendering.
 * Performance improvements to the 2D canvas API.
 
+* Local server now remembers the user's hub password when deploying a game:
+
+  1) When logging into the hub, click the 'Remember me' checkbox.
+  2) Once successfully authorised, the user that is logged in, will be written at the bottom right of the deploy dialog.
+  3) When next pressing the deploy button, that user will automatically be logged in and the will go straight to the deploy dialog.
+  4) Logging out, will forget the user's details.
+
+* The deploy dialog layout has been improved.
+  The list of previously deployed versions is now on the left hand side.
+  On selecting this list, the version name is shown below so users can see what they have previously uploaded.
+  Users can now upload on top of uploaded versions (provided they are unlocked) or create a version with a new name.
+  If the version clashes they will be warned and asked if they want to overwrite the previous version.
+
+* The local server now contains a "logged in as" field on the main page.
+  This allows developers to test being logged in as a particular user with a given name, emulating the services provided by Turbulenz Hub and turbulenz.com.
+  This now seperates the data for badges, leaderboards, userdata, notifications.
+  To change users read the instructions for :ref:`logging in multiple accounts <multiple_logins>`.
+
+* Local server now has a common.ini and a release.ini/development.ini.
+  The common file contains information that is required for both release and development.
+  It is possible to overwrite settings from common in release/development by declaring the setting after the import of the common.ini.
+
 Fixed
 -----
+
+* Various fixes for the viewer rendering.
+* Addition fixes to the dae2json and obj2json importing.
+* T1424 - Local does not remember the password when deploying a game from Local to Hub.
 
 Known Issues
 ============
@@ -97,7 +141,9 @@ Known Issues
 New
 ---
 
-There are no new known issues this release.
+* Importing tools/local server directly from Python has changed. Previously you could import them using 'turbulenz.tools.*' and 'turbulenz.devserver.*', now you must invoke them via 'turbulenz_tools.tools.*' and 'turbulenz_local.*'.
+* Any manual changes to release.ini configuration files have to be manually applied to the release.ini, after first running the local server command for the first time, since the file needs to be generated.
+* The default list of games in the local server flows onto the next page. You must click the arrow to scroll to the second page to see all applications.
 
 Unchanged
 ---------
