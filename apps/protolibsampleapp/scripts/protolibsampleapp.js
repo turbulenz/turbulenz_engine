@@ -115,7 +115,8 @@ Application.prototype =
             text: 'Powered by Turbulenz',
             position: [180, protolib.height - 100],
             v3Color: [1.0, 1.0, 1.0],
-            scale: 2
+            scale: 2,
+            horizontalAlign: protolib.textHorizontalAlign.LEFT
         };
 
         if (protolib.globals.config.debugMeshRotation)
