@@ -49,6 +49,8 @@ def command_env():
     with open(activate_script, 'r+') as f:
         activate_text = f.read()
         if activate_text.find(extra_path) == -1:
+            # Seek is required here on Windows Python 2.x
+            f.seek(0, 2)
             f.write(extra_path)
 
     def _easy_install(package):
