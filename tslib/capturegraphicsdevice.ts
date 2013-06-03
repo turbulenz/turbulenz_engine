@@ -1403,7 +1403,7 @@ class CaptureGraphicsDevice
                                      id,
                                      self._addData(data, (numVertices * this.stride), false));
                 }
-                else (0 < numVertices)
+                else if(0 < numVertices)
                 {
                     self._addCommand(CaptureGraphicsCommand.setData,
                                      id,
@@ -1490,7 +1490,7 @@ class CaptureGraphicsDevice
 
             var attributes = params.attributes;
             params.attributes = this._cloneVertexFormats(attributes);
-            if (params.dynamic === false || params.transient)
+            if (params.dynamic === false || params['transient'])
             {
                 delete params.dynamic;
             }
@@ -1595,7 +1595,7 @@ class CaptureGraphicsDevice
                 destroy.call(this);
             };
 
-            if (params.dynamic === false || params.transient)
+            if (params.dynamic === false || params['transient'])
             {
                 delete params.dynamic;
             }
