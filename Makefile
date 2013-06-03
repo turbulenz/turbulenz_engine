@@ -158,7 +158,3 @@ endif
 
 # EXT, LIBS, APPS are used to set up all build rules ...
 include $(BUILDDIR)/rules.mk
-
-CMDPRE:=$(CMDPREFIX)
-
-.PHONY : projects
