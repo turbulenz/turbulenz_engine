@@ -10,6 +10,14 @@ Summary
 Turbulenz SDK 0.26.0 is an update for both the Turbulenz Engine
 Installer and SDK components.
 
+Packaged Components
+===================
+
+The following versions of Turbulenz products are packaged in this SDK:
+
+* turbulenz_engine - 1.1
+* turbulenz_tools - 1.0.1
+* turbulenz_local - 1.1
 
 Change List
 ===========
@@ -141,6 +149,9 @@ Changes
   It is possible to overwrite settings from common in release/development by declaring the setting after the import of the common.ini.
 
 * The default renderer's ``defaultPrepareFn`` will now switch to a default "flat" or "flat_skinned" technique if "diffuse" is not set on the technique parameters for a geometries material.
+
+* Changes have been made to the :ref:`Mapping Table <mappingtable>` object.
+  Certain undocumented properties are not longer available, if you previously used properties such as mappingTablePrefix, please note they are no longer available.
 
 Fixed
 -----
