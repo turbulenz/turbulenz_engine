@@ -140,6 +140,8 @@ Changes
   The common file contains information that is required for both release and development.
   It is possible to overwrite settings from common in release/development by declaring the setting after the import of the common.ini.
 
+* The default renderer's ``defaultPrepareFn`` will now switch to a default "flat" or "flat_skinned" technique if "diffuse" is not set on the technique parameters for a geometries material.
+
 Fixed
 -----
 
