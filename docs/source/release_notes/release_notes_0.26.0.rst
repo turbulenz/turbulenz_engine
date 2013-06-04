@@ -121,7 +121,7 @@ Changes
 * Local server now remembers the user's hub password when deploying a game:
 
   1) When logging into the hub, click the 'Remember me' checkbox.
-  2) Once successfully authorised, the user that is logged in, will be written at the bottom right of the deploy dialog.
+  2) Once successfully authorized, the user that is logged in, will be written at the bottom right of the deploy dialog.
   3) When next pressing the deploy button, that user will automatically be logged in and the will go straight to the deploy dialog.
   4) Logging out, will forget the user's details.
 
@@ -133,7 +133,7 @@ Changes
 
 * The local server now contains a "logged in as" field on the main page.
   This allows developers to test being logged in as a particular user with a given name, emulating the services provided by Turbulenz Hub and turbulenz.com.
-  This now seperates the data for badges, leaderboards, userdata, notifications.
+  This now separates the data for badges, leaderboards, userdata, notifications.
   To change users read the instructions for :ref:`logging in multiple accounts <multiple_logins>`.
 
 * Local server now has a common.ini and a release.ini/development.ini.
