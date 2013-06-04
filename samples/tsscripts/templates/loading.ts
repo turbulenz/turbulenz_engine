@@ -836,7 +836,9 @@ TurbulenzEngine.onload = function onloadFn()
         // Manually reassign the mapping table to get the watercan from a predefined web address,
         // rather than where the rest of the assets reside
         watercanURL = mappingTable.getURL(watercanObjAddress);
-        mappingTable.urlMapping[watercanObjAddress] = watercanURL.replace(mappingTable.mappingTablePrefix, newPrefix);
+        var urlSplit = watercanURL.split("/");
+        var assetname = urlSplit[urlSplit.length - 1];
+        mappingTable.map(watercanObjAddress, newPrefix + assetname);
 
         loadAssets();
     };
