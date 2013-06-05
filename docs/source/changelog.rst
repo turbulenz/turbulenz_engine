@@ -12,10 +12,15 @@ Version 1.1
 
 2013-05-04
 
+- Update protolib library (version 0.2.0):
+  * Added version number field.
+  * Added horizontalAlign, verticalAlign properties to drawText.
+  * Depricated alignment property of drawText and textAlignment enum.
+  * Added setPostRendererDraw function for rendering after the scene rendering.
 - Added Data Shares - shared public key-value stores which allow games to share data with other users.
 - Added Notifications - send instant to other users or delayed notifications to the current user.
 - Added Tic-tac-toe app - An app showing how to use the Data Share and Notification API's with a simple game.
-- Update protolib library and add two apps 'protolibsampleapp' and 'protolibtemplateapp'
+- Update protolib library and add two apps 'protolibsampleapp' and 'protolibtemplateapp' (version 0.1.1)
 
   * Added a 'warn' function to the protolib.utils for warnings.
   * Add a 'time' property with app timers calculating current, previous, delta and maxDeltaTime times per frame.
