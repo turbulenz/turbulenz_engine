@@ -11,12 +11,13 @@ The Protolib Object
 
 **Added**
 
-*2013-05-02 - 0.1.0 - First BETA release (Open Source Only)*
-*2013-05-21 - 0.1.1 - Turbulenz Webcast Build (Open Source Only)*
+**2013-05-02** - 0.1.0 - First BETA release (Open Source Only)
 
 **Updated**
 
-*SDK 0.26.0 - 0.2.0 - First SDK release*
+**2013-05-21** - 0.1.1 - Turbulenz Webcast Build (Open Source Only)
+
+**2013-05-04** - 0.2.0 - First SDK release (SDK 0.26.0)
 
 **BETA**
 
