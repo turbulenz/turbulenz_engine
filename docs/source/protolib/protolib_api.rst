@@ -690,8 +690,8 @@ Draws the given text to screen space.
         position: [x, y],
         v3Color: color,
         scale: 2,
-        spacing: 1,
-        alignment: protolib.textAlignment.LEFT
+        horizontalAlign: protolib.textHorizontalAlign.CENTER,
+        verticalAlign: protolib.textVerticalAlign.MIDDLE
     });
 
 ``text``
