@@ -167,8 +167,9 @@ can be found in *assets/models*.
 
 .. TIP::
 
-    An example of how to load a scene with assets can be found in the
-    "scene loading" sample. Why not try loading your converted asset?
+    An in-depth example of how to load a scene with assets can be found in the "load model" sample. Alternatively,
+    :ref:`Protolib <protolib_introduction>` provides a simple asset loading and scene management framework that will
+    quickly get you up and running.
 
 .. TIP::
 
