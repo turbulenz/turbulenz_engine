@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+// Copyright (c) 2013 Turbulenz Limited
+
+/*global require: false*/
+/*global console: false*/
+/*global process: false*/
+
+var crypto = require('crypto');
+var fs = require('fs');
+var Buffer = require('buffer').Buffer;
+
+// Read the 256bit encryption key
+var keyBuffer = new Buffer(32);
+var keyLen = fs.readSync(process.stdin.fd, keyBuffer, 0, 32, null);
+if (keyLen !== 32)
+{
+    console.error('Could not read key');
+    process.exit(1);
+}
+// Read an int specifying the length of the data buffer
+var lenBuffer = new Buffer(4);
+var dataLen = fs.readSync(process.stdin.fd, lenBuffer, 0, 4, null);
+if (dataLen !== 4)
+{
+    console.error('Could not read data length');
+    process.exit(1);
+}
+var dataLen = lenBuffer.readUInt32LE(0);
+// Allocate and read the data
+var dataBuffer = new Buffer(dataLen);
+var dataReadLen = fs.readSync(process.stdin.fd, dataBuffer, 0, dataLen, null);
+if (dataReadLen !== dataLen)
+{
+    console.error('Error reading data');
+    process.exit(1);
+}
+// iv is stored in the last 16 bytes of the data stream
+var ivBuffer = dataBuffer.slice(dataLen - 16, dataLen);
+var decipher = crypto.createDecipheriv('aes-256-cbc', keyBuffer, ivBuffer);
+var dec = decipher.update(dataBuffer.slice(0, dataLen - 16), null, 'binary');
+dec += decipher.final('binary');
+// Convert and send the result over stdout
+var result = new Buffer(dec, 'binary');
+fs.writeSync(process.stdout.fd, result, 0, result.length);
