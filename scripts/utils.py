@@ -267,7 +267,43 @@ if platform.system() == "Windows":
         return None, None, None
     # pylint: enable=F0401, E0602
     # pylint: enable=W0404
+
+    def check_compilers():
+        try:
+            from distutils.msvc9compiler import query_vcvarsall
+        except ImportError:
+            # We could implement our own checks but distutils should be available, send a warning
+            raise EnvironmentError('Failed to import distutils, not able to confirm compiler toolchain is present')
+
+        _, version, _ = find_devenv()
+        if version == None:
+            raise EnvironmentError('Failed to find any Visual Studio installed')
+        versions_map = {
+            '2008': 9.0,
+            '2010': 10.0,
+            '2012': 11.0
+        }
+        arch, _ = platform.architecture()
+        if arch == '32bit':
+            try:
+                query_vcvarsall(versions_map[version], 'x86')
+            except ValueError:
+                raise EnvironmentError('Setuptools unable to detect Visual Studio Compilers correctly')
+        elif arch == '64bit':
+            try:
+                query_vcvarsall(versions_map[version], 'amd64')
+            except ValueError:
+                raise EnvironmentError('Setuptools unable to detect Visual Studio Compilers correctly.\n'
+                                       'You appear to be running 64bit Python, ensure you install the '
+                                       '64bit compilers in Visual Studio')
+        else:
+            raise EnvironmentError('Unexpected Python architecture, not able to'
+                                   ' confirm compiler toolchain is present')
+
 else:
     def find_devenv():
         return None, None, None
 
+    def check_compilers():
+        # This could be implemented but it's only Windows that causes us most of the issues
+        pass

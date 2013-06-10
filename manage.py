@@ -16,8 +16,8 @@ import argparse
 from scripts import TURBULENZ_ENGINE_VERSION
 from scripts.utils import TURBULENZOS, TURBULENZROOT, PYTHON, ENV
 from scripts.utils import command_no_arguments, command_with_arguments, command_requires_env
-from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, find_devenv, rm, mkdir, cp
-from scripts.utils import check_documentation_links
+from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, rm, mkdir, cp
+from scripts.utils import check_documentation_links, find_devenv, check_compilers
 
 #######################################################################################################################
 
@@ -52,6 +52,12 @@ def command_env():
             # Seek is required here on Windows Python 2.x
             f.seek(0, 2)
             f.write(extra_path)
+
+    try:
+        check_compilers()
+    except EnvironmentError as e:
+        error(e)
+        exit(1)
 
     def _easy_install(package):
         cmd = [os.path.join(env_bin, 'easy_install'), package]
