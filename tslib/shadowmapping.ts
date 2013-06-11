@@ -339,6 +339,81 @@ class ShadowMapping
         camera.updateViewMatrix();
         var viewMatrix = camera.viewMatrix;
 
+        if (!lightInstance.lightDepth || light.dynamic)
+        {
+            var halfExtents = light.halfExtents;
+            var halfExtents0 = halfExtents[0];
+            var halfExtents1 = halfExtents[1];
+            var halfExtents2 = halfExtents[2];
+            var lightDepth, lightViewWindowX, lightViewWindowY;
+            if (light.spot)
+            {
+                var tan = Math.tan;
+                var acos = Math.acos;
+                var frustumWorld = shadowMapInfo.frustumWorld;
+
+                var p0 = md.m43TransformPoint(frustumWorld, md.v3Build(-1, -1, 1));
+                var p1 = md.m43TransformPoint(frustumWorld, md.v3Build( 1, -1, 1));
+                var p2 = md.m43TransformPoint(frustumWorld, md.v3Build(-1,  1, 1));
+                var p3 = md.m43TransformPoint(frustumWorld, md.v3Build( 1,  1, 1));
+                var farLightCenter = md.v3Sub(md.v3ScalarMul(md.v3Add4(p0, p1, p2, p3), 0.25), origin);
+                lightDepth = md.v3Length(farLightCenter);
+                if (lightDepth <= 0.0)
+                {
+                    lightInstance.shadows = false;
+                    return;
+                }
+                farLightCenter = md.v3ScalarMul(farLightCenter, 1.0 / lightDepth);
+                var farLightRight = md.v3Normalize(md.v3Sub(md.v3ScalarMul(md.v3Add(p0, p2), 0.5), origin));
+                var farLightTop = md.v3Normalize(md.v3Sub(md.v3ScalarMul(md.v3Add(p0, p1), 0.5), origin));
+                lightViewWindowX = tan(acos(md.v3Dot(farLightCenter, farLightRight)));
+                lightViewWindowY = tan(acos(md.v3Dot(farLightCenter, farLightTop)));
+            }
+            else if (light.point)
+            {
+                // HACK: as we are only rendering shadowmaps for the lower half
+                var lightOrigin = light.origin;
+                if (lightOrigin)
+                {
+                    var displacedTarget = target.slice();
+                    displacedTarget[0] -= lightOrigin[0];
+                    displacedTarget[2] -= lightOrigin[2];
+                    lightDepth = md.v3Length(md.v3Sub(displacedTarget, origin));
+                    lightViewWindowX = (halfExtents0 / lightDepth);
+                    lightViewWindowY = (halfExtents2 / lightDepth);
+                }
+                else
+                {
+                    lightDepth = halfExtents1;
+                    lightViewWindowX = (halfExtents0 / halfExtents1);
+                    lightViewWindowY = (halfExtents2 / halfExtents1);
+                }
+                if (lightDepth <= 0.0)
+                {
+                    lightInstance.shadows = false;
+                    return;
+                }
+                lightViewWindowX *= 3;
+                lightViewWindowY *= 3;
+            }
+            else // directional
+            {
+                var m0 = viewMatrix[0];
+                var m1 = viewMatrix[1];
+                var m3 = viewMatrix[3];
+                var m4 = viewMatrix[4];
+                var m6 = viewMatrix[6];
+                var m7 = viewMatrix[7];
+                lightViewWindowX = ((m0 < 0 ? -m0 : m0) * halfExtents0 + (m3 < 0 ? -m3 : m3) * halfExtents1 + (m6 < 0 ? -m6 : m6) * halfExtents2);
+                lightViewWindowY = ((m1 < 0 ? -m1 : m1) * halfExtents0 + (m4 < 0 ? -m4 : m4) * halfExtents1 + (m7 < 0 ? -m7 : m7) * halfExtents2);
+                lightDepth = 2 * Math.sqrt((halfExtents0 * halfExtents0) + (halfExtents1 * halfExtents1) + (halfExtents2 * halfExtents2));
+            }
+
+            lightInstance.lightViewWindowX = lightViewWindowX;
+            lightInstance.lightViewWindowY = lightViewWindowY;
+            lightInstance.lightDepth = lightDepth;
+        }
+
         if (!shadowRenderables)
         {
             shadowRenderables = [];
@@ -505,80 +580,9 @@ class ShadowMapping
         var minLightDistance = (lightInstance.minLightDistance - distanceScale); // Need padding to avoid culling near objects
         var maxLightDistance = (lightInstance.maxLightDistance + distanceScale); // Need padding to avoid encoding singularity at far plane
 
-        var lightViewWindowX, lightViewWindowY, lightDepth;
-        lightViewWindowX = lightInstance.lightViewWindowX;
-        lightViewWindowY = lightInstance.lightViewWindowY;
-        lightDepth = lightInstance.lightDepth;
-        if (!lightDepth || light.dynamic)
-        {
-            if (light.spot)
-            {
-                var tan = Math.tan;
-                var acos = Math.acos;
-                var frustumWorld = shadowMapInfo.frustumWorld;
-
-                var p0 = md.m43TransformPoint(frustumWorld, md.v3Build(-1, -1, 1));
-                var p1 = md.m43TransformPoint(frustumWorld, md.v3Build( 1, -1, 1));
-                var p2 = md.m43TransformPoint(frustumWorld, md.v3Build(-1,  1, 1));
-                var p3 = md.m43TransformPoint(frustumWorld, md.v3Build( 1,  1, 1));
-                var farLightCenter = md.v3Sub(md.v3ScalarMul(md.v3Add4(p0, p1, p2, p3), 0.25), origin);
-                lightDepth = md.v3Length(farLightCenter);
-                if (lightDepth <= 0.0)
-                {
-                    lightInstance.shadows = false;
-                    return;
-                }
-                farLightCenter = md.v3ScalarMul(farLightCenter, 1.0 / lightDepth);
-                var farLightRight = md.v3Normalize(md.v3Sub(md.v3ScalarMul(md.v3Add(p0, p2), 0.5), origin));
-                var farLightTop = md.v3Normalize(md.v3Sub(md.v3ScalarMul(md.v3Add(p0, p1), 0.5), origin));
-                lightViewWindowX = tan(acos(md.v3Dot(farLightCenter, farLightRight)));
-                lightViewWindowY = tan(acos(md.v3Dot(farLightCenter, farLightTop)));
-            }
-            else if (light.point)
-            {
-                // HACK: as we are only rendering shadowmaps for the lower half
-                lightOrigin = light.origin;
-                if (lightOrigin)
-                {
-                    var target = shadowMapInfo.target;
-                    var displacedTarget = target.slice();
-                    displacedTarget[0] -= lightOrigin[0];
-                    displacedTarget[2] -= lightOrigin[2];
-                    lightDepth = md.v3Length(md.v3Sub(displacedTarget, origin));
-                    lightViewWindowX = (halfExtents0 / lightDepth);
-                    lightViewWindowY = (halfExtents2 / lightDepth);
-                }
-                else
-                {
-                    lightDepth = halfExtents1;
-                    lightViewWindowX = (halfExtents0 / halfExtents1);
-                    lightViewWindowY = (halfExtents2 / halfExtents1);
-                }
-                if (lightDepth <= 0.0)
-                {
-                    lightInstance.shadows = false;
-                    return;
-                }
-                lightViewWindowX *= 3;
-                lightViewWindowY *= 3;
-            }
-            else // directional
-            {
-                var m0 = viewMatrix[0];
-                var m1 = viewMatrix[1];
-                var m3 = viewMatrix[3];
-                var m4 = viewMatrix[4];
-                var m6 = viewMatrix[6];
-                var m7 = viewMatrix[7];
-                lightViewWindowX = ((m0 < 0 ? -m0 : m0) * halfExtents0 + (m3 < 0 ? -m3 : m3) * halfExtents1 + (m6 < 0 ? -m6 : m6) * halfExtents2);
-                lightViewWindowY = ((m1 < 0 ? -m1 : m1) * halfExtents0 + (m4 < 0 ? -m4 : m4) * halfExtents1 + (m7 < 0 ? -m7 : m7) * halfExtents2);
-                lightDepth = 2 * Math.sqrt((halfExtents0 * halfExtents0) + (halfExtents1 * halfExtents1) + (halfExtents2 * halfExtents2));
-            }
-
-            lightInstance.lightViewWindowX = lightViewWindowX;
-            lightInstance.lightViewWindowY = lightViewWindowY;
-            lightInstance.lightDepth = lightDepth;
-        }
+        var lightViewWindowX = lightInstance.lightViewWindowX;
+        var lightViewWindowY = lightInstance.lightViewWindowY;
+        var lightDepth = lightInstance.lightDepth;
 
         lightInstance.shadowMap = shadowMap;
 
@@ -819,8 +823,8 @@ class ShadowMapping
     };
 
     cullShadowRenderables(lightInstance,
-                                                                         viewMatrix,
-                                                                         shadowRenderables)
+                          viewMatrix,
+                          shadowRenderables)
     {
         var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
         var overlappingRenderables = lightInstance.overlappingRenderables;
@@ -984,6 +988,11 @@ class ShadowMapping
         if (minLightDistance < 0)
         {
             minLightDistance = 0;
+        }
+
+        if (maxLightDistance > lightInstance.lightDepth)
+        {
+            maxLightDistance = lightInstance.lightDepth;
         }
 
         lightInstance.numShadowRenderables = numShadowRenderables;
