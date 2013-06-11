@@ -47,12 +47,12 @@ float DecodeFloatRGBA32(float4 rgba)
 
 float4 EncodeFloatRGB16(float v)
 {
-    v = floor(saturate(v) * 65535.0);
-    float r = floor(v / 2048.0);
-    float g = floor(mod(v, 2048.0) / 32.0);
-    float b = mod(v, 32.0);
-
-    return float4(r / 31.0, g / 63.0, b / 31.0, 1.0);
+    v = saturate(v);
+    float r = floor(v * (65535.0 / 2048.0));
+    float v_r = ((v * 65535.0) - (r * 2048.0));
+    float g = floor(v_r * (1.0 / 32.0));
+    float b = (v_r - (g * 32.0));
+    return float4(r * (1.0 / 31.0), g * (1.0 / 63.0), b * (1.0 / 31.0), 1.0);
 }
 
 float DecodeFloatRGB16(float4 rgba)
