@@ -1335,13 +1335,63 @@ WebGLRenderTarget.prototype =
         var gd = this.gd;
         var gl = gd.gl;
 
-        gd.unbindTexture(this.colorTexture0.glTexture);
+        if (this.colorTexture0)
+        {
+            gd.unbindTexture(this.colorTexture0.glTexture);
+            if (this.colorTexture1)
+            {
+                gd.unbindTexture(this.colorTexture1.glTexture);
+                if (this.colorTexture2)
+                {
+                    gd.unbindTexture(this.colorTexture2.glTexture);
+                    if (this.colorTexture3)
+                    {
+                        gd.unbindTexture(this.colorTexture3.glTexture);
+                    }
+                }
+            }
+        }
         if (this.depthTexture)
         {
             gd.unbindTexture(this.depthTexture.glTexture);
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.glObject);
+
+        var drawBuffersExtension = gd.drawBuffersExtension;
+        if (drawBuffersExtension)
+        {
+            var buffers;
+            if (this.colorTexture0)
+            {
+                buffers = [gl.COLOR_ATTACHMENT0];
+                if (this.colorTexture1)
+                {
+                    buffers.push(gl.COLOR_ATTACHMENT0 + 1);
+                    if (this.colorTexture2)
+                    {
+                        buffers.push(gl.COLOR_ATTACHMENT0 + 2);
+                        if (this.colorTexture3)
+                        {
+                            buffers.push(gl.COLOR_ATTACHMENT0 + 3);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                buffers = [gl.NONE];
+            }
+
+            if (gd.WEBGL_draw_buffers)
+            {
+                drawBuffersExtension.drawBuffersWEBGL(buffers);
+            }
+            else
+            {
+                drawBuffersExtension.drawBuffersEXT(buffers);
+            }
+        }
 
         var state = gd.state;
         this.copyBox(this.oldViewportBox, state.viewportBox);
@@ -1359,10 +1409,40 @@ WebGLRenderTarget.prototype =
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+        var drawBuffersExtension = gd.drawBuffersExtension;
+        if (drawBuffersExtension)
+        {
+            var buffers = [gl.BACK];
+
+            if (gd.WEBGL_draw_buffers)
+            {
+                drawBuffersExtension.drawBuffersWEBGL(buffers);
+            }
+            else
+            {
+                drawBuffersExtension.drawBuffersEXT(buffers);
+            }
+        }
+
         gd.setViewport.apply(gd, this.oldViewportBox);
         gd.setScissor.apply(gd, this.oldScissorBox);
 
-        this.colorTexture0.updateMipmaps(this.face);
+        if (this.colorTexture0)
+        {
+            this.colorTexture0.updateMipmaps(this.face);
+            if (this.colorTexture1)
+            {
+                this.colorTexture1.updateMipmaps(this.face);
+                if (this.colorTexture2)
+                {
+                    this.colorTexture2.updateMipmaps(this.face);
+                    if (this.colorTexture3)
+                    {
+                        this.colorTexture3.updateMipmaps(this.face);
+                    }
+                }
+            }
+        }
         if (this.depthTexture)
         {
             this.depthTexture.updateMipmaps(this.face);
@@ -4236,6 +4316,8 @@ interface WebGLGraphicsDevice extends GraphicsDevice
     WEBGL_compressed_texture_s3tc: bool;
     TEXTURE_MAX_ANISOTROPY_EXT: bool;
     maxAnisotropy: number;
+    WEBGL_draw_buffers: bool;
+    drawBuffersExtension: any;
 
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
 
@@ -5633,6 +5715,17 @@ WebGLGraphicsDevice.prototype =
         }
         else if ("RENDERTARGET_COLOR_TEXTURES" === name)
         {
+            if (this.drawBuffersExtension)
+            {
+                if (this.WEBGL_draw_buffers)
+                {
+                    return gl.getParameter(this.drawBuffersExtension.MAX_COLOR_ATTACHMENTS_WEBGL);
+                }
+                else
+                {
+                    return gl.getParameter(this.drawBuffersExtension.MAX_COLOR_ATTACHMENTS_EXT);
+                }
+            }
             return 1;
         }
         else if ("RENDERBUFFER_SIZE" === name)
@@ -6359,8 +6452,19 @@ WebGLGraphicsDevice.create = function webGLGraphicsDeviceCreateFn(canvas, params
     {
         gd.maxAnisotropy = 1;
     }
+
     // Enable OES_element_index_uint extension
     gl.getExtension('OES_element_index_uint');
+
+    if (extensions.indexOf('WEBGL_draw_buffers') !== -1)
+    {
+        gd.WEBGL_draw_buffers = true;
+        gd.drawBuffersExtension = gl.getExtension('WEBGL_draw_buffers');
+    }
+    else if (extensions.indexOf('EXT_draw_buffers') !== -1)
+    {
+        gd.drawBuffersExtension = gl.getExtension('EXT_draw_buffers');
+    }
 
     gd.PRIMITIVE_POINTS         = gl.POINTS;
     gd.PRIMITIVE_LINES          = gl.LINES;
