@@ -4,6 +4,7 @@ basic_loop:
 camera:
 2dcanvas:
 forward_rendering:
+deferred_rendering:
 fullscreen_effect:
 hierarchy:
 immediate_mode_rendering:

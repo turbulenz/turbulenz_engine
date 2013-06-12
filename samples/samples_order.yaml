@@ -11,6 +11,7 @@
     - material
     - loading
     - forward_rendering
+    - deferred_rendering
     - morphing
     - postfx
     - particles
