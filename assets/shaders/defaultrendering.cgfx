@@ -1097,15 +1097,15 @@ technique flat
 {
     pass p0
     {
-        depthtestenable = true;
-        depthfunc       = lequal;
-        depthmask       = true;
-        cullfaceenable  = true;
-        cullface        = back;
-        blendenable     = false;
+        DepthTestEnable = true;
+        DepthFunc       = lequal;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = back;
+        BlendEnable     = false;
 
-        vertexprogram   = compile latest vp_flat();
-        fragmentprogram = compile latest fp_flat();
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
     }
 }
 
@@ -1113,15 +1113,45 @@ technique flat_skinned
 {
     pass p0
     {
-        depthtestenable = true;
-        depthfunc       = lequal;
-        depthmask       = true;
-        cullfaceenable  = true;
-        cullface        = back;
-        blendenable     = false;
+        DepthTestEnable = true;
+        DepthFunc       = lequal;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = back;
+        BlendEnable     = false;
 
-        vertexprogram   = compile latest vp_flat_skinned();
-        fragmentprogram = compile latest fp_flat();
+        VertexProgram   = compile latest vp_flat_skinned();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_nocull
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = lequal;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_flat();
+        FragmentProgram = compile latest fp_flat();
+    }
+}
+
+technique flat_skinned_nocull
+{
+    pass p0
+    {
+        DepthTestEnable = true;
+        DepthFunc       = lequal;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_flat_skinned();
+        FragmentProgram = compile latest fp_flat();
     }
 }
 
