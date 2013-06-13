@@ -1305,6 +1305,7 @@ interface WebGLRenderTarget extends RenderTarget
 {
     gd: any;
     glObject: any;
+    buffers: number[];
 };
 declare var WebGLRenderTarget :
 {
@@ -1361,35 +1362,13 @@ WebGLRenderTarget.prototype =
         var drawBuffersExtension = gd.drawBuffersExtension;
         if (drawBuffersExtension)
         {
-            var buffers;
-            if (this.colorTexture0)
-            {
-                buffers = [gl.COLOR_ATTACHMENT0];
-                if (this.colorTexture1)
-                {
-                    buffers.push(gl.COLOR_ATTACHMENT0 + 1);
-                    if (this.colorTexture2)
-                    {
-                        buffers.push(gl.COLOR_ATTACHMENT0 + 2);
-                        if (this.colorTexture3)
-                        {
-                            buffers.push(gl.COLOR_ATTACHMENT0 + 3);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                buffers = [gl.NONE];
-            }
-
             if (gd.WEBGL_draw_buffers)
             {
-                drawBuffersExtension.drawBuffersWEBGL(buffers);
+                drawBuffersExtension.drawBuffersWEBGL(this.buffers);
             }
             else
             {
-                drawBuffersExtension.drawBuffersEXT(buffers);
+                drawBuffersExtension.drawBuffersEXT(this.buffers);
             }
         }
 
@@ -1504,6 +1483,7 @@ WebGLRenderTarget.create = function webGLRenderTargetFn(gd, params)
     }
 
     var gl = gd.gl;
+    var colorAttachment0 = gl.COLOR_ATTACHMENT0;
 
     var glObject = gl.createFramebuffer();
 
@@ -1525,7 +1505,6 @@ WebGLRenderTarget.create = function webGLRenderTargetFn(gd, params)
             return null;
         }
 
-        var colorAttachment0 = gl.COLOR_ATTACHMENT0;
         if (colorTexture0.cubemap)
         {
             gl.framebufferTexture2D(gl.FRAMEBUFFER, colorAttachment0, (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face), glTexture, 0);
@@ -1626,6 +1605,32 @@ WebGLRenderTarget.create = function webGLRenderTargetFn(gd, params)
     renderTarget.width = width;
     renderTarget.height = height;
     renderTarget.face = face;
+
+    if (gd.drawBuffersExtension)
+    {
+        var buffers;
+        if (colorTexture0)
+        {
+            buffers = [colorAttachment0];
+            if (colorTexture1)
+            {
+                buffers.push(colorAttachment0 + 1);
+                if (colorTexture2)
+                {
+                    buffers.push(colorAttachment0 + 2);
+                    if (colorTexture3)
+                    {
+                        buffers.push(colorAttachment0 + 3);
+                    }
+                }
+            }
+        }
+        else
+        {
+            buffers = [gl.NONE];
+        }
+        renderTarget.buffers = buffers;
+    }
 
     return renderTarget;
 };
