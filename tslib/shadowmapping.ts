@@ -40,6 +40,9 @@ class ShadowMapping
     quadSemantics       : Semantics;
     quadVertexBuffer    : VertexBuffer;
 
+    pixelOffsetH        : number[];
+    pixelOffsetV        : number[];
+
     node                : SceneNode;
 
     bufferWidth         : number;
@@ -1010,7 +1013,6 @@ class ShadowMapping
     {
         var gd = this.gd;
         var numShadowMaps, n, shadowMaps, shadowMap, shadowMapBlurTexture, shadowMapBlurRenderTarget;
-        var shadowMapSize, pixelOffsetH, pixelOffsetV;
 
         gd.setStream(this.quadVertexBuffer, this.quadSemantics);
 
@@ -1019,15 +1021,16 @@ class ShadowMapping
 
         var quadPrimitive = this.quadPrimitive;
 
+        var pixelOffsetH = this.pixelOffsetH;
+        var pixelOffsetV = this.pixelOffsetV;
+
         numShadowMaps = this.highIndex;
         if (numShadowMaps)
         {
             shadowMaps = this.shadowMapsHigh;
             shadowMapBlurTexture = this.blurTextureHigh;
             shadowMapBlurRenderTarget = this.blurRenderTargetHigh;
-            shadowMapSize = this.sizeHigh;
-            pixelOffsetH = [(1.0 / shadowMapSize), 0];
-            pixelOffsetV = [0, (1.0 / shadowMapSize)];
+            pixelOffsetV[1] = pixelOffsetH[0] = (1.0 / this.sizeHigh);
             for (n = 0; n < numShadowMaps; n += 1)
             {
                 shadowMap = shadowMaps[n];
@@ -1067,9 +1070,7 @@ class ShadowMapping
             shadowMaps = this.shadowMapsLow;
             shadowMapBlurTexture = this.blurTextureLow;
             shadowMapBlurRenderTarget = this.blurRenderTargetLow;
-            shadowMapSize = this.sizeLow;
-            pixelOffsetH = [(1.0 / shadowMapSize), 0];
-            pixelOffsetV = [0, (1.0 / shadowMapSize)];
+            pixelOffsetV[1] = pixelOffsetH[0] = (1.0 / this.sizeLow);
             for (n = 0; n < numShadowMaps; n += 1)
             {
                 shadowMap = shadowMaps[n];
@@ -1183,6 +1184,9 @@ class ShadowMapping
                 1.0, -1.0, 1.0, 0.0
             ]
         });
+
+        shadowMapping.pixelOffsetH = [0, 0];
+        shadowMapping.pixelOffsetV = [0, 0];
 
         shadowMapping.bufferWidth = 0;
         shadowMapping.bufferHeight = 0;
