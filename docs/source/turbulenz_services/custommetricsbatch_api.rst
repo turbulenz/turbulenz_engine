@@ -35,7 +35,7 @@ Creates a new custom metric event batch
 
 **Syntax** ::
 
-    var customMetricEventBatch = CustomMetricsEventBatch.create();
+    var customMetricEventBatch = CustomMetricEventBatch.create();
 
 Each custom metric event batch can hold a number of custom metric events and can be sent to the servers using
 :ref:`TurbulenzServices.sendCustomMetricEventBatch <turbulenzservices_sendcustommetriceventbatch>`
