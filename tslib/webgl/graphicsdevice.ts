@@ -4885,18 +4885,13 @@ WebGLGraphicsDevice.prototype =
         {
             if (sortMode > 0)
             {
-                drawParametersArray.sort(function drawArraySortPositive(a, b) {
-                    return (b.sortKey - a.sortKey);
-                });
+                drawParametersArray.sort(this._drawArraySortPositive);
             }
             else //if (sortMode < 0)
             {
-                drawParametersArray.sort(function drawArraySortNegative(a, b) {
-                    return (a.sortKey - b.sortKey);
-                });
+                drawParametersArray.sort(this._drawArraySortNegative);
             }
         }
-
 
         var activeIndexBuffer = this.activeIndexBuffer;
         var attributeMask = this.attributeMask;
@@ -5834,6 +5829,16 @@ WebGLGraphicsDevice.prototype =
     },
 
     // private
+    _drawArraySortPositive: function _drawArraySortPositive(a, b)
+    {
+        return (b.sortKey - a.sortKey);
+    },
+
+    _drawArraySortNegative: function _drawArraySortNegative(a, b)
+    {
+        return (a.sortKey - b.sortKey);
+    },
+
     checkFullScreen : function checkFullScreenFn()
     {
         var fullscreen = this.fullscreen;
