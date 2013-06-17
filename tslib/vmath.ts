@@ -2411,34 +2411,34 @@ var VMath : MathDevice =
     //
     m33BuildIdentity : function m33BuildIdentityFn(dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            res = new VMathArrayConstructor(9);
         }
-        debug.assert(debug.isMtx33(dst));
+        debug.assert(debug.isMtx33(res));
 
-        dst[0] = 1.0;
-        dst[1] = 0.0;
-        dst[2] = 0.0;
-        dst[3] = 0.0;
-        dst[4] = 1.0;
-        dst[5] = 0.0;
-        dst[6] = 0.0;
-        dst[7] = 0.0;
-        dst[8] = 1.0;
+        res[0] = 1.0;
+        res[1] = 0.0;
+        res[2] = 0.0;
+        res[3] = 0.0;
+        res[4] = 1.0;
+        res[5] = 0.0;
+        res[6] = 0.0;
+        res[7] = 0.0;
+        res[8] = 1.0;
 
-        return dst;
+        return res;
     },
 
     // Matrix33
     m33Build : function m33BuildFn(r, u, a, dst?)
     {
+        var res;
         var length = arguments.length;
         if (length >= 9)
         {
             // Can NOT use dst because it will overwrite the input value...
-            var res;
-
             if (length > 9)
             {
                 res = arguments[9];
@@ -2462,29 +2462,28 @@ var VMath : MathDevice =
             res[6] = arguments[6];
             res[7] = arguments[7];
             res[8] = arguments[8];
-
-            return res;
         }
         else
         {
-            if (dst === undefined)
+            res = dst;
+            if (res === undefined)
             {
-                dst = new VMathArrayConstructor(9);
+                res = new VMathArrayConstructor(9);
             }
-            debug.assert(debug.isMtx33(dst));
+            debug.assert(debug.isMtx33(res));
 
-            dst[0] = r[0];
-            dst[1] = r[1];
-            dst[2] = r[2];
-            dst[3] = u[0];
-            dst[4] = u[1];
-            dst[5] = u[2];
-            dst[6] = a[0];
-            dst[7] = a[1];
-            dst[8] = a[2];
-
-            return dst;
+            res[0] = r[0];
+            res[1] = r[1];
+            res[2] = r[2];
+            res[3] = u[0];
+            res[4] = u[1];
+            res[5] = u[2];
+            res[6] = a[0];
+            res[7] = a[1];
+            res[8] = a[2];
         }
+
+        return res;
     },
 
     m33Copy : function m33CopyFn(m, dst?)
@@ -3099,37 +3098,38 @@ var VMath : MathDevice =
     // Matrix43
     m43BuildIdentity : function m43BuildIdentityFn(dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            res = new VMathArrayConstructor(12);
         }
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMtx43(res));
 
-        dst[0] = 1.0;
-        dst[1] = 0.0;
-        dst[2] = 0.0;
-        dst[3] = 0.0;
-        dst[4] = 1.0;
-        dst[5] = 0.0;
-        dst[6] = 0.0;
-        dst[7] = 0.0;
-        dst[8] = 1.0;
-        dst[9] = 0.0;
-        dst[10] = 0.0;
-        dst[11] = 0.0;
-        return dst;
+        res[0] = 1.0;
+        res[1] = 0.0;
+        res[2] = 0.0;
+        res[3] = 0.0;
+        res[4] = 1.0;
+        res[5] = 0.0;
+        res[6] = 0.0;
+        res[7] = 0.0;
+        res[8] = 1.0;
+        res[9] = 0.0;
+        res[10] = 0.0;
+        res[11] = 0.0;
+
+        return res;
     },
 
     m43Build : function m43BuildFn(r, u, a, p, dst?,
                                    a21?, a02?, a12?, a22?, a03?, a13?, a23?,
                                    _dst?)
     {
+        var res;
         var length = arguments.length;
         if (length >= 12)
         {
             // Can NOT use dst because it will overwrite the input value...
-            var res;
-
             if (length > 12)
             {
                 res = arguments[12];
@@ -3156,32 +3156,31 @@ var VMath : MathDevice =
             res[9] = arguments[9];
             res[10] = arguments[10];
             res[11] = arguments[11];
-
-            return res;
         }
         else
         {
-            if (dst === undefined)
+            res = dst;
+            if (res === undefined)
             {
-                dst = new VMathArrayConstructor(12);
+                res = new VMathArrayConstructor(12);
             }
-            debug.assert(debug.isMtx43(dst));
+            debug.assert(debug.isMtx43(res));
 
-            dst[0] = r[0];
-            dst[1] = r[1];
-            dst[2] = r[2];
-            dst[3] = u[0];
-            dst[4] = u[1];
-            dst[5] = u[2];
-            dst[6] = a[0];
-            dst[7] = a[1];
-            dst[8] = a[2];
-            dst[9] = p[0];
-            dst[10] = p[1];
-            dst[11] = p[2];
-
-            return dst;
+            res[0] = r[0];
+            res[1] = r[1];
+            res[2] = r[2];
+            res[3] = u[0];
+            res[4] = u[1];
+            res[5] = u[2];
+            res[6] = a[0];
+            res[7] = a[1];
+            res[8] = a[2];
+            res[9] = p[0];
+            res[10] = p[1];
+            res[11] = p[2];
         }
+
+        return res;
     },
 
     m43BuildTranslation : function m43BuildTranslationFn(p, dst?)
@@ -4241,40 +4240,40 @@ var VMath : MathDevice =
     // Matrix44
     m44BuildIdentity : function m44BuildIdentityFn(dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            res = new VMathArrayConstructor(16);
         }
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMtx44(res));
 
-        dst[0] =  1.0;
-        dst[1] =  0.0;
-        dst[2] =  0.0;
-        dst[3] =  0.0;
-        dst[4] =  0.0;
-        dst[5] =  1.0;
-        dst[6] =  0.0;
-        dst[7] =  0.0;
-        dst[8] =  0.0;
-        dst[9] =  0.0;
-        dst[10] = 1.0;
-        dst[11] = 0.0;
-        dst[12] = 0.0;
-        dst[13] = 0.0;
-        dst[14] = 0.0;
-        dst[15] = 1.0;
+        res[0] =  1.0;
+        res[1] =  0.0;
+        res[2] =  0.0;
+        res[3] =  0.0;
+        res[4] =  0.0;
+        res[5] =  1.0;
+        res[6] =  0.0;
+        res[7] =  0.0;
+        res[8] =  0.0;
+        res[9] =  0.0;
+        res[10] = 1.0;
+        res[11] = 0.0;
+        res[12] = 0.0;
+        res[13] = 0.0;
+        res[14] = 0.0;
+        res[15] = 1.0;
 
-        return dst;
+        return res;
     },
 
     m44Build : function m44BuildFn(r, u, a, p, dst?)
     {
+        var res;
         var length = arguments.length;
         if (length >= 16)
         {
             // Can NOT use dst because it will overwrite the input value...
-            var res;
-
             if (length > 16)
             {
                 res = arguments[16];
@@ -4305,36 +4304,35 @@ var VMath : MathDevice =
             res[13] = arguments[13];
             res[14] = arguments[14];
             res[15] = arguments[15];
-
-            return res;
         }
         else
         {
-            if (dst === undefined)
+            res = dst;
+            if (res === undefined)
             {
-                dst = new VMathArrayConstructor(16);
+                res = new VMathArrayConstructor(16);
             }
-            debug.assert(debug.isMtx44(dst));
+            debug.assert(debug.isMtx44(res));
 
-            dst[0] =  r[0];
-            dst[1] =  r[1];
-            dst[2] =  r[2];
-            dst[3] =  r[3];
-            dst[4] =  u[0];
-            dst[5] =  u[1];
-            dst[6] =  u[2];
-            dst[7] =  u[3];
-            dst[8] =  a[0];
-            dst[9] =  a[1];
-            dst[10] = a[2];
-            dst[11] = a[3];
-            dst[12] = p[0];
-            dst[13] = p[1];
-            dst[14] = p[2];
-            dst[15] = p[3];
-
-            return dst;
+            res[0] =  r[0];
+            res[1] =  r[1];
+            res[2] =  r[2];
+            res[3] =  r[3];
+            res[4] =  u[0];
+            res[5] =  u[1];
+            res[6] =  u[2];
+            res[7] =  u[3];
+            res[8] =  a[0];
+            res[9] =  a[1];
+            res[10] = a[2];
+            res[11] = a[3];
+            res[12] = p[0];
+            res[13] = p[1];
+            res[14] = p[2];
+            res[15] = p[3];
         }
+
+        return res;
     },
 
     m44Copy : function m44CopyFn(m, dst?)
