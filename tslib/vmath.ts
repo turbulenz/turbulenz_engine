@@ -775,17 +775,18 @@ var VMath : MathDevice =
 
     v3Add : function v3AddFn(a, b, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(dst));
-        dst[0] = (a[0] + b[0]);
-        dst[1] = (a[1] + b[1]);
-        dst[2] = (a[2] + b[2]);
-        return dst;
+        debug.assert(debug.isVec3(res));
+        res[0] = (a[0] + b[0]);
+        res[1] = (a[1] + b[1]);
+        res[2] = (a[2] + b[2]);
+        return res;
     },
 
     v3Add3 : function v3Add3Fn(a, b, c, dst?)
@@ -823,17 +824,18 @@ var VMath : MathDevice =
 
     v3Sub : function v3SubFn(a, b, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(dst));
-        dst[0] = (a[0] - b[0]);
-        dst[1] = (a[1] - b[1]);
-        dst[2] = (a[2] - b[2]);
-        return dst;
+        debug.assert(debug.isVec3(res));
+        res[0] = (a[0] - b[0]);
+        res[1] = (a[1] - b[1]);
+        res[2] = (a[2] - b[2]);
+        return res;
     },
 
     v3Mul : function v3MulFn(a, b, dst?)
@@ -876,23 +878,24 @@ var VMath : MathDevice =
 
     v3Cross : function v3CrossFn(a, b, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
         var a0 = a[0];
         var a1 = a[1];
         var a2 = a[2];
         var b0 = b[0];
         var b1 = b[1];
         var b2 = b[2];
-        dst[0] = ((a1 * b2) - (a2 * b1));
-        dst[1] = ((a2 * b0) - (a0 * b2));
-        dst[2] = ((a0 * b1) - (a1 * b0));
-        return dst;
+        res[0] = ((a1 * b2) - (a2 * b1));
+        res[1] = ((a2 * b0) - (a0 * b2));
+        res[2] = ((a0 * b1) - (a1 * b0));
+        return res;
     },
 
     v3LengthSq : function v3LengthSqFn(a)
@@ -961,52 +964,55 @@ var VMath : MathDevice =
 
     v3Abs : function v3AbsFn(a, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
         var abs = Math.abs;
-        dst[0] = abs(a[0]);
-        dst[1] = abs(a[1]);
-        dst[2] = abs(a[2]);
-        return dst;
+        res[0] = abs(a[0]);
+        res[1] = abs(a[1]);
+        res[2] = abs(a[2]);
+        return res;
     },
 
     v3Max : function v3MaxFn(a, b, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
         var max = Math.max;
-        dst[0] = max(a[0], b[0]);
-        dst[1] = max(a[1], b[1]);
-        dst[2] = max(a[2], b[2]);
-        return dst;
+        res[0] = max(a[0], b[0]);
+        res[1] = max(a[1], b[1]);
+        res[2] = max(a[2], b[2]);
+        return res;
     },
 
     v3Min : function v3MinFn(a, b, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
         var min = Math.min;
-        dst[0] = min(a[0], b[0]);
-        dst[1] = min(a[1], b[1]);
-        dst[2] = min(a[2], b[2]);
-        return dst;
+        res[0] = min(a[0], b[0]);
+        res[1] = min(a[1], b[1]);
+        res[2] = min(a[2], b[2]);
+        return res;
     },
 
     v3Equal : function v3EqualFn(a, b, precision?)
@@ -1201,27 +1207,28 @@ var VMath : MathDevice =
 
     v3ScalarMul : function v3ScalarMulFn(a, b, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
         if (b === 0)
         {
-            dst[0] = 0;
-            dst[1] = 0;
-            dst[2] = 0;
+            res[0] = 0;
+            res[1] = 0;
+            res[2] = 0;
         }
         else
         {
-            dst[0] = (a[0] * b);
-            dst[1] = (a[1] * b);
-            dst[2] = (a[2] * b);
+            res[0] = (a[0] * b);
+            res[1] = (a[1] * b);
+            res[2] = (a[2] * b);
         }
-        return dst;
+        return res;
     },
 
     v3AddScalarMul : function v3AddScalarMulFn(a, b, c, dst?)
@@ -1287,20 +1294,21 @@ var VMath : MathDevice =
 
     v3Lerp : function v3LerpFn(a, b, t, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
         debug.assert(debug.isNumber(t));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
-        dst[0] =  (a[0] + ((b[0] - a[0]) * t));
-        dst[1] =  (a[1] + ((b[1] - a[1]) * t));
-        dst[2] =  (a[2] + ((b[2] - a[2]) * t));
+        res[0] =  (a[0] + ((b[0] - a[0]) * t));
+        res[1] =  (a[1] + ((b[1] - a[1]) * t));
+        res[2] =  (a[2] + ((b[2] - a[2]) * t));
 
-        return dst;
+        return res;
     },
 
     //
@@ -2505,23 +2513,24 @@ var VMath : MathDevice =
 
     m33Copy : function m33CopyFn(m, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            res = new VMathArrayConstructor(9);
         }
-        debug.assert(debug.isMtx33(dst));
+        debug.assert(debug.isMtx33(res));
 
-        dst[0] = m[0];
-        dst[1] = m[1];
-        dst[2] = m[2];
-        dst[3] = m[3];
-        dst[4] = m[4];
-        dst[5] = m[5];
-        dst[6] = m[6];
-        dst[7] = m[7];
-        dst[8] = m[8];
+        res[0] = m[0];
+        res[1] = m[1];
+        res[2] = m[2];
+        res[3] = m[3];
+        res[4] = m[4];
+        res[5] = m[5];
+        res[6] = m[6];
+        res[7] = m[7];
+        res[8] = m[8];
 
-        return dst;
+        return res;
     },
 
     m33FromAxisRotation : function m33FromAxisRotationFn(axis, angle, dst?)
@@ -2601,47 +2610,50 @@ var VMath : MathDevice =
 
     m33Right : function m33RightFn(m, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx33(m));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
-        dst[0] = m[0];
-        dst[1] = m[1];
-        dst[2] = m[2];
-        return dst;
+        res[0] = m[0];
+        res[1] = m[1];
+        res[2] = m[2];
+        return res;
     },
 
     m33Up : function m33UpFn(m, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx33(m));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
-        dst[0] = m[3];
-        dst[1] = m[4];
-        dst[2] = m[5];
-        return dst;
+        res[0] = m[3];
+        res[1] = m[4];
+        res[2] = m[5];
+        return res;
     },
 
     m33At : function m33AtFn(m, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx33(m));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
-        dst[0] = m[6];
-        dst[1] = m[7];
-        dst[2] = m[8];
-        return dst;
+        res[0] = m[6];
+        res[1] = m[7];
+        res[2] = m[8];
+        return res;
     },
 
     m33SetRight : function m33SetRightFn(m, v)
@@ -3250,26 +3262,27 @@ var VMath : MathDevice =
 
     m43Copy : function m43CopyFn(m, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            res = new VMathArrayConstructor(12);
         }
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMtx43(res));
 
-        dst[0] = m[0];
-        dst[1] = m[1];
-        dst[2] = m[2];
-        dst[3] = m[3];
-        dst[4] = m[4];
-        dst[5] = m[5];
-        dst[6] = m[6];
-        dst[7] = m[7];
-        dst[8] = m[8];
-        dst[9] = m[9];
-        dst[10] = m[10];
-        dst[11] = m[11];
+        res[0] = m[0];
+        res[1] = m[1];
+        res[2] = m[2];
+        res[3] = m[3];
+        res[4] = m[4];
+        res[5] = m[5];
+        res[6] = m[6];
+        res[7] = m[7];
+        res[8] = m[8];
+        res[9] = m[9];
+        res[10] = m[10];
+        res[11] = m[11];
 
-        return dst;
+        return res;
     },
 
     m43FromM33V3: function m43FromM33V3Fn(m, v, dst?)
@@ -3919,28 +3932,29 @@ var VMath : MathDevice =
         var b7  = b[7];
         var b8  = b[8];
 
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            res = new VMathArrayConstructor(12);
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx43(b));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMtx43(res));
 
-        dst[0] =  (b0 * a0 + b3 * a1 + b6 * a2);
-        dst[1] =  (b1 * a0 + b4 * a1 + b7 * a2);
-        dst[2] =  (b2 * a0 + b5 * a1 + b8 * a2);
-        dst[3] =  (b0 * a3 + b3 * a4 + b6 * a5);
-        dst[4] =  (b1 * a3 + b4 * a4 + b7 * a5);
-        dst[5] =  (b2 * a3 + b5 * a4 + b8 * a5);
-        dst[6] =  (b0 * a6 + b3 * a7 + b6 * a8);
-        dst[7] =  (b1 * a6 + b4 * a7 + b7 * a8);
-        dst[8] =  (b2 * a6 + b5 * a7 + b8 * a8);
-        dst[9]  = (b0 * a9 + b3 * a10 + b6 * a11 + b[9]);
-        dst[10] = (b1 * a9 + b4 * a10 + b7 * a11 + b[10]);
-        dst[11] = (b2 * a9 + b5 * a10 + b8 * a11 + b[11]);
+        res[0] =  (b0 * a0 + b3 * a1 + b6 * a2);
+        res[1] =  (b1 * a0 + b4 * a1 + b7 * a2);
+        res[2] =  (b2 * a0 + b5 * a1 + b8 * a2);
+        res[3] =  (b0 * a3 + b3 * a4 + b6 * a5);
+        res[4] =  (b1 * a3 + b4 * a4 + b7 * a5);
+        res[5] =  (b2 * a3 + b5 * a4 + b8 * a5);
+        res[6] =  (b0 * a6 + b3 * a7 + b6 * a8);
+        res[7] =  (b1 * a6 + b4 * a7 + b7 * a8);
+        res[8] =  (b2 * a6 + b5 * a7 + b8 * a8);
+        res[9]  = (b0 * a9 + b3 * a10 + b6 * a11 + b[9]);
+        res[10] = (b1 * a9 + b4 * a10 + b7 * a11 + b[10]);
+        res[11] = (b2 * a9 + b5 * a10 + b8 * a11 + b[11]);
 
-        return dst;
+        return res;
     },
 
     m43MulM44 : function m43MulM44Fn(a, b, dst?)
@@ -3971,42 +3985,44 @@ var VMath : MathDevice =
         var b10 = b[10];
         var b11 = b[11];
 
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            res = new VMathArrayConstructor(16);
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx44(b));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMtx44(res));
 
-        dst[0] =  (b0 * a0 + b4 * a1 + b8  * a2);
-        dst[1] =  (b1 * a0 + b5 * a1 + b9  * a2);
-        dst[2] =  (b2 * a0 + b6 * a1 + b10 * a2);
-        dst[3] =  (b3 * a0 + b7 * a1 + b11 * a2);
-        dst[4] =  (b0 * a3 + b4 * a4 + b8  * a5);
-        dst[5] =  (b1 * a3 + b5 * a4 + b9  * a5);
-        dst[6] =  (b2 * a3 + b6 * a4 + b10 * a5);
-        dst[7] =  (b3 * a3 + b7 * a4 + b11 * a5);
-        dst[8] =  (b0 * a6 + b4 * a7 + b8  * a8);
-        dst[9]  = (b1 * a6 + b5 * a7 + b9  * a8);
-        dst[10] = (b2 * a6 + b6 * a7 + b10 * a8);
-        dst[11] = (b3 * a6 + b7 * a7 + b11 * a8);
-        dst[12] = (b0 * a9 + b4 * a10 + b8  * a11 + b[12]);
-        dst[13] = (b1 * a9 + b5 * a10 + b9  * a11 + b[13]);
-        dst[14] = (b2 * a9 + b6 * a10 + b10 * a11 + b[14]);
-        dst[15] = (b3 * a9 + b7 * a10 + b11 * a11 + b[15]);
+        res[0] =  (b0 * a0 + b4 * a1 + b8  * a2);
+        res[1] =  (b1 * a0 + b5 * a1 + b9  * a2);
+        res[2] =  (b2 * a0 + b6 * a1 + b10 * a2);
+        res[3] =  (b3 * a0 + b7 * a1 + b11 * a2);
+        res[4] =  (b0 * a3 + b4 * a4 + b8  * a5);
+        res[5] =  (b1 * a3 + b5 * a4 + b9  * a5);
+        res[6] =  (b2 * a3 + b6 * a4 + b10 * a5);
+        res[7] =  (b3 * a3 + b7 * a4 + b11 * a5);
+        res[8] =  (b0 * a6 + b4 * a7 + b8  * a8);
+        res[9]  = (b1 * a6 + b5 * a7 + b9  * a8);
+        res[10] = (b2 * a6 + b6 * a7 + b10 * a8);
+        res[11] = (b3 * a6 + b7 * a7 + b11 * a8);
+        res[12] = (b0 * a9 + b4 * a10 + b8  * a11 + b[12]);
+        res[13] = (b1 * a9 + b5 * a10 + b9  * a11 + b[13]);
+        res[14] = (b2 * a9 + b6 * a10 + b10 * a11 + b[14]);
+        res[15] = (b3 * a9 + b7 * a10 + b11 * a11 + b[15]);
 
-        return dst;
+        return res;
     },
 
     m43Transpose : function m43TransposeFn(m, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            res = new VMathArrayConstructor(12);
         }
         debug.assert(debug.isMtx43(m));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMtx43(res));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -4021,20 +4037,20 @@ var VMath : MathDevice =
         var m10 = m[10];
         var m11 = m[11];
 
-        dst[0] =  m0;
-        dst[1] =  m3;
-        dst[2] =  m6;
-        dst[3] =  m9;
-        dst[4] =  m1;
-        dst[5] =  m4;
-        dst[6] =  m7;
-        dst[7] =  m10;
-        dst[8] =  m2;
-        dst[9]  = m5;
-        dst[10] = m8;
-        dst[11] = m11;
+        res[0] =  m0;
+        res[1] =  m3;
+        res[2] =  m6;
+        res[3] =  m9;
+        res[4] =  m1;
+        res[5] =  m4;
+        res[6] =  m7;
+        res[7] =  m10;
+        res[8] =  m2;
+        res[9]  = m5;
+        res[10] = m8;
+        res[11] = m11;
 
-        return dst;
+        return res;
     },
 
     m43MulTranspose: function m43MulTransposeFn(a, b, dst?)
@@ -4065,28 +4081,29 @@ var VMath : MathDevice =
         var b10 = b[10];
         var b11 = b[11];
 
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            res = new VMathArrayConstructor(12);
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx43(b));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMtx43(res));
 
-        dst[0] =  (b0 * a0 + b3 * a1 + b6 * a2);
-        dst[1] =  (b0 * a3 + b3 * a4 + b6 * a5);
-        dst[2] =  (b0 * a6 + b3 * a7 + b6 * a8);
-        dst[3] =  (b0 * a9 + b3 * a10 + b6 * a11 + b9);
-        dst[4] =  (b1 * a0 + b4 * a1 + b7 * a2);
-        dst[5] =  (b1 * a3 + b4 * a4 + b7 * a5);
-        dst[6] =  (b1 * a6 + b4 * a7 + b7 * a8);
-        dst[7] =  (b1 * a9 + b4 * a10 + b7 * a11 + b10);
-        dst[8] =  (b2 * a0 + b5 * a1 + b8 * a2);
-        dst[9]  = (b2 * a3 + b5 * a4 + b8 * a5);
-        dst[10] = (b2 * a6 + b5 * a7 + b8 * a8);
-        dst[11] = (b2 * a9 + b5 * a10 + b8 * a11 + b11);
+        res[0] =  (b0 * a0 + b3 * a1 + b6 * a2);
+        res[1] =  (b0 * a3 + b3 * a4 + b6 * a5);
+        res[2] =  (b0 * a6 + b3 * a7 + b6 * a8);
+        res[3] =  (b0 * a9 + b3 * a10 + b6 * a11 + b9);
+        res[4] =  (b1 * a0 + b4 * a1 + b7 * a2);
+        res[5] =  (b1 * a3 + b4 * a4 + b7 * a5);
+        res[6] =  (b1 * a6 + b4 * a7 + b7 * a8);
+        res[7] =  (b1 * a9 + b4 * a10 + b7 * a11 + b10);
+        res[8] =  (b2 * a0 + b5 * a1 + b8 * a2);
+        res[9]  = (b2 * a3 + b5 * a4 + b8 * a5);
+        res[10] = (b2 * a6 + b5 * a7 + b8 * a8);
+        res[11] = (b2 * a9 + b5 * a10 + b8 * a11 + b11);
 
-        return dst;
+        return res;
     },
 
     m43Offset: function m43OffsetFn(m, o, dst?)
@@ -5042,14 +5059,15 @@ var VMath : MathDevice =
 
     quatSlerp : function quatSlerpFn(q1, q2, t, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            res = new VMathArrayConstructor(4);
         }
         debug.assert(debug.isQuat(q1));
         debug.assert(debug.isQuat(q2));
         debug.assert(debug.isNumber(t));
-        debug.assert(debug.isQuat(dst));
+        debug.assert(debug.isQuat(res));
 
         var q1x = q1[0];
         var q1y = q1[1];
@@ -5075,12 +5093,12 @@ var VMath : MathDevice =
         {
             if (cosom > (1.0 - 1e-6))
             {
-                dst[0] =  q1x;
-                dst[1] =  q1y;
-                dst[2] =  q1z;
-                dst[3] =  q1w;
+                res[0] =  q1x;
+                res[1] =  q1y;
+                res[2] =  q1z;
+                res[3] =  q1w;
 
-                return dst;
+                return res;
             }
 
             var delta = t;
@@ -5097,12 +5115,12 @@ var VMath : MathDevice =
             var mag = Math.sqrt((qrx * qrx) + (qry * qry) + (qrz * qrz) + (qrw * qrw));
             var recip = 1.0 / mag;
 
-            dst[0] =  qrx * recip;
-            dst[1] =  qry * recip;
-            dst[2] =  qrz * recip;
-            dst[3] =  qrw * recip;
+            res[0] =  qrx * recip;
+            res[1] =  qry * recip;
+            res[2] =  qrz * recip;
+            res[3] =  qrw * recip;
 
-            return dst;
+            return res;
         }
 
         var sinFn = Math.sin;
@@ -5121,12 +5139,12 @@ var VMath : MathDevice =
         q2z = q2z * scalar;
         q2w = q2w * scalar;
 
-        dst[0] =  q1x + q2x;
-        dst[1] =  q1y + q2y;
-        dst[2] =  q1z + q2z;
-        dst[3] =  q1w + q2w;
+        res[0] =  q1x + q2x;
+        res[1] =  q1y + q2y;
+        res[2] =  q1z + q2z;
+        res[3] =  q1w + q2w;
 
-        return dst;
+        return res;
     },
 
     quatFromM43 : function quatFromM43Fn(m, dst?)
