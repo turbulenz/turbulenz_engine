@@ -508,6 +508,11 @@ TurbulenzEngine.onload = function onloadFn()
     var fpsElement = document.getElementById("fpscounter");
     var lastFPS = '';
 
+    var updateFPSCounter = function updateFPSCounterFn()
+    {
+        fpsElement.innerHTML = (lastFPS + ' fps');
+    };
+
     var renderFrame = function renderFrameFn()
     {
         var skinnedNodes, numSkins, skinnedNode, sceneNode, skin;
@@ -537,9 +542,7 @@ TurbulenzEngine.onload = function onloadFn()
                     lastFPS = currentFPS;
 
                     // Execute any code that interacts with the DOM in a separate callback
-                    TurbulenzEngine.setTimeout(function () {
-                        fpsElement.innerHTML = (currentFPS + ' fps');
-                    }, 1);
+                    TurbulenzEngine.setTimeout(updateFPSCounter, 1);
                 }
             }
         }
