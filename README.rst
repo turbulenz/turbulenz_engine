@@ -522,8 +522,8 @@ Pre-requisites for building the tools cgfx2json and NvTriStrip via ``python mana
 
   - Linux : GCC 4.6.x or higher
 
-- `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher. This is included in
-  the repository for Windows, for Mac OSX and Linux please download and install it.
+- `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher. The repository
+  includes the binaries for Windows, if you're developing on Mac OSX or Linux please download and install it.
 
 - OpenGL development libraries, these are included on Windows and Mac OSX with the compiler toolchains. For
   debian based linux distributions the libgl1-mesa-dev package will provide the required files (e.g. ``sudo
