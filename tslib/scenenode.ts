@@ -190,7 +190,7 @@ class SceneNode
         this.parent = parent;
         this.notifiedParent = false;
         this.dirtyWorld = false;
-        this.setDirtyWorldTransform();
+        this._setDirtyWorldTransform();
     };
 
     //
@@ -396,89 +396,9 @@ class SceneNode
             this.local = this.mathDevice.m43Copy(matrix, this.local);
         }
 
-        //inlined non-recursive setDirtyWorldTransform()
-        var setDirtyWorldTransformHelper =
-            function setDirtyWorldTransformHelperFn(nodes)
-        {
-            var numRemainingNodes = nodes.length;
-            var node, index, child;
-            do
-            {
-                numRemainingNodes -= 1;
-                node = nodes[numRemainingNodes];
-
-                node.dirtyWorld = true;
-
-                if (!node.customWorldExtents && node.localExtents)
-                {
-                    node.dirtyWorldExtents = true;
-                }
-
-                var children = node.children;
-                if (children)
-                {
-                    var numChildren = children.length;
-
-                    if (!node.childNeedsUpdateCount)
-                    {
-                        // Common case of propagating down to clean children
-                        node.childNeedsUpdateCount = numChildren;
-                        for (index = 0; index < numChildren; index += 1)
-                        {
-                            child = children[index];
-                            child.notifiedParent = true;
-
-                            nodes[numRemainingNodes] = child;
-                            numRemainingNodes += 1;
-                        }
-                    }
-                    else
-                    {
-                        // One or more children dirty
-                        for (index = 0; index < numChildren; index += 1)
-                        {
-                            child = children[index];
-                            if (!child.dirtyWorld)
-                            {
-                                if (!child.notifiedParent)
-                                {
-                                    child.notifiedParent = true;
-                                    node.childNeedsUpdateCount += 1;
-                                }
-
-                                nodes[numRemainingNodes] = child;
-                                numRemainingNodes += 1;
-                            }
-                        }
-                    }
-                }
-            }
-            while (0 < numRemainingNodes);
-        }
-
         if (!this.dirtyWorld)
         {
-            //inlined updateRequired()
-            var parent = this.parent;
-            if (parent)
-            {
-                if (!this.notifiedParent)
-                {
-                    this.notifiedParent = true;
-                    parent.childNeedsUpdate();
-                }
-            }
-            else
-            {
-                //Root nodes
-                var scene = this.scene;
-                if (scene)
-                {
-                    scene.addRootNodeToUpdate(this, this.name);
-                }
-            }
-
-            setDirtyWorldTransformHelper([this]);
+            this._setDirtyWorldTransform();
         }
     };
 
@@ -491,42 +411,65 @@ class SceneNode
     };
 
     //
-    //setDirtyWorldTransform
+    //_setDirtyWorldTransform
     //
-    private setDirtyWorldTransform()
+    private _setDirtyWorldTransform()
     {
-        //private function
-        if (this.dirtyWorld)
+        //Private function
+
+        //Notify parents
+        //inlined updateRequired()
+        var parent = this.parent;
+        if (parent)
         {
-            return;
+            if (!this.notifiedParent)
+            {
+                this.notifiedParent = true;
+                parent.childNeedsUpdate();
+            }
+        }
+        else
+        {
+            //Root nodes
+            var scene = this.scene;
+            if (scene)
+            {
+                scene.addRootNodeToUpdate(this, this.name);
+            }
         }
 
-        var setDirtyWorldTransformHelper =
-            function setDirtyWorldTransformHelperFn()
+        //Notify children
+        var nodes = [this];
+        var numRemainingNodes = nodes.length;
+        var node, index, child;
+        do
         {
-            this.dirtyWorld = true;
+            numRemainingNodes -= 1;
+            node = nodes[numRemainingNodes];
 
-            if (!this.customWorldExtents && this.localExtents)
+            node.dirtyWorld = true;
+
+            if (!node.customWorldExtents && node.localExtents)
             {
-                this.dirtyWorldExtents = true;
+                node.dirtyWorldExtents = true;
             }
 
-            var children = this.children;
+            var children = node.children;
             if (children)
             {
                 var numChildren = children.length;
-                var index;
-                var child;
 
-                if (!this.childNeedsUpdateCount)
+                if (!node.childNeedsUpdateCount)
                 {
                     // Common case of propagating down to clean children
-                    this.childNeedsUpdateCount = numChildren;
+                    node.childNeedsUpdateCount = numChildren;
                     for (index = 0; index < numChildren; index += 1)
                     {
                         child = children[index];
                         child.notifiedParent = true;
-                        setDirtyWorldTransformHelper.call(child);
+
+                        nodes[numRemainingNodes] = child;
+                        numRemainingNodes += 1;
                     }
                 }
                 else
@@ -540,35 +483,17 @@ class SceneNode
                             if (!child.notifiedParent)
                             {
                                 child.notifiedParent = true;
-                                this.childNeedsUpdateCount += 1;
+                                node.childNeedsUpdateCount += 1;
                             }
-                            setDirtyWorldTransformHelper.call(child);
+
+                            nodes[numRemainingNodes] = child;
+                            numRemainingNodes += 1;
                         }
                     }
                 }
             }
         }
-
-        //inlined updateRequired()
-        if (this.parent)
-        {
-            if (!this.notifiedParent)
-            {
-                this.parent.childNeedsUpdate();
-                this.notifiedParent = true;
-            }
-        }
-        else
-        {
-            //Root nodes
-            var scene = this.scene;
-            if (scene)
-            {
-                scene.addRootNodeToUpdate(this, this.name);
-            }
-        }
-
-        setDirtyWorldTransformHelper.call(this);
+        while (0 < numRemainingNodes);
     };
 
     //
