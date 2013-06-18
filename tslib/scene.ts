@@ -110,7 +110,25 @@ class Scene
     uint16ArrayConstructor: any; // on prototype
     uint32ArrayConstructor: any; // on prototype
 
-    // Debugging
+    // Scene
+    constructor(mathDevice: MathDevice)
+    {
+        this.md = mathDevice;
+        this.clear();
+
+        var scene = this;
+        this.onGeometryDestroyed = function sceneOnGeometryDestroyedFn(geometry)
+        {
+            geometry.reference.unsubscribeDestroyed(scene.onGeometryDestroyed);
+            delete scene.shapes[geometry.name];
+        };
+
+        this.onMaterialDestroyed = function sceneOnMaterialDestroyedFn(material)
+        {
+            material.reference.unsubscribeDestroyed(scene.onMaterialDestroyed);
+            delete scene.materials[material.name];
+        };
+    };
 
     // getMaterial: (node) => string;
     getMaterialName: (node) => string;
@@ -186,18 +204,16 @@ class Scene
     addRootNode(rootNode)
     {
         // Add the root to the top level nodes list and update the scene hierarchys
-        debug.assert(rootNode.name, "Root nodes must be named");
+        var name = rootNode.name;
+
+        debug.assert(name, "Root nodes must be named");
         debug.assert(!rootNode.scene, "Root node already in a scene");
-        debug.assert(!this.rootNodesMap[rootNode.name], "Root node with the same name exits in the scene");
+        debug.assert(!this.rootNodesMap[name], "Root node with the same name exits in the scene");
 
         rootNode.scene = this;
         this.rootNodes.push(rootNode);
-        if (!this.dirtyRoots)
-        {
-            this.dirtyRoots = {};
-        }
-        this.dirtyRoots[rootNode.name] = rootNode;
-        this.rootNodesMap[rootNode.name] = rootNode;
+        this.rootNodesMap[name] = rootNode;
+        this.addRootNodeToUpdate(rootNode, name);
     };
 
     //
@@ -205,23 +221,29 @@ class Scene
     //
     removeRootNode(rootNode)
     {
+        var name = rootNode.name;
+
         debug.assert(rootNode.scene === this, "Root node is not in the scene");
         rootNode.removedFromScene(this);
-        var rootNodes = this.rootNodes;
-        var numRootNodes = rootNodes.length;
-        for (var n = 0; n < numRootNodes; n += 1)
+
+        var index = this.rootNodes.indexOf(rootNode);
+        if (index !== -1)
         {
-            if (rootNode === rootNodes[n])
+            this.rootNodes.splice(index, 1);
+        }
+        delete this.rootNodesMap[name];
+
+        if (this.dirtyRoots[name] === rootNode)
+        {
+            delete this.dirtyRoots[name];
+
+            index = this.nodesToUpdate.indexOf(rootNode);
+            if (index !== -1)
             {
-                rootNodes.splice(n, 1);
-                break;
+                this.nodesToUpdate.splice(index, 1);
             }
         }
-        if (this.dirtyRoots)
-        {
-            delete this.dirtyRoots[rootNode.name];
-        }
-        delete this.rootNodesMap[rootNode.name];
+
         delete rootNode.scene;
     };
 
@@ -2335,37 +2357,37 @@ class Scene
     };
 
     //
+    // addRootNodeToUpdate
+    //
+    addRootNodeToUpdate(rootNode, name)
+    {
+        var dirtyRoots = this.dirtyRoots;
+        if (dirtyRoots[name] !== rootNode)
+        {
+            dirtyRoots[name] = rootNode;
+            this.nodesToUpdate.push(rootNode);
+        }
+    };
+
+    //
     // updateNodes
     //
     updateNodes()
     {
-        var dirtyRoots = this.dirtyRoots;
-        if (dirtyRoots)
+        var nodesToUpdate = this.nodesToUpdate;
+        var numNodesToUpdate = nodesToUpdate.length;
+        if (0 < numNodesToUpdate)
         {
-            var nodesToUpdate = this.nodesToUpdate;
-            if (!nodesToUpdate)
+            var dirtyRoots = this.dirtyRoots;
+            var n;
+            for (n = 0; n < numNodesToUpdate; n += 1)
             {
-                this.nodesToUpdate = nodesToUpdate = [];
+                dirtyRoots[nodesToUpdate[n].name] = null;
             }
 
-            var numNodesToUpdate = 0;
-            for (var root in dirtyRoots)
-            {
-                if (dirtyRoots.hasOwnProperty(root))
-                {
-                    nodesToUpdate[numNodesToUpdate] = dirtyRoots[root];
-                    numNodesToUpdate += 1;
-                }
-            }
+            SceneNode.prototype.updateHelper(this.md, this, nodesToUpdate);
 
-            this.dirtyRoots = null;
-            dirtyRoots = null;
-
-            if (0 < numNodesToUpdate)
-            {
-                nodesToUpdate.length = numNodesToUpdate;
-                SceneNode.prototype.updateHelper(this.md, this, nodesToUpdate);
-            }
+            nodesToUpdate.length = 0;
         }
     };
 
@@ -2468,7 +2490,7 @@ class Scene
     //
     getExtents()
     {
-        if (this.dirtyRoots)
+        if (0 < this.nodesToUpdate.length)
         {
             this.updateNodes();
             this.staticSpatialMap.finalize();
@@ -2701,8 +2723,9 @@ class Scene
             }
         }
         this.rootNodes = [];
-        this.dirtyRoots = null;
         this.rootNodesMap = {};
+        this.dirtyRoots = {};
+        this.nodesToUpdate = [];
     };
 
     //
@@ -4862,15 +4885,16 @@ class Scene
         }
     };
 
-    planeNormalize(a, b, c, d, output?)
+    planeNormalize(a, b, c, d, dst?)
     {
-        if (!output)
+        var res = dst;
+        if (!res)
         {
             /*jshint newcap: false*/
             var float32ArrayConstructor = Scene.prototype.float32ArrayConstructor;
-            output = (float32ArrayConstructor ?
-                      new float32ArrayConstructor(4) :
-                      new Array(4));
+            res = (float32ArrayConstructor ?
+                   new float32ArrayConstructor(4) :
+                   new Array(4));
             /*jshint newcap: true*/
         }
 
@@ -4878,20 +4902,20 @@ class Scene
         if (lsq > 0.0)
         {
             var lr = 1.0 / Math.sqrt(lsq);
-            output[0] = (a * lr);
-            output[1] = (b * lr);
-            output[2] = (c * lr);
-            output[3] = (d * lr);
+            res[0] = (a * lr);
+            res[1] = (b * lr);
+            res[2] = (c * lr);
+            res[3] = (d * lr);
         }
         else
         {
-            output[0] = 0;
-            output[1] = 0;
-            output[2] = 0;
-            output[3] = 0;
+            res[0] = 0;
+            res[1] = 0;
+            res[2] = 0;
+            res[3] = 0;
         }
 
-        return output;
+        return res;
     };
 
     isInsidePlanesAABB(extents, planes) : bool
@@ -5314,25 +5338,7 @@ class Scene
     // Constructor function
     static create(mathDevice: MathDevice) : Scene
     {
-        var newScene = new Scene();
-        newScene.md = mathDevice;
-        newScene.clear();
-
-        newScene.onGeometryDestroyed = function sceneOnGeometryDestroyedFn(geometry)
-        {
-            var scene = newScene;
-            geometry.reference.unsubscribeDestroyed(scene.onGeometryDestroyed);
-            delete scene.shapes[geometry.name];
-        };
-
-        newScene.onMaterialDestroyed = function sceneOnMaterialDestroyedFn(material)
-        {
-            var scene = newScene;
-            material.reference.unsubscribeDestroyed(scene.onMaterialDestroyed);
-            delete scene.materials[material.name];
-        };
-
-        return newScene;
+        return new Scene(mathDevice);
     };
 
 };

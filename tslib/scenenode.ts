@@ -105,6 +105,8 @@ class SceneNode
 
     arrayConstructor: any; // on prototype
 
+    renderables: Renderable[];
+
     //
     //SceneNode.makePath
     //
@@ -121,7 +123,35 @@ class SceneNode
         debug.abort("setLocalTransform can not be called on static nodes.");
     };
 
-    renderables: Renderable[];
+    //
+    // SceneNode
+    //
+    constructor(params)
+    {
+        this.name = params.name;
+
+        var md = TurbulenzEngine.getMathDevice();
+        this.mathDevice = md;
+
+        this.dynamic = params.dynamic || false;
+        this.disabled = params.disabled || false;
+
+        this.dirtyWorldExtents = true;
+        this.dirtyLocalExtents = true;
+        this.worldUpdate = 0; //Counter of number of times modified.
+
+        var local = params.local;
+        if (local)
+        {
+            this.local = md.m43Copy(local);
+        }
+        else
+        {
+            this.local = md.m43BuildIdentity();
+        }
+        local = this.local;
+        this.world = md.m43Copy(local);
+    };
 
     //
     //getName
@@ -444,13 +474,7 @@ class SceneNode
                 var scene = this.scene;
                 if (scene)
                 {
-                    var dirtyRoots = scene.dirtyRoots;
-                    if (!dirtyRoots)
-                    {
-                        dirtyRoots = {};
-                        scene.dirtyRoots = dirtyRoots;
-                    }
-                    dirtyRoots[this.name] = this;
+                    scene.addRootNodeToUpdate(this, this.name);
                 }
             }
 
@@ -540,11 +564,7 @@ class SceneNode
             var scene = this.scene;
             if (scene)
             {
-                if (!scene.dirtyRoots)
-                {
-                    scene.dirtyRoots = {};
-                }
-                scene.dirtyRoots[this.name] = this;
+                scene.addRootNodeToUpdate(this, this.name);
             }
         }
 
@@ -674,7 +694,7 @@ class SceneNode
         }
         else
         {
-            delete this.disabled;
+            this.disabled = false;
         }
     };
 
@@ -683,7 +703,7 @@ class SceneNode
     //
     getDisabled(): bool
     {
-        return this.disabled ? true : false;
+        return this.disabled;
     };
 
     //
@@ -753,13 +773,7 @@ class SceneNode
             var scene = this.scene;
             if (scene)
             {
-                var dirtyRoots = scene.dirtyRoots;
-                if (!dirtyRoots)
-                {
-                    dirtyRoots = {};
-                    scene.dirtyRoots = dirtyRoots;
-                }
-                dirtyRoots[this.name] = this;
+                scene.addRootNodeToUpdate(this, this.name);
             }
         }
     };
@@ -1787,38 +1801,7 @@ class SceneNode
     //
     static create(params) : SceneNode
     {
-        var sceneNode = new SceneNode();
-        sceneNode.name = params.name;
-
-        var md = TurbulenzEngine.getMathDevice();
-        sceneNode.mathDevice = md;
-
-        if (params.dynamic)
-        {
-            sceneNode.dynamic = params.dynamic;
-        }
-        if (params.disabled)
-        {
-            sceneNode.disabled = params.disabled;
-        }
-
-        sceneNode.dirtyWorldExtents = true;
-        sceneNode.dirtyLocalExtents = true;
-        sceneNode.worldUpdate = 0; //Counter of number of times modified.
-
-        var local = params.local;
-        if (local)
-        {
-            sceneNode.local = md.m43Copy(local);
-        }
-        else
-        {
-            sceneNode.local = md.m43BuildIdentity();
-        }
-        local = sceneNode.local;
-        sceneNode.world = md.m43Copy(local);
-
-        return sceneNode;
+        return new SceneNode(params);
     };
 };
 
