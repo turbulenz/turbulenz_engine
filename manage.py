@@ -60,7 +60,7 @@ def command_env():
         exit(1)
 
     def _easy_install(package):
-        cmd = [os.path.join(env_bin, 'easy_install'), package]
+        cmd = [os.path.join(env_bin, 'easy_install'), '-Z', package]
         sh(cmd)
 
     _easy_install('simplejson>=2.1.5')
