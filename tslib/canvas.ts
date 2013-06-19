@@ -2454,7 +2454,9 @@ class CanvasContext
 
             if (numVertices > 0)
             {
-                this.fillFlatVertices(vertices, numVertices);
+                var bufferData = this.getFlatBuffer(numVertices);
+                this.fillFlatVertices(bufferData, vertices, numVertices);
+                this.fillFlatBuffer(bufferData, numVertices);
 
                 var gd = this.gd;
 
@@ -2486,6 +2488,7 @@ class CanvasContext
             var lineWidth = this.lineWidth;
             var thinLines = ((this.pixelRatio * lineWidth) < 2);
             var points, numPoints, primitive, numVertices;
+            var bufferData;
 
             if (thinLines)
             {
@@ -2510,7 +2513,9 @@ class CanvasContext
                 if (thinLines)
                 {
                     numVertices = numPoints;
-                    this.fillFlatVertices(points, numPoints);
+                    bufferData = this.getFlatBuffer(numVertices);
+                    this.fillFlatVertices(bufferData, points, numVertices);
+                    this.fillFlatBuffer(bufferData, numVertices);
                 }
                 else if (numPoints > 1)
                 {
@@ -2549,7 +2554,9 @@ class CanvasContext
                 if (thinLines)
                 {
                     numVertices = numPoints;
-                    this.fillFlatVertices(points, numPoints);
+                    bufferData = this.getFlatBuffer(numVertices);
+                    this.fillFlatVertices(bufferData, points, numVertices);
+                    this.fillFlatBuffer(bufferData, numVertices);
                 }
                 else if (numPoints > 1)
                 {
@@ -5150,25 +5157,19 @@ class CanvasContext
         return numVertices;
     };
 
-    fillFlatVertices(vertices, numVertices)
+    fillFlatVertices(bufferData, vertices, numVertices)
     {
-        var bufferData = this.getFlatBuffer(numVertices);
-        if (bufferData)
+        var p = 0, d = 0;
+        do
         {
-            var p = 0, d = 0;
-            do
-            {
-                var vertex = vertices[p];
-                bufferData[d] = vertex[0];
-                d += 1;
-                bufferData[d] = vertex[1];
-                d += 1;
-                p += 1;
-            }
-            while (p < numVertices);
-
-            this.fillFlatBuffer(bufferData, numVertices);
+            var vertex = vertices[p];
+            bufferData[d] = vertex[0];
+            d += 1;
+            bufferData[d] = vertex[1];
+            d += 1;
+            p += 1;
         }
+        while (p < numVertices);
     };
 
     isPointInPolygon(tx, ty, points, numPoints): bool
