@@ -273,7 +273,7 @@ interface WebGLPhysicsPrivateBody
 };
 declare var WebGLPhysicsPrivateBody :
 {
-    new(): WebGLPhysicsPrivateBody;
+    new(params, publicObject);
     uniqueId: number;
     prototype: any;
 };
@@ -2997,7 +2997,83 @@ WebGLPhysicsCollisionObject.prototype = {
     }
 };
 
-function WebGLPhysicsPrivateBody() { return this; }
+function WebGLPhysicsPrivateBody(params, publicObject)
+{
+    this._public = publicObject;
+
+    this.id = WebGLPhysicsPrivateBody.uniqueId;
+    WebGLPhysicsPrivateBody.uniqueId += 1;
+
+    this.world = null;
+    this.shape = params.shape._private;
+
+    this.friction    = (params.friction    !== undefined) ? params.friction    : 0.5;
+    this.restitution = (params.restitution !== undefined) ? params.restitution : 0.0;
+
+    var xform = params.transform;
+    this.transform = (xform ? VMath.m43Copy(xform) : VMath.m43BuildIdentity());
+
+    this.arbiters = [];
+    // Tracks constraints that are inside of a space, and making use of this object.
+    // We only track these constraints to avoid GC issues.
+    this.constraints = [];
+
+    // [v0, v1, v2]
+    // [w0, w1, w2]
+    // [v0, v1, v2] <-- bias velocity
+    // [w0, w1, w2] <-- bias velocity
+    this.velocity = new Float32Array(12);
+    var vel = params.linearVelocity;
+    if (vel)
+    {
+        this.velocity[0] = vel[0];
+        this.velocity[1] = vel[1];
+        this.velocity[2] = vel[2];
+    }
+    vel = params.angularVelocity;
+    if (vel)
+    {
+        this.velocity[3] = vel[0];
+        this.velocity[4] = vel[1];
+        this.velocity[5] = vel[2];
+    }
+
+    this.linearDamping  = (params.linearDamping  !== undefined) ? params.linearDamping  : 0.0;
+    this.angularDamping = (params.angularDamping !== undefined) ? params.angularDamping : 0.0;
+
+    this.extents = new Float32Array(6);
+
+    // For continous collision detection
+    this.startTransform = VMath.m43BuildIdentity();
+    this.endTransform = VMath.m43BuildIdentity();
+
+    // For kinematic objects.
+    this.prevTransform = VMath.m43Copy(this.transform);
+    this.newTransform = VMath.m43BuildIdentity();
+
+    this.island = null;
+    this.islandRoot = this;
+    this.islandRank = 0;
+
+    // used for kinematics so that it is kept alive for a single
+    // step before being sweffed.
+    this.delaySleep = true;
+
+    this.group = 0;
+    this.mask = 0;
+    this.kinematic = false;
+    this.fixedRotation = false;
+    this.mass = 0;
+    this.inverseMass = 0;
+    this.inverseInertiaLocal = null;
+    this.inverseInertia = null;
+    this.collisionObject = false;
+    this.permitSleep = false;
+    this.sweepFrozen = false;
+    this.active = false;
+    this.contactCallbacks = null;
+}
+
 WebGLPhysicsPrivateBody.prototype = {
 
     version : 1,
@@ -3425,70 +3501,6 @@ WebGLPhysicsPrivateBody.prototype = {
 };
 
 WebGLPhysicsPrivateBody.uniqueId = 0;
-var initPrivateBody =
-    function initPrivateBodyFn(r: WebGLPhysicsPrivateBody,
-                               params): WebGLPhysicsPrivateBody
-{
-    r.id = WebGLPhysicsPrivateBody.uniqueId;
-    WebGLPhysicsPrivateBody.uniqueId += 1;
-
-    r.world = null;
-    r.shape = params.shape._private;
-
-    r.friction    = (params.friction    !== undefined) ? params.friction    : 0.5;
-    r.restitution = (params.restitution !== undefined) ? params.restitution : 0.0;
-
-    var xform = params.transform;
-    r.transform = (xform ? VMath.m43Copy(xform) : VMath.m43BuildIdentity());
-
-    r.arbiters = [];
-    // Tracks constraints that are inside of a space, and making use of this object.
-    // We only track these constraints to avoid GC issues.
-    r.constraints = [];
-
-    // [v0, v1, v2]
-    // [w0, w1, w2]
-    // [v0, v1, v2] <-- bias velocity
-    // [w0, w1, w2] <-- bias velocity
-    r.velocity = new Float32Array(12);
-    var vel = params.linearVelocity;
-    if (vel)
-    {
-        r.velocity[0] = vel[0];
-        r.velocity[1] = vel[1];
-        r.velocity[2] = vel[2];
-    }
-    vel = params.angularVelocity;
-    if (vel)
-    {
-        r.velocity[3] = vel[0];
-        r.velocity[4] = vel[1];
-        r.velocity[5] = vel[2];
-    }
-
-    r.linearDamping  = (params.linearDamping  !== undefined) ? params.linearDamping  : 0.0;
-    r.angularDamping = (params.angularDamping !== undefined) ? params.angularDamping : 0.0;
-
-    r.extents = new Float32Array(6);
-
-    // For continous collision detection
-    r.startTransform = VMath.m43BuildIdentity();
-    r.endTransform = VMath.m43BuildIdentity();
-
-    // For kinematic objects.
-    r.prevTransform = VMath.m43Copy(r.transform);
-    r.newTransform = VMath.m43BuildIdentity();
-
-    r.island = null;
-    r.islandRoot = r;
-    r.islandRank = 0;
-
-    // used for kinematics so that it is kept alive for a single
-    // step before being sweffed.
-    r.delaySleep = true;
-
-    return r;
-}
 
 function WebGLPhysicsContactCallbacks(params, mask)
 {
@@ -3514,9 +3526,8 @@ WebGLPhysicsCollisionObject.sharedInverseInertia = new Float32Array([0, 0, 0, 0,
 WebGLPhysicsCollisionObject.create = function webGLPhysicsPrivateBodyFn(params)
 {
     var rets = new WebGLPhysicsCollisionObject();
-    var s = new WebGLPhysicsPrivateBody();
+    var s = new WebGLPhysicsPrivateBody(params, rets);
     rets._private = s;
-    s._public = rets;
 
     //read/write, no side effects
     rets.userData = ("userData" in params) ? params.userData : null;
@@ -3622,8 +3633,6 @@ WebGLPhysicsCollisionObject.create = function webGLPhysicsPrivateBodyFn(params)
     //--------------------------------
     // set private collision object properties
 
-    initPrivateBody(s, params);
-
     s.group = group;
     s.mask = mask;
 
@@ -3686,9 +3695,8 @@ WebGLPhysicsRigidBody.prototype = {
 WebGLPhysicsRigidBody.create = function webGLPhysicsRigidBodyFn(params)
 {
     var retr = new WebGLPhysicsRigidBody();
-    var r = new WebGLPhysicsPrivateBody();
+    var r = new WebGLPhysicsPrivateBody(params, retr);
     retr._private = r;
-    r._public = retr;
 
     // read/write, no side effects
     retr.userData = ("userData" in params) ? params.userData : null;
@@ -3929,8 +3937,6 @@ WebGLPhysicsRigidBody.create = function webGLPhysicsRigidBodyFn(params)
 
     // ------------------------------
     // initialise private properties of RigidBody.
-
-    initPrivateBody(r, params);
 
     r.group = group;
     r.mask = mask;
