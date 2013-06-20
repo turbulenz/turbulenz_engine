@@ -1589,17 +1589,49 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
-        var q1 = this.transformPoint(cp1x, cp1y);
-        var xq1 = q1[0];
-        var yq1 = q1[1];
+        var xq1, yq1, xq2, yq2, p2, x2, y2;
+        if (this.transformPoint === this.transformPointIdentity)
+        {
+            xq1 = cp1x;
+            yq1 = cp1y;
 
-        var q2 = this.transformPoint(cp2x, cp2y);
-        var xq2 = q2[0];
-        var yq2 = q2[1];
+            xq2 = cp2x;
+            yq2 = cp2y;
 
-        var p2 = this.transformPoint(x, y);
-        var x2 = p2[0];
-        var y2 = p2[1];
+            x2 = x;
+            y2 = y;
+            p2 = [x, y];
+        }
+        else if (this.transformPoint === this.transformPointTranslate)
+        {
+            var m = this.matrix;
+            var dx = m[2];
+            var dy = m[5];
+
+            xq1 = (cp1x + dx);
+            yq1 = (cp1y + dy);
+
+            xq2 = (cp2x + dx);
+            yq2 = (cp2y + dy);
+
+            x2 = (x + dx);
+            y2 = (y + dy);
+            p2 = [x2, y2];
+        }
+        else
+        {
+            var q1 = this.transformPoint(cp1x, cp1y);
+            xq1 = q1[0];
+            yq1 = q1[1];
+
+            var q2 = this.transformPoint(cp2x, cp2y);
+            xq2 = q2[0];
+            yq2 = q2[1];
+
+            p2 = this.transformPoint(x, y);
+            x2 = p2[0];
+            y2 = p2[1];
+        }
 
         var abs = Math.abs;
         var numSteps = Math.ceil(this.pixelRatio * Math.sqrt(abs(xq1 - x1) + abs(yq1 - y1) +
