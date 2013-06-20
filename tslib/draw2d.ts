@@ -652,7 +652,7 @@ class Draw2D
 
     // Set of render groups for texture sort mode.  dictionary on
     // texture name.
-    texLists                      : Draw2DGroup[];
+    texLists                      : { [name: string]: Draw2DGroup; };
 
     // Cached reference to last retrieved group to accelerate texture
     // sort mode draw calls.
@@ -796,11 +796,12 @@ class Draw2D
 
     clearBatch()
     {
-        for (var name in this.texLists)
+        var texLists = this.texLists;
+        for (var name in texLists)
         {
-            if (this.texLists.hasOwnProperty(name))
+            if (texLists.hasOwnProperty(name))
             {
-                delete this.texLists[name];
+                texLists[name] = undefined;
             }
         }
         this.currentTextureGroup = undefined;
@@ -1154,7 +1155,7 @@ class Draw2D
         this.texLists = null;
         this.state = this.drawStates.uninit;
 
-        delete this.graphicsDevice;
+        this.graphicsDevice = null;
 
         if (this.vertexBuffer)
         {
@@ -1173,8 +1174,8 @@ class Draw2D
             var target = renderTargets.pop();
             target.texture.destroy();
             target.renderTarget.destroy();
-            delete target.texture;
-            delete target.renderTarget;
+            target.texture = null;
+            target.renderTarget = null;
         }
     };
 
@@ -2155,7 +2156,7 @@ class Draw2D
 
         // Set of render groups for texture sort mode.
         // dictionary on texture name.
-        o.texLists = [];
+        o.texLists = {};
         // Cached reference to last retrieved group to accelerate
         // texture sort mode draw calls.
         o.texGroup = undefined;
