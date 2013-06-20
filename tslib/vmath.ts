@@ -3075,8 +3075,18 @@ var VMath : MathDevice =
         debug.assert(debug.isMtx34(res));
 
         res[0] = 1.0;
+        res[1] = 0.0;
+        res[2] = 0.0;
+        res[3] = 0.0;
+        res[4] = 0.0;
         res[5] = 1.0;
+        res[6] = 0.0;
+        res[7] = 0.0;
+        res[8] = 0.0;
+        res[9] = 0.0;
         res[10] = 1.0;
+        res[11] = 0.0;
+
         return res;
     },
 
