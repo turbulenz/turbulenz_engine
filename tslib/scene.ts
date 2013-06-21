@@ -709,6 +709,7 @@ class Scene
     //
     findVisibleNodes(camera, visibleNodes)
     {
+        var numVisibleNodes = visibleNodes.length;
         var frustumPlanes = this.frustumPlanes;
         var useAABBTrees = true;
         var areas = this.areas;
@@ -753,7 +754,6 @@ class Scene
                 var visiblePortals = this.visiblePortals;
                 var numVisiblePortals = visiblePortals.length;
                 var queryCounter = this.getQueryCounter();
-                var numVisibleNodes = visibleNodes.length;
                 var n, node, np, portalItem, portalPlanes;
 
                 area = areas[areaIndex];
@@ -843,9 +843,8 @@ class Scene
 
         if (useAABBTrees)
         {
-            this.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes);
-
-            this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes);
+            numVisibleNodes += this.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
+            this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
         }
     };
 
@@ -854,6 +853,7 @@ class Scene
     //
     findVisibleNodesTree(tree, camera, visibleNodes)
     {
+        var numVisibleNodes = visibleNodes.length;
         var frustumPlanes = this.frustumPlanes;
         var useAABBTree = true;
         var areas = this.areas;
@@ -903,7 +903,6 @@ class Scene
                 var numVisiblePortals = visiblePortals.length;
                 var queryCounter = this.getQueryCounter();
                 var bspNodes = this.bspNodes;
-                var numVisibleNodes = visibleNodes.length;
                 var portalPlanes;
                 var n, node, nodeExtents, np, portalItem;
                 var cX, cY, cZ, nodeAreaIndex, overlappingAreas, numOverlappingAreas;
@@ -1089,7 +1088,7 @@ class Scene
 
         if (useAABBTree)
         {
-            tree.getVisibleNodes(frustumPlanes, visibleNodes);
+            tree.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
         }
     };
 
@@ -2194,17 +2193,12 @@ class Scene
         if (useAABBTrees)
         {
             var queryVisibleNodes = this.queryVisibleNodes;
-            if (queryVisibleNodes)
-            {
-                queryVisibleNodes.length = 0;
-            }
-            else
+            if (!queryVisibleNodes)
             {
                 this.queryVisibleNodes = queryVisibleNodes = [];
             }
-            this.staticSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes);
-            this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes);
-            var numQueryVisibleNodes = queryVisibleNodes.length;
+            var numQueryVisibleNodes = this.staticSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes, 0);
+            numQueryVisibleNodes += this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes, numQueryVisibleNodes);
             for (n = 0; n < numQueryVisibleNodes; n += 1)
             {
                 node = queryVisibleNodes[n];
