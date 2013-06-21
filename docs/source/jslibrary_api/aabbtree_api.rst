@@ -143,7 +143,9 @@ Query to find which objects are visible.
 
 **Syntax** ::
 
-    aabbtree.getVisibleNodes(planes, visibleObjects);
+    aabbtree.getVisibleNodes(planes, visibleObjects, startIndex);
+
+Returns an integer representing the number of insertions made to the visibleObjects array.
 
 ``planes``
     An array of :ref:`Plane <plane>` objects that delimit the visible frustum.
@@ -152,6 +154,10 @@ Query to find which objects are visible.
 
 ``visibleObjects``
     An array to which the visible objects will be appended.
+
+``startIndex (Optional)``
+    The index at which to begin insertions to the visibleObjects array.
+    If left undefined, then all insertions will be made to the end of the array.
 
 
 .. index::
