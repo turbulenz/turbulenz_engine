@@ -60,6 +60,7 @@ interface WebGLSoundSource extends SoundSource
     createBufferNode: { (WebGLSound): any; };
     updateAudioVolume: { (): void; };
     loopAudio: { (): void; };
+    updateRelativePosition(lp0: number, lp1: number, lp2: number): void;
 };
 
 declare var WebGLSoundSource :
@@ -1099,6 +1100,19 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
             return bufferNode;
         };
 
+        source.updateRelativePosition = function updateRelativePositionFn(listenerPosition0,
+                                                                          listenerPosition1,
+                                                                          listenerPosition2)
+        {
+            if (1 >= this.sound.channels)
+            {
+                // We only support panning of mono sources
+                pannerNode.setPosition(position[0] + listenerPosition0,
+                                       position[1] + listenerPosition1,
+                                       position[2] + listenerPosition2);
+            }
+        };
+
         Object.defineProperty(source, "looping", {
                 get : function getLoopingFn() {
                     return looping;
@@ -1729,11 +1743,9 @@ WebGLSoundDevice.create = function webGLSoundDeviceFn(params)
 
                     if (source.relative)
                     {
-                        var position = source.position;
-                        var pannerNode = source.pannerNode;
-                        pannerNode.setPosition(position[0] + listenerPosition0,
-                                               position[1] + listenerPosition1,
-                                               position[2] + listenerPosition2);
+                        source.updateRelativePosition(listenerPosition0,
+                                                      listenerPosition1,
+                                                      listenerPosition2);
                     }
                 }
             }
