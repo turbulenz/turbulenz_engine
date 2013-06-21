@@ -9,7 +9,7 @@
 The AssetCache Object
 ---------------------
 
-Provides functionality for caching assets.
+Provides functionality for caching assets using least recently used (LRU) caching.
 When the cache is full each cache miss causes the removal of the asset that has the oldest requested time.
 
 **Required scripts**
@@ -17,6 +17,11 @@ When the cache is full each cache miss causes the removal of the asset that has 
 The AssetCache object requires::
 
     /*{{ javascript("jslib/assetcache.js") }}*/
+
+**Example**
+
+The ``AssetCache`` object is used in the leaderboards sample to make sure that by scrolling through users' avatar
+textures we don't use too much memory (while keeping the interface smooth).
 
 Constructor
 ===========
