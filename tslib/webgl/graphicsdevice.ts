@@ -1991,7 +1991,11 @@ WebGLVertexBuffer.prototype =
             var maxNumValues = (numVertices * numValuesPerVertex);
             var format = attributes[0].format;
 
-            if (format === gl.BYTE)
+            if (format === gl.FLOAT)
+            {
+                data = new Float32Array(maxNumValues);
+            }
+            else if (format === gl.BYTE)
             {
                 data = new Int8Array(maxNumValues);
             }
@@ -2014,10 +2018,6 @@ WebGLVertexBuffer.prototype =
             else if (format === gl.UNSIGNED_INT)
             {
                 data = new Uint32Array(maxNumValues);
-            }
-            else if (format === gl.FLOAT)
-            {
-                data = new Float32Array(maxNumValues);
             }
 
             writer = function vertexBufferWriterSingleFn()
@@ -2382,7 +2382,14 @@ WebGLVertexBuffer.prototype =
             attribute = attributes[0];
             format = attribute.format;
 
-            if (format === gl.BYTE)
+            if (format === gl.FLOAT)
+            {
+                if (!(data instanceof Float32Array))
+                {
+                    TypedArrayConstructor = Float32Array;
+                }
+            }
+            else if (format === gl.BYTE)
             {
                 if (!(data instanceof Int8Array))
                 {
@@ -2422,13 +2429,6 @@ WebGLVertexBuffer.prototype =
                 if (!(data instanceof Uint32Array))
                 {
                     TypedArrayConstructor = Uint32Array;
-                }
-            }
-            else if (format === gl.FLOAT)
-            {
-                if (!(data instanceof Float32Array))
-                {
-                    TypedArrayConstructor = Float32Array;
                 }
             }
 
