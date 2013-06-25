@@ -218,7 +218,7 @@ if platform.system() == "Windows":
     # pylint: disable=W0404
 
     # pylint: disable=F0401, E0602
-    def find_devenv():
+    def find_devenv(versions_to_check=None):
         from _winreg import OpenKey, QueryValueEx, HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY, KEY_READ
         sxs_key = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
                           0, KEY_READ | KEY_WOW64_32KEY)
@@ -232,48 +232,57 @@ if platform.system() == "Windows":
                 result = None
             return result
 
-        vs_path = _query_key_value(sxs_key, '11.0')
-        if vs_path is not None:
-            devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
-            if os.path.exists(devenv_path):
-                return (devenv_path, '2012', None)
+        versions_to_check = versions_to_check or ['9.0', '10.0', '11.0']
 
-        vs_path = _query_key_value(sxs_key, '10.0')
-        if vs_path is not None:
-            devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
-            if os.path.exists(devenv_path):
-                return (devenv_path, '2010', None)
-            devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'VCExpress.exe')
-            if os.path.exists(devenv_path):
-                return (devenv_path, '2010', None)
+        if '11.0' in versions_to_check:
+            vs_path = _query_key_value(sxs_key, '11.0')
+            if vs_path is not None:
+                devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
+                if os.path.exists(devenv_path):
+                    return (devenv_path, '2012', None)
 
-        vs_path = _query_key_value(sxs_key, '9.0')
-        if vs_path is not None:
-            devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
-            if os.path.exists(devenv_path):
-                return (devenv_path, '2008', None)
+        if '10.0' in versions_to_check:
+            vs_path = _query_key_value(sxs_key, '10.0')
+            if vs_path is not None:
+                devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
+                if os.path.exists(devenv_path):
+                    return (devenv_path, '2010', None)
+                devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'VCExpress.exe')
+                if os.path.exists(devenv_path):
+                    return (devenv_path, '2010', None)
+
+        if '9.0' in versions_to_check:
+            vs_path = _query_key_value(sxs_key, '9.0')
+            if vs_path is not None:
+                devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
+                if os.path.exists(devenv_path):
+                    return (devenv_path, '2008', None)
 
         # If we didn't find a devenv like tool try msbuild for Visual Studio 11.0
-        vs_path = _query_key_value(sxs_key, '11.0')
-        if vs_path is not None:
-            # Query the key in two steps because Python can't seem to read the 4.0 key in a
-            msbuild_basekey = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\MSBuild\ToolsVersions',
-                                      0, KEY_READ | KEY_WOW64_32KEY)
-            msbuild_key = OpenKey(msbuild_basekey, '4.0', 0, KEY_READ | KEY_WOW64_32KEY)
-            msbuild_path = _query_key_value(msbuild_key, 'MSBuildToolsPath')
-            if msbuild_path:
-                return None, '2012', os.path.join(msbuild_path, 'MSBuild.exe')
+        if '11.0' in versions_to_check:
+            vs_path = _query_key_value(sxs_key, '11.0')
+            if vs_path is not None:
+                # Query the key in two steps because Python can't seem to read the 4.0 key in a
+                msbuild_basekey = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\MSBuild\ToolsVersions',
+                                          0, KEY_READ | KEY_WOW64_32KEY)
+                msbuild_key = OpenKey(msbuild_basekey, '4.0', 0, KEY_READ | KEY_WOW64_32KEY)
+                msbuild_path = _query_key_value(msbuild_key, 'MSBuildToolsPath')
+                if msbuild_path:
+                    return None, '2012', os.path.join(msbuild_path, 'MSBuild.exe')
 
         return None, None, None
     # pylint: enable=F0401, E0602
     # pylint: enable=W0404
 
     def check_compilers():
+        # pylint: disable=F0401
         try:
+            from distutils.msvccompiler import get_build_version as get_python_build_compiler
             from distutils.msvc9compiler import query_vcvarsall
         except ImportError:
             # We could implement our own checks but distutils should be available, send a warning
             raise EnvironmentError('Failed to import distutils, not able to confirm compiler toolchain is present')
+        # pylint: enable=F0401
 
         _, version, _ = find_devenv()
         if version == None:
@@ -283,20 +292,26 @@ if platform.system() == "Windows":
             '2010': 10.0,
             '2012': 11.0
         }
+
+        # Turbulenz tools are built 32bit so always check for these compilers
+        try:
+            query_vcvarsall(versions_map[version], 'x86')
+        except ValueError:
+            raise EnvironmentError('Setuptools unable to detect Visual Studio Compilers correctly')
+
         arch, _ = platform.architecture()
-        if arch == '32bit':
-            try:
-                query_vcvarsall(versions_map[version], 'x86')
-            except ValueError:
-                raise EnvironmentError('Setuptools unable to detect Visual Studio Compilers correctly')
-        elif arch == '64bit':
-            try:
-                query_vcvarsall(versions_map[version], 'amd64')
-            except ValueError:
-                raise EnvironmentError('Setuptools unable to detect Visual Studio Compilers correctly.\n'
-                                       'You appear to be running 64bit Python, ensure you install the '
-                                       '64bit compilers in Visual Studio')
-        else:
+        if arch == '64bit':
+            _, python_build_version, _ = find_devenv([str(get_python_build_compiler())])
+            if python_build_version is not None:
+                # We're running 64bit Python and the user has the Visual Studio version used to build Python
+                # installed, check for the 64bit compilers
+                try:
+                    query_vcvarsall(versions_map[version], 'amd64')
+                except ValueError:
+                    raise EnvironmentError('Setuptools unable to detect Visual Studio Compilers correctly.\n'
+                                           'You appear to be running 64bit Python, ensure you install the '
+                                           '64bit compilers in Visual Studio')
+        elif arch != '32bit':
             raise EnvironmentError('Unexpected Python architecture, not able to'
                                    ' confirm compiler toolchain is present')
 
