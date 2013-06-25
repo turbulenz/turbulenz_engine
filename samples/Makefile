@@ -39,7 +39,6 @@ TSAPPS += camera
 
 deferred_rendering_src := tsscripts/templates/deferred_rendering.ts
 deferred_rendering_deps := sceneloader htmlcontrols
-deferred_rendering_nocanvas := 1
 TSAPPS += deferred_rendering
 
 device_initialization_src := tsscripts/templates/device_initialization.ts
@@ -154,7 +153,6 @@ TSAPPS += video
 
 # Apps that do not have a canvas version
 NON_CANVAS_APPS :=   \
-  deferred_rendering \
   physics_constraints   \
 
 # include the main application build file

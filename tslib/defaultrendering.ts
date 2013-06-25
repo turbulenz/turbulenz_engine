@@ -563,6 +563,7 @@ class DefaultRendering
             else if (diffuse.length === 4)
             {
                 techniqueParameters.materialColor = md.v4Build.apply(md, diffuse);
+                techniqueParameters.diffuse = undefined;
             }
         };
 
@@ -595,7 +596,7 @@ class DefaultRendering
         effect = Effect.create("constant");
         effectsManager.add(effect);
 
-        effectTypeData = {  prepare : defaultPrepare,
+        effectTypeData = {  prepare : noDiffusePrepare,
                             shaderName : "shaders/defaultrendering.cgfx",
                             techniqueName : "flat",
                             update : defaultUpdate,
@@ -603,9 +604,31 @@ class DefaultRendering
         effectTypeData.loadTechniques(shaderManager);
         effect.add(rigid, effectTypeData);
 
-        effectTypeData = {  prepare : defaultPrepare,
+        effectTypeData = {  prepare : noDiffusePrepare,
                             shaderName : "shaders/defaultrendering.cgfx",
                             techniqueName : "flat_skinned",
+                            update : defaultSkinnedUpdate,
+                            loadTechniques : loadTechniques };
+        effectTypeData.loadTechniques(shaderManager);
+        effect.add(skinned, effectTypeData);
+
+        //
+        // constant_nocull
+        //
+        effect = Effect.create("constant_nocull");
+        effectsManager.add(effect);
+
+        effectTypeData = {  prepare : noDiffusePrepare,
+                            shaderName : "shaders/defaultrendering.cgfx",
+                            techniqueName : "flat_nocull",
+                            update : defaultUpdate,
+                            loadTechniques : loadTechniques };
+        effectTypeData.loadTechniques(shaderManager);
+        effect.add(rigid, effectTypeData);
+
+        effectTypeData = {  prepare : noDiffusePrepare,
+                            shaderName : "shaders/defaultrendering.cgfx",
+                            techniqueName : "flat_skinned_nocull",
                             update : defaultSkinnedUpdate,
                             loadTechniques : loadTechniques };
         effectTypeData.loadTechniques(shaderManager);

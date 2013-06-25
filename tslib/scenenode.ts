@@ -105,6 +105,8 @@ class SceneNode
 
     arrayConstructor: any; // on prototype
 
+    renderables: Renderable[];
+
     //
     //SceneNode.makePath
     //
@@ -121,7 +123,35 @@ class SceneNode
         debug.abort("setLocalTransform can not be called on static nodes.");
     };
 
-    renderables: Renderable[];
+    //
+    // SceneNode
+    //
+    constructor(params)
+    {
+        this.name = params.name;
+
+        var md = TurbulenzEngine.getMathDevice();
+        this.mathDevice = md;
+
+        this.dynamic = params.dynamic || false;
+        this.disabled = params.disabled || false;
+
+        this.dirtyWorldExtents = true;
+        this.dirtyLocalExtents = true;
+        this.worldUpdate = 0; //Counter of number of times modified.
+
+        var local = params.local;
+        if (local)
+        {
+            this.local = md.m43Copy(local);
+        }
+        else
+        {
+            this.local = md.m43BuildIdentity();
+        }
+        local = this.local;
+        this.world = md.m43Copy(local);
+    };
 
     //
     //getName
@@ -160,7 +190,7 @@ class SceneNode
         this.parent = parent;
         this.notifiedParent = false;
         this.dirtyWorld = false;
-        this.setDirtyWorldTransform();
+        this._setDirtyWorldTransform();
     };
 
     //
@@ -366,95 +396,9 @@ class SceneNode
             this.local = this.mathDevice.m43Copy(matrix, this.local);
         }
 
-        //inlined non-recursive setDirtyWorldTransform()
-        var setDirtyWorldTransformHelper =
-            function setDirtyWorldTransformHelperFn(nodes)
-        {
-            var numRemainingNodes = nodes.length;
-            var node, index, child;
-            do
-            {
-                numRemainingNodes -= 1;
-                node = nodes[numRemainingNodes];
-
-                node.dirtyWorld = true;
-
-                if (!node.customWorldExtents && node.localExtents)
-                {
-                    node.dirtyWorldExtents = true;
-                }
-
-                var children = node.children;
-                if (children)
-                {
-                    var numChildren = children.length;
-
-                    if (!node.childNeedsUpdateCount)
-                    {
-                        // Common case of propagating down to clean children
-                        node.childNeedsUpdateCount = numChildren;
-                        for (index = 0; index < numChildren; index += 1)
-                        {
-                            child = children[index];
-                            child.notifiedParent = true;
-
-                            nodes[numRemainingNodes] = child;
-                            numRemainingNodes += 1;
-                        }
-                    }
-                    else
-                    {
-                        // One or more children dirty
-                        for (index = 0; index < numChildren; index += 1)
-                        {
-                            child = children[index];
-                            if (!child.dirtyWorld)
-                            {
-                                if (!child.notifiedParent)
-                                {
-                                    child.notifiedParent = true;
-                                    node.childNeedsUpdateCount += 1;
-                                }
-
-                                nodes[numRemainingNodes] = child;
-                                numRemainingNodes += 1;
-                            }
-                        }
-                    }
-                }
-            }
-            while (0 < numRemainingNodes);
-        }
-
         if (!this.dirtyWorld)
         {
-            //inlined updateRequired()
-            var parent = this.parent;
-            if (parent)
-            {
-                if (!this.notifiedParent)
-                {
-                    this.notifiedParent = true;
-                    parent.childNeedsUpdate();
-                }
-            }
-            else
-            {
-                //Root nodes
-                var scene = this.scene;
-                if (scene)
-                {
-                    var dirtyRoots = scene.dirtyRoots;
-                    if (!dirtyRoots)
-                    {
-                        dirtyRoots = {};
-                        scene.dirtyRoots = dirtyRoots;
-                    }
-                    dirtyRoots[this.name] = this;
-                }
-            }
-
-            setDirtyWorldTransformHelper([this]);
+            this._setDirtyWorldTransform();
         }
     };
 
@@ -467,42 +411,65 @@ class SceneNode
     };
 
     //
-    //setDirtyWorldTransform
+    //_setDirtyWorldTransform
     //
-    private setDirtyWorldTransform()
+    private _setDirtyWorldTransform()
     {
-        //private function
-        if (this.dirtyWorld)
+        //Private function
+
+        //Notify parents
+        //inlined updateRequired()
+        var parent = this.parent;
+        if (parent)
         {
-            return;
+            if (!this.notifiedParent)
+            {
+                this.notifiedParent = true;
+                parent.childNeedsUpdate();
+            }
+        }
+        else
+        {
+            //Root nodes
+            var scene = this.scene;
+            if (scene)
+            {
+                scene.addRootNodeToUpdate(this, this.name);
+            }
         }
 
-        var setDirtyWorldTransformHelper =
-            function setDirtyWorldTransformHelperFn()
+        //Notify children
+        var nodes = [this];
+        var numRemainingNodes = nodes.length;
+        var node, index, child;
+        do
         {
-            this.dirtyWorld = true;
+            numRemainingNodes -= 1;
+            node = nodes[numRemainingNodes];
 
-            if (!this.customWorldExtents && this.localExtents)
+            node.dirtyWorld = true;
+
+            if (!node.customWorldExtents && node.localExtents)
             {
-                this.dirtyWorldExtents = true;
+                node.dirtyWorldExtents = true;
             }
 
-            var children = this.children;
+            var children = node.children;
             if (children)
             {
                 var numChildren = children.length;
-                var index;
-                var child;
 
-                if (!this.childNeedsUpdateCount)
+                if (!node.childNeedsUpdateCount)
                 {
                     // Common case of propagating down to clean children
-                    this.childNeedsUpdateCount = numChildren;
+                    node.childNeedsUpdateCount = numChildren;
                     for (index = 0; index < numChildren; index += 1)
                     {
                         child = children[index];
                         child.notifiedParent = true;
-                        setDirtyWorldTransformHelper.call(child);
+
+                        nodes[numRemainingNodes] = child;
+                        numRemainingNodes += 1;
                     }
                 }
                 else
@@ -516,39 +483,17 @@ class SceneNode
                             if (!child.notifiedParent)
                             {
                                 child.notifiedParent = true;
-                                this.childNeedsUpdateCount += 1;
+                                node.childNeedsUpdateCount += 1;
                             }
-                            setDirtyWorldTransformHelper.call(child);
+
+                            nodes[numRemainingNodes] = child;
+                            numRemainingNodes += 1;
                         }
                     }
                 }
             }
         }
-
-        //inlined updateRequired()
-        if (this.parent)
-        {
-            if (!this.notifiedParent)
-            {
-                this.parent.childNeedsUpdate();
-                this.notifiedParent = true;
-            }
-        }
-        else
-        {
-            //Root nodes
-            var scene = this.scene;
-            if (scene)
-            {
-                if (!scene.dirtyRoots)
-                {
-                    scene.dirtyRoots = {};
-                }
-                scene.dirtyRoots[this.name] = this;
-            }
-        }
-
-        setDirtyWorldTransformHelper.call(this);
+        while (0 < numRemainingNodes);
     };
 
     //
@@ -674,7 +619,7 @@ class SceneNode
         }
         else
         {
-            delete this.disabled;
+            this.disabled = false;
         }
     };
 
@@ -683,7 +628,7 @@ class SceneNode
     //
     getDisabled(): bool
     {
-        return this.disabled ? true : false;
+        return this.disabled;
     };
 
     //
@@ -753,13 +698,7 @@ class SceneNode
             var scene = this.scene;
             if (scene)
             {
-                var dirtyRoots = scene.dirtyRoots;
-                if (!dirtyRoots)
-                {
-                    dirtyRoots = {};
-                    scene.dirtyRoots = dirtyRoots;
-                }
-                dirtyRoots[this.name] = this;
+                scene.addRootNodeToUpdate(this, this.name);
             }
         }
     };
@@ -1787,38 +1726,7 @@ class SceneNode
     //
     static create(params) : SceneNode
     {
-        var sceneNode = new SceneNode();
-        sceneNode.name = params.name;
-
-        var md = TurbulenzEngine.getMathDevice();
-        sceneNode.mathDevice = md;
-
-        if (params.dynamic)
-        {
-            sceneNode.dynamic = params.dynamic;
-        }
-        if (params.disabled)
-        {
-            sceneNode.disabled = params.disabled;
-        }
-
-        sceneNode.dirtyWorldExtents = true;
-        sceneNode.dirtyLocalExtents = true;
-        sceneNode.worldUpdate = 0; //Counter of number of times modified.
-
-        var local = params.local;
-        if (local)
-        {
-            sceneNode.local = md.m43Copy(local);
-        }
-        else
-        {
-            sceneNode.local = md.m43BuildIdentity();
-        }
-        local = sceneNode.local;
-        sceneNode.world = md.m43Copy(local);
-
-        return sceneNode;
+        return new SceneNode(params);
     };
 };
 

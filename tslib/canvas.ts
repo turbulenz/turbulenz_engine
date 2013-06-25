@@ -1025,6 +1025,208 @@ class CanvasContext
         'miter' : 1
     };
 
+
+    //
+    // CanvasContext
+    //
+    constructor(canvas, gd, md, width, height)
+    {
+        // public variables
+        this.canvas = canvas;
+        this.globalAlpha = 1.0;
+        this.globalCompositeOperation = 'source-over';
+        this.strokeStyle = '#000000';
+        this.fillStyle = '#000000';
+        this.lineWidth = 1;
+        this.lineCap = 'butt';
+        this.lineJoin = 'miter';
+        this.miterLimit = 10;
+        this.shadowOffsetX = 0;
+        this.shadowOffsetY = 0;
+        this.shadowBlur = 0;
+        this.shadowColor = 'rgba(0,0,0,0)';
+        this.font = '10px sans-serif';
+        this.textAlign = 'start';
+        this.textBaseline = 'alphabetic';
+        this.imageColor = '#fff';
+
+        // private variables
+        this.gd = gd;
+        this.md = md;
+
+        this.fm = null;
+
+        this.target = null;
+        this.viewport = [0, 0, width, height];
+
+        this.pixelRatio = 1;
+
+        this.width = width;
+        this.height = height;
+
+        this.screen = md.v4Build((2 / width), (-2 / height), -1, 1);
+
+        this.subPaths = [];
+        this.needToSimplifyPath = [];
+        this.currentSubPath = [];
+
+        /*jshint newcap: false*/
+        var floatArrayConstructor = this.floatArrayConstructor;
+
+        this.activeVertexBuffer = null;
+        this.activeTechnique = null;
+        this.activeScreen = new floatArrayConstructor(4);
+        this.activeColor = new floatArrayConstructor(4);
+
+        var shader = gd.createShader(this.shaderDefinition);
+        this.shader = shader;
+
+        this.triangleStripPrimitive = gd.PRIMITIVE_TRIANGLE_STRIP;
+        this.triangleFanPrimitive = gd.PRIMITIVE_TRIANGLE_FAN;
+        this.trianglePrimitive = gd.PRIMITIVE_TRIANGLES;
+        this.lineStripPrimitive = gd.PRIMITIVE_LINE_STRIP;
+        this.linePrimitive = gd.PRIMITIVE_LINES;
+
+        this.textureVertexFormats = [gd.VERTEXFORMAT_FLOAT2, gd.VERTEXFORMAT_FLOAT2];
+        this.textureSemantics = gd.createSemantics(['POSITION', 'TEXCOORD0']);
+
+        this.textureVertexBuffer = gd.createVertexBuffer({
+            numVertices: 4,
+            attributes: this.textureVertexFormats,
+            dynamic: true,
+            'transient': true
+        });
+
+        this.flatVertexFormats = [gd.VERTEXFORMAT_FLOAT2];
+        this.flatSemantics = gd.createSemantics(['POSITION']);
+
+        this.flatVertexBuffer = gd.createVertexBuffer({
+            numVertices: 256,
+            attributes: this.flatVertexFormats,
+            dynamic: true,
+            'transient': true
+        });
+
+        this.flatOffset = 0;
+
+        this.bufferData = new floatArrayConstructor(512);
+        this.subBufferDataCache = {};
+
+        this.tempRect = new floatArrayConstructor(8);
+        /*jshint newcap: true*/
+
+        this.tempVertices = [];
+
+        this.tempStack = [];
+
+        this.v4Zero = md.v4BuildZero();
+        this.v4One = md.v4BuildOne();
+
+        this.cachedColors = {};
+        this.numCachedColors = 0;
+
+        /*jshint newcap: false*/
+        this.uvtransform = new floatArrayConstructor(6);
+        /*jshint newcap: true*/
+        this.uvtransform[0] = 1;
+        this.uvtransform[1] = 0;
+        this.uvtransform[2] = 0;
+        this.uvtransform[3] = 0;
+        this.uvtransform[4] = 1;
+        this.uvtransform[5] = 0;
+
+        this.tempColor = md.v4BuildZero();
+        this.tempScreen = md.v4BuildZero();
+
+        this.tempImage = null;
+        this.imageTechnique = shader.getTechnique("image");
+
+        var compositeOperations = this.compositeOperations;
+        var flatTechniques = {};
+        var textureTechniques = {};
+        var patternTechniques = {};
+        var gradientTechniques = {};
+        this.flatTechniques = flatTechniques;
+        this.textureTechniques = textureTechniques;
+        this.patternTechniques = patternTechniques;
+        this.gradientTechniques = gradientTechniques;
+        for (var p in compositeOperations)
+        {
+            if (compositeOperations.hasOwnProperty(p))
+            {
+                var sp = p.replace('-', '_');
+                flatTechniques[p] = shader.getTechnique('flat_' + sp);
+                textureTechniques[p] = shader.getTechnique('texture_' + sp);
+                patternTechniques[p] = shader.getTechnique('pattern_' + sp);
+                gradientTechniques[p] = shader.getTechnique('gradient_' + sp);
+            }
+        }
+
+        this.textureShadowTechnique = shader.getTechnique('texture_shadow');
+        this.patternShadowTechnique = shader.getTechnique('pattern_shadow');
+        this.gradientShadowTechnique = shader.getTechnique('gradient_shadow');
+
+        /*
+          this.renderTexture = gd.createTexture({
+          name       : "canvas.backbuffer",
+          width      : width,
+          height     : height,
+          depth      : 1,
+          format     : gd.PIXELFORMAT_R8G8B8A8,
+          cubemap    : false,
+          mipmaps    : false,
+          renderable : true
+          });
+
+          this.renderTarget = gd.createRenderTarget({
+          colorTexture0 : this.renderTexture
+          });
+        */
+
+        //
+        // Transformation matrix and related operations
+        //
+        /*jshint newcap: false*/
+        this.matrix = new floatArrayConstructor(6);
+        /*jshint newcap: true*/
+        this.matrix[0] = 1;
+        this.matrix[1] = 0;
+        this.matrix[2] = 0;
+        this.matrix[3] = 0;
+        this.matrix[4] = 1;
+        this.matrix[5] = 0;
+
+        this.scale = this.scaleIdentity;
+        this.translate = this.translateIdentity;
+        this.transform = this.setTransformIdentity;
+        this.setTransform = this.setTransformIdentity;
+        this.transformPoint = this.transformPointIdentity;
+        this.transformRect = this.transformRectIdentity;
+
+        //
+        // Clipping
+        //
+        /*jshint newcap: false*/
+        this.clipExtents = new floatArrayConstructor(4);
+        /*jshint newcap: true*/
+        this.clipExtents[0] = 0;
+        this.clipExtents[1] = 0;
+        this.clipExtents[2] = width;
+        this.clipExtents[3] = height;
+
+        //
+        this.statesStack = [this.createStatesObject()]; // Preallocate one state objet
+        this.numStatesInStack = 0;
+
+        this.defaultStates = this.createStatesObject();
+
+        this.cachedTriangulation = {};
+        this.tempAngles = [];
+
+        this.cachedPaths = {};
+        this.numCachedPaths = 0;
+    };
+
     //
     // Public canvas 2D context API
     //
@@ -1035,10 +1237,13 @@ class CanvasContext
         var states = statesStack[numStatesInStack];
         if (!states)
         {
-            statesStack[numStatesInStack] = states = this.createStatesObject();
+            statesStack[numStatesInStack] = this.createStatesObject();
+        }
+        else
+        {
+            this.setStates(states, this);
         }
         this.numStatesInStack = (numStatesInStack + 1);
-        this.setStates(states, this);
     };
 
     restore()
@@ -1384,17 +1589,49 @@ class CanvasContext
         var x1 = p1[0];
         var y1 = p1[1];
 
-        var q1 = this.transformPoint(cp1x, cp1y);
-        var xq1 = q1[0];
-        var yq1 = q1[1];
+        var xq1, yq1, xq2, yq2, p2, x2, y2;
+        if (this.transformPoint === this.transformPointIdentity)
+        {
+            xq1 = cp1x;
+            yq1 = cp1y;
 
-        var q2 = this.transformPoint(cp2x, cp2y);
-        var xq2 = q2[0];
-        var yq2 = q2[1];
+            xq2 = cp2x;
+            yq2 = cp2y;
 
-        var p2 = this.transformPoint(x, y);
-        var x2 = p2[0];
-        var y2 = p2[1];
+            x2 = x;
+            y2 = y;
+            p2 = [x, y];
+        }
+        else if (this.transformPoint === this.transformPointTranslate)
+        {
+            var m = this.matrix;
+            var dx = m[2];
+            var dy = m[5];
+
+            xq1 = (cp1x + dx);
+            yq1 = (cp1y + dy);
+
+            xq2 = (cp2x + dx);
+            yq2 = (cp2y + dy);
+
+            x2 = (x + dx);
+            y2 = (y + dy);
+            p2 = [x2, y2];
+        }
+        else
+        {
+            var q1 = this.transformPoint(cp1x, cp1y);
+            xq1 = q1[0];
+            yq1 = q1[1];
+
+            var q2 = this.transformPoint(cp2x, cp2y);
+            xq2 = q2[0];
+            yq2 = q2[1];
+
+            p2 = this.transformPoint(x, y);
+            x2 = p2[0];
+            y2 = p2[1];
+        }
 
         var abs = Math.abs;
         var numSteps = Math.ceil(this.pixelRatio * Math.sqrt(abs(xq1 - x1) + abs(yq1 - y1) +
@@ -2454,7 +2691,9 @@ class CanvasContext
 
             if (numVertices > 0)
             {
-                this.fillFlatVertices(vertices, numVertices);
+                var bufferData = this.getFlatBuffer(numVertices);
+                this.fillFlatVertices(bufferData, vertices, numVertices);
+                this.fillFlatBuffer(bufferData, numVertices);
 
                 var gd = this.gd;
 
@@ -2486,6 +2725,7 @@ class CanvasContext
             var lineWidth = this.lineWidth;
             var thinLines = ((this.pixelRatio * lineWidth) < 2);
             var points, numPoints, primitive, numVertices;
+            var bufferData;
 
             if (thinLines)
             {
@@ -2510,7 +2750,9 @@ class CanvasContext
                 if (thinLines)
                 {
                     numVertices = numPoints;
-                    this.fillFlatVertices(points, numPoints);
+                    bufferData = this.getFlatBuffer(numVertices);
+                    this.fillFlatVertices(bufferData, points, numVertices);
+                    this.fillFlatBuffer(bufferData, numVertices);
                 }
                 else if (numPoints > 1)
                 {
@@ -2549,7 +2791,9 @@ class CanvasContext
                 if (thinLines)
                 {
                     numVertices = numPoints;
-                    this.fillFlatVertices(points, numPoints);
+                    bufferData = this.getFlatBuffer(numVertices);
+                    this.fillFlatVertices(bufferData, points, numVertices);
+                    this.fillFlatBuffer(bufferData, numVertices);
                 }
                 else if (numPoints > 1)
                 {
@@ -3240,32 +3484,50 @@ class CanvasContext
 
     createStatesObject(): any // TODO
     {
-        return {
-            globalAlpha : 0.0,
-            globalCompositeOperation : null,
-            strokeStyle : null,
-            fillStyle : null,
-            lineWidth : 0.0,
-            lineCap : null,
-            lineJoin : null,
-            miterLimit : 0,
-            shadowOffsetX : 0,
-            shadowOffsetY : 0,
-            shadowBlur : 0,
-            shadowColor : null,
-            font : null,
-            textAlign : null,
-            textBaseline : null,
-            imageColor: null,
+        var states = {
+            globalAlpha : this.globalAlpha,
+            globalCompositeOperation : this.globalCompositeOperation,
+            strokeStyle : this.strokeStyle,
+            fillStyle : this.fillStyle,
+            lineWidth : this.lineWidth,
+            lineCap : this.lineCap,
+            lineJoin : this.lineJoin,
+            miterLimit : this.miterLimit,
+            shadowOffsetX : this.shadowOffsetX,
+            shadowOffsetY : this.shadowOffsetY,
+            shadowBlur : this.shadowBlur,
+            shadowColor : this.shadowColor,
+            font : this.font,
+            textAlign : this.textAlign,
+            textBaseline : this.textBaseline,
+            imageColor: this.imageColor,
             matrix : new this.floatArrayConstructor(6),
-            scale : null,
-            translate : null,
-            transform : null,
-            setTransform : null,
-            transformPoint : null,
-            transformRect : null,
+            scale : this.scale,
+            translate : this.translate,
+            transform : this.transform,
+            setTransform : this.setTransform,
+            transformPoint : this.transformPoint,
+            transformRect : this.transformRect,
             clipExtents : new this.floatArrayConstructor(4)
         };
+
+        var destMatrix = states.matrix;
+        var srcMatrix = this.matrix;
+        destMatrix[0] = srcMatrix[0];
+        destMatrix[1] = srcMatrix[1];
+        destMatrix[2] = srcMatrix[2];
+        destMatrix[3] = srcMatrix[3];
+        destMatrix[4] = srcMatrix[4];
+        destMatrix[5] = srcMatrix[5];
+
+        var destExtents = states.clipExtents;
+        var srcExtents = this.clipExtents;
+        destExtents[0] = srcExtents[0];
+        destExtents[1] = srcExtents[1];
+        destExtents[2] = srcExtents[2];
+        destExtents[3] = srcExtents[3];
+
+        return states;
     };
 
     setStates(dest, src)
@@ -3424,6 +3686,17 @@ class CanvasContext
         }
     };
 
+    resetTransformMethods()
+    {
+        var CanvasPrototype = CanvasContext.prototype;
+        this.scale = CanvasPrototype.scale;
+        this.translate = CanvasPrototype.translate;
+        this.transform = CanvasPrototype.transform;
+        this.setTransform = CanvasPrototype.setTransform;
+        this.transformPoint = CanvasPrototype.transformPoint;
+        this.transformRect = CanvasPrototype.transformRect;
+    };
+
     transformPoint(x, y)
     {
         var m = this.matrix;
@@ -3507,6 +3780,59 @@ class CanvasContext
         rect[7] = y;
 
         return rect;
+    };
+
+    transformTranslate(a, b, c, d, e, f)
+    {
+        var m = this.matrix;
+        m[0] = a;
+        m[3] = b;
+        m[1] = c;
+        m[4] = d;
+        m[2] = (e + m[2]);
+        m[5] = (f + m[5]);
+
+        this.resetTransformMethods();
+    };
+
+    scaleIdentity(x, y)
+    {
+        if (x !== 1 || y !== 1)
+        {
+            var m = this.matrix;
+            m[0] = x;
+            m[4] = y;
+
+            this.resetTransformMethods();
+        }
+    };
+
+    translateIdentity(x, y)
+    {
+        if (x !== 0 || y !== 0)
+        {
+            var m = this.matrix;
+            m[2] = x;
+            m[5] = y;
+
+            this.translate = CanvasContext.prototype.translate;
+            this.transform = this.transformTranslate;
+            this.transformPoint = this.transformPointTranslate;
+            this.transformRect = this.transformRectTranslate;
+        }
+    };
+
+    setTransformIdentity(a, b, c, d, e, f)
+    {
+        var m = this.matrix;
+        m[0] = a;
+        m[1] = c;
+        m[2] = e;
+        m[3] = b;
+        m[4] = d;
+        m[5] = f;
+
+        this.resetTransformMethods();
     };
 
     untransformPoint(p)
@@ -5150,25 +5476,19 @@ class CanvasContext
         return numVertices;
     };
 
-    fillFlatVertices(vertices, numVertices)
+    fillFlatVertices(bufferData, vertices, numVertices)
     {
-        var bufferData = this.getFlatBuffer(numVertices);
-        if (bufferData)
+        var p = 0, d = 0;
+        do
         {
-            var p = 0, d = 0;
-            do
-            {
-                var vertex = vertices[p];
-                bufferData[d] = vertex[0];
-                d += 1;
-                bufferData[d] = vertex[1];
-                d += 1;
-                p += 1;
-            }
-            while (p < numVertices);
-
-            this.fillFlatBuffer(bufferData, numVertices);
+            var vertex = vertices[p];
+            bufferData[d] = vertex[0];
+            d += 1;
+            bufferData[d] = vertex[1];
+            d += 1;
+            p += 1;
         }
+        while (p < numVertices);
     };
 
     isPointInPolygon(tx, ty, points, numPoints): bool
@@ -6124,275 +6444,7 @@ class CanvasContext
     // Constructor function
     static create(canvas, gd, md, width, height): CanvasContext
     {
-        var c = new CanvasContext();
-
-        // public variables
-        c.canvas = canvas;
-        c.globalAlpha = 1.0;
-        c.globalCompositeOperation = 'source-over';
-        c.strokeStyle = '#000000';
-        c.fillStyle = '#000000';
-        c.lineWidth = 1;
-        c.lineCap = 'butt';
-        c.lineJoin = 'miter';
-        c.miterLimit = 10;
-        c.shadowOffsetX = 0;
-        c.shadowOffsetY = 0;
-        c.shadowBlur = 0;
-        c.shadowColor = 'rgba(0,0,0,0)';
-        c.font = '10px sans-serif';
-        c.textAlign = 'start';
-        c.textBaseline = 'alphabetic';
-        c.imageColor = '#fff';
-
-        // private variables
-        c.gd = gd;
-        c.md = md;
-
-        c.fm = null;
-
-        c.target = null;
-        c.viewport = [0, 0, width, height];
-
-        c.pixelRatio = 1;
-
-        c.width = width;
-        c.height = height;
-
-        c.screen = md.v4Build((2 / width), (-2 / height), -1, 1);
-
-        c.statesStack = [c.createStatesObject()]; // Preallocate one state objet
-        c.numStatesInStack = 0;
-
-        c.subPaths = [];
-        c.needToSimplifyPath = [];
-        c.currentSubPath = [];
-
-        /*jshint newcap: false*/
-        var floatArrayConstructor = c.floatArrayConstructor;
-
-        c.activeVertexBuffer = null;
-        c.activeTechnique = null;
-        c.activeScreen = new floatArrayConstructor(4);
-        c.activeColor = new floatArrayConstructor(4);
-
-        var shader = gd.createShader(c.shaderDefinition);
-        c.shader = shader;
-
-        c.triangleStripPrimitive = gd.PRIMITIVE_TRIANGLE_STRIP;
-        c.triangleFanPrimitive = gd.PRIMITIVE_TRIANGLE_FAN;
-        c.trianglePrimitive = gd.PRIMITIVE_TRIANGLES;
-        c.lineStripPrimitive = gd.PRIMITIVE_LINE_STRIP;
-        c.linePrimitive = gd.PRIMITIVE_LINES;
-
-        c.textureVertexFormats = [gd.VERTEXFORMAT_FLOAT2, gd.VERTEXFORMAT_FLOAT2];
-        c.textureSemantics = gd.createSemantics(['POSITION', 'TEXCOORD0']);
-
-        c.textureVertexBuffer = gd.createVertexBuffer({
-            numVertices: 4,
-            attributes: c.textureVertexFormats,
-            dynamic: true,
-            'transient': true
-        });
-
-        c.flatVertexFormats = [gd.VERTEXFORMAT_FLOAT2];
-        c.flatSemantics = gd.createSemantics(['POSITION']);
-
-        c.flatVertexBuffer = gd.createVertexBuffer({
-            numVertices: 256,
-            attributes: c.flatVertexFormats,
-            dynamic: true,
-            'transient': true
-        });
-
-        c.flatOffset = 0;
-
-        c.bufferData = new floatArrayConstructor(512);
-        c.subBufferDataCache = {};
-
-        c.tempRect = new floatArrayConstructor(8);
-        /*jshint newcap: true*/
-
-        c.tempVertices = [];
-
-        c.tempStack = [];
-
-        c.v4Zero = md.v4BuildZero();
-        c.v4One = md.v4BuildOne();
-
-        c.cachedColors = {};
-        c.numCachedColors = 0;
-
-        /*jshint newcap: false*/
-        c.uvtransform = new floatArrayConstructor(6);
-        /*jshint newcap: true*/
-        c.uvtransform[0] = 1;
-        c.uvtransform[1] = 0;
-        c.uvtransform[2] = 0;
-        c.uvtransform[3] = 0;
-        c.uvtransform[4] = 1;
-        c.uvtransform[5] = 0;
-
-        c.tempColor = md.v4BuildZero();
-        c.tempScreen = md.v4BuildZero();
-
-        c.tempImage = null;
-        c.imageTechnique = shader.getTechnique("image");
-
-        var compositeOperations = c.compositeOperations;
-        var flatTechniques = {};
-        var textureTechniques = {};
-        var patternTechniques = {};
-        var gradientTechniques = {};
-        c.flatTechniques = flatTechniques;
-        c.textureTechniques = textureTechniques;
-        c.patternTechniques = patternTechniques;
-        c.gradientTechniques = gradientTechniques;
-        for (var p in compositeOperations)
-        {
-            if (compositeOperations.hasOwnProperty(p))
-            {
-                var sp = p.replace('-', '_');
-                flatTechniques[p] = shader.getTechnique('flat_' + sp);
-                textureTechniques[p] = shader.getTechnique('texture_' + sp);
-                patternTechniques[p] = shader.getTechnique('pattern_' + sp);
-                gradientTechniques[p] = shader.getTechnique('gradient_' + sp);
-            }
-        }
-
-        c.textureShadowTechnique = shader.getTechnique('texture_shadow');
-        c.patternShadowTechnique = shader.getTechnique('pattern_shadow');
-        c.gradientShadowTechnique = shader.getTechnique('gradient_shadow');
-
-        /*
-          c.renderTexture = gd.createTexture({
-          name       : "canvas.backbuffer",
-          width      : width,
-          height     : height,
-          depth      : 1,
-          format     : gd.PIXELFORMAT_R8G8B8A8,
-          cubemap    : false,
-          mipmaps    : false,
-          renderable : true
-          });
-
-          c.renderTarget = gd.createRenderTarget({
-          colorTexture0 : c.renderTexture
-          });
-        */
-
-        //
-        // Transformation matrix and related operations
-        //
-        /*jshint newcap: false*/
-        c.matrix = new floatArrayConstructor(6);
-        /*jshint newcap: true*/
-        c.matrix[0] = 1;
-        c.matrix[1] = 0;
-        c.matrix[2] = 0;
-        c.matrix[3] = 0;
-        c.matrix[4] = 1;
-        c.matrix[5] = 0;
-
-        var CanvasPrototype = CanvasContext.prototype;
-        var scale = CanvasPrototype.scale;
-        var translate = CanvasPrototype.translate;
-        var transform = CanvasPrototype.transform;
-        var setTransform = CanvasPrototype.setTransform;
-        var transformPoint = CanvasPrototype.transformPoint;
-        var transformRect = CanvasPrototype.transformRect;
-
-        var resetTransformMethods = function resetTransformMethodsFn()
-        {
-            c.scale = scale;
-            c.translate = translate;
-            c.transform = transform;
-            c.setTransform = setTransform;
-            c.transformPoint = transformPoint;
-            c.transformRect = transformRect;
-        };
-
-        var transformTranslate = function transformTranslateFn(a, b, c, d, e, f)
-        {
-            var m = this.matrix;
-            m[0] = a;
-            m[3] = b;
-            m[1] = c;
-            m[4] = d;
-            m[2] = (e + m[2]);
-            m[5] = (f + m[5]);
-
-            resetTransformMethods();
-        };
-
-        var scaleIdentity = function scaleIdentityFn(x, y)
-        {
-            if (x !== 1 || y !== 1)
-            {
-                var m = this.matrix;
-                m[0] = x;
-                m[4] = y;
-
-                resetTransformMethods();
-            }
-        };
-
-        var translateIdentity = function translateIdentityFn(x, y)
-        {
-            if (x !== 0 || y !== 0)
-            {
-                var m = this.matrix;
-                m[2] = x;
-                m[5] = y;
-
-                this.translate = translate;
-                this.transform = transformTranslate;
-                this.transformPoint = this.transformPointTranslate;
-                this.transformRect = this.transformRectTranslate;
-            }
-        };
-
-        var setTransformIdentity = function setTransformIdentityFn(a, b, c, d, e, f)
-        {
-            var m = this.matrix;
-            m[0] = a;
-            m[1] = c;
-            m[2] = e;
-            m[3] = b;
-            m[4] = d;
-            m[5] = f;
-
-            resetTransformMethods();
-        };
-
-        c.scale = scaleIdentity;
-        c.translate = translateIdentity;
-        c.transform = setTransformIdentity;
-        c.setTransform = setTransformIdentity;
-        c.transformPoint = c.transformPointIdentity;
-        c.transformRect = c.transformRectIdentity;
-
-        //
-        // Clipping
-        //
-        /*jshint newcap: false*/
-        c.clipExtents = new floatArrayConstructor(4);
-        /*jshint newcap: true*/
-        c.clipExtents[0] = 0;
-        c.clipExtents[1] = 0;
-        c.clipExtents[2] = width;
-        c.clipExtents[3] = height;
-
-        //
-        c.defaultStates = c.setStates(c.createStatesObject(), c);
-
-        c.cachedTriangulation = {};
-        c.tempAngles = [];
-
-        c.cachedPaths = {};
-        c.numCachedPaths = 0;
-
-        return c;
+        return new CanvasContext(canvas, gd, md, width, height);
     };
 };
 

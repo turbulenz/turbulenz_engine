@@ -841,7 +841,7 @@ Creates a Character object.
             mass: 100.0,
             radius : characterRadius,
             height : characterHeight,
-            crouchHeight: (characterHeight * 0.5)),
+            crouchHeight: (characterHeight * 0.5),
             stepHeight : (characterHeight * 0.1),
             maxJumpHeight : (characterHeight * 0.4),
             restitution: 0.1,

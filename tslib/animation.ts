@@ -2407,58 +2407,52 @@ class GPUSkinController implements SkinControllerBase
 
         // convert the input interpolator quat pos data into skinning matrices
         var output = this.output;
-        var writer = output.map();
-        if (writer)
+        var md = this.md;
+        var interpOut = this.inputController.output;
+        var interpChannels = this.inputController.outputChannels;
+        var hasScale = interpChannels.scale;
+        var invBoneLTMs = this.skeleton.invBoneLTMs;
+        var jointParents = this.skeleton.parents;
+        var ltms = this.ltms;
+        var outputMat = this.outputMat;
+        var convertedquatPos = this.convertedquatPos;
+        var numBones = this.skeleton.numNodes;
+        var offset = 0;
+        var ltm;
+        for (var b = 0; b < numBones; b += 1)
         {
-            var md = this.md;
-            var interpOut = this.inputController.output;
-            var interpChannels = this.inputController.outputChannels;
-            var hasScale = interpChannels.scale;
-            var invBoneLTMs = this.skeleton.invBoneLTMs;
-            var jointParents = this.skeleton.parents;
-            var ltms = this.ltms;
-            var outputMat = this.outputMat;
-            var convertedquatPos = this.convertedquatPos;
-            var ltm;
-            var numBones = this.skeleton.numNodes;
-            for (var b = 0; b < numBones; b += 1)
-            {
-                var interpVal = interpOut[b];
-                var parentIndex = jointParents[b];
+            var interpVal = interpOut[b];
+            var parentIndex = jointParents[b];
 
-                if (parentIndex !== -1)
+            if (parentIndex !== -1)
+            {
+                if (hasScale)
                 {
-                    if (hasScale)
-                    {
-                        convertedquatPos = md.m43FromRTS(interpVal.rotation, interpVal.translation, interpVal.scale, convertedquatPos);
-                    }
-                    else
-                    {
-                        convertedquatPos = md.m43FromRT(interpVal.rotation, interpVal.translation, convertedquatPos);
-                    }
-                    ltms[b] = ltm = md.m43Mul(convertedquatPos, ltms[parentIndex], ltms[b]);
+                    convertedquatPos = md.m43FromRTS(interpVal.rotation, interpVal.translation, interpVal.scale, convertedquatPos);
                 }
                 else
                 {
-                    if (hasScale)
-                    {
-                        ltms[b] = ltm = md.m43FromRTS(interpVal.rotation, interpVal.translation, interpVal.scale, ltms[b]);
-                    }
-                    else
-                    {
-                        ltms[b] = ltm = md.m43FromRT(interpVal.rotation, interpVal.translation, ltms[b]);
-                    }
+                    convertedquatPos = md.m43FromRT(interpVal.rotation, interpVal.translation, convertedquatPos);
                 }
-
-                outputMat = md.m43MulTranspose(invBoneLTMs[b], ltm, outputMat);
-                writer(outputMat);
+                ltms[b] = ltm = md.m43Mul(convertedquatPos, ltms[parentIndex], ltms[b]);
+            }
+            else
+            {
+                if (hasScale)
+                {
+                    ltms[b] = ltm = md.m43FromRTS(interpVal.rotation, interpVal.translation, interpVal.scale, ltms[b]);
+                }
+                else
+                {
+                    ltms[b] = ltm = md.m43FromRT(interpVal.rotation, interpVal.translation, ltms[b]);
+                }
             }
 
-            this.outputMat = outputMat;
-            this.convertedquatPos = convertedquatPos;
-
-            output.unmap(writer);
+            outputMat = md.m43MulTranspose(invBoneLTMs[b], ltm, outputMat);
+            output.setData(outputMat, offset, 12);
+            offset += 12;
         }
+
         this.dirty = false;
     };
 
@@ -2480,8 +2474,8 @@ class GPUSkinController implements SkinControllerBase
         c.gd = gd;
         c.dirty = true;
         c.ltms = [];
-        c.outputMat = undefined;
-        c.convertedquatPos = undefined;
+        c.outputMat = md.m43BuildIdentity();
+        c.convertedquatPos = md.m43BuildIdentity();
         c.bufferSize = bufferSize || GPUSkinController.prototype.defaultBufferSize;
 
         return c;

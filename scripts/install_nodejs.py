@@ -139,13 +139,16 @@ def nodejs_install_source_unix(version, prefix):
 
 ############################################################
 
-def typescript_install_win32(version, prefix):
-    if 0 != call('%s\\Scripts\\npm.cmd install -g typescript' % prefix, shell=True):
-        raise Exception('failed to install typescript via npm')
-
-def typescript_install_unix(_version, prefix):
-
-    if 0 != call('%s/bin/npm install -g typescript' % prefix, shell=True):
+def typescript_install(version, prefix):
+    if 'win32' == PLATFORM:
+        npm_path = '%s\\Scripts\\npm.cmd' % prefix
+    else:
+        npm_path = '%s/bin/npm' % prefix
+    if version is not None:
+        package_specifier = 'typescript@%s' % version
+    else:
+        package_specifier = 'typescript'
+    if 0 != call('%s install -g %s' % (npm_path, package_specifier), shell=True):
         raise Exception('failed to install typescript via npm')
 
 ############################################################
@@ -204,10 +207,7 @@ def main():
         print 'Skipping typescript.'
     else:
         print 'Installing typescript-%s' % ts_version
-        if 'win32' == PLATFORM:
-            typescript_install_win32(ts_version, prefix)
-        else:
-            typescript_install_unix(ts_version, prefix)
+        typescript_install(ts_version, prefix)
     return 0
 
 

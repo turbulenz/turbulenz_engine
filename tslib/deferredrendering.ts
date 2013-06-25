@@ -884,6 +884,11 @@ class DeferredRendering
         return false;
     };
 
+    pixelCountCompare(nodeA, nodeB)
+    {
+        return (nodeB.pixelCount - nodeA.pixelCount);
+    };
+
     draw(gd, clearColor, drawDecalsFn, drawTransparentFn, drawDebugFn,
          postFXsetupFn)
     {
@@ -902,10 +907,7 @@ class DeferredRendering
         }
 
         // Prepare lights for rendering
-        function pixelCountCompareFn(nodeA, nodeB)
-        {
-            return (nodeB.pixelCount - nodeA.pixelCount);
-        }
+        var pixelCountCompare = this.pixelCountCompare;
 
         var l, query, light, lightInstance;
 
@@ -939,7 +941,7 @@ class DeferredRendering
 
             if (1 < numDirectionalInstances)
             {
-                directionalInstances.sort(pixelCountCompareFn);
+                directionalInstances.sort(pixelCountCompare);
             }
         }
 
@@ -973,7 +975,7 @@ class DeferredRendering
 
             if (1 < numPointInstances)
             {
-                pointInstances.sort(pixelCountCompareFn);
+                pointInstances.sort(pixelCountCompare);
             }
         }
 
@@ -1007,7 +1009,7 @@ class DeferredRendering
 
             if (1 < numSpotInstances)
             {
-                spotInstances.sort(pixelCountCompareFn);
+                spotInstances.sort(pixelCountCompare);
             }
         }
 

@@ -1403,7 +1403,7 @@ class CaptureGraphicsDevice
                                      id,
                                      self._addData(data, (numVertices * this.stride), false));
                 }
-                else if(0 < numVertices)
+                else if (0 < numVertices)
                 {
                     self._addCommand(CaptureGraphicsCommand.setData,
                                      id,

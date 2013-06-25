@@ -45,14 +45,15 @@ float DecodeFloatRGBA32(float4 rgba)
     return dot(rgba, float4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/16581375.0));
 }
 
+// The 16bit encoding is different because the 32bit one would waste 2048 values for the encoding of "1"
 float4 EncodeFloatRGB16(float v)
 {
-    v = floor(saturate(v) * 65535.0);
-    float r = floor(v / 2048.0);
-    float g = floor(mod(v, 2048.0) / 32.0);
-    float b = mod(v, 32.0);
-
-    return float4(r / 31.0, g / 63.0, b / 31.0, 1.0);
+    v = saturate(v);
+    float r = floor(v * (31.0 * 65535.0 / 63488.0));
+    float rg = r * (63488.0 * 63.0 / (31.0 * 2016.0));
+    float g = floor(v * (65535.0  * 63.0 / 2016.0) - rg);
+    float b = ((v * (65535.0 / 31.0) - r * (63488.0 / (31.0 * 31.0))) - g * (2016.0 / (63.0 * 31.0)));
+    return float4(r * (1.0 / 31.0), g * (1.0 / 63.0), b, 1.0);
 }
 
 float DecodeFloatRGB16(float4 rgba)

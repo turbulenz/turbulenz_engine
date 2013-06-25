@@ -1,4 +1,4 @@
-..index::
+.. index::
     single: CollisionUtils
 
 .. highlight:: javascript

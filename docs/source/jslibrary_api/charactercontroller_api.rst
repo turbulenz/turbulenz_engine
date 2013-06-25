@@ -52,7 +52,12 @@ Constructor
             maxStepHeight: 5,
             maxJumpHeight: 30
         };
-    var characterController = CharacterController.create(graphicsDevice, inputDevice, physicsDevice, matrix, parameters);
+    var characterController = CharacterController.create(graphicsDevice,
+                                                         inputDevice,
+                                                         physicsDevice,
+                                                         dynamicsWorld,
+                                                         matrix,
+                                                         parameters);
 
 ``matrix``
     A :ref:`m43 matrix <m43object>` representing the position and orientation of the character.

@@ -130,10 +130,10 @@ class AABBTree
     calculateSAH: (buildNodes, startIndex, endIndex) => void;
     nthElement: (nodes, first, nth, last, getkey) => void;
     recursiveBuild: (buildNodes, startIndex, endIndex, lastNodeIndex) => void;
-    getVisibleNodes: (planes, visibleNodes) => void;
-    getOverlappingNodes: (queryExtents, overlappingNodes, startIndex?) => void;
+    getVisibleNodes: (planes, visibleNodes, startIndex?) => number;
+    getOverlappingNodes: (queryExtents, overlappingNodes, startIndex?) => number;
     getSphereOverlappingNodes: (center, radius, overlappingNodes) => void;
-    getOverlappingPairs: (overlappingPairs, startIndex) => void;
+    getOverlappingPairs: (overlappingPairs, startIndex) => number;
     getRootNode: () => AABBTreeNode;
     getNodes: () => void;
     getEndNodeIndex: () => void;
@@ -1134,14 +1134,15 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
     }
 };
 
-AABBTree.prototype.getVisibleNodes = function getVisibleNodesFn(planes, visibleNodes)
+AABBTree.prototype.getVisibleNodes = function getVisibleNodesFn(planes, visibleNodes, startIndex?)
 {
+    var numVisibleNodes = 0;
     if (this.numExternalNodes > 0)
     {
         var nodes = this.nodes;
         var endNodeIndex = this.endNode;
         var numPlanes = planes.length;
-        var numVisibleNodes = visibleNodes.length;
+        var storageIndex = (startIndex === undefined) ? visibleNodes.length : startIndex;
         var node, extents, endChildren;
         var n0, n1, n2, p0, p1, p2;
         var isInside, n, plane, d0, d1, d2;
@@ -1178,7 +1179,8 @@ AABBTree.prototype.getVisibleNodes = function getVisibleNodesFn(planes, visibleN
             {
                 if (node.externalNode) // Is leaf
                 {
-                    visibleNodes[numVisibleNodes] = node.externalNode;
+                    visibleNodes[storageIndex] = node.externalNode;
+                    storageIndex += 1;
                     numVisibleNodes += 1;
                     nodeIndex += 1;
                     if (nodeIndex >= endNodeIndex)
@@ -1214,7 +1216,8 @@ AABBTree.prototype.getVisibleNodes = function getVisibleNodesFn(planes, visibleN
                             node = nodes[nodeIndex];
                             if (node.externalNode) // Is leaf
                             {
-                                visibleNodes[numVisibleNodes] = node.externalNode;
+                                visibleNodes[storageIndex] = node.externalNode;
+                                storageIndex += 1;
                                 numVisibleNodes += 1;
                             }
                             nodeIndex += 1;
@@ -1241,6 +1244,7 @@ AABBTree.prototype.getVisibleNodes = function getVisibleNodesFn(planes, visibleN
             }
         }
     }
+    return numVisibleNodes;
 };
 
 AABBTree.prototype.getOverlappingNodes =

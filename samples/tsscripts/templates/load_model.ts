@@ -112,8 +112,10 @@ TurbulenzEngine.onload = function onloadFn()
     var intervalID;
     var cube;
     var duck;
+    var sphere;
     var loadingDuck = false;
     var loadingCube = false;
+    var loadingSphere = false;
 
     var duckTransform = mathDevice.m43BuildIdentity();
     var relPos = mathDevice.v3Build(-4.5, 4.8, -3);
@@ -123,10 +125,16 @@ TurbulenzEngine.onload = function onloadFn()
     relPos = mathDevice.v3Build(-2, 5.4, 4);
     mathDevice.m43Translate(cubeTransform, relPos);
 
+    var sphereTransform = mathDevice.m43BuildIdentity();
+    relPos = mathDevice.v3Build(-6, 5.8, 2);
+    mathDevice.m43Translate(sphereTransform, relPos);
+
     var buttonLoadDuck;
     var buttonRemoveDuck;
     var buttonLoadCube;
     var buttonRemoveCube;
+    var buttonLoadSphere;
+    var buttonRemoveSphere;
     var buttonsAvailable;
 
     var loadModelDuck = function loadModelDuckFn()
@@ -213,6 +221,47 @@ TurbulenzEngine.onload = function onloadFn()
         }
     };
 
+    var loadModelSphere = function loadModelSphereFn()
+    {
+        // Load in the sphere
+        sceneLoader.load({  scene : scene,
+                        append : true,
+                        assetPath : "models/sphere.dae",
+                        keepLights : false,
+                        graphicsDevice : graphicsDevice,
+                        mathDevice : mathDevice,
+                        textureManager : textureManager,
+                        shaderManager : shaderManager,
+                        effectManager : effectManager,
+                        requestHandler : requestHandler,
+                        baseMatrix : sphereTransform,
+                        disabled : true
+                    });
+
+        // we check this flag in the update loop to know when to call sceneLoader.complete()
+        loadingSphere = true;
+
+        if (buttonsAvailable)
+        {
+            buttonLoadSphere.disabled = true;
+        }
+    };
+
+    var removeModelSphere = function removeModelSphereFn()
+    {
+        // Remove the sphere from the scene
+        scene.removeRootNode(sphere);
+        // Set references to null
+        sphere.destroy();
+        sphere = null;
+
+        if (buttonsAvailable)
+        {
+            buttonRemoveSphere.disabled = true;
+            buttonLoadSphere.disabled = false;
+        }
+    };
+
     // Link up with the HTML controls on the page
     var htmlControls = HTMLControls.create();
     htmlControls.addButtonControl({
@@ -235,23 +284,39 @@ TurbulenzEngine.onload = function onloadFn()
         value: "Remove",
         fn: removeModelCube
     });
+    htmlControls.addButtonControl({
+        id: "buttonLoadSphere",
+        value: "Load",
+        fn: loadModelSphere
+    });
+    htmlControls.addButtonControl({
+        id: "buttonRemoveSphere",
+        value: "Remove",
+        fn: removeModelSphere
+    });
 
     buttonLoadDuck = document.getElementById("buttonLoadDuck");
     buttonRemoveDuck = document.getElementById("buttonRemoveDuck");
     buttonLoadCube = document.getElementById("buttonLoadCube");
     buttonRemoveCube = document.getElementById("buttonRemoveCube");
+    buttonLoadSphere = document.getElementById("buttonLoadSphere");
+    buttonRemoveSphere = document.getElementById("buttonRemoveSphere");
     // check that we can access the buttons
     buttonsAvailable = buttonLoadDuck &&
                         buttonRemoveDuck &&
                         buttonLoadCube &&
-                        buttonRemoveCube;
+                        buttonRemoveCube &&
+                        buttonLoadSphere &&
+                        buttonRemoveSphere;
 
     if (buttonsAvailable)
     {
         buttonLoadDuck.disabled = true;
         buttonLoadCube.disabled = true;
+        buttonLoadSphere.disabled = true;
         buttonRemoveDuck.disabled = true;
         buttonRemoveCube.disabled = true;
+        buttonRemoveSphere.disabled = true;
     }
     htmlControls.register();
 
@@ -270,6 +335,14 @@ TurbulenzEngine.onload = function onloadFn()
         duck = scene.findNode("LOD3sp");
         duck.enableHierarchy(true);
         buttonRemoveDuck.disabled = false;
+    };
+
+    var loadSphereFinished = function loadSphereFinishedFn(scene)
+    {
+        loadingSphere = false;
+        sphere = scene.findNode("sphere");
+        sphere.enableHierarchy(true);
+        buttonRemoveSphere.disabled = false;
     };
 
     var v3Build = mathDevice.v3Build;
@@ -333,6 +406,7 @@ TurbulenzEngine.onload = function onloadFn()
         {
             buttonLoadDuck.disabled = false;
             buttonLoadCube.disabled = false;
+            buttonLoadSphere.disabled = false;
         }
     }
 
@@ -385,6 +459,10 @@ TurbulenzEngine.onload = function onloadFn()
         else if (loadingCube && sceneLoader.complete())
         {
             loadCubeFinished(scene);
+        }
+        else if (loadingSphere && sceneLoader.complete())
+        {
+            loadSphereFinished(scene);
         }
 
         scene.update();

@@ -522,8 +522,8 @@ Pre-requisites for building the tools cgfx2json and NvTriStrip via ``python mana
 
   - Linux : GCC 4.6.x or higher
 
-- `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher. This is included in
-  the repository for Windows, for Mac OSX and Linux please download and install it.
+- `NVIDIA CgToolkit <https://developer.nvidia.com/cg-toolkit>`__ version 3.1 or higher. The repository
+  includes the binaries for Windows, if you're developing on Mac OSX or Linux please download and install it.
 
 - OpenGL development libraries, these are included on Windows and Mac OSX with the compiler toolchains. For
   debian based linux distributions the libgl1-mesa-dev package will provide the required files (e.g. ``sudo
@@ -768,7 +768,7 @@ Make sure you have run the *tools* command to build the tools for your platform:
 
     $ python manage.py tools
 
-*Note: The requirements for building the tools is different per platform. See the* `Dependencies`_ *section.*
+*Note: The requirements for building the tools is different per platform. See the* `Pre-Requisites`_ *section.*
 
 For this example you should use the `Protolib <http://docs.turbulenz.com/protolib/protolib_api.html>`__ library, which is ideal for prototyping games using Turbulenz.
 You will need these assets::
@@ -800,7 +800,7 @@ Having built the tools you can now run this command with the Turbulenz environme
     $ python scripts/buildassets.py --root . --assets-path assets
 
 This will build the assets listed in the deps.yaml and output a "staticmax" directory and "mapping_table.json" file containing the processed assets and a mapping to them for the webserver.
-When a library trys to request one of these files, it will be able to find it in the staticmax directory.
+When a library tries to request one of these files, it will be able to find it in the staticmax directory.
 Now you can create the mesh example HTML file and place it at the root of the Turbulenz directory::
 
     <html>

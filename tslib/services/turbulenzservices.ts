@@ -46,10 +46,11 @@ interface UserProfileReceivedCB
     (userProfile: UserProfile): void;
 };
 
-// Called when the user has upgraded from a guest or anonymous account
-// to a full one.  This callback does not guarantee that the upgrade
-// complete successfully, so TurbulenzServices should be required for
-// a new UserProfile object to check the updated status of the user.
+/// Called when the user has upgraded from a guest or anonymous
+/// account to a full one.  This callback does not guarantee that the
+/// upgrade complete successfully, so TurbulenzServices should be
+/// required for a new UserProfile object to check the updated status
+/// of the user.
 interface UserUpgradeCB
 {
     (): void;
@@ -60,6 +61,7 @@ class CustomMetricEvent
     key: string;
     value: any;
     timeOffset: number;
+
     static create() : CustomMetricEvent
     {
         return new CustomMetricEvent();
@@ -69,6 +71,7 @@ class CustomMetricEvent
 class CustomMetricEventBatch
 {
     events: CustomMetricEvent[];
+
     push(key: string, value: any)
     {
         var event = CustomMetricEvent.create();
@@ -77,14 +80,17 @@ class CustomMetricEventBatch
         event.timeOffset = TurbulenzEngine.time;
         this.events.push(event);
     }
+
     length() : number
     {
         return this.events.length;
     }
+
     clear()
     {
         this.events.length = 0;
     }
+
     static create() : CustomMetricEventBatch
     {
         var batch = new CustomMetricEventBatch();
@@ -592,13 +598,14 @@ class TurbulenzServices
             errorCallbackFn = TurbulenzServices.defaultErrorCallback;
         }
 
+        // defaultErrorCallback should never be null, so this should
+        // hold.
+        debug.assert(errorCallbackFn, "no error callback");
+
         if (!TurbulenzServices.available())
         {
-            if (errorCallbackFn)
-            {
-                errorCallbackFn("TurbulenzServices.sendCustomMetricEvent failed: Service not available",
-                                0);
-            }
+            errorCallbackFn("TurbulenzServices.sendCustomMetricEvent " +
+                            "failed: Service not available", 0);
             return;
         }
 
@@ -606,36 +613,33 @@ class TurbulenzServices
 
         if (('string' !== typeof eventKey) || (0 === eventKey.length))
         {
-            if (errorCallbackFn)
-            {
-                errorCallbackFn("TurbulenzServices.sendCustomMetricEvent failed: Event key must be a non-empty string",
-                                0);
-            }
+            errorCallbackFn("TurbulenzServices.sendCustomMetricEvent " +
+                            "failed: Event key must be a non-empty string",
+                            0);
             return;
         }
 
-        if ('number' !== typeof eventValue || isNaN(eventValue) || !isFinite(eventValue))
+        if ('number' !== typeof eventValue ||
+            isNaN(eventValue) ||
+            !isFinite(eventValue))
         {
             if ('[object Array]' !== Object.prototype.toString.call(eventValue))
             {
-                if (errorCallbackFn)
-                {
-                    errorCallbackFn("TurbulenzServices.sendCustomMetricEvent failed: Event value must be a number or" +
-                                    " an array of numbers", 0);
-                }
+                errorCallbackFn("TurbulenzServices.sendCustomMetricEvent " +
+                                "failed: Event value must be a number or " +
+                                "an array of numbers", 0);
                 return;
             }
 
             var i, valuesLength = eventValue.length;
             for (i = 0; i < valuesLength; i += 1)
             {
-                if ('number' !== typeof eventValue[i] || isNaN(eventValue[i]) || !isFinite(eventValue[i]))
+                if ('number' !== typeof eventValue[i] || isNaN(eventValue[i]) ||
+                    !isFinite(eventValue[i]))
                 {
-                    if (errorCallbackFn)
-                    {
-                        errorCallbackFn("TurbulenzServices.sendCustomMetricEvent failed: Event value array elements" +
-                                        " must be numbers", 0);
-                    }
+                    errorCallbackFn("TurbulenzServices.sendCustomMetricEvent " +
+                                    "failed: Event value array elements must " +
+                                    "be numbers", 0);
                     return;
                 }
             }
@@ -644,13 +648,19 @@ class TurbulenzServices
         this.getService('customMetrics').request({
             url: '/api/v1/custommetrics/add-event/' + gameSession.gameSlug,
             method: 'POST',
-            data: {'key': eventKey, 'value': eventValue, 'gameSessionId': gameSession.gameSessionId},
-            callback: function sendCustomMetricEventAjaxErrorCheck(jsonResponse, status)
+            data: {
+                'key': eventKey,
+                'value': eventValue,
+                'gameSessionId': gameSession.gameSessionId
+            },
+            callback:
+            function sendCustomMetricEventAjaxErrorCheck(jsonResponse, status)
             {
-                if (status !== 200 && errorCallbackFn)
+                if (status !== 200)
                 {
-                    errorCallbackFn("TurbulenzServices.sendCustomMetricEvent error with HTTP status " + status + ": " +
-                                     jsonResponse.msg, status);
+                    errorCallbackFn("TurbulenzServices.sendCustomMetricEvent " +
+                                    "error with HTTP status " + status + ": " +
+                                    jsonResponse.msg, status);
                 }
             },
             requestHandler: requestHandler,

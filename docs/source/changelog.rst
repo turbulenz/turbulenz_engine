@@ -7,10 +7,22 @@
 Changelog
 ---------
 
+Version 1.x-dev
+---------------
+
+2013-06-12
+
+- Added sphere loading to load_model sample.
+- Fixed dependencies link in README.rst.
+- Minor docs typos.
+- Added compilers check to 'env' command. Should warn if correct compilers can't be found.
+- Fix for unnecessary NvTriStrip build argument
+- Various minor updates shadowmapping.
+
 Version 1.1
 -----------
 
-2013-05-04
+2013-06-04
 
 - Update protolib library (version 0.2.0):
   * Added version number field.

@@ -1293,3 +1293,11 @@ garbage collection cost.
 * Use Typed Arrays. These are more compact than native JavaScript
   arrays. They remove the object overhead per element, which can
   improve performance, sometimes much more than expected.
+
+Make use of compression techniques for the type of data you are using.
+
+* For binary data such as textures, pick the optimal compression format for the type of image you are storing. Using DXT texture compression can reduce the memory footprint on the graphics card for instance by generating optimized mipmaps offline, which can improve visual fidelity at a range of resolutions. The support for DXT compressed textures (which can support transparency) is possible in modern browsers. See the *Device Initialization* sample, which has a support check for different texture formats or use the :ref:`graphicsDevice.isSupported <graphicsdevice_issupported>` function.
+
+Release data you are no longer using and avoid holding duplicate data.
+
+* When loading asset data there is usually a difference between the result returned by the request and the processed data. Avoid holding a reference to both of these especially if you do not intend to use it anymore. For example, when loading scene data the JSON asset may no longer be required once loaded and processed into a :ref:`Scene <scene>` object. Discarding the source asset by setting references to *null* or deleting properties that refer to it will allow the JavaScript engine to garbage collect the data. The :ref:`AssetCache <assetcache>` object provides a useful interface for managing assets with a limitation on quantity.
