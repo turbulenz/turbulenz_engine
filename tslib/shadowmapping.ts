@@ -796,11 +796,6 @@ class ShadowMapping
                 rendererInfo = renderingCommonCreateRendererInfoFn(renderable);
             }
 
-            if (rendererInfo.far)
-            {
-                renderable.distance = 1.e38;
-            }
-
             if (rendererInfo.shadowMappingUpdate && renderable.shadowMappingDrawParameters)
             {
                 rendererInfo.shadowMappingUpdate.call(renderable);
