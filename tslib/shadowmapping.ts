@@ -68,6 +68,8 @@ class ShadowMapping
 
     drawQueue            : DrawParameters[];
 
+    occludersExtents     : any[];
+
     shadowMappingShader  : Shader;
     rigidTechnique       : Technique;
     skinnedTechnique     : Technique;
@@ -415,6 +417,12 @@ class ShadowMapping
             lightInstance.lightViewWindowX = lightViewWindowX;
             lightInstance.lightViewWindowY = lightViewWindowY;
             lightInstance.lightDepth = lightDepth;
+            lightInstance.minLightDistance = 0;
+            lightInstance.maxLightDistance = 0;
+            lightInstance.minLightDistanceX = 0;
+            lightInstance.maxLightDistanceX = 0;
+            lightInstance.minLightDistanceY = 0;
+            lightInstance.maxLightDistanceY = 0;
         }
 
         if (!shadowRenderables)
@@ -422,17 +430,26 @@ class ShadowMapping
             shadowRenderables = [];
             lightInstance.shadowRenderables = shadowRenderables;
         }
-        var numShadowRenderables = shadowRenderables.length;
 
         var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
-        var numOverlappingRenderables = lightInstance.overlappingRenderables.length;
+        var overlappingRenderables = lightInstance.overlappingRenderables;
+        var numOverlappingRenderables = overlappingRenderables.length;
         var staticNodesChangeCounter = lightInstance.staticNodesChangeCounter;
 
         if (node.dynamic ||
             numStaticOverlappingRenderables !== numOverlappingRenderables ||
             shadowMapInfo.staticNodesChangeCounter !== staticNodesChangeCounter)
         {
-            numShadowRenderables = this.cullShadowRenderables(lightInstance, viewMatrix, shadowRenderables);
+            var occludersExtents = this.occludersExtents;
+            var numShadowRenderables = this._filterOccluders(overlappingRenderables,
+                                                             numStaticOverlappingRenderables,
+                                                             shadowRenderables,
+                                                             occludersExtents);
+            numShadowRenderables = this._updateOccludersLimits(lightInstance,
+                                                               viewMatrix,
+                                                               shadowRenderables,
+                                                               occludersExtents,
+                                                               numShadowRenderables);
             shadowRenderables.length = numShadowRenderables;
             shadowMapInfo.staticNodesChangeCounter = staticNodesChangeCounter;
         }
@@ -475,7 +492,6 @@ class ShadowMapping
 
         var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
         var numOverlappingRenderables = lightInstance.overlappingRenderables.length;
-        numShadowRenderables = lightInstance.numShadowRenderables;
 
         var maxExtentSize = Math.max(halfExtents0, halfExtents1, halfExtents2);
         var shadowMap, shadowMapTexture, shadowMapRenderTarget, shadowMapSize;
@@ -820,14 +836,43 @@ class ShadowMapping
         gd.endRenderTarget();
     };
 
-    cullShadowRenderables(lightInstance,
-                          viewMatrix,
-                          shadowRenderables)
+    private _filterOccluders(overlappingRenderables: any[],
+                             numStaticOverlappingRenderables: number,
+                             shadowRenderables: any[],
+                             occludersExtents: any[]): number
     {
-        var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
-        var overlappingRenderables = lightInstance.overlappingRenderables;
         var numOverlappingRenderables = overlappingRenderables.length;
+        var numShadowRenderables = 0;
+        var n, renderable;
+        for (n = 0; n < numOverlappingRenderables; n += 1)
+        {
+            renderable = overlappingRenderables[n];
+            if (!(renderable.disabled || renderable.node.disabled || renderable.sharedMaterial.meta.noshadows))
+            {
+                shadowRenderables[numShadowRenderables] = renderable;
 
+                if (n >= numStaticOverlappingRenderables)
+                {
+                    occludersExtents[numShadowRenderables] = renderable.getWorldExtents();
+                }
+                else
+                {
+                    // We can use the property directly because as it is static it should not change!
+                    occludersExtents[numShadowRenderables] = renderable.worldExtents;
+                }
+
+                numShadowRenderables += 1;
+            }
+        }
+        return numShadowRenderables;
+    };
+
+    private _updateOccludersLimits(lightInstance: any,
+                                   viewMatrix: any,
+                                   shadowRenderables: any[],
+                                   occludersExtents: any[],
+                                   numShadowRenderables: number): number
+    {
         var r0 = -viewMatrix[0];
         var r1 = -viewMatrix[3];
         var r2 = -viewMatrix[6];
@@ -843,7 +888,6 @@ class ShadowMapping
         var d2 = -viewMatrix[8];
         var offset = viewMatrix[11];
 
-        var numShadowRenderables = 0;
         var minLightDistance = Number.MAX_VALUE;
         var maxLightDistance = -minLightDistance;
         var minLightDistanceX = minLightDistance;
@@ -851,134 +895,76 @@ class ShadowMapping
         var minLightDistanceY = minLightDistance;
         var maxLightDistanceY = -minLightDistance;
 
-        var n, renderable, extents, n0, n1, n2, p0, p1, p2, lightDistance;
+        var n, extents, n0, n1, n2, p0, p1, p2, lightDistance;
 
-        // Do dynamic first because they are likely to cast shadows into static ones
-        n = (numOverlappingRenderables - 1);
-        for (; n >= numStaticOverlappingRenderables; n -= 1)
+        for (n = 0; n < numShadowRenderables; )
         {
-            renderable = overlappingRenderables[n];
-            if (!(renderable.disabled || renderable.node.disabled || renderable.sharedMaterial.meta.noshadows))
+            extents = occludersExtents[n];
+            n0 = extents[0];
+            n1 = extents[1];
+            n2 = extents[2];
+            p0 = extents[3];
+            p1 = extents[4];
+            p2 = extents[5];
+            lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)));
+            if (lightDistance > offset)
             {
-                extents = renderable.getWorldExtents();
-                n0 = extents[0];
-                n1 = extents[1];
-                n2 = extents[2];
-                p0 = extents[3];
-                p1 = extents[4];
-                p2 = extents[5];
-                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)));
-                if (lightDistance > offset)
+                lightDistance = (lightDistance - offset);
+                if (maxLightDistance < lightDistance)
                 {
-                    lightDistance = (lightDistance - offset);
-                    if (maxLightDistance < lightDistance)
+                    maxLightDistance = lightDistance;
+                }
+
+                if (0 < minLightDistance)
+                {
+                    lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
+                    if (lightDistance < minLightDistance)
                     {
-                        maxLightDistance = lightDistance;
+                        minLightDistance = lightDistance;
+                        if (0 >= minLightDistance)
+                        {
+                            continue;
+                        }
                     }
 
-                    shadowRenderables[numShadowRenderables] = renderable;
-                    numShadowRenderables += 1;
-
-                    if (0 < minLightDistance)
+                    lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
+                    if (lightDistance < minLightDistanceX)
                     {
-                        lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
-                        if (lightDistance < minLightDistance)
-                        {
-                            minLightDistance = lightDistance;
-                            if (0 >= minLightDistance)
-                            {
-                                continue;
-                            }
-                        }
+                        minLightDistanceX = lightDistance;
+                    }
 
-                        lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
-                        if (lightDistance < minLightDistanceX)
-                        {
-                            minLightDistanceX = lightDistance;
-                        }
+                    lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
+                    if (maxLightDistanceX < lightDistance)
+                    {
+                        maxLightDistanceX = lightDistance;
+                    }
 
-                        lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
-                        if (maxLightDistanceX < lightDistance)
-                        {
-                            maxLightDistanceX = lightDistance;
-                        }
+                    lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
+                    if (lightDistance < minLightDistanceY)
+                    {
+                        minLightDistanceY = lightDistance;
+                    }
 
-                        lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
-                        if (lightDistance < minLightDistanceY)
-                        {
-                            minLightDistanceY = lightDistance;
-                        }
-
-                        lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
-                        if (maxLightDistanceY < lightDistance)
-                        {
-                            maxLightDistanceY = lightDistance;
-                        }
+                    lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
+                    if (maxLightDistanceY < lightDistance)
+                    {
+                        maxLightDistanceY = lightDistance;
                     }
                 }
+
+                n += 1;
             }
-        }
-
-        for (; n >= 0; n -= 1)
-        {
-            renderable = overlappingRenderables[n];
-            if (!(renderable.disabled || renderable.node.disabled || renderable.sharedMaterial.meta.noshadows))
+            else
             {
-                extents = renderable.worldExtents; // We can use the property directly because as it is static it should not change
-                n0 = extents[0];
-                n1 = extents[1];
-                n2 = extents[2];
-                p0 = extents[3];
-                p1 = extents[4];
-                p2 = extents[5];
-                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)));
-                if (lightDistance > offset)
+                numShadowRenderables -= 1;
+                if (n < numShadowRenderables)
                 {
-                    lightDistance = (lightDistance - offset);
-                    if (maxLightDistance < lightDistance)
-                    {
-                        maxLightDistance = lightDistance;
-                    }
-
-                    shadowRenderables[numShadowRenderables] = renderable;
-                    numShadowRenderables += 1;
-
-                    if (0 < minLightDistance)
-                    {
-                        lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
-                        if (lightDistance < minLightDistance)
-                        {
-                            minLightDistance = lightDistance;
-                            if (0 >= minLightDistance)
-                            {
-                                continue;
-                            }
-                        }
-
-                        lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
-                        if (lightDistance < minLightDistanceX)
-                        {
-                            minLightDistanceX = lightDistance;
-                        }
-
-                        lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
-                        if (maxLightDistanceX < lightDistance)
-                        {
-                            maxLightDistanceX = lightDistance;
-                        }
-
-                        lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
-                        if (lightDistance < minLightDistanceY)
-                        {
-                            minLightDistanceY = lightDistance;
-                        }
-
-                        lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
-                        if (maxLightDistanceY < lightDistance)
-                        {
-                            maxLightDistanceY = lightDistance;
-                        }
-                    }
+                    shadowRenderables[n] = shadowRenderables[numShadowRenderables];
+                    occludersExtents[n] = occludersExtents[numShadowRenderables];
+                }
+                else
+                {
+                    break;
                 }
             }
         }
@@ -993,7 +979,6 @@ class ShadowMapping
             maxLightDistance = lightInstance.lightDepth;
         }
 
-        lightInstance.numShadowRenderables = numShadowRenderables;
         lightInstance.minLightDistance = minLightDistance;
         lightInstance.maxLightDistance = maxLightDistance;
         lightInstance.minLightDistanceX = minLightDistanceX;
@@ -1141,6 +1126,7 @@ class ShadowMapping
         delete this.shadowMapsLow;
         delete this.shadowMapsHigh;
         delete this.techniqueParameters;
+        delete this.occludersExtents;
         delete this.drawQueue;
         delete this.md;
         delete this.gd;
@@ -1196,6 +1182,8 @@ class ShadowMapping
         shadowMapping.updateBuffers(sizeLow, sizeHigh);
 
         shadowMapping.drawQueue = [];
+
+        shadowMapping.occludersExtents = [];
 
         return shadowMapping;
     };
