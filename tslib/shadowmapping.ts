@@ -417,18 +417,23 @@ class ShadowMapping
             lightInstance.lightViewWindowX = lightViewWindowX;
             lightInstance.lightViewWindowY = lightViewWindowY;
             lightInstance.lightDepth = lightDepth;
-            lightInstance.minLightDistance = 0;
-            lightInstance.maxLightDistance = 0;
-            lightInstance.minLightDistanceX = 0;
-            lightInstance.maxLightDistanceX = 0;
-            lightInstance.minLightDistanceY = 0;
-            lightInstance.maxLightDistanceY = 0;
         }
 
         if (!shadowRenderables)
         {
             shadowRenderables = [];
             lightInstance.shadowRenderables = shadowRenderables;
+
+            // Initialize some properties required on the light instance
+            lightInstance.minLightDistance = 0;
+            lightInstance.maxLightDistance = 0;
+            lightInstance.minLightDistanceX = 0;
+            lightInstance.maxLightDistanceX = 0;
+            lightInstance.minLightDistanceY = 0;
+            lightInstance.maxLightDistanceY = 0;
+
+            lightInstance.shadowMap = null;
+            lightInstance.shadows = false;
         }
 
         var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
@@ -473,6 +478,8 @@ class ShadowMapping
         var halfExtents2 = halfExtents[2];
         var lightOrigin;
 
+        lightInstance.shadows = false;
+
         var shadowRenderables = lightInstance.shadowRenderables;
         var numShadowRenderables;
         if (shadowRenderables)
@@ -480,13 +487,11 @@ class ShadowMapping
             numShadowRenderables = shadowRenderables.length;
             if (!numShadowRenderables)
             {
-                lightInstance.shadows = false;
                 return;
             }
         }
         else
         {
-            lightInstance.shadows = false;
             return;
         }
 
@@ -592,7 +597,7 @@ class ShadowMapping
             this.lowIndex = (shadowMapsLowIndex + 1);
         }
 
-        lightInstance.shadowMap = null;
+        lightInstance.shadowMap = shadowMap;
         lightInstance.shadows = true;
 
         var distanceScale = (1.0 / 65536);
@@ -602,8 +607,6 @@ class ShadowMapping
         var lightViewWindowX = lightInstance.lightViewWindowX;
         var lightViewWindowY = lightInstance.lightViewWindowY;
         var lightDepth = lightInstance.lightDepth;
-
-        lightInstance.shadowMap = shadowMap;
 
         var lightViewOffsetX = 0;
         var lightViewOffsetY = 0;
