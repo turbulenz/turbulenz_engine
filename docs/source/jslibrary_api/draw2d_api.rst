@@ -621,6 +621,8 @@ Dictionary of supported scale modes for parameters of `configure` method.
 .. index::
     pair: Draw2D; sort
 
+.. _draw2d_sort:
+
 `sort`
 ------
 
@@ -653,6 +655,8 @@ Dictionary of supported sort modes for parameters of `begin` method.
 
 .. index::
     pair: Draw2D; blend
+
+.. _draw2d_blend:
 
 `blend`
 -------
@@ -805,12 +809,14 @@ Begin a new drawing state.
     var success = draw2D.begin(blendMode, sortMode);
 
 ``blendMode`` (optional)
+    The :ref:`blend mode <draw2d_blend>` to use.
     If this is the first call to begin, and this value is unspecified then the default blend mode `'opaque'` will be used.
     Otherwise when unspecified, the blend mode will be unchanged.
 
     This method will fail with `false` if blend mode is specified, but is not defined in the `draw2D.blend` dictionary.
 
 ``sortMode`` (optional)
+    The :ref:`sort mode <draw2d_sort>` to use.
     If this is the first call to begin, and this value is unspecified then the default sort mode `'deferred'` will be used.
     Otherwise when unspecified, the sort mode will be unchanged.
 
