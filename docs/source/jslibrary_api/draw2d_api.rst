@@ -216,7 +216,7 @@ Set the current color of the sprite.
 
 **Syntax** ::
 
-    sprite.setColor([r, g, b, a])
+    sprite.setColor([r, g, b, a]);
 
 ``color``
     The array containing the new color value of the sprite with normalized values in the range `[0,1]`.
@@ -524,7 +524,7 @@ Constructor
 **Syntax** ::
 
     var draw2D = Draw2D.create({
-        graphicsDevice : gd,
+        graphicsDevice : graphicsDevice,
         blendModes : {
             "customBlendMode" : technique,
             ...
@@ -1091,7 +1091,7 @@ static sprites.
 
 **Syntax** ::
 
-    draw2D.drawRaw(texture, buffer, count, offset)
+    draw2D.drawRaw(texture, buffer, count, offset);
 
 ``texture``
     The :ref:`Texture <texture>` to draw sprites from buffer with. This texture must be mipmapped and have power of 2 dimensions.
@@ -1187,7 +1187,7 @@ Create a new 2D :ref:`RenderTarget <rendertarget>` object with a related :ref:`T
     // Static render target with supplied fixed size.
     var renderTargetIndex = draw2D.createRenderTarget({
         name : "texture name",
-        backBuffer : true
+        backBuffer : true,
         width : targetWidth,
         height : targetHeight,
     });
