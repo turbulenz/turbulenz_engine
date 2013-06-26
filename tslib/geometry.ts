@@ -217,54 +217,60 @@ class GeometryInstance implements Renderable
     getWorldExtents()
     {
         //Note: This method is only valid on a clean node.
-        var worldExtents = this.worldExtents;
         var node = this.node;
         if (node.worldUpdate > this.worldExtentsUpdate)
         {
             this.worldExtentsUpdate = node.worldUpdate;
-
-            var center = this.center;
-            var halfExtents = this.halfExtents;
-
-            var world = node.world;
-            var m0 = world[0];
-            var m1 = world[1];
-            var m2 = world[2];
-            var m3 = world[3];
-            var m4 = world[4];
-            var m5 = world[5];
-            var m6 = world[6];
-            var m7 = world[7];
-            var m8 = world[8];
-
-            var ct0 = world[9];
-            var ct1 = world[10];
-            var ct2 = world[11];
-            if (center)
-            {
-                var c0 = center[0];
-                var c1 = center[1];
-                var c2 = center[2];
-                ct0 += (m0 * c0 + m3 * c1 + m6 * c2);
-                ct1 += (m1 * c0 + m4 * c1 + m7 * c2);
-                ct2 += (m2 * c0 + m5 * c1 + m8 * c2);
-            }
-
-            var h0 = halfExtents[0];
-            var h1 = halfExtents[1];
-            var h2 = halfExtents[2];
-            var ht0 = ((m0 < 0 ? -m0 : m0) * h0 + (m3 < 0 ? -m3 : m3) * h1 + (m6 < 0 ? -m6 : m6) * h2);
-            var ht1 = ((m1 < 0 ? -m1 : m1) * h0 + (m4 < 0 ? -m4 : m4) * h1 + (m7 < 0 ? -m7 : m7) * h2);
-            var ht2 = ((m2 < 0 ? -m2 : m2) * h0 + (m5 < 0 ? -m5 : m5) * h1 + (m8 < 0 ? -m8 : m8) * h2);
-
-            worldExtents[0] = (ct0 - ht0);
-            worldExtents[1] = (ct1 - ht1);
-            worldExtents[2] = (ct2 - ht2);
-            worldExtents[3] = (ct0 + ht0);
-            worldExtents[4] = (ct1 + ht1);
-            worldExtents[5] = (ct2 + ht2);
+            this.updateWorldExtents(node.world);
         }
-        return worldExtents;
+        return this.worldExtents;
+    };
+
+    //
+    // updateWorldExtents
+    //
+    updateWorldExtents(world)
+    {
+        var center = this.center;
+        var halfExtents = this.halfExtents;
+        var worldExtents = this.worldExtents;
+
+        var m0 = world[0];
+        var m1 = world[1];
+        var m2 = world[2];
+        var m3 = world[3];
+        var m4 = world[4];
+        var m5 = world[5];
+        var m6 = world[6];
+        var m7 = world[7];
+        var m8 = world[8];
+
+        var ct0 = world[9];
+        var ct1 = world[10];
+        var ct2 = world[11];
+        if (center)
+        {
+            var c0 = center[0];
+            var c1 = center[1];
+            var c2 = center[2];
+            ct0 += (m0 * c0 + m3 * c1 + m6 * c2);
+            ct1 += (m1 * c0 + m4 * c1 + m7 * c2);
+            ct2 += (m2 * c0 + m5 * c1 + m8 * c2);
+        }
+
+        var h0 = halfExtents[0];
+        var h1 = halfExtents[1];
+        var h2 = halfExtents[2];
+        var ht0 = ((m0 < 0 ? -m0 : m0) * h0 + (m3 < 0 ? -m3 : m3) * h1 + (m6 < 0 ? -m6 : m6) * h2);
+        var ht1 = ((m1 < 0 ? -m1 : m1) * h0 + (m4 < 0 ? -m4 : m4) * h1 + (m7 < 0 ? -m7 : m7) * h2);
+        var ht2 = ((m2 < 0 ? -m2 : m2) * h0 + (m5 < 0 ? -m5 : m5) * h1 + (m8 < 0 ? -m8 : m8) * h2);
+
+        worldExtents[0] = (ct0 - ht0);
+        worldExtents[1] = (ct1 - ht1);
+        worldExtents[2] = (ct2 - ht2);
+        worldExtents[3] = (ct0 + ht0);
+        worldExtents[4] = (ct1 + ht1);
+        worldExtents[5] = (ct2 + ht2);
     };
 
     //
