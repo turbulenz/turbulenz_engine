@@ -126,7 +126,7 @@ class SourceList():
         return self.source_list[path]
 
     def get_hashes(self):
-        return dict((k, v.hash) for (k, v) in self.source_list.iteritems() if v.hash_checked)
+        return dict((k, v.hash) for (k, v) in self.source_list.iteritems())
 
 class Tool(object):
     def __init__(self, name, path):
