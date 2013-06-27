@@ -29,6 +29,7 @@ interface WebGLInputDevice extends InputDevice
     canvas: any;
     previousCursor: string;
     ignoreNextMouseMoves: number;
+    ignoreNextBlur: bool;
 
     // Used to screen out auto-repeats, dictionary from keycode to bool,
     // true for each key currently pressed down
@@ -82,6 +83,10 @@ interface WebGLInputDevice extends InputDevice
         touchcancel : any[];
     };
 
+    onPointerLockChanged: { () : void; };
+    onPointerLockError: { (): void; };
+    setEventHandlersPointerLock: { (): void; };
+    setEventHandlersPointerUnlock: { (): void; };
     requestBrowserLock: { () : void; };
     requestBrowserUnlock: { (): void; };
 
@@ -774,6 +779,12 @@ WebGLInputDevice.prototype = {
 
     onBlur : function onBlurFn()
     {
+        if (this.ignoreNextBlur)
+        {
+            this.ignoreNextBlur = false;
+            return;
+        }
+
         var canvas = this.canvas;
         var handlers = this.handlers;
         var blurHandlers = handlers.blur;
@@ -1265,16 +1276,18 @@ WebGLInputDevice.prototype = {
         this.removeInternalEventListener(window, 'mousemove', this.onMouseOver);
 
         this.addInternalEventListener(window, 'mousemove', this.onMouseMove);
-        this.addInternalEventListener(window, 'fullscreenchange', this.onFullscreenChanged);
-        this.addInternalEventListener(window, 'mozfullscreenchange', this.onFullscreenChanged);
-        this.addInternalEventListener(window, 'webkitfullscreenchange', this.onFullscreenChanged);
+
+        this.addInternalEventListener(document, 'fullscreenchange', this.onFullscreenChanged);
+        this.addInternalEventListener(document, 'mozfullscreenchange', this.onFullscreenChanged);
+        this.addInternalEventListener(document, 'webkitfullscreenchange', this.onFullscreenChanged);
     },
 
     setEventHandlersUnlock : function setEventHandlersUnlockFn()
     {
-        this.removeInternalEventListener(window, 'webkitfullscreenchange', this.onFullscreenChanged);
-        this.removeInternalEventListener(window, 'mozfullscreenchange', this.onFullscreenChanged);
-        this.removeInternalEventListener(window, 'fullscreenchange', this.onFullscreenChanged);
+        this.removeInternalEventListener(document, 'webkitfullscreenchange', this.onFullscreenChanged);
+        this.removeInternalEventListener(document, 'mozfullscreenchange', this.onFullscreenChanged);
+        this.removeInternalEventListener(document, 'fullscreenchange', this.onFullscreenChanged);
+
         this.removeInternalEventListener(window, 'mousemove', this.onMouseMove);
 
         this.addInternalEventListener(window, 'mousemove', this.onMouseOver);
@@ -1385,30 +1398,15 @@ WebGLInputDevice.prototype = {
 
         if ((canvas) && (name === "POINTER_LOCK"))
         {
-            // Currently Firefox requires full screen mode for pointer
-            // lock to work.
-
-            var fullscreenEnabled = (document.fullscreenEnabled ||
-                                     document.mozFullScreen ||
-                                     document.webkitIsFullScreen);
-
-            // This check prevents allowing pointer lock in Firefox
-            // until this requirement is removed.  Allows chrome to
-            // lock whenever.
-
-            var navStr = window.navigator.userAgent;
-            var allowPointerLock =
-                (navStr.indexOf('Chrome') >= 0) || fullscreenEnabled;
-
             var havePointerLock = ('pointerLockElement' in document) ||
-                ('mozPointerLockElement' in document) ||
-                ('webkitPointerLockElement' in document);
+                                  ('mozPointerLockElement' in document) ||
+                                  ('webkitPointerLockElement' in document);
 
             var requestPointerLock = (canvas.requestPointerLock ||
                                       canvas.mozRequestPointerLock ||
                                       canvas.webkitRequestPointerLock);
 
-            if (allowPointerLock && havePointerLock && requestPointerLock)
+            if (havePointerLock && requestPointerLock)
             {
                 return true;
             }
@@ -1439,6 +1437,7 @@ WebGLInputDevice.create = function webGLInputDeviceFn(canvas /*, params */)
     id.isOutsideEngine = false; // Used for determining where we are when unlocking
     id.previousCursor = '';
     id.ignoreNextMouseMoves = 0;
+    id.ignoreNextBlur = false;
 
     // Used to screen out auto-repeats, dictionary from keycode to bool,
     // true for each key currently pressed down
@@ -1706,6 +1705,69 @@ WebGLInputDevice.create = function webGLInputDeviceFn(canvas /*, params */)
                                document.mozExitPointerLock ||
                                document.webkitExitPointerLock);
 
+        id.onPointerLockChanged = function onPointerLockChangedFn(/* event */)
+        {
+            var pointerLockElement = (document.pointerLockElement    ||
+                                      document.mozPointerLockElement ||
+                                      document.webkitPointerLockElement);
+            if (pointerLockElement !== id.canvas)
+            {
+                id.unlockMouse();
+            }
+        };
+
+        id.onPointerLockError = function onPointerLockErrorFn(/* event */)
+        {
+            id.unlockMouse();
+        };
+
+        // We need to set pointerlockchanged events because browsers consume the ESCAPE key without notification
+        if ('mozPointerLockElement' in document)
+        {
+            id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
+            {
+                // firefox changes focus when requesting lock...
+                this.ignoreNextBlur = true;
+                document.addEventListener('mozpointerlockchange', this.onPointerLockChanged, false);
+                document.addEventListener('mozpointerlockerror', this.onPointerLockError, false);
+            };
+
+            id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
+            {
+                this.ignoreNextBlur = false;
+                document.removeEventListener('mozpointerlockchange', this.onPointerLockChanged, false);
+                document.removeEventListener('mozpointerlockerror', this.onPointerLockError, false);
+            };
+        }
+        else if ('webkitPointerLockElement' in document)
+        {
+            id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
+            {
+                document.addEventListener('webkitpointerlockchange', this.onPointerLockChanged, false);
+                document.addEventListener('webkitpointerlockerror', this.onPointerLockError, false);
+            };
+
+            id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
+            {
+                document.removeEventListener('webkitpointerlockchange', this.onPointerLockChanged, false);
+                document.removeEventListener('webkitpointerlockerror', this.onPointerLockError, false);
+            };
+        }
+        else if ('pointerLockElement' in document)
+        {
+            id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
+            {
+                document.addEventListener('pointerlockchange', this.onPointerLockChanged, false);
+                document.addEventListener('pointerlockerror', this.onPointerLockError, false);
+            };
+
+            id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
+            {
+                document.removeEventListener('pointerlockchange', this.onPointerLockChanged, false);
+                document.removeEventListener('pointerlockerror', this.onPointerLockError, false);
+            };
+        }
+
         id.requestBrowserLock = function requestBrowserLockFn()
         {
             var pointerLockElement = (document.pointerLockElement    ||
@@ -1713,12 +1775,16 @@ WebGLInputDevice.create = function webGLInputDeviceFn(canvas /*, params */)
                                       document.webkitPointerLockElement);
             if (pointerLockElement !== canvas)
             {
+                this.setEventHandlersPointerLock();
+
                 requestPointerLock.call(canvas);
             }
         };
 
         id.requestBrowserUnlock = function requestBrowserUnlockFn()
         {
+            this.setEventHandlersPointerUnlock();
+
             var pointerLockElement = (document.pointerLockElement    ||
                                       document.mozPointerLockElement ||
                                       document.webkitPointerLockElement);
