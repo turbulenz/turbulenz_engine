@@ -270,7 +270,7 @@ class ShadowMapping
         return false;
     };
 
-    findVisibleRenderables(lightInstance)
+    findVisibleRenderables(lightInstance): bool
     {
         var md = this.md;
 
@@ -364,7 +364,7 @@ class ShadowMapping
                 if (lightDepth <= 0.0)
                 {
                     lightInstance.shadows = false;
-                    return;
+                    return false;
                 }
                 farLightCenter = md.v3ScalarMul(farLightCenter, 1.0 / lightDepth);
                 var farLightRight = md.v3Normalize(md.v3Sub(md.v3ScalarMul(md.v3Add(p0, p2), 0.5), origin));
@@ -394,7 +394,7 @@ class ShadowMapping
                 if (lightDepth <= 0.0)
                 {
                     lightInstance.shadows = false;
-                    return;
+                    return false;
                 }
                 lightViewWindowX *= 3;
                 lightViewWindowY *= 3;
@@ -456,6 +456,8 @@ class ShadowMapping
             occludersDrawArray.length = numOccluders;
             shadowMapInfo.staticNodesChangeCounter = staticNodesChangeCounter;
         }
+
+        return (0 < occludersDrawArray.length);
     };
 
     drawShadowMap(cameraMatrix, minExtentsHigh, lightInstance)
