@@ -66,8 +66,6 @@ class ShadowMapping
     blurRenderTargetHigh : RenderTarget;
     blurRenderTargetLow  : RenderTarget;
 
-    drawQueue            : DrawParameters[];
-
     occludersExtents     : any[];
 
     shadowMappingShader  : Shader;
@@ -279,7 +277,7 @@ class ShadowMapping
         var light = lightInstance.light;
         var node = lightInstance.node;
         var matrix = node.world;
-        var shadowRenderables = lightInstance.shadowRenderables;
+        var occludersDrawArray = lightInstance.occludersDrawArray;
         var origin = lightInstance.lightOrigin;
         var target, up, frustumWorld;
         var halfExtents = light.halfExtents;
@@ -419,10 +417,10 @@ class ShadowMapping
             lightInstance.lightDepth = lightDepth;
         }
 
-        if (!shadowRenderables)
+        if (!occludersDrawArray)
         {
-            shadowRenderables = [];
-            lightInstance.shadowRenderables = shadowRenderables;
+            occludersDrawArray = new Array(numOverlappingRenderables);
+            lightInstance.occludersDrawArray = occludersDrawArray;
 
             // Initialize some properties required on the light instance
             lightInstance.minLightDistance = 0;
@@ -446,16 +444,16 @@ class ShadowMapping
             shadowMapInfo.staticNodesChangeCounter !== staticNodesChangeCounter)
         {
             var occludersExtents = this.occludersExtents;
-            var numShadowRenderables = this._filterOccluders(overlappingRenderables,
+            var numOccluders = this._filterOccluders(overlappingRenderables,
                                                              numStaticOverlappingRenderables,
-                                                             shadowRenderables,
+                                                             occludersDrawArray,
                                                              occludersExtents);
-            numShadowRenderables = this._updateOccludersLimits(lightInstance,
+            numOccluders = this._updateOccludersLimits(lightInstance,
                                                                viewMatrix,
-                                                               shadowRenderables,
+                                                               occludersDrawArray,
                                                                occludersExtents,
-                                                               numShadowRenderables);
-            shadowRenderables.length = numShadowRenderables;
+                                                               numOccluders);
+            occludersDrawArray.length = numOccluders;
             shadowMapInfo.staticNodesChangeCounter = staticNodesChangeCounter;
         }
     };
@@ -480,12 +478,12 @@ class ShadowMapping
 
         lightInstance.shadows = false;
 
-        var shadowRenderables = lightInstance.shadowRenderables;
-        var numShadowRenderables;
-        if (shadowRenderables)
+        var occludersDrawArray = lightInstance.occludersDrawArray;
+        var numOccluders;
+        if (occludersDrawArray)
         {
-            numShadowRenderables = shadowRenderables.length;
-            if (!numShadowRenderables)
+            numOccluders = occludersDrawArray.length;
+            if (!numOccluders)
             {
                 return;
             }
@@ -751,19 +749,19 @@ class ShadowMapping
         if (numStaticOverlappingRenderables === numOverlappingRenderables &&
             !node.dynamic) // No dynamic renderables
         {
-            if (shadowMap.numRenderables === numShadowRenderables &&
+            if (shadowMap.numRenderables === numOccluders &&
                 shadowMap.lightNode === node &&
                 (shadowMap.frameUpdated + 1) === frameUpdated)
             {
                 // No need to update shadowmap
-                //Utilities.log(numShadowRenderables);
+                //Utilities.log(numOccluders);
                 shadowMap.frameUpdated = frameUpdated;
                 shadowMap.needsBlur = false;
                 return;
             }
             else
             {
-                shadowMap.numRenderables = numShadowRenderables;
+                shadowMap.numRenderables = numOccluders;
                 shadowMap.lightNode = node;
                 shadowMap.frameUpdated = frameUpdated;
                 shadowMap.frameVisible = frameUpdated;
@@ -772,7 +770,7 @@ class ShadowMapping
         }
         else
         {
-            shadowMap.numRenderables = numShadowRenderables;
+            shadowMap.numRenderables = numOccluders;
             shadowMap.frameVisible = frameUpdated;
             shadowMap.needsBlur = true;
         }
@@ -785,14 +783,6 @@ class ShadowMapping
         gd.clear(this.clearColor, 1.0, 0);
 
         var shadowMapTechniqueParameters = this.techniqueParameters;
-        var renderable, rendererInfo;
-/*
-        var d0 = -viewMatrix[2];
-        var d1 = -viewMatrix[5];
-        var d2 = -viewMatrix[8];
-        var offset = -viewMatrix[11];
-*/
-        var drawParametersArray, numDrawParameters, drawParametersIndex;
         shadowMapTechniqueParameters['viewTranspose'] = md.m43Transpose(viewMatrix,
                                                         shadowMapTechniqueParameters['viewTranspose']);
         shadowMapTechniqueParameters['shadowProjectionTranspose'] = md.m44Transpose(camera.projectionMatrix,
@@ -802,79 +792,64 @@ class ShadowMapping
                        -minLightDistance * maxDepthReciprocal,
                        shadowMapTechniqueParameters['shadowDepth']);
 
-        var drawQueue = this.drawQueue;
-        var drawQueueLength = 0;
-        var n;
-
-        for (n = 0; n < numShadowRenderables; n += 1)
-        {
-            renderable = shadowRenderables[n];
-            rendererInfo = renderable.rendererInfo;
-            if (!rendererInfo)
-            {
-                rendererInfo = renderingCommonCreateRendererInfoFn(renderable);
-            }
-
-            if (rendererInfo.shadowMappingUpdate && renderable.shadowMappingDrawParameters)
-            {
-                rendererInfo.shadowMappingUpdate.call(renderable);
-
-                drawParametersArray = renderable.shadowMappingDrawParameters;
-                numDrawParameters = drawParametersArray.length;
-                for (drawParametersIndex = 0; drawParametersIndex < numDrawParameters; drawParametersIndex += 1)
-                {
-                    drawQueue[drawQueueLength] = drawParametersArray[drawParametersIndex];
-                    drawQueueLength += 1;
-                }
-            }
-        }
-
-        if (drawQueue.length > drawQueueLength)
-        {
-            drawQueue.length = drawQueueLength;
-        }
-
-        gd.drawArray(drawQueue, [shadowMapTechniqueParameters], 1);
+        gd.drawArray(occludersDrawArray, [shadowMapTechniqueParameters], 1);
 
         gd.endRenderTarget();
     };
 
     private _filterOccluders(overlappingRenderables: any[],
                              numStaticOverlappingRenderables: number,
-                             shadowRenderables: any[],
+                             occludersDrawArray: any[],
                              occludersExtents: any[]): number
     {
         var numOverlappingRenderables = overlappingRenderables.length;
-        var numShadowRenderables = 0;
-        var n, renderable;
+        var numOccluders = 0;
+        var n, renderable, worldExtents, rendererInfo;
+        var drawParametersArray, numDrawParameters, drawParametersIndex;
         for (n = 0; n < numOverlappingRenderables; n += 1)
         {
             renderable = overlappingRenderables[n];
             if (!(renderable.disabled || renderable.node.disabled || renderable.sharedMaterial.meta.noshadows))
             {
-                shadowRenderables[numShadowRenderables] = renderable;
-
-                if (n >= numStaticOverlappingRenderables)
+                rendererInfo = renderable.rendererInfo;
+                if (!rendererInfo)
                 {
-                    occludersExtents[numShadowRenderables] = renderable.getWorldExtents();
-                }
-                else
-                {
-                    // We can use the property directly because as it is static it should not change!
-                    occludersExtents[numShadowRenderables] = renderable.worldExtents;
+                    rendererInfo = renderingCommonCreateRendererInfoFn(renderable);
                 }
 
-                numShadowRenderables += 1;
+                if (rendererInfo.shadowMappingUpdate && renderable.shadowMappingDrawParameters)
+                {
+                    rendererInfo.shadowMappingUpdate.call(renderable);
+
+                    if (n >= numStaticOverlappingRenderables)
+                    {
+                        worldExtents = renderable.getWorldExtents();
+                    }
+                    else
+                    {
+                        // We can use the property directly because as it is static it should not change!
+                        worldExtents = renderable.worldExtents;
+                    }
+
+                    drawParametersArray = renderable.shadowMappingDrawParameters;
+                    numDrawParameters = drawParametersArray.length;
+                    for (drawParametersIndex = 0; drawParametersIndex < numDrawParameters; drawParametersIndex += 1)
+                    {
+                        occludersDrawArray[numOccluders] = drawParametersArray[drawParametersIndex];
+                        occludersExtents[numOccluders] = worldExtents;
+                        numOccluders += 1;
+                    }
+                }
             }
         }
-        return numShadowRenderables;
+        return numOccluders;
     };
 
     private _updateOccludersLimits(lightInstance: any,
                                    viewMatrix: any,
-                                   shadowRenderables: any[],
+                                   occludersDrawArray: any[],
                                    occludersExtents: any[],
-                                   numShadowRenderables: number): number
+                                   numOccluders: number): number
     {
         var r0 = -viewMatrix[0];
         var r1 = -viewMatrix[3];
@@ -900,7 +875,7 @@ class ShadowMapping
 
         var n, extents, n0, n1, n2, p0, p1, p2, lightDistance;
 
-        for (n = 0; n < numShadowRenderables; )
+        for (n = 0; n < numOccluders; )
         {
             extents = occludersExtents[n];
             n0 = extents[0];
@@ -959,11 +934,11 @@ class ShadowMapping
             }
             else
             {
-                numShadowRenderables -= 1;
-                if (n < numShadowRenderables)
+                numOccluders -= 1;
+                if (n < numOccluders)
                 {
-                    shadowRenderables[n] = shadowRenderables[numShadowRenderables];
-                    occludersExtents[n] = occludersExtents[numShadowRenderables];
+                    occludersDrawArray[n] = occludersDrawArray[numOccluders];
+                    occludersExtents[n] = occludersExtents[numOccluders];
                 }
                 else
                 {
@@ -989,7 +964,7 @@ class ShadowMapping
         lightInstance.minLightDistanceY = minLightDistanceY;
         lightInstance.maxLightDistanceY = maxLightDistanceY;
 
-        return numShadowRenderables;
+        return numOccluders;
     };
 
     blurShadowMaps()
@@ -1130,7 +1105,6 @@ class ShadowMapping
         delete this.shadowMapsHigh;
         delete this.techniqueParameters;
         delete this.occludersExtents;
-        delete this.drawQueue;
         delete this.md;
         delete this.gd;
     };
@@ -1183,8 +1157,6 @@ class ShadowMapping
         sizeLow = sizeLow || shadowMapping.defaultSizeLow;
         sizeHigh = sizeHigh || shadowMapping.defaultSizeHigh;
         shadowMapping.updateBuffers(sizeLow, sizeHigh);
-
-        shadowMapping.drawQueue = [];
 
         shadowMapping.occludersExtents = [];
 

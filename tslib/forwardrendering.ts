@@ -621,8 +621,8 @@ class ForwardRendering
         {
             shadowMaps.findVisibleRenderables(lightInstance);
 
-            var shadowRenderables = lightInstance.shadowRenderables;
-            usingShadows = (shadowRenderables && 0 < shadowRenderables.length);
+            var occludersDrawArray = lightInstance.occludersDrawArray;
+            usingShadows = (occludersDrawArray && 0 < occludersDrawArray.length);
         }
 
         var lightInstanceTechniqueParameters = lightInstance.techniqueParameters;
