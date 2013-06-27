@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2013 Turbulenz Limited
 
 //
 // Uniform variables
@@ -13,6 +13,14 @@ sampler2D colorTexture = sampler_state
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+sampler2D colorTextureFiltered = sampler_state
+{
+    MinFilter = Linear;
+    MagFilter = Linear;
     WrapS = ClampToEdge;
     WrapT = ClampToEdge;
 };
@@ -55,6 +63,11 @@ float4 fp_fade(float2 UV: TEXCOORD0) : COLOR
 float4 fp_copy(float2 UV: TEXCOORD0) : COLOR
 {
     return tex2D(colorTexture, UV);
+}
+
+float4 fp_copyFiltered(float2 UV: TEXCOORD0) : COLOR
+{
+    return tex2D(colorTextureFiltered, UV);
 }
 
 float4 fp_bicolor(float2 UV: TEXCOORD0) : COLOR
@@ -101,6 +114,19 @@ technique copy
         BlendEnable     = false;
         VertexProgram   = compile glslv vp();
         FragmentProgram = compile glslf fp_copy();
+    }
+}
+
+technique copyFiltered
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp_copyFiltered();
     }
 }
 

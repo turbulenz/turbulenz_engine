@@ -6,6 +6,8 @@ interface PostEffectsEntry
 {
     technique           : Technique;
     techniqueParameters : TechniqueParameters;
+    textureName         : String;
+    callback            : (gd: GraphicsDevice, colTex: Texture) => void;
 };
 
 // TODO: Clear this hack out when ShaderManager is a class
@@ -24,6 +26,7 @@ class PostEffects
     shader: Shader;
     bicolor: PostEffectsEntry;
     copy: PostEffectsEntry;
+    copyFiltered: PostEffectsEntry;
     fadein: PostEffectsEntry;
     modulate: PostEffectsEntry;
     blend: PostEffectsEntry;
@@ -34,11 +37,12 @@ class PostEffects
         if (shader !== this.shader)
         {
             this.shader = shader;
-            this.bicolor.technique  = shader.getTechnique("bicolor");
-            this.copy.technique     = shader.getTechnique("copy");
-            this.fadein.technique   = shader.getTechnique("fadein");
-            this.modulate.technique = shader.getTechnique("modulate");
-            this.blend.technique    = shader.getTechnique("blend");
+            this.bicolor.technique      = shader.getTechnique("bicolor");
+            this.copy.technique         = shader.getTechnique("copy");
+            this.copyFiltered.technique = shader.getTechnique("copyFiltered");
+            this.fadein.technique       = shader.getTechnique("fadein");
+            this.modulate.technique     = shader.getTechnique("modulate");
+            this.blend.technique        = shader.getTechnique("blend");
         }
     };
 
@@ -47,16 +51,16 @@ class PostEffects
         var effect = this[name];
         if (effect)
         {
-            var technique = effect.technique;
-            var techniqueParameters  = effect.techniqueParameters;
-
-            return function postFXSetupFn(gd, colorTexture)
+            if (!effect.callback)
             {
-                gd.setTechnique(technique);
-
-                techniqueParameters.colorTexture = colorTexture;
-                gd.setTechniqueParameters(techniqueParameters);
-            };
+                effect.callback = function postFXSetupFn(gd, colorTexture)
+                {
+                    gd.setTechnique(effect.technique);
+                    effect.techniqueParameters[effect.textureName] = colorTexture;
+                    gd.setTechniqueParameters(effect.techniqueParameters);
+                };
+            }
+            return effect.callback;
         }
         else
         {
@@ -88,14 +92,27 @@ class PostEffects
                 color0: [0, 0, 0],
                 color1: [1, 1, 1],
                 colorTexture: null
-            })
+            }),
+            callback : null,
+            textureName : 'colorTexture'
         };
 
         pe.copy = {
             technique: null,
             techniqueParameters: gd.createTechniqueParameters({
                 colorTexture: null
-            })
+            }),
+            callback : null,
+            textureName : 'colorTexture'
+        };
+
+        pe.copyFiltered = {
+            technique: null,
+            techniqueParameters: gd.createTechniqueParameters({
+                colorTextureFiltered: null
+            }),
+            callback : null,
+            textureName : 'colorTextureFiltered'
         };
 
         pe.fadein = {
@@ -103,7 +120,9 @@ class PostEffects
             techniqueParameters: gd.createTechniqueParameters({
                 fadeColor: [0, 0, 0, 0],
                 colorTexture: null
-            })
+            }),
+            callback : null,
+            textureName : 'colorTexture'
         };
 
         pe.modulate = {
@@ -111,7 +130,9 @@ class PostEffects
             techniqueParameters: gd.createTechniqueParameters({
                 modulateColor: [1, 1, 1, 1],
                 colorTexture: null
-            })
+            }),
+            callback : null,
+            textureName : 'colorTexture'
         };
 
         pe.blend = {
@@ -119,7 +140,9 @@ class PostEffects
             techniqueParameters: gd.createTechniqueParameters({
                 alpha: 0.5,
                 colorTexture: null
-            })
+            }),
+            callback : null,
+            textureName : 'colorTexture'
         };
 
         return pe;
