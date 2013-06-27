@@ -1289,141 +1289,10 @@ class Scene
     findOverlappingNodes(tree, origin, extents, overlappingNodes)
     {
         var useAABBTree = true;
-        var areas = this.areas;
-        if (areas)
+
+        if (this.areas)
         {
-            // Assume scene.update has been called before this function
-            var cX = origin[0];
-            var cY = origin[1];
-            var cZ = origin[2];
-            var areaIndex = this.findAreaIndex(this.bspNodes, cX, cY, cZ);
-            if (areaIndex >= 0)
-            {
-                var externalNodesStack = this.externalNodesStack;
-
-                var na, area, nodes, numNodes;
-                var numAreas = areas.length;
-                for (na = 0; na < numAreas; na += 1)
-                {
-                    area = areas[na];
-                    nodes = area.externalNodes;
-                    if (nodes)
-                    {
-                        nodes.length = 0;
-                        externalNodesStack.push(nodes);
-                        area.externalNodes = null;
-                    }
-                }
-
-                var minExtent0 = extents[0];
-                var minExtent1 = extents[1];
-                var minExtent2 = extents[2];
-                var maxExtent0 = extents[3];
-                var maxExtent1 = extents[4];
-                var maxExtent2 = extents[5];
-
-                area = areas[areaIndex];
-                var areaExtents = area.extents;
-                var testMinExtent0 = areaExtents[0];
-                var testMinExtent1 = areaExtents[1];
-                var testMinExtent2 = areaExtents[2];
-                var testMaxExtent0 = areaExtents[3];
-                var testMaxExtent1 = areaExtents[4];
-                var testMaxExtent2 = areaExtents[5];
-
-                var overlappingPortals = [];
-                this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
-
-                var isInsidePlanesAABB = this.isInsidePlanesAABB;
-                var queryCounter = this.getQueryCounter();
-                var numOverlappingPortals = overlappingPortals.length;
-                var numOverlappingNodes = overlappingNodes.length;
-                var portalPlanes;
-                var n, node, np, portalItem;
-
-                if (0 < externalNodesStack.length)
-                {
-                    nodes = externalNodesStack.pop();
-                }
-                else
-                {
-                    nodes = [];
-                }
-                area.externalNodes = nodes;
-
-                var testExtents = this.testExtents;
-                testExtents[0] = (testMinExtent0 > minExtent0 ? testMinExtent0 : minExtent0);
-                testExtents[1] = (testMinExtent1 > minExtent1 ? testMinExtent1 : minExtent1);
-                testExtents[2] = (testMinExtent2 > minExtent2 ? testMinExtent2 : minExtent2);
-                testExtents[3] = (testMaxExtent0 < maxExtent0 ? testMaxExtent0 : maxExtent0);
-                testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
-                testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
-
-                tree.getOverlappingNodes(testExtents, nodes);
-
-                numNodes = nodes.length;
-                for (n = 0; n < numNodes; n += 1)
-                {
-                    node = nodes[n];
-                    node.queryCounter = queryCounter;
-                    overlappingNodes[numOverlappingNodes] = node;
-                    numOverlappingNodes += 1;
-                }
-
-                for (np = 0; np < numOverlappingPortals; np += 1)
-                {
-                    portalItem = overlappingPortals[np];
-                    portalPlanes = portalItem.planes;
-                    area = areas[portalItem.area];
-                    nodes = area.externalNodes;
-
-                    if (!nodes)
-                    {
-                        if (0 < externalNodesStack.length)
-                        {
-                            nodes = externalNodesStack.pop();
-                        }
-                        else
-                        {
-                            nodes = [];
-                        }
-                        area.externalNodes = nodes;
-                        areaExtents = area.extents;
-                        testMinExtent0 = areaExtents[0];
-                        testMinExtent1 = areaExtents[1];
-                        testMinExtent2 = areaExtents[2];
-                        testMaxExtent0 = areaExtents[3];
-                        testMaxExtent1 = areaExtents[4];
-                        testMaxExtent2 = areaExtents[5];
-
-                        testExtents[0] = (testMinExtent0 > minExtent0 ? testMinExtent0 : minExtent0);
-                        testExtents[1] = (testMinExtent1 > minExtent1 ? testMinExtent1 : minExtent1);
-                        testExtents[2] = (testMinExtent2 > minExtent2 ? testMinExtent2 : minExtent2);
-                        testExtents[3] = (testMaxExtent0 < maxExtent0 ? testMaxExtent0 : maxExtent0);
-                        testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
-                        testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
-
-                        tree.getOverlappingNodes(testExtents, nodes);
-                    }
-
-                    numNodes = nodes.length;
-                    for (n = 0; n < numNodes; n += 1)
-                    {
-                        node = nodes[n];
-                        if (node.queryCounter !== queryCounter)
-                        {
-                            if (isInsidePlanesAABB(node.worldExtents, portalPlanes))
-                            {
-                                node.queryCounter = queryCounter;
-                                overlappingNodes[numOverlappingNodes] = node;
-                                numOverlappingNodes += 1;
-                            }
-                        }
-                    }
-                }
-
-                useAABBTree = false;
-            }
+            useAABBTree = !this._findOverlappingNodesAreas(tree, origin, extents, overlappingNodes);
         }
 
         if (useAABBTree)
@@ -1449,11 +1318,37 @@ class Scene
     };
 
     //
-    // findOverlappingRenderables
+    // _findOverlappingNodesAreas
     //
-    findOverlappingRenderables(tree, origin, extents, overlappingRenderables)
+    _findOverlappingNodesAreas(tree, origin, extents, overlappingNodes): bool
     {
-        var numOverlappingRenderables = overlappingRenderables.length;
+        // Assume scene.update has been called before this function
+        var cX = origin[0];
+        var cY = origin[1];
+        var cZ = origin[2];
+        var areaIndex = this.findAreaIndex(this.bspNodes, cX, cY, cZ);
+        if (areaIndex < 0)
+        {
+            return false;
+        }
+
+        var externalNodesStack = this.externalNodesStack;
+        var areas = this.areas;
+
+        var na, area, nodes, numNodes;
+        var numAreas = areas.length;
+        for (na = 0; na < numAreas; na += 1)
+        {
+            area = areas[na];
+            nodes = area.externalNodes;
+            if (nodes)
+            {
+                nodes.length = 0;
+                externalNodesStack.push(nodes);
+                area.externalNodes = null;
+            }
+        }
+
         var minExtent0 = extents[0];
         var minExtent1 = extents[1];
         var minExtent2 = extents[2];
@@ -1461,65 +1356,63 @@ class Scene
         var maxExtent1 = extents[4];
         var maxExtent2 = extents[5];
 
-        var overlappingNodes = [];
-        var useAABBTree = true;
-        var areas = this.areas;
+        area = areas[areaIndex];
+        var areaExtents = area.extents;
+        var testMinExtent0 = areaExtents[0];
+        var testMinExtent1 = areaExtents[1];
+        var testMinExtent2 = areaExtents[2];
+        var testMaxExtent0 = areaExtents[3];
+        var testMaxExtent1 = areaExtents[4];
+        var testMaxExtent2 = areaExtents[5];
 
-        var node;
-        var numNodes;
-        var nodeIndex;
-        var renderable;
-        var renderables;
-        var numRenderables;
-        var nodeExtents;
-        var renderableIndex;
-        var renderableExtents;
+        var overlappingPortals = [];
+        this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
 
-        if (areas)
+        var isInsidePlanesAABB = this.isInsidePlanesAABB;
+        var queryCounter = this.getQueryCounter();
+        var numOverlappingPortals = overlappingPortals.length;
+        var numOverlappingNodes = overlappingNodes.length;
+        var portalPlanes;
+        var n, node, np, portalItem;
+
+        if (0 < externalNodesStack.length)
         {
-            // Assume scene.update has been called before this function
-            var cX = origin[0];
-            var cY = origin[1];
-            var cZ = origin[2];
-            var areaIndex = this.findAreaIndex(this.bspNodes, cX, cY, cZ);
-            if (areaIndex >= 0)
+            nodes = externalNodesStack.pop();
+        }
+        else
+        {
+            nodes = [];
+        }
+        area.externalNodes = nodes;
+
+        var testExtents = this.testExtents;
+        testExtents[0] = (testMinExtent0 > minExtent0 ? testMinExtent0 : minExtent0);
+        testExtents[1] = (testMinExtent1 > minExtent1 ? testMinExtent1 : minExtent1);
+        testExtents[2] = (testMinExtent2 > minExtent2 ? testMinExtent2 : minExtent2);
+        testExtents[3] = (testMaxExtent0 < maxExtent0 ? testMaxExtent0 : maxExtent0);
+        testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
+        testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
+
+        tree.getOverlappingNodes(testExtents, nodes);
+
+        numNodes = nodes.length;
+        for (n = 0; n < numNodes; n += 1)
+        {
+            node = nodes[n];
+            node.queryCounter = queryCounter;
+            overlappingNodes[numOverlappingNodes] = node;
+            numOverlappingNodes += 1;
+        }
+
+        for (np = 0; np < numOverlappingPortals; np += 1)
+        {
+            portalItem = overlappingPortals[np];
+            portalPlanes = portalItem.planes;
+            area = areas[portalItem.area];
+            nodes = area.externalNodes;
+
+            if (!nodes)
             {
-                var externalNodesStack = this.externalNodesStack;
-
-                var na, area, nodes;
-                var numAreas = areas.length;
-                for (na = 0; na < numAreas; na += 1)
-                {
-                    area = areas[na];
-                    nodes = area.externalNodes;
-                    if (nodes)
-                    {
-                        nodes.length = 0;
-                        externalNodesStack.push(nodes);
-                        area.externalNodes = null;
-                    }
-                }
-
-                area = areas[areaIndex];
-                var areaExtents = area.extents;
-                var testMinExtent0 = areaExtents[0];
-                var testMinExtent1 = areaExtents[1];
-                var testMinExtent2 = areaExtents[2];
-                var testMaxExtent0 = areaExtents[3];
-                var testMaxExtent1 = areaExtents[4];
-                var testMaxExtent2 = areaExtents[5];
-
-                var overlappingPortals = [];
-                this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
-
-                var isInsidePlanesAABB = this.isInsidePlanesAABB;
-                var isFullyInsidePlanesAABB = this.isFullyInsidePlanesAABB;
-                var queryCounter = this.getQueryCounter();
-                var numOverlappingPortals = overlappingPortals.length;
-                var portalPlanes;
-                var n, np, portalItem;
-                var allVisible;
-
                 if (0 < externalNodesStack.length)
                 {
                     nodes = externalNodesStack.pop();
@@ -1529,8 +1422,14 @@ class Scene
                     nodes = [];
                 }
                 area.externalNodes = nodes;
+                areaExtents = area.extents;
+                testMinExtent0 = areaExtents[0];
+                testMinExtent1 = areaExtents[1];
+                testMinExtent2 = areaExtents[2];
+                testMaxExtent0 = areaExtents[3];
+                testMaxExtent1 = areaExtents[4];
+                testMaxExtent2 = areaExtents[5];
 
-                var testExtents = this.testExtents;
                 testExtents[0] = (testMinExtent0 > minExtent0 ? testMinExtent0 : minExtent0);
                 testExtents[1] = (testMinExtent1 > minExtent1 ? testMinExtent1 : minExtent1);
                 testExtents[2] = (testMinExtent2 > minExtent2 ? testMinExtent2 : minExtent2);
@@ -1539,296 +1438,44 @@ class Scene
                 testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
                 tree.getOverlappingNodes(testExtents, nodes);
-
-                numNodes = nodes.length;
-                for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
-                {
-                    node = nodes[nodeIndex];
-                    node.queryCounter = queryCounter;
-                    renderables = node.renderables;
-                    if (renderables)
-                    {
-                        numRenderables = renderables.length;
-                        if (numRenderables === 1)
-                        {
-                            overlappingRenderables[numOverlappingRenderables] = renderables[0];
-                            numOverlappingRenderables += 1;
-                        }
-                        else
-                        {
-                            // Check if node is fully inside
-                            nodeExtents = node.worldExtents;
-                            if (nodeExtents[0] >= minExtent0 &&
-                                nodeExtents[1] >= minExtent1 &&
-                                nodeExtents[2] >= minExtent2 &&
-                                nodeExtents[3] <= maxExtent0 &&
-                                nodeExtents[4] <= maxExtent1 &&
-                                nodeExtents[5] <= maxExtent2)
-                            {
-                                for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
-                                {
-                                    overlappingRenderables[numOverlappingRenderables] = renderables[renderableIndex];
-                                    numOverlappingRenderables += 1;
-                                }
-                            }
-                            else
-                            {
-                                for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
-                                {
-                                    renderable = renderables[renderableIndex];
-                                    renderableExtents = renderable.getWorldExtents();
-                                    if (renderableExtents[3] >= minExtent0 &&
-                                        renderableExtents[4] >= minExtent1 &&
-                                        renderableExtents[5] >= minExtent2 &&
-                                        renderableExtents[0] <= maxExtent0 &&
-                                        renderableExtents[1] <= maxExtent1 &&
-                                        renderableExtents[2] <= maxExtent2)
-                                    {
-                                        overlappingRenderables[numOverlappingRenderables] = renderable;
-                                        numOverlappingRenderables += 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                for (np = 0; np < numOverlappingPortals; np += 1)
-                {
-                    portalItem = overlappingPortals[np];
-                    portalPlanes = portalItem.planes;
-                    area = areas[portalItem.area];
-                    nodes = area.externalNodes;
-
-                    if (!nodes)
-                    {
-                        if (0 < externalNodesStack.length)
-                        {
-                            nodes = externalNodesStack.pop();
-                        }
-                        else
-                        {
-                            nodes = [];
-                        }
-                        area.externalNodes = nodes;
-                        areaExtents = area.extents;
-                        testMinExtent0 = areaExtents[0];
-                        testMinExtent1 = areaExtents[1];
-                        testMinExtent2 = areaExtents[2];
-                        testMaxExtent0 = areaExtents[3];
-                        testMaxExtent1 = areaExtents[4];
-                        testMaxExtent2 = areaExtents[5];
-
-                        testExtents[0] = (testMinExtent0 > minExtent0 ? testMinExtent0 : minExtent0);
-                        testExtents[1] = (testMinExtent1 > minExtent1 ? testMinExtent1 : minExtent1);
-                        testExtents[2] = (testMinExtent2 > minExtent2 ? testMinExtent2 : minExtent2);
-                        testExtents[3] = (testMaxExtent0 < maxExtent0 ? testMaxExtent0 : maxExtent0);
-                        testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
-                        testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
-
-                        tree.getOverlappingNodes(testExtents, nodes);
-                    }
-
-                    numNodes = nodes.length;
-                    for (n = 0; n < numNodes; n += 1)
-                    {
-                        node = nodes[n];
-                        if (node.queryCounter !== queryCounter)
-                        {
-                            allVisible = true;
-
-                            renderables = node.renderables;
-                            if (renderables)
-                            {
-                                nodeExtents = node.worldExtents;
-                                if (isInsidePlanesAABB(nodeExtents, portalPlanes))
-                                {
-                                    numRenderables = renderables.length;
-                                    if (numRenderables === 1)
-                                    {
-                                        renderable = renderables[0];
-                                        if (renderable.queryCounter !== queryCounter)
-                                        {
-                                            renderable.queryCounter = queryCounter;
-                                            overlappingRenderables[numOverlappingRenderables] = renderable;
-                                            numOverlappingRenderables += 1;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // Check if node is fully inside
-                                        if (nodeExtents[0] >= minExtent0 &&
-                                            nodeExtents[1] >= minExtent1 &&
-                                            nodeExtents[2] >= minExtent2 &&
-                                            nodeExtents[3] <= maxExtent0 &&
-                                            nodeExtents[4] <= maxExtent1 &&
-                                            nodeExtents[5] <= maxExtent2)
-                                        {
-                                            if (isFullyInsidePlanesAABB(nodeExtents, portalPlanes))
-                                            {
-                                                for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
-                                                {
-                                                    renderable = renderables[renderableIndex];
-                                                    if (renderable.queryCounter !== queryCounter)
-                                                    {
-                                                        renderable.queryCounter = queryCounter;
-                                                        overlappingRenderables[numOverlappingRenderables] = renderable;
-                                                        numOverlappingRenderables += 1;
-                                                    }
-                                                }
-                                            }
-                                            else
-                                            {
-                                                for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
-                                                {
-                                                    renderable = renderables[renderableIndex];
-                                                    if (renderable.queryCounter !== queryCounter)
-                                                    {
-                                                        if (isInsidePlanesAABB(renderable.getWorldExtents(), portalPlanes))
-                                                        {
-                                                            renderable.queryCounter = queryCounter;
-                                                            overlappingRenderables[numOverlappingRenderables] = renderable;
-                                                            numOverlappingRenderables += 1;
-                                                        }
-                                                        else
-                                                        {
-                                                            allVisible = false;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        else
-                                        {
-                                            if (isFullyInsidePlanesAABB(nodeExtents, portalPlanes))
-                                            {
-                                                for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
-                                                {
-                                                    renderable = renderables[renderableIndex];
-                                                    if (renderable.queryCounter !== queryCounter)
-                                                    {
-                                                        renderableExtents = renderable.getWorldExtents();
-                                                        if (renderableExtents[3] >= minExtent0 &&
-                                                            renderableExtents[4] >= minExtent1 &&
-                                                            renderableExtents[5] >= minExtent2 &&
-                                                            renderableExtents[0] <= maxExtent0 &&
-                                                            renderableExtents[1] <= maxExtent1 &&
-                                                            renderableExtents[2] <= maxExtent2)
-                                                        {
-                                                            renderable.queryCounter = queryCounter;
-                                                            overlappingRenderables[numOverlappingRenderables] = renderable;
-                                                            numOverlappingRenderables += 1;
-                                                        }
-                                                        else
-                                                        {
-                                                            allVisible = false;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            else
-                                            {
-                                                for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
-                                                {
-                                                    renderable = renderables[renderableIndex];
-                                                    if (renderable.queryCounter !== queryCounter)
-                                                    {
-                                                        renderableExtents = renderable.getWorldExtents();
-                                                        if (renderableExtents[3] >= minExtent0 &&
-                                                            renderableExtents[4] >= minExtent1 &&
-                                                            renderableExtents[5] >= minExtent2 &&
-                                                            renderableExtents[0] <= maxExtent0 &&
-                                                            renderableExtents[1] <= maxExtent1 &&
-                                                            renderableExtents[2] <= maxExtent2 &&
-                                                            isInsidePlanesAABB(renderableExtents, portalPlanes))
-                                                        {
-                                                            renderable.queryCounter = queryCounter;
-                                                            overlappingRenderables[numOverlappingRenderables] = renderable;
-                                                            numOverlappingRenderables += 1;
-                                                        }
-                                                        else
-                                                        {
-                                                            allVisible = false;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    allVisible = false;
-                                }
-                            }
-
-                            if (allVisible)
-                            {
-                                node.queryCounter = queryCounter;
-                            }
-                        }
-                    }
-                }
-                useAABBTree = false;
             }
+
+            numNodes = nodes.length;
+            for (n = 0; n < numNodes; n += 1)
+            {
+                node = nodes[n];
+                if (node.queryCounter !== queryCounter)
+                {
+                    if (isInsidePlanesAABB(node.worldExtents, portalPlanes))
+                    {
+                        node.queryCounter = queryCounter;
+                        overlappingNodes[numOverlappingNodes] = node;
+                        numOverlappingNodes += 1;
+                    }
+                }
+            }
+        }
+
+        return true;
+    };
+
+    //
+    // findOverlappingRenderables
+    //
+    findOverlappingRenderables(tree, origin, extents, overlappingRenderables)
+    {
+        var useAABBTree = true;
+
+        if (this.areas)
+        {
+            useAABBTree = !this._findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables);
         }
 
         if (useAABBTree)
         {
-            tree.getOverlappingNodes(extents, overlappingNodes);
-            numNodes = overlappingNodes.length;
-            for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
-            {
-                node = overlappingNodes[nodeIndex];
-                renderables = node.renderables;
-                if (renderables)
-                {
-                    numRenderables = renderables.length;
-                    if (numRenderables === 1)
-                    {
-                        overlappingRenderables[numOverlappingRenderables] = renderables[0];
-                        numOverlappingRenderables += 1;
-                    }
-                    else
-                    {
-                        // Check if node is fully inside
-                        nodeExtents = node.worldExtents;
-                        if (nodeExtents[0] >= minExtent0 &&
-                            nodeExtents[1] >= minExtent1 &&
-                            nodeExtents[2] >= minExtent2 &&
-                            nodeExtents[3] <= maxExtent0 &&
-                            nodeExtents[4] <= maxExtent1 &&
-                            nodeExtents[5] <= maxExtent2)
-                        {
-                            for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
-                            {
-                                overlappingRenderables[numOverlappingRenderables] = renderables[renderableIndex];
-                                numOverlappingRenderables += 1;
-                            }
-                        }
-                        else
-                        {
-                            for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
-                            {
-                                renderable = renderables[renderableIndex];
-                                renderableExtents = renderable.getWorldExtents();
-                                if (renderableExtents[3] >= minExtent0 &&
-                                    renderableExtents[4] >= minExtent1 &&
-                                    renderableExtents[5] >= minExtent2 &&
-                                    renderableExtents[0] <= maxExtent0 &&
-                                    renderableExtents[1] <= maxExtent1 &&
-                                    renderableExtents[2] <= maxExtent2)
-                                {
-                                    overlappingRenderables[numOverlappingRenderables] = renderable;
-                                    numOverlappingRenderables += 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            this._findOverlappingRenderablesNoAreas(tree, extents, overlappingRenderables)
         }
-    };
+    }
 
     //
     // findStaticOverlappingRenderables
@@ -1847,6 +1494,408 @@ class Scene
     };
 
     //
+    // _findOverlappingRenderablesAreas
+    //
+    _findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables): bool
+    {
+        // Assume scene.update has been called before this function
+        var cX = origin[0];
+        var cY = origin[1];
+        var cZ = origin[2];
+        var areaIndex = this.findAreaIndex(this.bspNodes, cX, cY, cZ);
+        if (areaIndex < 0)
+        {
+            return false;
+        }
+
+        var numOverlappingRenderables = overlappingRenderables.length;
+        var minExtent0 = extents[0];
+        var minExtent1 = extents[1];
+        var minExtent2 = extents[2];
+        var maxExtent0 = extents[3];
+        var maxExtent1 = extents[4];
+        var maxExtent2 = extents[5];
+
+        var node;
+        var numNodes;
+        var nodeIndex;
+        var renderable;
+        var renderables;
+        var numRenderables;
+        var nodeExtents;
+        var renderableIndex;
+        var renderableExtents;
+
+        var externalNodesStack = this.externalNodesStack;
+        var areas = this.areas;
+
+        var na, area, nodes;
+        var numAreas = areas.length;
+        for (na = 0; na < numAreas; na += 1)
+        {
+            area = areas[na];
+            nodes = area.externalNodes;
+            if (nodes)
+            {
+                nodes.length = 0;
+                externalNodesStack.push(nodes);
+                area.externalNodes = null;
+            }
+        }
+
+        area = areas[areaIndex];
+        var areaExtents = area.extents;
+        var testMinExtent0 = areaExtents[0];
+        var testMinExtent1 = areaExtents[1];
+        var testMinExtent2 = areaExtents[2];
+        var testMaxExtent0 = areaExtents[3];
+        var testMaxExtent1 = areaExtents[4];
+        var testMaxExtent2 = areaExtents[5];
+
+        var overlappingPortals = [];
+        this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
+
+        var isInsidePlanesAABB = this.isInsidePlanesAABB;
+        var isFullyInsidePlanesAABB = this.isFullyInsidePlanesAABB;
+        var queryCounter = this.getQueryCounter();
+        var numOverlappingPortals = overlappingPortals.length;
+        var portalPlanes;
+        var n, np, portalItem;
+        var allVisible;
+
+        if (0 < externalNodesStack.length)
+        {
+            nodes = externalNodesStack.pop();
+        }
+        else
+        {
+            nodes = [];
+        }
+        area.externalNodes = nodes;
+
+        var testExtents = this.testExtents;
+        testExtents[0] = (testMinExtent0 > minExtent0 ? testMinExtent0 : minExtent0);
+        testExtents[1] = (testMinExtent1 > minExtent1 ? testMinExtent1 : minExtent1);
+        testExtents[2] = (testMinExtent2 > minExtent2 ? testMinExtent2 : minExtent2);
+        testExtents[3] = (testMaxExtent0 < maxExtent0 ? testMaxExtent0 : maxExtent0);
+        testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
+        testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
+
+        tree.getOverlappingNodes(testExtents, nodes);
+
+        numNodes = nodes.length;
+        for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
+        {
+            node = nodes[nodeIndex];
+            node.queryCounter = queryCounter;
+            renderables = node.renderables;
+            if (renderables)
+            {
+                numRenderables = renderables.length;
+                if (numRenderables === 1)
+                {
+                    overlappingRenderables[numOverlappingRenderables] = renderables[0];
+                    numOverlappingRenderables += 1;
+                }
+                else
+                {
+                    // Check if node is fully inside
+                    nodeExtents = node.worldExtents;
+                    if (nodeExtents[0] >= minExtent0 &&
+                        nodeExtents[1] >= minExtent1 &&
+                        nodeExtents[2] >= minExtent2 &&
+                        nodeExtents[3] <= maxExtent0 &&
+                        nodeExtents[4] <= maxExtent1 &&
+                        nodeExtents[5] <= maxExtent2)
+                    {
+                        for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
+                        {
+                            overlappingRenderables[numOverlappingRenderables] = renderables[renderableIndex];
+                            numOverlappingRenderables += 1;
+                        }
+                    }
+                    else
+                    {
+                        for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
+                        {
+                            renderable = renderables[renderableIndex];
+                            renderableExtents = renderable.getWorldExtents();
+                            if (renderableExtents[3] >= minExtent0 &&
+                                renderableExtents[4] >= minExtent1 &&
+                                renderableExtents[5] >= minExtent2 &&
+                                renderableExtents[0] <= maxExtent0 &&
+                                renderableExtents[1] <= maxExtent1 &&
+                                renderableExtents[2] <= maxExtent2)
+                            {
+                                overlappingRenderables[numOverlappingRenderables] = renderable;
+                                numOverlappingRenderables += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (np = 0; np < numOverlappingPortals; np += 1)
+        {
+            portalItem = overlappingPortals[np];
+            portalPlanes = portalItem.planes;
+            area = areas[portalItem.area];
+            nodes = area.externalNodes;
+
+            if (!nodes)
+            {
+                if (0 < externalNodesStack.length)
+                {
+                    nodes = externalNodesStack.pop();
+                }
+                else
+                {
+                    nodes = [];
+                }
+                area.externalNodes = nodes;
+                areaExtents = area.extents;
+                testMinExtent0 = areaExtents[0];
+                testMinExtent1 = areaExtents[1];
+                testMinExtent2 = areaExtents[2];
+                testMaxExtent0 = areaExtents[3];
+                testMaxExtent1 = areaExtents[4];
+                testMaxExtent2 = areaExtents[5];
+
+                testExtents[0] = (testMinExtent0 > minExtent0 ? testMinExtent0 : minExtent0);
+                testExtents[1] = (testMinExtent1 > minExtent1 ? testMinExtent1 : minExtent1);
+                testExtents[2] = (testMinExtent2 > minExtent2 ? testMinExtent2 : minExtent2);
+                testExtents[3] = (testMaxExtent0 < maxExtent0 ? testMaxExtent0 : maxExtent0);
+                testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
+                testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
+
+                tree.getOverlappingNodes(testExtents, nodes);
+            }
+
+            numNodes = nodes.length;
+            for (n = 0; n < numNodes; n += 1)
+            {
+                node = nodes[n];
+                if (node.queryCounter !== queryCounter)
+                {
+                    allVisible = true;
+
+                    renderables = node.renderables;
+                    if (renderables)
+                    {
+                        nodeExtents = node.worldExtents;
+                        if (isInsidePlanesAABB(nodeExtents, portalPlanes))
+                        {
+                            numRenderables = renderables.length;
+                            if (numRenderables === 1)
+                            {
+                                renderable = renderables[0];
+                                if (renderable.queryCounter !== queryCounter)
+                                {
+                                    renderable.queryCounter = queryCounter;
+                                    overlappingRenderables[numOverlappingRenderables] = renderable;
+                                    numOverlappingRenderables += 1;
+                                }
+                            }
+                            else
+                            {
+                                // Check if node is fully inside
+                                if (nodeExtents[0] >= minExtent0 &&
+                                    nodeExtents[1] >= minExtent1 &&
+                                    nodeExtents[2] >= minExtent2 &&
+                                    nodeExtents[3] <= maxExtent0 &&
+                                    nodeExtents[4] <= maxExtent1 &&
+                                    nodeExtents[5] <= maxExtent2)
+                                {
+                                    if (isFullyInsidePlanesAABB(nodeExtents, portalPlanes))
+                                    {
+                                        for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
+                                        {
+                                            renderable = renderables[renderableIndex];
+                                            if (renderable.queryCounter !== queryCounter)
+                                            {
+                                                renderable.queryCounter = queryCounter;
+                                                overlappingRenderables[numOverlappingRenderables] = renderable;
+                                                numOverlappingRenderables += 1;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
+                                        {
+                                            renderable = renderables[renderableIndex];
+                                            if (renderable.queryCounter !== queryCounter)
+                                            {
+                                                if (isInsidePlanesAABB(renderable.getWorldExtents(), portalPlanes))
+                                                {
+                                                    renderable.queryCounter = queryCounter;
+                                                    overlappingRenderables[numOverlappingRenderables] = renderable;
+                                                    numOverlappingRenderables += 1;
+                                                }
+                                                else
+                                                {
+                                                    allVisible = false;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (isFullyInsidePlanesAABB(nodeExtents, portalPlanes))
+                                    {
+                                        for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
+                                        {
+                                            renderable = renderables[renderableIndex];
+                                            if (renderable.queryCounter !== queryCounter)
+                                            {
+                                                renderableExtents = renderable.getWorldExtents();
+                                                if (renderableExtents[3] >= minExtent0 &&
+                                                    renderableExtents[4] >= minExtent1 &&
+                                                    renderableExtents[5] >= minExtent2 &&
+                                                    renderableExtents[0] <= maxExtent0 &&
+                                                    renderableExtents[1] <= maxExtent1 &&
+                                                    renderableExtents[2] <= maxExtent2)
+                                                {
+                                                    renderable.queryCounter = queryCounter;
+                                                    overlappingRenderables[numOverlappingRenderables] = renderable;
+                                                    numOverlappingRenderables += 1;
+                                                }
+                                                else
+                                                {
+                                                    allVisible = false;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
+                                        {
+                                            renderable = renderables[renderableIndex];
+                                            if (renderable.queryCounter !== queryCounter)
+                                            {
+                                                renderableExtents = renderable.getWorldExtents();
+                                                if (renderableExtents[3] >= minExtent0 &&
+                                                    renderableExtents[4] >= minExtent1 &&
+                                                    renderableExtents[5] >= minExtent2 &&
+                                                    renderableExtents[0] <= maxExtent0 &&
+                                                    renderableExtents[1] <= maxExtent1 &&
+                                                    renderableExtents[2] <= maxExtent2 &&
+                                                    isInsidePlanesAABB(renderableExtents, portalPlanes))
+                                                {
+                                                    renderable.queryCounter = queryCounter;
+                                                    overlappingRenderables[numOverlappingRenderables] = renderable;
+                                                    numOverlappingRenderables += 1;
+                                                }
+                                                else
+                                                {
+                                                    allVisible = false;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            allVisible = false;
+                        }
+                    }
+
+                    if (allVisible)
+                    {
+                        node.queryCounter = queryCounter;
+                    }
+                }
+            }
+        }
+
+        return true;
+    };
+
+    //
+    // _findOverlappingRenderablesNoAreas
+    //
+    _findOverlappingRenderablesNoAreas(tree, extents, overlappingRenderables)
+    {
+        var numOverlappingRenderables = overlappingRenderables.length;
+        var minExtent0 = extents[0];
+        var minExtent1 = extents[1];
+        var minExtent2 = extents[2];
+        var maxExtent0 = extents[3];
+        var maxExtent1 = extents[4];
+        var maxExtent2 = extents[5];
+
+        var overlappingNodes = [];
+
+        var node;
+        var numNodes;
+        var nodeIndex;
+        var renderable;
+        var renderables;
+        var numRenderables;
+        var nodeExtents;
+        var renderableIndex;
+        var renderableExtents;
+
+        tree.getOverlappingNodes(extents, overlappingNodes);
+        numNodes = overlappingNodes.length;
+        for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
+        {
+            node = overlappingNodes[nodeIndex];
+            renderables = node.renderables;
+            if (renderables)
+            {
+                numRenderables = renderables.length;
+                if (numRenderables === 1)
+                {
+                    overlappingRenderables[numOverlappingRenderables] = renderables[0];
+                    numOverlappingRenderables += 1;
+                }
+                else
+                {
+                    // Check if node is fully inside
+                    nodeExtents = node.worldExtents;
+                    if (nodeExtents[0] >= minExtent0 &&
+                        nodeExtents[1] >= minExtent1 &&
+                        nodeExtents[2] >= minExtent2 &&
+                        nodeExtents[3] <= maxExtent0 &&
+                        nodeExtents[4] <= maxExtent1 &&
+                        nodeExtents[5] <= maxExtent2)
+                    {
+                        for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
+                        {
+                            overlappingRenderables[numOverlappingRenderables] = renderables[renderableIndex];
+                            numOverlappingRenderables += 1;
+                        }
+                    }
+                    else
+                    {
+                        for (renderableIndex = 0; renderableIndex < numRenderables; renderableIndex += 1)
+                        {
+                            renderable = renderables[renderableIndex];
+                            renderableExtents = renderable.getWorldExtents();
+                            if (renderableExtents[3] >= minExtent0 &&
+                                renderableExtents[4] >= minExtent1 &&
+                                renderableExtents[5] >= minExtent2 &&
+                                renderableExtents[0] <= maxExtent0 &&
+                                renderableExtents[1] <= maxExtent1 &&
+                                renderableExtents[2] <= maxExtent2)
+                            {
+                                overlappingRenderables[numOverlappingRenderables] = renderable;
+                                numOverlappingRenderables += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    //
     // cloneRootNode
     //
     cloneRootNode(rootNode, newInstanceName)
@@ -1861,27 +1910,14 @@ class Scene
     //
     updateVisibleNodes(camera)
     {
-        var useAABBTrees = true;
+        var useAABBTree = true;
 
-        var areas = this.areas;
-        if (areas)
+        if (this.areas)
         {
-            var cameraMatrix = camera.matrix;
-            var cX = cameraMatrix[9];
-            var cY = cameraMatrix[10];
-            var cZ = cameraMatrix[11];
-
-            var areaIndex = this.findAreaIndex(this.bspNodes, cX, cY, cZ);
-            this.cameraAreaIndex = areaIndex;
-
-            if (areaIndex >= 0)
-            {
-                this._updateVisibleNodesAreas(camera, cX, cY, cZ, areaIndex);
-                useAABBTrees = false;
-            }
+            useAABBTree = !this._updateVisibleNodesAreas(camera);
         }
 
-        if (useAABBTrees)
+        if (useAABBTree)
         {
             this._updateVisibleNodesNoAreas(camera);
         }
@@ -2065,8 +2101,21 @@ class Scene
     //
     // _updateVisibleNodesAreas
     //
-    _updateVisibleNodesAreas(camera, cX, cY, cZ, areaIndex)
+    _updateVisibleNodesAreas(camera): bool
     {
+        var cameraMatrix = camera.matrix;
+        var cX = cameraMatrix[9];
+        var cY = cameraMatrix[10];
+        var cZ = cameraMatrix[11];
+
+        var areaIndex = this.findAreaIndex(this.bspNodes, cX, cY, cZ);
+        this.cameraAreaIndex = areaIndex;
+
+        if (areaIndex < 0)
+        {
+            return false;
+        }
+
         var visibleNodes = this.visibleNodes;
         var numVisibleNodes = 0;
 
@@ -2388,6 +2437,8 @@ class Scene
             visibleLights.length = numVisibleLights;
             visibleNodes.length = numVisibleNodes;
         }
+
+        return true;
     };
 
     //
