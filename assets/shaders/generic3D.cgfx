@@ -1,64 +1,10 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2013 Turbulenz Limited
 
 //
 // Vertex Programs
 //
 float4x4 worldViewProjection;
 float pointSize;
-
-struct VP_CONSTANTCOLOR3D_IN
-{
-    float3	Position  : POSITION;
-};
-
-struct VP_PRELIGHT3D_IN
-{
-    float3	Position  : POSITION;
-    float4	Color0    : COLOR;
-};
-
-struct VP_TEXTURED3D_IN
-{
-    float3	Position : POSITION;
-    float2  TexCoord0 : TEXCOORD0;
-};
-
-struct VP_PRELIGHT_TEXTURED3D_IN
-{
-    float3	Position : POSITION;
-    float4	Color0    : COLOR;
-    float2  TexCoord0 : TEXCOORD0;
-};
-
-struct VP_CONSTANTCOLOR_OUT
-{
-    float4	Position  : POSITION;
-};
-
-struct VP_POINT_CONSTANTCOLOR_OUT
-{
-    float4	Position  : POSITION;
-    float	PointSize : PSIZE;
-};
-
-struct VP_PRELIGHT_OUT
-{
-    float4	Position  : POSITION;
-    float4	Color0    : COLOR;
-};
-
-struct VP_TEXTURED_OUT
-{
-    float4	Position : POSITION;
-    float2  TexCoord0 : TEXCOORD0;
-};
-
-struct VP_PRELIGHT_TEXTURED_OUT
-{
-    float4	Position  : POSITION;
-    float4	Color0    : COLOR;
-    float2  TexCoord0 : TEXCOORD0;
-};
 
 
 float4 TransformPoint(float3 pt, float4x4 transform)
@@ -70,59 +16,53 @@ float4 TransformPoint(float3 pt, float4x4 transform)
 }
 
 
-VP_CONSTANTCOLOR_OUT
-vp_constantColor_3d(VP_CONSTANTCOLOR3D_IN In)
+void
+vp_constantColor_3d(in float3 InPosition : POSITION,
+                    out float4 OutPosition  : POSITION)
 {
-    VP_CONSTANTCOLOR_OUT Out;
-
-    Out.Position = TransformPoint(In.Position, worldViewProjection);
-
-    return Out;
+    OutPosition = TransformPoint(InPosition, worldViewProjection);
 }
 
-VP_PRELIGHT_OUT
-vp_vertexColor_3d(VP_PRELIGHT3D_IN In)
+void
+vp_vertexColor_3d(in float3 InPosition : POSITION,
+                  in float4 InColor0   : COLOR,
+                  out float4 OutPosition  : POSITION,
+                  out float4 OutColor0    : COLOR)
 {
-    VP_PRELIGHT_OUT Out;
-
-    Out.Position = TransformPoint(In.Position, worldViewProjection);
-    Out.Color0   = In.Color0;
-
-    return Out;
+    OutPosition = TransformPoint(InPosition, worldViewProjection);
+    OutColor0   = InColor0;
 }
 
-VP_TEXTURED_OUT
-vp_textured_3d(VP_TEXTURED3D_IN In)
+void
+vp_textured_3d(in float3 InPosition : POSITION,
+               in float2 InTexCoord0 : TEXCOORD0,
+               out float4 OutPosition : POSITION,
+               out float2 OutTexCoord0 : TEXCOORD0)
 {
-    VP_TEXTURED_OUT Out;
-
-    Out.Position  = TransformPoint(In.Position, worldViewProjection);
-    Out.TexCoord0 = In.TexCoord0;
-
-    return Out;
+    OutPosition  = TransformPoint(InPosition, worldViewProjection);
+    OutTexCoord0 = InTexCoord0;
 }
 
-VP_PRELIGHT_TEXTURED_OUT
-vp_vertexColorTextured_3d(VP_PRELIGHT_TEXTURED3D_IN In)
+void
+vp_vertexColorTextured_3d(in float3 InPosition  : POSITION,
+                          in float4 InColor0    : COLOR,
+                          in float2 InTexCoord0 : TEXCOORD0,
+                          out float4 OutPosition  : POSITION,
+                          out float4 OutColor0    : COLOR,
+                          out float2 OutTexCoord0 : TEXCOORD0)
 {
-    VP_PRELIGHT_TEXTURED_OUT Out;
-
-    Out.Position  = TransformPoint(In.Position, worldViewProjection);
-    Out.Color0    = In.Color0;
-    Out.TexCoord0 = In.TexCoord0;
-
-    return Out;
+    OutPosition  = TransformPoint(InPosition, worldViewProjection);
+    OutColor0    = InColor0;
+    OutTexCoord0 = InTexCoord0;
 }
 
-VP_POINT_CONSTANTCOLOR_OUT
-vp_point_constantColor_3d(VP_CONSTANTCOLOR3D_IN In)
+void
+vp_point_constantColor_3d(in float3 InPosition : POSITION,
+                          out float4 OutPosition  : POSITION,
+                          out float  OutPointSize : PSIZE)
 {
-    VP_POINT_CONSTANTCOLOR_OUT Out;
-
-    Out.Position = TransformPoint(In.Position, worldViewProjection);
-    Out.PointSize = pointSize;
-
-    return Out;
+    OutPosition = TransformPoint(InPosition, worldViewProjection);
+    OutPointSize = pointSize;
 }
 
 //
@@ -135,82 +75,40 @@ sampler2D diffuse  = sampler_state
     MagFilter = Linear;
 };
 
-struct FP_PRELIGHT_IN
+float4
+fp_constantColor() : COLOR
 {
-    float4	Color : COLOR;
-};
-
-struct FP_TEXTURED_IN
-{
-    float2  TexCoord0 : TEXCOORD0;
-};
-
-struct FP_PRELIGHT_TEXTURED_IN
-{
-    float4	Color : COLOR;
-    float2  TexCoord0 : TEXCOORD0;
-};
-
-
-struct FP_OUT
-{
-    float4	Color : COLOR;
-};
-
-
-FP_OUT
-fp_constantColor()
-{
-    FP_OUT Out;
-
-    Out.Color = constantColor;
-
-    return Out;
+    return constantColor;
 }
 
-FP_OUT
-fp_vertexColor(FP_PRELIGHT_IN In)
+float4
+fp_vertexColor(float4 InColor : COLOR) : COLOR
 {
-    FP_OUT Out;
-
-    Out.Color = In.Color;
-
-    return Out;
+    return InColor;
 }
 
-FP_OUT
-fp_textured(FP_TEXTURED_IN In)
+float4
+fp_textured(float2 InTexCoord0 : TEXCOORD0) : COLOR
 {
-    FP_OUT Out;
-
-    Out.Color = tex2D(diffuse, In.TexCoord0);
-    //Out.Color = float4(In.TexCoord0, 0.0, 1.0);
-
-    return Out;
+    return tex2D(diffuse, InTexCoord0);
+    //return float4(InTexCoord0, 0.0, 1.0);
 }
 
-FP_OUT
-fp_vertexColorTextured(FP_PRELIGHT_TEXTURED_IN In)
+float4
+fp_vertexColorTextured(float4 InColor : COLOR,
+                       float2 InTexCoord0 : TEXCOORD0) : COLOR
 {
-    FP_OUT Out;
-
-    Out.Color = In.Color * tex2D(diffuse, In.TexCoord0);
-
-    return Out;
+    return InColor * tex2D(diffuse, InTexCoord0);
 }
 
-FP_OUT
-fp_desatureTextureConstantColor(FP_TEXTURED_IN In)
+float4
+fp_desatureTextureConstantColor(float2 InTexCoord0 : TEXCOORD0) : COLOR
 {
-    FP_OUT Out;
-
-    float4 tex      = tex2D(diffuse, In.TexCoord0);
+    float4 tex      = tex2D(diffuse, InTexCoord0);
     float greyscale = dot(tex.rgb, float3(0.30, 0.59, 0.11));
     tex.rgb         = lerp(greyscale, tex.rgb, 0.0);
 
-    Out.Color = constantColor * tex;
-
-    return Out;
+    return constantColor * tex;
 }
 
 //
