@@ -131,6 +131,7 @@ class AABBTree
     nthElement: (nodes, first, nth, last, getkey) => void;
     recursiveBuild: (buildNodes, startIndex, endIndex, lastNodeIndex) => void;
     replaceNode: (nodes: AABBTreeNode[], nodeIndex: number, newNode: AABBTreeNode) => void;
+    predictNumNodes: (startIndex: number, endIndex: number, lastNodeIndex: number) => number;
     getVisibleNodes: (planes, visibleNodes, startIndex?) => number;
     getOverlappingNodes: (queryExtents, overlappingNodes, startIndex?) => number;
     getSphereOverlappingNodes: (center, radius, overlappingNodes) => void;
@@ -478,6 +479,8 @@ AABBTree.prototype.rebuild = function rebuildFn()
                     this.sortNodes(buildNodes);
                 }
             }
+
+            nodes.length = this.predictNumNodes(0, numBuildNodes, 0);
 
             this.recursiveBuild(buildNodes, 0, numBuildNodes, 0);
 
@@ -1148,6 +1151,40 @@ AABBTree.prototype.replaceNode = function (nodes: AABBTreeNode[], nodeIndex: num
         while (nodes[nodeIndex] !== undefined);
         nodes[nodeIndex] = oldNode;
     }
+};
+
+AABBTree.prototype.predictNumNodes = function (startIndex: number, endIndex: number, lastNodeIndex: number): number
+{
+    lastNodeIndex += 1;
+
+    if ((startIndex + this.numNodesLeaf) >= endIndex)
+    {
+        lastNodeIndex += (endIndex - startIndex);
+    }
+    else
+    {
+        var splitPosIndex = ((startIndex + endIndex) >> 1);
+
+        if ((startIndex + 1) >= splitPosIndex)
+        {
+            lastNodeIndex += 1;
+        }
+        else
+        {
+            lastNodeIndex = this.predictNumNodes(startIndex, splitPosIndex, lastNodeIndex);
+        }
+
+        if ((splitPosIndex + 1) >= endIndex)
+        {
+            lastNodeIndex += 1;
+        }
+        else
+        {
+            lastNodeIndex = this.predictNumNodes(splitPosIndex, endIndex, lastNodeIndex);
+        }
+    }
+
+    return lastNodeIndex;
 };
 
 AABBTree.prototype.getVisibleNodes = function getVisibleNodesFn(planes, visibleNodes, startIndex?)
