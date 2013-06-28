@@ -23,7 +23,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.20"
+#define VERSION_STRING "cgfx2json 0.21"
 
 //
 // Utils
@@ -837,7 +837,7 @@ static std::string FixShaderCode(char *text, int textLength, const UniformRules 
         };
 
         const size_t numRules = sizeof(sAttributeReplaceRules) / sizeof(AttributeReplaceRule);
-        for (size_t n = 0; n < numRules; n++)
+        for (size_t n = numRules; n--; )
         {
             const AttributeReplaceRule &rule(sAttributeReplaceRules[n]);
             if (regex_search(newtext, rule.re))
