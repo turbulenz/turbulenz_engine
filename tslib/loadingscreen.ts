@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2013 Turbulenz Limited
 
 /// <reference path="turbulenz.d.ts" />
 /// <reference path="assettracker.ts" />
@@ -391,7 +391,7 @@ class LoadingScreen
                     "vp_texture":
                     {
                         "type": "vertex",
-                        "code": "#ifdef GL_ES\nprecision mediump float;precision mediump int;\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR8;attribute vec4 ATTR0;\nuniform vec4 clipSpace;void main()\n{vec4 _position;_position=ATTR0;_position.xy=ATTR0.xy*clipSpace.xy+clipSpace.zw;tz_TexCoord[0].xy=ATTR8.xy;gl_Position=_position;}"
+                        "code": "#ifdef GL_ES\nprecision mediump float;precision mediump int;\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;attribute vec4 ATTR8;\nuniform vec4 clipSpace;void main()\n{vec4 _position;_position=ATTR0;_position.xy=ATTR0.xy*clipSpace.xy+clipSpace.zw;tz_TexCoord[0].xy=ATTR8.xy;gl_Position=_position;}"
                     },
                     "fp_background":
                     {

@@ -6386,7 +6386,7 @@ class CanvasContext
   "vp_image":
   {
    "type": "vertex",
-   "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR8;attribute vec4 ATTR0;\nvoid main()\n{vec4 tmpvar_1;tmpvar_1.zw=vec2(0.0,1.0);tmpvar_1.x=ATTR0.x;tmpvar_1.y=ATTR0.y;tz_TexCoord[0].xy=ATTR8.xy;gl_Position=tmpvar_1;}"
+   "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;attribute vec4 ATTR8;\nvoid main()\n{vec4 tmpvar_1;tmpvar_1.zw=vec2(0.0,1.0);tmpvar_1.x=ATTR0.x;tmpvar_1.y=ATTR0.y;tz_TexCoord[0].xy=ATTR8.xy;gl_Position=tmpvar_1;}"
   },
   "fp_gradient_shadow":
   {
@@ -6411,7 +6411,7 @@ class CanvasContext
   "vp_texture":
   {
    "type": "vertex",
-   "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR8;attribute vec4 ATTR0;\nuniform vec4 screen;void main()\n{vec2 tmpvar_1;tmpvar_1=((ATTR0.xy*screen.xy)+screen.zw);vec4 tmpvar_2;tmpvar_2.zw=vec2(0.0,1.0);tmpvar_2.x=tmpvar_1.x;tmpvar_2.y=tmpvar_1.y;tz_TexCoord[0].xy=ATTR8.xy;gl_Position=tmpvar_2;}"
+   "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;attribute vec4 ATTR8;\nuniform vec4 screen;void main()\n{vec2 tmpvar_1;tmpvar_1=((ATTR0.xy*screen.xy)+screen.zw);vec4 tmpvar_2;tmpvar_2.zw=vec2(0.0,1.0);tmpvar_2.x=tmpvar_1.x;tmpvar_2.y=tmpvar_1.y;tz_TexCoord[0].xy=ATTR8.xy;gl_Position=tmpvar_2;}"
   },
   "fp_gradient":
   {
