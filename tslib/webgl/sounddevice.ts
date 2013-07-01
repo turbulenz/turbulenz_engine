@@ -1052,7 +1052,10 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
             var bufferNode = audioContext.createBufferSource();
             bufferNode.buffer = buffer;
             bufferNode.loop = looping;
-            bufferNode.playbackRate.value = pitch;
+            if (bufferNode.playbackRate)
+            {
+                bufferNode.playbackRate.value = pitch;
+            }
             bufferNode.connect(gainNode);
 
             gainNode.disconnect();
@@ -1138,7 +1141,10 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                     var bufferNode = this.bufferNode;
                     if (bufferNode)
                     {
-                        bufferNode.playbackRate.value = newPitch;
+                        if (bufferNode.playbackRate)
+                        {
+                            bufferNode.playbackRate.value = newPitch;
+                        }
                     }
                 },
                 enumerable : true,
