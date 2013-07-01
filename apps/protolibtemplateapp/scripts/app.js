@@ -14,22 +14,23 @@ Application.prototype =
 
     init: function initFn()
     {
+        // Locally referenced variables to use for this function
         var protolib = this.protolib;
         var mathDevice = protolib.getMathDevice();
 
+        // Set the background color to clear during protolib.beginFrame
         protolib.setClearColor(mathDevice.v3Build(0, 0, 0));
 
-        // Intialization code goes here
+        // Initialization code goes here
     },
 
     update: function updateFn()
     {
         var protolib = this.protolib;
-
-        // Update code goes here
-
         if (protolib.beginFrame())
         {
+            // Update code goes here
+
             // Render code goes here
             protolib.endFrame();
         }
