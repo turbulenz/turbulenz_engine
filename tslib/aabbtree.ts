@@ -130,6 +130,8 @@ class AABBTree
     calculateSAH: (buildNodes, startIndex, endIndex) => void;
     nthElement: (nodes, first, nth, last, getkey) => void;
     recursiveBuild: (buildNodes, startIndex, endIndex, lastNodeIndex) => void;
+    replaceNode: (nodes: AABBTreeNode[], nodeIndex: number, newNode: AABBTreeNode) => void;
+    predictNumNodes: (startIndex: number, endIndex: number, lastNodeIndex: number) => number;
     getVisibleNodes: (planes, visibleNodes, startIndex?) => number;
     getOverlappingNodes: (queryExtents, overlappingNodes, startIndex?) => number;
     getSphereOverlappingNodes: (center, radius, overlappingNodes) => void;
@@ -477,6 +479,8 @@ AABBTree.prototype.rebuild = function rebuildFn()
                     this.sortNodes(buildNodes);
                 }
             }
+
+            nodes.length = this.predictNumNodes(0, numBuildNodes, 0);
 
             this.recursiveBuild(buildNodes, 0, numBuildNodes, 0);
 
@@ -1041,7 +1045,7 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
         maxZ = extents[5];
 
         buildNode.externalNode.aabbTreeIndex = lastNodeIndex;
-        nodes[lastNodeIndex] = buildNode;
+        this.replaceNode(nodes, lastNodeIndex, buildNode);
 
         for (var n = (startIndex + 1); n < endIndex; n += 1)
         {
@@ -1057,7 +1061,7 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
             /*jshint white: true*/
             lastNodeIndex += 1;
             buildNode.externalNode.aabbTreeIndex = lastNodeIndex;
-            nodes[lastNodeIndex] = buildNode;
+            this.replaceNode(nodes, lastNodeIndex, buildNode);
         }
 
         lastNode = nodes[lastNodeIndex];
@@ -1072,7 +1076,7 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
         {
             buildNode = buildNodes[startIndex];
             buildNode.externalNode.aabbTreeIndex = lastNodeIndex;
-            nodes[lastNodeIndex] = buildNode;
+            this.replaceNode(nodes, lastNodeIndex, buildNode);
         }
         else
         {
@@ -1094,7 +1098,7 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
         {
             buildNode = buildNodes[splitPosIndex];
             buildNode.externalNode.aabbTreeIndex = lastNodeIndex;
-            nodes[lastNodeIndex] = buildNode;
+            this.replaceNode(nodes, lastNodeIndex, buildNode);
         }
         else
         {
@@ -1132,6 +1136,55 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
         nodes[nodeIndex] = AABBTreeNode.create(parentExtents,
                                                (lastNodeIndex + lastNode.escapeNodeOffset - nodeIndex));
     }
+};
+
+AABBTree.prototype.replaceNode = function (nodes: AABBTreeNode[], nodeIndex: number, newNode: AABBTreeNode): void
+{
+    var oldNode = nodes[nodeIndex];
+    nodes[nodeIndex] = newNode;
+    if (oldNode !== undefined)
+    {
+        do
+        {
+            nodeIndex += 1;
+        }
+        while (nodes[nodeIndex] !== undefined);
+        nodes[nodeIndex] = oldNode;
+    }
+};
+
+AABBTree.prototype.predictNumNodes = function (startIndex: number, endIndex: number, lastNodeIndex: number): number
+{
+    lastNodeIndex += 1;
+
+    if ((startIndex + this.numNodesLeaf) >= endIndex)
+    {
+        lastNodeIndex += (endIndex - startIndex);
+    }
+    else
+    {
+        var splitPosIndex = ((startIndex + endIndex) >> 1);
+
+        if ((startIndex + 1) >= splitPosIndex)
+        {
+            lastNodeIndex += 1;
+        }
+        else
+        {
+            lastNodeIndex = this.predictNumNodes(startIndex, splitPosIndex, lastNodeIndex);
+        }
+
+        if ((splitPosIndex + 1) >= endIndex)
+        {
+            lastNodeIndex += 1;
+        }
+        else
+        {
+            lastNodeIndex = this.predictNumNodes(splitPosIndex, endIndex, lastNodeIndex);
+        }
+    }
+
+    return lastNodeIndex;
 };
 
 AABBTree.prototype.getVisibleNodes = function getVisibleNodesFn(planes, visibleNodes, startIndex?)

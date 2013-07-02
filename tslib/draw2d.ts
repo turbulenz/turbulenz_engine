@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2012-2013 Turbulenz Limited
 
 /*global
 Draw2D: false
@@ -2301,22 +2301,22 @@ class Draw2D
                     "fp_copy":
                     {
                         "type": "fragment",
-                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[8];\nvec4 _ret_0;uniform sampler2D inputTexture0;void main()\n{_ret_0=texture2D(inputTexture0,tz_TexCoord[0].xy);gl_FragColor=_ret_0;}"
+                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;uniform sampler2D inputTexture0;void main()\n{_ret_0=texture2D(inputTexture0,tz_TexCoord[0].xy);gl_FragColor=_ret_0;}"
                     },
                     "vp_copy":
                     {
                         "type": "vertex",
-                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[8];attribute vec4 ATTR8;attribute vec4 ATTR0;\nvec4 _OutPosition1;vec2 _OutUV1;uniform vec2 copyUVScale;uniform float copyFlip;void main()\n{_OutPosition1.x=ATTR0.x;_OutPosition1.y=ATTR0.y*copyFlip;_OutPosition1.zw=ATTR0.zw;_OutUV1=ATTR8.xy*copyUVScale;tz_TexCoord[0].xy=_OutUV1;gl_Position=_OutPosition1;}"
+                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;attribute vec4 ATTR8;\nvec4 _OutPosition1;vec2 _OutUV1;uniform vec2 copyUVScale;uniform float copyFlip;void main()\n{_OutPosition1.x=ATTR0.x;_OutPosition1.y=ATTR0.y*copyFlip;_OutPosition1.zw=ATTR0.zw;_OutUV1=ATTR8.xy*copyUVScale;tz_TexCoord[0].xy=_OutUV1;gl_Position=_OutPosition1;}"
                     },
                     "fp_draw2D":
                     {
                         "type": "fragment",
-                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying TZ_LOWP vec4 tz_Color;varying vec4 tz_TexCoord[8];\nvec4 _ret_0;vec4 _TMP0;uniform sampler2D texture;void main()\n{_TMP0=texture2D(texture,tz_TexCoord[0].xy);_ret_0=tz_Color*_TMP0;gl_FragColor=_ret_0;}"
+                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying TZ_LOWP vec4 tz_Color;varying vec4 tz_TexCoord[1];\nvec4 _ret_0;vec4 _TMP0;uniform sampler2D texture;void main()\n{_TMP0=texture2D(texture,tz_TexCoord[0].xy);_ret_0=tz_Color*_TMP0;gl_FragColor=_ret_0;}"
                     },
                     "vp_draw2D":
                     {
                         "type": "vertex",
-                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying TZ_LOWP vec4 tz_Color;varying vec4 tz_TexCoord[8];attribute vec4 ATTR8;attribute vec4 ATTR3;attribute vec4 ATTR0;\nvec4 _OUTPosition1;vec4 _OUTColor1;vec2 _OUTTexCoord01;uniform vec4 clipSpace;void main()\n{vec2 _position;_position=ATTR0.xy*clipSpace.xy+clipSpace.zw;_OUTPosition1.x=_position.x;_OUTPosition1.y=_position.y;_OUTPosition1.z=0.0;_OUTPosition1.w=1.0;_OUTColor1=ATTR3;_OUTTexCoord01=ATTR8.xy;tz_TexCoord[0].xy=ATTR8.xy;tz_Color=ATTR3;gl_Position=_OUTPosition1;}"
+                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying TZ_LOWP vec4 tz_Color;varying vec4 tz_TexCoord[1];attribute vec4 ATTR0;attribute vec4 ATTR3;attribute vec4 ATTR8;\nvec4 _OUTPosition1;vec4 _OUTColor1;vec2 _OUTTexCoord01;uniform vec4 clipSpace;void main()\n{vec2 _position;_position=ATTR0.xy*clipSpace.xy+clipSpace.zw;_OUTPosition1.x=_position.x;_OUTPosition1.y=_position.y;_OUTPosition1.z=0.0;_OUTPosition1.w=1.0;_OUTColor1=ATTR3;_OUTTexCoord01=ATTR8.xy;tz_TexCoord[0].xy=ATTR8.xy;tz_Color=ATTR3;gl_Position=_OUTPosition1;}"
                     }
                 }
             }

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2013 Turbulenz Limited
 
 #include "stdafx.h"
 #include "../common/json.h"
@@ -23,7 +23,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.19"
+#define VERSION_STRING "cgfx2json 0.21"
 
 //
 // Utils
@@ -837,7 +837,7 @@ static std::string FixShaderCode(char *text, int textLength, const UniformRules 
         };
 
         const size_t numRules = sizeof(sAttributeReplaceRules) / sizeof(AttributeReplaceRule);
-        for (size_t n = 0; n < numRules; n++)
+        for (size_t n = numRules; n--; )
         {
             const AttributeReplaceRule &rule(sAttributeReplaceRules[n]);
             if (regex_search(newtext, rule.re))
@@ -905,12 +905,22 @@ static std::string FixShaderCode(char *text, int textLength, const UniformRules 
 
     if (newtext.find("gl_TexCoord") != newtext.npos)
     {
+        // Count how many gl_TexCoord we use, some platforms have limits
+        unsigned int numTexCoords = 0;
+        char texCoordName[64];
+        for (unsigned int n = 0; n < 8; n += 1)
+        {
+            sprintf(texCoordName, "gl_TexCoord[%u]", n);
+            if (newtext.find(texCoordName) != newtext.npos)
+            {
+                numTexCoords = (n + 1);
+            }
+        }
+
         replace(newtext, "gl_TexCoord", "tz_TexCoord");
-        // Below seems to work for 8 rather than a count of the number of used gl_TexCoord.
-        // I think this is because gl_TexCoord is an unsized array with gl_MaxTextureCoords = 8 for "Compatibility Profile"
-        // A fragment shader can access them without the array being sized and without the vertex shader altering them.
-        // A consequence is that this is the worst case so used up extra space.
-        esPrefix += "varying vec4 tz_TexCoord[8];";
+
+        sprintf(texCoordName, "varying vec4 tz_TexCoord[%u];", numTexCoords);
+        esPrefix += texCoordName;
     }
 
 

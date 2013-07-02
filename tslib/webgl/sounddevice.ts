@@ -1052,7 +1052,10 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
             var bufferNode = audioContext.createBufferSource();
             bufferNode.buffer = buffer;
             bufferNode.loop = looping;
-            bufferNode.playbackRate.value = pitch;
+            if (bufferNode.playbackRate)
+            {
+                bufferNode.playbackRate.value = pitch;
+            }
             bufferNode.connect(gainNode);
 
             gainNode.disconnect();
@@ -1138,7 +1141,10 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                     var bufferNode = this.bufferNode;
                     if (bufferNode)
                     {
-                        bufferNode.playbackRate.value = newPitch;
+                        if (bufferNode.playbackRate)
+                        {
+                            bufferNode.playbackRate.value = newPitch;
+                        }
                     }
                 },
                 enumerable : true,
@@ -1342,6 +1348,62 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
             enumerable : true,
             configurable : false
         });
+
+        source.updateRelativePosition = function updateRelativePositionFn(listenerPosition0,
+                                                                          listenerPosition1,
+                                                                          listenerPosition2)
+        {
+            // Change volume depending on distance to listener
+            var minDistance = this.minDistance;
+            var maxDistance = this.maxDistance;
+            var position0 = position[0];
+            var position1 = position[1];
+            var position2 = position[2];
+
+            var distanceSq;
+            if (this.relative)
+            {
+                distanceSq = ((position0 * position0) + (position1 * position1) + (position2 * position2));
+            }
+            else
+            {
+                var delta0 = (listenerPosition0 - position0);
+                var delta1 = (listenerPosition1 - position1);
+                var delta2 = (listenerPosition2 - position2);
+                distanceSq = ((delta0 * delta0) + (delta1 * delta1) + (delta2 * delta2));
+            }
+
+            var gainFactor;
+            if (distanceSq <= (minDistance * minDistance))
+            {
+                gainFactor = 1;
+            }
+            else if (distanceSq >= (maxDistance * maxDistance))
+            {
+                gainFactor = 0;
+            }
+            else
+            {
+                var distance = Math.sqrt(distanceSq);
+                if (this.sd.linearDistance)
+                {
+                    gainFactor = ((maxDistance - distance) / (maxDistance - minDistance));
+                }
+                else
+                {
+                    gainFactor = minDistance / (minDistance + (this.rollOff * (distance - minDistance)));
+                }
+            }
+
+            gainFactor *= this.sd.listenerGain;
+
+            if (this.gainFactor !== gainFactor)
+            {
+                this.gainFactor = gainFactor;
+                this.updateAudioVolume();
+            }
+        };
+
     }
 
     source.relative = params.relative;
@@ -1433,16 +1495,10 @@ WebGLSoundDevice.prototype =
 
     update : function soundUpdateFn()
     {
-        var sqrt = Math.sqrt;
-
         var listenerTransform = this.listenerTransform;
         var listenerPosition0 = listenerTransform[9];
         var listenerPosition1 = listenerTransform[10];
         var listenerPosition2 = listenerTransform[11];
-
-        var listenerGain = this.listenerGain;
-
-        var linearDistance = this.linearDistance;
 
         var playingSources = this.playingSources;
         var id;
@@ -1451,57 +1507,9 @@ WebGLSoundDevice.prototype =
             if (playingSources.hasOwnProperty(id))
             {
                 var source = playingSources[id];
-
-                // Change volume depending on distance to listener
-                var minDistance = source.minDistance;
-                var maxDistance = source.maxDistance;
-                var position = source.position;
-                var position0 = position[0];
-                var position1 = position[1];
-                var position2 = position[2];
-
-                var distanceSq;
-                if (source.relative)
-                {
-                    distanceSq = ((position0 * position0) + (position1 * position1) + (position2 * position2));
-                }
-                else
-                {
-                    var delta0 = (listenerPosition0 - position0);
-                    var delta1 = (listenerPosition1 - position1);
-                    var delta2 = (listenerPosition2 - position2);
-                    distanceSq = ((delta0 * delta0) + (delta1 * delta1) + (delta2 * delta2));
-                }
-
-                var gainFactor;
-                if (distanceSq <= (minDistance * minDistance))
-                {
-                    gainFactor = 1;
-                }
-                else if (distanceSq >= (maxDistance * maxDistance))
-                {
-                    gainFactor = 0;
-                }
-                else
-                {
-                    var distance = sqrt(distanceSq);
-                    if (linearDistance)
-                    {
-                        gainFactor = ((maxDistance - distance) / (maxDistance - minDistance));
-                    }
-                    else
-                    {
-                        gainFactor = minDistance / (minDistance + (source.rollOff * (distance - minDistance)));
-                    }
-                }
-
-                gainFactor *= listenerGain;
-
-                if (source.gainFactor !== gainFactor)
-                {
-                    source.gainFactor = gainFactor;
-                    source.updateAudioVolume();
-                }
+                source.updateRelativePosition(listenerPosition0,
+                                              listenerPosition1,
+                                              listenerPosition2);
             }
         }
     },
