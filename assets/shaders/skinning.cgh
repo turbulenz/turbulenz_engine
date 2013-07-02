@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2013 Turbulenz Limited
 
 //
 // Uniform variables
@@ -51,4 +51,42 @@ SkinTransform BuildSkinTransform(float4 indices, float4 weights)
     // skinWeightTransform.Z = float4(0.0,0.0,1.0,0.0);
 
     return skinWeightTransform;
+}
+
+float3x4 BuildSkinMatrix(float4 indices, float4 weights)
+{
+    float3x4 skinMatrix;
+    float4 skinWeights = weights;
+    indices *= 3.0;
+    int4 Indices = int4(indices);
+
+    skinMatrix[0] = skinWeights.x * skinBones[Indices.x + 0];
+    skinMatrix[1] = skinWeights.x * skinBones[Indices.x + 1];
+    skinMatrix[2] = skinWeights.x * skinBones[Indices.x + 2];
+
+    skinMatrix[0] += skinWeights.y * skinBones[Indices.y + 0];
+    skinMatrix[1] += skinWeights.y * skinBones[Indices.y + 1];
+    skinMatrix[2] += skinWeights.y * skinBones[Indices.y + 2];
+
+    skinMatrix[0] += skinWeights.z * skinBones[Indices.z + 0];
+    skinMatrix[1] += skinWeights.z * skinBones[Indices.z + 1];
+    skinMatrix[2] += skinWeights.z * skinBones[Indices.z + 2];
+
+    skinMatrix[0] += skinWeights.w * skinBones[Indices.w + 0];
+    skinMatrix[1] += skinWeights.w * skinBones[Indices.w + 1];
+    skinMatrix[2] += skinWeights.w * skinBones[Indices.w + 2];
+
+    // 1-weight
+
+    // skinMatrix[0] = skinBones[Indices.x + 0];
+    // skinMatrix[1] = skinBones[Indices.x + 1];
+    // skinMatrix[2] = skinBones[Indices.x + 2];
+
+    // 0-weight
+
+    // skinMatrix[0] = float4(1.0,0.0,0.0,0.0);
+    // skinMatrix[1] = float4(0.0,1.0,0.0,0.0);
+    // skinMatrix[2] = float4(0.0,0.0,1.0,0.0);
+
+    return skinMatrix;
 }
