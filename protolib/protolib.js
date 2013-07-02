@@ -35,7 +35,7 @@ function Protolib(params)
     var globals = this.globals;
 
     // Major, Minor, Revision
-    protolib.version = [0, 2, 0];
+    protolib.version = [0, 2, 1];
 
     globals.config = params = params || {};
 
@@ -755,15 +755,19 @@ Protolib.prototype =
 
         var clear = this.clearColor;
 
+        if (this.preDrawFn)
+        {
+            this.preDrawFn();
+        }
+
         camera.updateViewMatrix();
         camera.updateViewProjectionMatrix();
         scene.update();
 
         renderer.update(graphicsDevice, camera, scene, TurbulenzEngine.time);
-        renderer.draw(graphicsDevice, clear, this.preDrawFn);
+        renderer.draw(graphicsDevice, clear);
 
         simplesprite.drawSprites();
-        simplefont.render();
         debugdraw.drawDebugLines();
 
         if (this.postRendererDrawFn)
@@ -772,6 +776,7 @@ Protolib.prototype =
         }
 
         this._draw2DSprites();
+        simplefont.render();
 
         if (this.postDrawFn)
         {
