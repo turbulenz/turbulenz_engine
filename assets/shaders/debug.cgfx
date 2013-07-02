@@ -15,75 +15,6 @@ float alphaRef;
 float alpha = 1.0;
 
 //
-// Variant inputs
-//
-struct VP_DEBUG_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float3 Tangent  : TANGENT;
-    float3 Binormal : BINORMAL;
-};
-
-struct VP_DEBUG_SKINNED_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float3 Tangent  : TANGENT;
-    float3 Binormal : BINORMAL;
-    float4 Indices  : BLENDINDICES;
-    float4 Weights  : BLENDWEIGHT;
-};
-
-struct VP_WIREFRAME_IN
-{
-    float4 Vertex0  : POSITION;
-    float3 Vertex1  : TEXCOORD0;
-    float3 Vertex2  : TEXCOORD1;
-};
-
-struct VP_WIREFRAME_SKINNED_IN
-{
-    float4 Vertex0  : POSITION;
-    float3 Vertex1  : TEXCOORD0;
-    float3 Vertex2  : TEXCOORD1;
-    float4 Indices0 : BLENDINDICES;
-    float4 Weights0 : BLENDWEIGHT;
-    float4 Indices1 : TEXCOORD2;
-    float4 Weights1 : TEXCOORD3;
-    float4 Indices2 : TEXCOORD4;
-    float4 Weights2 : TEXCOORD5;
-};
-
-struct FP_WIREFRAME_IN
-{
-    float4 Distance : TEXCOORD0;
-};
-
-struct VP_DEBUG_OUT
-{
-    float4 Position : POSITION;
-    float3 Normal   : TEXCOORD0;
-};
-
-struct VP_DEBUG_VERTEXCOLOR_OUT
-{
-    float4 Position : POSITION;
-    float4 Color    : COLOR;
-};
-
-struct VP_WIREFRAME_OUT
-{
-    float4 Position : POSITION;
-    float4 Distance : TEXCOORD0;
-};
-
-struct FP_WIREFRAME_OUT
-{
-    float4 Color    : COLOR;
-};
-
-//
 // Utils
 //
 float4 PointToDevice(float3 pt, float4x4 transform)
@@ -112,127 +43,150 @@ float3 NormalToWorld(float3 n, float3x3 transform)
 //
 // Vertex programs
 //
-VP_DEBUG_OUT vp_normals(VP_DEBUG_IN IN)
+void vp_normals(in float3 INPosition : POSITION,
+                in float3 INNormal   : NORMAL,
+                in float3 INTangent  : TANGENT,
+                in float3 INBinormal : BINORMAL,
+                out float4 OUTPosition : POSITION,
+                out float3 OUTNormal   : TEXCOORD0)
 {
-    VP_DEBUG_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    float3 Nn = NormalToWorld(IN.Normal, worldInverseTranspose);
-    OUT.Normal = Nn;
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    float3 Nn = NormalToWorld(INNormal, worldInverseTranspose);
+    OUTNormal = Nn;
 }
 
-VP_DEBUG_OUT vp_normals_skinned(VP_DEBUG_SKINNED_IN IN)
+void vp_normals_skinned(in float3 INPosition : POSITION,
+                        in float3 INNormal   : NORMAL,
+                        in float3 INTangent  : TANGENT,
+                        in float3 INBinormal : BINORMAL,
+                        in float4 INIndices  : BLENDINDICES,
+                        in float4 INWeights  : BLENDWEIGHT,
+                        out float4 OUTPosition : POSITION,
+                        out float3 OUTNormal   : TEXCOORD0)
 {
-    VP_DEBUG_OUT OUT;
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    float4 skinTempPosition = float4(IN.Position, 1.0);
+    float4 skinTempPosition = float4(INPosition, 1.0);
 
-    float3 skinTempNormal = IN.Normal.xyz;
+    float3 skinTempNormal = INNormal.xyz;
 
     float3 Position;
     float3 Normal;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
 
-    Normal.x = dot(skinTempNormal, skinTransform.X.xyz);
-    Normal.y = dot(skinTempNormal, skinTransform.Y.xyz);
-    Normal.z = dot(skinTempNormal, skinTransform.Z.xyz);
+    Normal.x = dot(skinTempNormal, skinMatrix[0].xyz);
+    Normal.y = dot(skinTempNormal, skinMatrix[1].xyz);
+    Normal.z = dot(skinTempNormal, skinMatrix[2].xyz);
 
     Normal.xyz = normalize(Normal.xyz);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
+    OUTPosition = PointToDevice(Position, worldViewProjection);
     float3 Nn = NormalToWorld(Normal, worldInverseTranspose);
 
-    OUT.Normal = Nn;
-    return OUT;
-
+    OUTNormal = Nn;
 }
 
-VP_DEBUG_OUT vp_tangents(VP_DEBUG_IN IN)
+void vp_tangents(in float3 INPosition : POSITION,
+                 in float3 INNormal   : NORMAL,
+                 in float3 INTangent  : TANGENT,
+                 in float3 INBinormal : BINORMAL,
+                 out float4 OUTPosition : POSITION,
+                 out float3 OUTNormal   : TEXCOORD0)
 {
-    VP_DEBUG_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    float3 Tn = NormalToWorld(IN.Tangent, worldInverseTranspose);
-    OUT.Normal = Tn;
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    float3 Tn = NormalToWorld(INTangent, worldInverseTranspose);
+    OUTNormal = Tn;
 }
 
-VP_DEBUG_OUT vp_tangents_skinned(VP_DEBUG_SKINNED_IN IN)
+void vp_tangents_skinned(in float3 INPosition : POSITION,
+                         in float3 INNormal   : NORMAL,
+                         in float3 INTangent  : TANGENT,
+                         in float3 INBinormal : BINORMAL,
+                         in float4 INIndices  : BLENDINDICES,
+                         in float4 INWeights  : BLENDWEIGHT,
+                         out float4 OUTPosition : POSITION,
+                         out float3 OUTNormal   : TEXCOORD0)
 {
-    VP_DEBUG_OUT OUT;
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    float4 skinTempPosition = float4(IN.Position, 1.0);
+    float4 skinTempPosition = float4(INPosition, 1.0);
 
-    float3 skinTempTangent = IN.Tangent.xyz;
+    float3 skinTempTangent = INTangent.xyz;
 
     float3 Position;
     float3 Tangent;
 
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
 
-    Tangent.x = dot(skinTempTangent, skinTransform.X.xyz);
-    Tangent.y = dot(skinTempTangent, skinTransform.Y.xyz);
-    Tangent.z = dot(skinTempTangent, skinTransform.Z.xyz);
+    Tangent.x = dot(skinTempTangent, skinMatrix[0].xyz);
+    Tangent.y = dot(skinTempTangent, skinMatrix[1].xyz);
+    Tangent.z = dot(skinTempTangent, skinMatrix[2].xyz);
 
     Tangent.xyz = normalize(Tangent.xyz);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
+    OUTPosition = PointToDevice(Position, worldViewProjection);
     float3 Tn = NormalToWorld(Tangent, worldInverseTranspose);
 
-    OUT.Normal = Tn;
-    return OUT;
+    OUTNormal = Tn;
 }
 
-VP_DEBUG_OUT vp_binormals(VP_DEBUG_IN IN)
+void vp_binormals(in float3 INPosition : POSITION,
+                  in float3 INNormal   : NORMAL,
+                  in float3 INTangent  : TANGENT,
+                  in float3 INBinormal : BINORMAL,
+                  out float4 OUTPosition : POSITION,
+                  out float3 OUTNormal   : TEXCOORD0)
 {
-    VP_DEBUG_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    float3 Bn = NormalToWorld(IN.Binormal, worldInverseTranspose);
-    OUT.Normal = Bn;
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    float3 Bn = NormalToWorld(INBinormal, worldInverseTranspose);
+    OUTNormal = Bn;
 }
 
-VP_DEBUG_OUT vp_binormals_skinned(VP_DEBUG_SKINNED_IN IN)
+void vp_binormals_skinned(in float3 INPosition : POSITION,
+                          in float3 INNormal   : NORMAL,
+                          in float3 INTangent  : TANGENT,
+                          in float3 INBinormal : BINORMAL,
+                          in float4 INIndices  : BLENDINDICES,
+                          in float4 INWeights  : BLENDWEIGHT,
+                          out float4 OUTPosition : POSITION,
+                          out float3 OUTNormal   : TEXCOORD0)
 {
-    VP_DEBUG_OUT OUT;
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    float4 skinTempPosition = float4(IN.Position, 1.0);
+    float4 skinTempPosition = float4(INPosition, 1.0);
 
-    float3 skinTempBinormal = IN.Binormal.xyz;
+    float3 skinTempBinormal = INBinormal.xyz;
 
     float3 Position;
     float3 Binormal;
 
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
 
-    Binormal.x = dot(skinTempBinormal, skinTransform.X.xyz);
-    Binormal.y = dot(skinTempBinormal, skinTransform.Y.xyz);
-    Binormal.z = dot(skinTempBinormal, skinTransform.Z.xyz);
+    Binormal.x = dot(skinTempBinormal, skinMatrix[0].xyz);
+    Binormal.y = dot(skinTempBinormal, skinMatrix[1].xyz);
+    Binormal.z = dot(skinTempBinormal, skinMatrix[2].xyz);
 
     Binormal.xyz = normalize(Binormal.xyz);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
+    OUTPosition = PointToDevice(Position, worldViewProjection);
     float3 Bn = NormalToWorld(Binormal, worldInverseTranspose);
 
-    OUT.Normal = Bn;
-    return OUT;
+    OUTNormal = Bn;
 }
 
-VP_DEBUG_VERTEXCOLOR_OUT vp_vertexcolor(float3 position : POSITION,
-                                        float4 color : COLOR)
+void vp_vertexcolor(in float3 INPosition : POSITION,
+                    in float4 INColor    : COLOR,
+                    out float4 OUTPosition : POSITION,
+                    out float4 OUTColor    : COLOR)
 {
-    VP_DEBUG_VERTEXCOLOR_OUT OUT;
-    OUT.Position = PointToDevice(position, worldViewProjection);
-    OUT.Color = color;
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTColor = INColor;
 }
 
 float4 vp_constantcolor(float3 position : POSITION) : POSITION
@@ -244,80 +198,88 @@ float4 vp_constantcolor_skinned(float3 position : POSITION,
                                 float4 indices  : BLENDINDICES,
                                 float4 weights  : BLENDWEIGHT) : POSITION
 {
-    SkinTransform skinTransform = BuildSkinTransform(indices, weights);
+    float3x4 skinMatrix = BuildSkinMatrix(indices, weights);
 
     float4 skinTempPosition = float4(position, 1.0);
 
     float3 Position;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
 
     return PointToDevice(Position, worldViewProjection);
 }
 
-VP_WIREFRAME_OUT vp_wireframe(VP_WIREFRAME_IN IN)
+void vp_wireframe(in float4 INVertex0 : POSITION,
+                  in float3 INVertex1 : TEXCOORD0,
+                  in float3 INVertex2 : TEXCOORD1,
+                  out float4 OUTPosition : POSITION,
+                  out float4 OUTDistance : TEXCOORD0)
 {
-    VP_WIREFRAME_OUT OUT;
-
-    float VertexId = IN.Vertex0.w;
-    float4 Position = IN.Vertex0;
+    float VertexId = INVertex0.w;
+    float4 Position = INVertex0;
     Position.w = 1.0;
 
-    OUT.Position = PointToDevice(Position.xyz, worldViewProjection);
-    float2 Position2D = OUT.Position.xy / OUT.Position.w;
+    OUTPosition = PointToDevice(Position.xyz, worldViewProjection);
+    float2 Position2D = OUTPosition.xy / OUTPosition.w;
 
-    float4 Vertex1Trans = PointToDevice(IN.Vertex1, worldViewProjection);
+    float4 Vertex1Trans = PointToDevice(INVertex1, worldViewProjection);
     float2 Vector1 = windowScale * (Vertex1Trans.xy / Vertex1Trans.w - Position2D);
 
-    float4 Vertex2Trans = PointToDevice(IN.Vertex2, worldViewProjection);
+    float4 Vertex2Trans = PointToDevice(INVertex2, worldViewProjection);
     float2 Vector2 = windowScale * (Vertex2Trans.xy / Vertex2Trans.w - Position2D);
 
     float Area2D = abs(Vector1.x * Vector2.y - Vector1.y * Vector2.x);
     float Height = Area2D / length(Vector1 - Vector2);
 
     if (VertexId < 1.0)         // VertexId == 0
-        OUT.Distance.xyz = float3(Height, 0.0, 0.0);
+        OUTDistance.xyz = float3(Height, 0.0, 0.0);
     else if (VertexId < 2.0)    // VertexId == 1
-        OUT.Distance.xyz = float3(0.0, Height, 0.0);
+        OUTDistance.xyz = float3(0.0, Height, 0.0);
     else                        // VertexId == 2
-        OUT.Distance.xyz = float3(0.0, 0.0, Height);
+        OUTDistance.xyz = float3(0.0, 0.0, Height);
 
-    OUT.Distance.xyz *= OUT.Position.w;
-    OUT.Distance.w = 1.0 / OUT.Position.w;
-
-    return OUT;
+    OUTDistance.xyz *= OUTPosition.w;
+    OUTDistance.w = 1.0 / OUTPosition.w;
 }
 
-VP_WIREFRAME_OUT vp_wireframe_skinned(VP_WIREFRAME_SKINNED_IN IN)
+void vp_wireframe_skinned(in float4 INVertex0  : POSITION,
+                          in float3 INVertex1  : TEXCOORD0,
+                          in float3 INVertex2  : TEXCOORD1,
+                          in float4 INIndices0 : BLENDINDICES,
+                          in float4 INWeights0 : BLENDWEIGHT,
+                          in float4 INIndices1 : TEXCOORD2,
+                          in float4 INWeights1 : TEXCOORD3,
+                          in float4 INIndices2 : TEXCOORD4,
+                          in float4 INWeights2 : TEXCOORD5,
+                          out float4 OUTPosition : POSITION,
+                          out float4 OUTDistance : TEXCOORD0)
 {
-    VP_WIREFRAME_OUT OUT;
-
-    float VertexId = IN.Vertex0.w;
-    float4 Position = IN.Vertex0;
+    float VertexId = INVertex0.w;
+    float4 Position = INVertex0;
     Position.w = 1.0;
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices0, IN.Weights0);
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices0, INWeights0);
     float3 newPosition;
-    newPosition.x = dot(Position, skinTransform.X);
-    newPosition.y = dot(Position, skinTransform.Y);
-    newPosition.z = dot(Position, skinTransform.Z);
-    OUT.Position = PointToDevice(newPosition, worldViewProjection);
-    float2 Position2D = OUT.Position.xy / OUT.Position.w;
+    newPosition.x = dot(Position, skinMatrix[0]);
+    newPosition.y = dot(Position, skinMatrix[1]);
+    newPosition.z = dot(Position, skinMatrix[2]);
+    OUTPosition = PointToDevice(newPosition, worldViewProjection);
+    float2 Position2D = OUTPosition.xy / OUTPosition.w;
 
-    skinTransform = BuildSkinTransform(IN.Indices1, IN.Weights1);
-    float4 skinTempPosition = float4(IN.Vertex1, 1.0);
-    newPosition.x = dot(skinTempPosition, skinTransform.X);
-    newPosition.y = dot(skinTempPosition, skinTransform.Y);
-    newPosition.z = dot(skinTempPosition, skinTransform.Z);
+    skinMatrix = BuildSkinMatrix(INIndices1, INWeights1);
+    float4 skinTempPosition = float4(INVertex1, 1.0);
+    newPosition.x = dot(skinTempPosition, skinMatrix[0]);
+    newPosition.y = dot(skinTempPosition, skinMatrix[1]);
+    newPosition.z = dot(skinTempPosition, skinMatrix[2]);
     float4 Vertex1Trans = PointToDevice(newPosition, worldViewProjection);
     float2 Vector1 = windowScale * (Vertex1Trans.xy / Vertex1Trans.w - Position2D);
 
-    skinTransform = BuildSkinTransform(IN.Indices2, IN.Weights2);
-    skinTempPosition = float4(IN.Vertex2, 1.0);
-    newPosition.x = dot(skinTempPosition, skinTransform.X);
-    newPosition.y = dot(skinTempPosition, skinTransform.Y);
-    newPosition.z = dot(skinTempPosition, skinTransform.Z);
+    skinMatrix = BuildSkinMatrix(INIndices2, INWeights2);
+    skinTempPosition = float4(INVertex2, 1.0);
+    newPosition.x = dot(skinTempPosition, skinMatrix[0]);
+    newPosition.y = dot(skinTempPosition, skinMatrix[1]);
+    newPosition.z = dot(skinTempPosition, skinMatrix[2]);
     float4 Vertex2Trans = PointToDevice(newPosition, worldViewProjection);
     float2 Vector2 = windowScale * (Vertex2Trans.xy / Vertex2Trans.w - Position2D);
 
@@ -325,16 +287,14 @@ VP_WIREFRAME_OUT vp_wireframe_skinned(VP_WIREFRAME_SKINNED_IN IN)
     float Height = Area2D / length(Vector1 - Vector2);
 
     if (VertexId < 1.0)         // VertexId == 0
-        OUT.Distance.xyz = float3(Height, 0.0, 0.0);
+        OUTDistance.xyz = float3(Height, 0.0, 0.0);
     else if (VertexId < 2.0)    // VertexId == 1
-        OUT.Distance.xyz = float3(0.0, Height, 0.0);
+        OUTDistance.xyz = float3(0.0, Height, 0.0);
     else                        // VertexId == 2
-        OUT.Distance.xyz = float3(0.0, 0.0, Height);
+        OUTDistance.xyz = float3(0.0, 0.0, Height);
 
-    OUT.Distance.xyz *= OUT.Position.w;
-    OUT.Distance.w = 1.0 / OUT.Position.w;
-
-    return OUT;
+    OUTDistance.xyz *= OUTPosition.w;
+    OUTDistance.w = 1.0 / OUTPosition.w;
 }
 
 //
@@ -356,39 +316,35 @@ float4 fp_constantcolor() : COLOR
     return constantColor;
 }
 
-FP_WIREFRAME_OUT fp_wireframe(FP_WIREFRAME_IN IN)
+float4 fp_wireframe(float4 INDistance : TEXCOORD0) : COLOR
 {
-    FP_WIREFRAME_OUT OUT;
-
-    float3 Distance = IN.Distance.xyz * IN.Distance.w;
+    float3 Distance = INDistance.xyz * INDistance.w;
 
     float MinDistance = min(Distance.x, min(Distance.y, Distance.z));
     float Intensity = exp2(-2.0 * MinDistance * MinDistance);
-    OUT.Color = Intensity * wireColor + (1.0 - Intensity) * fillColor;
+    float4 OUTColor = Intensity * wireColor + (1.0 - Intensity) * fillColor;
 
-    if (OUT.Color.a < alphaRef)
+    if (OUTColor.a < alphaRef)
         discard;
 
-    return OUT;
+    return OUTColor;
 }
 
-FP_WIREFRAME_OUT fp_physics_debug(FP_WIREFRAME_IN IN)
+float4 fp_physics_debug(float4 INDistance : TEXCOORD0) : COLOR
 {
-    FP_WIREFRAME_OUT OUT;
-
-    float3 Distance = IN.Distance.xyz * IN.Distance.w;
+    float3 Distance = INDistance.xyz * INDistance.w;
 
     float MinDistance = min(Distance.x, min(Distance.y, Distance.z));
     float Intensity = exp2(-2.0 * MinDistance * MinDistance);
-    OUT.Color = Intensity * wireColor + (1.0 - Intensity) * fillColor;
+    float4 OUTColor = Intensity * wireColor + (1.0 - Intensity) * fillColor;
 
     if (alpha < 1.0)
-        OUT.Color.a = alpha;
+        OUTColor.a = alpha;
 
-    if (OUT.Color.a < alphaRef)
+    if (OUTColor.a < alphaRef)
         discard;
 
-    return OUT;
+    return OUTColor;
 }
 
 //

@@ -87,277 +87,6 @@ sampler2D light_map = sampler_state
 
 
 //
-// Variant inputs
-//
-struct VP_NOLIGHT_IN
-{
-    float3 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-};
-
-struct VP_NOLIGHT_SKINNED_IN
-{
-    float3 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-    float4 Indices  : BLENDINDICES;
-    float4 Weights  : BLENDWEIGHT;
-};
-
-struct VP_NOLIGHT_VERTEXCOLOR_IN
-{
-    float3 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-    float4 Color    : COLOR;
-};
-
-struct VP_NOLIGHT_OUT
-{
-    float4 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-};
-
-struct VP_NOLIGHT_VERTEXCOLOR_OUT
-{
-    float4 Position : POSITION;
-    float4 Color    : COLOR;
-    float2 UV       : TEXCOORD0;
-};
-
-struct FP_NOLIGHT_IN
-{
-    float2 UV       : TEXCOORD0;
-};
-
-struct FP_NOLIGHT_VERTEXCOLOR_IN
-{
-    float4 Color    : COLOR;
-    float2 UV       : TEXCOORD0;
-};
-
-struct VP_ENV_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-};
-
-struct VP_ENV_SKINNED_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float4 Indices  : BLENDINDICES;
-    float4 Weights  : BLENDWEIGHT;
-};
-
-struct VP_ENV_OUT
-{
-    float4 Position     : POSITION;
-    float3 Normal       : TEXCOORD0;
-    float3 eyeDirection : TEXCOORD1;
-};
-
-struct FP_ENV_IN
-{
-    float3 Normal       : TEXCOORD0;
-    float3 eyeDirection : TEXCOORD1;
-};
-
-struct VP_GLASS_ENV_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float2 UV       : TEXCOORD0;
-};
-
-struct VP_GLASS_ENV_OUT
-{
-    float4 Position     : POSITION;
-    float2 UV           : TEXCOORD0;
-    float3 Normal       : TEXCOORD1;
-    float3 eyeDirection : TEXCOORD2;
-};
-
-struct FP_GLASS_ENV_IN
-{
-    float2 UV           : TEXCOORD0;
-    float3 Normal       : TEXCOORD1;
-    float3 eyeDirection : TEXCOORD2;
-};
-
-struct VP_LAMBERT_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float2 UV       : TEXCOORD0;
-};
-
-struct VP_LAMBERT_SKINNED_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float2 UV       : TEXCOORD0;
-    float4 Indices  : BLENDINDICES;
-    float4 Weights  : BLENDWEIGHT;
-};
-
-struct VP_FLAT_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-};
-
-struct VP_FLAT_SKINNED_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float4 Indices  : BLENDINDICES;
-    float4 Weights  : BLENDWEIGHT;
-};
-
-struct VP_LAMBERT_OUT
-{
-    float4 Position : POSITION;
-    float4 Color    : COLOR;
-    float2 UV       : TEXCOORD0;
-};
-
-struct VP_FLAT_OUT
-{
-    float4 Position : POSITION;
-    float4 Color    : COLOR;
-};
-
-struct VP_BLINN_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float2 UV       : TEXCOORD0;
-};
-
-struct VP_BLINN_SKINNED_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float2 UV       : TEXCOORD0;
-    float4 Indices  : BLENDINDICES;
-    float4 Weights  : BLENDWEIGHT;
-};
-
-struct VP_BLINN_OUT
-{
-    float4 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-    float3 Normal   : TEXCOORD1;
-    float3 Light    : TEXCOORD2;
-    float3 View     : TEXCOORD3;
-};
-
-struct VP_NORMALMAP_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float2 UV       : TEXCOORD0;
-    float3 Tangent  : TANGENT;
-    float3 Binormal : BINORMAL;
-};
-
-struct VP_NORMALMAP_OUT
-{
-    float4 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-    float3 Light    : TEXCOORD1;
-    float3 View     : TEXCOORD2;
-};
-
-struct FP_NORMALMAP_IN
-{
-    float2 UV    : TEXCOORD0;
-    float3 Light : TEXCOORD1;
-    float3 View  : TEXCOORD2;
-};
-
-struct VP_NORMALMAP_SKINNED_IN
-{
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float2 UV       : TEXCOORD0;
-    float3 Tangent  : TANGENT;
-    float3 Binormal : BINORMAL;
-    float4 Indices  : BLENDINDICES;
-    float4 Weights  : BLENDWEIGHT;
-};
-
-
-struct VP_GLOWMAP_IN
-{
-    float3 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-};
-
-struct VP_GLOWMAP_OUT
-{
-    float4 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-};
-
-struct FP_GLOWMAP_IN
-{
-    float2 UV    : TEXCOORD0;
-};
-
-struct VP_GLOWMAP_SKINNED_IN
-{
-    float3 Position : POSITION;
-    float2 UV       : TEXCOORD0;
-    float4 Indices  : BLENDINDICES;
-    float4 Weights  : BLENDWEIGHT;
-};
-
-struct VP_LIGHTMAP_IN
-{
-    float3 Position : POSITION;
-    float2 UV0      : TEXCOORD0;
-    float2 UV1      : TEXCOORD1;
-};
-
-struct VP_LIGHTMAP_OUT
-{
-    float4 Position : POSITION;
-    float4 UV       : TEXCOORD0;
-};
-
-struct FP_LIGHTMAP_IN
-{
-    float4 UV    : TEXCOORD0;
-};
-
-struct VP_SKYBOX_IN
-{
-    float3 Position : POSITION;
-};
-
-struct VP_SKYBOX_OUT
-{
-    float4 Position     : POSITION;
-    float3 eyeDirection : TEXCOORD0;
-};
-
-struct FP_SKYBOX_IN
-{
-    float3 eyeDirection : TEXCOORD0;
-};
-
-struct VP_DEBUG_OUT
-{
-    float4 Position : POSITION;
-    float3 Normal   : TEXCOORD0;
-};
-
-struct FP_DEBUG_IN
-{
-    float3 Normal : TEXCOORD0;
-};
-
-//
 // Utils
 //
 
@@ -437,390 +166,459 @@ float3 SampleNormalMapRXGB(float2 uv)
 //
 // Vertex programs
 //
-VP_NOLIGHT_OUT vp_nolight(VP_NOLIGHT_IN IN)
+void vp_nolight(in float3 INPosition : POSITION,
+                in float2 INUV       : TEXCOORD0,
+                out float4 OUTPosition : POSITION,
+                out float2 OUTUV       : TEXCOORD0)
 {
-    VP_NOLIGHT_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTUV = TransformUV(INUV);
 }
 
-VP_NOLIGHT_OUT vp_nolight_skinned(VP_NOLIGHT_SKINNED_IN IN)
+void vp_nolight_skinned(in float3 INPosition : POSITION,
+                        in float2 INUV       : TEXCOORD0,
+                        in float4 INIndices  : BLENDINDICES,
+                        in float4 INWeights  : BLENDWEIGHT,
+                        out float4 OUTPosition : POSITION,
+                        out float2 OUTUV       : TEXCOORD0)
 {
-    VP_NOLIGHT_OUT OUT;
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
-
-    float4 skinTempPosition = float4(IN.Position, 1.0);
+    float4 skinTempPosition = float4(INPosition, 1.0);
     float3 Position;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
-    return OUT;
+    OUTPosition = PointToDevice(Position, worldViewProjection);
+    OUTUV = TransformUV(INUV);
 }
 
-VP_NOLIGHT_VERTEXCOLOR_OUT vp_nolight_vertexcolor(VP_NOLIGHT_VERTEXCOLOR_IN IN)
+void vp_nolight_vertexcolor(in float3 INPosition : POSITION,
+                            in float2 INUV       : TEXCOORD0,
+                            in float4 INColor    : COLOR,
+                            out float4 OUTPosition : POSITION,
+                            out float4 OUTColor    : COLOR,
+                            out float2 OUTUV       : TEXCOORD0)
 {
-    VP_NOLIGHT_VERTEXCOLOR_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.Color = float4(IN.Color.xyz * materialColor.xyz, IN.Color.w);
-    OUT.UV = TransformUV(IN.UV);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTColor = float4(INColor.xyz * materialColor.xyz, INColor.w);
+    OUTUV = TransformUV(INUV);
 }
 
-VP_SKYBOX_OUT vp_skybox(VP_SKYBOX_IN IN)
+void vp_skybox(in float3 INPosition : POSITION,
+               out float4 OUTPosition     : POSITION,
+               out float3 OUTEyeDirection : TEXCOORD0)
 {
-    VP_SKYBOX_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.eyeDirection = NormalToWorld((IN.Position - eyePosition), worldInverseTranspose);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTEyeDirection = NormalToWorld((INPosition - eyePosition), worldInverseTranspose);
 }
 
-VP_GLASS_ENV_OUT vp_glass_env(VP_GLASS_ENV_IN IN)
+void vp_glass_env(in float3 INPosition : POSITION,
+                  in float3 INNormal   : NORMAL,
+                  in float2 INUV       : TEXCOORD0,
+                  out float4 OUTPosition     : POSITION,
+                  out float2 OUTUV           : TEXCOORD0,
+                  out float3 OUTNormal       : TEXCOORD1,
+                  out float3 OUTEyeDirection : TEXCOORD2)
 {
-    VP_GLASS_ENV_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
-    OUT.Normal = NormalToWorld(IN.Normal, worldInverseTranspose);
-    OUT.eyeDirection = NormalToWorld((IN.Position - eyePosition), worldInverseTranspose);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTUV = TransformUV(INUV);
+    OUTNormal = NormalToWorld(INNormal, worldInverseTranspose);
+    OUTEyeDirection = NormalToWorld((INPosition - eyePosition), worldInverseTranspose);
 }
 
-VP_ENV_OUT vp_env(VP_ENV_IN IN)
+void vp_env(in float3 INPosition : POSITION,
+            in float3 INNormal   : NORMAL,
+            out float4 OUTPosition     : POSITION,
+            out float3 OUTNormal       : TEXCOORD0,
+            out float3 OUTEyeDirection : TEXCOORD1)
 {
-    VP_ENV_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.Normal = NormalToWorld(IN.Normal, worldInverseTranspose);
-    OUT.eyeDirection = NormalToWorld((IN.Position - eyePosition), worldInverseTranspose);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTNormal = NormalToWorld(INNormal, worldInverseTranspose);
+    OUTEyeDirection = NormalToWorld((INPosition - eyePosition), worldInverseTranspose);
 }
 
-VP_ENV_OUT vp_env_skinned(VP_ENV_SKINNED_IN IN)
+void vp_env_skinned(in float3 INPosition : POSITION,
+                    in float3 INNormal   : NORMAL,
+                    in float4 INIndices  : BLENDINDICES,
+                    in float4 INWeights  : BLENDWEIGHT,
+                    out float4 OUTPosition     : POSITION,
+                    out float3 OUTNormal       : TEXCOORD0,
+                    out float3 OUTEyeDirection : TEXCOORD1)
 {
-    VP_ENV_OUT OUT;
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
-
-    float4 skinTempPosition = float4(IN.Position, 1.0);
-    float3 skinTempNormal = IN.Normal.xyz;
+    float4 skinTempPosition = float4(INPosition, 1.0);
+    float3 skinTempNormal = INNormal.xyz;
     float3 Position, Normal;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
-    Normal.x = dot(skinTempNormal, skinTransform.X.xyz);
-    Normal.y = dot(skinTempNormal, skinTransform.Y.xyz);
-    Normal.z = dot(skinTempNormal, skinTransform.Z.xyz);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
+    Normal.x = dot(skinTempNormal, skinMatrix[0].xyz);
+    Normal.y = dot(skinTempNormal, skinMatrix[1].xyz);
+    Normal.z = dot(skinTempNormal, skinMatrix[2].xyz);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
-    OUT.Normal = NormalToWorld(Normal, worldInverseTranspose);
-    OUT.eyeDirection = NormalToWorld((Position - eyePosition), worldInverseTranspose);
-    return OUT;
+    OUTPosition = PointToDevice(Position, worldViewProjection);
+    OUTNormal = NormalToWorld(Normal, worldInverseTranspose);
+    OUTEyeDirection = NormalToWorld((Position - eyePosition), worldInverseTranspose);
 }
 
-VP_FLAT_OUT vp_flat(VP_FLAT_IN IN)
+void vp_flat(in float3 INPosition : POSITION,
+             in float3 INNormal   : NORMAL,
+             out float4 OUTPosition : POSITION,
+             out float4 OUTColor    : COLOR)
 {
-    VP_FLAT_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    float3 lv = normalize(lightPosition - IN.Position);
-    float3 color = (saturate(dot(IN.Normal, lv)) * lightColor + ambientColor);
-    OUT.Color = float4(color * materialColor.xyz, materialColor.w);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    float3 lv = normalize(lightPosition - INPosition);
+    float3 color = (saturate(dot(INNormal, lv)) * lightColor + ambientColor);
+    OUTColor = float4(color * materialColor.xyz, materialColor.w);
 }
 
-VP_FLAT_OUT vp_flat_skinned(VP_FLAT_SKINNED_IN IN)
+void vp_flat_skinned(in float3 INPosition : POSITION,
+                     in float3 INNormal   : NORMAL,
+                     in float4 INIndices  : BLENDINDICES,
+                     in float4 INWeights  : BLENDWEIGHT,
+                     out float4 OUTPosition : POSITION,
+                     out float4 OUTColor    : COLOR)
 {
-    VP_FLAT_OUT OUT;
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
-
-    float4 skinTempPosition = float4(IN.Position, 1.0);
-    float3 skinTempNormal = IN.Normal.xyz;
+    float4 skinTempPosition = float4(INPosition, 1.0);
+    float3 skinTempNormal = INNormal.xyz;
 
     float3 Position, Normal;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
-    Normal.x = dot(skinTempNormal, skinTransform.X.xyz);
-    Normal.y = dot(skinTempNormal, skinTransform.Y.xyz);
-    Normal.z = dot(skinTempNormal, skinTransform.Z.xyz);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
+    Normal.x = dot(skinTempNormal, skinMatrix[0].xyz);
+    Normal.y = dot(skinTempNormal, skinMatrix[1].xyz);
+    Normal.z = dot(skinTempNormal, skinMatrix[2].xyz);
     Normal = normalize(Normal);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
+    OUTPosition = PointToDevice(Position, worldViewProjection);
     float3 lv = normalize(lightPosition - Position);
     float3 color = (saturate(dot(Normal, lv)) * lightColor + ambientColor);
-    OUT.Color = float4(color * materialColor.xyz, materialColor.w);
-    return OUT;
+    OUTColor = float4(color * materialColor.xyz, materialColor.w);
 }
 
-VP_LAMBERT_OUT vp_lambert(VP_LAMBERT_IN IN)
+void vp_lambert(in float3 INPosition : POSITION,
+                in float3 INNormal   : NORMAL,
+                in float2 INUV       : TEXCOORD0,
+                out float4 OUTPosition : POSITION,
+                out float4 OUTColor    : COLOR,
+                out float2 OUTUV       : TEXCOORD0)
 {
-    VP_LAMBERT_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    float3 lv = normalize(lightPosition - IN.Position);
-    float3 color = (saturate(dot(IN.Normal, lv)) * lightColor + ambientColor);
-    OUT.Color = float4(color * materialColor.xyz, materialColor.w);
-    OUT.UV = TransformUV(IN.UV);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    float3 lv = normalize(lightPosition - INPosition);
+    float3 color = (saturate(dot(INNormal, lv)) * lightColor + ambientColor);
+    OUTColor = float4(color * materialColor.xyz, materialColor.w);
+    OUTUV = TransformUV(INUV);
 }
 
-VP_LAMBERT_OUT vp_lambert_skinned(VP_LAMBERT_SKINNED_IN IN)
+void vp_lambert_skinned(in float3 INPosition : POSITION,
+                        in float3 INNormal   : NORMAL,
+                        in float2 INUV       : TEXCOORD0,
+                        in float4 INIndices  : BLENDINDICES,
+                        in float4 INWeights  : BLENDWEIGHT,
+                        out float4 OUTPosition : POSITION,
+                        out float4 OUTColor    : COLOR,
+                        out float2 OUTUV       : TEXCOORD0)
 {
-    VP_LAMBERT_OUT OUT;
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
-
-    float4 skinTempPosition = float4(IN.Position, 1.0);
-    float3 skinTempNormal = IN.Normal.xyz;
+    float4 skinTempPosition = float4(INPosition, 1.0);
+    float3 skinTempNormal = INNormal.xyz;
 
     float3 Position, Normal;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
-    Normal.x = dot(skinTempNormal, skinTransform.X.xyz);
-    Normal.y = dot(skinTempNormal, skinTransform.Y.xyz);
-    Normal.z = dot(skinTempNormal, skinTransform.Z.xyz);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
+    Normal.x = dot(skinTempNormal, skinMatrix[0].xyz);
+    Normal.y = dot(skinTempNormal, skinMatrix[1].xyz);
+    Normal.z = dot(skinTempNormal, skinMatrix[2].xyz);
     Normal = normalize(Normal);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
+    OUTPosition = PointToDevice(Position, worldViewProjection);
     float3 lv = normalize(lightPosition - Position);
     float3 color = (saturate(dot(Normal, lv)) * lightColor + ambientColor);
-    OUT.Color = float4(color * materialColor.xyz, materialColor.w);
-    OUT.UV = TransformUV(IN.UV);
-    return OUT;
+    OUTColor = float4(color * materialColor.xyz, materialColor.w);
+    OUTUV = TransformUV(INUV);
 }
 
-VP_BLINN_OUT vp_blinn(VP_BLINN_IN IN)
+void vp_blinn(in float3 INPosition : POSITION,
+              in float3 INNormal   : NORMAL,
+              in float2 INUV       : TEXCOORD0,
+              out float4 OUTPosition : POSITION,
+              out float2 OUTUV       : TEXCOORD0,
+              out float3 OUTNormal   : TEXCOORD1,
+              out float3 OUTLight    : TEXCOORD2,
+              out float3 OUTView     : TEXCOORD3)
 {
-    VP_BLINN_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
-    OUT.Normal = IN.Normal;
-    OUT.Light = normalize(lightPosition - IN.Position);
-    OUT.View  = normalize(eyePosition - IN.Position);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTUV = TransformUV(INUV);
+    OUTNormal = INNormal;
+    OUTLight = normalize(lightPosition - INPosition);
+    OUTView  = normalize(eyePosition - INPosition);
 }
 
-VP_BLINN_OUT vp_blinn_skinned(VP_BLINN_SKINNED_IN IN)
+void vp_blinn_skinned(in float3 INPosition : POSITION,
+                      in float3 INNormal   : NORMAL,
+                      in float2 INUV       : TEXCOORD0,
+                      in float4 INIndices  : BLENDINDICES,
+                      in float4 INWeights  : BLENDWEIGHT,
+                      out float4 OUTPosition : POSITION,
+                      out float2 OUTUV       : TEXCOORD0,
+                      out float3 OUTNormal   : TEXCOORD1,
+                      out float3 OUTLight    : TEXCOORD2,
+                      out float3 OUTView     : TEXCOORD3)
 {
-    VP_BLINN_OUT OUT;
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
-
-    float4 skinTempPosition = float4(IN.Position, 1.0);
-    float3 skinTempNormal = IN.Normal.xyz;
+    float4 skinTempPosition = float4(INPosition, 1.0);
+    float3 skinTempNormal = INNormal.xyz;
     float3 Position, Normal;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
-    Normal.x = dot(skinTempNormal, skinTransform.X.xyz);
-    Normal.y = dot(skinTempNormal, skinTransform.Y.xyz);
-    Normal.z = dot(skinTempNormal, skinTransform.Z.xyz);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
+    Normal.x = dot(skinTempNormal, skinMatrix[0].xyz);
+    Normal.y = dot(skinTempNormal, skinMatrix[1].xyz);
+    Normal.z = dot(skinTempNormal, skinMatrix[2].xyz);
 
     Normal.xyz = normalize(Normal.xyz);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
-    OUT.Normal = Normal;
-    OUT.Light = normalize(lightPosition - Position);
-    OUT.View  = normalize(eyePosition - Position);
-    return OUT;
+    OUTPosition = PointToDevice(Position, worldViewProjection);
+    OUTUV = TransformUV(INUV);
+    OUTNormal = Normal;
+    OUTLight = normalize(lightPosition - Position);
+    OUTView  = normalize(eyePosition - Position);
 }
 
-VP_NORMALMAP_OUT vp_normalmap(VP_NORMALMAP_IN IN)
+void vp_normalmap(in float3 INPosition : POSITION,
+                  in float3 INNormal   : NORMAL,
+                  in float2 INUV       : TEXCOORD0,
+                  in float3 INTangent  : TANGENT,
+                  in float3 INBinormal : BINORMAL,
+                  out float4 OUTPosition : POSITION,
+                  out float2 OUTUV       : TEXCOORD0,
+                  out float3 OUTLight    : TEXCOORD1,
+                  out float3 OUTView     : TEXCOORD2)
 {
-    VP_NORMALMAP_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
-    float3 Nn = IN.Normal;
-    float3 Tn = IN.Tangent;
-    float3 Bn = IN.Binormal;
-    float3 Ln = normalize(lightPosition - IN.Position);
-    float3 Vn = normalize(eyePosition - IN.Position);
-    OUT.Light = float3(dot(Ln, Tn), dot(Ln, Bn), dot(Ln, Nn));
-    OUT.View  = float3(dot(Vn, Tn), dot(Vn, Bn), dot(Vn, Nn));
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTUV = TransformUV(INUV);
+    float3 Nn = INNormal;
+    float3 Tn = INTangent;
+    float3 Bn = INBinormal;
+    float3 Ln = normalize(lightPosition - INPosition);
+    float3 Vn = normalize(eyePosition - INPosition);
+    OUTLight = float3(dot(Ln, Tn), dot(Ln, Bn), dot(Ln, Nn));
+    OUTView  = float3(dot(Vn, Tn), dot(Vn, Bn), dot(Vn, Nn));
 }
 
-VP_NORMALMAP_OUT vp_normalmap_skinned(VP_NORMALMAP_SKINNED_IN IN)
+void vp_normalmap_skinned(in float3 INPosition : POSITION,
+                          in float3 INNormal   : NORMAL,
+                          in float2 INUV       : TEXCOORD0,
+                          in float3 INTangent  : TANGENT,
+                          in float3 INBinormal : BINORMAL,
+                          in float4 INIndices  : BLENDINDICES,
+                          in float4 INWeights  : BLENDWEIGHT,
+                          out float4 OUTPosition : POSITION,
+                          out float2 OUTUV       : TEXCOORD0,
+                          out float3 OUTLight    : TEXCOORD1,
+                          out float3 OUTView     : TEXCOORD2)
 {
-    VP_NORMALMAP_OUT OUT;
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
-
-    float4 skinTempPosition = float4(IN.Position, 1.0);
-    float3 skinTempNormal = IN.Normal.xyz;
-    float3 skinTempTangent = IN.Tangent.xyz;
-    float3 skinTempBinormal = IN.Binormal.xyz;
+    float4 skinTempPosition = float4(INPosition, 1.0);
+    float3 skinTempNormal = INNormal.xyz;
+    float3 skinTempTangent = INTangent.xyz;
+    float3 skinTempBinormal = INBinormal.xyz;
 
     float3 Position, Normal, Tangent, Binormal;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
-    Normal.x = dot(skinTempNormal, skinTransform.X.xyz);
-    Normal.y = dot(skinTempNormal, skinTransform.Y.xyz);
-    Normal.z = dot(skinTempNormal, skinTransform.Z.xyz);
-    Tangent.x = dot(skinTempTangent, skinTransform.X.xyz);
-    Tangent.y = dot(skinTempTangent, skinTransform.Y.xyz);
-    Tangent.z = dot(skinTempTangent, skinTransform.Z.xyz);
-    Binormal.x = dot(skinTempBinormal, skinTransform.X.xyz);
-    Binormal.y = dot(skinTempBinormal, skinTransform.Y.xyz);
-    Binormal.z = dot(skinTempBinormal, skinTransform.Z.xyz);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
+    Normal.x = dot(skinTempNormal, skinMatrix[0].xyz);
+    Normal.y = dot(skinTempNormal, skinMatrix[1].xyz);
+    Normal.z = dot(skinTempNormal, skinMatrix[2].xyz);
+    Tangent.x = dot(skinTempTangent, skinMatrix[0].xyz);
+    Tangent.y = dot(skinTempTangent, skinMatrix[1].xyz);
+    Tangent.z = dot(skinTempTangent, skinMatrix[2].xyz);
+    Binormal.x = dot(skinTempBinormal, skinMatrix[0].xyz);
+    Binormal.y = dot(skinTempBinormal, skinMatrix[1].xyz);
+    Binormal.z = dot(skinTempBinormal, skinMatrix[2].xyz);
 
     Normal.xyz = normalize(Normal.xyz);
     Tangent.xyz = normalize(Tangent.xyz);
     Binormal.xyz = normalize(Binormal.xyz);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
+    OUTPosition = PointToDevice(Position, worldViewProjection);
+    OUTUV = TransformUV(INUV);
     float3 Nn = Normal;
     float3 Tn = Tangent;
     float3 Bn = Binormal;
     float3 Ln = normalize(lightPosition - Position);
     float3 Vn = normalize(eyePosition - Position);
-    OUT.Light = float3(dot(Ln, Tn), dot(Ln, Bn), dot(Ln, Nn));
-    OUT.View  = float3(dot(Vn, Tn), dot(Vn, Bn), dot(Vn, Nn));
-    return OUT;
+    OUTLight = float3(dot(Ln, Tn), dot(Ln, Bn), dot(Ln, Nn));
+    OUTView  = float3(dot(Vn, Tn), dot(Vn, Bn), dot(Vn, Nn));
 }
 
-VP_GLOWMAP_OUT vp_glowmap(VP_GLOWMAP_IN IN)
+void vp_glowmap(in float3 INPosition : POSITION,
+                in float2 INUV       : TEXCOORD0,
+                out float4 OUTPosition : POSITION,
+                out float2 OUTUV       : TEXCOORD0)
 {
-    VP_GLOWMAP_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTUV = TransformUV(INUV);
 }
 
-VP_GLOWMAP_OUT vp_glowmap_skinned(VP_GLOWMAP_SKINNED_IN IN)
+void vp_glowmap_skinned(in float3 INPosition : POSITION,
+                        in float2 INUV       : TEXCOORD0,
+                        in float4 INIndices  : BLENDINDICES,
+                        in float4 INWeights  : BLENDWEIGHT,
+                        out float4 OUTPosition : POSITION,
+                        out float2 OUTUV       : TEXCOORD0)
 {
-    VP_GLOWMAP_OUT OUT;
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
-
-    float4 skinTempPosition = float4(IN.Position, 1.0);
+    float4 skinTempPosition = float4(INPosition, 1.0);
 
     float3 Position;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
-    OUT.UV = TransformUV(IN.UV);
-    return OUT;
+    OUTPosition = PointToDevice(Position, worldViewProjection);
+    OUTUV = TransformUV(INUV);
 }
 
-VP_LIGHTMAP_OUT vp_lightmap(VP_LIGHTMAP_IN IN)
+void vp_lightmap(in float3 INPosition : POSITION,
+                 in float2 INUV0      : TEXCOORD0,
+                 in float2 INUV1      : TEXCOORD1,
+                 out float4 OUTPosition : POSITION,
+                 out float4 OUTUV       : TEXCOORD0)
 {
-    VP_LIGHTMAP_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    OUT.UV.xy = TransformUV(IN.UV0);
-    OUT.UV.zw = TransformUV(IN.UV1);
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    OUTUV.xy = TransformUV(INUV0);
+    OUTUV.zw = TransformUV(INUV1);
 }
 
-VP_DEBUG_OUT vp_debug(VP_NORMALMAP_IN IN)
+void vp_debug(in float3 INPosition : POSITION,
+              in float3 INNormal   : NORMAL,
+              in float2 INUV       : TEXCOORD0,
+              in float3 INTangent  : TANGENT,
+              in float3 INBinormal : BINORMAL,
+              out float4 OUTPosition : POSITION,
+              out float3 OUTNormal   : TEXCOORD0)
 {
-    VP_DEBUG_OUT OUT;
-    OUT.Position = PointToDevice(IN.Position, worldViewProjection);
-    float3 Nn = NormalToWorld(IN.Normal, worldInverseTranspose);
-    //float3 Tn = NormalToWorld(IN.Tangent, worldInverseTranspose);
-    //float3 Bn = NormalToWorld(IN.Binormal, worldInverseTranspose);
-    OUT.Normal = Nn;
-    return OUT;
+    OUTPosition = PointToDevice(INPosition, worldViewProjection);
+    float3 Nn = NormalToWorld(INNormal, worldInverseTranspose);
+    //float3 Tn = NormalToWorld(INTangent, worldInverseTranspose);
+    //float3 Bn = NormalToWorld(INBinormal, worldInverseTranspose);
+    OUTNormal = Nn;
 }
 
-VP_DEBUG_OUT vp_debug_skinned(VP_NORMALMAP_SKINNED_IN IN)
+void vp_debug_skinned(in float3 INPosition : POSITION,
+                      in float3 INNormal   : NORMAL,
+                      in float2 INUV       : TEXCOORD0,
+                      in float3 INTangent  : TANGENT,
+                      in float3 INBinormal : BINORMAL,
+                      in float4 INIndices  : BLENDINDICES,
+                      in float4 INWeights  : BLENDWEIGHT,
+                      out float4 OUTPosition : POSITION,
+                      out float3 OUTNormal   : TEXCOORD0)
 {
-    VP_DEBUG_OUT OUT;
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    SkinTransform skinTransform = BuildSkinTransform(IN.Indices, IN.Weights);
-
-    float4 skinTempPosition = float4(IN.Position, 1.0);
-    float3 skinTempNormal = IN.Normal.xyz;
-    float3 skinTempTangent = IN.Tangent.xyz;
-    float3 skinTempBinormal = IN.Binormal.xyz;
+    float4 skinTempPosition = float4(INPosition, 1.0);
+    float3 skinTempNormal = INNormal.xyz;
+    float3 skinTempTangent = INTangent.xyz;
+    float3 skinTempBinormal = INBinormal.xyz;
 
     float3 Position, Normal, Tangent, Binormal;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
-    Normal.x = dot(skinTempNormal, skinTransform.X.xyz);
-    Normal.y = dot(skinTempNormal, skinTransform.Y.xyz);
-    Normal.z = dot(skinTempNormal, skinTransform.Z.xyz);
-    Tangent.x = dot(skinTempTangent, skinTransform.X.xyz);
-    Tangent.y = dot(skinTempTangent, skinTransform.Y.xyz);
-    Tangent.z = dot(skinTempTangent, skinTransform.Z.xyz);
-    Binormal.x = dot(skinTempBinormal, skinTransform.X.xyz);
-    Binormal.y = dot(skinTempBinormal, skinTransform.Y.xyz);
-    Binormal.z = dot(skinTempBinormal, skinTransform.Z.xyz);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
+    Normal.x = dot(skinTempNormal, skinMatrix[0].xyz);
+    Normal.y = dot(skinTempNormal, skinMatrix[1].xyz);
+    Normal.z = dot(skinTempNormal, skinMatrix[2].xyz);
+    Tangent.x = dot(skinTempTangent, skinMatrix[0].xyz);
+    Tangent.y = dot(skinTempTangent, skinMatrix[1].xyz);
+    Tangent.z = dot(skinTempTangent, skinMatrix[2].xyz);
+    Binormal.x = dot(skinTempBinormal, skinMatrix[0].xyz);
+    Binormal.y = dot(skinTempBinormal, skinMatrix[1].xyz);
+    Binormal.z = dot(skinTempBinormal, skinMatrix[2].xyz);
 
     Normal.xyz = normalize(Normal.xyz);
     Tangent.xyz = normalize(Tangent.xyz);
     Binormal.xyz = normalize(Binormal.xyz);
 
-    OUT.Position = PointToDevice(Position, worldViewProjection);
+    OUTPosition = PointToDevice(Position, worldViewProjection);
     float3 Nn = NormalToWorld(Normal, worldInverseTranspose);
     //float3 Tn = NormalToWorld(Tangent, worldInverseTranspose);
     //float3 Bn = NormalToWorld(Binormal, worldInverseTranspose);
-    OUT.Normal = Nn;
-    return OUT;
+    OUTNormal = Nn;
 }
 
 //
 // Fragment programs
 //
-float4 fp_normal(FP_NOLIGHT_IN IN) : COLOR
+float4 fp_normal(float2 INUV : TEXCOORD0) : COLOR
 {
-    return materialColor * tex2D(diffuse, IN.UV);
+    return materialColor * tex2D(diffuse, INUV);
 }
 
-float4 fp_normal_vertexcolor(FP_NOLIGHT_VERTEXCOLOR_IN IN) : COLOR
+float4 fp_normal_vertexcolor(float4 INColor : COLOR,
+                             float2 INUV    : TEXCOORD0) : COLOR
 {
-    return IN.Color * tex2D(diffuse, IN.UV);
+    return INColor * tex2D(diffuse, INUV);
 }
 
-float4 fp_translucent(FP_NOLIGHT_IN IN) : COLOR
+float4 fp_translucent(float2 INUV : TEXCOORD0) : COLOR
 {
-    return float4(tex2D(diffuse, IN.UV).xyz * materialColor.xyz, 1.0);
+    return float4(tex2D(diffuse, INUV).xyz * materialColor.xyz, 1.0);
 }
 
-float4 fp_translucent_vertexcolor(FP_NOLIGHT_VERTEXCOLOR_IN IN) : COLOR
+float4 fp_translucent_vertexcolor(float4 INColor : COLOR,
+                                  float2 INUV    : TEXCOORD0) : COLOR
 {
-    return float4(tex2D(diffuse, IN.UV).xyz * IN.Color.xyz, 1.0);
+    return float4(tex2D(diffuse, INUV).xyz * INColor.xyz, 1.0);
 }
 
-float4 fp_premodulatealpha(FP_NOLIGHT_IN IN) : COLOR
+float4 fp_premodulatealpha(float2 INUV : TEXCOORD0) : COLOR
 {
-    float4 color = materialColor * tex2D(diffuse, IN.UV);
+    float4 color = materialColor * tex2D(diffuse, INUV);
     color.xyz *= materialColor.w;
     return color;
 }
 
-float4 fp_premodulatealpha_vertexcolor(FP_NOLIGHT_VERTEXCOLOR_IN IN) : COLOR
+float4 fp_premodulatealpha_vertexcolor(float4 INColor : COLOR,
+                                       float2 INUV    : TEXCOORD0) : COLOR
 {
-    float4 color = IN.Color * tex2D(diffuse, IN.UV);
-    color.xyz *= IN.Color.w;
+    float4 color = INColor * tex2D(diffuse, INUV);
+    color.xyz *= INColor.w;
     return color;
 }
 
-float4 fp_separatealpha(FP_NOLIGHT_IN IN) : COLOR
+float4 fp_separatealpha(float2 INUV : TEXCOORD0) : COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, IN.UV).a;
-    return materialColor * tex2D(diffuse, IN.UV) * alpha;
+    float alpha = materialColor.w * tex2D(alpha_map, INUV).a;
+    return materialColor * tex2D(diffuse, INUV) * alpha;
 }
 
-float4 fp_separatealpha_env(FP_GLASS_ENV_IN IN) : COLOR
+float4 fp_separatealpha_env(float2 INUV           : TEXCOORD0,
+                            float3 INNormal       : TEXCOORD1,
+                            float3 INEyeDirection : TEXCOORD2) : COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, IN.UV).a;
-    float3 R = reflect(normalize(IN.eyeDirection), normalize(IN.Normal));
+    float alpha = materialColor.w * tex2D(alpha_map, INUV).a;
+    float3 R = reflect(normalize(INEyeDirection), normalize(INNormal));
     return materialColor * texCUBE(env_map, R) * alpha;
 }
 
-float4 fp_env(FP_ENV_IN IN) : COLOR
+float4 fp_env(float3 INNormal       : TEXCOORD0,
+              float3 INEyeDirection : TEXCOORD1) : COLOR
 {
-    float3 R = reflect(normalize(IN.eyeDirection), normalize(IN.Normal));
+    float3 R = reflect(normalize(INEyeDirection), normalize(INNormal));
     return materialColor.w * materialColor * texCUBE(env_map, R);
 }
 
@@ -867,227 +665,253 @@ float4 fp_phong(float2 INUV     : TEXCOORD0,
     return float4(result,1.0);
 }
 
-float4 fp_normalmap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap(float2 INUV    : TEXCOORD0,
+                    float3 INLight : TEXCOORD1,
+                    float3 INView  : TEXCOORD2) : COLOR
 {
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMap(IN.UV);
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMap(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, IN.UV);
+    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_alphatest(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_alphatest(float2 INUV    : TEXCOORD0,
+                              float3 INLight : TEXCOORD1,
+                              float3 INView  : TEXCOORD2) : COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, IN.UV);
+    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
     }
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMap(IN.UV);
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMap(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_specularmap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_specularmap(float2 INUV    : TEXCOORD0,
+                                float3 INLight : TEXCOORD1,
+                                float3 INView  : TEXCOORD2) : COLOR
 {
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMap(IN.UV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, IN.UV).xyz;
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMap(INUV);
+    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, IN.UV);
+    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_specularmap_alphatest(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_specularmap_alphatest(float2 INUV    : TEXCOORD0,
+                                          float3 INLight : TEXCOORD1,
+                                          float3 INView  : TEXCOORD2) : COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, IN.UV);
+    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
     }
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMap(IN.UV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, IN.UV).xyz;
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMap(INUV);
+    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_specularmap_alphamap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_specularmap_alphamap(float2 INUV    : TEXCOORD0,
+                                         float3 INLight : TEXCOORD1,
+                                         float3 INView  : TEXCOORD2) : COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, IN.UV).a;
+    float alpha = materialColor.w * tex2D(alpha_map, INUV).a;
     if (alpha < alphaRef)
     {
         discard;
     }
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMap(IN.UV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, IN.UV).xyz;
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMap(INUV);
+    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = materialColor.xyz * tex2D(diffuse, IN.UV).xyz;
+    float3 diffuseColor = materialColor.xyz * tex2D(diffuse, INUV).xyz;
     float3 result = specContrib + (diffuseColor * (diffContrib + ambientColor));
     return float4(result, alpha);
 }
 
-float4 fp_normalmap_glowmap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_glowmap(float2 INUV    : TEXCOORD0,
+                            float3 INLight : TEXCOORD1,
+                            float3 INView  : TEXCOORD2) : COLOR
 {
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMap(IN.UV);
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMap(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, IN.UV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, IN.UV).xyz;
+    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, 1.0);
 }
 
-float4 fp_normalmap_specularmap_glowmap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_specularmap_glowmap(float2 INUV    : TEXCOORD0,
+                                        float3 INLight : TEXCOORD1,
+                                        float3 INView  : TEXCOORD2) : COLOR
 {
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMap(IN.UV);
-    float3 ks = tex2D(specular_map, IN.UV).xyz;
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMap(INUV);
+    float3 ks = tex2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, IN.UV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, IN.UV).xyz;
+    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, 1.0);
 }
 
-float4 fp_rxgb_normalmap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap(float2 INUV    : TEXCOORD0,
+                         float3 INLight : TEXCOORD1,
+                         float3 INView  : TEXCOORD2) : COLOR
 {
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMapRXGB(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, IN.UV);
+    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
-float4 fp_rxgb_normalmap_alphatest(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_alphatest(float2 INUV    : TEXCOORD0,
+                                   float3 INLight : TEXCOORD1,
+                                   float3 INView  : TEXCOORD2) : COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, IN.UV);
+    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
     }
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMapRXGB(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
-float4 fp_rxgb_normalmap_specularmap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_specularmap(float2 INUV    : TEXCOORD0,
+                                     float3 INLight : TEXCOORD1,
+                                     float3 INView  : TEXCOORD2) : COLOR
 {
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, IN.UV).xyz;
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMapRXGB(INUV);
+    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, IN.UV);
+    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
-float4 fp_rxgb_normalmap_specularmap_alphatest(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_specularmap_alphatest(float2 INUV    : TEXCOORD0,
+                                               float3 INLight : TEXCOORD1,
+                                               float3 INView  : TEXCOORD2) : COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, IN.UV);
+    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
     }
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, IN.UV).xyz;
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMapRXGB(INUV);
+    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
-float4 fp_rxgb_normalmap_glowmap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_glowmap(float2 INUV    : TEXCOORD0,
+                                 float3 INLight : TEXCOORD1,
+                                 float3 INView  : TEXCOORD2) : COLOR
 {
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMapRXGB(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, IN.UV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, IN.UV).xyz;
+    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, materialColor.w);
 }
 
-float4 fp_rxgb_normalmap_specularmap_glowmap(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_specularmap_glowmap(float2 INUV    : TEXCOORD0,
+                                             float3 INLight : TEXCOORD1,
+                                             float3 INView  : TEXCOORD2) : COLOR
 {
     float3 diffContrib;
     float3 specContrib;
-    float3 Ln = normalize(IN.Light);
-    float3 Vn = normalize(IN.View);
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
-    float3 ks = tex2D(specular_map, IN.UV).xyz;
+    float3 Ln = normalize(INLight);
+    float3 Vn = normalize(INView);
+    float3 Nn = SampleNormalMapRXGB(INUV);
+    float3 ks = tex2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, IN.UV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, IN.UV).xyz;
+    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, materialColor.w);
 }
 
-float4 fp_glowmap(FP_GLOWMAP_IN IN) : COLOR
+float4 fp_glowmap(float2 INUV : TEXCOORD0) : COLOR
 {
-    return float4(materialColor.xyz * tex2D(glow_map, IN.UV).xyz, 1.0);
+    return float4(materialColor.xyz * tex2D(glow_map, INUV).xyz, 1.0);
 }
 
-float4 fp_lightmap(FP_LIGHTMAP_IN IN) : COLOR
+float4 fp_lightmap(float4 INUV : TEXCOORD0) : COLOR
 {
-    float3 diffuseColor = tex2D(diffuse, IN.UV.xy).xyz;
-    float3 diffContrib = ((lightingScale * tex2D(light_map, IN.UV.zw).xyz) + ambientColor);
+    float3 diffuseColor = tex2D(diffuse, INUV.xy).xyz;
+    float3 diffContrib = ((lightingScale * tex2D(light_map, INUV.zw).xyz) + ambientColor);
     return float4(materialColor.xyz * diffuseColor * diffContrib, 1.0);
 }
 
-float4 fp_skybox(FP_SKYBOX_IN IN) : COLOR
+float4 fp_skybox(float3 INEyeDirection : TEXCOORD0) : COLOR
 {
-    return texCUBE(env_map, IN.eyeDirection);
+    return texCUBE(env_map, INEyeDirection);
 }
 
-float4 fp_debug(FP_DEBUG_IN IN) : COLOR
+float4 fp_debug(float3 INNormal : TEXCOORD0) : COLOR
 {
-    return float4(IN.Normal * 0.5 + 0.5, 1.0);
+    return float4(INNormal * 0.5 + 0.5, 1.0);
 }
 
 //
