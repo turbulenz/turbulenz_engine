@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2012 Turbulenz Limited
+// Copyright (c) 2010-2013 Turbulenz Limited
 
 float4 color;
 float4 clipSpace;
@@ -10,11 +10,6 @@ sampler2D diffuse = sampler_state
     WrapS = ClampToEdge;
     WrapT = ClampToEdge;
 };
-struct VS_OUT
-{
-    float4 Position: POSITION;
-    float2 UV: TEXCOORD0;
-};
 float4 vp_background(float4 Position : POSITION) : POSITION
 {
    return Position;
@@ -23,14 +18,14 @@ float4 fp_background() : COLOR
 {
    return float4(color.xyz, smoothstep(0.0, 1.0, color.w));
 }
-VS_OUT vp_texture(float4 Position : POSITION, float2 UV : TEXCOORD0)
+void vp_texture(in float4 InPosition : POSITION,
+                in float2 InUV : TEXCOORD0,
+                out float4 OutPosition: POSITION,
+                out float2 OutUV: TEXCOORD0)
 {
-   VS_OUT Out;
-   float4 position = Position;
-   position.xy = position.xy * clipSpace.xy + clipSpace.zw;
-   Out.Position  = position;
-   Out.UV = UV;
-   return Out;
+   OutPosition.xy = (InPosition.xy * clipSpace.xy) + clipSpace.zw;
+   OutPosition.zw = InPosition.zw;
+   OutUV = InUV;
 }
 float4 fp_texture(float2 uv : TEXCOORD0) : COLOR
 {
