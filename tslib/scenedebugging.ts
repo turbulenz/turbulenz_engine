@@ -3286,7 +3286,7 @@ Scene.prototype.drawWireframe = function drawWireframeFn(gd, sm, camera, wirefra
                             vertexBuffer = gd.createVertexBuffer({
                                     numVertices: dataLength,
                                     attributes: attributes,
-                                    dynamic: true
+                                    dynamic: oldVertexBuffer.dynamic
                                 });
 
                             vData.length = dataLength * numAttributeComponents;
