@@ -671,7 +671,7 @@ Viewer.create = function viewerCreateFn()
         checkMapping();
     };
 
-    var clearColor = [0.95, 0.95, 1.0, 0.0];
+    var clearColor = [0.95, 0.95, 1.0, 1.0];
     var previousFrameTime = 0;
     var nextUpdateTime = 0;
     vi.doUpdate = true;
@@ -1202,7 +1202,7 @@ Viewer.create = function viewerCreateFn()
         {
             vi.isDefaultWireframeOn = true;
             wireframeInfo.wireColor = md.v4Build(0, 0, 0, 1); //choose color for the wireframe lines
-            wireframeInfo.fillColor = md.v4Build(1, 1, 1, 0); //choose color for the interior of the polygons,
+            wireframeInfo.fillColor = md.v4Build(0.95, 0.95, 1, 0); //choose color for the interior of the polygons,
                                                         //leave alpha as zero to allow removing interior of polygons
             wireframeInfo.alphaRef = 0.35; //set to greater than zero (e.g. 0.1) to remove interior of polygons
         }
