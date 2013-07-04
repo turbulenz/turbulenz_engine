@@ -84,7 +84,7 @@ class GameProfileManager
         }
 
         return true;
-    };
+    }
 
     remove(callbackFn, errorCallbackFn)
     {
@@ -135,7 +135,7 @@ class GameProfileManager
         }
 
         return true;
-    };
+    }
 
     get(username, callbackFn, errorCallbackFn): bool
     {
@@ -151,7 +151,7 @@ class GameProfileManager
             }
         };
         return this.getList([username], callbackWrapper, errorCallbackFn);
-    };
+    }
 
     getList(usernames, callbackFn, errorCallbackFn): bool
     {
@@ -195,7 +195,7 @@ class GameProfileManager
         });
 
         return true;
-    };
+    }
 
     // Constructor function
     static create(requestHandler: RequestHandler,
@@ -215,5 +215,5 @@ class GameProfileManager
         gameProfileManager.service = TurbulenzServices.getService('gameProfile');
 
         return gameProfileManager;
-    };
-};
+    }
+}

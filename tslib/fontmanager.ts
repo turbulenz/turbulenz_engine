@@ -62,7 +62,7 @@ class Font
         this.pages = null;
         this.kernings = null;
         this.texture = null;
-    };
+    }
 
     calculateTextDimensions(text, scale, spacing)
     {
@@ -127,7 +127,7 @@ class Font
             numGlyphs: numGlyphs,
             linesWidth: linesWidth
         };
-    };
+    }
 
     generateTextVertices(text, params)
     {
@@ -267,7 +267,7 @@ class Font
         }
 
         return vertices;
-    };
+    }
 
     drawTextRect(text, params)
     {
@@ -329,7 +329,7 @@ class Font
         {
             gd.draw(fm.primitiveFan, 4, 0);
         }
-    };
+    }
 
     createIndexBuffer(maxGlyphs)
     {
@@ -359,7 +359,7 @@ class Font
         }
 
         return indexBuffer;
-    };
+    }
 
     createVertexBuffer(maxGlyphs)
     {
@@ -368,8 +368,8 @@ class Font
             attributes: [gd.VERTEXFORMAT_FLOAT2, gd.VERTEXFORMAT_FLOAT2],
             dynamic: true,
             'transient': true});
-    };
-};
+    }
+}
 
 /**
   @class  Font manager
@@ -386,7 +386,7 @@ class FontManager
     load: { (path: string, onFontLoaded?: { (font): void; }): Font; };
     map: { (dst: string, src: string): void; };
     remove: { (path: string): void; };
-    get(path: string): Font { debug.abort("empty method"); return undefined; };
+    get(path: string): Font { debug.abort("empty method"); return undefined; }
     getAll: { (): { [name: string]: Font; }; };
 
     getNumPendingFonts: { (): number; };
@@ -1208,5 +1208,5 @@ class FontManager
         };
 
         return fm;
-    };
-};
+    }
+}

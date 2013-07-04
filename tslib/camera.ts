@@ -45,7 +45,7 @@ class Camera
         v3Normalize.call(md, xaxis, xaxis);
         var yaxis = v3Cross.call(md, zaxis, xaxis);
         this.matrix = md.m43Build(xaxis, yaxis, zaxis, eyePosition, this.matrix);
-    };
+    }
 
     updateProjectionMatrix()
     {
@@ -98,19 +98,19 @@ class Camera
                                                  -shearX, -shearY,  z0,  z1,
                                                  0.0,     0.0,      w0,  w1,
                                                  this.projectionMatrix);
-    };
+    }
 
     updateViewMatrix()
     {
         var md = this.md;
         this.viewMatrix = md.m43InverseOrthonormal(this.matrix, this.viewMatrix);
-    };
+    }
 
     updateViewProjectionMatrix()
     {
         var md = this.md;
         this.viewProjectionMatrix = md.m43MulM44(this.viewMatrix, this.projectionMatrix, this.viewProjectionMatrix);
-    };
+    }
 
     extractFrustumPlanes(m, p): any[]
     {
@@ -153,42 +153,42 @@ class Camera
         planes[5] = md.planeNormalize(vec, planes[5]); // far
 
         return planes;
-    };
+    }
 
     updateFrustumPlanes()
     {
         this.frustumPlanes = this.extractFrustumPlanes(this.viewProjectionMatrix, this.frustumPlanes);
-    };
+    }
 
     isVisiblePoint(p)
     {
         var md = this.md;
         return md.isInsidePlanesPoint(p, this.frustumPlanes);
-    };
+    }
 
     isVisibleSphere(c, r)
     {
         var md = this.md;
         return md.isInsidePlanesSphere(c, r, this.frustumPlanes);
-    };
+    }
 
     isVisibleBox(c, h)
     {
         var md = this.md;
         return md.isInsidePlanesBox(c, h, this.frustumPlanes);
-    };
+    }
 
     isVisibleAABB(extents)
     {
         var md = this.md;
         return md.aabbIsInsidePlanes(extents, this.frustumPlanes);
-    };
+    }
 
     isFullyInsideAABB(extents)
     {
         var md = this.md;
         return md.aabbIsFullyInsidePlanes(extents, this.frustumPlanes);
-    };
+    }
 
     getFrustumPoints(farPlane?) : any[]
     {
@@ -303,7 +303,7 @@ class Camera
         }
 
         return frustumPoints;
-    };
+    }
 
     getFrustumFarPoints()
     {
@@ -378,7 +378,7 @@ class Camera
         }
 
         return frustumPoints;
-    };
+    }
 
     getFrustumExtents(extents, farClip)
     {
@@ -427,7 +427,7 @@ class Camera
         extents[3] = max0;
         extents[4] = max1;
         extents[5] = max2;
-    };
+    }
 
     // Constructor function
     static create(md: MathDevice): Camera
@@ -441,8 +441,8 @@ class Camera
         c.frustumPlanes = [];
         c.updateFrustumPlanes();
         return c;
-    };
-};
+    }
+}
 
 //
 // CameraController
@@ -533,7 +533,7 @@ class CameraController
         md.m43SetPos(matrix, pos);
 
         this.camera.matrix = matrix;
-    };
+    }
 
     translate(right, up, forward)
     {
@@ -546,7 +546,7 @@ class CameraController
                         md.v3ScalarMul(md.m43Up(matrix),    (speed * up)),
                         md.v3ScalarMul(md.m43At(matrix),   -(speed * forward)));
         md.m43SetPos(matrix, pos);
-    };
+    }
 
     update()
     {
@@ -599,7 +599,7 @@ class CameraController
         {
             this.camera.updateViewMatrix();
         }
-    };
+    }
 
     static create(gd: GraphicsDevice, id: InputDevice, camera: Camera,
                   log?: HTMLElement) : CameraController
@@ -951,5 +951,5 @@ class CameraController
         }
 
         return c;
-    };
-};
+    }
+}

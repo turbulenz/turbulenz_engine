@@ -54,7 +54,7 @@ class TextureEffects
         dst[8] = 0.0722;
         dst[9] = dst[10] = dst[11] = 0;
         return dst;
-    };
+    }
 
     sepiaMatrix(dst)
     {
@@ -73,7 +73,7 @@ class TextureEffects
         dst[8] = 0.131;
         dst[9] = dst[10] = dst[11] = 0;
         return dst;
-    };
+    }
 
     negativeMatrix(dst)
     {
@@ -85,7 +85,7 @@ class TextureEffects
         dst[1] = dst[2] = dst[3] = dst[5] = dst[6] = dst[7] = 0;
         dst[9] = dst[10] = dst[11] = 1;
         return dst;
-    };
+    }
 
     saturationMatrix(saturationScale, dst)
     {
@@ -105,7 +105,7 @@ class TextureEffects
         dst[8] = (is * 0.0722) + saturationScale;
         dst[9] = dst[10] = dst[11] = 0;
         return dst;
-    };
+    }
 
     hueMatrix(angle, dst)
     {
@@ -174,7 +174,7 @@ class TextureEffects
         dst[9] = dst[10] = dst[11] = 0;
 
         return dst;
-    };
+    }
 
     brightnessMatrix(brightnessOffset, dst)
     {
@@ -188,7 +188,7 @@ class TextureEffects
         dst[9] = dst[10] = dst[11] = brightnessOffset;
 
         return dst;
-    };
+    }
 
     contrastMatrix(contrastScale, dst)
     {
@@ -202,7 +202,7 @@ class TextureEffects
         dst[9] = dst[10] = dst[11] = 0.5 * (1 - contrastScale);
 
         return dst;
-    };
+    }
 
     applyBloom(params): bool
     {
@@ -265,7 +265,7 @@ class TextureEffects
         this.applyEffect(effectParams);
 
         return true;
-    };
+    }
 
     applyGaussianBlur(params): bool
     {
@@ -299,7 +299,7 @@ class TextureEffects
         this.applyEffect(effectParams);
 
         return true;
-    };
+    }
 
     applyColorMatrix(params): bool
     {
@@ -337,7 +337,7 @@ class TextureEffects
         this.applyEffect(effectParams);
 
         return true;
-    };
+    }
 
     applyDistort(params): bool
     {
@@ -412,7 +412,7 @@ class TextureEffects
         this.applyEffect(effectParams);
 
         return true;
-    };
+    }
 
     applyEffect(effect)
     {
@@ -429,7 +429,7 @@ class TextureEffects
 
             graphicsDevice.endRenderTarget();
         }
-    };
+    }
 
     destroy()
     {
@@ -437,7 +437,7 @@ class TextureEffects
 
         delete this.graphicsDevice;
         delete this.mathDevice;
-    };
+    }
 
     static create(params) : TextureEffects
     {
@@ -752,5 +752,5 @@ class TextureEffects
         e.gaussianBlurTechnique = shader.getTechnique("gaussianBlur");
 
         return e;
-    };
-};
+    }
+}

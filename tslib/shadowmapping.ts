@@ -89,12 +89,12 @@ class ShadowMapping
             this.skinnedTechnique = shader.getTechnique("skinned");
             this.blurTechnique = shader.getTechnique("blur");
         }
-    };
+    }
 
     update()
     {
         this.shadowTechniqueParameters['world'] = this.node.world;
-    };
+    }
 
     skinnedUpdate()
     {
@@ -107,7 +107,7 @@ class ShadowMapping
             techniqueParameters['skinBones'] = skinController.output;
             skinController.update();
         }
-    };
+    }
 
     destroyBuffers()
     {
@@ -193,7 +193,7 @@ class ShadowMapping
             this.depthBufferHigh.destroy();
             this.depthBufferHigh = null;
         }
-    };
+    }
 
     updateBuffers(sizeLow, sizeHigh): bool
     {
@@ -268,7 +268,7 @@ class ShadowMapping
         this.sizeHigh = 0;
         this.destroyBuffers();
         return false;
-    };
+    }
 
     findVisibleRenderables(lightInstance): bool
     {
@@ -458,7 +458,7 @@ class ShadowMapping
         }
 
         return (0 < occludersDrawArray.length);
-    };
+    }
 
     drawShadowMap(cameraMatrix, minExtentsHigh, lightInstance)
     {
@@ -797,7 +797,7 @@ class ShadowMapping
         gd.drawArray(occludersDrawArray, [shadowMapTechniqueParameters], 1);
 
         gd.endRenderTarget();
-    };
+    }
 
     private _filterOccluders(overlappingRenderables: any[],
                              numStaticOverlappingRenderables: number,
@@ -845,7 +845,7 @@ class ShadowMapping
             }
         }
         return numOccluders;
-    };
+    }
 
     private _updateOccludersLimits(lightInstance: any,
                                    viewMatrix: any,
@@ -967,7 +967,7 @@ class ShadowMapping
         lightInstance.maxLightDistanceY = maxLightDistanceY;
 
         return numOccluders;
-    };
+    }
 
     blurShadowMaps()
     {
@@ -1063,7 +1063,7 @@ class ShadowMapping
                 }
             }
         }
-    };
+    }
 
     lookAt(camera, lookAt, up, eyePosition)
     {
@@ -1074,7 +1074,7 @@ class ShadowMapping
         md.v3Normalize(xaxis, xaxis);
         var yaxis = md.v3Cross(zaxis, xaxis, this.tempV3AxisY);
         camera.matrix = md.m43Build(xaxis, yaxis, zaxis, eyePosition, camera.matrix);
-    };
+    }
 
     destroy()
     {
@@ -1109,9 +1109,9 @@ class ShadowMapping
         delete this.occludersExtents;
         delete this.md;
         delete this.gd;
-    };
+    }
 
-// Constructor function
+    // Constructor function
     static create(gd, md, shaderManager, effectsManager, sizeLow,
                   sizeHigh): ShadowMapping
     {
@@ -1163,6 +1163,5 @@ class ShadowMapping
         shadowMapping.occludersExtents = [];
 
         return shadowMapping;
-    };
-
-};
+    }
+}

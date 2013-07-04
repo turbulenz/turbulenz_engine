@@ -124,7 +124,7 @@ class Physics2DDebugDraw
             this._physics2DPortEnabled = false;
         }
         this._invalidated = true;
-    };
+    }
 
     setScreenViewport(viewport: any)
     {
@@ -142,7 +142,7 @@ class Physics2DDebugDraw
             this._screenPortEnabled = false;
         }
         this._invalidated = true;
-    };
+    }
 
     drawLine(x1, y1, x2, y2, color)
     {
@@ -164,7 +164,7 @@ class Physics2DDebugDraw
         data = this._indexData;
         data[iindex]     = numVertices;
         data[iindex + 1] = (numVertices + 1);
-    };
+    }
 
     drawLinearSpring(x1, y1, x2, y2, numCoils, radius, color)
     {
@@ -219,14 +219,14 @@ class Physics2DDebugDraw
             x1 = x2;
             y1 = y2;
         }
-    };
+    }
 
     _drawAngleIndicator(x, y, ang, rad, size, color)
     {
         var cos = Math.cos(ang);
         var sin = Math.sin(ang);
         this._drawAnchor(x + (rad * cos), y + (rad * sin), size, color);
-    };
+    }
 
     _drawAnchor(x, y, rad, color)
     {
@@ -235,7 +235,7 @@ class Physics2DDebugDraw
         this.drawCircle(x, y, rad * 0.75, color);
         this.drawCircle(x, y, rad * 0.5,  color);
         this.drawCircle(x, y, rad * 0.25, color);
-    };
+    }
 
     drawSpiral(x, y, ang1, ang2, rad1, rad2, color)
     {
@@ -327,7 +327,7 @@ class Physics2DDebugDraw
             x1 = x2;
             y1 = y2;
         }
-    };
+    }
 
     // We render a spiral 'spring' in the same way we do a spiral.
     // Only that the expressions for point on spring, and gradient at point
@@ -434,7 +434,7 @@ class Physics2DDebugDraw
             x1 = x2;
             y1 = y2;
         }
-    };
+    }
 
     drawCurve(x1, y1, cx, cy, x2, y2, color)
     {
@@ -519,7 +519,7 @@ class Physics2DDebugDraw
         }
 
         verts.length = 0;
-    };
+    }
 
     drawRectangle(x1, y1, x2, y2, color)
     {
@@ -543,7 +543,7 @@ class Physics2DDebugDraw
         idata[iindex + 1] = idata[iindex + 2] = (numVertices + 1);
         idata[iindex + 3] = idata[iindex + 4] = (numVertices + 2);
         idata[iindex + 5] = idata[iindex + 6] = (numVertices + 3);
-    };
+    }
 
     drawCircle(x, y, radius, color)
     {
@@ -613,7 +613,7 @@ class Physics2DDebugDraw
             idata[iindex + 1] = (numVertices + ((i + 1) % vCount));
             iindex += 2;
         }
-    };
+    }
 
     drawRigidBody(body)
     {
@@ -636,7 +636,7 @@ class Physics2DDebugDraw
                           data[(/*BODY_POS*/2)], data[(/*BODY_POS*/2) + 1],
                           this.bodyDetailColor);
         }
-    };
+    }
 
     drawConstraint(con)
     {
@@ -644,7 +644,7 @@ class Physics2DDebugDraw
         {
             con._draw(this, con._stiff);
         }
-    };
+    }
 
     drawWorld(world)
     {
@@ -679,7 +679,7 @@ class Physics2DDebugDraw
                 }
             }
         }
-    };
+    }
 
     _drawArbiters(arbiters)
     {
@@ -745,7 +745,7 @@ class Physics2DDebugDraw
                 this.drawLine(x1 - nx, y1 - ny, x2 - nx, y2 - ny, color);
             }
         }
-    };
+    }
 
     // Assumption that shape was updated by a body before call.
     _drawShape(shape)
@@ -782,7 +782,7 @@ class Physics2DDebugDraw
                 this.shapeDetailColor
             );
         }
-    };
+    }
 
     _drawCircleShape(circle, color)
     {
@@ -808,7 +808,7 @@ class Physics2DDebugDraw
                             this.screenToPhysics2D * this.circleOriginRadius,
                             this.shapeDetailColor);
         }
-    };
+    }
 
     _drawPolygonShape(polygon, color)
     {
@@ -845,7 +845,7 @@ class Physics2DDebugDraw
             idata[iindex + 1] = (numVertices + ((i + 1) % vCount));
             iindex += 2;
         }
-    };
+    }
 
     // =========================================================================
 
@@ -911,12 +911,12 @@ class Physics2DDebugDraw
         gd.setScissor(screenX, height - screenY - screenH, screenW, screenH);
         gd.setTechnique(this._technique);
         gd.setTechniqueParameters(this._techniqueParams);
-    };
+    }
 
     end()
     {
         this._dispatch();
-    };
+    }
 
     // =========================================================================
 
@@ -957,7 +957,7 @@ class Physics2DDebugDraw
             }
         }
         this._numLines += numLines;
-    };
+    }
 
     _bufferSizeAlgorithm(target)
     {
@@ -974,7 +974,7 @@ class Physics2DDebugDraw
         // Additionally ensure that we always take a multiple of of the stride
         // to avoid wasted bytes that could never be used.
         return (6 * Math.ceil(size / 6));
-    };
+    }
 
     _dispatch()
     {
@@ -1021,7 +1021,7 @@ class Physics2DDebugDraw
 
         this._numVertices = 0;
         this._numLines = 0;
-    };
+    }
 
     destroy()
     {
@@ -1032,7 +1032,7 @@ class Physics2DDebugDraw
 
         this._vertexBuffer.destroy();
         this._indexBuffer.destroy();
-    };
+    }
 
     static create(params) : Physics2DDebugDraw
     {
@@ -1215,8 +1215,8 @@ class Physics2DDebugDraw
         o._numLines = 0;
 
         return o;
-    };
-};
+    }
+}
 
 // =========================================================================
 // PULLEY CONSTRAINT

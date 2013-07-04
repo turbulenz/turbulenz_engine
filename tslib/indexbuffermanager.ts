@@ -88,7 +88,7 @@ class IndexBufferManager
             return 8;
         }
         return 9;
-    };
+    }
 
     //
     // makeBuckets
@@ -102,7 +102,7 @@ class IndexBufferManager
             result.push({headChunk: null});
         }
         return result;
-    };
+    }
 
     //
     // allocate
@@ -251,7 +251,7 @@ class IndexBufferManager
             length: numIndices,
             poolIndex: poolIndex
         };
-    };
+    }
 
     //
     // free
@@ -407,7 +407,7 @@ class IndexBufferManager
             indexBufferData.bucket.length = 0;
             indexBufferData.bucket = null;
         }
-    };
+    }
 
     //
     // destroy
@@ -451,7 +451,7 @@ class IndexBufferManager
         }
 
         this.graphicsDevice = null;
-    };
+    }
 
     //
     // create
@@ -467,6 +467,5 @@ class IndexBufferManager
         manager.dynamicIndexBuffers = dynamicIndexBuffers ? true : false;
 
         return manager;
-    };
-
-};
+    }
+}

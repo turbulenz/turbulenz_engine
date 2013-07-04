@@ -84,29 +84,29 @@ class MappingTable
             }
             return (this.assetPrefix + assetPath);
         }
-    };
+    }
 
     // Overides and previously set mapping
     setMapping(mapping: MappingTableDataURNMapping)
     {
         this.urlMapping = mapping;
-    };
+    }
 
     map(logicalPath: string, physicalPath: string)
     {
         this.urlMapping[logicalPath] = physicalPath;
-    };
+    }
 
     alias(alias: string, logicalPath: string)
     {
         var urlMapping = this.urlMapping;
         urlMapping[alias] = urlMapping[logicalPath];
-    };
+    }
 
     getCurrentProfile(): string
     {
         return this.currentProfile;
-    };
+    }
 
     setProfile(profile: string)
     {
@@ -118,7 +118,7 @@ class MappingTable
         {
             this.currentProfile = undefined;
         }
-    };
+    }
 
     static create(params: MappingTableParameters): MappingTable
     {
@@ -222,6 +222,5 @@ class MappingTable
         }
 
         return mappingTable;
-    };
-
-};
+    }
+}

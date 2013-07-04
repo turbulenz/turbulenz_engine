@@ -65,7 +65,7 @@ class ResourceLoader
         this.referencesPending = {};
         this.numReferencesPending = 0;
         this.animationsPending = {};
-    };
+    }
 
     //
     // endLoading
@@ -79,7 +79,7 @@ class ResourceLoader
         {
             onload(this.data);
         }
-    };
+    }
 
     resolveShapes(loadParams)
     {
@@ -130,7 +130,7 @@ class ResourceLoader
                 }
             }
         }
-    };
+    }
 
     resolveSkeletons(loadParams)
     {
@@ -154,7 +154,7 @@ class ResourceLoader
                 targetSkeletons[targetSkeletonName] = fileSkeleton;
             }
         }
-    };
+    }
 
     //
     // Resolve animations
@@ -228,7 +228,7 @@ class ResourceLoader
                 }
             }
         }
-    };
+    }
 
     //
     // resolveNodes
@@ -465,7 +465,7 @@ class ResourceLoader
 
         this.numReferencesPending += numReferences;
         //Utilities.log("total refs now " + this.numReferencesPending);
-    };
+    }
 
     //
     // loadPhysicsNodes
@@ -550,7 +550,7 @@ class ResourceLoader
                 }
             }
         }
-    };
+    }
 
     //
     // loadAreas
@@ -591,7 +591,7 @@ class ResourceLoader
             }
             targetAreas.push(fileArea);
         }
-    };
+    }
 
     //
     // resolve
@@ -660,7 +660,7 @@ class ResourceLoader
             this.endLoading(loadParams.onload);
         }
 
-    };
+    }
 
     //
     // load
@@ -686,7 +686,7 @@ class ResourceLoader
                 requestOwner: loadParams.request ? loadParams : TurbulenzEngine,
                 onload: dataReceived
             });
-    };
+    }
 
     // Constructor function
     static create() : ResourceLoader
@@ -697,5 +697,5 @@ class ResourceLoader
         rl.skeletonNames = {};
 
         return rl;
-    };
-};
+    }
+}

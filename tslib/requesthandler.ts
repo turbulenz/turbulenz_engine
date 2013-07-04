@@ -126,7 +126,7 @@ class RequestHandler
             callContext.retries = 1;
         }
         TurbulenzEngine.setTimeout(requestFn, callContext.expTime);
-    };
+    }
 
     retryAfter(callContext, retryAfter, requestFn, status)
     {
@@ -151,7 +151,7 @@ class RequestHandler
         }
 
         TurbulenzEngine.setTimeout(requestFn, retryAfter * 1000);
-    };
+    }
 
     request(callContext: RequestHandlerCallContext)
     {
@@ -220,7 +220,7 @@ class RequestHandler
                 callContext.onload = null;
             }
             callContext = null;
-        };
+        }
 
         makeRequest = function makeRequestFn()
         {
@@ -248,10 +248,10 @@ class RequestHandler
             {
                 TurbulenzEngine.request(callContext.src, responseCallback);
             }
-        };
+        }
 
         makeRequest();
-    };
+    }
 
     addEventListener(eventType, eventListener)
     {
@@ -279,7 +279,7 @@ class RequestHandler
                 eventHandlers.push(eventListener);
             }
         }
-    };
+    }
 
     removeEventListener(eventType, eventListener)
     {
@@ -304,7 +304,7 @@ class RequestHandler
                 }
             }
         }
-    };
+    }
 
     sendEventToHandlers(eventHandlers, arg0)
     {
@@ -318,7 +318,7 @@ class RequestHandler
                 eventHandlers[i](arg0);
             }
         }
-    };
+    }
 
     destroy()
     {
@@ -326,7 +326,7 @@ class RequestHandler
         this.handlers = null;
         this.onReconnected = null;
         this.onRequestTimeout = null;
-    };
+    }
 
     static create(params: any)
     {
@@ -347,5 +347,5 @@ class RequestHandler
         rh.handlers = handlers;
 
         return rh;
-    };
-};
+    }
+}

@@ -79,7 +79,7 @@ class LeaderboardManager
             callback: getOverviewCallback,
             requestHandler: this.requestHandler
         });
-    };
+    }
 
     getAggregates(spec, callbackFn, errorCallbackFn)
     {
@@ -117,7 +117,7 @@ class LeaderboardManager
             callback: getAggregatesCallback,
             requestHandler: this.requestHandler
         });
-    };
+    }
 
     getRaw(key, spec, callbackFn, errorCallbackFn): bool
     {
@@ -147,7 +147,7 @@ class LeaderboardManager
             requestHandler: this.requestHandler
         });
         return true;
-    };
+    }
 
     get(key, spec, callbackFn, errorCallbackFn): bool
     {
@@ -215,12 +215,12 @@ class LeaderboardManager
         var that = this;
         var callbackWrapper = function callbackWrapperFn(data)
         {
-            callbackFn(key,
-                       LeaderboardResult.create(that, key, dataSpec, data));
+            var lbr = LeaderboardResult.create(that, key, dataSpec, data);
+            callbackFn(key, lbr);
         };
 
         return this.getRaw(key, dataSpec, callbackWrapper, errorCallbackFn);
-    };
+    }
 
     set(key, score, callbackFn, errorCallbackFn)
     {
@@ -318,7 +318,7 @@ class LeaderboardManager
                 encrypt: true
             });
         }
-    };
+    }
 
     // ONLY available on Local and Hub
     reset(callbackFn, errorCallbackFn)
@@ -365,7 +365,7 @@ class LeaderboardManager
             callback: resetCallback,
             requestHandler: this.requestHandler
         });
-    };
+    }
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
@@ -429,8 +429,8 @@ class LeaderboardManager
         });
 
         return leaderboardManager;
-    };
-};
+    }
+}
 
 interface LeaderboardDataSpec
 {
@@ -440,8 +440,13 @@ interface LeaderboardDataSpec
     friendsonly?: number;
     score?: number;
     time?: number;
-};
-interface LeaderboardResult
+}
+
+// =============================================================================
+// LeaderboardResult
+// =============================================================================
+
+class LeaderboardResult
 {
     leaderboardManager: LeaderboardManager;
     key: string;
@@ -454,31 +459,16 @@ interface LeaderboardResult
     view: { player;    // TODO
             ranking;   // TODO
             playerIndex: number;
-            top: number;
-            bottom: number; };
+            top: bool;
+            bottom: bool; };
     invalidView: bool;
     onSlidingWindowUpdate: any; // TODO
 
-    parseResults(key: string, spec: LeaderboardDataSpec, data: any): any;
-};
-declare var LeaderboardResult :
-{
-    new(): LeaderboardResult;
-    prototype: any;
-    create(leaderboardManager: LeaderboardManager,
-           key: string,
-           dataSpec: LeaderboardDataSpec,
-           data: any): LeaderboardResult;
-};
+    // Prototype:
+    version: number;
+    requestSize: number;
 
-function LeaderboardResult() { return this; }
-LeaderboardResult.prototype =
-{
-    version : 1,
-
-    requestSize: 64,
-
-    computeOverlap: function computeOverlapFn()
+    computeOverlap(): void
     {
         // calculates the number of scores that the leaderboard results have overlapped
         // this only happens at the end of the leaderboards
@@ -516,9 +506,9 @@ LeaderboardResult.prototype =
             }
         }
         results.overlap = overlap;
-    },
+    }
 
-    getPageOffset: function getPageBelowOffsetFn(type, offsetIndex, callbackFn, errorCallbackFn)
+    getPageOffset(type, offsetIndex, callbackFn, errorCallbackFn)
     {
         var offsetScore = this.results.ranking[offsetIndex];
         if (!offsetScore)
@@ -548,9 +538,9 @@ LeaderboardResult.prototype =
 
         this.leaderboardManager.getRaw(this.key, newSpec, parseResults, errorCallbackFn);
         return true;
-    },
+    }
 
-    viewOperationBegin: function viewOperationBeginFn()
+    viewOperationBegin()
     {
         // lock the view object so not other page/scroll calls can be made
         if (this.viewLock)
@@ -559,9 +549,9 @@ LeaderboardResult.prototype =
         }
         this.viewLock = true;
         return true;
-    },
+    }
 
-    viewOperationEnd: function viewOperationEndFn(callbackFn)
+    viewOperationEnd(callbackFn)
     {
         // unlock the view object so other page/scroll calls can be made
         this.viewLock = false;
@@ -576,9 +566,9 @@ LeaderboardResult.prototype =
         {
             TurbulenzEngine.setTimeout(callbackWrapperFn, 0);
         }
-    },
+    }
 
-    wrapViewOperationError: function getViewOperationErrorCallbackFn(errorCallbackFn)
+    wrapViewOperationError(errorCallbackFn)
     {
         var that = this;
         return function errorWrapper(errorMsg, httpStatus, calledByFn, calledByParams)
@@ -587,9 +577,9 @@ LeaderboardResult.prototype =
             that.viewLock = false;
             errorCallbackFn(errorMsg, httpStatus, calledByFn, calledByParams);
         };
-    },
+    }
 
-    refresh: function refreshFn(callbackFn, errorCallbackFn)
+    refresh(callbackFn, errorCallbackFn)
     {
         if (!this.viewOperationBegin())
         {
@@ -612,9 +602,9 @@ LeaderboardResult.prototype =
         this.leaderboardManager.getRaw(this.key, this.spec, parseResults, this.wrapViewOperationError(errorCallbackFn));
 
         return true;
-    },
+    }
 
-    moveUp: function moveUpFn(offset, callbackFn, errorCallbackFn)
+    moveUp(offset, callbackFn, errorCallbackFn)
     {
         if (!this.viewOperationBegin())
         {
@@ -656,9 +646,9 @@ LeaderboardResult.prototype =
         this.invalidView = true;
         this.viewOperationEnd(callbackFn);
         return true;
-    },
+    }
 
-    moveDown: function moveDownFn(offset, callbackFn, errorCallbackFn)
+    moveDown(offset, callbackFn, errorCallbackFn)
     {
         if (!this.viewOperationBegin())
         {
@@ -703,29 +693,29 @@ LeaderboardResult.prototype =
         this.invalidView = true;
         this.viewOperationEnd(callbackFn);
         return true;
-    },
+    }
 
-    pageUp: function pageUpFn(callbackFn, errorCallbackFn)
+    pageUp(callbackFn, errorCallbackFn)
     {
         return this.moveUp(this.viewSize, callbackFn, errorCallbackFn);
-    },
+    }
 
-    pageDown: function pageDownFn(callbackFn, errorCallbackFn)
+    pageDown(callbackFn, errorCallbackFn)
     {
         return this.moveDown(this.viewSize, callbackFn, errorCallbackFn);
-    },
+    }
 
-    scrollUp: function scrollUpFn(callbackFn, errorCallbackFn)
+    scrollUp(callbackFn, errorCallbackFn)
     {
         return this.moveUp(1, callbackFn, errorCallbackFn);
-    },
+    }
 
-    scrollDown: function scrollDownFn(callbackFn, errorCallbackFn)
+    scrollDown(callbackFn, errorCallbackFn)
     {
         return this.moveDown(1, callbackFn, errorCallbackFn);
-    },
+    }
 
-    getView: function getViewFn()
+    getView()
     {
         if (this.invalidView)
         {
@@ -735,7 +725,7 @@ LeaderboardResult.prototype =
             var ranking = results.ranking;
             var rankingLength = ranking.length;
 
-            var playerIndex = null;
+            var playerIndex : number = null;
             if (results.playerIndex !== undefined)
             {
                 playerIndex = results.playerIndex - viewTop;
@@ -754,18 +744,18 @@ LeaderboardResult.prototype =
             };
         }
         return this.view;
-    },
+    }
 
-    getSlidingWindow: function getSlidingWindowFn()
+    getSlidingWindow()
     {
         return this.results;
-    },
+    }
 
-    parseResults: function parseResultsFn(key, spec, data)
+    parseResults(key, spec, data)
     {
         var results = {
             spec: spec,
-            overlap: null,
+            overlap: <any>(null),
             player: undefined,
             ranking: undefined,
             playerIndex: undefined,
@@ -811,43 +801,49 @@ LeaderboardResult.prototype =
         this.results = results;
         return results;
     }
-};
 
-LeaderboardResult.create = function LeaderboardResultCreate(leaderboardManager, key, spec, data)
-{
-    var leaderboardResult = new LeaderboardResult();
+    static create(leaderboardManager: LeaderboardManager,
+                  key: string,
+                  spec: LeaderboardDataSpec,
+                  data: any): LeaderboardResult
+    {
+        var leaderboardResult = new LeaderboardResult();
 
-    leaderboardResult.leaderboardManager = leaderboardManager;
+        leaderboardResult.leaderboardManager = leaderboardManager;
 
-    leaderboardResult.key = key;
+        leaderboardResult.key = key;
 
-    // patch up friendsOnly for frontend
-    spec.friendsOnly = (0 != spec.friendsonly);
-    delete spec.friendsonly;
-    // store the original spec used to create the results
-    leaderboardResult.originalSpec = spec;
-    // the spec used to generate the current results
-    leaderboardResult.spec = spec;
+        // patch up friendsOnly for frontend
+        spec.friendsOnly = (0 != spec.friendsonly);
+        delete spec.friendsonly;
+        // store the original spec used to create the results
+        leaderboardResult.originalSpec = spec;
+        // the spec used to generate the current results
+        leaderboardResult.spec = spec;
 
-    var results = leaderboardResult.results = leaderboardResult.parseResults(key, spec, data);
+        var results = leaderboardResult.results = leaderboardResult.parseResults(key, spec, data);
 
-    leaderboardResult.viewTop = 0;
-    leaderboardResult.viewSize = spec.size;
-    // lock to stop multiple synchronous view operations
-    // as that will have unknown consequences
-    leaderboardResult.viewLock = false;
-    // for lazy evaluation
-    leaderboardResult.view = {
-        player: results.player,
-        ranking: results.ranking,
-        playerIndex: results.playerIndex,
-        top: results.top,
-        bottom: results.bottom
-    };
-    leaderboardResult.invalidView = false;
+        leaderboardResult.viewTop = 0;
+        leaderboardResult.viewSize = spec.size;
+        // lock to stop multiple synchronous view operations
+        // as that will have unknown consequences
+        leaderboardResult.viewLock = false;
+        // for lazy evaluation
+        leaderboardResult.view = {
+            player: results.player,
+            ranking: results.ranking,
+            playerIndex: results.playerIndex,
+            top: results.top,
+            bottom: results.bottom
+        };
+        leaderboardResult.invalidView = false;
 
-    // callback called when the results is requested
-    leaderboardResult.onSlidingWindowUpdate = null;
+        // callback called when the results is requested
+        leaderboardResult.onSlidingWindowUpdate = null;
 
-    return leaderboardResult;
-};
+        return leaderboardResult;
+    }
+}
+
+LeaderboardResult.prototype.version = 1;
+LeaderboardResult.prototype.requestSize = 64;

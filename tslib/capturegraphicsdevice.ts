@@ -736,7 +736,7 @@ class CaptureGraphicsDevice
         }
 
         this.gd.setTechniqueParameters(techniqueParameters);
-    };
+    }
 
     private _lowerBoundGeneric(bin: any[], data: any, length: number, offset: number) : number
     {
@@ -1720,7 +1720,7 @@ class CaptureGraphicsDevice
             return this.gd.createTechniqueParameterBuffer(params);
         }
         var self = this;
-        techniqueParameterBuffer['setData'] = function captureTPBSetData(data, offset, numValues)
+        techniqueParameterBuffer['setData'] = function captureTPBSetData(data, offset?, numValues?)
         {
             if (offset === undefined)
             {

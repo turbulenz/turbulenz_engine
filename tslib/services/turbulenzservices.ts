@@ -28,8 +28,6 @@
 /// <reference path="gamesession.ts" />
 /// <reference path="mappingtable.ts" />
 
-declare var Observer;
-
 interface UserProfile
 {
     username    : string;
@@ -316,7 +314,7 @@ class TurbulenzServices
     static available() : bool
     {
         return window.gameSlug !== undefined;
-    };
+    }
 
     static addBridgeEvents()
     {
@@ -360,7 +358,7 @@ class TurbulenzServices
         // 0 is reserved value for no registered callback
         this.responseIndex = 0;
         TurbulenzBridge.on("bridgeservices.response", function (jsondata) { that.routeResponse(jsondata); });
-    };
+    }
 
     static callOnBridge(event, data, callback)
     {
@@ -375,7 +373,7 @@ class TurbulenzServices
             request.key = this.responseIndex;
         }
         TurbulenzBridge.emit('bridgeservices.' + event, JSON.stringify(request));
-    };
+    }
 
     static addSignature(data, url)
     {
@@ -385,7 +383,7 @@ class TurbulenzServices
         data.str = str;
         data.signature = TurbulenzEngine.generateSignature(str);
         return data;
-    };
+    }
 
     static routeResponse(jsondata)
     {
@@ -397,26 +395,26 @@ class TurbulenzServices
             this.responseHandlers[index] = null;
             callback(response.data);
         }
-    };
+    }
 
     static defaultErrorCallback : ServiceErrorCB =
         function(errorMsg: string, httpStatus?: number)
     {
-    };
+    }
 
     static onServiceUnavailable(serviceName: string, callContext?)
     {
-    };
+    }
 
     static onServiceAvailable(serviceName: string, callContext?)
     {
-    };
+    }
 
     static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn?)
     {
         return GameSession.create(requestHandler, sessionCreatedFn,
                                   errorCallbackFn);
-    };
+    }
 
     static createMappingTable(requestHandler, gameSession,
                               tableReceivedFn,
@@ -477,7 +475,7 @@ class TurbulenzServices
 
         mappingTable = MappingTable.create(mappingTableParams);
         return mappingTable;
-    };
+    }
 
     static createLeaderboardManager(requestHandler, gameSession,
                                     leaderboardMetaReceived?,
@@ -486,12 +484,12 @@ class TurbulenzServices
         return LeaderboardManager.create(requestHandler, gameSession,
                                          leaderboardMetaReceived,
                                          errorCallbackFn);
-    };
+    }
 
     static createBadgeManager(requestHandler, gameSession) : BadgeManager
     {
         return BadgeManager.create(requestHandler, gameSession);
-    };
+    }
 
     static createStoreManager(requestHandler, gameSession, storeMetaReceived?,
                               errorCallbackFn?) : StoreManager
@@ -500,19 +498,19 @@ class TurbulenzServices
                                    gameSession,
                                    storeMetaReceived,
                                    errorCallbackFn);
-    };
+    }
 
     static createNotificationsManager(requestHandler, gameSession, successCallbackFn, errorCallbackFn)
     : NotificationsManager
     {
         return NotificationsManager.create(requestHandler, gameSession, successCallbackFn, errorCallbackFn);
-    };
+    }
 
     static createMultiplayerSessionManager(requestHandler, gameSession)
     : MultiPlayerSessionManager
     {
         return MultiPlayerSessionManager.create(requestHandler, gameSession);
-    };
+    }
 
     static createUserProfile(requestHandler: RequestHandler,
                              profileReceivedFn?: UserProfileReceivedCB,
@@ -570,7 +568,7 @@ class TurbulenzServices
         }
 
         return userProfile;
-    };
+    }
 
     // This should only be called if UserProfile.anonymous is true.
     static upgradeAnonymousUser(upgradeCB: UserUpgradeCB)
@@ -585,7 +583,7 @@ class TurbulenzServices
         }
 
         TurbulenzBridge.emit('user.upgrade.show');
-    };
+    }
 
     static sendCustomMetricEvent(eventKey: string,
                                  eventValue: any,
@@ -666,7 +664,7 @@ class TurbulenzServices
             requestHandler: requestHandler,
             encrypt: true
         });
-    };
+    }
 
     static sendCustomMetricEventBatch(eventBatch: CustomMetricEventBatch,
                                       requestHandler: RequestHandler,
@@ -768,7 +766,7 @@ class TurbulenzServices
             requestHandler: requestHandler,
             encrypt: true
         });
-    };
+    }
 
     static services = {};
     static waitingServices = {};
@@ -789,7 +787,7 @@ class TurbulenzServices
             services[serviceName] = service;
             return service;
         }
-    };
+    }
 
     static serviceUnavailable(service, callContext)
     {
@@ -917,8 +915,8 @@ class TurbulenzServices
         };
 
         pollServiceStatus();
-    };
-};
+    }
+}
 
 if (typeof TurbulenzBridge !== 'undefined')
 {

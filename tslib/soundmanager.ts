@@ -36,7 +36,7 @@ class SoundManager
                             : void; };
     map                 : { (dst: string, src: string): void; };
     get(path: string) : Sound { debug.abort("this method should be overridden");
-                                return <Sound><any>{}; };
+                                return <Sound><any>{}; }
     remove              : { (path: string): void; };
     reload              : { (path: string): void; };
 
@@ -87,7 +87,7 @@ class SoundManager
         }
 
         return data;
-    };
+    }
 
     /**
       @constructs Constructs a SoundManager object.
@@ -468,6 +468,5 @@ class SoundManager
         };
 
         return sm;
-    };
-
-};
+    }
+}

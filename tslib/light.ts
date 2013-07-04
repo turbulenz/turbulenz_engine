@@ -73,7 +73,7 @@ class Light
         clone.techniqueParameters = this.techniqueParameters;
 
         return clone;
-    };
+    }
 
     //
     // isGlobal
@@ -81,7 +81,7 @@ class Light
     isGlobal() : bool
     {
         return this.global;
-    };
+    }
 
     //
     // Light create
@@ -244,7 +244,7 @@ class Light
         }
 
         return light;
-    };
+    }
 };
 
 //
@@ -303,7 +303,7 @@ class LightInstance
                 }
             }
         }
-    };
+    }
 
     //
     // setNode
@@ -312,7 +312,7 @@ class LightInstance
     {
         this.node = node;
         this.worldExtentsUpdate = -1;
-    };
+    }
 
     //
     // getNode
@@ -320,7 +320,7 @@ class LightInstance
     getNode() : SceneNode
     {
         return this.node;
-    };
+    }
 
     //
     // getWorldExtents
@@ -457,7 +457,7 @@ class LightInstance
             }
         }
         return worldExtents;
-    };
+    }
 
     //
     // clone
@@ -466,7 +466,7 @@ class LightInstance
     {
         var newInstance = LightInstance.create(this.light);
         return newInstance;
-    };
+    }
 
     //
     // Constructor function
@@ -481,8 +481,8 @@ class LightInstance
         instance.worldExtentsUpdate = -1;
 
         return instance;
-    };
-};
+    }
+}
 
 // Detect correct typed arrays
 (function () {

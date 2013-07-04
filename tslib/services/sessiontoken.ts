@@ -37,7 +37,7 @@ class SessionToken
         /*jshint bitwise: true*/
 
         return TurbulenzEngine.base64Encode(bytes);
-    };
+    }
 
     static create(): SessionToken
     {
@@ -49,5 +49,5 @@ class SessionToken
         sessionToken.bytes = [];
 
         return sessionToken;
-    };
-};
+    }
+}

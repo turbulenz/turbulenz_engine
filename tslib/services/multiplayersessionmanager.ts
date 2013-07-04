@@ -45,15 +45,13 @@ class MultiPlayerSessionManager
 
         this.processRequest("createSession", request, successCallback,
                             errorCallbackFn);
-    };
+    }
 
     getJoinRequestQueue() {
         return TurbulenzServices.multiplayerJoinRequestQueue;
-    };
+    }
 
-    joinSession(sessionID,
-                                                                 sessionJoinedFn,
-                                                                 errorCallbackFn)
+    joinSession(sessionID, sessionJoinedFn, errorCallbackFn)
     {
         var gameSessionId = this.gameSession.gameSessionId;
         var requestHandler = this.requestHandler;
@@ -80,11 +78,9 @@ class MultiPlayerSessionManager
 
         this.processRequest("joinSession", request, successCallback,
                             errorCallbackFn);
-    };
+    }
 
-    joinAnySession(sessionJoinedFn,
-                                                                       failCallbackFn,
-                                                                       errorCallbackFn)
+    joinAnySession(sessionJoinedFn, failCallbackFn, errorCallbackFn)
     {
         var gameSession = this.gameSession;
         var gameSessionId = gameSession.gameSessionId;
@@ -119,11 +115,9 @@ class MultiPlayerSessionManager
 
         this.processRequest("joinAnySession", request, successCallback,
                             errorCallbackFn);
-    };
+    }
 
-    joinOrCreateSession(numSlots,
-                                                                                 sessionJoinCreatedFn,
-                                                                                 errorCallbackFn)
+    joinOrCreateSession(numSlots, sessionJoinCreatedFn, errorCallbackFn)
     {
         var that = this;
         var joinFailedCallback = function joinFailedCallbackFn()
@@ -132,10 +126,9 @@ class MultiPlayerSessionManager
         };
 
         this.joinAnySession(sessionJoinCreatedFn, joinFailedCallback, errorCallbackFn);
-    };
+    }
 
-    getFriendsSessions(querySuccessFn,
-                                                                               errorCallbackFn)
+    getFriendsSessions(querySuccessFn, errorCallbackFn)
     {
         var requestHandler = this.requestHandler;
 
@@ -152,7 +145,7 @@ class MultiPlayerSessionManager
 
         this.processRequest("getFriendsSessions", request, successCallback,
                             errorCallbackFn);
-    };
+    }
 
     destroy()
     {
@@ -165,13 +158,10 @@ class MultiPlayerSessionManager
         }
 
         delete this.sessionList;
-    };
+    }
 
     // Helper Functions
-    processRequest(source,
-                                                                       request,
-                                                                       successFn,
-                                                                       errorFn)
+    processRequest(source, request, successFn, errorFn)
     {
         if (!errorFn)
         {
@@ -203,9 +193,9 @@ class MultiPlayerSessionManager
                 errorFn(source + " failed: Service not available", 0);
             }
         }
-    };
+    }
 
-   static create(requestHandler: RequestHandler,
+    static create(requestHandler: RequestHandler,
                   gameSession: GameSession): MultiPlayerSessionManager
     {
         var manager = new MultiPlayerSessionManager();
@@ -213,5 +203,5 @@ class MultiPlayerSessionManager
         manager.gameSession = gameSession;
         manager.sessionList = [];
         return manager;
-    };
-};
+    }
+}

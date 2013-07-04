@@ -22,57 +22,6 @@ interface CanvasImageData
     data: any;
 };
 
-interface CanvasLinearGradient
-{
-    x0              : number;
-    y0              : number;
-    x1              : number;
-    y1              : number;
-    width           : number;
-    height          : number;
-    stops           : any[][];
-
-    matrix          : any; // m33?
-
-    numTextureStops : number;
-    texture         : Texture;
-
-    opaque          : bool;
-};
-declare var CanvasLinearGradient :
-{
-    new(): CanvasLinearGradient;
-    prototype: any;
-    create(x0: number, y0: number,
-           x1: number, y1: number): CanvasLinearGradient;
-};
-
-interface CanvasRadialGradient
-{
-    x0              : number;
-    y0              : number;
-    r0              : number;
-    x1              : number;
-    y1              : number;
-    r1              : number;
-    minX            : number;
-    minY            : number;
-    stops           : any[][];
-    width           : number;
-    height          : number;
-    matrix          : any; // m33?
-    numTextureStops : number;
-    texture         : Texture;
-    opaque          : bool;
-};
-declare var CanvasRadialGradient :
-{
-    new(): CanvasRadialGradient;
-    prototype: any;
-    create(x0: number, y0: number, r0: number, x1: number, y1: number,
-           r1: number): CanvasRadialGradient;
-};
-
 // -----------------------------------------------------------------------------
 
 var namedCSSColor = {
@@ -378,13 +327,27 @@ var parseCSSColor = function parseCSSColorFn(text, color) : number[]
 //
 // CanvasLinearGradient
 //
-function CanvasLinearGradient() { return this; }
-CanvasLinearGradient.prototype =
+class CanvasLinearGradient
 {
-    version : 1,
+    static version = 1;
+
+    x0              : number;
+    y0              : number;
+    x1              : number;
+    y1              : number;
+    width           : number;
+    height          : number;
+    stops           : any[][];
+
+    matrix          : any; // m33?
+
+    numTextureStops : number;
+    texture         : Texture;
+
+    opaque          : bool;
 
     // Public API
-    addColorStop : function addLinearColorStopFn(offset, color)
+    addColorStop(offset, color)
     {
         if (offset < 0 || offset > 1)
         {
@@ -416,10 +379,10 @@ CanvasLinearGradient.prototype =
         {
             stops.sort(sortfunction);
         }
-    },
+    }
 
     // Private API
-    updateTexture : function updateLinearTextureFn(gd)
+    updateTexture(gd)
     {
         var texture = this.texture;
         var stops = this.stops;
@@ -554,77 +517,93 @@ CanvasLinearGradient.prototype =
         }
         return texture;
     }
-};
 
-// Constructor function
-CanvasLinearGradient.create = function canvasLinearGradientCreateFn(x0, y0, x1, y1)
-{
-    var dx = (x1 - x0);
-    var dy = (y1 - y0);
-    var width = Math.abs(dx);
-    var height = Math.abs(dy);
-    if (width === 0 && height === 0)
+    static create(x0, y0, x1, y1): CanvasLinearGradient
     {
-        return null;
+        var dx = (x1 - x0);
+        var dy = (y1 - y0);
+        var width = Math.abs(dx);
+        var height = Math.abs(dy);
+        if (width === 0 && height === 0)
+        {
+            return null;
+        }
+
+        // We need minimmal dimensions for minimal quality
+        while (width < 16 && height < 16)
+        {
+            width *= 16;
+            height *= 16;
+        }
+
+        if (width < 1)
+        {
+            width = 1;
+        }
+        else
+        {
+            width = Math.floor(width);
+        }
+
+        if (height < 1)
+        {
+            height = 1;
+        }
+        else
+        {
+            height = Math.floor(height);
+        }
+
+        var c = new CanvasLinearGradient();
+        c.x0 = x0;
+        c.y0 = y0;
+        c.x1 = x1;
+        c.y1 = y1;
+        c.width = width;
+        c.height = height;
+        c.stops = [];
+
+        var idx = (1.0 / dx);
+        var idy = (1.0 / dy);
+        c.matrix = [idx, 0, -x0 * idx,
+                    0, idy, -y0 * idy];
+
+        c.numTextureStops = 0;
+        c.texture = null;
+
+        c.opaque = true;
+
+        return c;
     }
+}
 
-    // We need minimmal dimensions for minimal quality
-    while (width < 16 && height < 16)
-    {
-        width *= 16;
-        height *= 16;
-    }
-
-    if (width < 1)
-    {
-        width = 1;
-    }
-    else
-    {
-        width = Math.floor(width);
-    }
-
-    if (height < 1)
-    {
-        height = 1;
-    }
-    else
-    {
-        height = Math.floor(height);
-    }
-
-    var c = new CanvasLinearGradient();
-    c.x0 = x0;
-    c.y0 = y0;
-    c.x1 = x1;
-    c.y1 = y1;
-    c.width = width;
-    c.height = height;
-    c.stops = [];
-
-    var idx = (1.0 / dx);
-    var idy = (1.0 / dy);
-    c.matrix = [idx, 0, -x0 * idx,
-                0, idy, -y0 * idy];
-
-    c.numTextureStops = 0;
-    c.texture = null;
-
-    c.opaque = true;
-
-    return c;
-};
 
 //
 // CanvasRadialGradient
 //
-function CanvasRadialGradient() { return this; }
-CanvasRadialGradient.prototype =
+
+class CanvasRadialGradient
 {
-    version : 1,
+    static version = 1;
+
+    x0              : number;
+    y0              : number;
+    r0              : number;
+    x1              : number;
+    y1              : number;
+    r1              : number;
+    minX            : number;
+    minY            : number;
+    stops           : any[][];
+    width           : number;
+    height          : number;
+    matrix          : any; // m33?
+    numTextureStops : number;
+    texture         : Texture;
+    opaque          : bool;
 
     // Public API
-    addColorStop : function addRadialColorStopFn(offset, color)
+    addColorStop(offset, color)
     {
         if (offset < 0 || offset > 1)
         {
@@ -655,10 +634,10 @@ CanvasRadialGradient.prototype =
         {
             stops.sort(sortfunction);
         }
-    },
+    }
 
     // Private API
-    updateTexture : function updateRadialTextureFn(gd)
+    updateTexture(gd)
     {
         var texture = this.texture;
         var stops = this.stops;
@@ -825,55 +804,55 @@ CanvasRadialGradient.prototype =
         }
         return texture;
     }
-};
 
-// Constructor function
-CanvasRadialGradient.create = function canvasRadialGradientCreateFn(x0, y0, r0, x1, y1, r1)
-{
-    if (r0 < 0 || r1 < 0)
+    static create(x0: number, y0: number, r0: number, x1: number, y1: number,
+                  r1: number): CanvasRadialGradient
     {
-        throw 'INDEX_SIZE_ERR';
+        if (r0 < 0 || r1 < 0)
+        {
+            throw 'INDEX_SIZE_ERR';
+        }
+
+        var c = new CanvasRadialGradient();
+        c.x0 = x0;
+        c.y0 = y0;
+        c.r0 = r0;
+        c.x1 = x1;
+        c.y1 = y1;
+        c.r1 = r1;
+
+        var minX = (Math.min((x0 - r0), (x1 - r1)) - 1);
+        var maxX = (Math.max((x0 + r0), (x1 + r1)) + 1);
+        var minY = (Math.min((y0 - r0), (y1 - r1)) - 1);
+        var maxY = (Math.max((y0 + r0), (y1 + r1)) + 1);
+
+        c.minX = minX;
+        c.minY = minY;
+        c.stops = [];
+
+        var width = Math.ceil(maxX - minX);
+        var height = Math.ceil(maxY - minY);
+        if (!width || !height)
+        {
+            return null;
+        }
+        c.width = width;
+        c.height = height;
+
+        var idx = (1.0 / width);
+        var idy = (1.0 / height);
+
+        c.matrix = [idx, 0, -minX * idx,
+                    0, idy, -minY * idy];
+
+        c.numTextureStops = 0;
+        c.texture = null;
+
+        c.opaque = true;
+
+        return c;
     }
-
-    var c = new CanvasRadialGradient();
-    c.x0 = x0;
-    c.y0 = y0;
-    c.r0 = r0;
-    c.x1 = x1;
-    c.y1 = y1;
-    c.r1 = r1;
-
-    var minX = (Math.min((x0 - r0), (x1 - r1)) - 1);
-    var maxX = (Math.max((x0 + r0), (x1 + r1)) + 1);
-    var minY = (Math.min((y0 - r0), (y1 - r1)) - 1);
-    var maxY = (Math.max((y0 + r0), (y1 + r1)) + 1);
-
-    c.minX = minX;
-    c.minY = minY;
-    c.stops = [];
-
-    var width = Math.ceil(maxX - minX);
-    var height = Math.ceil(maxY - minY);
-    if (!width || !height)
-    {
-        return null;
-    }
-    c.width = width;
-    c.height = height;
-
-    var idx = (1.0 / width);
-    var idy = (1.0 / height);
-
-    c.matrix = [idx, 0, -minX * idx,
-                0, idy, -minY * idy];
-
-    c.numTextureStops = 0;
-    c.texture = null;
-
-    c.opaque = true;
-
-    return c;
-};
+}
 
 //
 // CanvasContext
@@ -1225,7 +1204,7 @@ class CanvasContext
 
         this.cachedPaths = {};
         this.numCachedPaths = 0;
-    };
+    }
 
     //
     // Public canvas 2D context API
@@ -1244,7 +1223,7 @@ class CanvasContext
             this.setStates(states, this);
         }
         this.numStatesInStack = (numStatesInStack + 1);
-    };
+    }
 
     restore()
     {
@@ -1256,7 +1235,7 @@ class CanvasContext
             var states = this.statesStack[numStatesInStack];
             this.setStates(this, states);
         }
-    };
+    }
 
     scale(x, y)
     {
@@ -1265,7 +1244,7 @@ class CanvasContext
         m[1] *= y;
         m[3] *= x;
         m[4] *= y;
-    };
+    }
 
     rotate(angle)
     {
@@ -1275,14 +1254,14 @@ class CanvasContext
             var c = Math.cos(angle);
             this.transform(c, s, -s, c, 0, 0);
         }
-    };
+    }
 
     translate(x, y)
     {
         var m = this.matrix;
         m[2] += (m[0] * x + m[1] * y);
         m[5] += (m[3] * x + m[4] * y);
-    };
+    }
 
     transform(a, b, c, d, e, f)
     {
@@ -1300,7 +1279,7 @@ class CanvasContext
         m[4] = (m3 * c + m4 * d);
         m[2] = (m0 * e + m1 * f + m2);
         m[5] = (m3 * e + m4 * f + m5);
-    };
+    }
 
     setTransform(a, b, c, d, e, f)
     {
@@ -1311,17 +1290,17 @@ class CanvasContext
         m[3] = b;
         m[4] = d;
         m[5] = f;
-    };
+    }
 
     createLinearGradient(x0, y0, x1, y1): CanvasLinearGradient
     {
         return CanvasLinearGradient.create(x0, y0, x1, y1);
-    };
+    }
 
     createRadialGradient(x0, y0, r0, x1, y1, r1): CanvasRadialGradient
     {
         return CanvasRadialGradient.create(x0, y0, r0, x1, y1, r1);
-    };
+    }
 
     createPattern(image /*, repetition */)
     {
@@ -1337,7 +1316,7 @@ class CanvasContext
         }
 
         return image;
-    };
+    }
 
     clearRect(x, y, w, h)
     {
@@ -1376,7 +1355,7 @@ class CanvasContext
                 this.flatOffset += 4;
             }
         }
-    };
+    }
 
     fillRect(x, y, w, h)
     {
@@ -1400,7 +1379,7 @@ class CanvasContext
 
             this.flatOffset += 4;
         }
-    };
+    }
 
     strokeRect(x, y, w, h)
     {
@@ -1461,14 +1440,14 @@ class CanvasContext
 
             this.flatOffset += numVertices;
         }
-    };
+    }
 
     beginPath()
     {
         this.subPaths.length = 0;
         this.currentSubPath.length = 0;
         this.needToSimplifyPath[0] = true;
-    };
+    }
 
     closePath()
     {
@@ -1502,7 +1481,7 @@ class CanvasContext
             needToSimplifyPath[numSubPaths] = false;
             needToSimplifyPath[numSubPaths + 1] = true;
         }
-    };
+    }
 
     moveTo(x, y)
     {
@@ -1524,13 +1503,13 @@ class CanvasContext
         {
             currentSubPath[0] = this.transformPoint(x, y);
         }
-    };
+    }
 
     lineTo(x, y)
     {
         var currentSubPath = this.currentSubPath;
         currentSubPath[currentSubPath.length] = this.transformPoint(x, y);
-    };
+    }
 
     quadraticCurveTo(cpx, cpy, x, y)
     {
@@ -1574,7 +1553,7 @@ class CanvasContext
         }
 
         currentSubPath[numCurrentSubPathElements] = p2;
-    };
+    }
 
     bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
     {
@@ -1658,7 +1637,7 @@ class CanvasContext
         }
 
         currentSubPath[numCurrentSubPathElements] = p2;
-    };
+    }
 
     arcTo(x1, y1, x2, y2, radius)
     {
@@ -1752,7 +1731,7 @@ class CanvasContext
                 this.interpolateArc(cx, cy, radius, startAngle, endAngle);
             }
         }
-    };
+    }
 
     arc(x, y, radius, startAngle, endAngle, anticlockwise)
     {
@@ -1773,7 +1752,7 @@ class CanvasContext
         {
             this.interpolateArc(cp[0], cp[1], radius, startAngle, endAngle, anticlockwise);
         }
-    };
+    }
 
     ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise)
     {
@@ -1837,7 +1816,7 @@ class CanvasContext
         {
             this.arc(x, y, radius, startAngle, endAngle, anticlockwise);
         }
-    };
+    }
 
     rect(x, y, w, h)
     {
@@ -1867,7 +1846,7 @@ class CanvasContext
 
         needToSimplifyPath[numSubPaths] = (w < 1 || h < 1);
         needToSimplifyPath[numSubPaths + 1] = true;
-    };
+    }
 
     private _parsePath(path: string) : any[]
     {
@@ -2356,7 +2335,8 @@ class CanvasContext
                     sy = 1;
                 }
 
-                commands.push(65, angle, sx, sy, cx, cy, radius, a1, (a1 + ad), (true - sweepFlag));
+                commands.push(65, angle, sx, sy, cx, cy, radius, a1, (a1 + ad),
+                              !sweepFlag);
                 polygonStart = -1;
                 break;
 
@@ -2398,7 +2378,7 @@ class CanvasContext
         }
 
         return commands;
-    };
+    }
 
     addPoints(points: number[], offset: number, numPoints: number) : number
     {
@@ -2447,7 +2427,7 @@ class CanvasContext
         }
 
         return i;
-    };
+    }
 
     path(path: string)
     {
@@ -2564,7 +2544,7 @@ class CanvasContext
                 break;
             }
         }
-    };
+    }
 
     fill()
     {
@@ -2709,7 +2689,7 @@ class CanvasContext
                 this.flatOffset += numVertices;
             }
         }
-    };
+    }
 
     stroke()
     {
@@ -2816,23 +2796,23 @@ class CanvasContext
                 this.flatOffset += numVertices;
             }
         }
-    };
+    }
 
     drawSystemFocusRing(/* element */)
     {
         // TODO
-    };
+    }
 
     drawCustomFocusRing(/* element */): bool
     {
         // TODO
         return false;
-    };
+    }
 
     scrollPathIntoView()
     {
         // TODO
-    };
+    }
 
     clip()
     {
@@ -2944,7 +2924,7 @@ class CanvasContext
         this.updateScissor();
 
         // TODO: non rectangular clipping
-    };
+    }
 
     isPointInPath(x, y): bool
     {
@@ -2968,7 +2948,7 @@ class CanvasContext
         }
 
         return false;
-    };
+    }
 
     fillText(text: string, x: number, y: number, maxWidth?)
     {
@@ -3076,12 +3056,12 @@ class CanvasContext
 
         // Clear stream cache because drawTextRect sets its own
         this.activeVertexBuffer = null;
-    };
+    }
 
     strokeText(/* text, x, y, maxWidth */)
     {
         // TODO
-    };
+    }
 
     measureText(text) : { width: number; }
     {
@@ -3105,7 +3085,7 @@ class CanvasContext
         return {
             width : 0
         };
-    };
+    }
 
     drawImage(image, _x?, _y?, _width?, _height?)
     {
@@ -3220,7 +3200,7 @@ class CanvasContext
                 gd.draw(primitive, 4);
             }
         }
-    };
+    }
 
     createImageData() : CanvasImageData
     {
@@ -3253,7 +3233,7 @@ class CanvasContext
             height : sh,
             data : pixelData
         };
-    };
+    }
 
     getImageData(sx, sy, sw, sh): CanvasImageData
     {
@@ -3269,7 +3249,7 @@ class CanvasContext
             height : sh,
             data : pixelData
         };
-    };
+    }
 
     putImageData(imagedata, dx, dy)
     {
@@ -3370,7 +3350,7 @@ class CanvasContext
 
             this.updateScissor();
         }
-    };
+    }
 
     //
     // Public Turbulenz Canvas Context API
@@ -3436,7 +3416,7 @@ class CanvasContext
         }
 
         return true;
-    };
+    }
 
     endFrame()
     {
@@ -3449,7 +3429,7 @@ class CanvasContext
         this.target = null;
 
         this.gd.setScissor(0, 0, target.width, target.height);
-    };
+    }
 
     //
     // Private API
@@ -3466,7 +3446,7 @@ class CanvasContext
 
             this.clearRect(0, 0, width, this.height);
         }
-    };
+    }
 
     setHeight(height)
     {
@@ -3480,7 +3460,7 @@ class CanvasContext
 
             this.clearRect(0, 0, this.width, height);
         }
-    };
+    }
 
     createStatesObject(): any // TODO
     {
@@ -3528,7 +3508,7 @@ class CanvasContext
         destExtents[3] = srcExtents[3];
 
         return states;
-    };
+    }
 
     setStates(dest, src)
     {
@@ -3574,7 +3554,7 @@ class CanvasContext
         destExtents[3] = srcExtents[3];
 
         return dest;
-    };
+    }
 
     resetState()
     {
@@ -3594,7 +3574,7 @@ class CanvasContext
         {
             this.updateScissor();
         }
-    };
+    }
 
     updateScreenScale()
     {
@@ -3608,7 +3588,7 @@ class CanvasContext
         screen[1] = (-2 * viewport[3]) / (this.height * targetHeight);
         screen[2] = -1 + (2 * viewport[0] / targetWidth);
         screen[3] =  1 - (2 * (viewport[1] + viewport[3] - targetHeight) / targetHeight);
-    };
+    }
 
     updateScissor()
     {
@@ -3654,12 +3634,12 @@ class CanvasContext
         }
 
         this.gd.setScissor(x, y, w, h);
-    };
+    }
 
     setFontManager(fm)
     {
         this.fm = fm;
-    };
+    }
 
     buildFontName()
     {
@@ -3671,7 +3651,7 @@ class CanvasContext
             fontName = ('fonts/' + font.substr(lastSpace + 1) + '.fnt');
         }
         return fontName;
-    };
+    }
 
     calculateFontScale(font)
     {
@@ -3684,7 +3664,7 @@ class CanvasContext
         {
             return (requiredHeight / font.lineHeight);
         }
-    };
+    }
 
     resetTransformMethods()
     {
@@ -3695,14 +3675,14 @@ class CanvasContext
         this.setTransform = CanvasPrototype.setTransform;
         this.transformPoint = CanvasPrototype.transformPoint;
         this.transformRect = CanvasPrototype.transformRect;
-    };
+    }
 
     transformPoint(x, y)
     {
         var m = this.matrix;
         return [((x * m[0]) + (y * m[1]) + m[2]),
                 ((x * m[3]) + (y * m[4]) + m[5])];
-    };
+    }
 
     transformRect(x, y, w, h, rect)
     {
@@ -3731,14 +3711,14 @@ class CanvasContext
         rect[7] = (by + dx1);
 
         return rect;
-    };
+    }
 
     transformPointTranslate(x: number, y: number) : any[]
     {
         var m = this.matrix;
         return [(x + m[2]),
                 (y + m[5])];
-    };
+    }
 
     transformRectTranslate(x: number, y: number, w: number, h: number, rect: any[]) : any[]
     {
@@ -3758,12 +3738,12 @@ class CanvasContext
         rect[7] = y0;
 
         return rect;
-    };
+    }
 
     transformPointIdentity(x: number, y: number) : any[]
     {
         return [x, y];
-    };
+    }
 
     transformRectIdentity(x: number, y: number, w: number, h: number, rect: any[]) : any[]
     {
@@ -3780,7 +3760,7 @@ class CanvasContext
         rect[7] = y;
 
         return rect;
-    };
+    }
 
     transformTranslate(a, b, c, d, e, f)
     {
@@ -3793,7 +3773,7 @@ class CanvasContext
         m[5] = (f + m[5]);
 
         this.resetTransformMethods();
-    };
+    }
 
     scaleIdentity(x, y)
     {
@@ -3805,7 +3785,7 @@ class CanvasContext
 
             this.resetTransformMethods();
         }
-    };
+    }
 
     translateIdentity(x, y)
     {
@@ -3820,7 +3800,7 @@ class CanvasContext
             this.transformPoint = this.transformPointTranslate;
             this.transformRect = this.transformRectTranslate;
         }
-    };
+    }
 
     setTransformIdentity(a, b, c, d, e, f)
     {
@@ -3833,7 +3813,7 @@ class CanvasContext
         m[5] = f;
 
         this.resetTransformMethods();
-    };
+    }
 
     untransformPoint(p)
     {
@@ -3888,7 +3868,7 @@ class CanvasContext
 
         return [((x * r0) + (y * r1) + r2),
                 ((x * r3) + (y * r4) + r5)];
-    };
+    }
 
     calculateGradientUVtransform(gradientMatrix)
     {
@@ -3949,7 +3929,7 @@ class CanvasContext
         uvtransform[4] = (g3 * r1 + g4 * r4);
         uvtransform[5] = (g3 * r2 + g4 * r5 + g5);
         return uvtransform;
-    };
+    }
 
     calculatePatternUVtransform(imageWidth, imageHeight)
     {
@@ -4006,7 +3986,7 @@ class CanvasContext
         uvtransform[4] = (invHeight * r4);
         uvtransform[5] = (invHeight * r5);
         return uvtransform;
-    };
+    }
 
     setShadowStyle(style, onlyTexture?): bool
     {
@@ -4117,7 +4097,7 @@ class CanvasContext
         }
 
         return true;
-    };
+    }
 
     setStyle(style)
     {
@@ -4214,7 +4194,7 @@ class CanvasContext
             technique.uvtransform = this.calculatePatternUVtransform(imageWidth, imageHeight);
             technique.pattern = style;
         }
-    };
+    }
 
     setStream(vertexBuffer: VertexBuffer, semantics: Semantics) : void
     {
@@ -4223,7 +4203,7 @@ class CanvasContext
             this.activeVertexBuffer = vertexBuffer;
             this.gd.setStream(vertexBuffer, semantics, 0);
         }
-    };
+    }
 
     setTechniqueWithAlpha(technique: Technique, screen: any, alpha: number) : void
     {
@@ -4268,7 +4248,7 @@ class CanvasContext
                 technique['alpha'] = alpha;
             }
         }
-    };
+    }
 
     setTechniqueWithColor(technique: Technique, screen: any, color: any) : void
     {
@@ -4322,7 +4302,7 @@ class CanvasContext
                 technique['color'] = color;
             }
         }
-    };
+    }
 
     parseColor(colorText)
     {
@@ -4349,7 +4329,7 @@ class CanvasContext
         {
             throw "Unknown color: " + colorText;
         }
-    };
+    }
 
     interpolateArc(x, y, radius, startAngle, endAngle, anticlockwise?: bool)
     {
@@ -4414,7 +4394,7 @@ class CanvasContext
         j = sin(endAngle);
         points[numPoints] = [((i * m0) + (j * m1) + x),
                              ((i * m3) + (j * m4) + y)];
-    };
+    }
 
     getFlatBuffer(numVertices)
     {
@@ -4438,7 +4418,7 @@ class CanvasContext
         }
 
         return bufferData;
-    };
+    }
 
     fillFlatBuffer(bufferData, numVertices)
     {
@@ -4465,7 +4445,7 @@ class CanvasContext
         flatVertexBuffer.setData(bufferData, this.flatOffset, numVertices);
 
         this.setStream(flatVertexBuffer, this.flatSemantics);
-    };
+    }
 
     getTextureBuffer(numVertices)
     {
@@ -4489,7 +4469,7 @@ class CanvasContext
         }
 
         return bufferData;
-    };
+    }
 
     fillTextureBuffer(bufferData, numVertices)
     {
@@ -4510,7 +4490,7 @@ class CanvasContext
         textureVertexBuffer.setData(bufferData, 0, numVertices);
 
         this.setStream(textureVertexBuffer, this.textureSemantics);
-    };
+    }
 
     fillFatStrip(points, numPoints, lineWidth)
     {
@@ -4640,7 +4620,7 @@ class CanvasContext
         }
 
         return numVertices;
-    };
+    }
 
     autoClose(points, numPoints)
     {
@@ -4662,7 +4642,7 @@ class CanvasContext
         points[numPoints] = firstPoint;
 
         return (numPoints + 1);
-    };
+    }
 
     isClosed(firstPoint, lastPoint): bool
     {
@@ -4679,7 +4659,7 @@ class CanvasContext
         }
 
         return false;
-    };
+    }
 
     canTriangulateAsFan(points, numSegments): bool
     {
@@ -4737,7 +4717,7 @@ class CanvasContext
         }
 
         return false;
-    };
+    }
 
     simplifyShape(points: any[]) : number
     {
@@ -4899,7 +4879,7 @@ class CanvasContext
         }
         while (p < numPoints);
         return (area * 0.5);
-    };
+    }
 
     triangulateAsFan(points, numSegments, vertices, numVertices)
     {
@@ -4919,7 +4899,7 @@ class CanvasContext
         while (p < numSegments);
 
         return numVertices;
-    };
+    }
 
     getAngles(points: any[], numSegments: number, angles: any[]): number
     {
@@ -4958,7 +4938,7 @@ class CanvasContext
         while (n < numSegments);
 
         return (n - 2);
-    };
+    }
 
     lowerBound(bin: any[], data: number[], length: number) : number
     {
@@ -5076,7 +5056,7 @@ class CanvasContext
         }
 
         return numVertices;
-    };
+    }
 
     expandIndices(points: any[], vertices: any[], numVertices: number, indices: any[]) : number
     {
@@ -5087,7 +5067,7 @@ class CanvasContext
             vertices[v] = points[indices[n]];
         }
         return v;
-    };
+    }
 
     triangulateConcave(points: any[], numSegments: number,
                        vertices: any[], numVertices: number,
@@ -5474,7 +5454,7 @@ class CanvasContext
         while (j < numSegments);
 
         return numVertices;
-    };
+    }
 
     fillFlatVertices(bufferData, vertices, numVertices)
     {
@@ -5489,7 +5469,7 @@ class CanvasContext
             p += 1;
         }
         while (p < numVertices);
-    };
+    }
 
     isPointInPolygon(tx, ty, points, numPoints): bool
     {
@@ -5519,7 +5499,7 @@ class CanvasContext
         }
 
         return inside;
-    };
+    }
 
     isPointInSubPath(tx, ty, points): bool
     {
@@ -5535,7 +5515,7 @@ class CanvasContext
         }
 
         return false;
-    };
+    }
 
     shaderDefinition = {
  "version": 1,
@@ -6445,8 +6425,8 @@ class CanvasContext
     static create(canvas, gd, md, width, height): CanvasContext
     {
         return new CanvasContext(canvas, gd, md, width, height);
-    };
-};
+    }
+}
 
 //
 // Canvas
@@ -6472,7 +6452,7 @@ class Canvas
         {
             return null;
         }
-    };
+    }
 
     toDataURL(/* type */): string
     {
@@ -6491,7 +6471,7 @@ class Canvas
         }
 
         return null;
-    };
+    }
 
     toBlob(fileCallback /*, type */)
     {
@@ -6502,7 +6482,7 @@ class Canvas
                 this.context.gd.getScreenshot(true, 0, 0, this.width, this.height);
             fileCallback(pixelData);
         }
-    };
+    }
 
     setAttribute(attr, value)
     {
@@ -6524,13 +6504,13 @@ class Canvas
         {
             throw 'UNSUPPORTED ATTRIBUTE!';
         }
-    };
+    }
 
     // Turbulenz API
     setFontManager(fm)
     {
         this.context.setFontManager(fm);
-    };
+    }
 
     // Constructor function
     static create(gd, md): Canvas
@@ -6584,8 +6564,8 @@ class Canvas
         c.clientHeight = height;
 
         return c;
-    };
-};
+    }
+}
 
 // Detect correct typed arrays
 (function () {

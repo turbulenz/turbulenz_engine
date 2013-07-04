@@ -10,61 +10,39 @@
 //
 // TGALoader
 //
-interface TGALoader
+class TGALoader
 {
-    gd: WebGLGraphicsDevice;
+    static version = 1;
 
-    src: string;
-    data: Uint8Array;
+    gd                : WebGLGraphicsDevice;
 
+    src               : string;
+    data              : Uint8Array;
 
-    onload: { (data: Uint8Array, width: number, height: number, format: number,
-               status: number): void; };
-    onerror: { (msg?: string): void; };
+    onload            : { (data: Uint8Array,
+                           width: number, height: number,
+                           format: number, status : number): void; };
+    onerror           : { (msg?: string): void; };
 
-    width: number;
-    height: number;
-    bytesPerPixel: number;
-    horzRev: number;
-    vertRev: number;
-    format: number;
-    colorMap: number[];
+    width             : number;
+    height            : number;
+    bytesPerPixel     : number;
+    horzRev           : number;
+    vertRev           : number;
+    format            : number;
+    colorMap          : number[];
 
-    expandRLE(bytes: Uint8Array): Uint8Array;
-    expandColorMap(bytes: Uint8Array): Uint8Array;
-    convertBGR2RGB(bytes: Uint8Array): Uint8Array;
-    convertARGB2RGBA(bytes: Uint8Array): Uint8Array;
-
-    processBytes(bytes: Uint8Array): void;
-
-};
-declare var TGALoader :
-{
-    new(): TGALoader;
-    prototype: any;
-    create(tgaParams: any) : TGALoader;
-};
-
-
-function TGALoader() { return this; }
-TGALoader.prototype = {
-
-    version : 1,
-
-    TYPE_MAPPED      : 1,
-    TYPE_COLOR       : 2,
-    TYPE_GRAY        : 3,
-    TYPE_MAPPED_RLE  : 9,
-    TYPE_COLOR_RLE   : 10,
-    TYPE_GRAY_RLE    : 11,
-
-    DESC_ABITS       : 0x0f,
-    DESC_HORIZONTAL  : 0x10,
-    DESC_VERTICAL    : 0x20,
-
-    SIGNATURE        : "TRUEVISION-XFILE",
-
-    RLE_PACKETSIZE       : 0x80,
+    TYPE_MAPPED       : number; // prototype
+    TYPE_COLOR        : number; // prototype
+    TYPE_GRAY         : number; // prototype
+    TYPE_MAPPED_RLE   : number; // prototype
+    TYPE_COLOR_RLE    : number; // prototype
+    TYPE_GRAY_RLE     : number; // prototype
+    DESC_ABITS        : number; // prototype
+    DESC_HORIZONTAL   : number; // prototype
+    DESC_VERTICAL     : number; // prototype
+    SIGNATURE         : string; // prototype
+    RLE_PACKETSIZE    : number; // prototype
 
     processBytes : function processBytesFn(bytes)
     {
@@ -588,95 +566,101 @@ TGALoader.prototype = {
             return data;
         }
     }
-};
 
-// Constructor function
-TGALoader.create = function tgaLoaderFn(params)
-{
-    var loader = new TGALoader();
-    loader.gd = params.gd;
-    loader.onload = params.onload;
-    loader.onerror = params.onerror;
-
-    var src = params.src;
-    if (src)
+    static create(tgaParams: any) : TGALoader;
     {
-        loader.src = src;
-        var xhr;
-        if (window.XMLHttpRequest)
+        var loader = new TGALoader();
+        loader.gd = params.gd;
+        loader.onload = params.onload;
+        loader.onerror = params.onerror;
+
+        var src = params.src;
+        if (src)
         {
-            xhr = new window.XMLHttpRequest();
-        }
-        else if (window.ActiveXObject)
-        {
-            xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
-        }
-        else
-        {
-            if (params.onerror)
+            loader.src = src;
+            var xhr;
+            if (window.XMLHttpRequest)
             {
-                params.onerror("No XMLHTTPRequest object could be created");
+                xhr = new window.XMLHttpRequest();
             }
-            return null;
-        }
-
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4)
+            else if (window.ActiveXObject)
             {
-                if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
+            }
+            else
+            {
+                if (params.onerror)
                 {
-                    var xhrStatus = xhr.status;
-                    var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
+                    params.onerror("No XMLHTTPRequest object could be created");
+                }
+                return null;
+            }
 
-                    // Sometimes the browser sets status to 200 OK when the connection is closed
-                    // before the message is sent (weird!).
-                    // In order to address this we fail any completely empty responses.
-                    // Hopefully, nobody will get a valid response with no headers and no body!
-                    if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4)
+                {
+                    if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
                     {
-                        loader.onload(new Uint8Array(0), 0, 0, 0, 0);
-                        return;
-                    }
+                        var xhrStatus = xhr.status;
+                        var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
 
-                    if (xhrStatus === 200 || xhrStatus === 0)
-                    {
-                        var buffer;
-                        if (xhr.responseType === "arraybuffer")
+                        // Sometimes the browser sets status to 200 OK when the connection is closed
+                        // before the message is sent (weird!).
+                        // In order to address this we fail any completely empty responses.
+                        // Hopefully, nobody will get a valid response with no headers and no body!
+                        if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
                         {
-                            buffer = xhr.response;
+                            loader.onload(new Uint8Array(0), 0, 0, 0, 0);
+                            return;
                         }
-                        else if (xhr.mozResponseArrayBuffer)
+
+                        if (xhrStatus === 200 || xhrStatus === 0)
                         {
-                            buffer = xhr.mozResponseArrayBuffer;
-                        }
-                        else //if (xhr.responseText !== null)
-                        {
-                            /*jshint bitwise: false*/
-                            var text = xhr.responseText;
-                            var numChars = text.length;
-                            buffer = [];
-                            buffer.length = numChars;
-                            for (var i = 0; i < numChars; i += 1)
+                            var buffer;
+                            if (xhr.responseType === "arraybuffer")
                             {
-                                buffer[i] = (text.charCodeAt(i) & 0xff);
+                                buffer = xhr.response;
                             }
-                            /*jshint bitwise: true*/
-                        }
-
-                        // Fix for loading from file
-                        if (xhrStatus === 0 && window.location.protocol === "file:")
-                        {
-                            xhrStatus = 200;
-                        }
-
-                        loader.processBytes(new Uint8Array(buffer));
-                        if (loader.data)
-                        {
-                            if (loader.onload)
+                            else if (xhr.mozResponseArrayBuffer)
                             {
-                                loader.onload(loader.data, loader.width,
-                                              loader.height, loader.format,
-                                              xhrStatus);
+                                buffer = xhr.mozResponseArrayBuffer;
+                            }
+                            else //if (xhr.responseText !== null)
+                            {
+                                /*jshint bitwise: false*/
+                                var text = xhr.responseText;
+                                var numChars = text.length;
+                                buffer = [];
+                                buffer.length = numChars;
+                                for (var i = 0; i < numChars; i += 1)
+                                {
+                                    buffer[i] = (text.charCodeAt(i) & 0xff);
+                                }
+                                /*jshint bitwise: true*/
+                            }
+
+                            // Fix for loading from file
+                            if (xhrStatus === 0 && window.location.protocol === "file:")
+                            {
+                                xhrStatus = 200;
+                            }
+
+                            loader.processBytes(new Uint8Array(buffer));
+                            if (loader.data)
+                            {
+                                if (loader.onload)
+                                {
+                                    loader.onload(loader.data, loader.width,
+                                                  loader.height, loader.format,
+                                                  xhrStatus);
+                                }
+                            }
+                            else
+                            {
+                                if (loader.onerror)
+                                {
+                                    loader.onerror();
+                                }
                             }
                         }
                         else
@@ -687,53 +671,58 @@ TGALoader.create = function tgaLoaderFn(params)
                             }
                         }
                     }
-                    else
-                    {
-                        if (loader.onerror)
-                        {
-                            loader.onerror();
-                        }
-                    }
+                    // break circular reference
+                    xhr.onreadystatechange = null;
+                    xhr = null;
                 }
-                // break circular reference
-                xhr.onreadystatechange = null;
-                xhr = null;
+            };
+            xhr.open("GET", params.src, true);
+            if (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType"))
+            {
+                xhr.responseType = "arraybuffer";
             }
-        };
-        xhr.open("GET", params.src, true);
-        if (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType"))
-        {
-            xhr.responseType = "arraybuffer";
-        }
-        else if (xhr.overrideMimeType)
-        {
-            xhr.overrideMimeType("text/plain; charset=x-user-defined");
+            else if (xhr.overrideMimeType)
+            {
+                xhr.overrideMimeType("text/plain; charset=x-user-defined");
+            }
+            else
+            {
+                xhr.setRequestHeader("Content-Type", "text/plain; charset=x-user-defined");
+            }
+            xhr.send(null);
         }
         else
         {
-            xhr.setRequestHeader("Content-Type", "text/plain; charset=x-user-defined");
-        }
-        xhr.send(null);
-    }
-    else
-    {
-        loader.processBytes(params.data);
-        if (loader.data)
-        {
-            if (loader.onload)
+            loader.processBytes(params.data);
+            if (loader.data)
             {
-                loader.onload(loader.data, loader.width, loader.height,
-                              loader.format, 200);
+                if (loader.onload)
+                {
+                    loader.onload(loader.data, loader.width, loader.height,
+                                  loader.format, 200);
+                }
+            }
+            else
+            {
+                if (loader.onerror)
+                {
+                    loader.onerror();
+                }
             }
         }
-        else
-        {
-            if (loader.onerror)
-            {
-                loader.onerror();
-            }
-        }
-    }
 
-    return loader;
-};
+        return loader;
+    }
+}
+
+TGALoader.prototype.TYPE_MAPPED     = 1;
+TGALoader.prototype.TYPE_COLOR      = 2;
+TGALoader.prototype.TYPE_GRAY       = 3;
+TGALoader.prototype.TYPE_MAPPED_RLE = 9;
+TGALoader.prototype.TYPE_COLOR_RLE  = 10;
+TGALoader.prototype.TYPE_GRAY_RLE   = 11;
+TGALoader.prototype.DESC_ABITS      = 0x0f;
+TGALoader.prototype.DESC_HORIZONTAL = 0x10;
+TGALoader.prototype.DESC_VERTICAL   = 0x20;
+TGALoader.prototype.SIGNATURE       = "TRUEVISION-XFILE";
+TGALoader.prototype.RLE_PACKETSIZE  = 0x80;

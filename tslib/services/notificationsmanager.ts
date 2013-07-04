@@ -56,7 +56,7 @@ class NotificationPromise
             }, 0);
         }
         return this;
-    };
+    }
 
     error(callback: (error: NotificationError) => void) : NotificationPromise
     {
@@ -70,7 +70,7 @@ class NotificationPromise
             }, 0);
         }
         return this;
-    };
+    }
 
     cancel() : void
     {
@@ -81,12 +81,12 @@ class NotificationPromise
         {
             this.__nm.cancelNotificationByID(id);
         }
-    };
+    }
 
     getId() : string
     {
         return this.__id;
-    };
+    }
 
 
     callSuccess(id: string) : void
@@ -111,12 +111,12 @@ class NotificationPromise
             this.__errorCallback(error);
         }
     }
-};
+}
 
 interface sendNotificationPromiseList
 {
     [token: string] : NotificationPromise;
-};
+}
 
 //
 // NotificationsManager
@@ -129,8 +129,7 @@ interface SendNotificationParameters
     recipient?      : string;
     delay?          : number;
     noNotification? : bool;
-};
-
+}
 
 //
 class NotificationsManager
@@ -160,7 +159,6 @@ class NotificationsManager
         return key;
     }
 
-
     _validateMsg(params: SendNotificationParameters): NotificationMessage
     {
         var msg = params.msg;
@@ -175,7 +173,6 @@ class NotificationsManager
 
         return msg;
     }
-
 
     /*
      * Sends an instant notification to one or more recipients. params should be an object containing
@@ -216,7 +213,7 @@ class NotificationsManager
         TurbulenzBridge.triggerSendInstantNotification(JSON.stringify(params));
 
         return promise;
-    };
+    }
 
 
     /*
@@ -260,8 +257,7 @@ class NotificationsManager
         TurbulenzBridge.triggerSendDelayedNotification(JSON.stringify(params));
 
         return promise;
-    };
-
+    }
 
     cancelNotificationByID(ident: string) : void
     {
@@ -269,7 +265,7 @@ class NotificationsManager
             id: ident,
             session: this.gameSession
         }));
-    };
+    }
 
     cancelNotificationsByKey(key: string) : void
     {
@@ -281,14 +277,14 @@ class NotificationsManager
             key: key,
             session: this.gameSession
         }));
-    };
+    }
 
     cancelAllNotifications() : void
     {
         TurbulenzBridge.triggerCancelAllNotifications(JSON.stringify({
             session: this.gameSession
         }));
-    };
+    }
 
     addNotificationListener(key : string, listener) : void
     {
@@ -314,7 +310,7 @@ class NotificationsManager
         }
 
         keyHandlers.push(listener);
-    };
+    }
 
     removeNotificationListener(key: string, listener): void
     {
@@ -331,7 +327,7 @@ class NotificationsManager
                 }
             }
         }
-    };
+    }
 
     onNotificationReceived(data): void
     {
@@ -343,7 +339,7 @@ class NotificationsManager
                 this.handlers[data.key][i](data);
             }
         }
-    };
+    }
 
     onNotificationSent(data): void
     {
@@ -362,7 +358,7 @@ class NotificationsManager
             delete this.notificationPromises[token];
         }
 
-    };
+    }
 
     requestUserNotificationSettings(successCallback?: (params: UserSettings) => void,
                                     errorCallback?: (error: NotificationError) => void) : void
@@ -387,7 +383,7 @@ class NotificationsManager
             },
             requestHandler: this.requestHandler
         });
-    };
+    }
 
     requestGameNotificationKeys(successCallback?: (data: any) => void,
                                 errorCallback?: (error: NotificationError) => void ) : void
@@ -411,7 +407,7 @@ class NotificationsManager
             },
             requestHandler: this.requestHandler
         });
-    };
+    }
 
     onInit(): void
     {
@@ -419,7 +415,7 @@ class NotificationsManager
         TurbulenzBridge.triggerInitNotificationManager(JSON.stringify({
             session: this.gameSession
         }));
-    };
+    }
 
 
     static create( requestHandler: RequestHandler,
@@ -485,5 +481,5 @@ class NotificationsManager
         }, errorCallbackFn);
 
         return notificationsManager;
-    };
-};
+    }
+}

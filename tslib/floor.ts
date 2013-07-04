@@ -264,8 +264,8 @@ class Floor
         }
 
         return null;
-    };
-};
+    }
+}
 
 Floor.prototype.color       = [0.1, 0.1, 1.0, 1.0],
 Floor.prototype.fadeToColor = [0.95, 0.95, 1.0, 1.0],

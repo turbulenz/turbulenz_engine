@@ -33,7 +33,7 @@ class AssetCache
     exists(key)
     {
         return this.cache.hasOwnProperty(key);
-    };
+    }
 
     isLoading(key): bool
     {
@@ -43,7 +43,7 @@ class AssetCache
             return cachedAsset.isLoading;
         }
         return false;
-    };
+    }
 
     request(key, params?): any
     {
@@ -103,7 +103,7 @@ class AssetCache
                     that.hitCounter += 1;
                 });
         return null;
-    };
+    }
 
     // Constructor function
     static create(cacheParams: any): AssetCache
@@ -119,5 +119,5 @@ class AssetCache
         assetCache.cache = {};
 
         return assetCache;
-    };
-};
+    }
+}

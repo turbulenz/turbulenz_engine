@@ -32,7 +32,16 @@ interface IErrorStackResult
 //
 // etc...
 
-var debug = {
+interface TurbulenzDebug
+{
+    reportAssert(msg:string): void;
+    abort(msg: string): void;
+    assert(condition: any, msg?: string): void
+    log(msg: string): void;
+
+}
+
+var debug : TurbulenzDebug = {
 
     // Override this to change the behaviour when asserts are
     // triggered.  Default logs the message to the console and then
@@ -84,7 +93,7 @@ var debug = {
     },
 
     // Basic assertion that a condition is true.
-    assert : function debugAssertFn(condition, msg)
+    assert : function debugAssertFn(condition, msg?)
     {
         if (!condition)
         {

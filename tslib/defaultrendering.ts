@@ -73,7 +73,7 @@ class DefaultRendering
 
     updateShader(/* sm */)
     {
-    };
+    }
 
     sortRenderablesAndLights(camera, scene)
     {
@@ -139,7 +139,7 @@ class DefaultRendering
             }
             while (n < numVisibleRenderables);
         }
-    };
+    }
 
     update(gd, camera, scene, currentTime)
     {
@@ -164,12 +164,12 @@ class DefaultRendering
         this.globalTechniqueParameters['time'] = currentTime;
         this.camera = camera;
         this.scene = scene;
-    };
+    }
 
     updateBuffers(/* gd, deviceWidth, deviceHeight */): bool
     {
         return true;
-    };
+    }
 
     draw(gd,
          clearColor,
@@ -221,7 +221,7 @@ class DefaultRendering
         }
 
         this.lightPositionUpdated = false;
-    };
+    }
 
     setGlobalLightPosition(pos)
     {
@@ -229,33 +229,33 @@ class DefaultRendering
         this.lightPosition[0] = pos[0];
         this.lightPosition[1] = pos[1];
         this.lightPosition[2] = pos[2];
-    };
+    }
 
     setGlobalLightColor(color)
     {
         this.globalTechniqueParameters['lightColor'] = color;
-    };
+    }
 
     setAmbientColor(color)
     {
         this.globalTechniqueParameters['ambientColor'] = color;
-    };
+    }
 
     setDefaultTexture(tex)
     {
         this.globalTechniqueParameters['diffuse'] = tex;
-    };
+    }
 
     setWireframe(wireframeEnabled, wireframeInfo)
     {
         this.wireframeInfo = wireframeInfo;
         this.wireframe = wireframeEnabled;
-    };
+    }
 
     getDefaultSkinBufferSize(): number
     {
         return this.defaultSkinBufferSize;
-    };
+    }
 
     destroy()
     {
@@ -264,7 +264,7 @@ class DefaultRendering
         delete this.lightPosition;
         delete this.eyePosition;
         delete this.passes;
-    };
+    }
 
     //
     // defaultPrepareFn
@@ -352,7 +352,7 @@ class DefaultRendering
         }
 
         geometryInstance.renderUpdate = this.update;
-    };
+    }
 
     //
     // Constructor function
@@ -1353,5 +1353,5 @@ class DefaultRendering
         effect.add(rigid, effectTypeData);
 
         return dr;
-    };
-};
+    }
+}

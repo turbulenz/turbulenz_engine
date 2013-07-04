@@ -94,7 +94,7 @@ class VertexBufferManager
             return 8;
         }
         return 9;
-    };
+    }
 
     //
     // makeBuckets
@@ -108,7 +108,7 @@ class VertexBufferManager
             result.push({headChunk: null});
         }
         return result;
-    };
+    }
 
     //
     // allocate
@@ -253,7 +253,7 @@ class VertexBufferManager
             length: numVertices,
             poolIndex: poolIndex
         };
-    };
+    }
 
     //
     // free
@@ -407,7 +407,7 @@ class VertexBufferManager
             vertexBufferData.bucket.length = 0;
             vertexBufferData.bucket = null;
         }
-    };
+    }
 
     //
     // destroy
@@ -451,7 +451,7 @@ class VertexBufferManager
         }
 
         this.graphicsDevice = null;
-    };
+    }
 
     //
     // create
@@ -467,6 +467,5 @@ class VertexBufferManager
         manager.dynamicVertexBuffers = dynamicVertexBuffers ? true : false;
 
         return manager;
-    };
-
-};
+    }
+}

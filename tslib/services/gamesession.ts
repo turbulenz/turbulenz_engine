@@ -58,7 +58,7 @@ class GameSession
 
         this.status = status;
         TurbulenzBridge.setGameSessionStatus(this.gameSessionId, status);
-    };
+    }
 
     // callbackFn is for testing only!
     // It will not be called if destroy is called in TurbulenzEngine.onUnload
@@ -102,7 +102,7 @@ class GameSession
                 TurbulenzEngine.setTimeout(callbackFn, 0);
             }
         }
-    };
+    }
 
     /**
      * Handle player metadata
@@ -116,7 +116,7 @@ class GameSession
             sessionData.teamList = teamList;
             this.update();
         }
-    };
+    }
 
     setPlayerInfo(playerId, data)
     {
@@ -151,19 +151,19 @@ class GameSession
         {
             this.update();
         }
-    };
+    }
 
     removePlayerInfo(playerId)
     {
         delete this.info.playerSessionData[playerId];
         this.update();
-    };
+    }
 
     clearAllPlayerInfo()
     {
         this.info.playerSessionData = {};
         this.update();
-    };
+    }
 
     update()
     {
@@ -172,7 +172,7 @@ class GameSession
             // Debounce the update to pick up any other changes.
             this.pendingUpdate = TurbulenzEngine.setTimeout(this.postData, this.post_delay);
         }
-    };
+    }
 
     static create(requestHandler, sessionCreatedFn,
                   errorCallbackFn?): GameSession
@@ -260,5 +260,5 @@ class GameSession
         });
 
         return gameSession;
-    };
-};
+    }
+}

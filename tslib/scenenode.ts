@@ -113,7 +113,7 @@ class SceneNode
     static makePath(parentPath, childName)
     {
         return parentPath + "/" + childName;
-    };
+    }
 
     //
     //SceneNode.invalidSetLocalTransform
@@ -121,7 +121,7 @@ class SceneNode
     static invalidSetLocalTransform()
     {
         debug.abort("setLocalTransform can not be called on static nodes.");
-    };
+    }
 
     //
     // SceneNode
@@ -151,7 +151,7 @@ class SceneNode
         }
         local = this.local;
         this.world = md.m43Copy(local);
-    };
+    }
 
     //
     //getName
@@ -159,7 +159,7 @@ class SceneNode
     getName() : string
     {
         return this.name;
-    };
+    }
 
     //
     //getPath
@@ -171,7 +171,7 @@ class SceneNode
             return SceneNode.makePath(this.parent.getPath(), this.name);
         }
         return this.name;
-    };
+    }
 
     //
     //getParent
@@ -179,7 +179,7 @@ class SceneNode
     getParent() : SceneNode
     {
         return this.parent;
-    };
+    }
 
     //
     //setParentHelper
@@ -191,7 +191,7 @@ class SceneNode
         this.notifiedParent = false;
         this.dirtyWorld = false;
         this._setDirtyWorldTransform();
-    };
+    }
 
     //
     //addChild
@@ -223,7 +223,7 @@ class SceneNode
         {
             child.setDynamic();
         }
-    };
+    }
 
     //
     //removeChild
@@ -254,7 +254,7 @@ class SceneNode
             }
         }
         debug.abort("Invalid child");
-    };
+    }
 
     //
     //findChild
@@ -274,7 +274,7 @@ class SceneNode
             }
         }
         return undefined;
-    };
+    }
 
     //
     // clone
@@ -328,7 +328,7 @@ class SceneNode
         }
 
         return newNode;
-    };
+    }
 
     //
     //getRoot
@@ -341,7 +341,7 @@ class SceneNode
             result = result.parent;
         }
         return result;
-    };
+    }
 
     //
     // isInScene
@@ -353,7 +353,7 @@ class SceneNode
             return true;
         }
         return false;
-    };
+    }
 
     //
     //removedFromScene
@@ -384,7 +384,7 @@ class SceneNode
                 children[childIndex].removedFromScene(scene);
             }
         }
-    };
+    }
 
     //
     //setLocalTransform
@@ -400,7 +400,7 @@ class SceneNode
         {
             this._setDirtyWorldTransform();
         }
-    };
+    }
 
     //
     //getLocalTransform
@@ -408,7 +408,7 @@ class SceneNode
     getLocalTransform()
     {
         return this.local;
-    };
+    }
 
     //
     //_setDirtyWorldTransform
@@ -494,7 +494,7 @@ class SceneNode
             }
         }
         while (0 < numRemainingNodes);
-    };
+    }
 
     //
     //getWorldTransform
@@ -527,7 +527,7 @@ class SceneNode
             }
         }
         return this.world;
-    };
+    }
 
     //
     //setDynamic
@@ -562,7 +562,7 @@ class SceneNode
                 children[n].setDynamic();
             }
         }
-    };
+    }
 
     //
     //setStatic
@@ -606,7 +606,7 @@ class SceneNode
                 children[n].setStatic();
             }
         }
-    };
+    }
 
     //
     //setDisabled
@@ -621,7 +621,7 @@ class SceneNode
         {
             this.disabled = false;
         }
-    };
+    }
 
     //
     //getDisabled
@@ -629,7 +629,7 @@ class SceneNode
     getDisabled(): bool
     {
         return this.disabled;
-    };
+    }
 
     //
     //enableHierarchy
@@ -647,7 +647,7 @@ class SceneNode
                 children[c].enableHierarchy(enabled);
             }
         }
-    };
+    }
 
     //
     //childUpdated
@@ -665,7 +665,7 @@ class SceneNode
                 this.notifiedParent = false;
             }
         }
-    };
+    }
 
     //
     //childNeedsUpdate
@@ -675,7 +675,7 @@ class SceneNode
         //Private function
         this.updateRequired();        //propagate to the root node.
         this.childNeedsUpdateCount += 1;
-    };
+    }
 
     //
     //updateRequired
@@ -701,7 +701,7 @@ class SceneNode
                 scene.addRootNodeToUpdate(this, this.name);
             }
         }
-    };
+    }
 
     //
     //checkUpdateRequired
@@ -719,7 +719,7 @@ class SceneNode
                 this.notifiedParent = false;
             }
         }
-    };
+    }
 
     //
     //update
@@ -727,7 +727,7 @@ class SceneNode
     update(scene)
     {
         this.updateHelper(this.mathDevice, (scene || this.scene), [this]);
-    };
+    }
 
     // TODO: Marked as private, but Scene accesses it
     // PRIVATE
@@ -859,7 +859,7 @@ class SceneNode
             }
         }
         while (0 < numNodes);
-    };
+    }
 
     //
     //updateLocalExtents
@@ -1011,7 +1011,7 @@ class SceneNode
         }
 
         this.dirtyLocalExtents = false;
-    };
+    }
 
     //
     //getLocalExtents
@@ -1023,7 +1023,7 @@ class SceneNode
             this.updateLocalExtents();
         }
         return this.localExtents; //Can be undefined if no local extents. These are not transformed by the local transform matrix.
-    };
+    }
 
     //
     //updateWorldExtents
@@ -1063,7 +1063,7 @@ class SceneNode
 
             this.checkUpdateRequired();
         }
-    };
+    }
 
     //
     //updateCustomRenderableWorldExtents
@@ -1147,7 +1147,7 @@ class SceneNode
             worldExtents[4] = maxY;
             worldExtents[5] = maxZ;
         }
-    };
+    }
 
     //
     //recalculateWorldExtents
@@ -1202,7 +1202,7 @@ class SceneNode
         worldExtents[3] = (ct0 + ht0);
         worldExtents[4] = (ct1 + ht1);
         worldExtents[5] = (ct2 + ht2);
-    };
+    }
 
     //
     //getWorldExtents
@@ -1214,7 +1214,7 @@ class SceneNode
             this.updateWorldExtents();
         }
         return this.worldExtents;
-    };
+    }
 
     //
     //addCustomLocalExtents
@@ -1238,7 +1238,7 @@ class SceneNode
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
         this.updateRequired();
-    };
+    }
 
     //
     //removeCustomLocalExtents
@@ -1249,7 +1249,7 @@ class SceneNode
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
         this.updateRequired();
-    };
+    }
 
     //
     //getCustomLocalExtents
@@ -1257,7 +1257,7 @@ class SceneNode
     getCustomLocalExtents()
     {
         return this.customLocalExtents;
-    };
+    }
 
     //
     //addCustomWorldExtents
@@ -1280,7 +1280,7 @@ class SceneNode
         }
         this.dirtyWorldExtents = true;
         this.updateRequired();
-    };
+    }
 
     //
     //removeCustomWorldExtents
@@ -1290,7 +1290,7 @@ class SceneNode
         delete this.customWorldExtents;
         this.dirtyWorldExtents = true;
         this.updateRequired();
-    };
+    }
 
     //
     //getCustomWorldExtents
@@ -1298,7 +1298,7 @@ class SceneNode
     getCustomWorldExtents()
     {
         return this.customWorldExtents;
-    };
+    }
 
     //
     //renderableWorldExtentsUpdated
@@ -1316,7 +1316,7 @@ class SceneNode
             this.dirtyLocalExtents = true;
             this.numCustomRenderableWorldExtents = this.numCustomRenderableWorldExtents ? this.numCustomRenderableWorldExtents + 1 : 1;
         }
-    };
+    }
 
     //
     //renderableWorldExtentsRemoved
@@ -1330,7 +1330,7 @@ class SceneNode
         }
         this.dirtyLocalExtents = true;
         this.numCustomRenderableWorldExtents -= 1;
-    };
+    }
 
     //
     //calculateHierarchyWorldExtents
@@ -1384,7 +1384,7 @@ class SceneNode
         {
             return undefined;
         }
-    };
+    }
 
     //
     //addRenderable
@@ -1400,7 +1400,7 @@ class SceneNode
         this.renderables.push(renderable);
         renderable.setNode(this);
         this.dirtyLocalExtents = true;
-    };
+    }
 
     //
     //addRenderableArray
@@ -1421,7 +1421,7 @@ class SceneNode
             additionalRenderables[index].setNode(this);
         }
         this.dirtyLocalExtents = true;
-    };
+    }
 
     //
     //removeRenderable
@@ -1443,7 +1443,7 @@ class SceneNode
             }
         }
         debug.abort("Invalid renderable");
-    };
+    }
 
     //
     //hasRenderables
@@ -1451,7 +1451,7 @@ class SceneNode
     hasRenderables() : bool
     {
         return (this.renderables && this.renderables.length) ? true : false;
-    };
+    }
 
     //
     //addLightInstance
@@ -1467,7 +1467,7 @@ class SceneNode
         this.lightInstances.push(lightInstance);
         lightInstance.setNode(this);
         this.dirtyLocalExtents = true;
-    };
+    }
 
     //
     //addLightInstanceArray
@@ -1490,7 +1490,7 @@ class SceneNode
         }
 
         this.dirtyLocalExtents = true;
-    };
+    }
 
     //
     //removeLightInstance
@@ -1512,7 +1512,7 @@ class SceneNode
             }
         }
         debug.abort("Invalid light");
-    };
+    }
 
     //
     //hasLightInstances
@@ -1520,7 +1520,7 @@ class SceneNode
     hasLightInstances(): bool
     {
         return <bool><any>(this.lightInstances && this.lightInstances.length);
-    };
+    }
 
     //
     //destroy
@@ -1568,7 +1568,7 @@ class SceneNode
         }
 
         delete this.scene;
-    };
+    }
 
     //
     //subscribeCloned
@@ -1580,7 +1580,7 @@ class SceneNode
             this.clonedObserver = Observer.create();
         }
         this.clonedObserver.subscribe(observerFunction);
-    };
+    }
 
     //
     //unsubscribeCloned
@@ -1588,7 +1588,7 @@ class SceneNode
     unsubscribeCloned(observerFunction)
     {
         this.clonedObserver.unsubscribe(observerFunction);
-    };
+    }
 
     //
     //subscribeDestroyed
@@ -1600,7 +1600,7 @@ class SceneNode
             this.destroyedObserver = Observer.create();
         }
         this.destroyedObserver.subscribe(observerFunction);
-    };
+    }
 
     //
     //unsubscribeDestroyed
@@ -1608,7 +1608,7 @@ class SceneNode
     unsubscribeDestroyed(observerFunction)
     {
         this.destroyedObserver.unsubscribe(observerFunction);
-    };
+    }
 
     //
     //SceneNode.create
@@ -1616,8 +1616,8 @@ class SceneNode
     static create(params) : SceneNode
     {
         return new SceneNode(params);
-    };
-};
+    }
+}
 
 // Detect correct typed arrays
 (function () {

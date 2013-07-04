@@ -321,7 +321,7 @@ interface MathDevice
     isInsidePlanesSphere(c, r, planes);
     isInsidePlanesBox(c, h, planes);
     extractIntersectingPlanes(extents, planes);
-};
+}
 
 // -----------------------------------------------------------------------------
 // GraphicsDevice
@@ -331,7 +331,7 @@ interface Pass
 {
     name: string;
     parameters: any;
-};
+}
 
 interface Technique
 {
@@ -344,7 +344,7 @@ interface Technique
 
     numParameters: number;
     device: any;
-};
+}
 
 interface ShaderParameter
 {
@@ -352,7 +352,7 @@ interface ShaderParameter
     type    : string;
     rows    : number;
     columns : number;
-};
+}
 
 interface Shader
 {
@@ -376,12 +376,12 @@ interface Shader
     setTechnique(technique: Technique): void;
     getParameter(index: number): ShaderParameter;
     getParameter(name: string): ShaderParameter;
-};
+}
 
 interface TechniqueParameters
 {
     [paramName: string]: any;
-};
+}
 
 interface ParameterWriteIterator
 {
@@ -399,7 +399,7 @@ interface TechniqueParameterBuffer
         numValuesToMap?: number): ParameterWriteIterator;
     unmap(writer: ParameterWriteIterator): void;
     setData(data: any, offset: number, numVertices: number): void;
-};
+}
 
 interface RenderBuffer
 {
@@ -410,7 +410,7 @@ interface RenderBuffer
     // Methods
 
     destroy();
-};
+}
 
 interface TextureParameters
 {
@@ -428,7 +428,7 @@ interface TextureParameters
     renderable?: bool;
     dynamic?: bool;
     data?: any;
-};
+}
 
 interface Texture
 {
@@ -448,7 +448,7 @@ interface Texture
     setData(data: any);
     typedArrayIsValid(array: any);
     destroy();
-};
+}
 
 interface RenderTargetParameters
 {
@@ -458,7 +458,7 @@ interface RenderTargetParameters
     colorTexture3? : Texture;
     depthBuffer?   : RenderBuffer;
     depthTexture?  : RenderBuffer;
-};
+}
 
 interface RenderTarget
 {
@@ -475,13 +475,13 @@ interface RenderTarget
     // Methods
 
     destroy();
-};
+}
 
 interface Semantics
 {
     length: number;
     [index: number]: any;
-};
+}
 
 interface VertexBufferParameters
 {
@@ -491,13 +491,13 @@ interface VertexBufferParameters
     dynamic?    : bool;
     transient?  : bool;
     data?       : any; // ArrayBufferView or Array
-};
+}
 
 interface VertexWriteIterator
 {
     (... data: any[]): void;
     write(... data: any[]): void;
-};
+}
 
 interface VertexBuffer
 {
@@ -514,7 +514,7 @@ interface VertexBuffer
     map(offset?: number, count?: number): VertexWriteIterator;
     unmap(writer: VertexWriteIterator): void;
     destroy(): void;
-};
+}
 
 interface IndexBufferParameters
 {
@@ -531,7 +531,7 @@ interface IndexWriteIterator
 {
     (... data: any[]): void;
     write(... data: any[]): void;
-};
+}
 
 interface IndexBuffer
 {
@@ -549,7 +549,7 @@ interface IndexBuffer
     unmap(writer: IndexWriteIterator): void;
 
     destroy(): void;
-};
+}
 
 interface DrawParameters
 {
@@ -573,18 +573,18 @@ interface DrawParameters
     getVertexBuffer(index: number): VertexBuffer;
     getSemantics(index: number): Semantics;
     getOffset(index: number): number;
-};
+}
 
 interface OcclusionQuery
 {
-};
+}
 
 interface VideoParameters
 {
     src: string;
     looping?: bool;
     onload: { (v: Video): void; };
-};
+}
 
 interface Video
 {
@@ -776,7 +776,7 @@ interface GraphicsDevice
     loadTexturesArchive(params: any): void;
     getScreenshot(compress: bool, x?: number, y?: number,
                   width?: number, height?: number): number[];
-};
+}
 
 // -----------------------------------------------------------------------------
 // PhysicsDevice
@@ -789,13 +789,13 @@ interface PhysicsShape
     halfExtents: any; // v3
     inertia: any; // v3
     type: string;
-};
+}
 
 interface PhysicsTriangleArray
 {
     vertices : Float32Array; // getter for _private.vertices
     indices  : any;          // Uint16Array / Uint32Array
-};
+}
 
 interface PhysicsCollisionObject
 {
@@ -811,9 +811,9 @@ interface PhysicsCollisionObject
     calculateTransform(transfrom: any, // m43
                        origin: any // v3 / v4
                       ): void;
-    calculateExtents(): void;
+    calculateExtents(extents: any): void;
     clone(): PhysicsCollisionObject;
-};
+}
 
 interface PhysicsRigidBody extends PhysicsCollisionObject
 {
@@ -826,7 +826,7 @@ interface PhysicsRigidBody extends PhysicsCollisionObject
     inertia         : any; // v3
 
     clone(): PhysicsRigidBody;
-};
+}
 
 interface PhysicsCharacter
 {
@@ -843,7 +843,7 @@ interface PhysicsCharacter
                       )          : any; // m43
     calculateExtents(extents: any /* array?  typed array? */): void;
     jump(): void;
-};
+}
 
 interface PhysicsConstraint
 {
@@ -852,7 +852,7 @@ interface PhysicsConstraint
     transformA: any; // m43
     transformB: any; // m43
     type: string;
-};
+}
 
 interface PhysicsPoint2PointConstraint extends PhysicsConstraint
 {
@@ -867,7 +867,7 @@ interface PhysicsHingeConstraint extends PhysicsConstraint
 {
     low: number;
     high: number;
-};
+}
 
 interface PhysicsConeTwistConstraint extends PhysicsConstraint
 {
@@ -875,7 +875,7 @@ interface PhysicsConeTwistConstraint extends PhysicsConstraint
     swingSpan2: number;
     twistSpan: number;
     twistAngle: number;
-};
+}
 
 interface Physics6DOFConstraint extends PhysicsConstraint
 {
@@ -883,7 +883,7 @@ interface Physics6DOFConstraint extends PhysicsConstraint
     linearUpperLimit: any; // v3
     angularLowerLimit: any; // v3
     angularUpperLimit: any; // v3
-};
+}
 
 interface PhysicsSliderConstraint extends PhysicsConstraint
 {
@@ -891,7 +891,7 @@ interface PhysicsSliderConstraint extends PhysicsConstraint
     linearUpperLimit: number;
     angularLowerLimit: number;
     angularUpperLimit: number;
-};
+}
 
 interface RayTestParameters
 {
@@ -900,12 +900,12 @@ interface RayTestParameters
     group?: number;
     mask?: number;
     exclude?: PhysicsCollisionObject;
-};
+}
 
 interface ConvexSweepTestParameters extends RayTestParameters
 {
     shape: PhysicsShape;
-};
+}
 
 interface RayHit
 {
@@ -913,7 +913,7 @@ interface RayHit
     body            : PhysicsRigidBody;
     hitPoint        : any; // v3
     hitNormal       : any; // v3
-};
+}
 
 interface PhysicsWorld
 {
@@ -975,7 +975,7 @@ interface PhysicsDevice
     create6DOFConstraint(params) : Physics6DOFConstraint;
     createSliderConstraint(params) : PhysicsSliderConstraint;
     createCharacter(params) : PhysicsCharacter;
-};
+}
 
 // -----------------------------------------------------------------------------
 // SoundDevice
@@ -985,7 +985,7 @@ interface PhysicsDevice
 
 // Should return an Array or ArrayBufferView
 interface SoundDataFn { (amplitude: number, frequency: number,
-                         wavefrequency: number, length: number): any; };
+                         wavefrequency: number, length: number): any; }
 
 interface SoundParameters
 {
@@ -998,7 +998,7 @@ interface SoundParameters
     frequency?  : number;
 
     onload?     : { (sound: Sound): void; };
-};
+}
 
 interface Sound
 {
@@ -1011,7 +1011,7 @@ interface Sound
 
 
     destroy(): void;
-};
+}
 
 // SoundEffect
 
@@ -1041,7 +1041,7 @@ interface SoundEffectParameters
     roomRollOffFactor?   : number;
     airAbsorptionGainHF? : number;
     decayHFLimit?        : number;
-};
+}
 
 interface SoundEffect
 {
@@ -1065,7 +1065,7 @@ interface SoundEffect
     damping: number;
     feedback: number;
     spread: number;
-};
+}
 
 // SoundEffectSlot
 
@@ -1073,14 +1073,14 @@ interface SoundEffectSlotParameters
 {
     effect : SoundEffect;
     gain   : number;
-};
+}
 
 interface SoundEffectSlot
 {
     effect            : SoundEffect;
     gain              : number;
     auxiliarySendAuto : bool;
-};
+}
 
 // SoundFilter
 
@@ -1092,7 +1092,7 @@ interface SoundFilterParameters
     // Lowpass
     gain?   : number;
     gainHF? : number;
-};
+}
 
 interface SoundFilter
 {
@@ -1100,7 +1100,7 @@ interface SoundFilter
     type: string;
     gain: number;
     gainHF: number;
-};
+}
 
 // SoundSource
 
@@ -1117,7 +1117,7 @@ interface SoundSourceParameters
     relative?    : bool;
     looping?     : bool;
     pitch?       : number;
-};
+}
 
 interface SoundSource
 {
@@ -1147,7 +1147,7 @@ interface SoundSource
                            filter: SoundFilter): bool;
     setDirectFilter(filter: SoundFilter): bool;
     destroy(): void;
-};
+}
 
 // SoundArchiveParameters
 
@@ -1157,7 +1157,7 @@ interface SoundArchiveParameters
     onsoundload : { (sound: Sound): void; };
     onload      : { (success: bool, status: number): void; };
     uncompress  : bool;
-};
+}
 
 // SoundDevice
 
@@ -1188,7 +1188,7 @@ interface SoundDevice
     createFilter(params: SoundFilterParameters): SoundFilter;
     update(): void;
     isSupported(feature: string): bool;
-};
+}
 
 // -----------------------------------------------------------------------------
 // NetworkDevice
@@ -1198,7 +1198,7 @@ interface NetworkDevice
 {
     createWebSocket(url: string): WebSocket;
     update(): void;
-};
+}
 
 // -----------------------------------------------------------------------------
 // InputDevice
@@ -1209,18 +1209,18 @@ interface TouchEvent
     gameTouches: any[];
     touches: any[];
     changedTouches: any;
-};
+}
 
 interface InputDeviceEventListener
 {
     (...arg0: any[]): void; //?, arg1?, arg2?, arg3?, arg4?, arg5?): void;
-};
+}
 
 interface InputDevice
 {
-    keyCodes   : any; // { [keyName: string]: number; };
-    mouseCodes : any; // { [keyName: string]: number; };
-    padCodes   : any; // { [keyName: string]: number; };
+    keyCodes   : any; // { [keyName: string]: number; }
+    mouseCodes : any; // { [keyName: string]: number; }
+    padCodes   : any; // { [keyName: string]: number; }
 
     update(): void;
     addEventListener(eventType: string,
@@ -1236,7 +1236,7 @@ interface InputDevice
     isFocused(): bool;
     convertToUnicode(keyCodes: number[]): string[];
     isSupported(feature: string): bool;
-};
+}
 
 // -----------------------------------------------------------------------------
 // TurbulenzEngine
@@ -1260,12 +1260,12 @@ interface SystemInfo
     platformProfile   : string;
 
     userLocale        : string;
-};
+}
 
 interface TurbulenzRequestCallback
 {
     (asset: any, status: number): void;
-};
+}
 
 interface TurbulenzEngine
 {
@@ -1330,7 +1330,7 @@ interface TurbulenzEngine
 
     unload(): void;
     isUnloading(): void;
-};
+}
 
 // -----------------------------------------------------------------------------
 // TurbulenzEngine global

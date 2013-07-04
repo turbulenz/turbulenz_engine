@@ -19,5 +19,5 @@ class WebGLTouchEvent implements TouchEvent
         touchEvent.touches          = params.touches;
 
         return touchEvent;
-    };
-};
+    }
+}

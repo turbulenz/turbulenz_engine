@@ -44,7 +44,7 @@ class PostEffects
             this.modulate.technique     = shader.getTechnique("modulate");
             this.blend.technique        = shader.getTechnique("blend");
         }
-    };
+    }
 
     getEffectSetupCB(name) : { (gd: GraphicsDevice, colTex: Texture): void; }
     {
@@ -66,7 +66,7 @@ class PostEffects
         {
             return undefined;
         }
-    };
+    }
 
     destroy()
     {
@@ -77,9 +77,9 @@ class PostEffects
                 delete this[p];
             }
         }
-    };
+    }
 
-// Constructor function
+    // Constructor function
     static create(gd: GraphicsDevice, sm: ShaderManager) : PostEffects
     {
         var pe = new PostEffects();
@@ -146,5 +146,5 @@ class PostEffects
         };
 
         return pe;
-    };
-};
+    }
+}

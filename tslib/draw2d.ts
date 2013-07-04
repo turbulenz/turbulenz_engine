@@ -38,7 +38,7 @@ class Draw2DGroup
         group.numVertices = 0;
 
         return group;
-    };
+    }
 };
 
 //
@@ -48,7 +48,6 @@ class Draw2DSprite
 {
     static version = 1;
 
-    data             : any; // Draw2D.prototype.floatArray(38);
     x                : number;
     y                : number;
     rotation         : number;
@@ -84,7 +83,7 @@ class Draw2DSprite
             dst[3] = data[15];
         }
         return dst;
-    };
+    }
 
     setTextureRectangle(uvRect)
     {
@@ -106,7 +105,7 @@ class Draw2DSprite
             data[14] = uvRect[2];
             data[15] = uvRect[3];
         }
-    };
+    }
 
     getColor(dst)
     {
@@ -120,7 +119,7 @@ class Draw2DSprite
         dst[2] = data[10];
         dst[3] = data[11];
         return dst;
-    };
+    }
 
     setColor(color)
     {
@@ -129,12 +128,12 @@ class Draw2DSprite
         data[9]  = color[1];
         data[10] = color[2];
         data[11] = color[3];
-    };
+    }
 
     getTexture() : Texture
     {
         return this._texture;
-    };
+    }
 
     setTexture(texture)
     {
@@ -151,12 +150,12 @@ class Draw2DSprite
             data[14] *= su;
             data[15] *= sv;
         }
-    };
+    }
 
     getWidth(): number
     {
         return this.data[17] * 2;
-    };
+    }
 
     setWidth(width)
     {
@@ -167,12 +166,12 @@ class Draw2DSprite
             data[17] = width;
             this._invalidate();
         }
-    };
+    }
 
     getHeight(): number
     {
         return this.data[18] * 2;
-    };
+    }
 
     setHeight(height)
     {
@@ -183,7 +182,7 @@ class Draw2DSprite
             data[18] = height;
             this._invalidate();
         }
-    };
+    }
 
     getScale(dst)
     {
@@ -195,7 +194,7 @@ class Draw2DSprite
         dst[0] = data[19];
         dst[1] = data[20];
         return dst;
-    };
+    }
 
     setScale(scale)
     {
@@ -208,7 +207,7 @@ class Draw2DSprite
             data[20] = scaleY;
             this._invalidate();
         }
-    };
+    }
 
     getShear(dst)
     {
@@ -220,7 +219,7 @@ class Draw2DSprite
         dst[0] = data[21];
         dst[1] = data[22];
         return dst;
-    };
+    }
 
     setShear(shear)
     {
@@ -233,7 +232,7 @@ class Draw2DSprite
             data[22] = shearY;
             this._invalidate();
         }
-    };
+    }
 
     getOrigin(dst)
     {
@@ -245,7 +244,7 @@ class Draw2DSprite
         dst[0] = data[23];
         dst[1] = data[24];
         return dst;
-    };
+    }
 
     setOrigin(origin)
     {
@@ -258,7 +257,7 @@ class Draw2DSprite
             data[24] = originY;
             this._invalidate();
         }
-    };
+    }
 
     // Method for internal use only.
     //
@@ -344,7 +343,7 @@ class Draw2DSprite
         // We permit a half pixel movement to be considered a 'true' movement.
         // Squared rotation required to impart this movement on furthest vertex is
         data[37] = (0.25 / r1); // squared epsilon
-    };
+    }
 
     // Method for internal use only.
     //
@@ -398,7 +397,7 @@ class Draw2DSprite
         data[3] = v + y; // v2y = centerY + y2
         data[4] = u - x; // v3x = centerX - x2
         data[5] = v - y; // v3y = centerY - y2
-    };
+    }
 
     static create(params: any): Draw2DSprite
     {
@@ -480,8 +479,8 @@ class Draw2DSprite
 
         s._invalidate();
         return s;
-    };
-};
+    }
+}
 
 //
 // Used in rectangle draw routines to compute data to be pushed into
@@ -587,7 +586,7 @@ interface Draw2DRenderTargetParams
     backBuffer? : bool;
     width?      : number;
     height?     : number;
-};
+}
 
 interface Draw2DRenderTarget
 {
@@ -597,7 +596,7 @@ interface Draw2DRenderTarget
     backBuffer   : bool;
     actualWidth  : number;
     actualHeight : number;
-};
+}
 
 // params : {
 //    graphicsDevice : gd,
@@ -610,7 +609,7 @@ interface Draw2DParameters
 {
     graphicsDevice : GraphicsDevice;
     blendModes?    : { [name: string]: Technique; };
-};
+}
 
 class Draw2D
 {
@@ -792,7 +791,7 @@ class Draw2D
         }
 
         return true;
-    };
+    }
 
     clearBatch()
     {
@@ -806,7 +805,7 @@ class Draw2D
         }
         this.currentTextureGroup = undefined;
         this.numGroups = 0;
-    };
+    }
 
     bufferSprite(buffer, sprite, index)
     {
@@ -832,7 +831,7 @@ class Draw2D
         buffer[index + 13] = data[13];
         buffer[index + 14] = data[14];
         buffer[index + 15] = data[15];
-    };
+    }
 
     update()
     {
@@ -979,7 +978,7 @@ class Draw2D
             this.updateRenderTargetVbo(this.scissorX, this.scissorY, this.scissorWidth, this.scissorHeight);
             this.forceUpdate = false;
         }
-    };
+    }
 
     getViewport(dst)
     {
@@ -1002,7 +1001,7 @@ class Draw2D
             dst[3] = this.graphicsDevice.height;
         }
         return dst;
-    };
+    }
 
     getScreenSpaceViewport(dst?: any): any
     {
@@ -1018,7 +1017,7 @@ class Draw2D
         dst[2] = dst[0] + this.scissorWidth;
         dst[3] = dst[1] + this.scissorHeight;
         return dst;
-    };
+    }
 
     viewportMap(screenX, screenY, dst?): any
     {
@@ -1043,7 +1042,7 @@ class Draw2D
         }
 
         return dst;
-    };
+    }
 
     viewportUnmap(x, y, dst?): any
     {
@@ -1067,7 +1066,7 @@ class Draw2D
         dst[0] = (x / this.viewScaleX) + this.scissorX;
         dst[1] = (y / this.viewScaleY) + scissorY;
         return dst;
-    };
+    }
 
     viewportClamp(point)
     {
@@ -1116,7 +1115,7 @@ class Draw2D
         }
 
         return point;
-    };
+    }
 
     configure(params)
     {
@@ -1148,7 +1147,7 @@ class Draw2D
         this.update();
 
         return true;
-    };
+    }
 
     destroy()
     {
@@ -1177,7 +1176,7 @@ class Draw2D
             target.texture = null;
             target.renderTarget = null;
         }
-    };
+    }
 
     begin(blendMode?, sortMode?)
     {
@@ -1236,7 +1235,7 @@ class Draw2D
         this.graphicsDevice.setTechnique(this.blendModeTechniques[blendMode]);
 
         return true;
-    };
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -1313,7 +1312,7 @@ class Draw2D
 
         // increment number of indices in present subset.
         group.indices[group.numSets - 1] += 6;
-    };
+    }
 
     private bufferMultiSprite(group, buffer, count?, offset?)
     {
@@ -1397,7 +1396,7 @@ class Draw2D
         group.numVertices += (numSprites * 4);
         // increment number of indices in present subset.
         group.indices[group.numSets - 1] += (numSprites * 6);
-    };
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -1417,7 +1416,7 @@ class Draw2D
             vertexIndex += 4;
         }
         return indexData;
-    };
+    }
 
     // upload group buffer to graphics device vertexBuffer.
     uploadBuffer(group, count, offset)
@@ -1469,7 +1468,7 @@ class Draw2D
             var stride = vertexBuffer.stride;
             vertexBuffer.setData(vertexData.subarray(offset * stride, (offset + count) * stride), 0, count);
         }
-    };
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -1486,7 +1485,7 @@ class Draw2D
 
         // Draw render group immediately.
         this.dispatch();
-    };
+    }
 
     drawSpriteImmediate(sprite)
     {
@@ -1501,7 +1500,7 @@ class Draw2D
 
         // Draw render group immediately.
         this.dispatch();
-    };
+    }
 
     drawImmediate(params)
     {
@@ -1523,7 +1522,7 @@ class Draw2D
 
         // Draw render group immediately.
         this.dispatch();
-    };
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -1543,7 +1542,7 @@ class Draw2D
         }
 
         this.bufferMultiSprite(group, multiSprite, count, offset);
-    };
+    }
 
     drawSpriteDeferred(sprite)
     {
@@ -1563,7 +1562,7 @@ class Draw2D
 
         sprite._update(this.spriteAngleFactor);
         this._bufferSprite(group, sprite.data);
-    };
+    }
 
     drawDeferred(params)
     {
@@ -1590,7 +1589,7 @@ class Draw2D
         Draw2DSpriteData.setFromRotatedRectangle(drawSprite, texture, destRect, srcRect, color, rotation, params.origin);
 
         this._bufferSprite(group, drawSprite);
-    };
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -1627,7 +1626,7 @@ class Draw2D
         }
 
         this.bufferMultiSprite(group, multiSprite, count, offset);
-    };
+    }
 
     drawSpriteTextured(sprite)
     {
@@ -1664,7 +1663,7 @@ class Draw2D
 
         sprite._update(this.spriteAngleFactor);
         this._bufferSprite(group, sprite.data);
-    };
+    }
 
     drawTextured(params)
     {
@@ -1708,7 +1707,7 @@ class Draw2D
         Draw2DSpriteData.setFromRotatedRectangle(drawSprite, texture, destRect, srcRect, color, rotation, params.origin);
 
         this._bufferSprite(group, drawSprite);
-    };
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -1732,7 +1731,7 @@ class Draw2D
             this.drawSprite = this.drawSpriteTextured;
             this.drawRaw = this.drawRawTextured;
         }
-    };
+    }
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -1764,7 +1763,7 @@ class Draw2D
         }
 
         return true;
-    };
+    }
 
     dispatch()
     {
@@ -1876,7 +1875,7 @@ class Draw2D
         }
 
         return true;
-    };
+    }
 
     bufferSizeAlgorithm(target, stride)
     {
@@ -1893,7 +1892,7 @@ class Draw2D
         // Additionally ensure that we always take a multiple of of the stride
         // to avoid wasted bytes that could never be used.
         return (stride * Math.ceil(size / stride));
-    };
+    }
 
     updateRenderTargetVbo(viewX, viewY, viewWidth, viewHeight)
     {
@@ -1933,7 +1932,7 @@ class Draw2D
         vertexData[15] = 0.0;
 
         vertexBuffer.setData(vertexData, 0, 4);
-    };
+    }
 
     // always overallocate.
     /*jshint bitwise: false*/
@@ -1941,7 +1940,7 @@ class Draw2D
     {
         var index = Math.log(dim) / Math.log(2);
         return (1 << Math.ceil(index));
-    };
+    }
     /*jshint bitwise: true*/
 
     createRenderTarget(params: Draw2DRenderTargetParams)
@@ -1979,7 +1978,7 @@ class Draw2D
         });
 
         return index;
-    };
+    }
 
     validateTarget(target, viewWidth, viewHeight)
     {
@@ -2018,7 +2017,7 @@ class Draw2D
                 target.renderTarget = graphicsDevice.createRenderTarget(targetParams);
             }
         }
-    };
+    }
 
     setBackBuffer()
     {
@@ -2031,7 +2030,7 @@ class Draw2D
         this.forceUpdate = true;
 
         return true;
-    };
+    }
 
     getRenderTargetTexture(renderTargetIndex)
     {
@@ -2042,7 +2041,7 @@ class Draw2D
         }
 
         return renderTargets[renderTargetIndex].texture;
-    };
+    }
 
     getRenderTarget(renderTargetIndex)
     {
@@ -2053,7 +2052,7 @@ class Draw2D
         }
 
         return renderTargets[renderTargetIndex].renderTarget;
-    };
+    }
 
     setRenderTarget(renderTargetIndex)
     {
@@ -2072,7 +2071,7 @@ class Draw2D
         this.forceUpdate = true;
 
         return true;
-    };
+    }
 
     copyRenderTarget(renderTargetIndex)
     {
@@ -2127,7 +2126,7 @@ class Draw2D
         }
 
         return true;
-    };
+    }
 
     resetPerformanceData()
     {
@@ -2135,7 +2134,7 @@ class Draw2D
         data.minBatchSize = data.maxBatchSize = data.avgBatchSize = undefined;
         data.batchCount = 0;
         data.dataTransfers = 0;
-    };
+    }
 
     // Constructor function
     static create(params): Draw2D
@@ -2489,8 +2488,8 @@ class Draw2D
                                                     1.0,  1.0, 1.0, 1.0]);
 
         return o;
-    };
-};
+    }
+}
 
 // Detect correct typed arrays
 (function () {

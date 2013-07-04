@@ -61,6 +61,21 @@ if ((typeof Float32Array !== "undefined") &&
     };
 }
 
+interface TurbulenzDebug
+{
+    isNumber(s: any): bool;
+    isVec2(v): bool;
+    isVec3(v): bool;
+    isVec4(v): bool;
+    isAABB(v): bool;
+    isQuat(v): bool;
+    isMtx33(v): bool;
+    isMtx43(v): bool;
+    isMtx34(v): bool;
+    isMtx44(v): bool;
+    isQuatPos(v): bool;
+}
+
 if (debug)
 {
     debug.isNumber = function debugIsNumber(s)

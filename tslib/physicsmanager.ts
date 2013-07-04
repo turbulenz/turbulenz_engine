@@ -115,7 +115,7 @@ class PhysicsManager
                 }
             }
         }
-    };
+    }
 
     //
     // enableNode
@@ -170,7 +170,7 @@ class PhysicsManager
                 }
             }
         }
-    };
+    }
 
     //
     // enableHierarchy
@@ -188,7 +188,7 @@ class PhysicsManager
                 this.enableHierarchy(children[c], enabled);
             }
         }
-    };
+    }
 
     //
     // deletePhysicsNode
@@ -228,7 +228,7 @@ class PhysicsManager
                 break;
             }
         }
-    };
+    }
 
     //
     // deleteNode
@@ -269,7 +269,7 @@ class PhysicsManager
                 delete sceneNode.physicsNodes;
             }
         }
-    };
+    }
 
     //
     // deleteHierarchy
@@ -287,7 +287,7 @@ class PhysicsManager
                 this.deleteHierarchy(children[c]);
             }
         }
-    };
+    }
 
     //
     // calculateHierarchyExtents
@@ -343,7 +343,7 @@ class PhysicsManager
             return undefined;
         }
         return totalExtents;
-    };
+    }
 
     //
     // calculateExtents
@@ -379,7 +379,7 @@ class PhysicsManager
             return undefined;
         }
         return totalExtents;
-    };
+    }
 
     //
     // clear
@@ -396,7 +396,7 @@ class PhysicsManager
         this.physicsNodes = [];
         this.dynamicPhysicsNodes = [];
         this.kinematicPhysicsNodes = [];
-    };
+    }
 
     //
     // loadNodes
@@ -903,7 +903,7 @@ class PhysicsManager
                 }
             }
         }
-    };
+    }
 
     //
     // unsubscribeSceneNode
@@ -912,7 +912,7 @@ class PhysicsManager
     {
         sceneNode.unsubscribeCloned(this.sceneNodeCloned);
         sceneNode.unsubscribeDestroyed(this.sceneNodeDestroyed);
-    };
+    }
 
     //
     // subscribeSceneNode
@@ -921,7 +921,7 @@ class PhysicsManager
     {
         sceneNode.subscribeCloned(this.sceneNodeCloned);
         sceneNode.subscribeDestroyed(this.sceneNodeDestroyed);
-    };
+    }
 
     //
     // cloneSceneNode
@@ -995,7 +995,7 @@ class PhysicsManager
                 physicsManagerCloneNode(physicsNodes[p], newSceneNode);
             }
         }
-    };
+    }
 
     //
     // Snapshot
@@ -1024,7 +1024,7 @@ class PhysicsManager
         }
 
         return snapshot;
-    };
+    }
 
     restoreSnapshot(snapshot)
     {
@@ -1047,7 +1047,7 @@ class PhysicsManager
                 }
             }
         }
-    };
+    }
 
     //
     // Constructor function
@@ -1075,8 +1075,8 @@ class PhysicsManager
         physicsManager.tempMatrix = mathsDevice.m43BuildIdentity();
 
         return physicsManager;
-    };
-};
+    }
+}
 
 PhysicsManager.prototype.arrayConstructor = Array;
 

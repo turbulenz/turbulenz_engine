@@ -128,7 +128,7 @@ class Scene
             material.reference.unsubscribeDestroyed(scene.onMaterialDestroyed);
             delete scene.materials[material.name];
         };
-    };
+    }
 
     // getMaterial: (node) => string;
     getMaterialName: (node) => string;
@@ -196,7 +196,7 @@ class Scene
             result = result.findChild(names[depth]);
         }
         return result;
-    };
+    }
 
     //
     // addRootNode
@@ -214,7 +214,7 @@ class Scene
         this.rootNodes.push(rootNode);
         this.rootNodesMap[name] = rootNode;
         this.addRootNodeToUpdate(rootNode, name);
-    };
+    }
 
     //
     // removeRootNode
@@ -245,7 +245,7 @@ class Scene
         }
 
         delete rootNode.scene;
-    };
+    }
 
     //
     // addLight
@@ -258,7 +258,7 @@ class Scene
         {
             this.globalLights.push(light);
         }
-    };
+    }
 
     //
     // removeLight
@@ -280,7 +280,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // getLight
@@ -288,7 +288,7 @@ class Scene
     getLight(name)
     {
         return this.lights[name];
-    };
+    }
 
     //
     // getGlobalLights
@@ -296,7 +296,7 @@ class Scene
     getGlobalLights()
     {
         return this.globalLights;
-    };
+    }
 
     //
     // calculateNumNodes
@@ -314,7 +314,7 @@ class Scene
             }
         }
         return numTotalNodes;
-    };
+    }
 
     //
     // buildPortalPlanes
@@ -454,7 +454,7 @@ class Scene
         while (np < numPoints);
 
         return allPointsVisible;
-    };
+    }
 
     //
     // findAreaIndex
@@ -476,7 +476,7 @@ class Scene
         }
         while (nodeIndex < numNodes);
         return -1;
-    };
+    }
 
     //
     // findAreaIndicesAABB
@@ -548,7 +548,7 @@ class Scene
         }
         while (0 < numNodesStack);
         return areaIndices;
-    };
+    }
 
     //
     // findVisiblePortals
@@ -702,7 +702,7 @@ class Scene
         {
             visiblePortals.length = numVisiblePortals;
         }
-    };
+    }
 
     //
     // findVisibleNodes
@@ -846,7 +846,7 @@ class Scene
             numVisibleNodes += this.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
             this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
         }
-    };
+    }
 
     //
     // findVisibleNodesTree
@@ -1090,7 +1090,7 @@ class Scene
         {
             tree.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
         }
-    };
+    }
 
     //
     // buildPortalPlanesNoFrustum
@@ -1153,7 +1153,7 @@ class Scene
         while (np < numPoints);
 
         return planes;
-    };
+    }
 
     //
     // findOverlappingPortals
@@ -1281,7 +1281,7 @@ class Scene
             }
             while (currentPortalIndex < numOverlappingPortals);
         }
-    };
+    }
 
     //
     // findOverlappingNodes
@@ -1299,7 +1299,7 @@ class Scene
         {
             tree.getOverlappingNodes(extents, overlappingNodes);
         }
-    };
+    }
 
     //
     // findStaticOverlappingNodes
@@ -1307,7 +1307,7 @@ class Scene
     findStaticOverlappingNodes(origin, extents, overlappingNodes)
     {
         this.findOverlappingNodes(this.staticSpatialMap, origin, extents, overlappingNodes);
-    };
+    }
 
     //
     // findDynamicOverlappingNodes
@@ -1315,7 +1315,7 @@ class Scene
     findDynamicOverlappingNodes(origin, extents, overlappingNodes)
     {
         this.findOverlappingNodes(this.dynamicSpatialMap, origin, extents, overlappingNodes);
-    };
+    }
 
     //
     // _findOverlappingNodesAreas
@@ -1457,7 +1457,7 @@ class Scene
         }
 
         return true;
-    };
+    }
 
     //
     // findOverlappingRenderables
@@ -1483,7 +1483,7 @@ class Scene
     findStaticOverlappingRenderables(origin, extents, overlappingRenderables)
     {
         this.findOverlappingRenderables(this.staticSpatialMap, origin, extents, overlappingRenderables);
-    };
+    }
 
     //
     // findDynamicOverlappingRenderables
@@ -1491,7 +1491,7 @@ class Scene
     findDynamicOverlappingRenderables(origin, extents, overlappingRenderables)
     {
         this.findOverlappingRenderables(this.dynamicSpatialMap, origin, extents, overlappingRenderables);
-    };
+    }
 
     //
     // _findOverlappingRenderablesAreas
@@ -1814,7 +1814,7 @@ class Scene
         }
 
         return true;
-    };
+    }
 
     //
     // _findOverlappingRenderablesNoAreas
@@ -1893,7 +1893,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // cloneRootNode
@@ -1903,7 +1903,7 @@ class Scene
         var newNode = rootNode.clone(newInstanceName);
         this.addRootNode(newNode);
         return newNode;
-    };
+    }
 
     //
     // updateVisibleNodes
@@ -1923,7 +1923,7 @@ class Scene
         }
 
         this.frameIndex += 1;
-    };
+    }
 
     //
     // _updateVisibleNodesNoAreas
@@ -2096,7 +2096,7 @@ class Scene
             visibleLights.length = numVisibleLights;
             visibleNodes.length = numVisibleNodes;
         }
-    };
+    }
 
     //
     // _updateVisibleNodesAreas
@@ -2439,7 +2439,7 @@ class Scene
         }
 
         return true;
-    };
+    }
 
     //
     // _filterVisibleNodesForCameraBox
@@ -2560,7 +2560,7 @@ class Scene
         visibleRenderables.length = numVisibleRenderables;
         visibleLights.length = numVisibleLights;
         visibleNodes.length = numVisibleNodes;
-    };
+    }
 
     //
     // getCurrentVisibleNodes
@@ -2568,23 +2568,23 @@ class Scene
     getCurrentVisibleNodes(): SceneNode[]
     {
         return this.visibleNodes;
-    };
+    }
 
     //
     // getCurrentVisibleRenderables
     //
-    getCurrentVisibleRenderables(): Renderable[]
+    getCurrentVisibleRenderables()
     {
         return this.visibleRenderables;
-    };
+    }
 
     //
     // getCurrentVisibleLights
     //
-    getCurrentVisibleLights(): LightInstance[]
+    getCurrentVisibleLights()
     {
         return this.visibleLights;
-    };
+    }
 
     //
     // addRootNodeToUpdate
@@ -2597,7 +2597,7 @@ class Scene
             dirtyRoots[name] = rootNode;
             this.nodesToUpdate.push(rootNode);
         }
-    };
+    }
 
     //
     // updateNodes
@@ -2619,7 +2619,7 @@ class Scene
 
             nodesToUpdate.length = 0;
         }
-    };
+    }
 
     //
     // update
@@ -2637,7 +2637,7 @@ class Scene
             //Note this leaves extents of areas as large as they ever got.
             this.initializeAreas();
         }
-    };
+    }
 
     //
     // updateExtents
@@ -2713,7 +2713,7 @@ class Scene
                 sceneExtents[5] = 0;
             }
         }
-    };
+    }
 
     //
     //  getExtents
@@ -2728,7 +2728,7 @@ class Scene
             this.updateExtents();
         }
         return this.extents;
-    };
+    }
 
     //
     //  loadMaterial
@@ -2755,7 +2755,7 @@ class Scene
             }
         }
         return false;
-    };
+    }
 
     //
     // hasMaterial
@@ -2768,7 +2768,7 @@ class Scene
             return true;
         }
         return false;
-    };
+    }
 
     //
     // getMaterial
@@ -2776,7 +2776,7 @@ class Scene
     getMaterial(materialName): Material
     {
         return this.materials[materialName];
-    };
+    }
 
     //
     // Draw nodes with same technique, mostly for debugging
@@ -2857,12 +2857,12 @@ class Scene
             }
             while (n < numNodes);
         }
-    };
+    }
 
     drawVisibleNodes(gd, globalTechniqueParameters, technique, renderUpdate)
     {
         this.drawNodesArray(this.visibleNodes, gd, globalTechniqueParameters, technique, renderUpdate);
-    };
+    }
 
     //
     // clearMaterials
@@ -2882,7 +2882,7 @@ class Scene
             }
         }
         this.materials = {};
-    };
+    }
 
     //
     // clearShapes
@@ -2902,7 +2902,7 @@ class Scene
             }
         }
         this.shapes = {};
-    };
+    }
 
     //
     // clearShapesVertexData
@@ -2936,7 +2936,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // clearRootNodes
@@ -2956,7 +2956,7 @@ class Scene
         this.rootNodesMap = {};
         this.dirtyRoots = {};
         this.nodesToUpdate = [];
-    };
+    }
 
     //
     // clear
@@ -2994,7 +2994,7 @@ class Scene
                             new this.float32ArrayConstructor(6) :
                             new Array(6));
         this.externalNodesStack = [];
-    };
+    }
 
     //
     // endLoading
@@ -3007,7 +3007,7 @@ class Scene
         {
             onload(this);
         }
-    };
+    }
 
     //
     // initializeNodes
@@ -3017,7 +3017,7 @@ class Scene
         this.updateNodes();
         this.staticSpatialMap.finalize();
         this.updateExtents();
-    };
+    }
 
     //
     // addAreaStaticNodes
@@ -3149,7 +3149,7 @@ class Scene
         {
             addAreasNode.call(rootNodes[n], bspNodes, areas);
         }
-    };
+    }
 
     //
     // findOverlappingAreas
@@ -3259,7 +3259,7 @@ class Scene
         }
 
         return overlappingAreas;
-    };
+    }
 
     //
     // checkAreaDynamicNodes
@@ -3352,7 +3352,7 @@ class Scene
         {
             checkAreaNode.call(rootNodes[n]);
         }
-    };
+    }
 
     //
     // initializeAreas
@@ -3393,7 +3393,7 @@ class Scene
             }
         }
         this.areaInitalizeStaticNodesChangeCounter = this.staticNodesChangeCounter;
-    };
+    }
 
     //
     // createMaterial
@@ -3515,7 +3515,7 @@ class Scene
         material.reference.subscribeDestroyed(this.onMaterialDestroyed);
 
         return material;
-    };
+    }
 
     //
     // loadMaterials
@@ -3552,7 +3552,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // loadSkeletons
@@ -3589,7 +3589,7 @@ class Scene
                 this.skeletons[s] = skeleton;
             }
         }
-    };
+    }
 
     //
     // loadShape
@@ -4346,7 +4346,7 @@ class Scene
             throw "Geometry '" + shapeName + "' already exists in the scene";
         }
         return shape;
-    };
+    }
 
     streamShapes(loadParams, postLoadFn)
     {
@@ -4439,7 +4439,7 @@ class Scene
         {
             yieldFn(postLoadFn);
         }
-    };
+    }
 
     //
     // Load lights
@@ -4530,7 +4530,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // loadNodes
@@ -4863,7 +4863,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // loadAreas
@@ -5058,7 +5058,7 @@ class Scene
                     neg: fileBspNode.neg
                 };
         }
-    };
+    }
 
     //
     // load
@@ -5113,7 +5113,7 @@ class Scene
         {
             sceneCompleteLoadStage();
         }
-    };
+    }
 
     planeNormalize(a, b, c, d, dst?)
     {
@@ -5146,7 +5146,7 @@ class Scene
         }
 
         return res;
-    };
+    }
 
     isInsidePlanesAABB(extents, planes) : bool
     {
@@ -5172,7 +5172,7 @@ class Scene
         }
         while (n < numPlanes);
         return true;
-    };
+    }
 
     isFullyInsidePlanesAABB(extents, planes) : bool
     {
@@ -5198,9 +5198,9 @@ class Scene
         }
         while (n < numPlanes);
         return true;
-    };
+    }
 
-    extractFrustumPlanes(camera) : any[] // v4[]
+    extractFrustumPlanes(camera) : any[]
     {
         var planeNormalize = this.planeNormalize;
         var m = camera.viewProjectionMatrix;
@@ -5243,7 +5243,7 @@ class Scene
         this.nearPlane = planeNormalize((m3 + m2), (m7 + m6), (m11 + m10), -(m15 + m14), this.nearPlane);  // near
 
         return planes;
-    };
+    }
 
     //
     // calculateHullScreenExtents
@@ -5439,7 +5439,7 @@ class Scene
         screenExtents[2] = maxX;
         screenExtents[3] = maxY;
         return screenExtents;
-    };
+    }
 
     //
     // calculateLightsScreenExtents
@@ -5538,7 +5538,7 @@ class Scene
             }
             while (n < numVisibleLights);
         }
-    };
+    }
 
     //
     // destroy
@@ -5556,22 +5556,22 @@ class Scene
             this.indexBufferManager.destroy();
             delete this.indexBufferManager;
         }
-    };
+    }
 
     getQueryCounter()
     {
         var queryCounter = this.queryCounter;
         this.queryCounter = (queryCounter + 1);
         return queryCounter;
-    };
+    }
 
     // Constructor function
     static create(mathDevice: MathDevice) : Scene
     {
         return new Scene(mathDevice);
-    };
+    }
 
-};
+}
 
 // Detect correct typed arrays
 (function () {

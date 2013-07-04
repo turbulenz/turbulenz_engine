@@ -80,7 +80,7 @@ class Geometry
         delete this.halfExtents;
         delete this.reference;
         delete this.surfaces;
-    };
+    }
 
     static create() : Geometry
     {
@@ -89,8 +89,8 @@ class Geometry
         geometry.surfaces = {};
         geometry.type = "rigid";
         return geometry;
-    };
-};
+    }
+}
 
 //
 // GeometryInstance
@@ -142,7 +142,7 @@ class GeometryInstance implements Renderable
         }
 
         return newInstance;
-    };
+    }
 
     //
     // isSkinned
@@ -154,7 +154,7 @@ class GeometryInstance implements Renderable
             return true;
         }
         return false;
-    };
+    }
 
     //
     // setNode
@@ -179,7 +179,7 @@ class GeometryInstance implements Renderable
             }
         }
         this.worldExtentsUpdate = -1;
-    };
+    }
 
     //
     // getNode
@@ -187,7 +187,7 @@ class GeometryInstance implements Renderable
     getNode(): SceneNode
     {
         return this.node;
-    };
+    }
 
     //
     // setMaterial
@@ -201,7 +201,7 @@ class GeometryInstance implements Renderable
 
         this.renderUpdate = undefined;
         this.rendererInfo = undefined;
-    };
+    }
 
     //
     // getMaterial
@@ -209,7 +209,7 @@ class GeometryInstance implements Renderable
     getMaterial() : Material
     {
         return this.sharedMaterial;
-    };
+    }
 
     //
     // getWorldExtents
@@ -224,7 +224,7 @@ class GeometryInstance implements Renderable
             this.updateWorldExtents(node.world);
         }
         return this.worldExtents;
-    };
+    }
 
     //
     // updateWorldExtents
@@ -271,7 +271,7 @@ class GeometryInstance implements Renderable
         worldExtents[3] = (ct0 + ht0);
         worldExtents[4] = (ct1 + ht1);
         worldExtents[5] = (ct2 + ht2);
-    };
+    }
 
     //
     // addCustomWorldExtents
@@ -288,7 +288,7 @@ class GeometryInstance implements Renderable
         var alreadyHadCustomExtents = (this.worldExtentsUpdate === this.maxUpdateValue);
         this.worldExtentsUpdate = this.maxUpdateValue;
         this.node.renderableWorldExtentsUpdated(alreadyHadCustomExtents);
-    };
+    }
 
     //
     // removeCustomWorldExtents
@@ -297,7 +297,7 @@ class GeometryInstance implements Renderable
     {
         this.worldExtentsUpdate = -1;
         this.node.renderableWorldExtentsRemoved();
-    };
+    }
 
     //
     // getCustomWorldExtents
@@ -309,7 +309,7 @@ class GeometryInstance implements Renderable
             return this.worldExtents;
         }
         return undefined;
-    };
+    }
 
     //
     // hasCustomWorldExtents
@@ -317,7 +317,7 @@ class GeometryInstance implements Renderable
     hasCustomWorldExtents() : bool
     {
         return this.worldExtentsUpdate === this.maxUpdateValue;
-    };
+    }
 
     //
     // destroy
@@ -345,7 +345,7 @@ class GeometryInstance implements Renderable
         delete this.renderUpdate;
         delete this.rendererInfo;
         delete this.sorting;
-    };
+    }
 
     //
     // prepareDrawParameters
@@ -370,7 +370,7 @@ class GeometryInstance implements Renderable
         {
             drawParameters.count = surface.numVertices;
         }
-    };
+    }
 
     //
     // Constructor function
@@ -405,8 +405,8 @@ class GeometryInstance implements Renderable
         instance.rendererInfo = undefined;
 
         return instance;
-    };
-};
+    }
+}
 
 // Detect correct typed arrays
 (function () {

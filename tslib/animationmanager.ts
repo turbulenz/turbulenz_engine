@@ -7,7 +7,7 @@
 
 // -----------------------------------------------------------------------------
 
-interface AnimationList { [name: string]: Animation; };
+interface AnimationList{ [name: string]: Animation; };
 
 class AnimationManager
 {
@@ -17,19 +17,19 @@ class AnimationManager
 
     // Methods
     loadFile(path: string, callback: any)
-    { debug.abort("abstract method"); };
+    { debug.abort("abstract method"); }
     loadData(data: any, prefix?: string)
-    { debug.abort("abstract method"); };
+    { debug.abort("abstract method"); }
     get(name: string): Animation
-    { debug.abort("abstract method"); return null; };
+    { debug.abort("abstract method"); return null; }
     remove(name: string)
-    { debug.abort("abstract method"); };
+    { debug.abort("abstract method"); }
     nodeHasSkeleton(node: Node): Skeleton
-    { debug.abort("abstract method"); return null; };
+    { debug.abort("abstract method"); return null; }
     getAll(): AnimationList
-    { debug.abort("abstract method"); return null; };
+    { debug.abort("abstract method"); return null; }
     setPathRemapping(prm: any, assetUrl: string)
-    { debug.abort("abstract method"); };
+    { debug.abort("abstract method"); }
 
     static create(errorCallback?: { (msg: string): void; },
                   log?          : HTMLElement              ): AnimationManager
@@ -358,5 +358,5 @@ class AnimationManager
         };
 
         return animationManager;
-    };
-};
+    }
+}

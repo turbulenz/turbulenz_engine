@@ -392,7 +392,7 @@ class CharacterController
         }
 
         return c;
-    };
+    }
 
     rotate(turn, pitch)
     {
@@ -433,7 +433,7 @@ class CharacterController
         md.m43SetPos(matrix, pos);
 
         this.matrix = matrix;
-    };
+    }
 
     setPosition(position)
     {
@@ -442,7 +442,7 @@ class CharacterController
         this.character.position = physicsPosition;
         this.updateExtents(physicsPosition);
         md.m43SetPos(this.matrix, position);
-    };
+    }
 
     setDead(dead)
     {
@@ -466,7 +466,7 @@ class CharacterController
             this.character.dead = false;
             this.physicsHeightOffset = this.physicsStandingHeightOffset;
         }
-    };
+    }
 
     updateExtents(position)
     {
@@ -490,7 +490,7 @@ class CharacterController
         extents[3] = (p0 + radius);
         extents[4] = (p1 + (halfHeight * 2));
         extents[5] = (p2 + radius);
-    };
+    }
 
     update(deltaTime)
     {
@@ -660,6 +660,5 @@ class CharacterController
         }
 
         md.m43SetPos(matrix, position);
-    };
-
-};
+    }
+}

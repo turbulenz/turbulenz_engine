@@ -11,137 +11,39 @@
 /// <reference path="../vmath.ts" />
 /// <reference path="../aabbtree.ts" />
 
-interface WebGLPhysicsShape extends PhysicsShape
+interface WebGLPhysicsShapeRayTestResult
 {
-    _private: any; // TODO: the sub class should inherit from this interface
-};
-declare var WebGLPhysicsShape :
-{
-    new(): WebGLPhysicsShape;
-    prototype: any;
+    factor    : number;
+    hitPoint  : any; // v3
+    hitNormal : any; // v3
 }
-interface WebGLPhysicsPlaneShape
-{
-    _public: WebGLPhysicsShape;
-    collisionRadius: number;
-    distance: number;
-    normal: any; // v3
-    center: any; // v3
 
-    radius: number;
-    halfExtents: any; // v3
-    inertia: any; // v3
-};
-declare var WebGLPhysicsPlaneShape :
+//
+// WebGLPhysicsShape
+//
+class WebGLPhysicsShape implements PhysicsShape
 {
-    new(): WebGLPhysicsPlaneShape;
-    prototype: any;
-    create(params: any): WebGLPhysicsShape;
-};
+    static version = 1;
 
-interface WebGLPhysicsCapsuleShape
-{
-    _public: WebGLPhysicsShape;
-    radius: number;
-    capsuleRadius: number;
-    halfHeight: number;
-    halfExtents: any; // v3
-    inertia: any; // v3
-    collisionRadius: number;
-    center: any; // v3
-    margin: number;
+    // From Physics Shape
+
+    margin      : number;
+    radius      : number;
+    halfExtents : any; // v3
+    inertia     : any; // v3
+    type        : string;
+
+    // Ours
+
+    rayTest     : (ray: any) => WebGLPhysicsShapeRayTestResult;
+    center      : any; // v3
+    _private    : any;
+
+    // TODO: inherit the subclasses rather than using _public /
+    // _private membes
 }
-declare var WebGLPhysicsCapsuleShape :
-{
-    new(): WebGLPhysicsCapsuleShape;
-    prototype: any;
-    create(params: any): WebGLPhysicsShape;
-}
-interface WebGLPhysicsSphereShape
-{
-    _public: WebGLPhysicsShape;
 
-    sphereRadius: number;
-    radius: number;
-    collisionRadius: number;
-    halfExtents: any; // v3
-    inertia: any; // v3
-    center: any; // v3
-    margin: number;
-};
-declare var WebGLPhysicsSphereShape :
-{
-    new(): WebGLPhysicsSphereShape;
-    prototype: {};
-    create(params: any): WebGLPhysicsShape;
-};
-interface WebGLPhysicsBoxShape
-{
-    _public: WebGLPhysicsShape;
-
-    center: any; // v3
-    radius: number;
-    halfExtents: any; // v3
-    inertia: any; // v3
-    collisionRadius: number;
-}
-declare var WebGLPhysicsBoxShape :
-{
-    new(): WebGLPhysicsBoxShape;
-    prototype: any;
-    create(params: any): WebGLPhysicsShape;
-}
-interface WebGLPhysicsCylinderShape
-{
-    _public: WebGLPhysicsShape;
-
-    center: any; // v3
-    radius: number;
-    halfExtents: any; // v3
-    cylinderRadius: number;
-    halfHeight: number;
-    inertia: any; // v3
-    collisionRadius: number;
-};
-declare var WebGLPhysicsCylinderShape :
-{
-    new(): WebGLPhysicsCylinderShape;
-    prototype: any;
-    create(params: any): WebGLPhysicsShape;
-};
-interface WebGLPhysicsConeShape
-{
-    _public: WebGLPhysicsShape;
-
-    halfHeight: number;
-    coneRadius: number;
-    radius: number;
-    halfExtents: any; // v3
-    inertia: any; // v3
-    collisionRadius: number;
-    center: any; // v3
-};
-declare var WebGLPhysicsConeShape :
-{
-    new(): WebGLPhysicsConeShape;
-    prototype: any;
-    create(params: any): WebGLPhysicsShape;
-};
-
-interface WebGLPhysicsTriangleArray extends PhysicsTriangleArray
-{
-    _private: WebGLPhysicsPrivateTriangleArray;
-
-    // vertices: Float32Array; // getter for _private.vertices
-    // indices: any; // Uint16Array / Uint32Array
-};
-
-declare var WebGLPhysicsTriangleArray :
-{
-    new(): WebGLPhysicsTriangleArray;
-    prototype: any;
-    create(params: any): WebGLPhysicsTriangleArray;
-};interface WebGLPhysicsPrivateTriangleArray
+interface WebGLPhysicsPrivateTriangleArray
 {
     _public: WebGLPhysicsTriangleArray;
 
@@ -158,124 +60,6 @@ declare var WebGLPhysicsPrivateTriangleArray :
     new(): WebGLPhysicsPrivateTriangleArray;
     prototype: any;
     create(params: any): WebGLPhysicsShape;
-};
-interface WebGLPhysicsTriangleMeshShape
-{
-    _public: WebGLPhysicsShape;
-
-    triangleArray: WebGLPhysicsTriangleArray;
-    radius: number;
-    halfExtents: any; // v3
-    center: any; // v3
-    inertia: any; // v3
-    collisionRadius: any; // v3
-};
-declare var WebGLPhysicsTriangleMeshShape :
-{
-    new(): WebGLPhysicsTriangleMeshShape;
-    prototype: any;
-    create(params: any): WebGLPhysicsShape;
-};
-interface WebGLPhysicsConvexHullShape
-{
-    _public: WebGLPhysicsShape;
-
-    radius: number;
-    halfExtents: any; // v3
-    center: any; // v3
-    inertia: any; // v3
-    collisionRadius: number;
-
-    points: Float32Array;
-    triangleArray: WebGLPhysicsTriangleArray;
-    supportTopology: any; // Int32Array / Int16Array
-};
-declare var WebGLPhysicsConvexHullShape :
-{
-    new(): WebGLPhysicsConvexHullShape;
-    prototype: any;
-    create(params: any): WebGLPhysicsShape;
-};
-
-interface WebGLPhysicsCollisionObject extends PhysicsCollisionObject
-{
-    // From PhysicsCollisionObject
-    // transform: any; // m43
-    // shape: WebGLPhysicsShape;
-    // group: number;  // getter for _private.group
-    // mask: number;   // getter for _private.mask
-    // friction: number; // getter for _private.friction
-    // restitution: number; // getter for _private.restitution
-    // kinematic: bool; // getter for _private.kinematic
-
-    _private: WebGLPhysicsPrivateBody;
-    userData: any;
-
-    // calculateTransform(transfrom: any, // m43
-    //                    origin: any // v3 / v4
-    //                   ): void;
-    // calculateExtents(): void;
-    // clone(): void;
-};
-declare var WebGLPhysicsCollisionObject :
-{
-    new(): WebGLPhysicsCollisionObject;
-    prototype: any;
-    create(params: any): WebGLPhysicsCollisionObject;
-
-    sharedInverseInertiaLocal: any; // v3
-    sharedInverseInertia: Float32Array;
-};
-
-interface WebGLPhysicsPrivateBody
-{
-    _public: WebGLPhysicsCollisionObject;
-
-    // set by initPrivateBody()
-    id: number;
-    world: WebGLPhysicsWorld;
-    shape: WebGLPhysicsShape;
-    friction: number;
-    restitution: number;
-    transform: any;                   // m43
-    arbiters: WebGLPhysicsArbiter[];  // TODO:
-    constraints: any[];               // TODO:
-    velocity: Float32Array;           // length 12
-    linearDamping: number;
-    angularDamping: number;
-    extents: Float32Array;            // length 6
-    startTransform: any;              // m43
-    endTransform: any;                // m43
-    prevTransform: any;               // m43
-    newTransform: any;                // m43
-    island: WebGLPhysicsIsland;
-    islandRoot: WebGLPhysicsPrivateBody;
-    islandRank: number;
-    delaySleep: bool;
-
-    // set by RigidBody and CollisionObject constructors
-    group: number;
-    mask: number;
-    kinematic: bool;
-    fixedRotation: bool;
-    mass: number;
-    inverseMass: number;
-    inverseInertiaLocal: any; // v3
-    inverseInertia: Float32Array;
-    collisionObject: bool;
-    permitSleep: bool;
-    sweepFrozen: bool;
-    active: bool;
-    //contactCallbacksMask: number;
-    //addedToContactCallbacks: bool;
-
-    contactCallbacks: WebGLPhysicsContactCallbacks;
-};
-declare var WebGLPhysicsPrivateBody :
-{
-    new(params, publicObject);
-    uniqueId: number;
-    prototype: any;
 };
 
 interface WebGLPhysicsContactCallbacks
@@ -527,18 +311,6 @@ declare var WebGLPhysicsTOIEvent :
     deallocate: { (WebGLPhysicsTOIEvent): void; };
 };
 
-interface WebGLPhysicsWorld
-{
-    _private: WebGLPrivatePhysicsWorld;
-
-}
-declare var WebGLPhysicsWorld :
-{
-    new(): WebGLPhysicsWorld;
-    prototype: any;
-    create(params: any): WebGLPhysicsWorld;
-}
-
 interface WebGLPrivatePhysicsWorld
 {
     _public                        : WebGLPhysicsWorld;
@@ -729,16 +501,6 @@ var webGLPhysicsClone = function webGLPhysicsCloneFn(dst, src)
     return dst;
 }
 
-//
-// WebGL Physics Shape (public).
-//
-function WebGLPhysicsShape() { return this; }
-WebGLPhysicsShape.prototype = {
-
-    version : 1
-
-};
-
 var initShapeProperties = function initShapePropertiesFn(s: WebGLPhysicsShape,
                                                          type: string,
                                                          nomargin?: bool) : void
@@ -796,15 +558,25 @@ var initShapeProperties = function initShapePropertiesFn(s: WebGLPhysicsShape,
 }
 
 //
-// WebGL Physics Plane Shape
+// WebGLPhysicsPlaneShape
 //
-function WebGLPhysicsPlaneShape() { return this; }
-WebGLPhysicsPlaneShape.prototype = {
+class WebGLPhysicsPlaneShape
+{
+    static version = 1;
 
-    version : 1,
-    type : "PLANE",
+    type            : string; // prototype
 
-    rayTest : function planeRayTestFn(ray)
+    _public         : WebGLPhysicsShape;
+    collisionRadius : number;
+    distance        : number;
+    normal          : any;    // v3
+    center          : any;    // v3
+
+    radius          : number;
+    halfExtents     : any;    // v3
+    inertia         : any;    // v3
+
+    rayTest(ray)
     {
         var dir = ray.direction;
         var origin = ray.origin;
@@ -856,55 +628,66 @@ WebGLPhysicsPlaneShape.prototype = {
             return null;
         }
     }
-};
 
-WebGLPhysicsPlaneShape.create =
-    function WebGLPhysicsPlaneShapeFn(params) : WebGLPhysicsShape
-{
-    var retp = new WebGLPhysicsShape();
-    var p = new WebGLPhysicsPlaneShape();
-    retp._private = p;
-    p._public = retp;
-
-    p.collisionRadius = (params.margin !== undefined) ? params.margin : 0.04;
-    p.distance = params.distance;
-    var normal = p.normal = VMath.v3Copy(params.normal);
-
-    var abs = Math.abs;
-    var maxValue = Number.MAX_VALUE;
-
-    p.radius = maxValue;
-
-    if (abs(normal[0]) === 1)
+    static create(params: any) : WebGLPhysicsShape
     {
-        p.halfExtents = VMath.v3Build(abs(p.distance), maxValue, maxValue);
-    }
-    else if (abs(normal[1]) === 1)
-    {
-        p.halfExtents = VMath.v3Build(maxValue, abs(p.distance), maxValue);
-    }
-    else if (abs(normal[2]) === 1)
-    {
-        p.halfExtents = VMath.v3Build(maxValue, maxValue, abs(p.distance));
-    }
+        var retp = new WebGLPhysicsShape();
+        var p = new WebGLPhysicsPlaneShape();
+        retp._private = p;
+        p._public = retp;
 
-    p.center = undefined;
-    p.inertia = VMath.v3BuildZero();
+        p.collisionRadius = (params.margin !== undefined) ? params.margin : 0.04;
+        p.distance = params.distance;
+        var normal = p.normal = VMath.v3Copy(params.normal);
 
-    initShapeProperties(retp, "PLANE");
-    return retp;
-};
+        var abs = Math.abs;
+        var maxValue = Number.MAX_VALUE;
+
+        p.radius = maxValue;
+
+        if (abs(normal[0]) === 1)
+        {
+            p.halfExtents = VMath.v3Build(abs(p.distance), maxValue, maxValue);
+        }
+        else if (abs(normal[1]) === 1)
+        {
+            p.halfExtents = VMath.v3Build(maxValue, abs(p.distance), maxValue);
+        }
+        else if (abs(normal[2]) === 1)
+        {
+            p.halfExtents = VMath.v3Build(maxValue, maxValue, abs(p.distance));
+        }
+
+        p.center = undefined;
+        p.inertia = VMath.v3BuildZero();
+
+        initShapeProperties(retp, "PLANE");
+        return retp;
+    }
+}
+
+WebGLPhysicsPlaneShape.prototype.type = "PLANE";
 
 //
 // WebGL Physics Capsule Shape
 //
-function WebGLPhysicsCapsuleShape() { return this; }
-WebGLPhysicsCapsuleShape.prototype = {
+class WebGLPhysicsCapsuleShape
+{
+    static version = 1;
 
-    version : 1,
-    type : "CAPSULE",
+    type            : string;  // prototype
 
-    rayTestCap : function rayTestCapFn(ray, height, scale)
+    _public         : WebGLPhysicsShape;
+    radius          : number;
+    capsuleRadius   : number;
+    halfHeight      : number;
+    halfExtents     : any; // v3
+    inertia         : any; // v3
+    collisionRadius : number;
+    center          : any; // v3
+    margin          : number;
+
+    rayTestCap(ray, height, scale)
     {
         var origin = ray.origin;
         var direction = ray.direction;
@@ -961,9 +744,9 @@ WebGLPhysicsCapsuleShape.prototype = {
         {
             return null;
         }
-    },
+    }
 
-    rayTest : function capsuleRayTestFn(ray)
+    rayTest(ray)
     {
         var origin = ray.origin;
         var direction = ray.direction;
@@ -1040,84 +823,96 @@ WebGLPhysicsCapsuleShape.prototype = {
 
         // Intersect capsule caps.
         return this.rayTestCap(ray, halfHeight, 1.0) || this.rayTestCap(ray, -halfHeight, -1.0);
-    },
+    }
 
-    localSupportWithoutMargin : function capsuleLocalSupportWithoutMarginFn(vec, dst)
+    localSupportWithoutMargin(vec, dst)
     {
         dst[0] = 0;
         dst[1] = (vec[1] >= 0) ? this.halfHeight : (-this.halfHeight);
         dst[2] = 0;
     }
-};
 
-WebGLPhysicsCapsuleShape.create = function WebGlPhysicsCapsuleShapeFn(params)
-{
-    var retc = new WebGLPhysicsShape();
-    var c = new WebGLPhysicsCapsuleShape();
-    retc._private = c;
-    c._public = retc;
+    static create(params: any): WebGLPhysicsShape
+    {
+        var retc = new WebGLPhysicsShape();
+        var c = new WebGLPhysicsCapsuleShape();
+        retc._private = c;
+        c._public = retc;
 
-    var margin = (params.margin !== undefined) ? params.margin : 0.04;
-    var radius = params.radius;
-    var height = params.height;
-    var halfHeight = (0.5 * height);
-    var maxRadius = (radius + halfHeight);
+        var margin = (params.margin !== undefined) ? params.margin : 0.04;
+        var radius = params.radius;
+        var height = params.height;
+        var halfHeight = (0.5 * height);
+        var maxRadius = (radius + halfHeight);
 
-    var h0 = (radius + margin);
-    var h1 = (maxRadius + margin);
-    var h2 = (radius + margin);
+        var h0 = (radius + margin);
+        var h1 = (maxRadius + margin);
+        var h2 = (radius + margin);
 
-    var lx = (2.0 * h0);
-    var ly = (2.0 * h1);
-    var lz = (2.0 * h2);
-    lx *= lx;
-    ly *= ly;
-    lz *= lz;
+        var lx = (2.0 * h0);
+        var ly = (2.0 * h1);
+        var lz = (2.0 * h2);
+        lx *= lx;
+        ly *= ly;
+        lz *= lz;
 
-    var massRatio = (1.0 / 12.0);
+        var massRatio = (1.0 / 12.0);
 
-    c.radius = maxRadius + margin;
-    c.capsuleRadius = radius;
-    c.halfHeight = halfHeight;
-    c.halfExtents = VMath.v3Build(h0, h1, h2);
-    c.inertia = VMath.v3Build(massRatio * (ly + lz),
-                              massRatio * (lx + lz),
-                              massRatio * (lx + ly));
-    c.collisionRadius = radius + margin;
+        c.radius = maxRadius + margin;
+        c.capsuleRadius = radius;
+        c.halfHeight = halfHeight;
+        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.inertia = VMath.v3Build(massRatio * (ly + lz),
+                                  massRatio * (lx + lz),
+                                  massRatio * (lx + ly));
+        c.collisionRadius = radius + margin;
 
-    c.center = undefined;
+        c.center = undefined;
 
-    // Defined differently from other shapes.
-    Object.defineProperty(retc, "margin", {
-        get : function capsuleShapeGetMargin()
-        {
-            return (this._private.collisionRadius - this._private.capsuleRadius);
-        },
-        set : function capsuleShapeSetMargin(margin)
-        {
-            var pr = this._private;
-            pr.collisionRadius = (pr.capsuleRadius + margin);
-            pr.halfExtents[0] = pr.capsuleRadius + margin;
-            pr.halfExtents[1] = (pr.capsuleRadius + pr.halfHeight) + margin;
-            pr.halfExtents[2] = pr.capsuleRadius + margin;
-            pr.radius = (pr.capsuleRadius + pr.halfHeight) + margin;
-        },
-        enumerable : true
-    });
-    initShapeProperties(retc, "CAPSULE", true);
-    return retc;
-};
+        // Defined differently from other shapes.
+        Object.defineProperty(retc, "margin", {
+            get : function capsuleShapeGetMargin()
+            {
+                return (this._private.collisionRadius - this._private.capsuleRadius);
+            },
+            set : function capsuleShapeSetMargin(margin)
+            {
+                var pr = this._private;
+                pr.collisionRadius = (pr.capsuleRadius + margin);
+                pr.halfExtents[0] = pr.capsuleRadius + margin;
+                pr.halfExtents[1] = (pr.capsuleRadius + pr.halfHeight) + margin;
+                pr.halfExtents[2] = pr.capsuleRadius + margin;
+                pr.radius = (pr.capsuleRadius + pr.halfHeight) + margin;
+            },
+            enumerable : true
+        });
+        initShapeProperties(retc, "CAPSULE", true);
+        return retc;
+    }
+
+}
+
+WebGLPhysicsShape.prototype.type = "CAPSULE";
 
 //
 // WebGL Physics Sphere Shape
 //
-function WebGLPhysicsSphereShape() { return this; }
-WebGLPhysicsSphereShape.prototype = {
+class WebGLPhysicsSphereShape
+{
+    static version = 1;
 
-    version : 1,
-    type : "SPHERE",
+    type            : string; // prototype
 
-    rayTest : function sphereRayTestFn(ray)
+    _public         : WebGLPhysicsShape;
+    sphereRadius    : number;
+    radius          : number;
+    collisionRadius : number;
+    halfExtents     : any; // v3
+    inertia         : any; // v3
+    center          : any; // v3
+    margin          : number;
+
+    rayTest(ray)
     {
         var origin = ray.origin;
         var direction = ray.direction;
@@ -1175,64 +970,74 @@ WebGLPhysicsSphereShape.prototype = {
         {
             return null;
         }
-    },
+    }
 
-    localSupportWithoutMargin : function sphereLocalSupportWithoutMarginFn(vec, dst)
+    localSupportWithoutMargin(vec, dst)
     {
         dst[0] = dst[1] = dst[2] = 0;
     }
-};
 
-WebGLPhysicsSphereShape.create = function WebGlPhysicsSphereShapeFn(params)
-{
-    var rets = new WebGLPhysicsShape();
-    var s = new WebGLPhysicsSphereShape();
-    rets._private = s;
-    s._public = rets;
+    static create(params: any): WebGLPhysicsShape
+    {
+        var rets = new WebGLPhysicsShape();
+        var s = new WebGLPhysicsSphereShape();
+        rets._private = s;
+        s._public = rets;
 
-    var margin = (params.margin !== undefined) ? params.margin : 0.04;
-    var radius = params.radius;
-    var i = (0.4 * radius * radius);
+        var margin = (params.margin !== undefined) ? params.margin : 0.04;
+        var radius = params.radius;
+        var i = (0.4 * radius * radius);
 
-    s.sphereRadius = radius;
-    s.radius = s.sphereRadius + margin;
-    s.collisionRadius = radius + margin;
-    s.halfExtents = VMath.v3Build(radius + margin, radius + margin, radius + margin);
-    s.inertia = VMath.v3Build(i, i, i);
+        s.sphereRadius = radius;
+        s.radius = s.sphereRadius + margin;
+        s.collisionRadius = radius + margin;
+        s.halfExtents = VMath.v3Build(radius + margin, radius + margin, radius + margin);
+        s.inertia = VMath.v3Build(i, i, i);
 
-    s.center = undefined;
+        s.center = undefined;
 
-    // Defined differently from other shapes.
-    Object.defineProperty(rets, "margin", {
-        get : function sphereShapeGetMargin()
-        {
-            return (this._private.collisionRadius - this._private.radius);
-        },
-        set : function sphereShapeSetMargin(margin)
-        {
-            var pr = this._private;
-            pr.collisionRadius = (pr.radius + margin);
-            pr.halfExtents[0] = pr.collisionRadius;
-            pr.halfExtents[1] = pr.collisionRadius;
-            pr.halfExtents[2] = pr.collisionRadius;
-            pr.radius = pr.collisionRadius;
-        },
-        enumerable : true
-    });
-    initShapeProperties(rets, "SPHERE", true);
-    return rets;
-};
+        // Defined differently from other shapes.
+        Object.defineProperty(rets, "margin", {
+            get : function sphereShapeGetMargin()
+            {
+                return (this._private.collisionRadius - this._private.radius);
+            },
+            set : function sphereShapeSetMargin(margin)
+            {
+                var pr = this._private;
+                pr.collisionRadius = (pr.radius + margin);
+                pr.halfExtents[0] = pr.collisionRadius;
+                pr.halfExtents[1] = pr.collisionRadius;
+                pr.halfExtents[2] = pr.collisionRadius;
+                pr.radius = pr.collisionRadius;
+            },
+            enumerable : true
+        });
+        initShapeProperties(rets, "SPHERE", true);
+        return rets;
+    }
+}
+
+WebGLPhysicsSphereShape.prototype.type = "SPHERE";
 
 //
 // WebGL Physics Box Shape
 //
-function WebGLPhysicsBoxShape() { return this; }
-WebGLPhysicsBoxShape.prototype = {
+class WebGLPhysicsBoxShape
+{
+    static version = 1;
 
-    version : 1,
-    type : "BOX",
+    type            : string;
 
-    rayTest : function boxRayTestFn(ray)
+    _public         : WebGLPhysicsShape;
+
+    center          : any; // v3
+    radius          : number;
+    halfExtents     : any; // v3
+    inertia         : any; // v3
+    collisionRadius : number;
+
+    rayTest(ray)
     {
         var origin = ray.origin;
         var direction = ray.direction;
@@ -1340,9 +1145,9 @@ WebGLPhysicsBoxShape.prototype = {
         {
             return null;
         }
-    },
+    }
 
-    localSupportWithoutMargin : function boxLocalSupportWithoutMarginFn(vec, dst)
+    localSupportWithoutMargin(vec, dst)
     {
         var v0 = vec[0];
         var v1 = vec[1];
@@ -1357,52 +1162,63 @@ WebGLPhysicsBoxShape.prototype = {
         dst[1] = ((v1 < 0) ? -h1 : h1);
         dst[2] = ((v2 < 0) ? -h2 : h2);
     }
-};
 
-WebGLPhysicsBoxShape.create = function WebGLPhysicsBoxShapeFn(params)
-{
-    var retb = new WebGLPhysicsShape();
-    var b = new WebGLPhysicsBoxShape();
-    retb._private = b;
-    b._public = retb;
+    static create(params): WebGLPhysicsShape
+    {
+        var retb = new WebGLPhysicsShape();
+        var b = new WebGLPhysicsBoxShape();
+        retb._private = b;
+        b._public = retb;
 
-    var margin = (params.margin !== undefined) ? params.margin : 0.04;
-    var halfExtents = params.halfExtents;
+        var margin = (params.margin !== undefined) ? params.margin : 0.04;
+        var halfExtents = params.halfExtents;
 
-    var h0 = (halfExtents[0] + margin);
-    var h1 = (halfExtents[1] + margin);
-    var h2 = (halfExtents[2] + margin);
+        var h0 = (halfExtents[0] + margin);
+        var h1 = (halfExtents[1] + margin);
+        var h2 = (halfExtents[2] + margin);
 
-    var lx = (2.0 * h0);
-    var ly = (2.0 * h1);
-    var lz = (2.0 * h2);
-    lx *= lx;
-    ly *= ly;
-    lz *= lz;
+        var lx = (2.0 * h0);
+        var ly = (2.0 * h1);
+        var lz = (2.0 * h2);
+        lx *= lx;
+        ly *= ly;
+        lz *= lz;
 
-    b.center = undefined;
+        b.center = undefined;
 
-    b.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-    b.halfExtents = VMath.v3Build(h0, h1, h2);
-    b.inertia = VMath.v3Build((1.0 / 12.0) * (ly + lz),
-                              (1.0 / 12.0) * (lx + lz),
-                              (1.0 / 12.0) * (lx + ly));
-    b.collisionRadius = margin;
+        b.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
+        b.halfExtents = VMath.v3Build(h0, h1, h2);
+        b.inertia = VMath.v3Build((1.0 / 12.0) * (ly + lz),
+                                  (1.0 / 12.0) * (lx + lz),
+                                  (1.0 / 12.0) * (lx + ly));
+        b.collisionRadius = margin;
 
-    initShapeProperties(retb, "BOX");
-    return retb;
-};
+        initShapeProperties(retb, "BOX");
+        return retb;
+    }
+}
+
+WebGLPhysicsBoxShape.prototype.type = "BOX";
 
 //
 // WebGL Physics Cylinder Shape
 //
-function WebGLPhysicsCylinderShape() { return this; }
-WebGLPhysicsCylinderShape.prototype = {
+class WebGLPhysicsCylinderShape
+{
+    static version = 1;
 
-    version : 1,
-    type : "CYLINDER",
+    type            : string; // prototype
 
-    rayTest : function cylinderRayTestFn(ray)
+    _public         : WebGLPhysicsShape;
+    center          : any; // v3
+    radius          : number;
+    halfExtents     : any; // v3
+    cylinderRadius  : number;
+    halfHeight      : number;
+    inertia         : any; // v3
+    collisionRadius : number;
+
+    rayTest(ray)
     {
         var origin = ray.origin;
         var direction = ray.direction;
@@ -1502,9 +1318,9 @@ WebGLPhysicsCylinderShape.prototype = {
         }
 
         return null;
-    },
+    }
 
-    localSupportWithoutMargin : function cylinderLocalSupportWithoutMarginFn(vec, dst)
+    localSupportWithoutMargin(vec, dst)
     {
         var v0 = vec[0];
         var v2 = vec[2];
@@ -1531,51 +1347,64 @@ WebGLPhysicsCylinderShape.prototype = {
         dst[1] = ((vec[1] > 0 ? 1 : -1) * this.halfHeight);
         dst[2] = (v2 * scale);
     }
-};
 
-WebGLPhysicsCylinderShape.create = function WebGLPhysicsCylinderShapeFn(params)
+    static create(params: any): WebGLPhysicsShape
+    {
+        var retc = new WebGLPhysicsShape();
+        var c = new WebGLPhysicsCylinderShape();
+        retc._private = c;
+        c._public = retc;
+
+        var margin = (params.margin !== undefined) ? params.margin : 0.04;
+        var halfExtents = params.halfExtents;
+
+        var h0 = (halfExtents[0] + margin);
+        var h1 = (halfExtents[1] + margin);
+        var h2 = (halfExtents[2] + margin);
+
+        var radius2 = (h0 * h0);
+        var height2 = (4.0 * h1 * h1);
+
+        var t1 = (((1.0 / 12.0) * height2) + ((1.0 / 4.0) * radius2));
+        var t2 = ((1.0 / 2.0) * radius2);
+
+        c.center = undefined;
+
+        c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
+        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.cylinderRadius = halfExtents[0];
+        c.halfHeight = halfExtents[1];
+        c.inertia = VMath.v3Build(t1, t2, t1);
+        c.collisionRadius = margin;
+
+        initShapeProperties(retc, "CYLINDER");
+        return retc;
+    }
+}
+
+WebGLPhysicsCylinderShape.prototype.type = "CYLINDER";
+
+//
+// WebGLPhysicsConeShape
+//
+class WebGLPhysicsConeShape
 {
-    var retc = new WebGLPhysicsShape();
-    var c = new WebGLPhysicsCylinderShape();
-    retc._private = c;
-    c._public = retc;
+    static version = 1;
 
-    var margin = (params.margin !== undefined) ? params.margin : 0.04;
-    var halfExtents = params.halfExtents;
+    type : string; // prototype
 
-    var h0 = (halfExtents[0] + margin);
-    var h1 = (halfExtents[1] + margin);
-    var h2 = (halfExtents[2] + margin);
 
-    var radius2 = (h0 * h0);
-    var height2 = (4.0 * h1 * h1);
+    _public: WebGLPhysicsShape;
 
-    var t1 = (((1.0 / 12.0) * height2) + ((1.0 / 4.0) * radius2));
-    var t2 = ((1.0 / 2.0) * radius2);
+    halfHeight: number;
+    coneRadius: number;
+    radius: number;
+    halfExtents: any; // v3
+    inertia: any; // v3
+    collisionRadius: number;
+    center: any; // v3
 
-    c.center = undefined;
-
-    c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-    c.halfExtents = VMath.v3Build(h0, h1, h2);
-    c.cylinderRadius = halfExtents[0];
-    c.halfHeight = halfExtents[1];
-    c.inertia = VMath.v3Build(t1, t2, t1);
-    c.collisionRadius = margin;
-
-    initShapeProperties(retc, "CYLINDER");
-    return retc;
-};
-
-//
-// WebGL Physics Cone Shape
-//
-function WebGLPhysicsConeShape() { return this; }
-WebGLPhysicsConeShape.prototype = {
-
-    version : 1,
-    type : "CONE",
-
-    rayTest : function coneRayTestFn(ray)
+    rayTest(ray)
     {
         var origin = ray.origin;
         var direction = ray.direction;
@@ -1681,9 +1510,9 @@ WebGLPhysicsConeShape.prototype = {
                 factor : t
             };
         }
-    },
+    }
 
-    localSupportWithoutMargin : function coneLocalSupportWithoutMarginFn(vec, dst)
+    localSupportWithoutMargin(vec, dst)
     {
         var v0 = vec[0];
         var v1 = vec[1];
@@ -1710,67 +1539,70 @@ WebGLPhysicsConeShape.prototype = {
             dst[1] = -this.halfHeight;
         }
     }
-};
 
-WebGLPhysicsConeShape.create = function WebGLPhysicsConeShapeFn(params)
+    static create(params: any): WebGLPhysicsShape
+    {
+        var retc = new WebGLPhysicsShape();
+        var c = new WebGLPhysicsConeShape();
+        retc._private = c;
+        c._public = retc;
+
+        var margin = (params.margin !== undefined) ? params.margin : 0.04;
+        var radius = params.radius;
+        var height = params.height;
+        var halfHeight = (0.5 * height);
+
+        var h0 = (radius + margin);
+        var h1 = (halfHeight + margin);
+        var h2 = (radius + margin);
+
+        var lx = (2.0 * h0);
+        var ly = (2.0 * h1);
+        var lz = (2.0 * h2);
+        lx *= lx;
+        ly *= ly;
+        lz *= lz;
+
+        var massRatio = (1.0 / 12.0);
+
+        c.halfHeight = halfHeight;
+        c.coneRadius = radius;
+        c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
+        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.inertia = VMath.v3Build(massRatio * (ly + lz),
+                                  massRatio * (lx + lz),
+                                  massRatio * (lx + ly));
+        c.collisionRadius = margin;
+
+        c.center = undefined;
+
+        initShapeProperties(retc, "CONE");
+        return retc;
+    }
+}
+
+WebGLPhysicsConeShape.prototype.type = "CONE";
+
+//
+// WebGLPhysicsTriangleArray
+//
+
+class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
 {
-    var retc = new WebGLPhysicsShape();
-    var c = new WebGLPhysicsConeShape();
-    retc._private = c;
-    c._public = retc;
-
-    var margin = (params.margin !== undefined) ? params.margin : 0.04;
-    var radius = params.radius;
-    var height = params.height;
-    var halfHeight = (0.5 * height);
-
-    var h0 = (radius + margin);
-    var h1 = (halfHeight + margin);
-    var h2 = (radius + margin);
-
-    var lx = (2.0 * h0);
-    var ly = (2.0 * h1);
-    var lz = (2.0 * h2);
-    lx *= lx;
-    ly *= ly;
-    lz *= lz;
-
-    var massRatio = (1.0 / 12.0);
-
-    c.halfHeight = halfHeight;
-    c.coneRadius = radius;
-    c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-    c.halfExtents = VMath.v3Build(h0, h1, h2);
-    c.inertia = VMath.v3Build(massRatio * (ly + lz),
-                              massRatio * (lx + lz),
-                              massRatio * (lx + ly));
-    c.collisionRadius = margin;
-
-    c.center = undefined;
-
-    initShapeProperties(retc, "CONE");
-    return retc;
-};
-
-//
-// WebGL Physics Triangle Array
-//
-function WebGLPhysicsTriangleArray() { return this; }
-WebGLPhysicsTriangleArray.prototype = {
-
-    version : 1
-
-};
-
-function WebGLPhysicsPrivateTriangleArray() { return this; }
-WebGLPhysicsPrivateTriangleArray.prototype = {
-
-    version : 1,
+    static version = 1;
 
     // Size of each 'triangle' in triangles array.
-    TRIANGLE_SIZE : 17,
+    TRIANGLE_SIZE        : number; // prototype
 
-    rayTest : function triangleArrayRayTestFn(ray)
+    vertices             : Float32Array;
+    indices              : any;
+
+    private triangles    : Float32Array;
+    private spatialMap   : AABBTree;
+    private numTriangles : number;
+    private _private     : WebGLPhysicsPrivateTriangleArray;
+
+    rayTest(ray)
     {
         var triangles = this.triangles;
         var spatialMap = this.spatialMap;
@@ -1897,207 +1729,209 @@ WebGLPhysicsPrivateTriangleArray.prototype = {
             return minimumResult;
         }
     }
-};
 
-WebGLPhysicsTriangleArray.create = function webGLPhysicsTriangleArrayFn(params)
-{
-    var rett = new WebGLPhysicsTriangleArray();
-    var t = new WebGLPhysicsPrivateTriangleArray();
-    rett._private = t;
-    t._public = rett;
-
-    var vertices = params.vertices;
-    var numVertices = (vertices.length / 3);
-    var indices = params.indices;
-    var numTriangles = (indices.length / 3);
-
-    var minExtent = params.minExtent;
-    var maxExtent = params.maxExtent;
-
-    var v0;
-    var v1;
-    var v2;
-
-    if (!minExtent || !maxExtent)
+    static create(params: any): WebGLPhysicsTriangleArray
     {
-        var min0 = vertices[0];
-        var min1 = vertices[1];
-        var min2 = vertices[2];
-        var max0 = min0;
-        var max1 = min1;
-        var max2 = min2;
-        var maxN = vertices.length;
-        for (var n = 3; n < maxN; n += 3)
+        var rett = new WebGLPhysicsTriangleArray();
+        var t = new WebGLPhysicsPrivateTriangleArray();
+        rett._private = t;
+        t._public = rett;
+
+        var vertices = params.vertices;
+        var numVertices = (vertices.length / 3);
+        var indices = params.indices;
+        var numTriangles = (indices.length / 3);
+
+        var minExtent = params.minExtent;
+        var maxExtent = params.maxExtent;
+
+        var v0;
+        var v1;
+        var v2;
+
+        if (!minExtent || !maxExtent)
         {
-            v0 = vertices[n];
-            v1 = vertices[n + 1];
-            v2 = vertices[n + 2];
-            if (min0 > v0)
+            var min0 = vertices[0];
+            var min1 = vertices[1];
+            var min2 = vertices[2];
+            var max0 = min0;
+            var max1 = min1;
+            var max2 = min2;
+            var maxN = vertices.length;
+            for (var n = 3; n < maxN; n += 3)
             {
-                min0 = v0;
+                v0 = vertices[n];
+                v1 = vertices[n + 1];
+                v2 = vertices[n + 2];
+                if (min0 > v0)
+                {
+                    min0 = v0;
+                }
+                else if (max0 < v0)
+                {
+                    max0 = v0;
+                }
+                if (min1 > v1)
+                {
+                    min1 = v1;
+                }
+                else if (max1 < v1)
+                {
+                    max1 = v1;
+                }
+                if (min2 > v2)
+                {
+                    min2 = v2;
+                }
+                else if (max2 < v2)
+                {
+                    max2 = v2;
+                }
             }
-            else if (max0 < v0)
+            minExtent = [min0, min1, min2];
+            maxExtent = [max0, max1, max2];
+        }
+
+        var extents = new Float32Array(6);
+        extents[0] = minExtent[0];
+        extents[1] = minExtent[1];
+        extents[2] = minExtent[2];
+        extents[3] = maxExtent[0];
+        extents[4] = maxExtent[1];
+        extents[5] = maxExtent[2];
+
+        t.vertices = (params.dontCopy ? vertices : new Float32Array(vertices));
+        t.numVertices = numVertices;
+        t.indices = (params.dontCopy ? indices : (numVertices < 65536 ? new Uint16Array(indices) : new Uint32Array(indices)));
+        t.numTriangles = numTriangles;
+        t.extents = extents;
+
+        // read only, no getter needed.
+        Object.defineProperty(rett, "vertices", {
+            value : t.vertices,
+            enumerable : true
+        });
+        Object.defineProperty(rett, "indices", {
+            value : t.indices,
+            enumerable : true
+        });
+
+        /*
+          store pre-computed triangle information for ray tests
+
+          n0 n1 n2 - triangle normal
+          v0 v1 v2 - triangle vertex
+          u0 u1 u2 v0 v1 v2  - edge vectors
+          dotuu dotvv dotuv negLimit - barycentric constants
+          d - triangle plane distance
+        */
+        var triangles = new Float32Array(WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE * numTriangles);
+        var spatialMap = null;
+
+        // Only use spatial map if we do not have a trivial number of triangles.
+        if (numTriangles >= 8)
+        {
+            spatialMap = AABBTree.create(true);
+        }
+
+        var i;
+        for (i = 0; i < numTriangles; i = i + 1)
+        {
+            var i3 = (i * 3);
+            var itri = (i * WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE);
+
+            var i0 = (indices[i3] * 3);
+            var i1 = (indices[i3 + 1] * 3);
+            var i2 = (indices[i3 + 2] * 3);
+
+            var v00 = vertices[i0];
+            var v01 = vertices[i0 + 1];
+            var v02 = vertices[i0 + 2];
+
+            var v10 = vertices[i1];
+            var v11 = vertices[i1 + 1];
+            var v12 = vertices[i1 + 2];
+
+            var v20 = vertices[i2];
+            var v21 = vertices[i2 + 1];
+            var v22 = vertices[i2 + 2];
+
+            //var u = VMath.v3Sub(v1, v0);
+            //var v = VMath.v3Sub(v2, v0);
+            var u0 = (v10 - v00);
+            var u1 = (v11 - v01);
+            var u2 = (v12 - v02);
+            v0 = (v20 - v00);
+            v1 = (v21 - v01);
+            v2 = (v22 - v02);
+
+            //var normal = VMath.v3Cross(u, v);
+            var n0 = ((u1 * v2) - (u2 * v1));
+            var n1 = ((u2 * v0) - (u0 * v2));
+            var n2 = ((u0 * v1) - (u1 * v0));
+            var nn = (1.0 / Math.sqrt((n0 * n0) + (n1 * n1) + (n2 * n2)));
+
+            var distance = (((n0 * v00) + (n1 * v01) + (n2 * v02)) * nn);
+
+            //var dotuv = VMath.v3Dot(u, v);
+            //var dotuu = VMath.v3Dot(u, u);
+            //var dotvv = VMath.v3Dot(v, v);
+            var dotuv = ((u0 * v0) + (u1 * v1) + (u2 * v2));
+            var dotuu = ((u0 * u0) + (u1 * u1) + (u2 * u2));
+            var dotvv = ((v0 * v0) + (v1 * v1) + (v2 * v2));
+
+            // Always negative
+            var negLimit = ((dotuv * dotuv) - (dotuu * dotvv));
+
+            triangles[itri] = (n0 * nn);
+            triangles[itri + 1] = (n1 * nn);
+            triangles[itri + 2] = (n2 * nn);
+            triangles[itri + 3] = v00;
+            triangles[itri + 4] = v01;
+            triangles[itri + 5] = v02;
+            triangles[itri + 6] = u0;
+            triangles[itri + 7] = u1;
+            triangles[itri + 8] = u2;
+            triangles[itri + 9] = v0;
+            triangles[itri + 10] = v1;
+            triangles[itri + 11] = v2;
+            triangles[itri + 12] = dotuu;
+            triangles[itri + 13] = dotvv;
+            triangles[itri + 14] = dotuv;
+            triangles[itri + 15] = negLimit;
+            triangles[itri + 16] = distance;
+
+            // If building AABBTree, store node
+            if (spatialMap)
             {
-                max0 = v0;
-            }
-            if (min1 > v1)
-            {
-                min1 = v1;
-            }
-            else if (max1 < v1)
-            {
-                max1 = v1;
-            }
-            if (min2 > v2)
-            {
-                min2 = v2;
-            }
-            else if (max2 < v2)
-            {
-                max2 = v2;
+                extents = new Float32Array(6);
+                extents[0] = Math.min(v00, v10, v20);
+                extents[1] = Math.min(v01, v11, v21);
+                extents[2] = Math.min(v02, v12, v22);
+                extents[3] = Math.max(v00, v10, v20);
+                extents[4] = Math.max(v01, v11, v21);
+                extents[5] = Math.max(v02, v12, v22);
+
+                var triNode = {
+                    index: itri
+                };
+                spatialMap.add(triNode, extents);
             }
         }
-        minExtent = [min0, min1, min2];
-        maxExtent = [max0, max1, max2];
-    }
 
-    var extents = new Float32Array(6);
-    extents[0] = minExtent[0];
-    extents[1] = minExtent[1];
-    extents[2] = minExtent[2];
-    extents[3] = maxExtent[0];
-    extents[4] = maxExtent[1];
-    extents[5] = maxExtent[2];
-
-    t.vertices = (params.dontCopy ? vertices : new Float32Array(vertices));
-    t.numVertices = numVertices;
-    t.indices = (params.dontCopy ? indices : (numVertices < 65536 ? new Uint16Array(indices) : new Uint32Array(indices)));
-    t.numTriangles = numTriangles;
-    t.extents = extents;
-
-    // read only, no getter needed.
-    Object.defineProperty(rett, "vertices", {
-        value : t.vertices,
-        enumerable : true
-    });
-    Object.defineProperty(rett, "indices", {
-        value : t.indices,
-        enumerable : true
-    });
-
-    /*
-        store pre-computed triangle information for ray tests
-
-        n0 n1 n2 - triangle normal
-        v0 v1 v2 - triangle vertex
-        u0 u1 u2 v0 v1 v2  - edge vectors
-        dotuu dotvv dotuv negLimit - barycentric constants
-        d - triangle plane distance
-    */
-    var triangles = new Float32Array(WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE * numTriangles);
-    var spatialMap = null;
-
-    // Only use spatial map if we do not have a trivial number of triangles.
-    if (numTriangles >= 8)
-    {
-        spatialMap = AABBTree.create(true);
-    }
-
-    var i;
-    for (i = 0; i < numTriangles; i = i + 1)
-    {
-        var i3 = (i * 3);
-        var itri = (i * WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE);
-
-        var i0 = (indices[i3] * 3);
-        var i1 = (indices[i3 + 1] * 3);
-        var i2 = (indices[i3 + 2] * 3);
-
-        var v00 = vertices[i0];
-        var v01 = vertices[i0 + 1];
-        var v02 = vertices[i0 + 2];
-
-        var v10 = vertices[i1];
-        var v11 = vertices[i1 + 1];
-        var v12 = vertices[i1 + 2];
-
-        var v20 = vertices[i2];
-        var v21 = vertices[i2 + 1];
-        var v22 = vertices[i2 + 2];
-
-        //var u = VMath.v3Sub(v1, v0);
-        //var v = VMath.v3Sub(v2, v0);
-        var u0 = (v10 - v00);
-        var u1 = (v11 - v01);
-        var u2 = (v12 - v02);
-        v0 = (v20 - v00);
-        v1 = (v21 - v01);
-        v2 = (v22 - v02);
-
-        //var normal = VMath.v3Cross(u, v);
-        var n0 = ((u1 * v2) - (u2 * v1));
-        var n1 = ((u2 * v0) - (u0 * v2));
-        var n2 = ((u0 * v1) - (u1 * v0));
-        var nn = (1.0 / Math.sqrt((n0 * n0) + (n1 * n1) + (n2 * n2)));
-
-        var distance = (((n0 * v00) + (n1 * v01) + (n2 * v02)) * nn);
-
-        //var dotuv = VMath.v3Dot(u, v);
-        //var dotuu = VMath.v3Dot(u, u);
-        //var dotvv = VMath.v3Dot(v, v);
-        var dotuv = ((u0 * v0) + (u1 * v1) + (u2 * v2));
-        var dotuu = ((u0 * u0) + (u1 * u1) + (u2 * u2));
-        var dotvv = ((v0 * v0) + (v1 * v1) + (v2 * v2));
-
-        // Always negative
-        var negLimit = ((dotuv * dotuv) - (dotuu * dotvv));
-
-        triangles[itri] = (n0 * nn);
-        triangles[itri + 1] = (n1 * nn);
-        triangles[itri + 2] = (n2 * nn);
-        triangles[itri + 3] = v00;
-        triangles[itri + 4] = v01;
-        triangles[itri + 5] = v02;
-        triangles[itri + 6] = u0;
-        triangles[itri + 7] = u1;
-        triangles[itri + 8] = u2;
-        triangles[itri + 9] = v0;
-        triangles[itri + 10] = v1;
-        triangles[itri + 11] = v2;
-        triangles[itri + 12] = dotuu;
-        triangles[itri + 13] = dotvv;
-        triangles[itri + 14] = dotuv;
-        triangles[itri + 15] = negLimit;
-        triangles[itri + 16] = distance;
-
-        // If building AABBTree, store node
         if (spatialMap)
         {
-            extents = new Float32Array(6);
-            extents[0] = Math.min(v00, v10, v20);
-            extents[1] = Math.min(v01, v11, v21);
-            extents[2] = Math.min(v02, v12, v22);
-            extents[3] = Math.max(v00, v10, v20);
-            extents[4] = Math.max(v01, v11, v21);
-            extents[5] = Math.max(v02, v12, v22);
-
-            var triNode = {
-                index: itri
-            };
-            spatialMap.add(triNode, extents);
+            spatialMap.finalize();
         }
+
+        t.triangles = triangles;
+        t.spatialMap = spatialMap;
+
+        return rett;
     }
+}
 
-    if (spatialMap)
-    {
-        spatialMap.finalize();
-    }
-
-    t.triangles = triangles;
-    t.spatialMap = spatialMap;
-
-    return rett;
-};
+WebGLPhysicsTriangleArray.prototype.TRIANGLE_SIZE = 17;
 
 //
 // WebGL Physics Convex Hull helpers.
@@ -2594,82 +2428,105 @@ var WebGLPhysicsConvexHullHelpers = {
 
 
 //
-// WebGL Physics Triangle Mesh Shape
+// WebGLPhysicsTriangleMeshShape
 //
-function WebGLPhysicsTriangleMeshShape() { return this; }
-WebGLPhysicsTriangleMeshShape.prototype = {
+class WebGLPhysicsTriangleMeshShape
+{
+    static version = 1;
 
-    version : 1,
-    type : "TRIANGLE_MESH",
+    type : string; // prototype
 
-    rayTest : function triangleMeshRayTestFn(ray)
+    _public: WebGLPhysicsShape;
+
+    triangleArray: WebGLPhysicsTriangleArray;
+    radius: number;
+    halfExtents: any; // v3
+    center: any; // v3
+    inertia: any; // v3
+    collisionRadius: any; // v3
+
+    rayTest(ray)
     {
         return this.triangleArray.rayTest(ray);
     }
-};
 
-WebGLPhysicsTriangleMeshShape.create = function WebGLPhysicsTriangleMeshShapeFn(params)
-{
-    var rett = new WebGLPhysicsShape();
-    var t = new WebGLPhysicsTriangleMeshShape();
-    rett._private = t;
-    t._public = rett;
-
-    var margin = (params.margin !== undefined) ? params.margin : 0.04;
-    var triangleArray = params.triangleArray._private;
-
-    var extents = triangleArray.extents;
-    var e0 = extents[0];
-    var e1 = extents[1];
-    var e2 = extents[2];
-    var e3 = extents[3];
-    var e4 = extents[4];
-    var e5 = extents[5];
-
-    var h0 = ((0.5 * (e3 - e0)) + margin);
-    var h1 = ((0.5 * (e4 - e1)) + margin);
-    var h2 = ((0.5 * (e5 - e2)) + margin);
-    var c0 = (0.5 * (e0 + e3));
-    var c1 = (0.5 * (e1 + e4));
-    var c2 = (0.5 * (e2 + e5));
-
-    t.triangleArray = triangleArray;
-    t.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-    t.halfExtents = VMath.v3Build(h0, h1, h2);
-    if (c0 !== 0 || c1 !== 0 || c2 !== 0)
+    static create(params: any): WebGLPhysicsShape
     {
-        t.center = VMath.v3Build(c0, c1, c2);
-    }
-    else
-    {
-        t.center = undefined;
-    }
-    t.inertia = VMath.v3Build(0, 0, 0);
-    t.collisionRadius = margin;
+        var rett = new WebGLPhysicsShape();
+        var t = new WebGLPhysicsTriangleMeshShape();
+        rett._private = t;
+        t._public = rett;
 
-    initShapeProperties(rett, "TRIANGLE_MESH");
+        var margin = (params.margin !== undefined) ? params.margin : 0.04;
+        var triangleArray = params.triangleArray._private;
 
-    Object.defineProperty(rett, "triangleArray", {
-        get : function shapeGetTriangleArray()
+        var extents = triangleArray.extents;
+        var e0 = extents[0];
+        var e1 = extents[1];
+        var e2 = extents[2];
+        var e3 = extents[3];
+        var e4 = extents[4];
+        var e5 = extents[5];
+
+        var h0 = ((0.5 * (e3 - e0)) + margin);
+        var h1 = ((0.5 * (e4 - e1)) + margin);
+        var h2 = ((0.5 * (e5 - e2)) + margin);
+        var c0 = (0.5 * (e0 + e3));
+        var c1 = (0.5 * (e1 + e4));
+        var c2 = (0.5 * (e2 + e5));
+
+        t.triangleArray = triangleArray;
+        t.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
+        t.halfExtents = VMath.v3Build(h0, h1, h2);
+        if (c0 !== 0 || c1 !== 0 || c2 !== 0)
         {
-            return this._private.triangleArray;
-        },
-        enumerable : true
-    });
+            t.center = VMath.v3Build(c0, c1, c2);
+        }
+        else
+        {
+            t.center = undefined;
+        }
+        t.inertia = VMath.v3Build(0, 0, 0);
+        t.collisionRadius = margin;
 
-    return rett;
-};
+        initShapeProperties(rett, "TRIANGLE_MESH");
+
+        Object.defineProperty(rett, "triangleArray", {
+            get : function shapeGetTriangleArray()
+            {
+                return this._private.triangleArray;
+            },
+            enumerable : true
+        });
+
+        return rett;
+    }
+}
+
+WebGLPhysicsTriangleMeshShape.prototype.type = "TRIANGLE_MESH";
 
 //
 // WebGL Physics Convex Hull Shape
 //
-function WebGLPhysicsConvexHullShape() { return this; }
-WebGLPhysicsConvexHullShape.prototype = {
+class WebGLPhysicsConvexHullShape
+{
+    static version = 1;
 
-    version : 1,
-    type : "CONVEX_HULL",
+    type : string;
 
-    rayTest : function convexHullRayTestFn(ray)
+    _public: WebGLPhysicsShape;
+    radius: number;
+    halfExtents: any; // v3
+    center: any; // v3
+    inertia: any; // v3
+    collisionRadius: number;
+    points: Float32Array;
+    triangleArray: WebGLPhysicsTriangleArray;
+    supportTopology: any; // Int32Array / Int16Array
+
+    private lastSupport: number;
+
+    rayTest(ray)
     {
         var triangleArray = this.triangleArray;
         if (triangleArray === undefined)
@@ -2678,9 +2535,9 @@ WebGLPhysicsConvexHullShape.prototype = {
         }
 
         return triangleArray.rayTest(ray);
-    },
+    }
 
-    localSupportWithoutMargin : function convexHullLocalSupportWithoutMarginFn(vec, dst)
+    localSupportWithoutMargin(vec, dst)
     {
         var v0 = vec[0];
         var v1 = vec[1];
@@ -2736,351 +2593,357 @@ WebGLPhysicsConvexHullShape.prototype = {
         dst[1] = points[ind + 1];
         dst[2] = points[ind + 2];
     }
-};
 
-WebGLPhysicsConvexHullShape.create = function WebGLPhysicsConvexHullShapeFn(params)
-{
-    var retc = new WebGLPhysicsShape();
-    var c = new WebGLPhysicsConvexHullShape();
-    retc._private = c;
-    c._public = retc;
-
-    var margin = (params.margin !== undefined) ? params.margin : 0.04;
-    var points = params.points;
-
-    var min0 = points[0];
-    var min1 = points[1];
-    var min2 = points[2];
-    var max0 = min0;
-    var max1 = min1;
-    var max2 = min2;
-    var maxN = points.length;
-    var n;
-    var v0, v1, v2;
-    for (n = 3; n < maxN; n += 3)
+    static create(params: any): WebGLPhysicsShape
     {
-        v0 = points[n];
-        v1 = points[n + 1];
-        v2 = points[n + 2];
-        if (min0 > v0)
-        {
-            min0 = v0;
-        }
-        else if (max0 < v0)
-        {
-            max0 = v0;
-        }
-        if (min1 > v1)
-        {
-            min1 = v1;
-        }
-        else if (max1 < v1)
-        {
-            max1 = v1;
-        }
-        if (min2 > v2)
-        {
-            min2 = v2;
-        }
-        else if (max2 < v2)
-        {
-            max2 = v2;
-        }
-    }
+        var retc = new WebGLPhysicsShape();
+        var c = new WebGLPhysicsConvexHullShape();
+        retc._private = c;
+        c._public = retc;
 
-    var h0 = ((0.5 * (max0 - min0)) + margin);
-    var h1 = ((0.5 * (max1 - min1)) + margin);
-    var h2 = ((0.5 * (max2 - min2)) + margin);
-    var c0 = (0.5 * (min0 + max0));
-    var c1 = (0.5 * (min1 + max1));
-    var c2 = (0.5 * (min2 + max2));
+        var margin = (params.margin !== undefined) ? params.margin : 0.04;
+        var points = params.points;
 
-    var lx = (2.0 * h0);
-    var ly = (2.0 * h1);
-    var lz = (2.0 * h2);
-    lx *= lx;
-    ly *= ly;
-    lz *= lz;
-
-    var massRatio = (1.0 / 12.0);
-
-    c.points = new Float32Array(points);
-    c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-    c.halfExtents = VMath.v3Build(h0, h1, h2);
-    if (c0 !== 0 || c1 !== 0 || c2 !== 0)
-    {
-        c.center = VMath.v3Build(c0, c1, c2);
-    }
-    else
-    {
-        c.center = undefined;
-    }
-    c.inertia = VMath.v3Build(massRatio * (ly + lz),
-                              massRatio * (lx + lz),
-                              massRatio * (lx + ly));
-    c.collisionRadius = margin;
-
-    // Generate triangle array for ray testing
-    if (points.length < 9)
-    {
-        // Less than 3 points... cannot generate triangles.
-        throw "At present time, WebGL PhysicsDevice does not permit a convex hull to contain " +
-              "less than 3 vertices";
-    }
-    else
-    {
-        var planar = WebGLPhysicsConvexHullHelpers.isPlanar(points);
-        if (planar)
+        var min0 = points[0];
+        var min1 = points[1];
+        var min2 = points[2];
+        var max0 = min0;
+        var max1 = min1;
+        var max2 = min2;
+        var maxN = points.length;
+        var n;
+        var v0, v1, v2;
+        for (n = 3; n < maxN; n += 3)
         {
-            c.triangleArray = WebGLPhysicsConvexHullHelpers.makePlanarConvexHull(points);
+            v0 = points[n];
+            v1 = points[n + 1];
+            v2 = points[n + 2];
+            if (min0 > v0)
+            {
+                min0 = v0;
+            }
+            else if (max0 < v0)
+            {
+                max0 = v0;
+            }
+            if (min1 > v1)
+            {
+                min1 = v1;
+            }
+            else if (max1 < v1)
+            {
+                max1 = v1;
+            }
+            if (min2 > v2)
+            {
+                min2 = v2;
+            }
+            else if (max2 < v2)
+            {
+                max2 = v2;
+            }
+        }
+
+        var h0 = ((0.5 * (max0 - min0)) + margin);
+        var h1 = ((0.5 * (max1 - min1)) + margin);
+        var h2 = ((0.5 * (max2 - min2)) + margin);
+        var c0 = (0.5 * (min0 + max0));
+        var c1 = (0.5 * (min1 + max1));
+        var c2 = (0.5 * (min2 + max2));
+
+        var lx = (2.0 * h0);
+        var ly = (2.0 * h1);
+        var lz = (2.0 * h2);
+        lx *= lx;
+        ly *= ly;
+        lz *= lz;
+
+        var massRatio = (1.0 / 12.0);
+
+        c.points = new Float32Array(points);
+        c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
+        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        if (c0 !== 0 || c1 !== 0 || c2 !== 0)
+        {
+            c.center = VMath.v3Build(c0, c1, c2);
         }
         else
         {
-            c.triangleArray = WebGLPhysicsConvexHullHelpers.makeConvexHull(points);
+            c.center = undefined;
         }
+        c.inertia = VMath.v3Build(massRatio * (ly + lz),
+                                  massRatio * (lx + lz),
+                                  massRatio * (lx + ly));
+        c.collisionRadius = margin;
 
-        // Produce edge topology for faster support search.
-        // Each vertex keeps a reference to each neighbouring vertex on triangulated surface.
-        //
-        // Experiment showed that even for a planar convex hull of 3 vertices, we only search
-        // on average 1.6 vertices instead of all 3 so is better even for this smallest case.
-        var supportTopology = [];
-
-        points = c.triangleArray.vertices;
-        maxN = points.length;
-        for (n = 0; n < maxN; n += 3)
+        // Generate triangle array for ray testing
+        if (points.length < 9)
         {
-            supportTopology[n / 3] = [];
+            // Less than 3 points... cannot generate triangles.
+            throw "At present time, WebGL PhysicsDevice does not permit a convex hull to contain " +
+                "less than 3 vertices";
         }
-
-        var m;
-        if (planar)
+        else
         {
+            var planar = WebGLPhysicsConvexHullHelpers.isPlanar(points);
+            if (planar)
+            {
+                c.triangleArray = WebGLPhysicsConvexHullHelpers.makePlanarConvexHull(points);
+            }
+            else
+            {
+                c.triangleArray = WebGLPhysicsConvexHullHelpers.makeConvexHull(points);
+            }
+
+            // Produce edge topology for faster support search.
+            // Each vertex keeps a reference to each neighbouring vertex on triangulated surface.
+            //
+            // Experiment showed that even for a planar convex hull of 3 vertices, we only search
+            // on average 1.6 vertices instead of all 3 so is better even for this smallest case.
+            var supportTopology = [];
+
+            points = c.triangleArray.vertices;
+            maxN = points.length;
+            for (n = 0; n < maxN; n += 3)
+            {
+                supportTopology[n / 3] = [];
+            }
+
+            var m;
+            if (planar)
+            {
+                for (n = 0; n < (maxN / 3); n += 1)
+                {
+                    m = (n + 1) % (maxN / 3);
+                    supportTopology[n].push(m);
+                    supportTopology[m].push(n);
+                }
+            }
+            else
+            {
+                var triangles = c.triangleArray.indices;
+                maxN = triangles.length;
+                for (n = 0; n < maxN; n += 3)
+                {
+                    var i0 = triangles[n];
+                    var i1 = triangles[n + 1];
+                    var i2 = triangles[n + 2];
+
+                    // Create links i0 -> i1 -> i2 -> i0.
+                    // Adjacent triangles will take care of back links.
+                    supportTopology[i0].push(i1);
+                    supportTopology[i1].push(i2);
+                    supportTopology[i2].push(i0);
+                }
+            }
+
+            // Additionally each vertex keeps a reference to the vertex on far side of hull.
+            // Tests show that this reduces the number of vertices searched in support function.
+            //
+            // Planar case, only do this for 6 vertices or more, or else includes uneeded edges.
+            // Non-planar case, do this for 10 vertices or more. Experiment showed this to be a good
+            // threshold.
+            maxN = points.length;
+            if ((planar && maxN >= (3 * 6)) || (!planar && maxN >= (3 * 10)))
+            {
+                for (n = 0; n < maxN; n += 3)
+                {
+                    var min = Number.MAX_VALUE;
+                    v0 = points[n];
+                    v1 = points[n + 1];
+                    v2 = points[n + 2];
+
+                    var  minm;
+                    for (m = 0; m < maxN; m += 3)
+                    {
+                        var dot = (v0 * points[m]) + (v1 * points[m + 1]) + (v2 * points[m + 2]);
+                        if (dot < min)
+                        {
+                            min = dot;
+                            minm = m;
+                        }
+                    }
+
+                    supportTopology[n / 3].push(minm / 3);
+                }
+            }
+
+            // Flatten supportTopology array of arrays, into a single typed array.
+            //
+            // We take topology array like: [[1,2],[0],[0,1,3],[0,1,2]]
+            // Decorate with index of vertex in triangle array
+            // and number of edges: [[0,2|1,2], [3,1|0], [6,3|0,1,3], [9,3|0,1,2]]
+            // And then flatten into array: [0,2,4,7, 3,1,0, 6,3,0,4,12, 9,3,0,4,7]
+            //
+
+            // Compute size of array, and positions of vertex data.
+            var mapping = [];
+            var size = 0;
             for (n = 0; n < (maxN / 3); n += 1)
             {
-                m = (n + 1) % (maxN / 3);
-                supportTopology[n].push(m);
-                supportTopology[m].push(n);
+                mapping.push(size);
+                size += supportTopology[n].length + 2;
             }
-        }
-        else
-        {
-            var triangles = c.triangleArray.indices;
-            maxN = triangles.length;
-            for (n = 0; n < maxN; n += 3)
+
+            // Produce flattened array.
+            c.supportTopology = (size > 65536) ? new Int32Array(size) : new Int16Array(size);
+            var index = 0;
+            for (n = 0; n < (maxN / 3); n += 1)
             {
-                var i0 = triangles[n];
-                var i1 = triangles[n + 1];
-                var i2 = triangles[n + 2];
-
-                // Create links i0 -> i1 -> i2 -> i0.
-                // Adjacent triangles will take care of back links.
-                supportTopology[i0].push(i1);
-                supportTopology[i1].push(i2);
-                supportTopology[i2].push(i0);
-            }
-        }
-
-        // Additionally each vertex keeps a reference to the vertex on far side of hull.
-        // Tests show that this reduces the number of vertices searched in support function.
-        //
-        // Planar case, only do this for 6 vertices or more, or else includes uneeded edges.
-        // Non-planar case, do this for 10 vertices or more. Experiment showed this to be a good
-        // threshold.
-        maxN = points.length;
-        if ((planar && maxN >= (3 * 6)) || (!planar && maxN >= (3 * 10)))
-        {
-            for (n = 0; n < maxN; n += 3)
-            {
-                var min = Number.MAX_VALUE;
-                v0 = points[n];
-                v1 = points[n + 1];
-                v2 = points[n + 2];
-
-                var  minm;
-                for (m = 0; m < maxN; m += 3)
-                {
-                    var dot = (v0 * points[m]) + (v1 * points[m + 1]) + (v2 * points[m + 2]);
-                    if (dot < min)
-                    {
-                        min = dot;
-                        minm = m;
-                    }
-                }
-
-                supportTopology[n / 3].push(minm / 3);
-            }
-        }
-
-        // Flatten supportTopology array of arrays, into a single typed array.
-        //
-        // We take topology array like: [[1,2],[0],[0,1,3],[0,1,2]]
-        // Decorate with index of vertex in triangle array
-        // and number of edges: [[0,2|1,2], [3,1|0], [6,3|0,1,3], [9,3|0,1,2]]
-        // And then flatten into array: [0,2,4,7, 3,1,0, 6,3,0,4,12, 9,3,0,4,7]
-        //
-
-        // Compute size of array, and positions of vertex data.
-        var mapping = [];
-        var size = 0;
-        for (n = 0; n < (maxN / 3); n += 1)
-        {
-            mapping.push(size);
-            size += supportTopology[n].length + 2;
-        }
-
-        // Produce flattened array.
-        c.supportTopology = (size > 65536) ? new Int32Array(size) : new Int16Array(size);
-        var index = 0;
-        for (n = 0; n < (maxN / 3); n += 1)
-        {
-            c.supportTopology[index] = (n * 3);
-            index += 1;
-
-            var topology = supportTopology[n];
-            c.supportTopology[index] = topology.length;
-            index += 1;
-
-            for (m = 0; m < topology.length; m += 1)
-            {
-                c.supportTopology[index] = mapping[topology[m]];
+                c.supportTopology[index] = (n * 3);
                 index += 1;
+
+                var topology = supportTopology[n];
+                c.supportTopology[index] = topology.length;
+                index += 1;
+
+                for (m = 0; m < topology.length; m += 1)
+                {
+                    c.supportTopology[index] = mapping[topology[m]];
+                    index += 1;
+                }
             }
         }
+
+        initShapeProperties(retc, "CONVEX_HULL");
+        return retc;
     }
-
-    initShapeProperties(retc, "CONVEX_HULL");
-    return retc;
-};
-
-
-//
-// WebGL Physics Collision Object
-//
-function WebGLPhysicsCollisionObject() { return this; }
-WebGLPhysicsCollisionObject.prototype = {
-
-    version : 1,
-
-    calculateExtents : function collisionObjectCalculateExtentsFn(extents)
-    {
-        this._private.calculateExtents(extents);
-    },
-
-    calculateTransform : function collisionObjectCalculateTransformFn(transform, origin)
-    {
-        var privateTransform = this._private.transform;
-        if (origin)
-        {
-            VMath.m43NegOffset(privateTransform, origin, transform);
-        }
-        else
-        {
-            transform[0] = privateTransform[0];
-            transform[1] = privateTransform[1];
-            transform[2] = privateTransform[2];
-            transform[3] = privateTransform[3];
-            transform[4] = privateTransform[4];
-            transform[5] = privateTransform[5];
-            transform[6] = privateTransform[6];
-            transform[7] = privateTransform[7];
-            transform[8] = privateTransform[8];
-            transform[9] = privateTransform[9];
-            transform[10] = privateTransform[10];
-            transform[11] = privateTransform[11];
-        }
-    },
-
-    clone : function collisionObjectCloneFn()
-    {
-        return WebGLPhysicsCollisionObject.create(this);
-    }
-};
-
-function WebGLPhysicsPrivateBody(params, publicObject)
-{
-    this._public = publicObject;
-
-    this.id = WebGLPhysicsPrivateBody.uniqueId;
-    WebGLPhysicsPrivateBody.uniqueId += 1;
-
-    this.world = null;
-    this.shape = params.shape._private;
-
-    this.friction    = (params.friction    !== undefined) ? params.friction    : 0.5;
-    this.restitution = (params.restitution !== undefined) ? params.restitution : 0.0;
-
-    var xform = params.transform;
-    this.transform = (xform ? VMath.m43Copy(xform) : VMath.m43BuildIdentity());
-
-    this.arbiters = [];
-    // Tracks constraints that are inside of a space, and making use of this object.
-    // We only track these constraints to avoid GC issues.
-    this.constraints = [];
-
-    // [v0, v1, v2]
-    // [w0, w1, w2]
-    // [v0, v1, v2] <-- bias velocity
-    // [w0, w1, w2] <-- bias velocity
-    this.velocity = new Float32Array(12);
-    var vel = params.linearVelocity;
-    if (vel)
-    {
-        this.velocity[0] = vel[0];
-        this.velocity[1] = vel[1];
-        this.velocity[2] = vel[2];
-    }
-    vel = params.angularVelocity;
-    if (vel)
-    {
-        this.velocity[3] = vel[0];
-        this.velocity[4] = vel[1];
-        this.velocity[5] = vel[2];
-    }
-
-    this.linearDamping  = (params.linearDamping  !== undefined) ? params.linearDamping  : 0.0;
-    this.angularDamping = (params.angularDamping !== undefined) ? params.angularDamping : 0.0;
-
-    this.extents = new Float32Array(6);
-
-    // For continous collision detection
-    this.startTransform = VMath.m43BuildIdentity();
-    this.endTransform = VMath.m43BuildIdentity();
-
-    // For kinematic objects.
-    this.prevTransform = VMath.m43Copy(this.transform);
-    this.newTransform = VMath.m43BuildIdentity();
-
-    this.island = null;
-    this.islandRoot = this;
-    this.islandRank = 0;
-
-    // used for kinematics so that it is kept alive for a single
-    // step before being sweffed.
-    this.delaySleep = true;
-
-    this.group = 0;
-    this.mask = 0;
-    this.kinematic = false;
-    this.fixedRotation = false;
-    this.mass = 0;
-    this.inverseMass = 0;
-    this.inverseInertiaLocal = null;
-    this.inverseInertia = null;
-    this.collisionObject = false;
-    this.permitSleep = false;
-    this.sweepFrozen = false;
-    this.active = false;
-    this.contactCallbacks = null;
 }
 
-WebGLPhysicsPrivateBody.prototype = {
+WebGLPhysicsConvexHullShape.prototype.type = "CONVEX_HULL";
 
-    version : 1,
+//
+// WebGLPhysicsPrivateBody
+//
+class WebGLPhysicsPrivateBody
+{
+    static version = 1;
+
+    _public: WebGLPhysicsCollisionObject;
+
+    // set by initPrivateBody()
+    id: number;
+    world: WebGLPhysicsWorld;
+    shape: WebGLPhysicsShape;
+    friction: number;
+    restitution: number;
+    transform: any;                   // m43
+    arbiters: WebGLPhysicsArbiter[];  // TODO:
+    constraints: any[];               // TODO:
+    velocity: Float32Array;           // length 12
+    linearDamping: number;
+    angularDamping: number;
+    extents: Float32Array;            // length 6
+    startTransform: any;              // m43
+    endTransform: any;                // m43
+    prevTransform: any;               // m43
+    newTransform: any;                // m43
+    island: WebGLPhysicsIsland;
+    islandRoot: WebGLPhysicsPrivateBody;
+    islandRank: number;
+    delaySleep: bool;
+    wakeTimeStamp: number;
+
+    // set by RigidBody and CollisionObject constructors
+    group: number;
+    mask: number;
+    kinematic: bool;
+    fixedRotation: bool;
+    mass: number;
+    inverseMass: number;
+    inverseInertiaLocal: any; // v3
+    inverseInertia: Float32Array;
+    collisionObject: bool;
+    permitSleep: bool;
+    sweepFrozen: bool;
+    active: bool;
+    //contactCallbacksMask: number;
+    //addedToContactCallbacks: bool;
+
+    contactCallbacks: WebGLPhysicsContactCallbacks;
+
+    private static uniqueId = 0;
+
+    constructor(params, publicObject)
+    {
+        this._public = publicObject;
+
+        this.id = WebGLPhysicsPrivateBody.uniqueId;
+        WebGLPhysicsPrivateBody.uniqueId += 1;
+
+        this.world = null;
+        this.shape = params.shape._private;
+
+        this.friction    = (params.friction    !== undefined) ? params.friction    : 0.5;
+        this.restitution = (params.restitution !== undefined) ? params.restitution : 0.0;
+
+        var xform = params.transform;
+        this.transform = (xform ? VMath.m43Copy(xform) : VMath.m43BuildIdentity());
+
+        this.arbiters = [];
+        // Tracks constraints that are inside of a space, and making use of this object.
+        // We only track these constraints to avoid GC issues.
+        this.constraints = [];
+
+        // [v0, v1, v2]
+        // [w0, w1, w2]
+        // [v0, v1, v2] <-- bias velocity
+        // [w0, w1, w2] <-- bias velocity
+        this.velocity = new Float32Array(12);
+        var vel = params.linearVelocity;
+        if (vel)
+        {
+            this.velocity[0] = vel[0];
+            this.velocity[1] = vel[1];
+            this.velocity[2] = vel[2];
+        }
+        vel = params.angularVelocity;
+        if (vel)
+        {
+            this.velocity[3] = vel[0];
+            this.velocity[4] = vel[1];
+            this.velocity[5] = vel[2];
+        }
+
+        this.linearDamping  = (params.linearDamping  !== undefined) ? params.linearDamping  : 0.0;
+        this.angularDamping = (params.angularDamping !== undefined) ? params.angularDamping : 0.0;
+
+        this.extents = new Float32Array(6);
+
+        // For continous collision detection
+        this.startTransform = VMath.m43BuildIdentity();
+        this.endTransform = VMath.m43BuildIdentity();
+
+        // For kinematic objects.
+        this.prevTransform = VMath.m43Copy(this.transform);
+        this.newTransform = VMath.m43BuildIdentity();
+
+        this.island = null;
+        this.islandRoot = this;
+        this.islandRank = 0;
+
+        // used for kinematics so that it is kept alive for a single
+        // step before being sweffed.
+        this.delaySleep = true;
+
+        this.group = 0;
+        this.mask = 0;
+        this.kinematic = false;
+        this.fixedRotation = false;
+        this.mass = 0;
+        this.inverseMass = 0;
+        this.inverseInertiaLocal = null;
+        this.inverseInertia = null;
+        this.collisionObject = false;
+        this.permitSleep = false;
+        this.sweepFrozen = false;
+        this.active = false;
+        this.contactCallbacks = null;
+    }
 
     // Used for kinematics.
     // TODO: Should be used for convexSweep to permit non-linear sweeps.
-    computeDeltaVelocity : function collisionObjectComputeDeltaVelocityFn(timeStep, from, to, inputVelocity)
+    computeDeltaVelocity(timeStep, from, to, inputVelocity)
     {
         var velocity = inputVelocity || this.velocity;
 
@@ -3167,10 +3030,10 @@ WebGLPhysicsPrivateBody.prototype = {
         }
 
         return active;
-    },
+    }
 
     // Used for kinematic and dynamics.
-    calculateSweptExtents : function collisionObjectSweptExtentsFn(extents)
+    calculateSweptExtents(extents)
     {
         var shape = this.shape;
         var radius = shape.radius;
@@ -3211,10 +3074,10 @@ WebGLPhysicsPrivateBody.prototype = {
         extents[3] = y0 + radius;
         extents[4] = y1 + radius;
         extents[5] = y2 + radius;
-    },
+    }
 
     // use for all types.
-    calculateExtents : function collisionObjectCalculateExtentsFn(extents)
+    calculateExtents(extents)
     {
         var shape = this.shape;
         var center = shape.center;
@@ -3273,10 +3136,10 @@ WebGLPhysicsPrivateBody.prototype = {
         extents[3] = (ct0 + ht0);
         extents[4] = (ct1 + ht1);
         extents[5] = (ct2 + ht2);
-    },
+    }
 
     // used for all types.
-    rayTest : function collisionObjectRayTestFn(ray)
+    rayTest(ray)
     {
         //Transform ray; assuming transform is orthogonal
         var transform = this.transform;
@@ -3294,10 +3157,10 @@ WebGLPhysicsPrivateBody.prototype = {
         }
 
         return result;
-    },
+    }
 
     // used for kinematics and dynamics
-    integratePositionWithVelocities : function intPosWithVelFn(transform, outTransform, timeStep, offset)
+    integratePositionWithVelocities(transform, outTransform, timeStep, offset)
     {
         var velocity = this.velocity;
         var sqrt = Math.sqrt;
@@ -3372,10 +3235,10 @@ WebGLPhysicsPrivateBody.prototype = {
         outTransform[6] = B6;
         outTransform[7] = B7;
         outTransform[8] = B8;
-    },
+    }
 
     // used for dynamics.
-    applyBiasVelocities : function applyBiasVelocitiesFn(timeStep)
+    applyBiasVelocities(timeStep)
     {
         var velocity = this.velocity;
         this.integratePositionWithVelocities(this.transform, this.startTransform, timeStep, 6);
@@ -3383,16 +3246,16 @@ WebGLPhysicsPrivateBody.prototype = {
         // Set bias velocities back to 0.
         velocity[6] = velocity[7] = velocity[8] = 0;
         velocity[9] = velocity[10] = velocity[11] = 0;
-    },
+    }
 
     // used for kinematics and dynamics.
-    integratePosition : function integratePositionFn(timeStep)
+    integratePosition(timeStep)
     {
         this.integratePositionWithVelocities(this.startTransform, this.transform, timeStep, 0);
-    },
+    }
 
     // used for dynamics.
-    refreshInertiaTensor : function refreshInertiaTensorFn()
+    refreshInertiaTensor()
     {
         var A = this.transform;
         var inertia = this.inverseInertiaLocal;
@@ -3421,10 +3284,11 @@ WebGLPhysicsPrivateBody.prototype = {
         I[6] = (A2 * A0 * i0) + (A5 * A3 * i1) + (A8 * A6 * i2);
         I[7] = (A2 * A1 * i0) + (A5 * A4 * i1) + (A8 * A7 * i2);
         I[8] = (A2 * A2 * i0) + (A5 * A5 * i1) + (A8 * A8 * i2);
-    },
+    }
 
     // used for dynamics.
-    integrateVelocity : function integrateVelocityFn(gravity, timeStep) {
+    integrateVelocity(gravity, timeStep)
+    {
         var velocity = this.velocity;
 
         var pow = Math.pow;
@@ -3453,11 +3317,11 @@ WebGLPhysicsPrivateBody.prototype = {
         velocity[3] = w0;
         velocity[4] = w1;
         velocity[5] = w2;
-    },
+    }
 
     // Return false if body is (considering purely velocity) able to sleep.
     // used for dynamics.
-    isActiveVelocity : function isActiveVelocityFn(linear, angular)
+    isActiveVelocity(linear, angular)
     {
         var r = this.shape.radius;
 
@@ -3480,11 +3344,11 @@ WebGLPhysicsPrivateBody.prototype = {
         }
 
         return false;
-    },
+    }
 
     // Return false if body is (taking into account sleep delay) able to sleep.
     // used for dynamics.
-    isActive : function isActiveFn(/* timeStep */)
+    isActive(/* timeStep */)
     {
         if (!this.permitSleep) {
             return true;
@@ -3498,9 +3362,213 @@ WebGLPhysicsPrivateBody.prototype = {
 
         return ((this.wakeTimeStamp + WebGLPhysicsConfig.SLEEP_DELAY) > this.world.timeStamp);
     }
-};
+}
 
-WebGLPhysicsPrivateBody.uniqueId = 0;
+//
+// WebGL Physics Collision Object
+//
+class WebGLPhysicsCollisionObject implements PhysicsCollisionObject
+{
+    static version = 1;
+
+    // From PhysicsCollisionObject
+    transform: any; // m43
+    shape: WebGLPhysicsShape;
+    group: number;  // getter for _private.group
+    mask: number;   // getter for _private.mask
+    friction: number; // getter for _private.friction
+    restitution: number; // getter for _private.restitution
+    kinematic: bool; // getter for _private.kinematic
+    userData: any;
+
+    private _private: WebGLPhysicsPrivateBody;
+    private static sharedInverseInertiaLocal = VMath.v3BuildZero();
+    private static sharedInverseInertia = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+    calculateExtents(extents)
+    {
+        this._private.calculateExtents(extents);
+    }
+
+    calculateTransform(transform, origin)
+    {
+        var privateTransform = this._private.transform;
+        if (origin)
+        {
+            VMath.m43NegOffset(privateTransform, origin, transform);
+        }
+        else
+        {
+            transform[0] = privateTransform[0];
+            transform[1] = privateTransform[1];
+            transform[2] = privateTransform[2];
+            transform[3] = privateTransform[3];
+            transform[4] = privateTransform[4];
+            transform[5] = privateTransform[5];
+            transform[6] = privateTransform[6];
+            transform[7] = privateTransform[7];
+            transform[8] = privateTransform[8];
+            transform[9] = privateTransform[9];
+            transform[10] = privateTransform[10];
+            transform[11] = privateTransform[11];
+        }
+    }
+
+    clone()
+    {
+        return WebGLPhysicsCollisionObject.create(this);
+    }
+
+    static create(params: any): WebGLPhysicsCollisionObject
+    {
+        var rets = new WebGLPhysicsCollisionObject();
+        var s = new WebGLPhysicsPrivateBody(params, rets);
+        rets._private = s;
+
+        //read/write, no side effects
+        rets.userData = ("userData" in params) ? params.userData : null;
+
+        // read only, no getter needed
+        Object.defineProperty(rets, "shape", {
+            value : params.shape,
+            enumerable : true
+        });
+
+        var kinematic = (params.kinematic !== undefined) ? params.kinematic : false;
+
+        // read/write, side effects
+        Object.defineProperty(rets, "transform", {
+            get : function collisionObjectGetTransform()
+            {
+                return VMath.m43Copy(this._private.transform);
+            },
+            set : function collisionObjectSetTransform(transform)
+            {
+                var pr = this._private;
+                // can only set transform if kinematic, or else for non kinematic IF NOT in a world.
+                if (pr.kinematic || !pr.world) {
+                    VMath.m43Copy(transform, pr.transform);
+                    if (pr.world)
+                    {
+                        pr.world.wakeBody(pr);
+                    }
+                }
+            },
+            enumerable : true
+        });
+
+        var group = (params.group !== undefined) ? params.group : WebGLPhysicsDevice.prototype.FILTER_STATIC;
+        // read only, no getter needed
+        Object.defineProperty(rets, "group", {
+            value : group,
+            enumerable : true
+        });
+
+        /*jshint bitwise: false*/
+        var mask  = (params.mask !== undefined) ? params.mask  :
+            (WebGLPhysicsDevice.prototype.FILTER_ALL ^ WebGLPhysicsDevice.prototype.FILTER_STATIC);
+        /*jshint bitwise: true*/
+        // read only, no getter needed
+        Object.defineProperty(rets, "mask", {
+            value : mask,
+            enumerable : true
+        });
+
+        // read/write, side effects needed
+        Object.defineProperty(rets, "friction", {
+            get : function collisionObjectGetFriction()
+            {
+                return this._private.friction;
+            },
+            set : function collisionObjectSetFriction(friction)
+            {
+                var pr = this._private;
+                pr.friction = friction;
+
+                // Invalidate arbiter friction values.
+                var arbiters = pr.arbiters;
+                var i;
+                var limit = arbiters.length;
+                for (i = 0; i < limit; i += 1)
+                {
+                    arbiters[i].invalidateParameters();
+                }
+            },
+            enumerable : true
+        });
+
+        // read/write, side effects needed
+        Object.defineProperty(rets, "restitution", {
+            get : function collisionObjectGetFriction()
+            {
+                return this._private.restitution;
+            },
+            set : function collisionObjectSetFriction(restitution)
+            {
+                var pr = this._private;
+                pr.restitution = restitution;
+
+                // Invalidate arbiter restitution values.
+                var arbiters = pr.arbiters;
+                var i;
+                var limit = arbiters.length;
+                for (i = 0; i < limit; i += 1)
+                {
+                    arbiters[i].invalidateParameters();
+                }
+            },
+            enumerable : true
+        });
+
+        // read only, no getter needed
+        Object.defineProperty(rets, "kinematic", {
+            value : kinematic,
+            enumerable : true
+        });
+
+        //--------------------------------
+        // set private collision object properties
+
+        s.group = group;
+        s.mask = mask;
+
+        s.kinematic = kinematic;
+        s.fixedRotation = !kinematic;
+
+        s.mass = 0;
+        s.inverseMass = 0;
+
+        s.inverseInertiaLocal = WebGLPhysicsCollisionObject.sharedInverseInertiaLocal;
+        s.inverseInertia = WebGLPhysicsCollisionObject.sharedInverseInertia;
+
+        s.collisionObject = true;
+
+        // Kinematic/Static object is not permitted to sleep in the normal sense.
+        s.permitSleep = false;
+        // Kinematic/Static objects are not subject to manipulation by continuous
+        // collision detection.
+        s.sweepFrozen = true;
+
+        // Object default active state is true iff object is kinematic.
+        // static object is always 'inactive'
+        s.active = kinematic;
+
+        // prepare for contact callbacks
+        if (params.onPreSolveContact ||
+            params.onAddedContacts ||
+            params.onProcessedContacts ||
+            params.onRemovedContacts)
+        {
+            s.contactCallbacks = new WebGLPhysicsContactCallbacks(params, mask);
+        }
+        else
+        {
+            s.contactCallbacks = null;
+        }
+
+        return rets;
+    }
+}
 
 function WebGLPhysicsContactCallbacks(params, mask)
 {
@@ -3519,159 +3587,6 @@ function WebGLPhysicsContactCallbacks(params, mask)
 
     return this;
 }
-
-WebGLPhysicsCollisionObject.sharedInverseInertiaLocal = VMath.v3BuildZero();
-WebGLPhysicsCollisionObject.sharedInverseInertia = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0]);
-
-WebGLPhysicsCollisionObject.create = function webGLPhysicsPrivateBodyFn(params)
-{
-    var rets = new WebGLPhysicsCollisionObject();
-    var s = new WebGLPhysicsPrivateBody(params, rets);
-    rets._private = s;
-
-    //read/write, no side effects
-    rets.userData = ("userData" in params) ? params.userData : null;
-
-    // read only, no getter needed
-    Object.defineProperty(rets, "shape", {
-        value : params.shape,
-        enumerable : true
-    });
-
-    var kinematic = (params.kinematic !== undefined) ? params.kinematic : false;
-
-    // read/write, side effects
-    Object.defineProperty(rets, "transform", {
-        get : function collisionObjectGetTransform()
-        {
-            return VMath.m43Copy(this._private.transform);
-        },
-        set : function collisionObjectSetTransform(transform)
-        {
-            var pr = this._private;
-            // can only set transform if kinematic, or else for non kinematic IF NOT in a world.
-            if (pr.kinematic || !pr.world) {
-                VMath.m43Copy(transform, pr.transform);
-                if (pr.world)
-                {
-                    pr.world.wakeBody(pr);
-                }
-            }
-        },
-        enumerable : true
-    });
-
-    var group = (params.group !== undefined) ? params.group : WebGLPhysicsDevice.prototype.FILTER_STATIC;
-    // read only, no getter needed
-    Object.defineProperty(rets, "group", {
-        value : group,
-        enumerable : true
-    });
-
-    /*jshint bitwise: false*/
-    var mask  = (params.mask !== undefined) ? params.mask  :
-                (WebGLPhysicsDevice.prototype.FILTER_ALL ^ WebGLPhysicsDevice.prototype.FILTER_STATIC);
-    /*jshint bitwise: true*/
-    // read only, no getter needed
-    Object.defineProperty(rets, "mask", {
-        value : mask,
-        enumerable : true
-    });
-
-    // read/write, side effects needed
-    Object.defineProperty(rets, "friction", {
-        get : function collisionObjectGetFriction()
-        {
-            return this._private.friction;
-        },
-        set : function collisionObjectSetFriction(friction)
-        {
-            var pr = this._private;
-            pr.friction = friction;
-
-            // Invalidate arbiter friction values.
-            var arbiters = pr.arbiters;
-            var i;
-            var limit = arbiters.length;
-            for (i = 0; i < limit; i += 1)
-            {
-                arbiters[i].invalidateParameters();
-            }
-        },
-        enumerable : true
-    });
-
-    // read/write, side effects needed
-    Object.defineProperty(rets, "restitution", {
-        get : function collisionObjectGetFriction()
-        {
-            return this._private.restitution;
-        },
-        set : function collisionObjectSetFriction(restitution)
-        {
-            var pr = this._private;
-            pr.restitution = restitution;
-
-            // Invalidate arbiter restitution values.
-            var arbiters = pr.arbiters;
-            var i;
-            var limit = arbiters.length;
-            for (i = 0; i < limit; i += 1)
-            {
-                arbiters[i].invalidateParameters();
-            }
-        },
-        enumerable : true
-    });
-
-    // read only, no getter needed
-    Object.defineProperty(rets, "kinematic", {
-        value : kinematic,
-        enumerable : true
-    });
-
-    //--------------------------------
-    // set private collision object properties
-
-    s.group = group;
-    s.mask = mask;
-
-    s.kinematic = kinematic;
-    s.fixedRotation = !kinematic;
-
-    s.mass = 0;
-    s.inverseMass = 0;
-
-    s.inverseInertiaLocal = WebGLPhysicsCollisionObject.sharedInverseInertiaLocal;
-    s.inverseInertia = WebGLPhysicsCollisionObject.sharedInverseInertia;
-
-    s.collisionObject = true;
-
-    // Kinematic/Static object is not permitted to sleep in the normal sense.
-    s.permitSleep = false;
-    // Kinematic/Static objects are not subject to manipulation by continuous
-    // collision detection.
-    s.sweepFrozen = true;
-
-    // Object default active state is true iff object is kinematic.
-    // static object is always 'inactive'
-    s.active = kinematic;
-
-    // prepare for contact callbacks
-    if (params.onPreSolveContact ||
-        params.onAddedContacts ||
-        params.onProcessedContacts ||
-        params.onRemovedContacts)
-    {
-        s.contactCallbacks = new WebGLPhysicsContactCallbacks(params, mask);
-    }
-    else
-    {
-        s.contactCallbacks = null;
-    }
-
-    return rets;
-};
 
 
 //
@@ -6200,8 +6115,7 @@ WebGLContactEPA.create = function WebGLContactEPAFn()
 // Contacts are thus instead allocated an deallocated with no
 // create method.
 //
-declare var WebGLPhysicsContact :
-{
+var WebGLPhysicsContact = <{
     contactPool: Float32Array[];
     contactPoolSize: number;
     publicContacts: WebGLPhysicsPublicContact[];
@@ -6210,9 +6124,8 @@ declare var WebGLPhysicsContact :
     allocate: { (): Float32Array; };
     deallocate: { (Float32Array): void; };
 
-};
+}> {};
 
-var WebGLPhysicsContact = {};
 WebGLPhysicsContact.contactPool = [];
 WebGLPhysicsContact.contactPoolSize = 0;
 
@@ -7638,71 +7551,189 @@ WebGLPhysicsTOIEvent.deallocate = function deallocateFn(toi)
 //
 // WebGLPhysicsWorld
 //
-function WebGLPhysicsWorld() { return this; }
-WebGLPhysicsWorld.prototype = {
+class WebGLPhysicsWorld implements DynamicsWorld
+{
+    static version = 1;
 
-    version : 1,
+    timeStamp: number;
 
-    update : function physicsWorldUpdateFn()
+    private _private: WebGLPrivatePhysicsWorld;
+
+    update()
     {
         this._private.update();
-    },
+    }
 
-    rayTest : function physicWorldRayTestFn(ray)
+    rayTest(ray)
     {
         return this._private.rayTest(ray);
-    },
+    }
 
-    convexSweepTest : function physicsWorldConvexSweepTestFn(params)
+    convexSweepTest(params)
     {
         return this._private.convexSweepTest(params);
-    },
+    }
 
-    addCollisionObject : function physicsWorldAddCollisionObjectFn(collisionObject)
+    addCollisionObject(collisionObject)
     {
         return this._private.addBody(collisionObject._private);
-    },
+    }
 
-    removeCollisionObject : function physicsWorldRemoveCollisionObjectFn(collisionObject)
+    removeCollisionObject(collisionObject)
     {
         return this._private.removeBody(collisionObject._private);
-    },
+    }
 
-    addRigidBody : function physicsWorldAddRigidBodyFn(rigidBody)
+    addRigidBody(rigidBody)
     {
         return this._private.addBody(rigidBody._private);
-    },
+    }
 
-    removeRigidBody : function physicsWorldRemoveRigidBodyFn(rigidBody)
+    removeRigidBody(rigidBody)
     {
         return this._private.removeBody(rigidBody._private);
-    },
+    }
 
-    addConstraint : function physicsWorldAddConstraintFn(constraint)
+    addConstraint(constraint)
     {
         return this._private.addConstraint(constraint._private);
-    },
+    }
 
-    removeConstraint : function physicsWorldRemoveConstraintFn(constraint)
+    removeConstraint(constraint)
     {
         return this._private.removeConstraint(constraint._private);
-    },
+    }
 
-    addCharacter : function physicsWorldAddCharacterFn(character)
+    addCharacter(character)
     {
         return this._private.addBody(character._private.rigidBody._private);
-    },
+    }
 
-    removeCharacter : function physicsWorldRemoveCharacterFn(character)
+    removeCharacter(character)
     {
         return this._private.removeBody(character._private.rigidBody._private);
-    },
+    }
 
-    flush : function physicsWorldFlushFn()
+    flush()
     {
         this._private.flush();
     }
-};
+
+    static create(params: any): WebGLPhysicsWorld
+    {
+        var rets = new WebGLPhysicsWorld();
+        var s = new WebGLPrivatePhysicsWorld();
+        rets._private = s;
+        s._public = rets;
+
+        s.gravity = (params.gravity !== undefined) ? VMath.v3Copy(params.gravity) : VMath.v3Build(0, -10, 0);
+        s.maxSubSteps = (params.maxSubSteps !== undefined) ? params.maxSubSteps : 10;
+
+        s.fixedTimeStep = (params.fixedTimeStep !== undefined) ? params.fixedTimeStep : (1 / 60);
+
+        s.variableMinStep = (params.minimumTimeStep !== undefined) ? params.minimumTimeStep : (1 / 70);
+        s.variableMaxStep = (params.maximumTimeStep !== undefined) ? params.maximumTimeStep : (1 / 50);
+
+        s.variableStep = (params.variableTimeSteps !== undefined) ? params.variableTimeSteps : false;
+
+        s.maxGiveUpTimeStep = (params.maxGiveUpTimeStep !== undefined) ? params.maxGiveUpTimeStep : 1 / 20;
+
+        // read only properties
+        Object.defineProperty(rets, "maxSubSteps", {
+            value : s.maxSubSteps,
+            enumerable : true
+        });
+
+        Object.defineProperty(rets, "maxGiveUpTimeStep", {
+            value : s.maxGiveUpTimeStep,
+            enumerable : true
+        });
+
+        if (!s.variableStep)
+        {
+            Object.defineProperty(rets, "fixedTimeStep", {
+                value : s.fixedTimeStep,
+                enumerable : true
+            });
+        }
+        else
+        {
+            Object.defineProperty(rets, "minimumTimeStep", {
+                value : s.variableMinStep,
+                enumerable : true
+            });
+            Object.defineProperty(rets, "maximumTimeStep", {
+                value : s.variableMaxStep,
+                enumerable : true
+            });
+        }
+
+
+
+        // read only, getter needed to make copy
+        Object.defineProperty(rets, "gravity", {
+            get : function physicsWorldGetGravity()
+            {
+                return VMath.v3Copy(this._private.gravity);
+            },
+            enumerable : true
+        });
+
+        s.staticSpatialMap = AABBTree.create(true);
+        s.dynamicSpatialMap = AABBTree.create();
+
+        s.collisionObjects = [];
+        s.rigidBodies = [];
+        s.constraints = [];
+        s.kinematicBodies = [];
+
+        // List of active arbiters between shapes.
+        s.activeArbiters = [];
+
+        // List of active rigid bodies and constraints.
+        s.activeBodies = [];
+        s.activeKinematics = [];
+        s.activeConstraints = [];
+
+        s.persistantObjectsList = [];
+        s.persistantObjectsList2 = [];
+        s.persistantTrianglesList = [];
+        s.persistantTOIEventList = [];
+
+        s.timeStamp = 0;
+
+        // timing information
+        s.performanceData = {
+            discrete             : 0,
+            sleepComputation     : 0,
+            prestepContacts      : 0,
+            prestepConstraints   : 0,
+            integrateVelocities  : 0,
+            warmstartContacts    : 0,
+            warmstartConstraints : 0,
+            physicsIterations    : 0,
+            integratePositions   : 0,
+            continuous           : 0
+        };
+
+        // read only, no getter needed
+        Object.defineProperty(rets, "performanceData", {
+            value : s.performanceData,
+            enumerable : true
+        });
+
+        // Extents used throughout all calls to syncBody
+        s.syncExtents = new Float32Array(6);
+
+        // Array for all the objects we need to call for contact callbacks
+        s.contactCallbackObjects = [];
+
+        // Array for all the removed arbiters
+        s.contactCallbackRemovedArbiters = [];
+
+        return rets;
+    }
+}
 
 function WebGLPrivatePhysicsWorld() { return this; }
 WebGLPrivatePhysicsWorld.prototype = {
@@ -10676,121 +10707,6 @@ WebGLPrivatePhysicsWorld.prototype = {
     }
 };
 
-WebGLPhysicsWorld.create = function webGLPrivatePhysicsWorldFn(params)
-{
-    var rets = new WebGLPhysicsWorld();
-    var s = new WebGLPrivatePhysicsWorld();
-    rets._private = s;
-    s._public = rets;
-
-    s.gravity = (params.gravity !== undefined) ? VMath.v3Copy(params.gravity) : VMath.v3Build(0, -10, 0);
-    s.maxSubSteps = (params.maxSubSteps !== undefined) ? params.maxSubSteps : 10;
-
-    s.fixedTimeStep = (params.fixedTimeStep !== undefined) ? params.fixedTimeStep : (1 / 60);
-
-    s.variableMinStep = (params.minimumTimeStep !== undefined) ? params.minimumTimeStep : (1 / 70);
-    s.variableMaxStep = (params.maximumTimeStep !== undefined) ? params.maximumTimeStep : (1 / 50);
-
-    s.variableStep = (params.variableTimeSteps !== undefined) ? params.variableTimeSteps : false;
-
-    s.maxGiveUpTimeStep = (params.maxGiveUpTimeStep !== undefined) ? params.maxGiveUpTimeStep : 1 / 20;
-
-    // read only properties
-    Object.defineProperty(rets, "maxSubSteps", {
-        value : s.maxSubSteps,
-        enumerable : true
-    });
-
-    Object.defineProperty(rets, "maxGiveUpTimeStep", {
-        value : s.maxGiveUpTimeStep,
-        enumerable : true
-    });
-
-    if (!s.variableStep)
-    {
-        Object.defineProperty(rets, "fixedTimeStep", {
-            value : s.fixedTimeStep,
-            enumerable : true
-        });
-    }
-    else
-    {
-        Object.defineProperty(rets, "minimumTimeStep", {
-            value : s.variableMinStep,
-            enumerable : true
-        });
-        Object.defineProperty(rets, "maximumTimeStep", {
-            value : s.variableMaxStep,
-            enumerable : true
-        });
-    }
-
-
-
-    // read only, getter needed to make copy
-    Object.defineProperty(rets, "gravity", {
-        get : function physicsWorldGetGravity()
-        {
-            return VMath.v3Copy(this._private.gravity);
-        },
-        enumerable : true
-    });
-
-    s.staticSpatialMap = AABBTree.create(true);
-    s.dynamicSpatialMap = AABBTree.create();
-
-    s.collisionObjects = [];
-    s.rigidBodies = [];
-    s.constraints = [];
-    s.kinematicBodies = [];
-
-    // List of active arbiters between shapes.
-    s.activeArbiters = [];
-
-    // List of active rigid bodies and constraints.
-    s.activeBodies = [];
-    s.activeKinematics = [];
-    s.activeConstraints = [];
-
-    s.persistantObjectsList = [];
-    s.persistantObjectsList2 = [];
-    s.persistantTrianglesList = [];
-    s.persistantTOIEventList = [];
-
-    s.timeStamp = 0;
-
-    // timing information
-    s.performanceData = {
-        discrete             : 0,
-        sleepComputation     : 0,
-        prestepContacts      : 0,
-        prestepConstraints   : 0,
-        integrateVelocities  : 0,
-        warmstartContacts    : 0,
-        warmstartConstraints : 0,
-        physicsIterations    : 0,
-        integratePositions   : 0,
-        continuous           : 0
-    };
-
-    // read only, no getter needed
-    Object.defineProperty(rets, "performanceData", {
-        value : s.performanceData,
-        enumerable : true
-    });
-
-    // Extents used throughout all calls to syncBody
-    s.syncExtents = new Float32Array(6);
-
-    // Array for all the objects we need to call for contact callbacks
-    s.contactCallbackObjects = [];
-
-    // Array for all the removed arbiters
-    s.contactCallbackRemovedArbiters = [];
-
-    return rets;
-};
-
 
 //
 // WebGL Physics Device
@@ -10815,105 +10731,105 @@ class WebGLPhysicsDevice
     constructor()
     {
         this.genObjectId = 0;
-    };
+    }
 
     static create(/* params */) : WebGLPhysicsDevice
     {
         return new WebGLPhysicsDevice();
-    };
+    }
 
     createDynamicsWorld(params) : WebGLPhysicsWorld
     {
         return WebGLPhysicsWorld.create(params);
-    };
+    }
 
     createPlaneShape(params) : WebGLPhysicsShape
     {
         return WebGLPhysicsPlaneShape.create(params);
-    };
+    }
 
     createBoxShape(params) : WebGLPhysicsShape
     {
         return WebGLPhysicsBoxShape.create(params);
-    };
+    }
 
     createSphereShape(params) : WebGLPhysicsShape
     {
         return WebGLPhysicsSphereShape.create(params);
-    };
+    }
 
     createCapsuleShape(params) : WebGLPhysicsShape
     {
         return WebGLPhysicsCapsuleShape.create(params);
-    };
+    }
 
     createCylinderShape(params) : WebGLPhysicsShape
     {
         return WebGLPhysicsCylinderShape.create(params);
-    };
+    }
 
     createConeShape(params) : WebGLPhysicsShape
     {
         return WebGLPhysicsConeShape.create(params);
-    };
+    }
 
     createTriangleMeshShape(params) : WebGLPhysicsShape
     {
         return WebGLPhysicsTriangleMeshShape.create(params);
-    };
+    }
 
     createConvexHullShape(params) : WebGLPhysicsShape
     {
         return WebGLPhysicsConvexHullShape.create(params);
-    };
+    }
 
     createTriangleArray(params) : WebGLPhysicsTriangleArray
     {
         return WebGLPhysicsTriangleArray.create(params);
-    };
+    }
 
     createCollisionObject(params) : WebGLPhysicsCollisionObject
     {
         return WebGLPhysicsCollisionObject.create(params);
-    };
+    }
 
     createRigidBody(params) : WebGLPhysicsRigidBody
     {
         return WebGLPhysicsRigidBody.create(params);
-    };
+    }
 
     createPoint2PointConstraint(params) : WebGLPhysicsPoint2PointConstraint
     {
         return WebGLPhysicsPoint2PointConstraint.create(params);
-    };
+    }
 
     createHingeConstraint(params) : WebGLPhysicsConstraint
     {
         return WebGLPhysicsConstraint.create("HINGE", params);
-    };
+    }
 
     createConeTwistConstraint(params) : WebGLPhysicsConstraint
     {
         return WebGLPhysicsConstraint.create("CONETWIST", params);
-    };
+    }
 
     create6DOFConstraint(params) : WebGLPhysicsConstraint
     {
         return WebGLPhysicsConstraint.create("D6", params);
-    };
+    }
 
     createSliderConstraint(params) : WebGLPhysicsConstraint
     {
         return WebGLPhysicsConstraint.create("SLIDER", params);
-    };
+    }
 
     createCharacter(params) : WebGLPhysicsCharacter
     {
         return WebGLPhysicsCharacter.create(params);
-    };
+    }
 
     private genObjectId: number;
-};
+}
 
 WebGLPhysicsDevice.prototype.FILTER_DYNAMIC    = 1;
 WebGLPhysicsDevice.prototype.FILTER_STATIC     = 2;

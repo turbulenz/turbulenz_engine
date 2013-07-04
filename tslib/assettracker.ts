@@ -19,17 +19,17 @@ class AssetTracker
     getLoadedCount(): number
     {
         return this.assetsLoadedCount;
-    };
+    }
 
     getLoadingProgress(): number
     {
         return this.loadingProgress;
-    };
+    }
 
     getNumberAssetsToLoad(): number
     {
         return this.numberAssetsToLoad;
-    };
+    }
 
     eventOnAssetLoadedCallback(event)
     {
@@ -53,12 +53,12 @@ class AssetTracker
         {
             this.callback();
         }
-    };
+    }
 
     setCallback(callback)
     {
         this.callback = callback;
-    };
+    }
 
     setNumberAssetsToLoad(numberAssetsToLoad)
     {
@@ -75,7 +75,7 @@ class AssetTracker
         {
             this.callback();
         }
-    };
+    }
 
     // Constructor function
     static create(numberAssetsToLoad: number, displayLog: bool): AssetTracker
@@ -99,5 +99,5 @@ class AssetTracker
         };
 
         return f;
-    };
-};
+    }
+}

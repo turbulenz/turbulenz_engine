@@ -52,17 +52,17 @@ class Material
         };
 
         return newMaterial;
-    };
+    }
 
     getName() : string
     {
         return this.name;
-    };
+    }
 
     setName(name)
     {
         this.name = name;
-    };
+    }
 
     loadTextures(textureManager)
     {
@@ -76,7 +76,7 @@ class Material
                 this.setTextureInstance(p, textureManager.getInstance(textureName));
             }
         }
-    };
+    }
 
     setTextureInstance(propertryName, textureInstance)
     {
@@ -96,7 +96,7 @@ class Material
             textureInstance.subscribeTextureChanged(this.onTextureChanged);
             textureInstance.reference.add();
         }
-    };
+    }
 
     destroy()
     {
@@ -115,5 +115,5 @@ class Material
         }
         delete this.textureInstances;
         delete this.texturesNames;
-    };
-};
+    }
+}

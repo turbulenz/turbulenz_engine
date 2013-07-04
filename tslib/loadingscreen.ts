@@ -38,7 +38,7 @@ class LoadingScreen
         this.textureMaterial['diffuse'] = texture;
         this.textureWidthHalf  = (texture.width  * 0.5);
         this.textureHeightHalf = (texture.height * 0.5);
-    };
+    }
 
     loadAndSetTexture(graphicsDevice, requestHandler, mappingTable, name)
     {
@@ -66,7 +66,7 @@ class LoadingScreen
                     }
                 });
         }
-    };
+    }
 
     render(backgroundAlpha, textureAlpha)
     {
@@ -228,7 +228,7 @@ class LoadingScreen
                 writer = null;
             }
         }
-    };
+    }
 
     static create(gd: GraphicsDevice, md: MathDevice,
                   parameters: any): LoadingScreen
@@ -415,5 +415,5 @@ class LoadingScreen
         }
 
         return null;
-    };
-};
+    }
+}

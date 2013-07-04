@@ -44,7 +44,7 @@ class Effect
         effect.materialsMap = {};
 
         return effect;
-    };
+    }
 
     hashMaterial(material: Material)
     {
@@ -68,7 +68,7 @@ class Effect
         {
             return hashArray[0];
         }
-    };
+    }
 
     prepareMaterial(material: Material)
     {
@@ -82,17 +82,17 @@ class Effect
         }
         material.meta.materialIndex = index;
         material.effect = this;
-    };
+    }
 
     add(geometryType: string, prepareObject)
     {
         this.geometryType[geometryType] = prepareObject;
-    };
+    }
 
     remove(geometryType: string)
     {
         delete this.geometryType[geometryType];
-    };
+    }
 
     get(geometryType: string): EffectPrepareObject
     {
@@ -110,8 +110,8 @@ class Effect
         {
             debug.abort("Unsupported or missing geometryType");
         }
-    };
-};
+    }
+}
 
 //
 // EffectManager
@@ -127,23 +127,23 @@ class EffectManager
         var effectManager = new EffectManager();
         effectManager.effects = {};
         return effectManager;
-    };
+    }
 
     add(effect: Effect)
     {
         debug.assert(this.effects[effect.name] === undefined);
         this.effects[effect.name] = effect;
-    };
+    }
 
     remove(name: string)
     {
         delete this.effects[name];
-    };
+    }
 
     map(destination: string, source: string)
     {
         this.effects[destination] = this.effects[source];
-    };
+    }
 
     get(name: string): Effect
     {
@@ -153,5 +153,5 @@ class EffectManager
             return this.effects["default"];
         }
         return effect;
-    };
-};
+    }
+}

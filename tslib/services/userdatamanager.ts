@@ -44,7 +44,7 @@ class UserDataManager
         }
 
         return key;
-    };
+    }
 
     getKeys(callbackFn, errorCallbackFn)
     {
@@ -84,7 +84,7 @@ class UserDataManager
                 encrypt: true
             });
         }
-    };
+    }
 
     exists(key, callbackFn, errorCallbackFn)
     {
@@ -132,7 +132,7 @@ class UserDataManager
                 encrypt: true
             });
         }
-    };
+    }
 
     get(key, callbackFn, errorCallbackFn)
     {
@@ -184,7 +184,7 @@ class UserDataManager
                 encrypt: true
             });
         }
-    };
+    }
 
     set(key, value, callbackFn, errorCallbackFn)
     {
@@ -243,7 +243,7 @@ class UserDataManager
                 encrypt: true
             });
         }
-    };
+    }
 
     remove(key, callbackFn, errorCallbackFn?)
     {
@@ -295,7 +295,7 @@ class UserDataManager
                 encrypt: true
             });
         }
-    };
+    }
 
     removeAll(callbackFn, errorCallbackFn)
     {
@@ -335,7 +335,7 @@ class UserDataManager
                 encrypt: true
             });
         }
-    };
+    }
 
     // Constructor function
     static create(requestHandler: RequestHandler,
@@ -356,5 +356,5 @@ class UserDataManager
         userdataManager.service = TurbulenzServices.getService('userdata');
 
         return userdataManager;
-    };
-};
+    }
+}

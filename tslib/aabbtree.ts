@@ -38,11 +38,10 @@ class AABBTreeNode
     isLeaf()
     {
         return !!this.externalNode;
-    };
+    }
 
     reset(minX, minY, minZ, maxX, maxY, maxZ,
-                                         escapeNodeOffset,
-                                         externalNode)
+          escapeNodeOffset, externalNode)
     {
         this.escapeNodeOffset = escapeNodeOffset;
         this.externalNode = externalNode;
@@ -53,7 +52,7 @@ class AABBTreeNode
         oldExtents[3] = maxX;
         oldExtents[4] = maxY;
         oldExtents[5] = maxZ;
-    };
+    }
 
     clear()
     {
@@ -67,15 +66,15 @@ class AABBTreeNode
         oldExtents[3] = -maxNumber;
         oldExtents[4] = -maxNumber;
         oldExtents[5] = -maxNumber;
-    };
+    }
 
     // Constructor function
     static create(extents: any, escapeNodeOffset: number,
                   externalNode?: AABBTreeNode): AABBTreeNode
     {
         return new AABBTreeNode(extents, escapeNodeOffset, externalNode);
-    };
-};
+    }
+}
 
 //
 // AABBTree
@@ -164,7 +163,7 @@ AABBTree.prototype.add = function addFn(externalNode, extents)
     this.needsRebuild = true;
     this.numAdds += 1;
     this.numExternalNodes += 1;
-},
+};
 
 AABBTree.prototype.remove = function removeFn(externalNode)
 {

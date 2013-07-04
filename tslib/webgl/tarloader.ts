@@ -19,8 +19,10 @@ interface TARLoaderParameters
     onerror: { (msg?: string): void; };
 };
 
-interface TARLoader
+class TARLoader
 {
+    static version = 1;
+
     gd: WebGLGraphicsDevice;
     mipmaps: bool;
     src: string;
@@ -29,22 +31,7 @@ interface TARLoader
     onerror: { (): void; };
     texturesLoading: number;
 
-    processBytes: { (bytes: Uint8Array): bool; };
-};
-declare var TARLoader :
-{
-    new(): TARLoader;
-    prototype: any;
-    create(params: TARLoaderParameters): TARLoader;
-};
-
-
-function TARLoader() { return this; }
-TARLoader.prototype = {
-
-    version : 1,
-
-    processBytes : function processBytesFn(bytes)
+    processBytes(bytes)
     {
         var offset = 0;
         var totalSize = bytes.length;
@@ -203,115 +190,121 @@ TARLoader.prototype = {
         bytes = null;
 
         return result;
-    },
+    }
 
-    isValidHeader : function isValidHeaderFn(/* header */)
+    isValidHeader(/* header */)
     {
         return true;
     }
-};
 
-// Constructor function
-TARLoader.create = function TarLoaderCreateFn(params)
-{
-    var loader = new TARLoader();
-    loader.gd = params.gd;
-    loader.mipmaps = params.mipmaps;
-    loader.ontextureload = params.ontextureload;
-    loader.onload = params.onload;
-    loader.onerror = params.onerror;
-    loader.texturesLoading = 0;
-
-    var src = params.src;
-    if (src)
+    create(params: TARLoaderParameters): TARLoader
     {
-        loader.src = src;
-        var xhr;
-        if (window.XMLHttpRequest)
+        var loader = new TARLoader();
+        loader.gd = params.gd;
+        loader.mipmaps = params.mipmaps;
+        loader.ontextureload = params.ontextureload;
+        loader.onload = params.onload;
+        loader.onerror = params.onerror;
+        loader.texturesLoading = 0;
+
+        var src = params.src;
+        if (src)
         {
-            xhr = new window.XMLHttpRequest();
-        }
-        else if (window.ActiveXObject)
-        {
-            xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
-        }
-        else
-        {
-            if (params.onerror)
+            loader.src = src;
+            var xhr;
+            if (window.XMLHttpRequest)
             {
-                params.onerror("No XMLHTTPRequest object could be created");
+                xhr = new window.XMLHttpRequest();
             }
-            return null;
-        }
-
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4)
+            else if (window.ActiveXObject)
             {
-                if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
+            }
+            else
+            {
+                if (params.onerror)
                 {
-                    var xhrStatus = xhr.status;
-                    var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
+                    params.onerror("No XMLHTTPRequest object could be created");
+                }
+                return null;
+            }
 
-                    // Sometimes the browser sets status to 200 OK when the connection is closed
-                    // before the message is sent (weird!).
-                    // In order to address this we fail any completely empty responses.
-                    // Hopefully, nobody will get a valid response with no headers and no body!
-                    if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4)
+                {
+                    if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
                     {
-                        loader.onload(false, 0);
-                        return;
-                    }
+                        var xhrStatus = xhr.status;
+                        var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
 
-                    if (xhrStatus === 200 || xhrStatus === 0)
-                    {
-                        var buffer;
-                        if (xhr.responseType === "arraybuffer")
+                        // Sometimes the browser sets status to 200 OK when the connection is closed
+                        // before the message is sent (weird!).
+                        // In order to address this we fail any completely empty responses.
+                        // Hopefully, nobody will get a valid response with no headers and no body!
+                        if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
                         {
-                            buffer = xhr.response;
+                            loader.onload(false, 0);
+                            return;
                         }
-                        else if (xhr.mozResponseArrayBuffer)
+
+                        if (xhrStatus === 200 || xhrStatus === 0)
                         {
-                            buffer = xhr.mozResponseArrayBuffer;
-                        }
-                        else //if (xhr.responseText !== null)
-                        {
-                            /*jshint bitwise: false*/
-                            var text = xhr.responseText;
-                            var numChars = text.length;
-                            buffer = [];
-                            buffer.length = numChars;
-                            for (var i = 0; i < numChars; i += 1)
+                            var buffer;
+                            if (xhr.responseType === "arraybuffer")
                             {
-                                buffer[i] = (text.charCodeAt(i) & 0xff);
+                                buffer = xhr.response;
                             }
-                            /*jshint bitwise: true*/
-                        }
-
-                        // Fix for loading from file
-                        if (xhrStatus === 0 && window.location.protocol === "file:")
-                        {
-                            xhrStatus = 200;
-                        }
-
-                        if (loader.processBytes(new Uint8Array(buffer)))
-                        {
-                            if (loader.onload)
+                            else if (xhr.mozResponseArrayBuffer)
                             {
-                                var callOnload = function callOnloadFn()
+                                buffer = xhr.mozResponseArrayBuffer;
+                            }
+                            else //if (xhr.responseText !== null)
+                            {
+                                /*jshint bitwise: false*/
+                                var text = xhr.responseText;
+                                var numChars = text.length;
+                                buffer = [];
+                                buffer.length = numChars;
+                                for (var i = 0; i < numChars; i += 1)
                                 {
-                                    if (0 < loader.texturesLoading)
+                                    buffer[i] = (text.charCodeAt(i) & 0xff);
+                                }
+                                /*jshint bitwise: true*/
+                            }
+
+                            // Fix for loading from file
+                            if (xhrStatus === 0 && window.location.protocol === "file:")
+                            {
+                                xhrStatus = 200;
+                            }
+
+                            if (loader.processBytes(new Uint8Array(buffer)))
+                            {
+                                if (loader.onload)
+                                {
+                                    var callOnload = function callOnloadFn()
                                     {
-                                        if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                                        if (0 < loader.texturesLoading)
                                         {
-                                            window.setTimeout(callOnload, 100);
+                                            if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                                            {
+                                                window.setTimeout(callOnload, 100);
+                                            }
                                         }
-                                    }
-                                    else
-                                    {
-                                        loader.onload(true, xhrStatus);
-                                    }
-                                };
-                                callOnload();
+                                        else
+                                        {
+                                            loader.onload(true, xhrStatus);
+                                        }
+                                    };
+                                    callOnload();
+                                }
+                            }
+                            else
+                            {
+                                if (loader.onerror)
+                                {
+                                    loader.onerror();
+                                }
                             }
                         }
                         else
@@ -322,34 +315,27 @@ TARLoader.create = function TarLoaderCreateFn(params)
                             }
                         }
                     }
-                    else
-                    {
-                        if (loader.onerror)
-                        {
-                            loader.onerror();
-                        }
-                    }
+                    // break circular reference
+                    xhr.onreadystatechange = null;
+                    xhr = null;
                 }
-                // break circular reference
-                xhr.onreadystatechange = null;
-                xhr = null;
+            };
+            xhr.open("GET", params.src, true);
+            if (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType"))
+            {
+                xhr.responseType = "arraybuffer";
             }
-        };
-        xhr.open("GET", params.src, true);
-        if (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType"))
-        {
-            xhr.responseType = "arraybuffer";
+            else if (xhr.overrideMimeType)
+            {
+                xhr.overrideMimeType("text/plain; charset=x-user-defined");
+            }
+            else
+            {
+                xhr.setRequestHeader("Content-Type", "text/plain; charset=x-user-defined");
+            }
+            xhr.send(null);
         }
-        else if (xhr.overrideMimeType)
-        {
-            xhr.overrideMimeType("text/plain; charset=x-user-defined");
-        }
-        else
-        {
-            xhr.setRequestHeader("Content-Type", "text/plain; charset=x-user-defined");
-        }
-        xhr.send(null);
-    }
 
-    return loader;
-};
+        return loader;
+    }
+}

@@ -206,27 +206,27 @@ class Physics2DMaterial
     getElasticity()
     {
         return this._data[(/*MAT_ELASTICITY*/0)];
-    };
+    }
 
     getStaticFriction()
     {
         return this._data[(/*MAT_STATIC*/1)];
-    };
+    }
 
     getDynamicFriction()
     {
         return this._data[(/*MAT_DYNAMIC*/2)];
-    };
+    }
 
     getRollingFriction()
     {
         return this._data[(/*MAT_ROLLING*/3)];
-    };
+    }
 
     getDensity()
     {
         return this._data[(/*MAT_DENSITY*/4)];
-    };
+    }
 
     // params = {
     //    elasticity : ## = 0,
@@ -256,13 +256,13 @@ class Physics2DMaterial
         m.userData = (params && params.userData ? params.userData : null);
 
         return m;
-    };
-};
+    }
+}
 
 interface Physics2DCallbackFn
 {
     (thisShape: Physics2DShape, otherShape: Physics2DShape): void;
-};
+}
 
 
 // =========================================================================
@@ -315,24 +315,24 @@ class Physics2DConstraint
     // Abstract methods to be overridden by subclasses
 
     _inWorld()
-    { debug.abort("abstact method"); };
+    { debug.abort("abstact method"); }
     _outWorld()
-    { debug.abort("abstact method"); };
+    { debug.abort("abstact method"); }
     _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody) : bool
-    { debug.abort("abstact method"); return false; };
+    { debug.abort("abstact method"); return false; }
     _wakeConnected()
-    { debug.abort("abstact method"); };
+    { debug.abort("abstact method"); }
     _sleepComputation(union: { (body: Physics2DRigidBody,
                                 constraint: Physics2DConstraint): void; })
-    { debug.abort("abstact method"); };
+    { debug.abort("abstact method"); }
     _preStep(deltaTime: number): bool
-    { debug.abort("abstact method"); return false; };
+    { debug.abort("abstact method"); return false; }
     _warmStart()
-    { debug.abort("abstact method"); };
+    { debug.abort("abstact method"); }
     _iterateVel(): bool
-    { debug.abort("abstact method"); return false; };
+    { debug.abort("abstact method"); return false; }
     _iteratePos(): bool
-    { debug.abort("abstact method"); return false; };
+    { debug.abort("abstact method"); return false; }
 
     // DebugDraw
 
@@ -367,7 +367,7 @@ class Physics2DConstraint
         con._onSleep = [];
 
         con.userData = (params.userData || null);
-    };
+    }
 
     configure(params)
     {
@@ -409,7 +409,7 @@ class Physics2DConstraint
             this._stiff = params.stiff;
         }
         this.wake(true);
-    };
+    }
 
     // ===============================================
 
@@ -436,7 +436,7 @@ class Physics2DConstraint
         this.wake();
 
         return true;
-    };
+    }
 
     removeEventListener(eventType, callback)
     {
@@ -462,7 +462,7 @@ class Physics2DConstraint
         this.wake();
 
         return true;
-    };
+    }
 
     // ===============================================
 
@@ -475,7 +475,7 @@ class Physics2DConstraint
         }
 
         this.world._wakeConstraint(this, !automated);
-    };
+    }
     sleep()
     {
         if (!this.world)
@@ -485,19 +485,19 @@ class Physics2DConstraint
         }
 
         this.world._forceSleepConstraint(this);
-    };
+    }
 
     // ================================================
 
     isEnabled()
     {
         return this._active;
-    };
+    }
 
     isDisabled()
     {
         return (!this._active);
-    };
+    }
 
     enable()
     {
@@ -510,7 +510,7 @@ class Physics2DConstraint
                 this.wake(true);
             }
         }
-    };
+    }
 
     disable()
     {
@@ -525,7 +525,7 @@ class Physics2DConstraint
             }
             this._active = false;
         }
-    };
+    }
 
     // ================================================
 
@@ -540,7 +540,7 @@ class Physics2DConstraint
         dst[0] = data[INDEX];
         dst[1] = data[INDEX + 1];
         return dst;
-    };
+    }
     getAnchorB(dst)
     {
         if (dst === undefined)
@@ -552,7 +552,7 @@ class Physics2DConstraint
         dst[0] = data[INDEX];
         dst[1] = data[INDEX + 1];
         return dst;
-    };
+    }
 
     setAnchorA(anchor)
     {
@@ -566,7 +566,7 @@ class Physics2DConstraint
             data[INDEX + 1] = newY;
             this.wake(true);
         }
-    };
+    }
     setAnchorB(anchor)
     {
         var data = this._data;
@@ -579,7 +579,7 @@ class Physics2DConstraint
             data[INDEX + 1] = newY;
             this.wake(true);
         }
-    };
+    }
 
     rotateAnchor(data, body, LOCAL, RELATIVE)
     {
@@ -590,7 +590,7 @@ class Physics2DConstraint
 
         data[RELATIVE]     = ((cos * x) - (sin * y));
         data[RELATIVE + 1] = ((sin * x) + (cos * y));
-    };
+    }
 
     // ================================================
 
@@ -600,7 +600,7 @@ class Physics2DConstraint
         var dtRatio = (preDt === -1 ? 1.0 : (deltaTime / preDt));
         data[(/*JOINT_PRE_DT*/4)] = deltaTime;
         return dtRatio;
-    };
+    }
 
     // ================================================
 
@@ -608,7 +608,7 @@ class Physics2DConstraint
     {
         this.bodyA.constraints.push(this);
         this.bodyB.constraints.push(this);
-    };
+    }
 
     twoBodyOutWorld()
     {
@@ -621,13 +621,13 @@ class Physics2DConstraint
         index = constraints.indexOf(this);
         constraints[index] = constraints[constraints.length - 1];
         constraints.pop();
-    };
+    }
 
     twoBodyPairExists(b1, b2)
     {
         return ((b1 === this.bodyA && b2 === this.bodyB) ||
                 (b2 === this.bodyA && b1 === this.bodyB));
-    };
+    }
 
     twoBodyWakeConnected()
     {
@@ -642,7 +642,7 @@ class Physics2DConstraint
         {
             body.wake(true);
         }
-    };
+    }
 
     twoBodySleepComputation(union)
     {
@@ -657,7 +657,7 @@ class Physics2DConstraint
         {
             union(body, this);
         }
-    };
+    }
 
     // ================================================
 
@@ -666,21 +666,21 @@ class Physics2DConstraint
         var data = this._data;
         data[this._JACC] = 0;
         data[(/*JOINT_PRE_DT*/4)] = -1;
-    };
+    }
     clearCache2()
     {
         var data = this._data;
         var INDEX = this._JACC;
         data[INDEX] = data[INDEX + 1] = 0;
         data[(/*JOINT_PRE_DT*/4)] = -1;
-    };
+    }
     clearCache3()
     {
         var data = this._data;
         var INDEX = this._JACC;
         data[INDEX] = data[INDEX + 1] = data[INDEX + 2] = 0;
         data[(/*JOINT_PRE_DT*/4)] = -1;
-    };
+    }
 
     // ================================================
 
@@ -716,7 +716,7 @@ class Physics2DConstraint
         }
         data[BIAS] = bias;
         return false;
-    };
+    }
     soft_params2(data, KMASS, GAMMA, BIAS, deltaTime, breakUnderError)
     {
         var biasX = data[BIAS];
@@ -750,7 +750,7 @@ class Physics2DConstraint
         data[BIAS]     = biasX;
         data[BIAS + 1] = biasY;
         return false;
-    };
+    }
     soft_params3(data, KMASS, GAMMA, BIAS, deltaTime, breakUnderError)
     {
         var biasX = data[BIAS];
@@ -791,7 +791,7 @@ class Physics2DConstraint
         data[BIAS + 1] = biasY;
         data[BIAS + 2] = biasZ;
         return false;
-    };
+    }
 
     // Solve K * j = err, permitting degeneracies in K
     // indices JMASS, ERR, IMP
@@ -801,7 +801,7 @@ class Physics2DConstraint
         var err = data[ERR];
         var K = data[KMASS];
         data[IMP] = (K !== 0 ? (err / K) : 0);
-    };
+    }
     safe_solve2(data, KMASS, ERR, IMP)
     {
         var errX = data[ERR];
@@ -824,7 +824,7 @@ class Physics2DConstraint
             data[IMP]     = (det * ((Kc * errX) - (Kb * errY)));
             data[IMP + 1] = (det * ((Ka * errY) - (Kb * errX)));
         }
-    };
+    }
     safe_solve3(data, KMASS, ERR, IMP)
     {
         var errX = data[ERR];
@@ -902,7 +902,7 @@ class Physics2DConstraint
             data[IMP + 1] = (det * ((B * errX) + (D * errY) + (E * errZ)));
             data[IMP + 2] = (det * ((C * errX) + (E * errY) + (F * errZ)));
         }
-    };
+    }
 
     // Invert matrix stored symmetrically in data at
     // indices KMASS
@@ -920,7 +920,7 @@ class Physics2DConstraint
         {
             data[KMASS] = (1 / K);
         }
-    };
+    }
     safe_invert2(data, KMASS, JACC)
     {
         var Ka = data[KMASS];
@@ -959,7 +959,7 @@ class Physics2DConstraint
             data[KMASS + 1] = (det * -Kb);
             data[KMASS + 2] = (det * Ka);
         }
-    };
+    }
     safe_invert3(data, KMASS, JACC)
     {
         var Ka = data[KMASS];
@@ -1094,8 +1094,8 @@ class Physics2DConstraint
             data[KMASS + 4] = (det * ((Kb * Kc) - (Ka * Ke)));
             data[KMASS + 5] = (det * ((Ka * Kd) - (Kb * Kb)));
         }
-    };
-};
+    }
+}
 
 
 // =========================================================================
@@ -1108,49 +1108,47 @@ class Physics2DConstraint
 //
 ///*CUSTOM_JMAX*/5
 ///*CUSTOM_GAMMA*/6
-
 class Physics2DCustomConstraint extends Physics2DConstraint
 {
     type = "CUSTOM";
 
-    // Inherited
-    wake  = Physics2DConstraint.prototype.wake;
-    sleep = Physics2DConstraint.prototype.sleep;
+    // wake  = Physics2DConstraint.prototype.wake;
+    // sleep = Physics2DConstraint.prototype.sleep;
 
-    configure = Physics2DConstraint.prototype.configure;
-    isEnabled = Physics2DConstraint.prototype.isEnabled;
-    isDisabled = Physics2DConstraint.prototype.isDisabled;
-    enable = Physics2DConstraint.prototype.enable;
-    disable = Physics2DConstraint.prototype.disable;
+    // configure = Physics2DConstraint.prototype.configure;
+    // isEnabled = Physics2DConstraint.prototype.isEnabled;
+    // isDisabled = Physics2DConstraint.prototype.isDisabled;
+    // enable = Physics2DConstraint.prototype.enable;
+    // disable = Physics2DConstraint.prototype.disable;
 
-    addEventListener = Physics2DConstraint.prototype.addEventListener;
-    removeEventListener = Physics2DConstraint.prototype.removeEventListener;
+    // addEventListener = Physics2DConstraint.prototype.addEventListener;
+    // removeEventListener = Physics2DConstraint.prototype.removeEventListener;
 
-    _removeOnBreak: bool;
-    _breakUnderError: bool;
-    _breakUnderForce: bool;
-    _stiff: bool;
-    _ignoreInteractions: bool;
-    sleeping: bool;
-    _active: bool;
+    // _removeOnBreak: bool;
+    // _breakUnderError: bool;
+    // _breakUnderForce: bool;
+    // _stiff: bool;
+    // _ignoreInteractions: bool;
+    // sleeping: bool;
+    // _active: bool;
 
-    world: any; // TODO: Physics2DWorld
-    _islandRoot: Physics2DRigidBody;
-    _islandRank: number;
-    _island: Physics2DIsland;
+    // world: any; // TODO: Physics2DWorld
+    // _islandRoot: Physics2DRigidBody;
+    // _islandRank: number;
+    // _island: Physics2DIsland;
 
-    _wakeTime: number;
+    // _wakeTime: number;
 
-    _onBreak: Physics2DCallback[];
-    _onWake: Physics2DCallback[];
-    _onSleep: Physics2DCallback[];
+    // _onBreak: Physics2DCallback[];
+    // _onWake: Physics2DCallback[];
+    // _onSleep: Physics2DCallback[];
 
-    userData: any;
+    // userData: any;
 
     // Ours
 
     bodies: any[]; // TODO: Physics2DBody[];
-    _data: any; // new Physics2DDevice.prototype.floatArray(dataSize);
+    // _data: any; // new Physics2DDevice.prototype.floatArray(dataSize);
     dimension: number;
 
     _K_MASS: number;
@@ -1182,7 +1180,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         {
             bodies[i].constraints.push(this);
         }
-    };
+    }
 
     _outWorld()
     {
@@ -1196,7 +1194,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
             constraints[index] = constraints[constraints.length - 1];
             constraints.pop();
         }
-    };
+    }
 
     _pairExists(b1, b2) : bool
     {
@@ -1222,7 +1220,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
 
         return false;
-    };
+    }
 
     _wakeConnected()
     {
@@ -1237,7 +1235,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
                 body.wake(true);
             }
         }
-    };
+    }
 
     _sleepComputation(union)
     {
@@ -1252,7 +1250,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
                 union(body, this);
             }
         }
-    };
+    }
 
     // =====================================================
 
@@ -1269,7 +1267,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
 
         data[(/*JOINT_PRE_DT*/4)] = -1;
-    };
+    }
 
     // Compute cholesky decomposition of A into
     // lower triangular matrix L. A stored
@@ -1332,7 +1330,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
                 A += (dim - j - 1);
             }
         }
-    };
+    }
 
     // Perform multiplication with inverse of eff-mass matrix.
     // X = (LL^T)^-1 * X for L = CHOLESKY
@@ -1383,7 +1381,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
                 data[X + i] = 0;
             }
         }
-    };
+    }
 
     _effMass()
     {
@@ -1416,7 +1414,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
                 KMASS += 1;
             }
         }
-    };
+    }
 
     _preStep(deltaTime) : bool
     {
@@ -1519,12 +1517,12 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         data[(/*CUSTOM_JMAX*/5)] = (data[(/*JOINT_MAX_FORCE*/2)] * deltaTime);
 
         return false;
-    };
+    }
 
     _warmStart()
     {
         this._applyImpulse(this._J_ACC);
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -1570,7 +1568,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
 
         dst[0] = dst[1] = dst[2] = 0;
         return dst;
-    };
+    }
 
     _applyImpulse(J, position?)
     {
@@ -1619,7 +1617,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
 
             JAC += 3;
         }
-    };
+    }
 
     _iterateVel() : bool
     {
@@ -1701,7 +1699,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         this._applyImpulse(VECTOR);
 
         return false;
-    };
+    }
 
     _iteratePos() : bool
     {
@@ -1759,7 +1757,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         this._applyImpulse(BIAS, true);
 
         return false;
-    };
+    }
 
     static create(params): Physics2DCustomConstraint
     {
@@ -1799,8 +1797,8 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         p._velocityOnly = (p._posError === undefined);
 
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 //
@@ -1868,7 +1866,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
     getRatio()
     {
         return this._data[(/*PULLEY_RATIO*/7)];
-    };
+    }
     setRatio(ratio)
     {
         var data = this._data;
@@ -1877,16 +1875,16 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
             data[(/*PULLEY_RATIO*/7)] = ratio;
             this.wake(true);
         }
-    };
+    }
 
     getLowerBound()
     {
         return this._data[(/*PULLEY_JOINTMIN*/5)];
-    };
+    }
     getUpperBound()
     {
         return this._data[(/*PULLEY_JOINTMAX*/6)];
-    };
+    }
 
     setLowerBound(lowerBound)
     {
@@ -1897,7 +1895,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
             this._equal = (lowerBound === data[(/*PULLEY_JOINTMAX*/6)]);
             this.wake(true);
         }
-    };
+    }
     setUpperBound(upperBound)
     {
         var data = this._data;
@@ -1907,7 +1905,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
             this._equal = (upperBound === data[(/*PULLEY_JOINTMIN*/5)]);
             this.wake(true);
         }
-    };
+    }
 
     // Inherited
     _ANCHOR_A = (/*PULLEY_LANCHOR1*/11);
@@ -1930,7 +1928,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         dst[0] = data[INDEX];
         dst[1] = data[INDEX + 1];
         return dst;
-    };
+    }
     setAnchorC(anchor)
     {
         var data = this._data;
@@ -1943,7 +1941,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
             data[INDEX + 1] = newY;
             this.wake(true);
         }
-    };
+    }
 
     _ANCHOR_D = (/*PULLEY_LANCHOR4*/17);
     getAnchorD(dst)
@@ -1957,7 +1955,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         dst[0] = data[INDEX];
         dst[1] = data[INDEX + 1];
         return dst;
-    };
+    }
     setAnchorD(anchor)
     {
         var data = this._data;
@@ -1970,7 +1968,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
             data[INDEX + 1] = newY;
             this.wake(true);
         }
-    };
+    }
 
     // =========================================================
 
@@ -1983,7 +1981,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
             this.bodyC.constraints.push(this);
         }
         this.bodyD.constraints.push(this);
-    };
+    }
 
     _outWorld()
     {
@@ -2009,7 +2007,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         index = constraints.indexOf(this);
         constraints[index] = constraints[constraints.length - 1];
         constraints.pop();
-    };
+    }
 
     _pairExists(b1, b2)
     {
@@ -2022,7 +2020,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
                 (b1 === bodyB && (b2 === bodyA || b2 === bodyC || b2 === bodyD)) ||
                 (b1 === bodyC && (b2 === bodyA || b2 === bodyB || b2 === bodyD)) ||
                 (b1 === bodyD && (b2 === bodyA || b2 === bodyB || b2 === bodyC)));
-    };
+    }
 
     _wakeConnected()
     {
@@ -2049,7 +2047,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         {
             body.wake(true);
         }
-    };
+    }
 
     _sleepComputation(union)
     {
@@ -2076,7 +2074,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         {
             union(body, this);
         }
-    };
+    }
 
     // =====================================================
 
@@ -2185,7 +2183,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         data[(/*PULLEY_N34*/31)]     = n34x;
         data[(/*PULLEY_N34*/31) + 1] = n34y;
         data[(/*PULLEY_BIAS*/28)]    = (-err);
-    };
+    }
 
     _preStep(deltaTime)
     {
@@ -2244,7 +2242,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         data[(/*PULLEY_JMAX*/10)] = (data[(/*JOINT_MAX_FORCE*/2)] * deltaTime);
 
         return false;
-    };
+    }
 
     _warmStart()
     {
@@ -2285,7 +2283,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         b4[(/*BODY_VEL*/7)]     += (jx * im);
         b4[(/*BODY_VEL*/7) + 1] += (jy * im);
         b4[(/*BODY_VEL*/7) + 2] += (data[(/*PULLEY_CX4*/36)] * jAcc * b4[(/*BODY_IINERTIA*/1)]);
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -2332,7 +2330,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         }
 
         return dst;
-    };
+    }
 
     _iterateVel()
     {
@@ -2427,7 +2425,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         b4[(/*BODY_VEL*/7) + 2] += (cx4 * j * b4[(/*BODY_IINERTIA*/1)]);
 
         return false;
-    };
+    }
 
     _iteratePos()
     {
@@ -2571,7 +2569,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         }
 
         return false;
-    };
+    }
 
     // params = {
     //   bodyA, bodyB, bodyC, bodyD // bodyB permitted equal to bodyC
@@ -2622,8 +2620,8 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         data[(/*PULLEY_N34*/31) + 1] = 0;
 
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 //
@@ -2666,11 +2664,11 @@ class Physics2DMotorConstraint extends Physics2DConstraint
     getRate()
     {
         return this._data[(/*MOTOR_RATE*/5)];
-    };
+    }
     getRatio()
     {
         return this._data[(/*MOTOR_RATIO*/6)];
-    };
+    }
 
     setRate(rate)
     {
@@ -2680,7 +2678,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
             data[(/*MOTOR_RATE*/5)] = rate;
             this.wake(true);
         }
-    };
+    }
     setRatio(ratio)
     {
         var data = this._data;
@@ -2689,7 +2687,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
             data[(/*MOTOR_RATIO*/6)] = ratio;
             this.wake(true);
         }
-    };
+    }
 
     // =========================================================
 
@@ -2724,7 +2722,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         data[(/*MOTOR_JMAX*/9)] = (data[(/*JOINT_MAX_FORCE*/2)] * deltaTime);
 
         return false;
-    };
+    }
 
     _warmStart()
     {
@@ -2735,7 +2733,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         var j = data[(/*MOTOR_JACC*/8)];
         b1[(/*BODY_VEL*/7) + 2] -= (j * b1[(/*BODY_IINERTIA*/1)]);
         b2[(/*BODY_VEL*/7) + 2] += (data[(/*MOTOR_RATIO*/6)] * j * b2[(/*BODY_IINERTIA*/1)]);
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -2749,7 +2747,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         dst[0] = dst[1] = 0;
         dst[2] = (body === this.bodyA ? -1 : (body === this.bodyB ? data[(/*MOTOR_RATIO*/6)] : 0)) * data[(/*MOTOR_JACC*/8)];
         return dst;
-    };
+    }
 
     _iterateVel()
     {
@@ -2786,13 +2784,13 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (ratio * j * b2[(/*BODY_IINERTIA*/1)]);
 
         return false;
-    };
+    }
 
     // Velocity only constraint.
     _iteratePos()
     {
         return false;
-    };
+    }
 
     static create(params): Physics2DMotorConstraint
     {
@@ -2808,8 +2806,8 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         p.bodyB = params.bodyB;
 
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 //
@@ -2866,11 +2864,11 @@ class Physics2DLineConstraint extends Physics2DConstraint
     getLowerBound()
     {
         return this._data[(/*LINE_JOINTMIN*/5)];
-    };
+    }
     getUpperBound()
     {
         return this._data[(/*LINE_JOINTMAX*/6)];
-    };
+    }
 
     setLowerBound(lowerBound)
     {
@@ -2881,7 +2879,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
             this._equal = (lowerBound === data[(/*LINE_JOINTMAX*/6)]);
             this.wake(true);
         }
-    };
+    }
     setUpperBound(upperBound)
     {
         var data = this._data;
@@ -2891,7 +2889,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
             this._equal = (upperBound === data[(/*LINE_JOINTMIN*/5)]);
             this.wake(true);
         }
-    };
+    }
 
     // Inherited
     _ANCHOR_A = (/*LINE_LANCHOR1*/7);
@@ -2912,7 +2910,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         dst[0] = data[(/*LINE_LAXIS*/11)];
         dst[1] = data[(/*LINE_LAXIS*/11) + 1];
         return dst;
-    };
+    }
     setAxis(axis)
     {
         var data = this._data;
@@ -2935,7 +2933,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
             data[(/*LINE_LAXIS*/11) + 1] = newY;
             this.wake(true);
         }
-    };
+    }
 
     // =========================================================
 
@@ -3006,7 +3004,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
 
         data[(/*LINE_BIAS*/26)]     = (-errX);
         data[(/*LINE_BIAS*/26) + 1] = (-errY);
-    };
+    }
 
     _preStep(deltaTime)
     {
@@ -3065,7 +3063,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         data[(/*LINE_JMAX*/24)]     = (data[(/*JOINT_MAX_FORCE*/2)] * deltaTime);
 
         return false;
-    };
+    }
 
     _warmStart()
     {
@@ -3095,7 +3093,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (((data[(/*LINE_DOT2*/31)] * jx) -
                                      (scale * data[(/*LINE_CX2*/29)] * jy)) *
                                    b2[(/*BODY_IINERTIA*/1)]);
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -3134,7 +3132,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         }
 
         return dst;
-    };
+    }
 
     _iterateVel()
     {
@@ -3214,7 +3212,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (((dot2 * jx) - (scale * cx2 * jy)) * b2[(/*BODY_IINERTIA*/1)]);
 
         return false;
-    };
+    }
 
     _iteratePos()
     {
@@ -3328,7 +3326,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         }
 
         return false;
-    };
+    }
 
     // params = {
     //   bodyA, bodyB
@@ -3363,8 +3361,8 @@ class Physics2DLineConstraint extends Physics2DConstraint
         p.bodyB = params.bodyB;
 
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 //
@@ -3417,11 +3415,11 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
     getLowerBound()
     {
         return this._data[(/*DIST_JOINTMIN*/5)];
-    };
+    }
     getUpperBound()
     {
         return this._data[(/*DIST_JOINTMAX*/6)];
-    };
+    }
 
     setLowerBound(lowerBound)
     {
@@ -3432,7 +3430,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
             this._equal = (lowerBound === data[(/*DIST_JOINTMAX*/6)]);
             this.wake(true);
         }
-    };
+    }
     setUpperBound(upperBound)
     {
         var data = this._data;
@@ -3442,7 +3440,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
             this._equal = (upperBound === data[(/*DIST_JOINTMIN*/5)]);
             this.wake(true);
         }
-    };
+    }
 
     // Inherited
     _ANCHOR_A = (/*DIST_LANCHOR1*/7);
@@ -3537,7 +3535,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         data[(/*DIST_NORMAL*/20)]     = nx;
         data[(/*DIST_NORMAL*/20) + 1] = ny;
         data[(/*DIST_BIAS*/19)]       = (-err);
-    };
+    }
 
     _preStep(deltaTime)
     {
@@ -3580,7 +3578,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         data[(/*DIST_JMAX*/17)] = (data[(/*JOINT_MAX_FORCE*/2)] * deltaTime);
 
         return false;
-    };
+    }
 
     _warmStart()
     {
@@ -3606,7 +3604,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7)]     += (jx * im);
         b2[(/*BODY_VEL*/7) + 1] += (jy * im);
         b2[(/*BODY_VEL*/7) + 2] += (data[(/*DIST_CX2*/23)] * jAcc * b2[(/*BODY_IINERTIA*/1)]);
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -3639,7 +3637,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         }
 
         return dst;
-    };
+    }
 
     _iterateVel()
     {
@@ -3711,7 +3709,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (data[(/*DIST_CX2*/23)] * j * b2[(/*BODY_IINERTIA*/1)]);
 
         return false;
-    };
+    }
 
     _iteratePos()
     {
@@ -3805,7 +3803,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         }
 
         return false;
-    };
+    }
 
     // params = {
     //   bodyA, bodyB
@@ -3842,8 +3840,8 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         data[(/*DIST_NORMAL*/20) + 1] = 0;
 
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 //
@@ -3895,15 +3893,15 @@ class Physics2DAngleConstraint extends Physics2DConstraint
     getLowerBound()
     {
         return this._data[(/*ANGLE_JOINTMIN*/5)];
-    };
+    }
     getUpperBound()
     {
         return this._data[(/*ANGLE_JOINTMAX*/6)];
-    };
+    }
     getRatio()
     {
         return this._data[(/*ANGLE_RATIO*/7)];
-    };
+    }
 
     setLowerBound(lowerBound)
     {
@@ -3914,7 +3912,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
             this._equal = (lowerBound === data[(/*ANGLE_JOINTMAX*/6)]);
             this.wake(true);
         }
-    };
+    }
     setUpperBound(upperBound)
     {
         var data = this._data;
@@ -3924,7 +3922,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
             this._equal = (upperBound === data[(/*ANGLE_JOINTMIN*/5)]);
             this.wake(true);
         }
-    };
+    }
     setRatio(ratio)
     {
         var data = this._data;
@@ -3933,7 +3931,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
             data[(/*ANGLE_RATIO*/7)] = ratio;
             this.wake(true);
         }
-    };
+    }
 
     // =========================================================
 
@@ -3989,7 +3987,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
             }
         }
         data[(/*ANGLE_BIAS*/12)] = (-err);
-    };
+    }
 
     _preStep(deltaTime)
     {
@@ -4034,7 +4032,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         data[(/*ANGLE_JMAX*/10)] = (data[(/*JOINT_MAX_FORCE*/2)] * deltaTime);
 
         return false;
-    };
+    }
 
     _warmStart()
     {
@@ -4050,7 +4048,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         var j = (data[(/*ANGLE_JACC*/9)] * data[(/*ANGLE_SCALE*/13)]);
         b1[(/*BODY_VEL*/7) + 2] -= (j * b1[(/*BODY_IINERTIA*/1)]);
         b2[(/*BODY_VEL*/7) + 2] += (j * data[(/*ANGLE_RATIO*/7)] * b2[(/*BODY_IINERTIA*/1)]);
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -4066,7 +4064,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         dst[2] = (body === this.bodyA ? -1 : (body === this.bodyB ? data[(/*ANGLE_RATIO*/7)] : 0)) * j;
 
         return dst;
-    };
+    }
 
     _iterateVel()
     {
@@ -4142,7 +4140,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (j * ratio * b2[(/*BODY_IINERTIA*/1)]);
 
         return false;
-    };
+    }
 
     _iteratePos()
     {
@@ -4188,7 +4186,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         }
 
         return false;
-    };
+    }
 
     // params = {
     //   bodyA, bodyB,
@@ -4213,8 +4211,8 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         p.bodyB = params.bodyB;
 
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 //
@@ -4274,7 +4272,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     getPhase()
     {
         return this._data[(/*WELD_PHASE*/13)];
-    };
+    }
     setPhase(phase)
     {
         var data = this._data;
@@ -4283,7 +4281,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
             data[(/*WELD_PHASE*/13)] = phase;
             this.wake(true);
         }
-    };
+    }
 
     // =========================================================
 
@@ -4354,7 +4352,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         data[(/*WELD_JMAX*/23)]     = (data[(/*JOINT_MAX_FORCE*/2)] * deltaTime);
 
         return false;
-    };
+    }
 
     _warmStart()
     {
@@ -4381,7 +4379,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
                                      (data[(/*WELD_RANCHOR2*/11) + 1] * jx) +
                                      jz) *
                                     b2[(/*BODY_IINERTIA*/1)]);
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -4417,7 +4415,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         }
 
         return dst;
-    };
+    }
 
     _iterateVel()
     {
@@ -4494,7 +4492,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (((rx2 * jy) - (ry2 * jx) + jz) * b2[(/*BODY_IINERTIA*/1)]);
 
         return false;
-    };
+    }
 
     _iteratePos()
     {
@@ -4626,7 +4624,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         }
 
         return false;
-    };
+    }
 
     // params = {
     //   bodyA, bodyB,
@@ -4655,8 +4653,8 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         p.bodyB = params.bodyB;
 
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 //
@@ -4774,7 +4772,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         data[(/*POINT_JMAX*/18)]     = (data[(/*JOINT_MAX_FORCE*/2)] * deltaTime);
 
         return false;
-    };
+    }
 
     _warmStart()
     {
@@ -4798,7 +4796,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (((data[(/*POINT_RANCHOR2*/11)]     * jy) -
                                      (data[(/*POINT_RANCHOR2*/11) + 1] * jx)) *
                                     b2[(/*BODY_IINERTIA*/1)]);
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -4832,7 +4830,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         }
 
         return dst;
-    };
+    }
 
     _iterateVel()
     {
@@ -4900,7 +4898,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (((rx2 * jy) - (ry2 * jx)) * b2[(/*BODY_IINERTIA*/1)]);
 
         return false;
-    };
+    }
 
     _iteratePos()
     {
@@ -5014,7 +5012,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         }
 
         return false;
-    };
+    }
 
     // params = {
     //   bodyA, bodyB,
@@ -5041,8 +5039,8 @@ class Physics2DPointConstraint extends Physics2DConstraint
         p.bodyB = params.bodyB;
 
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 //
@@ -5087,22 +5085,22 @@ class Physics2DShape
     // _validate()
     // {
     //     debug.abort("abstact method");
-    // };
+    // }
 
     // Abstract methods (have to have a body unfortunately)
 
     computeArea(): number
     {
         debug.abort("abstract method"); return 0;
-    };
+    }
     computeMasslessInertia(): number
     {
         debug.abort("abstract method"); return 0;
-    };
+    }
     computeCenterOfMass: { (dst?: any): any; }; // floatArray
     // {
     //     debug.abort("abstract method"); return 0;
-    // };
+    // }
     translate(translation, skip: bool)
     {
         debug.abort("abstract method");
@@ -5111,18 +5109,18 @@ class Physics2DShape
             skipAABB?: bool)
     {
         debug.abort("abstract method");
-    };
+    }
     clone(): Physics2DShape
     {
         debug.abort("abstract method"); return undefined;
-    };
+    }
 
     // Methods
 
     getGroup()
     {
         return this._group;
-    };
+    }
 
     setGroup(group)
     {
@@ -5131,12 +5129,12 @@ class Physics2DShape
         {
             this.body.wake(true);
         }
-    };
+    }
 
     getMask()
     {
         return this._mask;
-    };
+    }
 
     setMask(mask)
     {
@@ -5145,12 +5143,12 @@ class Physics2DShape
         {
             this.body.wake(true);
         }
-    };
+    }
 
     getMaterial(/* material */)
     {
         return this._material;
-    };
+    }
 
     setMaterial(material)
     {
@@ -5170,7 +5168,7 @@ class Physics2DShape
                 arbiters[j]._invalidate();
             }
         }
-    };
+    }
 
     copyCommon(from, to)
     {
@@ -5200,7 +5198,7 @@ class Physics2DShape
 
         to._onPreSolve = [];
         to._events = []; // onBegin, onEnd, onProgress combined.
-    };
+    }
 
     init(shape, params)
     {
@@ -5218,7 +5216,7 @@ class Physics2DShape
 
         shape._onPreSolve = [];
         shape._events = []; // onBegin, onEnd, onProgress combined.
-    };
+    }
 
     // =============================================================================
 
@@ -5239,7 +5237,7 @@ class Physics2DShape
         }
 
         return -1;
-    };
+    }
 
     addEventListener(eventType, callback, callbackMask?, deterministic?)
     {
@@ -5291,7 +5289,7 @@ class Physics2DShape
         }
 
         return true;
-    };
+    }
 
     removeEventListener(eventType, callback, callbackMask)
     {
@@ -5330,8 +5328,8 @@ class Physics2DShape
         }
 
         return true;
-    };
-};
+    }
+}
 
 // =========================================================================
 
@@ -5370,7 +5368,7 @@ class Physics2DCircle extends Physics2DShape
     {
         var r = this._data[(/*CIRCLE_RADIUS*/6)];
         return (Math.PI * r * r);
-    };
+    }
 
     computeMasslessInertia()
     {
@@ -5379,14 +5377,14 @@ class Physics2DCircle extends Physics2DShape
         var x = data[(/*CIRCLE_LOCAL*/7)];
         var y = data[(/*CIRCLE_LOCAL*/7) + 1];
         return ((0.5 * r * r) + ((x * x) + (y * y)));
-    };
+    }
 
     // ==============================================================
 
     getRadius()
     {
         return this._data[(/*CIRCLE_RADIUS*/6)];
-    };
+    }
 
     setRadius(radius)
     {
@@ -5406,7 +5404,7 @@ class Physics2DCircle extends Physics2DShape
                 body._invalidate();
             }
         }
-    };
+    }
 
     // ==============================================================
 
@@ -5420,7 +5418,7 @@ class Physics2DCircle extends Physics2DShape
         dst[0] = data[(/*CIRCLE_LOCAL*/7)];
         dst[1] = data[(/*CIRCLE_LOCAL*/7) + 1];
         return dst;
-    };
+    }
 
     setOrigin(origin)
     {
@@ -5444,7 +5442,7 @@ class Physics2DCircle extends Physics2DShape
                 body._invalidate();
             }
         }
-    };
+    }
 
     // ==============================================================
 
@@ -5453,7 +5451,7 @@ class Physics2DCircle extends Physics2DShape
         var c = new Physics2DCircle();
         Physics2DShape.prototype.copyCommon(this, c);
         return c;
-    };
+    }
 
     // ==============================================================
 
@@ -5480,7 +5478,7 @@ class Physics2DCircle extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     translate(translation, skip)
     {
@@ -5499,7 +5497,7 @@ class Physics2DCircle extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     rotate(rotation)
     {
@@ -5522,7 +5520,7 @@ class Physics2DCircle extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     transform(matrix)
     {
@@ -5558,7 +5556,7 @@ class Physics2DCircle extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     // ==============================================================
 
@@ -5578,7 +5576,7 @@ class Physics2DCircle extends Physics2DShape
             data[(/*SHAPE_AABB*/0) + 2] = (ox + radius);
             data[(/*SHAPE_AABB*/0) + 3] = (oy + radius);
         }
-    };
+    }
 
     _validate() : void
     {
@@ -5590,7 +5588,7 @@ class Physics2DCircle extends Physics2DShape
         var olength = Math.sqrt((originX * originX) + (originY * originY));
         data[(/*SHAPE_SWEEP_RADIUS*/4)] = (radius + olength);
         data[(/*SHAPE_SWEEP_FACTOR*/5)] = (data[(/*SHAPE_SWEEP_RADIUS*/4)] - Math.max(radius - olength, 0));
-    };
+    }
 
     computeCenterOfMass = Physics2DCircle.prototype.getOrigin;
 
@@ -5616,8 +5614,8 @@ class Physics2DCircle extends Physics2DShape
         c._validate();
 
         return c;
-    };
-};
+    }
+}
 
 // =========================================================================
 
@@ -5681,7 +5679,7 @@ class Physics2DPolygon extends Physics2DShape
                            (data[index + (/*POLY_LOCAL*/0) + 1] * data[next + (/*POLY_LOCAL*/0)]));
         }
         return (doubleArea * 0.5);
-    };
+    }
 
     computeMasslessInertia() : number
     {
@@ -5711,7 +5709,7 @@ class Physics2DPolygon extends Physics2DShape
         }
 
         return (s1 / (6 * s2));
-    };
+    }
 
     // Workaround for TS lack of support for abstract methods
     private _computeCenterOfMass(dst?)
@@ -5751,7 +5749,7 @@ class Physics2DPolygon extends Physics2DShape
         dst[1] = (cy * rec);
 
         return dst;
-    };
+    }
     computeCenterOfMass = Physics2DPolygon.prototype._computeCenterOfMass;
 
     // ===========================================================================
@@ -5769,7 +5767,7 @@ class Physics2DPolygon extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     // ===========================================================================
 
@@ -5778,7 +5776,7 @@ class Physics2DPolygon extends Physics2DShape
         var c = new Physics2DPolygon();
         Physics2DShape.prototype.copyCommon(this, c);
         return c;
-    };
+    }
 
     // ===========================================================================
 
@@ -5849,7 +5847,7 @@ class Physics2DPolygon extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     translate(translation, skip)
     {
@@ -5895,7 +5893,7 @@ class Physics2DPolygon extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     rotate(rotation)
     {
@@ -5932,7 +5930,7 @@ class Physics2DPolygon extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     transform(matrix)
     {
@@ -6012,7 +6010,7 @@ class Physics2DPolygon extends Physics2DShape
         {
             body._invalidate();
         }
-    };
+    }
 
     // ===========================================================================
 
@@ -6093,7 +6091,7 @@ class Physics2DPolygon extends Physics2DShape
             data[(/*SHAPE_AABB*/0) + 2] = maxX;
             data[(/*SHAPE_AABB*/0) + 3] = maxY;
         }
-    };
+    }
 
     _validate(vertices)
     {
@@ -6149,7 +6147,7 @@ class Physics2DPolygon extends Physics2DShape
 
         data[(/*SHAPE_SWEEP_RADIUS*/4)] = Math.sqrt(radius);
         data[(/*SHAPE_SWEEP_FACTOR*/5)] = (data[(/*SHAPE_SWEEP_RADIUS*/4)] - Math.max(minProj, 0));
-    };
+    }
 
     // params = {
     //      vertices : [v2, v2, ...]  (CLOCKWISE)
@@ -6164,8 +6162,8 @@ class Physics2DPolygon extends Physics2DShape
 
         p._validate(inVertices || params.vertices);
         return p;
-    };
-};
+    }
+}
 
 // =========================================================================
 
@@ -6237,7 +6235,7 @@ class Physics2DRigidBody
     isDynamic()
     {
         return (this._type === (/*TYPE_DYNAMIC*/0));
-    };
+    }
 
     setAsDynamic()
     {
@@ -6253,12 +6251,12 @@ class Physics2DRigidBody
         var inertia = data[(/*BODY_INERTIA*/24)];
         data[(/*BODY_IMASS*/0)]    = (mass    === Number.POSITIVE_INFINITY ? 0 : (1 / mass));
         data[(/*BODY_IINERTIA*/1)] = (inertia === Number.POSITIVE_INFINITY ? 0 : (1 / inertia));
-    };
+    }
 
     isStatic()
     {
         return (this._type === (/*TYPE_STATIC*/2));
-    };
+    }
 
     setAsStatic()
     {
@@ -6272,12 +6270,12 @@ class Physics2DRigidBody
         data[(/*BODY_IMASS*/0)] = data[(/*BODY_IINERTIA*/1)] = 0;
         // Static body cannot have velocity
         data[(/*BODY_VEL*/7)] = data[(/*BODY_VEL*/7) + 1] = data[(/*BODY_VEL*/7) + 2] = 0;
-    };
+    }
 
     isKinematic()
     {
         return (this._type === (/*TYPE_KINEMATIC*/1));
-    };
+    }
 
     setAsKinematic()
     {
@@ -6289,7 +6287,7 @@ class Physics2DRigidBody
         this._setTypeValue((/*TYPE_KINEMATIC*/1));
         var data = this._data;
         data[(/*BODY_IMASS*/0)] = data[(/*BODY_IINERTIA*/1)] = 0;
-    };
+    }
 
     _setTypeValue(newType)
     {
@@ -6305,7 +6303,7 @@ class Physics2DRigidBody
         }
 
         this.world._transmitBodyType(this, newType);
-    };
+    }
 
     // ===============================================================================
 
@@ -6337,7 +6335,7 @@ class Physics2DRigidBody
         data[(/*BODY_VEL*/7) + 1] += (iy * im);
         data[(/*BODY_VEL*/7) + 2] += (((x * iy) - (y * ix)) * data[(/*BODY_IINERTIA*/1)]);
         this.wake(true);
-    };
+    }
 
     setVelocityFromPosition(newPosition, newRotation, deltaTime)
     {
@@ -6352,7 +6350,7 @@ class Physics2DRigidBody
         data[(/*BODY_VEL*/7) + 1] = ((newPosition[1] - data[(/*BODY_POS*/2) + 1]) * idt);
         data[(/*BODY_VEL*/7) + 2] = ((newRotation    - data[(/*BODY_POS*/2) + 2]) * idt);
         this.wake(true);
-    };
+    }
 
     // ===============================================================================
 
@@ -6370,7 +6368,7 @@ class Physics2DRigidBody
         dst[0] = ((cos * x) + (sin * y));
         dst[1] = ((cos * y) - (sin * x));
         return dst;
-    };
+    }
 
     transformWorldVectorToLocal(src, dst)
     {
@@ -6386,7 +6384,7 @@ class Physics2DRigidBody
         dst[0] = ((cos * x) + (sin * y));
         dst[1] = ((cos * y) - (sin * x));
         return dst;
-    };
+    }
 
     transformLocalPointToWorld(src, dst)
     {
@@ -6402,7 +6400,7 @@ class Physics2DRigidBody
         dst[0] = ((cos * x) - (sin * y) + data[(/*BODY_POS*/2)]);
         dst[1] = ((sin * x) + (cos * y) + data[(/*BODY_POS*/2) + 1]);
         return dst;
-    };
+    }
 
     transformLocalVectorToWorld(src, dst)
     {
@@ -6418,7 +6416,7 @@ class Physics2DRigidBody
         dst[0] = ((cos * x) - (sin * y));
         dst[1] = ((sin * x) + (cos * y));
         return dst;
-    };
+    }
 
     // ===============================================================================
 
@@ -6433,7 +6431,7 @@ class Physics2DRigidBody
         dst[0] = data[(/*BODY_POS*/2)];
         dst[1] = data[(/*BODY_POS*/2) + 1];
         return dst;
-    };
+    }
 
     setPosition(position)
     {
@@ -6452,12 +6450,12 @@ class Physics2DRigidBody
             this._invalidated = true;
             this.wake(true);
         }
-    };
+    }
 
     getRotation()
     {
         return this._data[(/*BODY_POS*/2) + 2];
-    };
+    }
 
     setRotation(rotation)
     {
@@ -6475,7 +6473,7 @@ class Physics2DRigidBody
             this._invalidated = true;
             this.wake(true);
         }
-    };
+    }
 
     // ===============================================================================
 
@@ -6490,7 +6488,7 @@ class Physics2DRigidBody
         dst[0] = data[(/*BODY_VEL*/7)];
         dst[1] = data[(/*BODY_VEL*/7) + 1];
         return dst;
-    };
+    }
 
     setVelocity(velocity)
     {
@@ -6509,12 +6507,12 @@ class Physics2DRigidBody
             data[(/*BODY_VEL*/7) + 1] = newY;
             this.wake(true);
         }
-    };
+    }
 
     getAngularVelocity()
     {
         return this._data[(/*BODY_VEL*/7) + 2];
-    };
+    }
 
     setAngularVelocity(angularVelocity)
     {
@@ -6530,7 +6528,7 @@ class Physics2DRigidBody
             data[(/*BODY_VEL*/7) + 2] = angularVelocity;
             this.wake(true);
         }
-    };
+    }
 
     // ===============================================================================
 
@@ -6545,7 +6543,7 @@ class Physics2DRigidBody
         dst[0] = data[(/*BODY_FORCE*/10)];
         dst[1] = data[(/*BODY_FORCE*/10) + 1];
         return dst;
-    };
+    }
 
     setForce(force)
     {
@@ -6561,12 +6559,12 @@ class Physics2DRigidBody
             // make a decision
             this.wake(true);
         }
-    };
+    }
 
     getTorque()
     {
         return this._data[(/*BODY_FORCE*/10) + 2];
-    };
+    }
 
     setTorque(torque)
     {
@@ -6579,7 +6577,7 @@ class Physics2DRigidBody
             // make a decision
             this.wake(true);
         }
-    };
+    }
 
     // ===============================================================================
 
@@ -6594,7 +6592,7 @@ class Physics2DRigidBody
         dst[0] = data[(/*BODY_SURFACE_VEL*/13)];
         dst[1] = data[(/*BODY_SURFACE_VEL*/13) + 1];
         return dst;
-    };
+    }
 
     setSurfaceVelocity(surfaceVelocity)
     {
@@ -6602,19 +6600,19 @@ class Physics2DRigidBody
         data[(/*BODY_SURFACE_VEL*/13)]     = surfaceVelocity[0];
         data[(/*BODY_SURFACE_VEL*/13) + 1] = surfaceVelocity[1];
         this.wake(true);
-    };
+    }
 
     // ===============================================================================
 
     getMass()
     {
         return this._data[(/*BODY_MASS*/23)];
-    };
+    }
 
     getInertia()
     {
         return this._data[(/*BODY_INERTIA*/24)];
-    };
+    }
 
     setMass(mass)
     {
@@ -6626,7 +6624,7 @@ class Physics2DRigidBody
             this._customMass = true;
             this._invalidateMassInertia();
         }
-    };
+    }
 
     setMassFromShapes()
     {
@@ -6636,7 +6634,7 @@ class Physics2DRigidBody
             this._data[(/*BODY_MASS*/23)] = this.computeMassFromShapes();
             this._invalidateMassInertia();
         }
-    };
+    }
 
     setInertia(inertia)
     {
@@ -6648,7 +6646,7 @@ class Physics2DRigidBody
             this._customInertia = true;
             this._invalidateMassInertia();
         }
-    };
+    }
 
     setInertiaFromShapes()
     {
@@ -6658,7 +6656,7 @@ class Physics2DRigidBody
             this._data[(/*BODY_INERTIA*/24)] = this.computeInertiaFromShapes();
             this._invalidateMassInertia();
         }
-    };
+    }
 
     _invalidateMassInertia()
     {
@@ -6674,14 +6672,14 @@ class Physics2DRigidBody
         // We wake body, even if static/kinematic incase user has some crazy
         // callback which queries mass/inertia to make decision
         this.wake(true);
-    };
+    }
 
     // ===============================================================================
 
     getLinearDrag()
     {
         return (1 - Math.exp(this._data[(/*BODY_LIN_DRAG*/21)]));
-    };
+    }
 
     setLinearDrag(linearDrag)
     {
@@ -6689,12 +6687,12 @@ class Physics2DRigidBody
         // We wake body, even if static/kinematic incase user has some crazy
         // callback which queries mass/inertia to make decision
         this.wake(true);
-    };
+    }
 
     getAngularDrag()
     {
         return (1 - Math.exp(this._data[(/*BODY_ANG_DRAG*/22)]));
-    };
+    }
 
     setAngularDrag(angularDrag)
     {
@@ -6702,7 +6700,7 @@ class Physics2DRigidBody
         // We wake body, even if static/kinematic incase user has some crazy
         // callback which queries mass/inertia to make decision
         this.wake(true);
-    };
+    }
 
     // ===============================================================================
 
@@ -6738,7 +6736,7 @@ class Physics2DRigidBody
         this._invalidate();
 
         return true;
-    };
+    }
 
     removeShape(shape)
     {
@@ -6782,7 +6780,7 @@ class Physics2DRigidBody
         this._invalidate();
 
         return true;
-    };
+    }
 
     // ===============================================================================
 
@@ -6798,7 +6796,7 @@ class Physics2DRigidBody
             mass += shape._material._data[(/*MAT_DENSITY*/4)] * shape.computeArea();
         }
         return mass;
-    };
+    }
 
     computeInertiaFromShapes()
     {
@@ -6812,7 +6810,7 @@ class Physics2DRigidBody
             inertia += shape._material._data[(/*MAT_DENSITY*/4)] * shape.computeMasslessInertia() * shape.computeArea();
         }
         return inertia;
-    };
+    }
 
     // ===============================================================================
 
@@ -6825,7 +6823,7 @@ class Physics2DRigidBody
         }
 
         this.world._wakeBody(this, !automated);
-    };
+    }
 
     sleep()
     {
@@ -6836,7 +6834,7 @@ class Physics2DRigidBody
         }
 
         this.world._forceSleepBody(this);
-    };
+    }
 
     // ===============================================================================
 
@@ -6867,7 +6865,7 @@ class Physics2DRigidBody
         dst[0] = (comX * imass);
         dst[1] = (comY * imass);
         return dst;
-    };
+    }
 
     computeWorldBounds(dst)
     {
@@ -6915,7 +6913,7 @@ class Physics2DRigidBody
         dst[2] = maxX;
         dst[3] = maxY;
         return dst;
-    };
+    }
 
     // ===============================================================================
 
@@ -6938,7 +6936,7 @@ class Physics2DRigidBody
             shapes[i].translate(negCOM, true);
         }
         this._invalidate();
-    };
+    }
 
     // ===============================================================================
 
@@ -6963,7 +6961,7 @@ class Physics2DRigidBody
         }
 
         this.wake(true);
-    };
+    }
 
     _update()
     {
@@ -6984,7 +6982,7 @@ class Physics2DRigidBody
                 );
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -7043,7 +7041,7 @@ class Physics2DRigidBody
                 return ((this._wakeTime + Physics2DConfig.SLEEP_DELAY) < timeStamp);
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -7085,7 +7083,7 @@ class Physics2DRigidBody
             data[(/*BODY_AXIS*/5) + 1] = nSin;
         }
         return rotation;
-    };
+    }
 
     // Integrate to deltaTime from current sweepTime (back or forth).
     _sweepIntegrate(deltaTime)
@@ -7104,7 +7102,7 @@ class Physics2DRigidBody
                 this._deltaRotation(data[(/*BODY_SWEEP_ANGVEL*/20)] * delta);
             }
         }
-    };
+    }
 
     integrate(deltaTime)
     {
@@ -7120,7 +7118,7 @@ class Physics2DRigidBody
         data[(/*BODY_SWEEP_TIME*/18)] = 0;
         this._invalidated = true;
         this.wake(true);
-    };
+    }
 
     // ==========================================================
 
@@ -7146,7 +7144,7 @@ class Physics2DRigidBody
         this.wake();
 
         return true;
-    };
+    }
 
     removeEventListener(eventType, callback)
     {
@@ -7171,7 +7169,7 @@ class Physics2DRigidBody
         this.wake();
 
         return true;
-    };
+    }
 
     // params = {
     //      shapes : [...],
@@ -7298,8 +7296,8 @@ class Physics2DRigidBody
         b._onSleep = [];
 
         return b;
-    };
-};
+    }
+}
 
 // =====================================================================
 
@@ -7323,7 +7321,7 @@ interface Physics2DCallback
     arbiter: Physics2DArbiter;
 
     next: Physics2DCallback;
-};
+}
 declare var Physics2DCallback :
 {
     new(): Physics2DCallback;
@@ -7332,7 +7330,7 @@ declare var Physics2DCallback :
     pool: any;
     allocate: { (): Physics2DCallback; };
     deallocate: { (callback: Physics2DCallback): void; };
-};
+}
 
 // EVENT TYPES
 // !! Must use regexp to change these globally (in all files) !!
@@ -7416,7 +7414,7 @@ class Physics2DIsland
         this.sleeping = false;
         this.wakeTime = 0;
         this.next = null;
-    };
+    }
 
     static pool : Physics2DIsland = null;
 
@@ -7433,15 +7431,15 @@ class Physics2DIsland
         {
             return (new Physics2DIsland());
         }
-    };
+    }
 
     static deallocate(island)
     {
         island.next = Physics2DIsland.pool;
         Physics2DIsland.pool = island;
         island.wakeTime = 0;
-    };
-};
+    }
+}
 
 // =====================================================================
 
@@ -7472,7 +7470,7 @@ interface Physics2DTOIEvent
     staticType: bool;
     kinematic: bool;
     _data: any; // Physics2DDevice.prototype.floatArray((/*TOI_DATA_SIZE*/7));
-};
+}
 declare var Physics2DTOIEvent :
 {
     new(): Physics2DTOIEvent;
@@ -7555,15 +7553,15 @@ class Physics2DBoxTreeBroadphaseHandle
         {
             return new Physics2DBoxTreeBroadphaseHandle();
         }
-    };
+    }
 
     static deallocate(handle: Physics2DBoxTreeBroadphaseHandle)
     {
         this.pool.push(handle);
 
         handle.data = null;
-    };
-};
+    }
+}
 
 class Physics2DBoxTreeBroadphase
 {
@@ -7592,7 +7590,7 @@ class Physics2DBoxTreeBroadphase
         {
             lambda.call(thisObject, overlappingNodes[n], box);
         }
-    };
+    }
 
     insert(data, box, isStatic)
     {
@@ -7610,7 +7608,7 @@ class Physics2DBoxTreeBroadphase
         }
 
         return handle;
-    };
+    }
 
     update(handle, box, isStatic?: bool)
     {
@@ -7640,7 +7638,7 @@ class Physics2DBoxTreeBroadphase
                 this.dynamicTree.update(handle, box);
             }
         }
-    };
+    }
 
     remove(handle)
     {
@@ -7654,13 +7652,13 @@ class Physics2DBoxTreeBroadphase
         }
 
         Physics2DBoxTreeBroadphaseHandle.deallocate(handle);
-    };
+    }
 
     clear(callback, thisObject)
     {
         this._clearTree(this.staticTree, callback, thisObject);
         this._clearTree(this.dynamicTree, callback, thisObject);
-    };
+    }
 
     _clearTree(tree, callback, thisObject)
     {
@@ -7680,13 +7678,13 @@ class Physics2DBoxTreeBroadphase
             }
         }
         tree.clear();
-    };
+    }
 
     _validate()
     {
         this.staticTree.finalize();
         this.dynamicTree.finalize();
-    };
+    }
 
     perform(lambda, thisObject)
     {
@@ -7722,13 +7720,13 @@ class Physics2DBoxTreeBroadphase
         {
             lambda.call(thisObject, overlappingNodes[n], overlappingNodes[n + 1]);
         }
-    };
+    }
 
     static create()
     {
         return new Physics2DBoxTreeBroadphase();
-    };
-};
+    }
+}
 
 // =====================================================================
 
@@ -7768,7 +7766,7 @@ class Physics2DSweepAndPruneHandle
             ret._next = null;
             return ret;
         }
-    };
+    }
 
     static deallocate(handle)
     {
@@ -7777,8 +7775,8 @@ class Physics2DSweepAndPruneHandle
         this.pool = handle;
 
         handle.data = null;
-    };
-};
+    }
+}
 
 class Physics2DSweepAndPrune
 {
@@ -7820,7 +7818,7 @@ class Physics2DSweepAndPrune
             }
             d1 = d1._next;
         }
-    };
+    }
 
     insert(data, aabb, isStatic) : Physics2DSweepAndPruneHandle
     {
@@ -7844,7 +7842,7 @@ class Physics2DSweepAndPrune
         this._list = handle;
 
         return handle;
-    };
+    }
 
     update(handle, aabb, isStatic)
     {
@@ -7859,7 +7857,7 @@ class Physics2DSweepAndPrune
         {
             handle.isStatic = isStatic;
         }
-    };
+    }
 
     remove(handle)
     {
@@ -7878,7 +7876,7 @@ class Physics2DSweepAndPrune
         }
 
         Physics2DSweepAndPruneHandle.deallocate(handle);
-    };
+    }
 
     clear(callback, thisObject)
     {
@@ -7894,7 +7892,7 @@ class Physics2DSweepAndPrune
             handle = next;
         }
         this._list = null;
-    };
+    }
 
     _validate()
     {
@@ -7949,7 +7947,7 @@ class Physics2DSweepAndPrune
 
             a = next;
         }
-    };
+    }
 
     perform(lambda, thisObject)
     {
@@ -7991,15 +7989,15 @@ class Physics2DSweepAndPrune
 
             d1 = d1._next;
         }
-    };
+    }
 
     static create() : Physics2DSweepAndPrune
     {
         var b = new Physics2DSweepAndPrune();
         b._list = null;
         return b;
-    };
-};
+    }
+}
 
 // =====================================================================
 
@@ -8016,7 +8014,7 @@ interface Physics2DContact
     _next: Physics2DContact;
     active: bool;
     virtual: bool;
-};
+}
 declare var Physics2DContact :
 {
     new(): Physics2DContact;
@@ -8278,7 +8276,7 @@ class Physics2DArbiter
         this._position2Contact = false;
         this._contact1 = this._contact2 = null;
         this._faceType = 0; // FACE_CIRCLE/FACE_1/FACE_2
-    };
+    }
 
     static version = 1;
 
@@ -8299,7 +8297,7 @@ class Physics2DArbiter
             dst[1] = data[(/*ARB_NORMAL*/4) + 1];
         }
         return dst;
-    };
+    }
 
     getRollingImpulse(): number
     {
@@ -8312,7 +8310,7 @@ class Physics2DArbiter
         {
             return this._data[(/*ARB_JRACC*/16)];
         }
-    };
+    }
 
     // =========================================================
 
@@ -8325,7 +8323,7 @@ class Physics2DArbiter
 
         this._validate();
         return this._data[(/*ARB_ELASTICITY*/2)];
-    };
+    }
 
     getDynamicFriction()
     {
@@ -8336,7 +8334,7 @@ class Physics2DArbiter
 
         this._validate();
         return this._data[(/*ARB_DYN_FRIC*/0)];
-    };
+    }
 
     getStaticFriction()
     {
@@ -8347,7 +8345,7 @@ class Physics2DArbiter
 
         this._validate();
         return this._data[(/*ARB_STATIC_FRIC*/1)];
-    };
+    }
 
     getRollingFriction()
     {
@@ -8358,7 +8356,7 @@ class Physics2DArbiter
 
         this._validate();
         return this._data[(/*ARB_ROLLING_FRIC*/3)];
-    };
+    }
 
     /*jshint bitwise: false*/
     setElasticity(elasticity)
@@ -8371,7 +8369,7 @@ class Physics2DArbiter
         this._data[(/*ARB_ELASTICITY*/2)] = elasticity;
         this._userdef |= (1 << (/*ARB_ELASTICITY*/2));
         this._invalidate(true);
-    };
+    }
 
     setDynamicFriction(dynamicFriction)
     {
@@ -8383,7 +8381,7 @@ class Physics2DArbiter
         this._data[(/*ARB_DYN_FRIC*/0)] = dynamicFriction;
         this._userdef |= (1 << (/*ARB_DYN_FRIC*/0));
         this._invalidate(true);
-    };
+    }
 
     setStaticFriction(staticFriction)
     {
@@ -8395,7 +8393,7 @@ class Physics2DArbiter
         this._data[(/*ARB_STAT_FRIC*/1)] = staticFriction;
         this._userdef |= (1 << (/*ARB_STAT_FRIC*/1));
         this._invalidate(true);
-    };
+    }
 
     setRollingFriction(rollingFriction)
     {
@@ -8407,7 +8405,7 @@ class Physics2DArbiter
         this._data[(/*ARB_ROLLING_FRIC*/3)] = rollingFriction;
         this._userdef |= (1 << (/*ARB_ROLLING_FRIC*/3));
         this._invalidate(true);
-    };
+    }
 
     setElasticityFromShapes()
     {
@@ -8418,7 +8416,7 @@ class Physics2DArbiter
 
         this._userdef &= ~(1 << (/*ARB_ELASTICITY*/2));
         this._invalidate(true);
-    };
+    }
 
     setDynamicFrictionFromShapes()
     {
@@ -8429,7 +8427,7 @@ class Physics2DArbiter
 
         this._userdef &= ~(1 << (/*ARB_DYN_FRIC*/0));
         this._invalidate(true);
-    };
+    }
 
     setStaticFrictionFromShapes()
     {
@@ -8440,7 +8438,7 @@ class Physics2DArbiter
 
         this._userdef &= ~(1 << (/*ARB_STAT_FRIC*/1));
         this._invalidate(true);
-    };
+    }
 
     setRollingFrictionFromShapes()
     {
@@ -8451,7 +8449,7 @@ class Physics2DArbiter
 
         this._userdef &= ~(1 << (/*ARB_ROLLING_FRIC*/3));
         this._invalidate(true);
-    };
+    }
     /*jshint bitwise: true*/
 
     // =========================================================
@@ -8467,7 +8465,7 @@ class Physics2DArbiter
         {
             return ((this._state & (/*STATE_ACCEPT*/1)) !== 0);
         }
-    };
+    }
 
     isStatePersistent(): bool
     {
@@ -8479,7 +8477,7 @@ class Physics2DArbiter
         {
             return ((this._state & (/*STATE_ALWAYS*/2)) !== 0);
         }
-    };
+    }
 
     setAcceptedState(accepted)
     {
@@ -8497,7 +8495,7 @@ class Physics2DArbiter
             this._state &= ~(/*STATE_ACCEPT*/1);
         }
         this._invalidate(true);
-    };
+    }
 
     setPersistentState(persistent)
     {
@@ -8515,7 +8513,7 @@ class Physics2DArbiter
             this._state &= ~(/*STATE_ALWAYS*/2);
         }
         this._invalidate(true);
-    };
+    }
     /*jshint bitwise: true*/
 
     // =========================================================
@@ -8549,7 +8547,7 @@ class Physics2DArbiter
             arbiters[index] = arbiters[arbiters.length - 1];
             arbiters.pop();
         }
-    };
+    }
 
     _assign(s1, s2)
     {
@@ -8565,7 +8563,7 @@ class Physics2DArbiter
         this.sleeping = false;
 
         this._invalidate();
-    };
+    }
 
     _retire()
     {
@@ -8583,7 +8581,7 @@ class Physics2DArbiter
             Physics2DContact.deallocate(contact);
         }
         this._contact1 = this._contact2 = null;
-    };
+    }
 
     // =====================================================================
 
@@ -8595,7 +8593,7 @@ class Physics2DArbiter
             this.shapeA.body.wake();
             this.shapeB.body.wake();
         }
-    };
+    }
 
     _validate()
     {
@@ -8649,7 +8647,7 @@ class Physics2DArbiter
             data[(/*ARB_ROLLING_FRIC*/3)] = sqrt(mA[(/*MAT_ROLLING*/3)] * mB[(/*MAT_ROLLING*/3)]);
         }
         /*jshint bitwise: true*/
-    };
+    }
 
     // =====================================================================
 
@@ -8715,7 +8713,7 @@ class Physics2DArbiter
         data[(/*ARB_NORMAL*/4) + 1] = ny;
 
         return contact;
-    };
+    }
 
     _cleanContacts(timeStamp): bool
     {
@@ -8771,7 +8769,7 @@ class Physics2DArbiter
         }
 
         return !fst;
-    };
+    }
 
     // =====================================================================
 
@@ -8948,7 +8946,7 @@ class Physics2DArbiter
         }
 
         return true;
-    };
+    }
 
     // =====================================================================
 
@@ -9186,7 +9184,7 @@ class Physics2DArbiter
         data2[(/*BODY_VEL*/7)]     = vx2;
         data2[(/*BODY_VEL*/7) + 1] = vy2;
         data2[(/*BODY_VEL*/7) + 2] = vw2;
-    };
+    }
 
     // =====================================================================
 
@@ -9324,7 +9322,7 @@ class Physics2DArbiter
                 cdata2[(/*CON_DIST*/2)]    = err;
             }
         }
-    };
+    }
 
     _iteratePosition()
     {
@@ -9488,7 +9486,7 @@ class Physics2DArbiter
         data1[(/*BODY_POS*/2) + 1] = py1;
         data2[(/*BODY_POS*/2)]     = px2;
         data2[(/*BODY_POS*/2) + 1] = py2;
-    };
+    }
 
     // =====================================================================
 
@@ -9540,7 +9538,7 @@ class Physics2DArbiter
             data1[(/*BODY_VEL*/7) + 2] -= (jn * ii1);
             data2[(/*BODY_VEL*/7) + 2] += (jn * ii2);
         }
-    };
+    }
 
     getImpulseForBody(body, dst)
     {
@@ -9607,7 +9605,7 @@ class Physics2DArbiter
         dst[1] = sumY;
         dst[2] = sumW;
         return dst;
-    };
+    }
 
     static pool : Physics2DArbiter = null;
     static allocate(): Physics2DArbiter
@@ -9623,15 +9621,15 @@ class Physics2DArbiter
             arb._next = null;
             return arb;
         }
-    };
+    }
     static deallocate(arb)
     {
         arb._next = this.pool;
         this.pool = arb;
 
         arb._userdef = 0;
-    };
-};
+    }
+}
 
 // =========================================================================
 
@@ -9644,19 +9642,19 @@ interface Physics2DSampler
 
     rectangleShape?: Physics2DShape;
     circleShape?: Physics2DShape;
-};
+}
 
 interface Physics2DRay
 {
     origin: any; // v3
     direction: any; // v3
     maxFactor: number;
-};
+}
 
 interface Physics2DCastCallback
 {
     (userThis: any, ray: Physics2DRay, result: Physics2DCastResult): bool;
-};
+}
 
 interface Physics2DRayCast
 {
@@ -9669,7 +9667,7 @@ interface Physics2DRayCast
     noInner : bool;
     normal : any; // floatArray
     sample(handle): void;
-};
+}
 
 interface Physics2DCastResult
 {
@@ -9677,7 +9675,7 @@ interface Physics2DCastResult
     hitNormal : any; // v3
     hitPoint  : any; // v3
     factor    : number;
-};
+}
 
 interface Physics2DConvexCast
 {
@@ -9755,7 +9753,7 @@ class Physics2DWorld
         dst[0] = this._gravityX;
         dst[1] = this._gravityY;
         return dst;
-    };
+    }
 
     setGravity(gravity)
     {
@@ -9774,7 +9772,7 @@ class Physics2DWorld
                 this._wakeBody(bodies[i]);
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -9785,7 +9783,7 @@ class Physics2DWorld
 
         var isStaticHandle = ((body._type === (/*TYPE_STATIC*/2)) || body.sleeping);
         shape._bphaseHandle = this.broadphase.insert(shape, shape._data, isStaticHandle);
-    };
+    }
 
     // precon: body was woken before calling this method.
     //         therefore all arbiters are in the world as
@@ -9820,7 +9818,7 @@ class Physics2DWorld
                 this._pushInteractionEvents((/*EVENT_END*/3), arb);
             }
         }
-    };
+    }
 
     // Call on constraint when:
     //  A)  active (outside world), and then added to world
@@ -9836,7 +9834,7 @@ class Physics2DWorld
             constraint.sleeping = true; // force wake.
             this._wakeConstraint(constraint, true);
         }
-    };
+    }
 
     // Call on constraint when:
     //  A)  active (in world), and then removed from world
@@ -9849,7 +9847,7 @@ class Physics2DWorld
         var index = constraints.indexOf(constraint);
         constraints[index] = constraints[constraints.length - 1];
         constraints.pop();
-    };
+    }
 
     addConstraint(constraint): bool
     {
@@ -9869,7 +9867,7 @@ class Physics2DWorld
         }
 
         return true;
-    };
+    }
 
     removeConstraint(constraint): bool
     {
@@ -9892,7 +9890,7 @@ class Physics2DWorld
         constraint._outWorld();
 
         return true;
-    };
+    }
 
     addRigidBody(body): bool
     {
@@ -9931,7 +9929,7 @@ class Physics2DWorld
         }
 
         return true;
-    };
+    }
 
     removeRigidBody(body, noCallbacks?: bool): bool
     {
@@ -9980,7 +9978,7 @@ class Physics2DWorld
         }
 
         return true;
-    };
+    }
 
     // =====================================================================
 
@@ -10022,7 +10020,7 @@ class Physics2DWorld
 
         // _island, _toiEvents already empty
         // broadphase already clear by removal of shapes.
-    };
+    }
 
     _clearArbiters(arbiters)
     {
@@ -10035,19 +10033,19 @@ class Physics2DWorld
             arb._retire();
             Physics2DArbiter.deallocate(arb);
         }
-    };
+    }
 
     // =====================================================================
 
     shapePointQuery(point, store): number
     {
         return this._pointQuery(this._shapePointCallback, point, store);
-    };
+    }
 
     bodyPointQuery(point, store): number
     {
         return this._pointQuery(this._bodyPointCallback, point, store);
-    };
+    }
 
     _pointQuery(callback, point, store): number
     {
@@ -10059,19 +10057,19 @@ class Physics2DWorld
         callback.count = 0;
         this.broadphase.sample(rect, callback.sample, callback);
         return callback.count;
-    };
+    }
 
     // -------------------------------------
 
     shapeCircleQuery(center, radius, store): number
     {
         return this._circleQuery(this._shapeCircleCallback, center, radius, store);
-    };
+    }
 
     bodyCircleQuery(center, radius, store): number
     {
         return this._circleQuery(this._bodyCircleCallback, center, radius, store);
-    };
+    }
 
     _circleQuery(callback, center, radius, store): number
     {
@@ -10092,19 +10090,19 @@ class Physics2DWorld
         callback.count = 0;
         this.broadphase.sample(rect, callback.sample, callback);
         return callback.count;
-    };
+    }
 
     // -------------------------------------
 
     shapeRectangleQuery(point, store)
     {
         return this._rectangleQuery(this._shapeRectangleCallback, point, store);
-    };
+    }
 
     bodyRectangleQuery(point, store)
     {
         return this._rectangleQuery(this._bodyRectangleCallback, point, store);
-    };
+    }
 
     _rectangleQuery(callback, aabb, store)
     {
@@ -10127,7 +10125,7 @@ class Physics2DWorld
         callback.count = 0;
         this.broadphase.sample(aabb, callback.sample, callback);
         return callback.count;
-    };
+    }
 
     // =====================================================================
 
@@ -10176,7 +10174,7 @@ class Physics2DWorld
         {
             return null;
         }
-    };
+    }
 
     convexCast(shape, deltaTime, customCallback,
                thisObject) : Physics2DCastResult
@@ -10231,7 +10229,7 @@ class Physics2DWorld
         {
             return null;
         }
-    };
+    }
 
     // =====================================================================
 
@@ -10290,7 +10288,7 @@ class Physics2DWorld
         this._midStep = false;
         this._eventTime = (/*EVENT_TIME_PRE*/-1);
         this._doCallbacks();
-    };
+    }
 
     // =========================================================================
     // =========================================================================
@@ -10299,7 +10297,7 @@ class Physics2DWorld
     {
         this.broadphase.perform(this._discreteNarrowPhase, this);
         this._doDeferredWake(false);
-    };
+    }
 
     _doDeferredWake(continuous)
     {
@@ -10320,7 +10318,7 @@ class Physics2DWorld
             this._wakeBody(body, false, continuous);
             limit -= 1;
         }
-    };
+    }
 
     _collisionType(s1, s2, b1, b2)
     {
@@ -10358,7 +10356,7 @@ class Physics2DWorld
         }
 
         return collisionType;
-    };
+    }
 
     _discreteNarrowPhase(handleA, handleB, continuous)
     {
@@ -10543,7 +10541,7 @@ class Physics2DWorld
         }
 
         return arb;
-    };
+    }
 
     // =====================================================================
 
@@ -10731,7 +10729,7 @@ class Physics2DWorld
         // Arbiters were sleeping -> objects were sleeping -> data
         // is the same.
         this._doDeferredWake(true);
-    };
+    }
 
     _continuousNarrowPhase(handleA, handleB)
     {
@@ -10802,7 +10800,7 @@ class Physics2DWorld
                 toi.kinematic = kin;
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -10855,7 +10853,7 @@ class Physics2DWorld
                 x._islandRank += 1;
             }
         }
-    };
+    }
 
     __find(x)
     {
@@ -10880,7 +10878,7 @@ class Physics2DWorld
             stack = next;
         }
         return x;
-    };
+    }
 
     // =====================================================================
 
@@ -11047,7 +11045,7 @@ class Physics2DWorld
                 Physics2DIsland.deallocate(island);
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11055,7 +11053,7 @@ class Physics2DWorld
     {
         this._subSortArbiters(this.dynamicArbiters);
         this._subSortArbiters(this.staticArbiters);
-    };
+    }
 
     _subSortArbiters(arbiters)
     {
@@ -11091,7 +11089,7 @@ class Physics2DWorld
 
             arbiters[hole] = item;
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11108,7 +11106,7 @@ class Physics2DWorld
         {
             component._woken = true;
         }
-    };
+    }
 
     _pushCallbacks(thisObject, callbacks)
     {
@@ -11124,7 +11122,7 @@ class Physics2DWorld
             cb.index = i;
             cbs.push(cb);
         }
-    };
+    }
 
     _pushInteractionEvents(eventType, arb)
     {
@@ -11178,7 +11176,7 @@ class Physics2DWorld
                 cbs.push(cb);
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11207,7 +11205,7 @@ class Physics2DWorld
         }
 
         con._clearCache();
-    };
+    }
 
     _preStep(deltaTime)
     {
@@ -11231,7 +11229,7 @@ class Physics2DWorld
 
         this._preStepArbiters(this.dynamicArbiters, deltaTime);
         this._preStepArbiters(this.staticArbiters, deltaTime);
-    };
+    }
 
     // Used in continuous collisions, only want to pre-step a single arbiter.
     _preStepArbiter(arb, deltaTime, progressEvents?: bool)
@@ -11271,7 +11269,7 @@ class Physics2DWorld
                 arb.active = false;
             }
         }
-    };
+    }
 
     // Used in usual case, pre stepping whole list of arbiters.
     _preStepArbiters(arbiters, deltaTime)
@@ -11355,7 +11353,7 @@ class Physics2DWorld
 
             i += 1;
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11385,7 +11383,7 @@ class Physics2DWorld
             this._iterateVelocityArbiters(this.staticArbiters);
             count -= 1;
         }
-    };
+    }
 
     _iterateVelocityArbiters(arbiters)
     {
@@ -11402,7 +11400,7 @@ class Physics2DWorld
                 arb._iterateVelocity();
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11432,7 +11430,7 @@ class Physics2DWorld
             this._iteratePositionArbiters(this.staticArbiters);
             count -= 1;
         }
-    };
+    }
 
     _iteratePositionArbiters(arbiters)
     {
@@ -11449,7 +11447,7 @@ class Physics2DWorld
                 arb._iteratePosition();
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11485,7 +11483,7 @@ class Physics2DWorld
                 data[(/*BODY_VEL*/7) + 2] *= Math.exp(deltaTime * data[(/*BODY_ANG_DRAG*/22)]);
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11493,7 +11491,7 @@ class Physics2DWorld
     {
         this._integratePositionBodies(this.liveDynamics, deltaTime);
         this._integratePositionBodies(this.liveKinematics, deltaTime);
-    };
+    }
 
     _integratePositionBodies(bodies, deltaTime)
     {
@@ -11575,7 +11573,7 @@ class Physics2DWorld
                 body._bullet = false;
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11587,7 +11585,7 @@ class Physics2DWorld
         // Finalize contact positions for API to be correct at end of step() in queries
         this._finalizeArbiters(this.dynamicArbiters);
         this._finalizeArbiters(this.staticArbiters);
-    };
+    }
 
     _finalizeArbiters(arbiters)
     {
@@ -11601,7 +11599,7 @@ class Physics2DWorld
                 arb._refreshContactData();
             }
         }
-    };
+    }
 
     _finalizeBodies(bodies)
     {
@@ -11641,7 +11639,7 @@ class Physics2DWorld
 
             i += 1;
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11727,7 +11725,7 @@ class Physics2DWorld
             Physics2DCallback.deallocate(cb);
         }
         callbacks.length = 0;
-    };
+    }
 
     // =====================================================================
 
@@ -11743,7 +11741,7 @@ class Physics2DWorld
 
         this._warmStartArbiters(this.dynamicArbiters);
         this._warmStartArbiters(this.staticArbiters);
-    };
+    }
 
     _warmStartArbiters(arbiters)
     {
@@ -11760,7 +11758,7 @@ class Physics2DWorld
                 arb._warmStart();
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -11816,7 +11814,7 @@ class Physics2DWorld
                 arbs.pop();
             }
         }
-    };
+    }
 
     _forceSleepConstraint(constraint)
     {
@@ -11834,7 +11832,7 @@ class Physics2DWorld
             constraints[index] = constraints[constraints.length - 1];
             constraints.pop();
         }
-    };
+    }
 
     _wakeConstraint(constraint, noCallback?)
     {
@@ -11865,7 +11863,7 @@ class Physics2DWorld
                 }
             }
         }
-    };
+    }
 
     _wakeBody(body, noCallback?, continuousCallbacks?)
     {
@@ -11925,7 +11923,7 @@ class Physics2DWorld
                 this._wakeIsland(body._island, (noCallback ? body : null), continuousCallbacks);
             }
         }
-    };
+    }
 
     _wakeArbiter(arb, continuousCallbacks?: bool)
     {
@@ -11957,7 +11955,7 @@ class Physics2DWorld
         {
             this._continuousArbiterPrepare(arb, this._deltaTime, true);
         }
-    };
+    }
 
     _continuousArbiterPrepare(arb, deltaTime, progressEvents?: bool)
     {
@@ -11972,7 +11970,7 @@ class Physics2DWorld
             // in following step anyhow.
             arb._iterateVelocity();
         }
-    };
+    }
 
     _wakeArbiters(arbiters, skip, continuousCallbacks)
     {
@@ -12013,7 +12011,7 @@ class Physics2DWorld
                 }
             }
         }
-    };
+    }
 
     _wakeIsland(island, noCallbackObject, continuousCallbacks?)
     {
@@ -12065,7 +12063,7 @@ class Physics2DWorld
         }
 
         Physics2DIsland.deallocate(island);
-    };
+    }
 
     // =====================================================================
 
@@ -12172,7 +12170,7 @@ class Physics2DWorld
         // may now become active.
         body.sleeping = true;
         this._wakeBody(body);
-    };
+    }
 
     // =====================================================================
 
@@ -12194,7 +12192,7 @@ class Physics2DWorld
             }
             con._woken = false;
         }
-    };
+    }
 
     _validateBodies(bodies)
     {
@@ -12229,7 +12227,7 @@ class Physics2DWorld
                 bphase.update(shape._bphaseHandle, shape._data);
             }
         }
-    };
+    }
 
     static create(params): Physics2DWorld
     {
@@ -12502,8 +12500,8 @@ class Physics2DWorld
         };
 
         return w;
-    };
-};
+    }
+}
 
 // =========================================================================
 
@@ -12518,7 +12516,7 @@ class Physics2DCollisionUtils
     {
         shape.body._update();
         return this._contains(shape, point[0], point[1]);
-    };
+    }
 
     signedDistance(shapeA, shapeB, witnessA, witnessB, axis): number
     {
@@ -12538,7 +12536,7 @@ class Physics2DCollisionUtils
         axis[1]     = data[(/*TOI_AXIS*/0) + 1];
 
         return ret;
-    };
+    }
 
     intersects(shapeA, shapeB): bool
     {
@@ -12549,13 +12547,13 @@ class Physics2DCollisionUtils
         }
 
         return this._test(shapeA, shapeB);
-    };
+    }
 
     rayTest(shape, ray, normal, ignoreInnerSurfaces): number
     {
         shape.body._update();
         return this._rayTest(shape, ray, normal, ignoreInnerSurfaces);
-    };
+    }
 
     sweepTest(shapeA, shapeB, deltaTime, point, normal): number
     {
@@ -12594,7 +12592,7 @@ class Physics2DCollisionUtils
         normal[0] = data[(/*TOI_AXIS*/0)];
         normal[1] = data[(/*TOI_AXIS*/0) + 1];
         return (ret * deltaTime);
-    };
+    }
 
     //=======================================================================================
     //=======================================================================================
@@ -12614,7 +12612,7 @@ class Physics2DCollisionUtils
         {
             return this._rayTestPolygon(shape, ray, normal, noInner);
         }
-    };
+    }
 
     _rayTestPolygon(poly, ray, normal, noInner)
     {
@@ -12674,7 +12672,7 @@ class Physics2DCollisionUtils
             normal[1] = (data[edge + (/*POLY_WNORMAL*/6) + 1] * scale);
             return min;
         }
-    };
+    }
 
     _rayTestCircle(circle, ray, normal, noInner)
     {
@@ -12731,7 +12729,7 @@ class Physics2DCollisionUtils
         {
             return undefined;
         }
-    };
+    }
 
     // =====================================================================
 
@@ -12749,7 +12747,7 @@ class Physics2DCollisionUtils
         {
             return this._containsPolygon(shape, x, y);
         }
-    };
+    }
 
     _containsCircle(circle, x, y): bool
     {
@@ -12758,7 +12756,7 @@ class Physics2DCollisionUtils
         var dy = (data[(/*CIRCLE_WORLD*/9) + 1] - y);
         var rad = data[(/*CIRCLE_RADIUS*/6)];
         return ((dx * dx) + (dy * dy) - (rad * rad)) <= Physics2DConfig.CONTAINS_SQ_EPSILON;
-    };
+    }
 
     _containsPolygon(poly, x, y): bool
     {
@@ -12777,7 +12775,7 @@ class Physics2DCollisionUtils
             }
         }
         return true;
-    };
+    }
 
     // =====================================================================
 
@@ -12921,7 +12919,7 @@ class Physics2DCollisionUtils
 
         toiData[(/*TOI_TOI_ALPHA*/6)] = curTOIAlpha;
         return curTOIAlpha;
-    };
+    }
 
     _staticSweep(toi: Physics2DTOIEvent, timeStep: number, negRadius?) : number
     {
@@ -13025,7 +13023,7 @@ class Physics2DCollisionUtils
 
         toiData[(/*TOI_TOI_ALPHA*/6)] = curTOIAlpha;
         return curTOIAlpha;
-    };
+    }
 
     // =====================================================================
 
@@ -13068,7 +13066,7 @@ class Physics2DCollisionUtils
                 return this._distancePolygon2Polygon(shapeA, shapeB, toiData);
             }
         }
-    };
+    }
 
     _distanceCircle2Circle(circleA, circleB, toiData)
     {
@@ -13104,7 +13102,7 @@ class Physics2DCollisionUtils
         toiData[(/*TOI_WITNESS_B*/4) + 1] = cBY - (dy * radB);
 
         return (len - rSum);
-    };
+    }
 
     _distanceCircle2Polygon(circle, polygon, toiData)
     {
@@ -13183,7 +13181,7 @@ class Physics2DCollisionUtils
         toiData[(/*TOI_WITNESS_B*/4)]     = vX;
         toiData[(/*TOI_WITNESS_B*/4) + 1] = vY;
         return (len - radius);
-    };
+    }
 
     _distancePolygon2Polygon(polyA, polyB, toiData)
     {
@@ -13503,7 +13501,7 @@ class Physics2DCollisionUtils
                 return max;
             }
         }
-    };
+    }
 
     // =====================================================================
 
@@ -13536,7 +13534,7 @@ class Physics2DCollisionUtils
                 return this._collidePolygon2Polygon(shapeA, shapeB, arb);
             }
         }
-    };
+    }
 
     _collideCircle2Polygon(circle, polygon, arb, reverse)
     {
@@ -13677,7 +13675,7 @@ class Physics2DCollisionUtils
         arb._reverse = false;
 
         return true;
-    };
+    }
 
     _collidePolygon2Polygon(polyA, polyB, arb)
     {
@@ -13865,7 +13863,7 @@ class Physics2DCollisionUtils
         arb._reverse = (!first);
 
         return true;
-    };
+    }
 
     _collideCircle2Circle(circleA, circleB, arb)
     {
@@ -13916,7 +13914,7 @@ class Physics2DCollisionUtils
         arb._faceType = (/*FACE_CIRCLE*/0);
 
         return true;
-    };
+    }
 
     // =====================================================================
 
@@ -13947,7 +13945,7 @@ class Physics2DCollisionUtils
                 return this._testPolygon2Polygon(shapeA, shapeB);
             }
         }
-    };
+    }
 
     _testCircle2Circle(circleA, circleB)
     {
@@ -13959,7 +13957,7 @@ class Physics2DCollisionUtils
         var rSum = dataA[(/*CIRCLE_RADIUS*/6)] + dataB[(/*CIRCLE_RADIUS*/6)];
 
         return (((dx * dx) + (dy * dy)) <= (rSum * rSum));
-    };
+    }
 
     _testCircle2Polygon(circle, polygon)
     {
@@ -14019,7 +14017,7 @@ class Physics2DCollisionUtils
         var dx = (cx - dataP[edge + (/*POLY_WORLD*/2)]);
         var dy = (cy - dataP[edge + (/*POLY_WORLD*/2) + 1]);
         return (((dx * dx) + (dy * dy)) <= (radius * radius));
-    };
+    }
 
     _testPolygon2Polygon(polyA, polyB)
     {
@@ -14074,15 +14072,15 @@ class Physics2DCollisionUtils
         }
 
         return true;
-    };
+    }
 
     static create()
     {
         var c = new Physics2DCollisionUtils();
         c._toi = Physics2DTOIEvent.allocate();
         return c;
-    };
-};
+    }
+}
 
 // =========================================================================
 
@@ -14100,89 +14098,89 @@ class Physics2DDevice
     getDefaultMaterial(): Physics2DMaterial
     {
         return Physics2DMaterial.defaultMaterial;
-    };
+    }
 
     createCircleShape(params): Physics2DCircle
     {
         return Physics2DCircle.create(params);
-    };
+    }
 
     createPolygonShape(params): Physics2DPolygon
     {
         return Physics2DPolygon.create(params, null);
-    };
+    }
 
     createRigidBody(params): Physics2DRigidBody
     {
         return Physics2DRigidBody.create(params);
-    };
+    }
 
     createWorld(params): Physics2DWorld
     {
         return Physics2DWorld.create(params);
-    };
+    }
 
     createMaterial(params): Physics2DMaterial
     {
         return Physics2DMaterial.create(params);
-    };
+    }
 
     createSweepAndPruneBroadphase(): Physics2DSweepAndPrune
     {
         return Physics2DSweepAndPrune.create();
-    };
+    }
 
     createBoxTreeBroadphase(): Physics2DBoxTreeBroadphase
     {
         return Physics2DBoxTreeBroadphase.create();
-    };
+    }
 
     createCollisionUtils(): Physics2DCollisionUtils
     {
         return Physics2DCollisionUtils.create();
-    };
+    }
 
     createPointConstraint(params): Physics2DPointConstraint
     {
         return Physics2DPointConstraint.create(params);
-    };
+    }
 
     createWeldConstraint(params): Physics2DWeldConstraint
     {
         return Physics2DWeldConstraint.create(params);
-    };
+    }
 
     createAngleConstraint(params): Physics2DAngleConstraint
     {
         return Physics2DAngleConstraint.create(params);
-    };
+    }
 
     createDistanceConstraint(params): Physics2DDistanceConstraint
     {
         return Physics2DDistanceConstraint.create(params);
-    };
+    }
 
     createLineConstraint(params): Physics2DLineConstraint
     {
         return Physics2DLineConstraint.create(params);
-    };
+    }
 
     createMotorConstraint(params): Physics2DMotorConstraint
     {
         return Physics2DMotorConstraint.create(params);
-    };
+    }
 
     createPulleyConstraint(params): Physics2DPulleyConstraint
     {
         return Physics2DPulleyConstraint.create(params);
-    };
+    }
 
     createCustomConstraint(params): Physics2DCustomConstraint
     {
         return Physics2DCustomConstraint.create(params);
-    };
+    }
 
-    createRectangleVertices(minX, minY, maxX, maxY): any[] // floatArray[]
+    createRectangleVertices(minX, minY, maxX, maxY): any[]
     {
         var tmp;
         if (maxX < minX)
@@ -14212,7 +14210,7 @@ class Physics2DDevice
         v3[1] = maxY;
 
         return [v0, v1, v2, v3];
-    };
+    }
 
     createBoxVertices(width, height): any[] // floatArray[]
     {
@@ -14233,7 +14231,7 @@ class Physics2DDevice
         v3[1] = h;
 
         return [v0, v1, v2, v3];
-    };
+    }
 
     createRegularPolygonVertices(diameterX, diameterY, numVertices): any[]
     {
@@ -14254,14 +14252,14 @@ class Physics2DDevice
         }
 
         return vertices;
-    };
+    }
 
     static create(): Physics2DDevice
     {
         var pd = new Physics2DDevice();
         return pd;
-    };
-};
+    }
+}
 
 // =========================================================================
 

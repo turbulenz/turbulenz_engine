@@ -19,7 +19,7 @@
 
 class TurbulenzBridge
 {
-    static private _bridge = undefined;
+    private static _bridge = undefined;
 
     /**
      * Try to find an 'EventEmitter' object on the page and cache it.
@@ -57,29 +57,29 @@ class TurbulenzBridge
         {
             TurbulenzServices.addBridgeEvents();
         }
-    };
+    }
 
     static isInitialised(): bool
     {
         return (this._bridge !== undefined);
-    };
+    }
 
     static emit(serviceName: string, request?: string)
     {
-    };
+    }
 
     static on(serviceName: string, cb: { (data: string) : void; })
     {
-    };
+    }
 
     //off: function offFn() {},
 
-    static addListener() {};
+    static addListener() {}
 
     static setListener(eventName: string,
                        listener: { (params: string): void; })
     {
-    };
+    }
 
     /**
      * Message that passes game configuration information from the hosting site
@@ -87,12 +87,12 @@ class TurbulenzBridge
     static setOnReceiveConfig(callback)
     {
         this.on('config.set', callback);
-    };
+    }
 
     static triggerRequestConfig()
     {
         this.emit('config.request');
-    };
+    }
 
     /**
      * Methods to signal the beginning and end of load/save processes.
@@ -102,22 +102,22 @@ class TurbulenzBridge
     static startLoading()
     {
         this.emit('status.loading.start');
-    };
+    }
 
     static startSaving()
     {
         this.emit('status.saving.start');
-    };
+    }
 
     static stopLoading()
     {
         this.emit('status.loading.stop');
-    };
+    }
 
     static stopSaving()
     {
         this.emit('status.saving.stop');
-    };
+    }
 
     /**
      * These methods tell the gamesite the gameSession so it can
@@ -127,22 +127,22 @@ class TurbulenzBridge
     static createdGameSession(gameSessionId)
     {
         this.emit('game.session.created', gameSessionId);
-    };
+    }
 
     static destroyedGameSession(gameSessionId)
     {
         this.emit('game.session.destroyed', gameSessionId);
-    };
+    }
 
     static setGameSessionStatus(gameSessionId, status)
     {
         this.emit('game.session.status', gameSessionId, status);
-    };
+    }
 
     static setGameSessionInfo(info)
     {
         this.emit('game.session.info', info);
-    };
+    }
 
     /**
      * Update a userbadge. Used by the BadgeManager
@@ -150,7 +150,7 @@ class TurbulenzBridge
     static updateUserBadge(badge)
     {
         this.emit('userbadge.update', badge);
-    };
+    }
 
     /**
      * Update a leaderboard. Used by the LeaderboardManager
@@ -158,7 +158,7 @@ class TurbulenzBridge
     static updateLeaderBoard(scoreData)
     {
         this.emit('leaderboards.update', scoreData);
-    };
+    }
 
     /**
      * Handle multiplayer join events
@@ -166,22 +166,22 @@ class TurbulenzBridge
     static setOnMultiplayerSessionToJoin(callback)
     {
         this.on('multiplayer.session.join', callback);
-    };
+    }
 
     static triggerJoinedMultiplayerSession(session)
     {
         this.emit('multiplayer.session.joined', session);
-    };
+    }
 
     static triggerLeaveMultiplayerSession(sessionId)
     {
         this.emit('multiplayer.session.leave', sessionId);
-    };
+    }
 
     static triggerMultiplayerSessionMakePublic(sessionId)
     {
         this.emit('multiplayer.session.makepublic', sessionId);
-    };
+    }
 
     /**
      * Handle store basket events
@@ -189,42 +189,42 @@ class TurbulenzBridge
     static setOnBasketUpdate(callback)
     {
         this.on('basket.site.update', callback);
-    };
+    }
 
     static triggerBasketUpdate(basket?)
     {
         this.emit('basket.game.update.v2', basket);
-    };
+    }
 
     static triggerUserStoreUpdate(items)
     {
         this.emit('store.user.update', items);
-    };
+    }
 
     static setOnPurchaseConfirmed(callback)
     {
         this.on('purchase.confirmed', callback);
-    };
+    }
 
     static setOnPurchaseRejected(callback)
     {
         this.on('purchase.rejected', callback);
-    };
+    }
 
     static triggerShowConfirmPurchase()
     {
         this.emit('purchase.show.confirm');
-    };
+    }
 
     static triggerFetchStoreMeta()
     {
         this.emit('fetch.store.meta');
-    };
+    }
 
     static setOnStoreMeta(callback)
     {
         this.on('store.meta.v2', callback);
-    };
+    }
 
 
     /**
@@ -234,12 +234,12 @@ class TurbulenzBridge
     static triggerSendInstantNotification(notification)
     {
         this.emit('notifications.ingame.sendInstant', notification);
-    };
+    }
 
     static triggerSendDelayedNotification(notification)
     {
         this.emit('notifications.ingame.sendDelayed', notification);
-    };
+    }
 
     static setOnNotificationSent(callback)
     {
@@ -249,27 +249,27 @@ class TurbulenzBridge
     static triggerCancelNotificationByID(params)
     {
         this.emit('notifications.ingame.cancelByID', params);
-    };
+    }
 
     static triggerCancelNotificationsByKey(params)
     {
         this.emit('notifications.ingame.cancelByKey', params);
-    };
+    }
 
     static triggerCancelAllNotifications(params)
     {
         this.emit('notifications.ingame.cancelAll', params);
-    };
+    }
 
     static triggerInitNotificationManager(params)
     {
         this.emit('notifications.ingame.initNotificationManager', params);
-    };
+    }
 
     static setOnReceiveNotification(callback)
     {
         this.on('notifications.ingame.receive', callback);
-    };
+    }
 
     /**
      * Methods to signal changes of the viewport's aspect ratio to the page.
@@ -277,7 +277,7 @@ class TurbulenzBridge
     static changeAspectRatio(ratio)
     {
         this.emit('change.viewport.ratio', ratio);
-    };
+    }
 
     /**
      * Methods to set callbacks to react to events happening on the page.
@@ -285,32 +285,32 @@ class TurbulenzBridge
     static setOnViewportHide(callback)
     {
         this.on('change.viewport.hide', callback);
-    };
+    }
 
     static setOnViewportShow(callback)
     {
         this.on('change.viewport.show', callback);
-    };
+    }
 
     static setOnFullscreenOn(callback)
     {
         this.on('change.viewport.fullscreen.on', callback);
-    };
+    }
 
     static setOnFullscreenOff(callback)
     {
         this.on('change.viewport.fullscreen.off', callback);
-    };
+    }
 
     static setOnMenuStateChange(callback)
     {
         this.on('change.menu.state', callback);
-    };
+    }
 
     static setOnUserStateChange(callback)
     {
         this.on('change.user.state', callback);
-    };
+    }
 
     /**
      * Methods to send trigger event-emission on the page. These
@@ -321,22 +321,22 @@ class TurbulenzBridge
     static triggerOnFullscreen()
     {
         this.emit('trigger.viewport.fullscreen');
-    };
+    }
 
     static triggerOnViewportVisibility()
     {
         this.emit('trigger.viewport.visibility');
-    };
+    }
 
     static triggerOnMenuStateChange()
     {
         this.emit('trigger.menu.state');
-    };
+    }
 
     static triggerOnUserStateChange()
     {
         this.emit('trigger.user.state');
-    };
+    }
 
     /**
      * Methods to send requests for information to the page. These
@@ -351,7 +351,7 @@ class TurbulenzBridge
     static queryFullscreen(callback)
     {
         this.emit('query.viewport.fullscreen', callback);
-    };
+    }
 
     /**
      * callback - a function that takes a single boolean value that
@@ -360,7 +360,7 @@ class TurbulenzBridge
     static queryViewportVisibility(callback)
     {
         this.emit('query.viewport.visibility', callback);
-    };
+    }
 
     /**
      * callback - a function that takes an object-representation of
@@ -369,7 +369,7 @@ class TurbulenzBridge
     static queryMenuState(callback)
     {
         this.emit('query.menu.state', callback);
-    };
+    }
 
     /**
      * callback - a function that takes an object-representation of
@@ -378,8 +378,8 @@ class TurbulenzBridge
     static queryUserState(callback)
     {
         this.emit('query.user.state', callback);
-    };
-};
+    }
+}
 
 if (!TurbulenzBridge.isInitialised())
 {

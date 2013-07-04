@@ -12,21 +12,6 @@
 /// <reference path="turbulenzengine.ts" />
 /// <reference path="soundtarloader.ts" />
 
-interface WebGLSound extends Sound
-{
-    audioContext: any; // TODO
-    buffer: any; // TODO
-    data: any; // TODO
-    audio: HTMLAudioElement;
-};
-
-declare var WebGLSound :
-{
-    new(): WebGLSound;
-    prototype: any;
-    create(sd: WebGLSoundDevice, params: any): WebGLSound;
-};
-
 interface WebGLSoundSource extends SoundSource
 {
     sd: WebGLSoundDevice;
@@ -110,12 +95,16 @@ declare var WebGLSoundDevice :
 //
 // WebGLSound
 //
-function WebGLSound() { return this; }
-WebGLSound.prototype =
+class WebGLSound implements Sound
 {
-    version : 1,
+    static version = 1;
 
-    destroy : function soundDestroyFn()
+    audioContext : any; // TODO
+    buffer       : any; // TODO
+    data         : any; // TODO
+    audio        : HTMLAudioElement;
+
+    destroy()
     {
         var audioContext = this.audioContext;
         if (audioContext)
@@ -128,99 +117,33 @@ WebGLSound.prototype =
             delete this.audio;
         }
     }
-};
 
-WebGLSound.create = function webGLSoundCreateFn(sd, params)
-{
-    var sound = new WebGLSound();
-
-    var soundPath = params.src;
-
-    sound.name = (params.name || soundPath);
-    sound.frequency = 0;
-    sound.channels = 0;
-    sound.bitrate = 0;
-    sound.length = 0;
-    sound.compressed = (!params.uncompress);
-
-    var onload = params.onload;
-
-    var data, numSamples, numChannels, samplerRate;
-
-    var audioContext = sd.audioContext;
-    if (audioContext)
+    static create(sd: WebGLSoundDevice, params: any): WebGLSound;
     {
-        sound.audioContext = audioContext;
+        var sound = new WebGLSound();
 
-        var buffer;
-        if (soundPath)
+        var soundPath = params.src;
+
+        sound.name = (params.name || soundPath);
+        sound.frequency = 0;
+        sound.channels = 0;
+        sound.bitrate = 0;
+        sound.length = 0;
+        sound.compressed = (!params.uncompress);
+
+        var onload = params.onload;
+
+        var data, numSamples, numChannels, samplerRate;
+
+        var audioContext = sd.audioContext;
+        if (audioContext)
         {
-            if (!sd.isResourceSupported(soundPath))
-            {
-                if (onload)
-                {
-                    onload(null);
-                }
-                return null;
-            }
+            sound.audioContext = audioContext;
 
-            var bufferCreated = function bufferCreatedFn(buffer)
+            var buffer;
+            if (soundPath)
             {
-                if (buffer)
-                {
-                    sound.buffer = buffer;
-                    sound.frequency = buffer.sampleRate;
-                    sound.channels = buffer.numberOfChannels;
-                    sound.bitrate = (sound.frequency * sound.channels * 2 * 8);
-                    sound.length = buffer.duration;
-
-                    if (onload)
-                    {
-                        onload(sound, 200);
-                    }
-                }
-                else
-                {
-                    if (onload)
-                    {
-                        onload(null);
-                    }
-                }
-            };
-
-            var bufferFailed = function bufferFailedFn()
-            {
-                if (onload)
-                {
-                    onload(null);
-                }
-            };
-
-            data = params.data;
-            if (data)
-            {
-                if (audioContext.decodeAudioData)
-                {
-                    audioContext.decodeAudioData(data, bufferCreated, bufferFailed);
-                }
-                else
-                {
-                    buffer = audioContext.createBuffer(data, false);
-                    bufferCreated(buffer);
-                }
-            }
-            else
-            {
-                var xhr;
-                if (window.XMLHttpRequest)
-                {
-                    xhr = new window.XMLHttpRequest();
-                }
-                else if (window.ActiveXObject)
-                {
-                    xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
-                }
-                else
+                if (!sd.isResourceSupported(soundPath))
                 {
                     if (onload)
                     {
@@ -229,301 +152,367 @@ WebGLSound.create = function webGLSoundCreateFn(sd, params)
                     return null;
                 }
 
-                xhr.onreadystatechange = function ()
+                var bufferCreated = function bufferCreatedFn(buffer)
                 {
-                    if (xhr.readyState === 4)
+                    if (buffer)
                     {
-                        if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
-                        {
-                            var xhrStatus = xhr.status;
-                            var xhrStatusText = (xhrStatus !== 0 && xhr.statusText || 'No connection');
-                            var response = xhr.response;
-
-                            // Sometimes the browser sets status to 200 OK when the connection is closed
-                            // before the message is sent (weird!).
-                            // In order to address this we fail any completely empty responses.
-                            // Hopefully, nobody will get a valid response with no headers and no body!
-                            if (xhr.getAllResponseHeaders() === "" && !response && xhrStatus === 200 && xhrStatusText === 'OK')
-                            {
-                                if (onload)
-                                {
-                                    onload(null);
-                                }
-                            }
-                            else if (xhrStatus === 200 || xhrStatus === 0)
-                            {
-                                if (audioContext.decodeAudioData)
-                                {
-                                    audioContext.decodeAudioData(response, bufferCreated, bufferFailed);
-                                }
-                                else
-                                {
-                                    var buffer = audioContext.createBuffer(response, false);
-                                    bufferCreated(buffer);
-                                }
-                            }
-                            else
-                            {
-                                if (onload)
-                                {
-                                    onload(null);
-                                }
-                            }
-                        }
-                        // break circular reference
-                        xhr.onreadystatechange = null;
-                        xhr = null;
-                    }
-                };
-                xhr.open("GET", soundPath, true);
-                xhr.responseType = "arraybuffer";
-                xhr.setRequestHeader("Content-Type", "text/plain");
-                xhr.send(null);
-            }
-
-            return sound;
-        }
-        else
-        {
-            data = params.data;
-            if (data)
-            {
-                numSamples = data.length;
-                numChannels = (params.channels || 1);
-                samplerRate = params.frequency;
-
-                var contextSampleRate = Math.min(audioContext.sampleRate, 96000);
-                var c, channel, i, j;
-
-                if (contextSampleRate === samplerRate)
-                {
-                    buffer = audioContext.createBuffer(numChannels, (numSamples / numChannels), samplerRate);
-
-                    // De-interleave data
-                    for (c = 0; c < numChannels; c += 1)
-                    {
-                        channel = buffer.getChannelData(c);
-                        for (i = c, j = 0; i < numSamples; i += numChannels, j += 1)
-                        {
-                            channel[j] = data[i];
-                        }
-                    }
-                }
-                else
-                {
-                    var ratio = (samplerRate / contextSampleRate);
-                    /*jshint bitwise: false*/
-                    var bufferLength = ((numSamples / (ratio * numChannels)) | 0);
-                    /*jshint bitwise: true*/
-
-                    buffer = audioContext.createBuffer(numChannels, bufferLength, contextSampleRate);
-
-                    // De-interleave data
-                    for (c = 0; c < numChannels; c += 1)
-                    {
-                        channel = buffer.getChannelData(c);
-                        for (j = 0; j < bufferLength; j += 1)
-                        {
-                            /*jshint bitwise: false*/
-                            channel[j] = data[c + (((j * ratio) | 0) * numChannels)];
-                            /*jshint bitwise: true*/
-                        }
-                    }
-                }
-
-                if (buffer)
-                {
-                    sound.buffer = buffer;
-                    sound.frequency = samplerRate;
-                    sound.channels = numChannels;
-                    sound.bitrate = (samplerRate * numChannels * 2 * 8);
-                    sound.length = (numSamples / (samplerRate * numChannels));
-
-                    if (onload)
-                    {
-                        onload(sound, 200);
-                    }
-
-                    return sound;
-                }
-            }
-        }
-    }
-    else
-    {
-        var audio;
-
-        if (soundPath)
-        {
-            var extension = soundPath.slice(-3);
-
-            data = params.data;
-            if (data)
-            {
-
-                var dataArray;
-                if (data instanceof Uint8Array)
-                {
-                    dataArray = data;
-                }
-                else
-                {
-                    dataArray = new Uint8Array(data);
-                }
-
-                // Check extension based on data
-
-                if (dataArray[0] === 79 &&
-                    dataArray[1] === 103 &&
-                    dataArray[2] === 103 &&
-                    dataArray[3] === 83)
-                {
-                    extension = 'ogg';
-                    soundPath = 'data:audio/ogg;base64,';
-                }
-                else if (dataArray[0] === 82 &&
-                         dataArray[1] === 73 &&
-                         dataArray[2] === 70 &&
-                         dataArray[3] === 70)
-                {
-                    extension = 'wav';
-                    soundPath = 'data:audio/wav;base64,';
-                }
-                else
-                {
-                    // Assume it's an mp3?
-                    extension = 'mp3';
-                    soundPath = 'data:audio/mpeg;base64,';
-                }
-
-                // Mangle data into a data URI
-                soundPath = soundPath +
-                    (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(
-                        dataArray);
-            }
-
-            if (!sd.supportedExtensions[extension])
-            {
-                if (onload)
-                {
-                    onload(null);
-                }
-                return null;
-            }
-
-            audio = new Audio();
-
-            audio.preload = 'auto';
-            audio.autobuffer = true;
-
-            audio.src = soundPath;
-
-            audio.onerror = function loadingSoundFailedFn(/* e */)
-            {
-                if (onload)
-                {
-                    onload(null);
-                    onload = null;
-                }
-            };
-
-            sd.addLoadingSound(function checkLoadedFn() {
-                if (3 <= audio.readyState)
-                {
-                    sound.frequency = (audio.sampleRate || audio.mozSampleRate);
-                    sound.channels = (audio.channels || audio.mozChannels);
-                    sound.bitrate = (sound.frequency * sound.channels * 2 * 8);
-                    sound.length = audio.duration;
-
-                    if (audio.buffered &&
-                        audio.buffered.length &&
-                        0 < audio.buffered.end(0))
-                    {
-                        if (isNaN(sound.length) ||
-                            sound.length === Number.POSITIVE_INFINITY)
-                        {
-                            sound.length = audio.buffered.end(0);
-                        }
+                        sound.buffer = buffer;
+                        sound.frequency = buffer.sampleRate;
+                        sound.channels = buffer.numberOfChannels;
+                        sound.bitrate = (sound.frequency * sound.channels * 2 * 8);
+                        sound.length = buffer.duration;
 
                         if (onload)
                         {
                             onload(sound, 200);
-                            onload = null;
                         }
                     }
                     else
                     {
-                        // Make sure the data is actually loaded
-                        var forceLoading = function forceLoadingFn()
+                        if (onload)
                         {
-                            audio.pause();
-                            audio.removeEventListener('play', forceLoading, false);
+                            onload(null);
+                        }
+                    }
+                };
+
+                var bufferFailed = function bufferFailedFn()
+                {
+                    if (onload)
+                    {
+                        onload(null);
+                    }
+                };
+
+                data = params.data;
+                if (data)
+                {
+                    if (audioContext.decodeAudioData)
+                    {
+                        audioContext.decodeAudioData(data, bufferCreated, bufferFailed);
+                    }
+                    else
+                    {
+                        buffer = audioContext.createBuffer(data, false);
+                        bufferCreated(buffer);
+                    }
+                }
+                else
+                {
+                    var xhr;
+                    if (window.XMLHttpRequest)
+                    {
+                        xhr = new window.XMLHttpRequest();
+                    }
+                    else if (window.ActiveXObject)
+                    {
+                        xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
+                    }
+                    else
+                    {
+                        if (onload)
+                        {
+                            onload(null);
+                        }
+                        return null;
+                    }
+
+                    xhr.onreadystatechange = function ()
+                    {
+                        if (xhr.readyState === 4)
+                        {
+                            if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                            {
+                                var xhrStatus = xhr.status;
+                                var xhrStatusText = (xhrStatus !== 0 && xhr.statusText || 'No connection');
+                                var response = xhr.response;
+
+                                // Sometimes the browser sets status to 200 OK when the connection is closed
+                                // before the message is sent (weird!).
+                                // In order to address this we fail any completely empty responses.
+                                // Hopefully, nobody will get a valid response with no headers and no body!
+                                if (xhr.getAllResponseHeaders() === "" && !response && xhrStatus === 200 && xhrStatusText === 'OK')
+                                {
+                                    if (onload)
+                                    {
+                                        onload(null);
+                                    }
+                                }
+                                else if (xhrStatus === 200 || xhrStatus === 0)
+                                {
+                                    if (audioContext.decodeAudioData)
+                                    {
+                                        audioContext.decodeAudioData(response, bufferCreated, bufferFailed);
+                                    }
+                                    else
+                                    {
+                                        var buffer = audioContext.createBuffer(response, false);
+                                        bufferCreated(buffer);
+                                    }
+                                }
+                                else
+                                {
+                                    if (onload)
+                                    {
+                                        onload(null);
+                                    }
+                                }
+                            }
+                            // break circular reference
+                            xhr.onreadystatechange = null;
+                            xhr = null;
+                        }
+                    };
+                    xhr.open("GET", soundPath, true);
+                    xhr.responseType = "arraybuffer";
+                    xhr.setRequestHeader("Content-Type", "text/plain");
+                    xhr.send(null);
+                }
+
+                return sound;
+            }
+            else
+            {
+                data = params.data;
+                if (data)
+                {
+                    numSamples = data.length;
+                    numChannels = (params.channels || 1);
+                    samplerRate = params.frequency;
+
+                    var contextSampleRate = Math.min(audioContext.sampleRate, 96000);
+                    var c, channel, i, j;
+
+                    if (contextSampleRate === samplerRate)
+                    {
+                        buffer = audioContext.createBuffer(numChannels, (numSamples / numChannels), samplerRate);
+
+                        // De-interleave data
+                        for (c = 0; c < numChannels; c += 1)
+                        {
+                            channel = buffer.getChannelData(c);
+                            for (i = c, j = 0; i < numSamples; i += numChannels, j += 1)
+                            {
+                                channel[j] = data[i];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var ratio = (samplerRate / contextSampleRate);
+                        /*jshint bitwise: false*/
+                        var bufferLength = ((numSamples / (ratio * numChannels)) | 0);
+                        /*jshint bitwise: true*/
+
+                        buffer = audioContext.createBuffer(numChannels, bufferLength, contextSampleRate);
+
+                        // De-interleave data
+                        for (c = 0; c < numChannels; c += 1)
+                        {
+                            channel = buffer.getChannelData(c);
+                            for (j = 0; j < bufferLength; j += 1)
+                            {
+                                /*jshint bitwise: false*/
+                                channel[j] = data[c + (((j * ratio) | 0) * numChannels)];
+                                /*jshint bitwise: true*/
+                            }
+                        }
+                    }
+
+                    if (buffer)
+                    {
+                        sound.buffer = buffer;
+                        sound.frequency = samplerRate;
+                        sound.channels = numChannels;
+                        sound.bitrate = (samplerRate * numChannels * 2 * 8);
+                        sound.length = (numSamples / (samplerRate * numChannels));
+
+                        if (onload)
+                        {
+                            onload(sound, 200);
+                        }
+
+                        return sound;
+                    }
+                }
+            }
+        }
+        else
+        {
+            var audio;
+
+            if (soundPath)
+            {
+                var extension = soundPath.slice(-3);
+
+                data = params.data;
+                if (data)
+                {
+
+                    var dataArray;
+                    if (data instanceof Uint8Array)
+                    {
+                        dataArray = data;
+                    }
+                    else
+                    {
+                        dataArray = new Uint8Array(data);
+                    }
+
+                    // Check extension based on data
+
+                    if (dataArray[0] === 79 &&
+                        dataArray[1] === 103 &&
+                        dataArray[2] === 103 &&
+                        dataArray[3] === 83)
+                    {
+                        extension = 'ogg';
+                        soundPath = 'data:audio/ogg;base64,';
+                    }
+                    else if (dataArray[0] === 82 &&
+                             dataArray[1] === 73 &&
+                             dataArray[2] === 70 &&
+                             dataArray[3] === 70)
+                    {
+                        extension = 'wav';
+                        soundPath = 'data:audio/wav;base64,';
+                    }
+                    else
+                    {
+                        // Assume it's an mp3?
+                        extension = 'mp3';
+                        soundPath = 'data:audio/mpeg;base64,';
+                    }
+
+                    // Mangle data into a data URI
+                    soundPath = soundPath +
+                        (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(
+                            dataArray);
+                }
+
+                if (!sd.supportedExtensions[extension])
+                {
+                    if (onload)
+                    {
+                        onload(null);
+                    }
+                    return null;
+                }
+
+                audio = new Audio();
+
+                audio.preload = 'auto';
+                audio.autobuffer = true;
+
+                audio.src = soundPath;
+
+                audio.onerror = function loadingSoundFailedFn(/* e */)
+                {
+                    if (onload)
+                    {
+                        onload(null);
+                        onload = null;
+                    }
+                };
+
+                sd.addLoadingSound(function checkLoadedFn() {
+                    if (3 <= audio.readyState)
+                    {
+                        sound.frequency = (audio.sampleRate || audio.mozSampleRate);
+                        sound.channels = (audio.channels || audio.mozChannels);
+                        sound.bitrate = (sound.frequency * sound.channels * 2 * 8);
+                        sound.length = audio.duration;
+
+                        if (audio.buffered &&
+                            audio.buffered.length &&
+                            0 < audio.buffered.end(0))
+                        {
+                            if (isNaN(sound.length) ||
+                                sound.length === Number.POSITIVE_INFINITY)
+                            {
+                                sound.length = audio.buffered.end(0);
+                            }
 
                             if (onload)
                             {
                                 onload(sound, 200);
                                 onload = null;
                             }
-                        };
-                        audio.addEventListener('play', forceLoading, false);
-                        audio.volume = 0;
-                        audio.play();
+                        }
+                        else
+                        {
+                            // Make sure the data is actually loaded
+                            var forceLoading = function forceLoadingFn()
+                            {
+                                audio.pause();
+                                audio.removeEventListener('play', forceLoading, false);
+
+                                if (onload)
+                                {
+                                    onload(sound, 200);
+                                    onload = null;
+                                }
+                            };
+                            audio.addEventListener('play', forceLoading, false);
+                            audio.volume = 0;
+                            audio.play();
+                        }
+
+                        return true;
                     }
+                    return false;
+                });
 
-                    return true;
-                }
-                return false;
-            });
+                sound.audio = audio;
 
-            sound.audio = audio;
-
-            return sound;
-        }
-        else
-        {
-            data = params.data;
-            if (data)
+                return sound;
+            }
+            else
             {
-                audio = new Audio();
-
-                if (audio.mozSetup)
+                data = params.data;
+                if (data)
                 {
-                    numSamples = data.length;
-                    numChannels = (params.channels || 1);
-                    samplerRate = params.frequency;
+                    audio = new Audio();
 
-                    audio.mozSetup(numChannels, samplerRate);
-
-                    sound.data = data;
-                    sound.frequency = samplerRate;
-                    sound.channels = numChannels;
-                    sound.bitrate = (samplerRate * numChannels * 2 * 8);
-                    sound.length = (numSamples / (samplerRate * numChannels));
-
-                    sound.audio = audio;
-
-                    if (onload)
+                    if (audio.mozSetup)
                     {
-                        onload(sound, 200);
-                    }
+                        numSamples = data.length;
+                        numChannels = (params.channels || 1);
+                        samplerRate = params.frequency;
 
-                    return sound;
-                }
-                else
-                {
-                    audio = null;
+                        audio.mozSetup(numChannels, samplerRate);
+
+                        sound.data = data;
+                        sound.frequency = samplerRate;
+                        sound.channels = numChannels;
+                        sound.bitrate = (samplerRate * numChannels * 2 * 8);
+                        sound.length = (numSamples / (samplerRate * numChannels));
+
+                        sound.audio = audio;
+
+                        if (onload)
+                        {
+                            onload(sound, 200);
+                        }
+
+                        return sound;
+                    }
+                    else
+                    {
+                        audio = null;
+                    }
                 }
             }
         }
-    }
 
-    if (onload)
-    {
-        onload(null);
-    }
+        if (onload)
+        {
+            onload(null);
+        }
 
-    return null;
-};
+        return null;
+    }
+}
 
 //
 // WebGLSoundSource

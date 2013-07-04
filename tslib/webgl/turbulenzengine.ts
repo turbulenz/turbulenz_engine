@@ -88,8 +88,6 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
     resizeCanvas: { (): void; };
     base64Encode: { (bytes: any): string; };
 
-    callOnError(msg: string): void;
-
     setInterval(f, t): any
     {
         var that = this;
@@ -97,12 +95,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 that.updateTime();
                 f();
             }, t);
-    };
+    }
 
     clearInterval(i)
     {
         return window.clearInterval(i);
-    };
+    }
 
     createGraphicsDevice(params): WebGLGraphicsDevice
     {
@@ -117,7 +115,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.graphicsDevice = graphicsDevice;
             return graphicsDevice;
         }
-    };
+    }
 
     createPhysicsDevice(params): WebGLPhysicsDevice
     {
@@ -141,7 +139,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.physicsDevice = physicsDevice;
             return physicsDevice;
         }
-    };
+    }
 
     createSoundDevice(params): WebGLSoundDevice
     {
@@ -165,7 +163,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.soundDevice = soundDevice;
             return soundDevice;
         }
-    };
+    }
 
     createInputDevice(params): WebGLInputDevice
     {
@@ -180,7 +178,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.inputDevice = inputDevice;
             return inputDevice;
         }
-    };
+    }
 
     createNetworkDevice(params): WebGLNetworkDevice
     {
@@ -194,7 +192,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.networkDevice = networkDevice;
             return networkDevice;
         }
-    };
+    }
 
     createMathDevice(params): MathDevice
     {
@@ -214,12 +212,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
 
         return VMath;
-    };
+    }
 
     createNativeMathDevice(params): MathDevice
     {
         return VMath;
-    };
+    }
 
     getGraphicsDevice(): WebGLGraphicsDevice
     {
@@ -229,87 +227,87 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.callOnError("GraphicsDevice not created yet.");
         }
         return graphicsDevice;
-    };
+    }
 
     getPhysicsDevice(): WebGLPhysicsDevice
     {
         return this.physicsDevice;
-    };
+    }
 
     getSoundDevice(): WebGLSoundDevice
     {
         return this.soundDevice;
-    };
+    }
 
     getInputDevice(): WebGLInputDevice
     {
         return this.inputDevice;
-    };
+    }
 
     getNetworkDevice(): WebGLNetworkDevice
     {
         return this.networkDevice;
-    };
+    }
 
     getMathDevice(): MathDevice
     {
         return VMath;
-    };
+    }
 
     getNativeMathDevice(): MathDevice
     {
         return VMath;
-    };
+    }
 
     getObjectStats()
     {
         return null;
-    };
+    }
 
     flush()
     {
 
-    };
+    }
 
     run()
     {
 
-    };
+    }
 
     encrypt(msg: string): string
     {
         return msg;
-    };
+    }
 
     decrypt(msg: string): string
     {
         return msg;
-    };
+    }
 
     generateSignature(msg: string): string
     {
         return null;
-    };
+    }
 
     verifySignature(msg: string, sig: string): bool
     {
         return true;
-    };
+    }
 
     onerror(msg)
     {
         console.error(msg);
-    };
+    }
 
     onwarning(msg)
     {
         console.warn(msg);
-    };
+    }
 
     getSystemInfo()
     {
         return this.systemInfo;
-    };
+    }
 
     request(url, callback)
     {
@@ -399,7 +397,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             xhr.onreadystatechange = httpRequestCallback;
         }
         xhr.send();
-    };
+    }
 
     // Internals
     private destroy()
@@ -438,7 +436,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         {
             window.removeEventListener('resize', this.resizeCanvas, false);
         }
-    };
+    }
 
     getPluginObject()
     {
@@ -448,7 +446,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.plugin = document.getElementById(this.pluginId);
         }
         return this.plugin;
-    };
+    }
 
     unload()
     {
@@ -464,16 +462,16 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 this.destroy();
             }
         }
-    };
+    }
 
     isUnloading()
     {
         return this.unloading;
-    };
+    }
 
     enableProfiling()
     {
-    };
+    }
 
     startProfiling()
     {
@@ -481,7 +479,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         {
             console.profile("turbulenz");
         }
-    };
+    }
 
     stopProfiling()
     {
@@ -497,7 +495,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
 
         return result;
-    };
+    }
 
     callOnError(msg)
     {
@@ -506,7 +504,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         {
             onerror(msg);
         }
-    };
+    }
 
     static create(params): WebGLTurbulenzEngine
     {
@@ -985,7 +983,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         };
 
         return tz;
-    };
-};
+    }
+}
 
 window.WebGLTurbulenzEngine = WebGLTurbulenzEngine;

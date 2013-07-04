@@ -124,12 +124,12 @@ class StoreManager
                 requestHandler: this.requestHandler,
                 encrypt: true
             });
-    };
+    }
 
     getUserItems(): UserItemList
     {
         return this.userItems;
-    };
+    }
 
     getItemsSortedDict(items: StoreItemList): StoreItemList
     {
@@ -158,17 +158,17 @@ class StoreManager
         }
 
         return sortedItemsDict;
-    };
+    }
 
     getOfferings(): StoreOfferingList
     {
         return <StoreOfferingList> this.getItemsSortedDict(this.offerings);
-    };
+    }
 
     getResources(): StoreResourceList
     {
         return <StoreResourceList> this.getItemsSortedDict(this.resources);
-    };
+    }
 
     // backwards compatibility
     getItems(): any
@@ -192,7 +192,7 @@ class StoreManager
                     token: token
                 }));
             }, 0);
-    };
+    }
 
     addToBasket(key: string, amount: number): bool
     {
@@ -270,7 +270,7 @@ class StoreManager
 
         basketItems[key] = {amount: newBasketAmount};
         return true;
-    };
+    }
 
     removeFromBasket(key: string, amount: number): bool
     {
@@ -296,12 +296,12 @@ class StoreManager
             this.basket.items[key] = {amount: newAmount};
         }
         return true;
-    };
+    }
 
     emptyBasket()
     {
         this.basket.items = {};
-    };
+    }
 
     isBasketEmpty(): bool
     {
@@ -315,7 +315,7 @@ class StoreManager
             }
         }
         return true;
-    };
+    }
 
     showConfirmPurchase(): bool
     {
@@ -328,7 +328,7 @@ class StoreManager
                 TurbulenzBridge.triggerShowConfirmPurchase();
             });
         return true;
-    };
+    }
 
     consume(key, consumeAmount, callbackFn, errorCallbackFn)
     {
@@ -375,7 +375,7 @@ class StoreManager
                 requestHandler: this.requestHandler,
                 encrypt: true
             });
-    };
+    }
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
@@ -500,5 +500,5 @@ class StoreManager
         TurbulenzBridge.setOnPurchaseRejected(onSitePurchaseRejected);
 
         return storeManager;
-    };
-};
+    }
+}

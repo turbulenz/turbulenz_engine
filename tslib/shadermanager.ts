@@ -19,7 +19,7 @@ class ShaderManager
 
     load: (path: string, callback?: { (shader: Shader): void; }) => Shader;
     map: (dst: string, src: string) => void;
-    get(path: string) : Shader { debug.abort("abstract method"); return null; };
+    get(path: string) : Shader { debug.abort("abstract method"); return null; }
     getAll: () => { [path: string]: Shader; };
     remove: (path: string) => void;
     reload: (path: string, callback: { (shader: Shader): void; }) => void;
@@ -529,5 +529,5 @@ class ShaderManager
         };
 
         return sm;
-    };
-};
+    }
+}
