@@ -3513,9 +3513,9 @@ Scene.prototype.getMetrics =
 {
     var numTotalNodes = 0;
     var numTotalRenderables = 0;
-    var numTotalLights = 0;
     var numTotalVertices = 0;
     var numTotalPrimitives = 0;
+    var numTotalLights = this.globalLights.length;
 
     var count = function countFn(node)
     {
