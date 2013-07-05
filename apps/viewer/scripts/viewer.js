@@ -1245,11 +1245,24 @@ function createSceneFn()
 
     function onSceneLoadedFn(scene)
     {
+        var sceneDetailsDiv = htmlDoc.getElementById('scene-details');
+        var sceneDetailsString = "";
+
+        var sceneMetrics = scene.getMetrics();
+        var metricsString = "<div>Scene metrics:<\/div><table class=\"status\" border=\"1\" bordercolor=\"gray\">";
+        metricsString += "<tr><td>Nodes<\/td><td align=\"right\">" + sceneMetrics.numNodes + "<\/td><\/tr>";
+        metricsString += "<tr><td>Renderables<\/td><td align=\"right\">" + sceneMetrics.numRenderables + "<\/td><\/tr>";
+        metricsString += "<tr><td>Vertices<\/td><td align=\"right\">" + sceneMetrics.numVertices + "<\/td><\/tr>";
+        metricsString += "<tr><td>Primitives<\/td><td align=\"right\">" + sceneMetrics.numPrimitives + "<\/td><\/tr>";
+        metricsString += "<tr><td>Lights<\/td><td align=\"right\">" + sceneMetrics.numLights + "<\/td><\/tr>";
+        metricsString += "<\/table>";
+        sceneDetailsString += metricsString;
+
         var globalLights = scene.globalLights;
         var numGlobalLights = globalLights.length;
         if (0 < numGlobalLights)
         {
-            var lightsString = "<span id=\"table-title\">Global Lights:<\/span><br><table class=\"status\" border=\"1\" bordercolor=\"gray\"><tr><th>Name<\/th><th>Type<\/th>";
+            var lightsString = "<div>Global Lights:<\/div><table class=\"status\" border=\"1\" bordercolor=\"gray\">";
             var n = 0;
             do
             {
@@ -1272,18 +1285,16 @@ function createSceneFn()
                 {
                     lightType = "point";
                 }
-                lightsString += "<tr><td>" + lightName + "<\/td><td>" + lightType + "<\/td><\/tr>";
+                lightsString += "<tr><td>" + lightName + "<\/td><td align=\"right\">" + lightType + "<\/td><\/tr>";
                 n += 1;
             }
             while (n < numGlobalLights);
             lightsString += "<\/table>";
-            var lightDetailsDiv = htmlDoc.getElementById('light-details');
-            lightDetailsDiv.innerHTML += lightsString;
+
+            sceneDetailsString += lightsString;
         }
-        else
-        {
-            jQuery('#light-details').hide();
-        }
+
+        sceneDetailsDiv.innerHTML += sceneDetailsString;
 
         function drawOptionFn()
         {
