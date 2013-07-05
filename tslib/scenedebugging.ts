@@ -3282,14 +3282,14 @@ Scene.prototype.drawWireframe = function drawWireframeFn(gd, sm, camera, wirefra
                             }
                             else if (surfacePrimitive === gd.PRIMITIVE_TRIANGLE_STRIP || surfacePrimitive === gd.PRIMITIVE_TRIANGLE_FAN)
                             {
-                                positionOffset += (oldSurface.first * stride);
+                                positionOffset += (oldSurface.first - oldGeometry.vertexBufferAllocation.baseIndex) * stride;
                                 numTriangles = oldSurface.numVertices - 2;
                                 dataLength = numTriangles * 3;
                                 stepSize = 1;
                             }
                             else    //unindexed and gd.PRIMITIVE_TRIANGLES
                             {
-                                positionOffset += (oldSurface.first * stride);
+                                positionOffset += (oldSurface.first - oldGeometry.vertexBufferAllocation.baseIndex) * stride;
                                 dataLength = oldSurface.numVertices;
                                 stepSize = 3;
                             }
