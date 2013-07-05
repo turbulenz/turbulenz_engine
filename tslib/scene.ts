@@ -4189,6 +4189,7 @@ class Scene
                                 destSurface.indexBuffer = indexBuffer;
                                 destSurface.numIndices = numIndices;
                                 destSurface.first = (indexBufferBaseIndex + indexBufferOffset);
+                                destSurface.numVertices = totalNumVertices;
 
                                 if (baseIndex)
                                 {
@@ -4274,6 +4275,7 @@ class Scene
                         }
 
                         shape.first = surface.first;
+                        shape.numVertices = surface.numVertices;
 
                         if (surface.indexBuffer)
                         {
@@ -4283,10 +4285,6 @@ class Scene
                             {
                                 shape.indexData = surface.indexData;
                             }
-                        }
-                        else
-                        {
-                            shape.numVertices = surface.numVertices;
                         }
                     }
 
