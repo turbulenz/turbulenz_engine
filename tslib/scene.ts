@@ -144,6 +144,7 @@ class Scene
     drawAnimationHierarchy: (gd, sm, camera, hierarchy, numJoints, controller, matrix, boneColor, boundsColor) => void;
     getDebugSemanticsPos: () => Semantics;
     getDebugSemanticsPosCol: () => Semantics;
+    getMetrics: () => any;
     getVisibilityMetrics: () => any;
     drawWireframe: (gd, sm, camera, wireframeInfo) => void;
     attributeComponents: (attribute) => number;
