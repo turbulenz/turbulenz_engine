@@ -257,7 +257,6 @@ float3 ApplyShadowAttenuation(float3 position, float3 attenuation)
 {
     float3 shadowPosition = WorldPointToDevice(position, shadowProjection).xyw;
     float2 shadowSpace = (shadowPosition.xy / shadowPosition.z);
-    float2 shadowSpaceRange = abs(shadowSpace);
     float depth = saturate(dot(shadowDepth, float4(position, 1.0)) - 0.007);
     float2 shadowuv = (shadowSpace * 0.5 + 0.5);
 
