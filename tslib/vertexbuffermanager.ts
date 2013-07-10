@@ -18,7 +18,7 @@ interface VertexBuffersBucket
 
 interface VertexBuffersPool
 {
-    attributesHash: number;
+    attributesHash: string;
     vertexBufferData: {
         vertexBuffer: VertexBuffer;
         bucket: VertexBuffersBucket[];
@@ -128,7 +128,27 @@ class VertexBufferManager
         var poolIndex;
         var maxVerticesPerVertexBuffer = this.maxVerticesPerVertexBuffer;
 
-        var attributesHash = attributes.join();
+        var attributesHash = '';
+        var attributeIndex;
+        var attribute;
+        for (attributeIndex = 0; attributeIndex < attributes.length; attributeIndex += 1)
+        {
+            attribute = attributes[attributeIndex];
+            if (attribute.name)
+            {
+                attributesHash += attribute.name;
+            }
+            else if (typeof attribute === "number")
+            {
+                attributesHash += attribute;
+            }
+            else
+            {
+                attributesHash += attribute.toString();
+            }
+            attributesHash += ',';
+        }
+
         var numVertexBuffersPools = this.vertexBuffersPools.length;
         var vertexBuffersPool;
 
