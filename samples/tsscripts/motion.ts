@@ -100,7 +100,7 @@ class Motion
             this.circularRadius = radius;
         }
 
-        this.centerPosition = md.v3Build(circularCenter[0], 0, circularCenter[2]);
+        this.centerPosition = md.v3Build(circularCenter[0], 0, circularCenter[2], this.centerPosition);
         this.dirMode = this.directionType.circular2D;
     };
 
@@ -217,7 +217,7 @@ class Motion
             // Motion assumes that xaxis is always pointing to the center
             xaxis = md.v3Sub(endPosition, centerPosition, xaxis);
             md.v3Normalize(xaxis, xaxis);
-            zaxis = md.v3Cross(xaxis, up);
+            zaxis = md.v3Cross(xaxis, up, zaxis);
             md.v3Normalize(zaxis, zaxis);
         }
         else if (rotate === mode)
@@ -225,16 +225,16 @@ class Motion
             variantRotation = md.m43FromAxisRotation(up, this.motionPhase, variantRotation);
 
             //TODO: not relative to up vector
-            xaxis = md.v3Build(1, 0, 0);
-            yaxis = md.v3Build(0, 1, 0);
-            zaxis = md.v3Build(0, 0, 1);
+            xaxis = md.v3Build(1, 0, 0, xaxis);
+            yaxis = md.v3Build(0, 1, 0, yaxis);
+            zaxis = md.v3Build(0, 0, 1, zaxis);
         }
         else // none, default
         {
             variantRotation = md.m43FromAxisRotation(up, 0, variantRotation);
             // TODO: Don't create a new v3
-            xaxis = md.v3Build(1, 0, 0);
-            zaxis = md.v3Cross(xaxis, up);
+            xaxis = md.v3Build(1, 0, 0, xaxis);
+            zaxis = md.v3Cross(xaxis, up, zaxis);
             md.v3Normalize(zaxis, zaxis);
         }
 
@@ -323,8 +323,7 @@ class Motion
             // No position update
         }
 
-        // TODO: Avoid creating a new v3
-        this.endPosition = md.v3Build(this.position[0], this.position[1], this.position[2]);
+        this.endPosition = md.v3Copy(this.position, this.endPosition);
     };
 
     update(delta)
