@@ -133,12 +133,10 @@ class Floor
                 var vpAt = md.m44At(vp);
                 var vpPos = md.m44Pos(vp);
 
-                var v4ScalarMul = md.v4ScalarMul;
-
-                var worldRight = v4ScalarMul.call(md, vpRight, farPlane);
+                var worldRight = md.v4ScalarMul(vpRight, farPlane);
                 var worldUp = md.m44Up(vp);
                 var worldAt = md.v4ScalarMul(vpAt, farPlane);
-                var worldPos = md.v4Add3(v4ScalarMul.call(md, vpRight, posX), v4ScalarMul.call(md, vpAt, posZ), vpPos);
+                var worldPos = md.v4Add3(md.v4ScalarMul(vpRight, posX), md.v4ScalarMul(vpAt, posZ), vpPos);
 
                 techniqueParameters.worldViewProjection = md.m44Build(worldRight,
                                                                       worldUp,
