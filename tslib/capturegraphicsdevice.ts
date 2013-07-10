@@ -672,18 +672,23 @@ class CaptureGraphicsDevice
         var gd = this.gd;
         var numSemantics = semantics.length;
         var newSemantics = new Array(numSemantics);
-        var n;
+        var n, clonedSemantic;
         for (n = 0; n < numSemantics; n += 1)
         {
             var semantic = semantics[n];
             if (typeof semantic === "string")
             {
-                newSemantics[n] = semantic;
+                clonedSemantic = semantic;
             }
             else
             {
-                newSemantics[n] = this.reverseSemantic[semantic];
+                clonedSemantic = this.reverseSemantic[semantic];
             }
+            if (clonedSemantic === 'TEXCOORD0')
+            {
+                clonedSemantic = 'TEXCOORD';
+            }
+            newSemantics[n] = clonedSemantic;
         }
         return newSemantics;
     }
