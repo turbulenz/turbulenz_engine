@@ -188,12 +188,6 @@ class Motion
     {
         // Math device functions
         var md = this.md;
-        var v3Normalize = md.v3Normalize;
-        var v3Cross = md.v3Cross;
-        var m43Mul = md.m43Mul;
-        var v3Sub = md.v3Sub;
-        var m43Build = md.m43Build;
-        var m43FromAxisRotation = md.m43FromAxisRotation;
 
         // update input
         var up = this.up;
@@ -218,17 +212,17 @@ class Motion
         if (weave2D === mode)
         {
             // Assumes forward motion is zaxis
-            variantRotation = m43FromAxisRotation.call(md, up, this.rotationVariation * this.motionWaveSin, variantRotation);
+            variantRotation = md.m43FromAxisRotation(up, this.rotationVariation * this.motionWaveSin, variantRotation);
 
             // Motion assumes that xaxis is always pointing to the center
-            xaxis = v3Sub.call(md, endPosition, centerPosition, xaxis);
-            v3Normalize.call(md, xaxis, xaxis);
-            zaxis = v3Cross.call(md, xaxis, up);
-            v3Normalize.call(md, zaxis, zaxis);
+            xaxis = md.v3Sub(endPosition, centerPosition, xaxis);
+            md.v3Normalize(xaxis, xaxis);
+            zaxis = md.v3Cross(xaxis, up);
+            md.v3Normalize(zaxis, zaxis);
         }
         else if (rotate === mode)
         {
-            variantRotation = m43FromAxisRotation.call(md, up, this.motionPhase, variantRotation);
+            variantRotation = md.m43FromAxisRotation(up, this.motionPhase, variantRotation);
 
             //TODO: not relative to up vector
             xaxis = md.v3Build(1, 0, 0);
@@ -237,17 +231,17 @@ class Motion
         }
         else // none, default
         {
-            variantRotation = m43FromAxisRotation.call(md, up, 0, variantRotation);
+            variantRotation = md.m43FromAxisRotation(up, 0, variantRotation);
             // TODO: Don't create a new v3
             xaxis = md.v3Build(1, 0, 0);
-            zaxis = v3Cross.call(md, xaxis, up);
-            v3Normalize.call(md, zaxis, zaxis);
+            zaxis = md.v3Cross(xaxis, up);
+            md.v3Normalize(zaxis, zaxis);
         }
 
         // Construct final world matrix
-        matrix = m43Build.call(md, xaxis, up, zaxis, endPosition, matrix);
-        matrix = m43Mul.call(md, matrix, baseRotation, matrix);
-        this.matrix = m43Mul.call(md, matrix, variantRotation, matrix);
+        matrix = md.m43Build(xaxis, up, zaxis, endPosition, matrix);
+        matrix = md.m43Mul(matrix, baseRotation, matrix);
+        this.matrix = md.m43Mul(matrix, variantRotation, matrix);
     };
 
     updateMovement(delta)
@@ -336,7 +330,6 @@ class Motion
     update(delta)
     {
         var md = this.md;
-        var m43SetPos = md.m43SetPos;
         var pi2 = this.pi2;
         var delta2PI = delta * pi2;
 
@@ -350,7 +343,7 @@ class Motion
             this.updateDirection(/* delta */);
             this.updateRotation(/* delta2PI */);
 
-            m43SetPos.call(md, this.matrix, this.endPosition);
+            md.m43SetPos(this.matrix, this.endPosition);
         }
     };
 
