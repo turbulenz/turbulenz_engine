@@ -77,13 +77,18 @@ class DefaultRendering
 
     sortRenderablesAndLights(camera, scene)
     {
-        var index;
+        var opaque = DefaultRendering.passIndex.opaque;
+        var decal = DefaultRendering.passIndex.decal;
+        var transparent = DefaultRendering.passIndex.transparent;
+
         var passes = this.passes;
-        var numPasses = DefaultRendering.numPasses;
-        for (index = 0; index < numPasses; index += 1)
-        {
-            passes[index].length = 0;
-        }
+        var opaquePass = passes[opaque];
+        var decalPass = passes[decal];
+        var transparentPass = passes[transparent];
+
+        var numOpaque = 0;
+        var numDecal = 0;
+        var numTransparent = 0;
 
         var drawParametersArray;
         var numDrawParameters;
@@ -95,7 +100,6 @@ class DefaultRendering
         if (numVisibleRenderables > 0)
         {
             var renderable, pass, passIndex;
-            var transparent = DefaultRendering.passIndex.transparent;
             var n = 0;
             do
             {
@@ -118,7 +122,12 @@ class DefaultRendering
                 {
                     drawParameters = drawParametersArray[drawParametersIndex];
                     passIndex = drawParameters.userData.passIndex;
-                    if (passIndex === transparent)
+                    if (passIndex === opaque)
+                    {
+                        opaquePass[numOpaque] = drawParameters;
+                        numOpaque += 1;
+                    }
+                    else if (passIndex === transparent)
                     {
                         if (renderable.sharedMaterial.meta.far)
                         {
@@ -128,9 +137,15 @@ class DefaultRendering
                         {
                             drawParameters.sortKey = renderable.distance;
                         }
+
+                        transparentPass[numTransparent] = drawParameters;
+                        numTransparent += 1;
                     }
-                    pass = passes[passIndex];
-                    pass[pass.length] = drawParameters;
+                    else if (passIndex === decal)
+                    {
+                        decalPass[numDecal] = drawParameters;
+                        numDecal += 1;
+                    }
                 }
 
                 // this renderer does not care about lights
@@ -139,6 +154,10 @@ class DefaultRendering
             }
             while (n < numVisibleRenderables);
         }
+
+        opaquePass.length = numOpaque;
+        decalPass.length = numDecal;
+        transparentPass.length = numTransparent;
     };
 
     update(gd, camera, scene, currentTime)
@@ -177,8 +196,6 @@ class DefaultRendering
          drawTransparentFn,
          drawDebugFn)
     {
-        var globalTechniqueParametersArray = this.globalTechniqueParametersArray;
-
         gd.clear(clearColor, 1.0, 0);
 
         if (this.wireframe)
@@ -197,17 +214,19 @@ class DefaultRendering
         }
         else
         {
+            var globalTechniqueParametersArray = this.globalTechniqueParametersArray;
+            var passes = this.passes;
 
-            gd.drawArray(this.passes[DefaultRendering.passIndex.opaque], globalTechniqueParametersArray, -1);
+            gd.drawArray(passes[DefaultRendering.passIndex.opaque], globalTechniqueParametersArray, -1);
 
-            gd.drawArray(this.passes[DefaultRendering.passIndex.decal], globalTechniqueParametersArray, -1);
+            gd.drawArray(passes[DefaultRendering.passIndex.decal], globalTechniqueParametersArray, -1);
 
             if (drawDecalsFn)
             {
                 drawDecalsFn();
             }
 
-            gd.drawArray(this.passes[DefaultRendering.passIndex.transparent], globalTechniqueParametersArray, 1);
+            gd.drawArray(passes[DefaultRendering.passIndex.transparent], globalTechniqueParametersArray, 1);
 
             if (drawTransparentFn)
             {
