@@ -28,11 +28,16 @@ if (dataLen !== 4)
 var dataLen = lenBuffer.readUInt32LE(0);
 // Allocate and read the data
 var dataBuffer = new Buffer(dataLen);
-var dataReadLen = fs.readSync(process.stdin.fd, dataBuffer, 0, dataLen, null);
-if (dataReadLen !== dataLen)
+var dataRead = 0;
+while (dataRead < dataLen)
 {
-    console.error('Error reading data');
-    process.exit(1);
+    var dataReadLen = fs.readSync(process.stdin.fd, dataBuffer, dataRead, dataLen - dataRead, null);
+    dataRead += dataReadLen;
+    if (dataReadLen === 0 && dataRead !== dataLen)
+    {
+        console.error('Error reading data ' + dataRead + '/' + dataLen);
+        process.exit(1);
+    }
 }
 // iv is stored in the last 16 bytes of the data stream
 var ivBuffer = dataBuffer.slice(dataLen - 16, dataLen);
