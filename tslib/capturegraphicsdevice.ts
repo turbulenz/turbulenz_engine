@@ -763,23 +763,25 @@ class CaptureGraphicsDevice
             {
                 av = a[n];
                 bv = data[n];
-                if (av < bv)
+                if (av === bv)
+                {
+                    n += 1;
+                    if (n >= length)
+                    {
+                        // This would be a non-zero negative value to signal that we found an identical copy
+                        return -binIndex;
+                    }
+                }
+                else if (av < bv)
                 {
                     first = (middle + 1);
                     count -= (step + 1);
                     break;
                 }
-                else if (av > bv)
+                else //if (av > bv)
                 {
                     count = step;
                     break;
-                }
-
-                n += 1;
-                if (n >= length)
-                {
-                    // This would be a non-zero negative value to signal that we found an identical copy
-                    return -binIndex;
                 }
             }
         }
@@ -803,19 +805,19 @@ class CaptureGraphicsDevice
             // Simple commands only have one parameter after method
             av = bin[binIndex][1];
             bv = data[1];
-            if (av < bv)
+            if (av === bv)
+            {
+                // This would be a non-zero negative value to signal that we found an identical copy
+                return -binIndex;
+            }
+            else if (av < bv)
             {
                 first = (middle + 1);
                 count -= (step + 1);
             }
-            else if (av > bv)
+            else //if (av > bv)
             {
                 count = step;
-            }
-            else
-            {
-                // This would be a non-zero negative value to signal that we found an identical copy
-                return -binIndex;
             }
         }
 
