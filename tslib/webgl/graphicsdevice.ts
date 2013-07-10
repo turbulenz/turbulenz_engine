@@ -5393,7 +5393,7 @@ WebGLGraphicsDevice.prototype =
                 }
             }
 
-            if (depth !== undefined)
+            if (typeof depth === 'number')
             {
                 if (!depthMask)
                 {
@@ -5417,7 +5417,7 @@ WebGLGraphicsDevice.prototype =
                 }
             }
 
-            if (depth !== undefined)
+            if (typeof depth === 'number')
             {
                 if (!depthMask)
                 {
