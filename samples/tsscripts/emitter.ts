@@ -110,7 +110,6 @@ class ParticleSystem
     update(currentTime, deltaTime)
     {
         var md = this.md;
-        var v3AddScalarMul = md.v3AddScalarMul;
         var numActiveParticles = this.numActiveParticles;
         var particles = this.particles;
         var maxParticles = this.maxParticles;
@@ -154,7 +153,7 @@ class ParticleSystem
                 p.size += deltaSize;
                 velocity = p.velocity;
                 position = p.position;
-                p.position = v3AddScalarMul.call(md, position, velocity, deltaTime, position);
+                p.position = md.v3AddScalarMul(position, velocity, deltaTime, position);
 
                 if (deltaVelocity)
                 {
