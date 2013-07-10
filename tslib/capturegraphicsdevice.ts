@@ -2453,6 +2453,7 @@ class PlaybackGraphicsDevice
     black = [0, 0, 0, 1];
 
     gd:         any;
+    nextFrameIndex: number;
     srcWidth:   number;
     srcHeight:  number;
     frames:     any[];
@@ -2464,6 +2465,7 @@ class PlaybackGraphicsDevice
     constructor(gd)
     {
         this.gd = gd;
+        this.nextFrameIndex = 0;
         this.srcWidth = 0;
         this.srcHeight = 0;
         this.frames = [];
@@ -2885,6 +2887,7 @@ class PlaybackGraphicsDevice
                 frames[n] = null;
             }
             frames.length = 0;
+            this.nextFrameIndex = 0;
         }
         for (n = 0; n < numCommands; n += 1)
         {
@@ -3014,8 +3017,58 @@ class PlaybackGraphicsDevice
         }
     }
 
+    // This skip method would fail when updating the same data multiple times for next frame to use
+    private _skip(endIndex)
+    {
+        var nextIndex = this.nextFrameIndex;
+        while (nextIndex < endIndex)
+        {
+            var frame = this.frames[nextIndex];
+            if (!frame)
+            {
+                return false;
+            }
+
+            var numCommands = frame.length;
+            var c, target;
+            for (c = 0; c < numCommands; c += 1)
+            {
+                var command = frame[c];
+                var method = command[0];
+                if (method === CaptureGraphicsCommand.setData)
+                {
+                    target = command[1];
+                    if (!target['transient'])
+                    {
+                        target.setData(command[4],
+                                       command[2],
+                                       command[3]);
+                    }
+                }
+                else if (method === CaptureGraphicsCommand.setAllData)
+                {
+                    target = command[1];
+                    if (!target['transient'])
+                    {
+                        target.setData(command[2]);
+                    }
+                }
+            }
+
+            nextIndex += 1;
+            this.nextFrameIndex = nextIndex;
+        }
+
+        return true;
+    }
+
     public play(frameIndex)
     {
+        if (this.nextFrameIndex < frameIndex)
+        {
+            this._skip(frameIndex);
+        }
+
         var frame = this.frames[frameIndex];
         if (!frame)
         {
@@ -3187,6 +3240,8 @@ class PlaybackGraphicsDevice
                 break;
             }
         }
+
+        this.nextFrameIndex = (frameIndex + 1);
 
         return true;
     }
