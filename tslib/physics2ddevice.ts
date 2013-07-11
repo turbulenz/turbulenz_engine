@@ -1837,15 +1837,15 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 {
     type = "PULLEY";
 
-    // Inherited
-    wake  = Physics2DConstraint.prototype.wake;
-    sleep = Physics2DConstraint.prototype.sleep;
+    // // Inherited
+    // wake  = Physics2DConstraint.prototype.wake;
+    // sleep = Physics2DConstraint.prototype.sleep;
 
-    configure  = Physics2DConstraint.prototype.configure;
-    isEnabled  = Physics2DConstraint.prototype.isEnabled;
-    isDisabled = Physics2DConstraint.prototype.isDisabled;
-    enable     = Physics2DConstraint.prototype.enable;
-    disable    = Physics2DConstraint.prototype.disable;
+    // configure  = Physics2DConstraint.prototype.configure;
+    // isEnabled  = Physics2DConstraint.prototype.isEnabled;
+    // isDisabled = Physics2DConstraint.prototype.isDisabled;
+    // enable     = Physics2DConstraint.prototype.enable;
+    // disable    = Physics2DConstraint.prototype.disable;
 
     addEventListener    = Physics2DConstraint.prototype.addEventListener;
     removeEventListener = Physics2DConstraint.prototype.removeEventListener;

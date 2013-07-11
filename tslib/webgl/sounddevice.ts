@@ -118,7 +118,7 @@ class WebGLSound implements Sound
         }
     }
 
-    static create(sd: WebGLSoundDevice, params: any): WebGLSound;
+    static create(sd: WebGLSoundDevice, params: any): WebGLSound
     {
         var sound = new WebGLSound();
 

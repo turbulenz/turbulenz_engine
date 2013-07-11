@@ -62,336 +62,7 @@ declare var WebGLPhysicsPrivateTriangleArray :
     create(params: any): WebGLPhysicsShape;
 };
 
-interface WebGLPhysicsContactCallbacks
-{
-    mask: number;
-    added: bool;
-    deferred: bool;
-    trigger: bool;
-
-    onPreSolveContact: { (objectA: WebGLPhysicsCollisionObject,
-                          objectB: WebGLPhysicsCollisionObject,
-                          contact: WebGLPhysicsPublicContact) : void; };
-    onAddedContacts: { (objectA: WebGLPhysicsCollisionObject,
-                        objectB: WebGLPhysicsCollisionObject,
-                        contact: WebGLPhysicsPublicContact[]) : void; };
-    onProcessedContacts: { (objectA: WebGLPhysicsCollisionObject,
-                            objectB: WebGLPhysicsCollisionObject,
-                            contact: WebGLPhysicsPublicContact[]) : void; };
-    onRemovedContacts: { (objectA: WebGLPhysicsCollisionObject,
-                          objectB: WebGLPhysicsCollisionObject,
-                          contact: WebGLPhysicsPublicContact[]) : void; };
-};
-declare var WebGLPhysicsContactCallbacks :
-{
-    new(params: any, mask: number): WebGLPhysicsContactCallbacks;
-};
-
-interface WebGLPhysicsRigidBody extends PhysicsRigidBody
-{
-    // From PhysicsCollisionObject
-    // transform: any; // m43
-    // shape: WebGLPhysicsShape;
-    // group: number;  // getter for _private.group
-    // mask: number;   // getter for _private.mask
-    // friction: number; // getter for _private.friction
-    // restitution: number; // getter for _private.restitution
-    // kinematic: bool; // getter for _private.kinematic
-
-    // From WebGLPhysicsRigidBody
-    // linearVelocity  : any; // v3
-    // angularVelocity : any; // v3
-    // linearDamping   : number;
-    // angularDamping  : number;
-    // active          : bool;
-    // mass            : number;
-    // inertia         : any; // v3
-
-
-    _private: WebGLPhysicsPrivateBody;
-    userData: any;
-};
-declare var WebGLPhysicsRigidBody :
-{
-    new(): WebGLPhysicsRigidBody;
-    prototype: any;
-    create(params: any): WebGLPhysicsRigidBody;
-};
-interface WebGLPhysicsConstraint
-{
-    world: WebGLPhysicsWorld;
-    type: string;
-    userData: any;
-};
-declare var WebGLPhysicsConstraint :
-{
-    new(): WebGLPhysicsConstraint;
-    prototype: any;
-    create(type: string, params: any): WebGLPhysicsConstraint;
-};
-interface WebGLPhysicsPoint2PointConstraint extends PhysicsPoint2PointConstraint
-{
-    _private: WebGLPhysicsPrivatePoint2PointConstraint;
-};
-declare var WebGLPhysicsPoint2PointConstraint :
-{
-    new(): WebGLPhysicsPoint2PointConstraint;
-    prototype: any;
-    create(params: any): WebGLPhysicsPoint2PointConstraint;
-};
-interface WebGLPhysicsPrivatePoint2PointConstraint
-{
-    bodyA: WebGLPhysicsCollisionObject;
-    bodyB: WebGLPhysicsCollisionObject;
-    data: Float32Array;
-};
-declare var WebGLPhysicsPrivatePoint2PointConstraint :
-{
-    new() : WebGLPhysicsPrivatePoint2PointConstraint;
-    prototype: any;
-};
-
-interface WebGLPhysicsCharacter extends PhysicsCharacter
-{
-    _private: WebGLPhysicsPrivateCharacter;
-    userData: any;
-
-    height: number;
-    radius: number;
-    stepHeight: number;
-    crouchHeight: number;
-
-    start: any; // m43
-    end: any;   // m43
-    rigidBody: WebGLPhysicsRigidBody;
-};
-
-declare var WebGLPhysicsCharacter :
-{
-    new(): WebGLPhysicsCharacter;
-    prototype: any;
-    create(params: any): WebGLPhysicsCharacter;
-};interface WebGLPhysicsPrivateCharacter
-{
-    crouch: bool;
-    dead: bool;
-    start: any; // m43
-    end: any;   // m43
-    rigidBody: WebGLPhysicsRigidBody;
-};
-declare var WebGLPhysicsPrivateCharacter :
-{
-    new(): WebGLPhysicsPrivateCharacter;
-    prototype: any;
-};interface WebGLGJKContactSolver
-{
-    simplex: Float32Array;
-    numVertices: number;
-    closest: Float32Array;
-    cachedCoords: Float32Array;
-    tempCoords: Float32Array;
-};
-declare var WebGLGJKContactSolver :
-{
-    new(): WebGLGJKContactSolver;
-    prototype: any;
-    create(): WebGLGJKContactSolver;
-};interface WebGLContactEPA
-{
-    MAX_VERTICES: number;  // TODO: Should be on constructor?
-    MAX_FACES; number;
-
-    vertex_store: Float32Array;
-
-    hull: any; // TODO: { root : null, count : 0 };
-    stock: any; // TODO: { root : null, count : 0 };
-    horizon: any; // TODO { cf : null, ff : null, numFaces : 0 };
-
-    append(list, face): void;
-};
-declare var WebGLContactEPA :
-{
-    new(): WebGLContactEPA;
-    prototype: any;
-    create(): WebGLContactEPA;
-};
-
-interface WebGLPhysicsPublicContact
-{
-    _private: any; // ??
-
-    localPointOnA: any;  // v3 - getter
-    localPointOnB: any;  // v3 - getter
-    worldNormalOnB: any; // v3 - getter
-    added: bool;
-    distance: number;
-};
-declare var WebGLPhysicsPublicContact :
-{
-    new(): WebGLPhysicsPublicContact;
-    create(): WebGLPhysicsPublicContact;
-};
-
-interface WebGLPhysicsArbiter
-{
-    objectA: WebGLPhysicsCollisionObject;
-    objectB: WebGLPhysicsCollisionObject;
-    shapeA: WebGLPhysicsShape;
-    shapeB: WebGLPhysicsShape;
-    friction: number;
-    restitution: number;
-    contacts: WebGLPhysicsPublicContact[];
-    activeContacts: WebGLPhysicsPublicContact[];
-    active: bool;
-    skipDiscreteCollisions: bool;
-    contactFlags: number;
-    trigger: bool;
-};
-declare var WebGLPhysicsArbiter :
-{
-    new(): WebGLPhysicsArbiter;
-    prototype: any;
-
-    arbiterPool: WebGLPhysicsArbiter[];
-    arbiterPoolSize: number;
-
-    allocate: { (shapeA: WebGLPhysicsShape, shapeB: WebGLPhysicsShape,
-                 objectA: WebGLPhysicsCollisionObject,
-                 objectB: WebGLPhysicsCollisionObject) : WebGLPhysicsArbiter; };
-    deallocate: { (WebGLPhysicsArbiter): void; };
-};
-
-interface WebGLPhysicsIsland
-{
-    bodies: WebGLPhysicsRigidBody[];
-    constraints: WebGLPhysicsConstraint[];
-    wakeTimeStamp: number;
-    active: bool;
-}
-declare var WebGLPhysicsIsland :
-{
-    new(): WebGLPhysicsIsland;
-    prototype: any;
-
-    islandPool: WebGLPhysicsIsland[];
-    islandPoolSize: number;
-
-    allocate: { () : WebGLPhysicsIsland; };
-    deallocate: { (WebGLPhysicsIsland) : void; };
-}
-
-interface WebGLPhysicsTriangleShape
-{
-
-};
-declare var WebGLPhysicsTriangleShape :
-{
-    new(): WebGLPhysicsTriangleShape;
-    prototype: any;
-
-    trianglePool: WebGLPhysicsTriangleShape[];
-    trianglePoolSize: number;
-    allocate: { (): WebGLPhysicsTriangleShape; };
-    deallocate: { (WebGLPhysicsTriangleShape): void; };
-};
-
-interface WebGLPhysicsTOIEvent
-{
-
-};
-declare var WebGLPhysicsTOIEvent :
-{
-    new() : WebGLPhysicsTOIEvent;
-    prototype: any;
-
-    eventPool: WebGLPhysicsTOIEvent[];
-    eventPoolSize: number;
-
-    allocate: { (): WebGLPhysicsTOIEvent; };
-    deallocate: { (WebGLPhysicsTOIEvent): void; };
-};
-
-interface WebGLPrivatePhysicsWorld
-{
-    _public                        : WebGLPhysicsWorld;
-
-    gravity                        : any; // v3
-    maxSubSteps                    : number;
-    fixedTimeStep                  : number;
-    variableMinStep                : number;
-    variableMaxStep                : number;
-    variableStep                   : bool;
-    maxGiveUpTimeStep              : number;
-    staticSpatialMap               : AABBTree;
-    dynamicSpatialMap              : AABBTree;
-    collisionObjects               : WebGLPhysicsCollisionObject[];
-    rigidBodies                    : WebGLPhysicsRigidBody[];
-    constraints                    : WebGLPhysicsConstraint[];
-    kinematicBodies                : WebGLPhysicsCollisionObject[];
-
-    activeArbiters                 : WebGLPhysicsArbiter[];
-
-    activeBodies                   : WebGLPhysicsRigidBody[];
-    activeKinematics               : WebGLPhysicsCollisionObject[];
-    activeConstraints              : WebGLPhysicsConstraint [];
-
-    persistantObjectsList          : WebGLPhysicsRigidBody[];
-    persistantObjectsList2         : WebGLPhysicsRigidBody[];
-    persistantTrianglesList        : WebGLPhysicsTriangleArray[];
-    persistantTOIEventList         : WebGLPhysicsTOIEvent[];
-
-    timeStamp                      : number;
-
-    // timing information
-    performanceData                : {
-        discrete                   : number;
-        sleepComputation           : number;
-        prestepContacts            : number;
-        prestepConstraints         : number;
-        integrateVelocities        : number;
-        warmstartContacts          : number;
-        warmstartConstraints       : number;
-        physicsIterations          : number;
-        integratePositions         : number;
-        continuous                 : number;
-    };
-
-    syncExtents                    : Float32Array;
-    contactCallbackObjects         : WebGLPhysicsContactCallbacks[];
-    contactCallbackRemovedArbiters : WebGLPhysicsArbiter[];
-};
-declare var WebGLPrivatePhysicsWorld :
-{
-    new(): WebGLPrivatePhysicsWorld;
-    prototype: any;
-    create(params: any): WebGLPrivatePhysicsWorld;
-};
-
-interface PhysicsDevice
-{
-    createDynamicsWorld(params) : WebGLPhysicsWorld;
-    createPlaneShape(params) : WebGLPhysicsShape;
-    createBoxShape(params) : WebGLPhysicsShape;
-    createSphereShape(params) : WebGLPhysicsShape;
-    createCapsuleShape(params) : WebGLPhysicsShape;
-    createCylinderShape(params) : WebGLPhysicsShape;
-    createConeShape(params) : WebGLPhysicsShape;
-    createTriangleMeshShape(params) : WebGLPhysicsShape;
-    createConvexHullShape(params) : WebGLPhysicsShape;
-    createTriangleArray(params) : WebGLPhysicsTriangleArray;
-    createCollisionObject(params) : WebGLPhysicsCollisionObject;
-    createRigidBody(params) : WebGLPhysicsRigidBody;
-    createPoint2PointConstraint(params) : WebGLPhysicsPoint2PointConstraint;
-    createHingeConstraint(params) : WebGLPhysicsConstraint;
-    createConeTwistConstraint(params) : WebGLPhysicsConstraint;
-    create6DOFConstraint(params) : WebGLPhysicsConstraint;
-    createSliderConstraint(params) : WebGLPhysicsConstraint;
-    createCharacter(params) : WebGLPhysicsCharacter;
-};
-
 // -----------------------------------------------------------------------------
-
-
 
 //
 // WebGLPhysicsConfig
@@ -560,7 +231,7 @@ var initShapeProperties = function initShapePropertiesFn(s: WebGLPhysicsShape,
 //
 // WebGLPhysicsPlaneShape
 //
-class WebGLPhysicsPlaneShape
+class WebGLPhysicsPlaneShape implements PhysicsShape
 {
     static version = 1;
 
@@ -671,7 +342,7 @@ WebGLPhysicsPlaneShape.prototype.type = "PLANE";
 //
 // WebGL Physics Capsule Shape
 //
-class WebGLPhysicsCapsuleShape
+class WebGLPhysicsCapsuleShape implements PhysicsShape
 {
     static version = 1;
 
@@ -897,7 +568,7 @@ WebGLPhysicsShape.prototype.type = "CAPSULE";
 //
 // WebGL Physics Sphere Shape
 //
-class WebGLPhysicsSphereShape
+class WebGLPhysicsSphereShape implements PhysicsShape
 {
     static version = 1;
 
@@ -1023,7 +694,7 @@ WebGLPhysicsSphereShape.prototype.type = "SPHERE";
 //
 // WebGL Physics Box Shape
 //
-class WebGLPhysicsBoxShape
+class WebGLPhysicsBoxShape implements PhysicsShape
 {
     static version = 1;
 
@@ -1203,7 +874,7 @@ WebGLPhysicsBoxShape.prototype.type = "BOX";
 //
 // WebGL Physics Cylinder Shape
 //
-class WebGLPhysicsCylinderShape
+class WebGLPhysicsCylinderShape implements PhysicsShape
 {
     static version = 1;
 
@@ -1387,7 +1058,7 @@ WebGLPhysicsCylinderShape.prototype.type = "CYLINDER";
 //
 // WebGLPhysicsConeShape
 //
-class WebGLPhysicsConeShape
+class WebGLPhysicsConeShape implements PhysicsShape
 {
     static version = 1;
 
@@ -1597,7 +1268,7 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
     vertices             : Float32Array;
     indices              : any;
 
-    private triangles    : Float32Array;
+    triangles    : Float32Array;
     private spatialMap   : AABBTree;
     private numTriangles : number;
     private _private     : WebGLPhysicsPrivateTriangleArray;
@@ -2430,7 +2101,7 @@ var WebGLPhysicsConvexHullHelpers = {
 //
 // WebGLPhysicsTriangleMeshShape
 //
-class WebGLPhysicsTriangleMeshShape
+class WebGLPhysicsTriangleMeshShape implements PhysicsShape
 {
     static version = 1;
 
@@ -2508,7 +2179,7 @@ WebGLPhysicsTriangleMeshShape.prototype.type = "TRIANGLE_MESH";
 //
 // WebGL Physics Convex Hull Shape
 //
-class WebGLPhysicsConvexHullShape
+class WebGLPhysicsConvexHullShape implements PhysicsShape
 {
     static version = 1;
 
@@ -3381,7 +3052,19 @@ class WebGLPhysicsCollisionObject implements PhysicsCollisionObject
     kinematic: bool; // getter for _private.kinematic
     userData: any;
 
+    inverseInertia: Float32Array;
+    inverseMass: number;
+    velocity: Float32Array;
+
+    world: WebGLPhysicsWorld;
+
+    contactCallbacks: WebGLPhysicsContactCallbacks;
+
+    sweepFrozen: bool;
+
     private _private: WebGLPhysicsPrivateBody;
+    _public: any;  // TODO: what's this.  Seems to be refered to.
+
     private static sharedInverseInertiaLocal = VMath.v3BuildZero();
     private static sharedInverseInertia = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -3570,364 +3253,410 @@ class WebGLPhysicsCollisionObject implements PhysicsCollisionObject
     }
 }
 
-function WebGLPhysicsContactCallbacks(params, mask)
+class WebGLPhysicsContactCallbacks
 {
-    this.mask = (params.contactCallbacksMask !== undefined ?
-                 params.contactCallbacksMask :
-                 mask);
-    this.added = false;
-    this.deferred = (params.onAddedContacts ||
-                     params.onProcessedContacts ||
-                     params.onRemovedContacts);
-    this.onPreSolveContact = params.onPreSolveContact || null;
-    this.onAddedContacts = params.onAddedContacts || null;
-    this.onProcessedContacts = params.onProcessedContacts || null;
-    this.onRemovedContacts = params.onRemovedContacts || null;
-    this.trigger = params.trigger || false;
+    mask     : number;
+    added    : bool;
+    deferred : bool;
+    trigger  : bool;
 
-    return this;
+    onPreSolveContact: { (objectA: WebGLPhysicsCollisionObject,
+                          objectB: WebGLPhysicsCollisionObject,
+                          contact: WebGLPhysicsPublicContact) : void; };
+    onAddedContacts: { (objectA: WebGLPhysicsCollisionObject,
+                        objectB: WebGLPhysicsCollisionObject,
+                        contact: WebGLPhysicsPublicContact[]) : void; };
+    onProcessedContacts: { (objectA: WebGLPhysicsCollisionObject,
+                            objectB: WebGLPhysicsCollisionObject,
+                            contact: WebGLPhysicsPublicContact[]) : void; };
+    onRemovedContacts: { (objectA: WebGLPhysicsCollisionObject,
+                          objectB: WebGLPhysicsCollisionObject,
+                          contact: WebGLPhysicsPublicContact[]) : void; };
+
+    constructor(params, mask: number)
+    {
+        this.mask = (params.contactCallbacksMask !== undefined ?
+                     params.contactCallbacksMask :
+                     mask);
+        this.added = false;
+        this.deferred = (params.onAddedContacts ||
+                         params.onProcessedContacts ||
+                         params.onRemovedContacts);
+        this.onPreSolveContact = params.onPreSolveContact || null;
+        this.onAddedContacts = params.onAddedContacts || null;
+        this.onProcessedContacts = params.onProcessedContacts || null;
+        this.onRemovedContacts = params.onRemovedContacts || null;
+        this.trigger = params.trigger || false;
+
+        return this;
+    }
 }
 
-
 //
-// WebGL Physics Rigid Body
+// WebGLPhysicsRigidBody
 //
-function WebGLPhysicsRigidBody() { return this; }
-WebGLPhysicsRigidBody.prototype = {
 
-    version : 1,
+// TODO: inherit from WebGLPhysicsCollisionObject
 
-    calculateExtents : WebGLPhysicsCollisionObject.prototype.calculateExtents,
+class WebGLPhysicsRigidBody implements PhysicsRigidBody
+{
+    static version = 1;
 
-    calculateTransform : WebGLPhysicsCollisionObject.prototype.calculateTransform,
+    // From PhysicsCollisionObject
+    transform: any; // m43
+    shape: WebGLPhysicsShape;
+    group: number;  // getter for _private.group
+    mask: number;   // getter for _private.mask
+    friction: number; // getter for _private.friction
+    restitution: number; // getter for _private.restitution
+    kinematic: bool; // getter for _private.kinematic
 
-    clone : function rigidBodyCloneFn()
+    // From WebGLPhysicsRigidBody
+    linearVelocity  : any; // v3
+    angularVelocity : any; // v3
+    linearDamping   : number;
+    angularDamping  : number;
+    active          : bool;
+    mass            : number;
+    inertia         : any; // v3
+
+    _private: WebGLPhysicsPrivateBody;
+    userData: any;
+
+    calculateExtents = WebGLPhysicsCollisionObject.prototype.calculateExtents;
+
+    calculateTransform = WebGLPhysicsCollisionObject.prototype.calculateTransform;
+
+    clone()
     {
         return WebGLPhysicsRigidBody.create(this);
     }
-};
 
-WebGLPhysicsRigidBody.create = function webGLPhysicsRigidBodyFn(params)
-{
-    var retr = new WebGLPhysicsRigidBody();
-    var r = new WebGLPhysicsPrivateBody(params, retr);
-    retr._private = r;
+    static create(params: any): WebGLPhysicsRigidBody
+    {
+        var retr = new WebGLPhysicsRigidBody();
+        var r = new WebGLPhysicsPrivateBody(params, retr);
+        retr._private = r;
 
-    // read/write, no side effects
-    retr.userData = ("userData" in params) ? params.userData : null;
+        // read/write, no side effects
+        retr.userData = ("userData" in params) ? params.userData : null;
 
-    // read only, no getter needed
-    Object.defineProperty(retr, "shape", {
-        value : params.shape,
-        enumerable : true
-    });
+        // read only, no getter needed
+        Object.defineProperty(retr, "shape", {
+            value : params.shape,
+            enumerable : true
+        });
 
-    // read/write, side effects
-    Object.defineProperty(retr, "linearVelocity", {
-        get : function rigidBodyGetVelocity()
-        {
-            var vel = this._private.velocity;
-            return VMath.v3Build(vel[0], vel[1], vel[2]);
-        },
-        set : function rigidBodySetVelocity(linearVelocity)
-        {
-            var vel = this._private.velocity;
-            vel[0] = linearVelocity[0];
-            vel[1] = linearVelocity[1];
-            vel[2] = linearVelocity[2];
-        },
-        enumerable : true
-    });
-
-    // read/write, side effects
-    Object.defineProperty(retr, "angularVelocity", {
-        get : function rigidBodyGetVelocity()
-        {
-            var vel = this._private.velocity;
-            return VMath.v3Build(vel[3], vel[4], vel[5]);
-        },
-        set : function rigidBodySetVelocity(angularVelocity)
-        {
-            var vel = this._private.velocity;
-            vel[3] = angularVelocity[0];
-            vel[4] = angularVelocity[1];
-            vel[5] = angularVelocity[2];
-        },
-        enumerable : true
-    });
-
-    // read/write, side effects
-    Object.defineProperty(retr, "transform", {
-        get : function rigidBodyGetTransform()
-        {
-            return VMath.m43Copy(this._private.transform);
-        },
-        set : function rigidBodySetTransform(transform)
-        {
-            var pr = this._private;
-            VMath.m43Copy(transform, pr.transform);
-
-            // Ensure any arbiter's have their skipDiscreteCollisions flags set to false as
-            // new contacts 'will' be needed.
-            var arbiters = pr.arbiters;
-            var i;
-            var limit = arbiters.length;
-            for (i = 0; i < limit; i += 1)
+        // read/write, side effects
+        Object.defineProperty(retr, "linearVelocity", {
+            get : function rigidBodyGetVelocity()
             {
-                arbiters[i].skipDiscreteCollisions = false;
-            }
-        },
-        enumerable : true
-    });
-
-    // read/write, side effects
-    Object.defineProperty(retr, "active", {
-        get : function rigidBodyGetActive()
-        {
-            return this._private.active;
-        },
-        set : function rigidBodySetActive(active)
-        {
-            var pr = this._private;
-            if (active === pr.active)
+                var vel = this._private.velocity;
+                return VMath.v3Build(vel[0], vel[1], vel[2]);
+            },
+            set : function rigidBodySetVelocity(linearVelocity)
             {
-                // If already active, and in a world then allow re-settnig to true
-                // to update wakeTimeStamp.
-                if (pr.world && active)
+                var vel = this._private.velocity;
+                vel[0] = linearVelocity[0];
+                vel[1] = linearVelocity[1];
+                vel[2] = linearVelocity[2];
+            },
+            enumerable : true
+        });
+
+        // read/write, side effects
+        Object.defineProperty(retr, "angularVelocity", {
+            get : function rigidBodyGetVelocity()
+            {
+                var vel = this._private.velocity;
+                return VMath.v3Build(vel[3], vel[4], vel[5]);
+            },
+            set : function rigidBodySetVelocity(angularVelocity)
+            {
+                var vel = this._private.velocity;
+                vel[3] = angularVelocity[0];
+                vel[4] = angularVelocity[1];
+                vel[5] = angularVelocity[2];
+            },
+            enumerable : true
+        });
+
+        // read/write, side effects
+        Object.defineProperty(retr, "transform", {
+            get : function rigidBodyGetTransform()
+            {
+                return VMath.m43Copy(this._private.transform);
+            },
+            set : function rigidBodySetTransform(transform)
+            {
+                var pr = this._private;
+                VMath.m43Copy(transform, pr.transform);
+
+                // Ensure any arbiter's have their skipDiscreteCollisions flags set to false as
+                // new contacts 'will' be needed.
+                var arbiters = pr.arbiters;
+                var i;
+                var limit = arbiters.length;
+                for (i = 0; i < limit; i += 1)
                 {
-                    pr.wakeTimeStamp = pr.world.timeStamp;
+                    arbiters[i].skipDiscreteCollisions = false;
                 }
-            }
-            else if (pr.world)
-            {
-                // If in a world, and not already active then wake the body.
-                if (active)
-                {
-                    pr.world.wakeBody(pr);
-                }
-                // Otherwise force body to go to sleep.
-                else
-                {
-                    var list = pr.world.activeBodies;
-                    list[list.indexOf(pr)] = list[list.length - 1];
-                    list.pop();
-                    pr.active = false;
+            },
+            enumerable : true
+        });
 
-                    // force any arbiters to be deactivated also.
-                    var arbiters = pr.arbiters;
-                    var n;
-                    var maxN = arbiters.length;
-                    for (n = 0; n < maxN; n += 1)
+        // read/write, side effects
+        Object.defineProperty(retr, "active", {
+            get : function rigidBodyGetActive()
+            {
+                return this._private.active;
+            },
+            set : function rigidBodySetActive(active)
+            {
+                var pr = this._private;
+                if (active === pr.active)
+                {
+                    // If already active, and in a world then allow re-settnig to true
+                    // to update wakeTimeStamp.
+                    if (pr.world && active)
                     {
-                        var arb = arbiters[n];
-                        if (!arb.active)
+                        pr.wakeTimeStamp = pr.world.timeStamp;
+                    }
+                }
+                else if (pr.world)
+                {
+                    // If in a world, and not already active then wake the body.
+                    if (active)
+                    {
+                        pr.world.wakeBody(pr);
+                    }
+                    // Otherwise force body to go to sleep.
+                    else
+                    {
+                        var list = pr.world.activeBodies;
+                        list[list.indexOf(pr)] = list[list.length - 1];
+                        list.pop();
+                        pr.active = false;
+
+                        // force any arbiters to be deactivated also.
+                        var arbiters = pr.arbiters;
+                        var n;
+                        var maxN = arbiters.length;
+                        for (n = 0; n < maxN; n += 1)
                         {
-                            continue;
+                            var arb = arbiters[n];
+                            if (!arb.active)
+                            {
+                                continue;
+                            }
+
+                            arb.active = false;
+                            var worldList = pr.world.activeArbiters;
+                            worldList[worldList.indexOf(arb)] = worldList[worldList.length - 1];
+                            worldList.pop();
                         }
 
-                        arb.active = false;
-                        var worldList = pr.world.activeArbiters;
-                        worldList[worldList.indexOf(arb)] = worldList[worldList.length - 1];
-                        worldList.pop();
+                        // sync with broadphase
+                        pr.world.syncBody(pr);
                     }
-
-                    // sync with broadphase
-                    pr.world.syncBody(pr);
                 }
-            }
-            else
+                else
+                {
+                    pr.active = active;
+                }
+            },
+            enumerable : true
+        });
+
+        // read only, no getter needed
+        var group = (params.group !== undefined) ? params.group : WebGLPhysicsDevice.prototype.FILTER_DYNAMIC;
+        Object.defineProperty(retr, "group", {
+            value : group,
+            enumerable : true
+        });
+
+        // read only, no getter needed
+        var mask  = (params.mask  !== undefined) ? params.mask  : WebGLPhysicsDevice.prototype.FILTER_ALL;
+        Object.defineProperty(retr, "mask", {
+            value : mask,
+            enumerable : true
+        });
+
+        // read/write, side effects
+        Object.defineProperty(retr, "friction", {
+            get : function rigidBodyGetFriction()
             {
-                pr.active = active;
-            }
-        },
-        enumerable : true
-    });
-
-    // read only, no getter needed
-    var group = (params.group !== undefined) ? params.group : WebGLPhysicsDevice.prototype.FILTER_DYNAMIC;
-    Object.defineProperty(retr, "group", {
-        value : group,
-        enumerable : true
-    });
-
-    // read only, no getter needed
-    var mask  = (params.mask  !== undefined) ? params.mask  : WebGLPhysicsDevice.prototype.FILTER_ALL;
-    Object.defineProperty(retr, "mask", {
-        value : mask,
-        enumerable : true
-    });
-
-    // read/write, side effects
-    Object.defineProperty(retr, "friction", {
-        get : function rigidBodyGetFriction()
-        {
-            return this._private.friction;
-        },
-        set : function rigidBodySetFriction(friction)
-        {
-            var pr = this._private;
-            pr.friction = friction;
-
-            // Invalidate arbiter friction values.
-            var arbiters = pr.arbiters;
-            var i;
-            var limit = arbiters.length;
-            for (i = 0; i < limit; i += 1)
+                return this._private.friction;
+            },
+            set : function rigidBodySetFriction(friction)
             {
-                arbiters[i].invalidateParameters();
-            }
-        },
-        enumerable : true
-    });
-    Object.defineProperty(retr, "restitution", {
-        get : function rigidBodyGetRestitution()
-        {
-            return this._private.restitution;
-        },
-        set : function rigidBodySetRestitution(restitution)
-        {
-            var pr = this._private;
-            pr.restitution = restitution;
+                var pr = this._private;
+                pr.friction = friction;
 
-            // Invalidate arbiter restitution values.
-            var arbiters = pr.arbiters;
-            var i;
-            var limit = arbiters.length;
-            for (i = 0; i < limit; i += 1)
+                // Invalidate arbiter friction values.
+                var arbiters = pr.arbiters;
+                var i;
+                var limit = arbiters.length;
+                for (i = 0; i < limit; i += 1)
+                {
+                    arbiters[i].invalidateParameters();
+                }
+            },
+            enumerable : true
+        });
+        Object.defineProperty(retr, "restitution", {
+            get : function rigidBodyGetRestitution()
             {
-                arbiters[i].invalidateParameters();
-            }
-        },
-        enumerable : true
-    });
+                return this._private.restitution;
+            },
+            set : function rigidBodySetRestitution(restitution)
+            {
+                var pr = this._private;
+                pr.restitution = restitution;
 
-    // read/write, getters needed.
-    Object.defineProperty(retr, "linearDamping", {
-        get : function rigidBodyGetLinearDamping()
+                // Invalidate arbiter restitution values.
+                var arbiters = pr.arbiters;
+                var i;
+                var limit = arbiters.length;
+                for (i = 0; i < limit; i += 1)
+                {
+                    arbiters[i].invalidateParameters();
+                }
+            },
+            enumerable : true
+        });
+
+        // read/write, getters needed.
+        Object.defineProperty(retr, "linearDamping", {
+            get : function rigidBodyGetLinearDamping()
+            {
+                return this._private.linearDamping;
+            },
+            set : function rigidBodySetLinearDamping(linearDamping)
+            {
+                this._private.linearDamping = linearDamping;
+            },
+            enumerable : true
+        });
+        Object.defineProperty(retr, "angularDamping", {
+            get : function rigidBodyGetLinearDamping()
+            {
+                return this._private.angularDamping;
+            },
+            set : function rigidBodySetLinearDamping(angularDamping)
+            {
+                this._private.angularDamping = angularDamping;
+            },
+            enumerable : true
+        });
+
+        // read only, no getter needed
+        var kinematic = (params.kinematic !== undefined) ? params.kinematic : false;
+        Object.defineProperty(retr, "kinematic", {
+            value : kinematic,
+            enumerable : true
+        });
+
+        // read only, no getter needed
+        var mass = (params.mass !== undefined) ? params.mass : 1.0;
+        Object.defineProperty(retr, "mass", {
+            value : mass,
+            enumerable : true
+        });
+
+        // read only, getter needed for unique vector.
+        // this value isn't used internally so is kept in a closure just for this getter.
+        var inertia = (params.inertia ? VMath.v3Copy(params.inertia) : VMath.v3ScalarMul(params.shape.inertia, mass));
+        Object.defineProperty(retr, "inertia", {
+            get : function rigidBodyGetInertia()
+            {
+                return VMath.v3Copy(inertia);
+            },
+            enumerable : true
+        });
+
+        // ------------------------------
+        // initialise private properties of RigidBody.
+
+        r.group = group;
+        r.mask = mask;
+
+        r.active = (params.active !== undefined) ? params.active :
+            (params.frozen !== undefined) ? (!params.frozen) : true;
+
+        r.kinematic = kinematic;
+        r.fixedRotation = kinematic || ((params.fixedRotation !== undefined) ? params.fixedRotation : false);
+
+        r.inverseInertiaLocal = (r.fixedRotation ? VMath.v3BuildZero() :
+                                 VMath.v3Build(1 / inertia[0],
+                                               1 / inertia[1],
+                                               1 / inertia[2]));
+        r.inverseInertia = VMath.m33BuildIdentity();
+
+        r.mass = mass;
+        r.inverseMass = (kinematic ? 0 : (1 / r.mass));
+
+        r.collisionObject = false;
+
+        // Kinematic object is not permitted to sleep in the normal sense.
+        r.permitSleep = (params.permitSleep !== undefined) ? params.permitSleep : (!kinematic);
+
+        // Kinematic object is not subject to manipulation by continous collisions.
+        r.sweepFrozen = kinematic;
+
+        // prepare for contact callbacks
+        if (params.onPreSolveContact ||
+            params.onAddedContacts ||
+            params.onProcessedContacts ||
+            params.onRemovedContacts)
         {
-            return this._private.linearDamping;
-        },
-        set : function rigidBodySetLinearDamping(linearDamping)
+            r.contactCallbacks = new WebGLPhysicsContactCallbacks(params, mask);
+        }
+        else
         {
-            this._private.linearDamping = linearDamping;
-        },
-        enumerable : true
-    });
-    Object.defineProperty(retr, "angularDamping", {
-        get : function rigidBodyGetLinearDamping()
-        {
-            return this._private.angularDamping;
-        },
-        set : function rigidBodySetLinearDamping(angularDamping)
-        {
-            this._private.angularDamping = angularDamping;
-        },
-        enumerable : true
-    });
+            r.contactCallbacks = null;
+        }
 
-    // read only, no getter needed
-    var kinematic = (params.kinematic !== undefined) ? params.kinematic : false;
-    Object.defineProperty(retr, "kinematic", {
-        value : kinematic,
-        enumerable : true
-    });
-
-    // read only, no getter needed
-    var mass = (params.mass !== undefined) ? params.mass : 1.0;
-    Object.defineProperty(retr, "mass", {
-        value : mass,
-        enumerable : true
-    });
-
-    // read only, getter needed for unique vector.
-    // this value isn't used internally so is kept in a closure just for this getter.
-    var inertia = (params.inertia ? VMath.v3Copy(params.inertia) : VMath.v3ScalarMul(params.shape.inertia, mass));
-    Object.defineProperty(retr, "inertia", {
-        get : function rigidBodyGetInertia()
-        {
-            return VMath.v3Copy(inertia);
-        },
-        enumerable : true
-    });
-
-    // ------------------------------
-    // initialise private properties of RigidBody.
-
-    r.group = group;
-    r.mask = mask;
-
-    r.active = (params.active !== undefined) ? params.active :
-                (params.frozen !== undefined) ? (!params.frozen) : true;
-
-    r.kinematic = kinematic;
-    r.fixedRotation = kinematic || ((params.fixedRotation !== undefined) ? params.fixedRotation : false);
-
-    r.inverseInertiaLocal = (r.fixedRotation ? VMath.v3BuildZero() :
-                                               VMath.v3Build(1 / inertia[0],
-                                                             1 / inertia[1],
-                                                             1 / inertia[2]));
-    r.inverseInertia = VMath.m33BuildIdentity();
-
-    r.mass = mass;
-    r.inverseMass = (kinematic ? 0 : (1 / r.mass));
-
-    r.collisionObject = false;
-
-    // Kinematic object is not permitted to sleep in the normal sense.
-    r.permitSleep = (params.permitSleep !== undefined) ? params.permitSleep : (!kinematic);
-
-    // Kinematic object is not subject to manipulation by continous collisions.
-    r.sweepFrozen = kinematic;
-
-    // prepare for contact callbacks
-    if (params.onPreSolveContact ||
-        params.onAddedContacts ||
-        params.onProcessedContacts ||
-        params.onRemovedContacts)
-    {
-        r.contactCallbacks = new WebGLPhysicsContactCallbacks(params, mask);
+        return retr;
     }
-    else
-    {
-        r.contactCallbacks = null;
-    }
-
-    return retr;
-};
+}
 
 //
-// WebGL Physics Constraint
+// WebGLPhysicsConstraint
 //
-function WebGLPhysicsConstraint() { return this; }
-WebGLPhysicsConstraint.prototype = {
-
-    version : 1,
-
-    preStep : function constraintPreStepFn(/* timeStep */)
-    {
-    },
-
-    applyCachedImpulses : function constraintApplyCachedImpulsesFn()
-    {
-    },
-
-    computeAndApplyImpulses : function constraintComputeAndApplyImpulsesFn()
-    {
-    }
-};
-
-WebGLPhysicsConstraint.create = function webGLPhysicsConstraintFn(type, params)
+class WebGLPhysicsConstraint implements PhysicsConstraint
 {
-    var s = new WebGLPhysicsConstraint();
+    static version = 1;
 
-    s.world = null;
-    s.userData = null;
+    world    : WebGLPhysicsWorld;
+    type     : string;
+    userData : any;
 
-    webGLPhysicsClone(s, params);
-    s.type = type;
+    preStep(/* timeStep */)
+    {
+    }
 
-    return s;
-};
+    applyCachedImpulses()
+    {
+    }
+
+    computeAndApplyImpulses()
+    {
+    }
+
+    create(type: string, params: any): WebGLPhysicsConstraint
+    {
+        var s = new WebGLPhysicsConstraint();
+
+        s.world = null;
+        s.userData = null;
+
+        webGLPhysicsClone(s, params);
+        s.type = type;
+
+        return s;
+    }
+}
 
 // Decorate constraint with getter/setters for bodyA/bodyB
 // And deal with construction logic common to all constraints
@@ -3997,48 +3726,172 @@ var initConstraintProperties = function initConstraintPropertiesFn(c, params)
 }
 
 //
-// WebGL Physics Point2Point Constraint
+// WebGLPhysicsPoint2Point Constraint
 //
-function WebGLPhysicsPoint2PointConstraint() { return this; }
-WebGLPhysicsPoint2PointConstraint.prototype = {
-
-    version : 1,
-    type : "POINT2POINT"
-
-};
-
-
-function WebGLPhysicsPrivatePoint2PointConstraint()
+class WebGLPhysicsPoint2PointConstraint implements PhysicsPoint2PointConstraint
 {
-    // Initialise all properties that will ever be set on this object.
-    this.bodyA = null;
-    this.bodyB = null;
+    static version = 1;
+    type : string;  // prototype
 
-    // [0,  3) : pivotA (vector3)
-    // [3,  6) : pivotB (vector3)
-    // [6,  9) : relA   (vector3)
-    // [9, 12) : relB   (vector3)
-    // [12,21) : skewA  (mat33)
-    // [21,30) : skewB  (mat33)
-    // [30,31) : force   (scalar)
-    // [31,32) : damping (scalar)
-    // [32,33) : clamp   (scalar)
-    // [33,34) : gamma   (scalar)
-    // [34,40) : K (symmetric mat33)
-    //           [ K0 K1 K2 ]
-    //    aka:   [ K1 K3 K4 ]
-    //           [ K2 K4 K5 ]
-    // [40,43) : jAcc (vector3)
-    // [43,46) : bias (vector3)
-    this.data = new Float32Array(46);
-    return this;
+    // PhysicsConstraint
+    bodyA: PhysicsCollisionObject;
+    bodyB: PhysicsCollisionObject;
+    transformA: any; // m43
+    transformB: any; // m43
+
+    // PhysicsPoint2PointConstraint
+    pivotA: any; // v3
+    pivotB: any; // v3
+    force: number;
+    damping: number;
+    impulseClamp: number;
+
+    // TODO: move into the class
+    private _private: WebGLPhysicsPrivatePoint2PointConstraint;
+
+    create(params: any): WebGLPhysicsPoint2PointConstraint
+    {
+        var c = new WebGLPhysicsPoint2PointConstraint();
+        var pc = new WebGLPhysicsPrivatePoint2PointConstraint();
+        c._private = pc;
+
+        initConstraintProperties(c, params);
+
+        var data = pc.data;
+        // read/write with side effects
+        data[0] = params.pivotA[0];
+        data[1] = params.pivotA[1];
+        data[2] = params.pivotA[2];
+        Object.defineProperty(c, "pivotA", {
+            get : function point2pointGetPivotA()
+            {
+                var data = this._private.data;
+                return VMath.v3Build(data[0], data[1], data[2]);
+            },
+            set : function point2pointSetPivotA(pivotA)
+            {
+                var data = this._private.data;
+                data[0] = pivotA[0];
+                data[1] = pivotA[1];
+                data[2] = pivotA[2];
+            },
+            enumerable : true
+        });
+
+        // read/write with side effects
+        // In the case that bodyB is not defined, we initialise pivot so that positional
+        // error is 0.
+        if (params.pivotB)
+        {
+            data[3] = params.pivotB[0];
+            data[4] = params.pivotB[1];
+            data[5] = params.pivotB[2];
+        }
+        else
+        {
+            var pivotB = VMath.m43TransformPoint(pc.bodyA.transform, params.pivotA);
+            data[3] = pivotB[0];
+            data[4] = pivotB[1];
+            data[5] = pivotB[2];
+        }
+        Object.defineProperty(c, "pivotB", {
+            get : function point2pointGetPivotB()
+            {
+                var data = this._private.data;
+                return VMath.v3Build(data[3], data[4], data[5]);
+            },
+            set : function point2pointSetPivotB(pivotB)
+            {
+                var data = this._private.data;
+                data[3] = pivotB[0];
+                data[4] = pivotB[1];
+                data[5] = pivotB[2];
+            },
+            enumerable : true
+        });
+
+        // read/write with no immediate side effects, but getter/setter required.
+        data[30] = (params.force !== undefined) ? params.force : 0.3;
+        Object.defineProperty(c, "force", {
+            get : function point2pointGetForce()
+            {
+                return this._private.data[30];
+            },
+            set : function point2pointSetForce(force)
+            {
+                this._private.data[30] = force;
+            },
+            enumerable : true
+        });
+
+        // read/write with no immediate side effects, but getter/setter required.
+        data[31] = (params.damping !== undefined) ? params.damping : 1.0;
+        Object.defineProperty(c, "damping", {
+            get : function point2pointGetForce()
+            {
+                return this._private.data[31];
+            },
+            set : function point2pointSetForce(damping)
+            {
+                this._private.data[31] = damping;
+            },
+            enumerable : true
+        });
+
+        // read/write with no immediate side effects, but getter/setter required.
+        data[32] = (params.impulseClamp !== undefined) ? params.impulseClamp : 0.0;
+        Object.defineProperty(c, "impulseClamp", {
+            get : function point2pointGetForce()
+            {
+                return this._private.data[32];
+            },
+            set : function point2pointSetForce(impulseClamp)
+            {
+                this._private.data[32] = impulseClamp;
+            },
+            enumerable : true
+        });
+
+        return c;
+    }
 }
 
-WebGLPhysicsPrivatePoint2PointConstraint.prototype = {
+WebGLPhysicsPoint2PointConstraint.prototype.type = "POINT2POINT";
 
-    version : 1,
+class WebGLPhysicsPrivatePoint2PointConstraint
+{
 
-    preStep : function point2pointPreStepFn(timeStepRatio, timeStep)
+    bodyA: WebGLPhysicsCollisionObject;
+    bodyB: WebGLPhysicsCollisionObject;
+    data: Float32Array;
+
+    constructor()
+    {
+        // Initialise all properties that will ever be set on this object.
+        this.bodyA = null;
+        this.bodyB = null;
+
+        // [0,  3) : pivotA (vector3)
+        // [3,  6) : pivotB (vector3)
+        // [6,  9) : relA   (vector3)
+        // [9, 12) : relB   (vector3)
+        // [12,21) : skewA  (mat33)
+        // [21,30) : skewB  (mat33)
+        // [30,31) : force   (scalar)
+        // [31,32) : damping (scalar)
+        // [32,33) : clamp   (scalar)
+        // [33,34) : gamma   (scalar)
+        // [34,40) : K (symmetric mat33)
+        //           [ K0 K1 K2 ]
+        //    aka:   [ K1 K3 K4 ]
+        //           [ K2 K4 K5 ]
+        // [40,43) : jAcc (vector3)
+        // [43,46) : bias (vector3)
+        this.data = new Float32Array(46);
+        return this;
+    }
+
+    preStep(timeStepRatio, timeStep)
     {
         var bodyA = this.bodyA;
         var bodyB = this.bodyB;
@@ -4173,9 +4026,9 @@ WebGLPhysicsPrivatePoint2PointConstraint.prototype = {
         data[40] *= timeStepRatio;
         data[41] *= timeStepRatio;
         data[42] *= timeStepRatio;
-    },
+    }
 
-    applyCachedImpulses : function point2pointApplyCachedImpulsesFn()
+    applyCachedImpulses()
     {
         var data = this.data;
 
@@ -4210,9 +4063,9 @@ WebGLPhysicsPrivatePoint2PointConstraint.prototype = {
             vel[4] += ((data[22] * j0) + (data[25] * j1) + (data[28] * j2));
             vel[5] += ((data[23] * j0) + (data[26] * j1) + (data[29] * j2));
         }
-    },
+    }
 
-    computeAndApplyImpulses : function point2pointComputeAndApplyImpulsesFn()
+    computeAndApplyImpulses()
     {
         var bodyA = this.bodyA;
         var bodyB = this.bodyB;
@@ -4297,123 +4150,35 @@ WebGLPhysicsPrivatePoint2PointConstraint.prototype = {
             vel2[5] += ((data[23] * j0) + (data[26] * j1) + (data[29] * j2));
         }
     }
-};
+}
 
-WebGLPhysicsPoint2PointConstraint.create = function Point2PointConstraintFn(params)
+//
+// WebGLPhysicsCharacter
+//
+class WebGLPhysicsCharacter implements PhysicsCharacter
 {
-    var c = new WebGLPhysicsPoint2PointConstraint();
-    var pc = new WebGLPhysicsPrivatePoint2PointConstraint();
-    c._private = pc;
+    static version = 1;
 
-    initConstraintProperties(c, params);
+    velocity      : any; // v3
+    position      : any; // v3
+    onGround      : bool;
+    crouch        : bool;
+    dead          : bool;
+    maxJumpHeight : number;
+    userData      : any;
 
-    var data = pc.data;
-    // read/write with side effects
-    data[0] = params.pivotA[0];
-    data[1] = params.pivotA[1];
-    data[2] = params.pivotA[2];
-    Object.defineProperty(c, "pivotA", {
-        get : function point2pointGetPivotA()
-        {
-            var data = this._private.data;
-            return VMath.v3Build(data[0], data[1], data[2]);
-        },
-        set : function point2pointSetPivotA(pivotA)
-        {
-            var data = this._private.data;
-            data[0] = pivotA[0];
-            data[1] = pivotA[1];
-            data[2] = pivotA[2];
-        },
-        enumerable : true
-    });
+   _private       : WebGLPhysicsPrivateCharacter;
 
-    // read/write with side effects
-    // In the case that bodyB is not defined, we initialise pivot so that positional
-    // error is 0.
-    if (params.pivotB)
-    {
-        data[3] = params.pivotB[0];
-        data[4] = params.pivotB[1];
-        data[5] = params.pivotB[2];
-    }
-    else
-    {
-        var pivotB = VMath.m43TransformPoint(pc.bodyA.transform, params.pivotA);
-        data[3] = pivotB[0];
-        data[4] = pivotB[1];
-        data[5] = pivotB[2];
-    }
-    Object.defineProperty(c, "pivotB", {
-        get : function point2pointGetPivotB()
-        {
-            var data = this._private.data;
-            return VMath.v3Build(data[3], data[4], data[5]);
-        },
-        set : function point2pointSetPivotB(pivotB)
-        {
-            var data = this._private.data;
-            data[3] = pivotB[0];
-            data[4] = pivotB[1];
-            data[5] = pivotB[2];
-        },
-        enumerable : true
-    });
+    height        : number;
+    radius        : number;
+    stepHeight    : number;
+    crouchHeight  : number;
 
-    // read/write with no immediate side effects, but getter/setter required.
-    data[30] = (params.force !== undefined) ? params.force : 0.3;
-    Object.defineProperty(c, "force", {
-        get : function point2pointGetForce()
-        {
-            return this._private.data[30];
-        },
-        set : function point2pointSetForce(force)
-        {
-            this._private.data[30] = force;
-        },
-        enumerable : true
-    });
+    start         : any; // m43
+    end           : any;   // m43
+    rigidBody     : WebGLPhysicsRigidBody;
 
-    // read/write with no immediate side effects, but getter/setter required.
-    data[31] = (params.damping !== undefined) ? params.damping : 1.0;
-    Object.defineProperty(c, "damping", {
-        get : function point2pointGetForce()
-        {
-            return this._private.data[31];
-        },
-        set : function point2pointSetForce(damping)
-        {
-            this._private.data[31] = damping;
-        },
-        enumerable : true
-    });
-
-    // read/write with no immediate side effects, but getter/setter required.
-    data[32] = (params.impulseClamp !== undefined) ? params.impulseClamp : 0.0;
-    Object.defineProperty(c, "impulseClamp", {
-        get : function point2pointGetForce()
-        {
-            return this._private.data[32];
-        },
-        set : function point2pointSetForce(impulseClamp)
-        {
-            this._private.data[32] = impulseClamp;
-        },
-        enumerable : true
-    });
-
-    return c;
-};
-
-//
-// WebGL Physics Character
-//
-function WebGLPhysicsCharacter() { return this; }
-WebGLPhysicsCharacter.prototype = {
-
-    version : 1,
-
-    jump : function characterJumpFn()
+    jump()
     {
         var pc = this._private;
         var rigidBody = pc.rigidBody._private;
@@ -4424,289 +4189,300 @@ WebGLPhysicsCharacter.prototype = {
             rigidBody.transform[10] += this.stepHeight;
             world.wakeBody(rigidBody);
         }
-    },
+    }
 
-    calculateExtents : function characterCalculateExtentsFn(extents)
+    calculateExtents(extents)
     {
         this._private.rigidBody.calculateExtents(extents);
-    },
+    }
 
-    calculateTransform : function characterCalculateTransformFn(transform, origin)
+    calculateTransform(transform, origin)
     {
         this._private.rigidBody.calculateTransform(transform, origin);
     }
-};
 
-function WebGLPhysicsPrivateCharacter()
-{
-    // Initialise all properties this object will ever hold.
-
-    // Value of read/write property.
-    this.crouch = false;
-    this.dead = false;
-
-    // Matrices re-used in all calls to onGround getter.
-    this.start = VMath.m43BuildIdentity();
-    this.end   = VMath.m43BuildIdentity();
-
-    // Reference to created RigidBody representing Character.
-    this.rigidBody = null;
-
-    return this;
-}
-
-WebGLPhysicsPrivateCharacter.prototype = {
-
-    version : 1,
-
-    onGroundConvexCallback : function onGroundConvexCallbackFn(hitResult)
+    static create(params: any): WebGLPhysicsCharacter
     {
-        // Less than cosine of 15 degrees.
-        return hitResult.hitNormal[1] >= 0.26;
-    }
-};
+        var c = new WebGLPhysicsCharacter();
+        var pc = new WebGLPhysicsPrivateCharacter();
+        c._private = pc;
 
-WebGLPhysicsCharacter.create = function webGLPhysicsCharacterFn(params)
-{
-    var c = new WebGLPhysicsCharacter();
-    var pc = new WebGLPhysicsPrivateCharacter();
-    c._private = pc;
+        // read/write, no side effects.
+        c.userData = (params.userData !== undefined) ? params.userData : null;
 
-    // read/write, no side effects.
-    c.userData = (params.userData !== undefined) ? params.userData : null;
-
-    // read/write with side effects.
-    Object.defineProperty(c, "crouch", {
-        get : function getCharacterCrouchFn()
-        {
-            return this._private.crouch;
-        },
-        set : function setCharacterCrouchFn(crouch)
-        {
-            var pc = this._private;
-            if (!pc.dead && crouch !== pc.crouch)
+        // read/write with side effects.
+        Object.defineProperty(c, "crouch", {
+            get : function getCharacterCrouchFn()
             {
-                var rigidBody = pc.rigidBody._private;
-                var capsule = rigidBody.shape;
+                return this._private.crouch;
+            },
+            set : function setCharacterCrouchFn(crouch)
+            {
+                var pc = this._private;
+                if (!pc.dead && crouch !== pc.crouch)
+                {
+                    var rigidBody = pc.rigidBody._private;
+                    var capsule = rigidBody.shape;
 
-                pc.crouch = crouch;
-                if (crouch)
-                {
-                    capsule.halfHeight = ((this.crouchHeight * 0.5) - this.radius);
-                    rigidBody.transform[10] -= ((this.height - this.crouchHeight) * 0.5);
+                    pc.crouch = crouch;
+                    if (crouch)
+                    {
+                        capsule.halfHeight = ((this.crouchHeight * 0.5) - this.radius);
+                        rigidBody.transform[10] -= ((this.height - this.crouchHeight) * 0.5);
+                    }
+                    else
+                    {
+                        capsule.halfHeight = ((this.height * 0.5) - this.radius);
+                        rigidBody.transform[10] += ((this.height - this.crouchHeight) * 0.5);
+                    }
+
+                    if (rigidBody.world)
+                    {
+                        rigidBody.world.wakeBody(rigidBody);
+                    }
                 }
-                else
+            },
+            enumerable : true
+        });
+
+        // read/write with side effects.
+        Object.defineProperty(c, "dead", {
+            get : function getCharacterDeadFn()
+            {
+                return this._private.dead;
+            },
+            set : function setCharacterDead(dead)
+            {
+                var pc = this._private;
+                if (pc.dead !== dead)
                 {
-                    capsule.halfHeight = ((this.height * 0.5) - this.radius);
-                    rigidBody.transform[10] += ((this.height - this.crouchHeight) * 0.5);
+                    var rigidBody = pc.rigidBody._private;
+                    var capsule = rigidBody.shape;
+
+                    pc.dead = dead;
+                    if (dead)
+                    {
+                        capsule.halfHeight = 0;
+                        rigidBody.transform[10] -= ((this.height - this.radius) * 0.5);
+                    }
+                    else
+                    {
+                        capsule.halfHeight = ((this.height * 0.5) - this.radius);
+                        rigidBody.transform[10] += ((this.height - this.radius) * 0.5);
+                    }
+
+                    if (rigidBody.world)
+                    {
+                        rigidBody.world.wakeBody(rigidBody);
+                    }
                 }
+            },
+            enumerable : true
+        });
+
+        // read only, no getter required.
+        Object.defineProperty(c, "height", {
+            value : params.height,
+            enumerable : true
+        });
+
+        // read only, no getter required.
+        Object.defineProperty(c, "radius", {
+            value : params.radius,
+            enumerable : true
+        });
+
+        // read only, no getter required
+        Object.defineProperty(c, "stepHeight", {
+            value : (params.stepHeight !== undefined) ? params.stepHeight : 0.35,
+            enumerable : true
+        });
+
+        // read/write, no side effects so stored on actual object as standard property.
+        c.maxJumpHeight = (params.maxJumpHeight !== undefined) ? params.maxJumpHeight : 1;
+
+        // read only, no getter required
+        Object.defineProperty(c, "crouchHeight", {
+            value : (params.crouchHeight !== undefined) ? params.crouchHeight : (0.5 * params.height),
+            enumerable : true
+        });
+
+        // read only, getter required.
+        Object.defineProperty(c, "onGround", {
+            get : function getCharacterOnGround()
+            {
+                var pc = this._private;
+                var rigidBody = pc.rigidBody._private;
 
                 if (rigidBody.world)
                 {
-                    rigidBody.world.wakeBody(rigidBody);
-                }
-            }
-        },
-        enumerable : true
-    });
+                    var pos = rigidBody.transform;
+                    var start = pc.start;
+                    var end   = pc.end;
 
-    // read/write with side effects.
-    Object.defineProperty(c, "dead", {
-        get : function getCharacterDeadFn()
-        {
-            return this._private.dead;
-        },
-        set : function setCharacterDead(dead)
-        {
-            var pc = this._private;
-            if (pc.dead !== dead)
-            {
-                var rigidBody = pc.rigidBody._private;
-                var capsule = rigidBody.shape;
+                    start[9]  = pos[9];
+                    start[10] = pos[10];
+                    start[11] = pos[11];
 
-                pc.dead = dead;
-                if (dead)
-                {
-                    capsule.halfHeight = 0;
-                    rigidBody.transform[10] -= ((this.height - this.radius) * 0.5);
-                }
-                else
-                {
-                    capsule.halfHeight = ((this.height * 0.5) - this.radius);
-                    rigidBody.transform[10] += ((this.height - this.radius) * 0.5);
-                }
+                    end[9]  = pos[9];
+                    end[10] = (pos[10] - (this.stepHeight * 0.5));
+                    end[11] = pos[11];
 
-                if (rigidBody.world)
-                {
-                    rigidBody.world.wakeBody(rigidBody);
-                }
-            }
-        },
-        enumerable : true
-    });
-
-    // read only, no getter required.
-    Object.defineProperty(c, "height", {
-        value : params.height,
-        enumerable : true
-    });
-
-    // read only, no getter required.
-    Object.defineProperty(c, "radius", {
-        value : params.radius,
-        enumerable : true
-    });
-
-    // read only, no getter required
-    Object.defineProperty(c, "stepHeight", {
-        value : (params.stepHeight !== undefined) ? params.stepHeight : 0.35,
-        enumerable : true
-    });
-
-    // read/write, no side effects so stored on actual object as standard property.
-    c.maxJumpHeight = (params.maxJumpHeight !== undefined) ? params.maxJumpHeight : 1;
-
-    // read only, no getter required
-    Object.defineProperty(c, "crouchHeight", {
-        value : (params.crouchHeight !== undefined) ? params.crouchHeight : (0.5 * params.height),
-        enumerable : true
-    });
-
-    // read only, getter required.
-    Object.defineProperty(c, "onGround", {
-        get : function getCharacterOnGround()
-        {
-            var pc = this._private;
-            var rigidBody = pc.rigidBody._private;
-
-            if (rigidBody.world)
-            {
-                var pos = rigidBody.transform;
-                var start = pc.start;
-                var end   = pc.end;
-
-                start[9]  = pos[9];
-                start[10] = pos[10];
-                start[11] = pos[11];
-
-                end[9]  = pos[9];
-                end[10] = (pos[10] - (this.stepHeight * 0.5));
-                end[11] = pos[11];
-
-                var result = rigidBody.world.convexSweepTest({
+                    var result = rigidBody.world.convexSweepTest({
                         shape: rigidBody.shape._public,
                         from: start,
                         to: end,
                         group: WebGLPhysicsDevice.prototype.FILTER_CHARACTER
                     },
-                    this.onGroundConvexCallback
-                );
-                return (result !== null);
-            }
-            else
+                                                                 this.onGroundConvexCallback
+                                                                );
+                    return (result !== null);
+                }
+                else
+                {
+                    return false;
+                }
+            },
+            enumerable : true
+        });
+
+        // read/write with side effects.
+        Object.defineProperty(c, "position", {
+            get : function getCharacterPosition()
             {
-                return false;
-            }
-        },
-        enumerable : true
-    });
+                var rigidBody = this._private.rigidBody;
+                return VMath.m43Pos(rigidBody._private.transform);
+            },
+            set : function setCharacterPosition(position)
+            {
+                var rigidBody = this._private.rigidBody;
+                var transform = rigidBody._private.transform;
+                transform[9]  = position[0];
+                transform[10] = position[1];
+                transform[11] = position[2];
+                rigidBody.transform = rigidBody._private.transform; //invoke setter.
+                rigidBody.active = true;
+            },
+            enumerable : true
+        });
 
-    // read/write with side effects.
-    Object.defineProperty(c, "position", {
-        get : function getCharacterPosition()
-        {
-            var rigidBody = this._private.rigidBody;
-            return VMath.m43Pos(rigidBody._private.transform);
-        },
-        set : function setCharacterPosition(position)
-        {
-            var rigidBody = this._private.rigidBody;
-            var transform = rigidBody._private.transform;
-            transform[9]  = position[0];
-            transform[10] = position[1];
-            transform[11] = position[2];
-            rigidBody.transform = rigidBody._private.transform; //invoke setter.
-            rigidBody.active = true;
-        },
-        enumerable : true
-    });
+        // read/write with side effects.
+        Object.defineProperty(c, "velocity", {
+            get : function getCharacterVelocity()
+            {
+                var rigidBody = this._private.rigidBody;
+                return rigidBody.linearVelocity;
+            },
+            set : function setCharacterVelocity(velocity)
+            {
+                var rigidBody = this._private.rigidBody;
+                rigidBody.linearVelocity = velocity;
+                rigidBody.active = true;
+            },
+            enumerable : true
+        });
 
-    // read/write with side effects.
-    Object.defineProperty(c, "velocity", {
-        get : function getCharacterVelocity()
-        {
-            var rigidBody = this._private.rigidBody;
-            return rigidBody.linearVelocity;
-        },
-        set : function setCharacterVelocity(velocity)
-        {
-            var rigidBody = this._private.rigidBody;
-            rigidBody.linearVelocity = velocity;
-            rigidBody.active = true;
-        },
-        enumerable : true
-    });
+        // read only, no getter required.
+        var group = (params.group !== undefined) ? params.group : WebGLPhysicsDevice.prototype.FILTER_CHARACTER;
+        Object.defineProperty(c, "group", {
+            value : group,
+            enumerable : true
+        });
 
-    // read only, no getter required.
-    var group = (params.group !== undefined) ? params.group : WebGLPhysicsDevice.prototype.FILTER_CHARACTER;
-    Object.defineProperty(c, "group", {
-        value : group,
-        enumerable : true
-    });
+        // read only, no getter required.
+        var mask  = (params.mask !== undefined) ? params.mask : WebGLPhysicsDevice.prototype.FILTER_ALL;
+        Object.defineProperty(c, "mask", {
+            value : mask,
+            enumerable : true
+        });
 
-    // read only, no getter required.
-    var mask  = (params.mask !== undefined) ? params.mask : WebGLPhysicsDevice.prototype.FILTER_ALL;
-    Object.defineProperty(c, "mask", {
-        value : mask,
-        enumerable : true
-    });
+        // Create inner RigidBody with Capsule shape.
+        var capsule = WebGLPhysicsCapsuleShape.create({
+            radius : c.radius,
+            height : (2 * ((c.height * 0.5) - c.radius)),
+            margin : 0
+        });
 
-    // Create inner RigidBody with Capsule shape.
-    var capsule = WebGLPhysicsCapsuleShape.create({
-        radius : c.radius,
-        height : (2 * ((c.height * 0.5) - c.radius)),
-        margin : 0
-    });
+        var rigidBody = WebGLPhysicsRigidBody.create({
+            shape : capsule,
+            mass : params.mass,
+            transform : params.transform,
+            linearVelocity : params.velocity,
+            group : group,
+            mask : mask,
+            friction : params.friction,
+            restitution : params.restitution,
+            linearDamping : params.linearDamping,
+            angularDamping : params.angularDamping,
+            fixedRotation : true
+        });
 
-    var rigidBody = WebGLPhysicsRigidBody.create({
-        shape : capsule,
-        mass : params.mass,
-        transform : params.transform,
-        linearVelocity : params.velocity,
-        group : group,
-        mask : mask,
-        friction : params.friction,
-        restitution : params.restitution,
-        linearDamping : params.linearDamping,
-        angularDamping : params.angularDamping,
-        fixedRotation : true
-    });
+        // private (But internals like dynamics world need access through this object).
+        pc.rigidBody = rigidBody;
 
-    // private (But internals like dynamics world need access through this object).
-    pc.rigidBody = rigidBody;
+        // Back reference to this public character, so that rayTests and
+        // convexSweeps can in the case of intersecting a rigid body that
+        // represents a character, return the character instead!
 
-    // Back reference to this public character, so that rayTests and
-    // convexSweeps can in the case of intersecting a rigid body that
-    // represents a character, return the character instead!
+        // TODO: Here a WebGLPhysicsCharacter is assign to a property that
+        // should be a WebGLPhysicsCollisionObject.  Can PhysicsCharacter
+        // inherit from CollisionObject?
 
-    // TODO: Here a WebGLPhysicsCharacter is assign to a property that
-    // should be a WebGLPhysicsCollisionObject.  Can PhysicsCharacter
-    // inherit from CollisionObject?
+        rigidBody._private._public = <WebGLPhysicsCollisionObject><any>c;
 
-    rigidBody._private._public = <WebGLPhysicsCollisionObject><any>c;
+        return c;
+    }
+}
 
-    return c;
-};
+class WebGLPhysicsPrivateCharacter
+{
+    static version = 1;
+
+    crouch    : bool;
+    dead      : bool;
+    start     : any; // m43
+    end       : any;   // m43
+    rigidBody : WebGLPhysicsRigidBody;
+
+    constructor()
+    {
+        // Initialise all properties this object will ever hold.
+
+        // Value of read/write property.
+        this.crouch = false;
+        this.dead = false;
+
+        // Matrices re-used in all calls to onGround getter.
+        this.start = VMath.m43BuildIdentity();
+        this.end   = VMath.m43BuildIdentity();
+
+        // Reference to created RigidBody representing Character.
+        this.rigidBody = null;
+
+        return this;
+    }
+
+    onGroundConvexCallback(hitResult)
+    {
+        // Less than cosine of 15 degrees.
+        return hitResult.hitNormal[1] >= 0.26;
+    }
+}
 
 //
 // WebGL GJK Contact Solver
 //
-function WebGLGJKContactSolver() { return this; }
-WebGLGJKContactSolver.prototype = {
+class WebGLGJKContactSolver
+{
+    static version = 1;
 
-    version : 1,
+    simplex      : Float32Array;
+    numVertices  : number;
+    closest      : Float32Array;
+    cachedCoords : Float32Array;
+    tempCoords   : Float32Array;
 
-    removeVertex : function removeVertexFn(index)
+    removeVertex(index)
     {
         this.numVertices -= 1;
 
@@ -4723,9 +4499,9 @@ WebGLGJKContactSolver.prototype = {
         simplex[replace + 6] = simplex[withv + 6];
         simplex[replace + 7] = simplex[withv + 7];
         simplex[replace + 8] = simplex[withv + 8];
-    },
+    }
 
-    reduceVertices : function reduceVerticesFn(coords)
+    reduceVertices(coords)
     {
         // NOTE: NOT USING EPSILON
         //
@@ -4785,9 +4561,9 @@ WebGLGJKContactSolver.prototype = {
             simplex[7] = simplex[withv + 7];
             simplex[8] = simplex[withv + 8];
         }
-    },
+    }
 
-    updateClosestPoints : function updateClosestPointsFn()
+    updateClosestPoints()
     {
         var numVertices = this.numVertices;
         if (numVertices === 0)
@@ -4922,9 +4698,9 @@ WebGLGJKContactSolver.prototype = {
         }
 
         return false;
-    },
+    }
 
-    closestPointTetrahedron : function closestPointTetrahedron(coords)
+    closestPointTetrahedron(coords)
     {
         var simplex = this.simplex;
 
@@ -5059,9 +4835,9 @@ WebGLGJKContactSolver.prototype = {
         }
 
         return true;
-    },
+    }
 
-    closestPointTriangle : function closestPointTriangleFn(a, b, c, coords, computeDistance)
+    closestPointTriangle(a, b, c, coords, computeDistance?: bool)
     {
         var simplex = this.simplex;
 
@@ -5214,7 +4990,7 @@ WebGLGJKContactSolver.prototype = {
         {
             return undefined;
         }
-    },
+    }
 
     //
     // cache having properties
@@ -5224,7 +5000,7 @@ WebGLGJKContactSolver.prototype = {
     //      'on' objectB.
     //   closestA <-- to be populated by this function
     //   closestB <-- to be populated by this function
-    evaluate : function gjkEvaluateFn(cache, xformA, xformB)
+    evaluate(cache, xformA, xformB)
     {
         var axis = cache.axis;
         var shapeA = cache.shapeA;
@@ -5470,46 +5246,51 @@ WebGLGJKContactSolver.prototype = {
             return undefined;
         }
     }
-};
 
-WebGLGJKContactSolver.create = function WebGLGJKContactSolverFn()
+    static create(): WebGLGJKContactSolver
+    {
+        var solver = new WebGLGJKContactSolver();
+
+        // current simplex with vertices W = P - Q, generated by points P and Q
+        // [ W00 W01 W02 P01 P02 P03 Q01 Q02 Q03 ... ]
+        solver.simplex = new Float32Array(36);
+        solver.numVertices = 0;
+
+        // on update closest points defined by W = P - Q stored here.
+        solver.closest = new Float32Array(6);
+
+        solver.cachedCoords = new Float32Array(4);
+        solver.tempCoords = new Float32Array(4);
+
+        return solver;
+    }
+}
+
+//
+// WebGLContactEPA
+//
+class WebGLContactEPA
 {
-    var solver = new WebGLGJKContactSolver();
+    static version = 1;
 
-    // current simplex with vertices W = P - Q, generated by points P and Q
-    // [ W00 W01 W02 P01 P02 P03 Q01 Q02 Q03 ... ]
-    solver.simplex = new Float32Array(36);
-    solver.numVertices = 0;
+    MAX_VERTICES: number;  // prototype
+    MAX_FACES; number;     // prototype
 
-    // on update closest points defined by W = P - Q stored here.
-    solver.closest = new Float32Array(6);
+    vertex_store: Float32Array;
 
-    solver.cachedCoords = new Float32Array(4);
-    solver.tempCoords = new Float32Array(4);
+    hull: any; // TODO: { root : null, count : 0 };
+    stock: any; // TODO: { root : null, count : 0 };
+    horizon: any; // TODO { cf : null, ff : null, numFaces : 0 };
 
-    return solver;
-};
-
-//
-// WebGL Contact EPA
-//
-function WebGLContactEPA() { return this; }
-WebGLContactEPA.prototype = {
-
-    version : 1,
-
-    MAX_VERTICES : 64,
-    MAX_FACES : 128,
-
-    bind : function bindFn(faceA, edgeA, faceB, edgeB)
+    bind(faceA, edgeA, faceB, edgeB)
     {
         faceA.edge[edgeA] = edgeB;
         faceA.adjFace[edgeA] = faceB;
         faceB.edge[edgeB] = edgeA;
         faceB.adjFace[edgeB] = faceA;
-    },
+    }
 
-    append : function appendFn(list, face)
+    append(list, face)
     {
         face.leaf0 = null;
         face.leaf1 = list.root;
@@ -5519,9 +5300,9 @@ WebGLContactEPA.prototype = {
         }
         list.root = face;
         list.count += 1;
-    },
+    }
 
-    remove : function removeFn(list, face)
+    remove(list, face)
     {
         var leaf0 = face.leaf0;
         var leaf1 = face.leaf1;
@@ -5538,9 +5319,9 @@ WebGLContactEPA.prototype = {
             list.root = leaf1;
         }
         list.count -= 1;
-    },
+    }
 
-    findBest : function findBestFn()
+    findBest()
     {
         var minFace = this.hull.root;
         var minDistance = minFace.distance * minFace.distance;
@@ -5556,9 +5337,9 @@ WebGLContactEPA.prototype = {
         }
 
         return minFace;
-    },
+    }
 
-    getEdgeDistance : function getEdgeDistanceFn(face, a, b)
+    getEdgeDistance(face, a, b)
     {
         var vertices = this.vertex_store;
 
@@ -5614,9 +5395,9 @@ WebGLContactEPA.prototype = {
         {
             return undefined;
         }
-    },
+    }
 
-    buildNewFace : function buildNewFaceFn(a, b, c, forced)
+    buildNewFace(a, b, c, forced)
     {
         var face = this.stock.root;
         if (face === null)
@@ -5694,9 +5475,9 @@ WebGLContactEPA.prototype = {
         }
 
         return null;
-    },
+    }
 
-    expandFace : function expandFaceFn(pass, w, face, edge, horizon)
+    expandFace(pass, w, face, edge, horizon)
     {
         if (face.pass !== pass)
         {
@@ -5747,7 +5528,7 @@ WebGLContactEPA.prototype = {
         }
 
         return false;
-    },
+    }
 
     //
     // cache having properties
@@ -5757,7 +5538,7 @@ WebGLContactEPA.prototype = {
     //     'on' object B.
     //   closestA <-- to be populated by this function
     //   closestB <-- to be populated by this function
-    evaluate : function epaEvaluateFn(gjkSimplex, cache, xformA, xformB)
+    evaluate(gjkSimplex, cache, xformA, xformB)
     {
         var shapeA = cache.shapeA;
         var shapeB = cache.shapeB;
@@ -6027,57 +5808,60 @@ WebGLContactEPA.prototype = {
         axis[2] = -n2;
         return (-best.distance);
     }
-};
 
-WebGLContactEPA.create = function WebGLContactEPAFn()
-{
-    var epa = new WebGLContactEPA();
-    var i;
-
-    // populate vertex and face pools
-    epa.vertex_store = new Float32Array(epa.MAX_VERTICES * 9);
-
-    var face_store = [];
-    for (i = 0; i < epa.MAX_FACES; i += 1)
+    static create(): WebGLContactEPA
     {
-        face_store[i] = {
-            normal : VMath.v3BuildZero(),
-            distance : 0,
-            vertex : new Int16Array(3),
-            adjFace : [null, null, null],
-            edge : new Int16Array(3),
+        var epa = new WebGLContactEPA();
+        var i;
 
-            leaf0 : null,
-            leaf1 : null,
-            pass : 0
+        // populate vertex and face pools
+        epa.vertex_store = new Float32Array(epa.MAX_VERTICES * 9);
+
+        var face_store = [];
+        for (i = 0; i < epa.MAX_FACES; i += 1)
+        {
+            face_store[i] = {
+                normal : VMath.v3BuildZero(),
+                distance : 0,
+                vertex : new Int16Array(3),
+                adjFace : [null, null, null],
+                edge : new Int16Array(3),
+
+                leaf0 : null,
+                leaf1 : null,
+                pass : 0
+            };
+        }
+
+        // initialise hull, stock and horizon
+        epa.hull = {
+            root : null,
+            count : 0
         };
+
+        epa.stock = {
+            root : null,
+            count : 0
+        };
+
+        epa.horizon = {
+            cf : null,
+            ff : null,
+            numFaces : 0
+        };
+
+        // populat stock with all faces
+        for (i = 0; i < epa.MAX_FACES; i += 1)
+        {
+            epa.append(epa.stock, face_store[epa.MAX_FACES - i - 1]);
+        }
+
+        return epa;
     }
+}
 
-    // initialise hull, stock and horizon
-    epa.hull = {
-        root : null,
-        count : 0
-    };
-
-    epa.stock = {
-        root : null,
-        count : 0
-    };
-
-    epa.horizon = {
-        cf : null,
-        ff : null,
-        numFaces : 0
-    };
-
-    // populat stock with all faces
-    for (i = 0; i < epa.MAX_FACES; i += 1)
-    {
-        epa.append(epa.stock, face_store[epa.MAX_FACES - i - 1]);
-    }
-
-    return epa;
-};
+WebGLContactEPA.prototype.MAX_VERTICES = 64;
+WebGLContactEPA.prototype.MAX_FACES = 128;
 
 //
 // WebGLPhysicsContact
@@ -6115,182 +5899,200 @@ WebGLContactEPA.create = function WebGLContactEPAFn()
 // Contacts are thus instead allocated an deallocated with no
 // create method.
 //
-var WebGLPhysicsContact = <{
-    contactPool: Float32Array[];
-    contactPoolSize: number;
-    publicContacts: WebGLPhysicsPublicContact[];
-    callbackContacts: WebGLPhysicsPublicContact[];
-
-    allocate: { (): Float32Array; };
-    deallocate: { (Float32Array): void; };
-
-}> {};
-
-WebGLPhysicsContact.contactPool = [];
-WebGLPhysicsContact.contactPoolSize = 0;
-
-WebGLPhysicsContact.allocate = function allocateFn()
+class WebGLPhysicsContact
 {
-    var contact;
-    if (this.contactPoolSize === 0)
+    static contactPool: Float32Array[] = [];
+    static contactPoolSize = 0;
+    static publicContacts: WebGLPhysicsPublicContact[];
+    static callbackContacts: WebGLPhysicsPublicContact[];
+
+    static allocate(): Float32Array
     {
-        contact = new Float32Array(52);
-    }
-    else
-    {
-        this.contactPoolSize -= 1;
-        contact = this.contactPool[this.contactPoolSize];
+        var contact;
+        if (this.contactPoolSize === 0)
+        {
+            contact = new Float32Array(52);
+        }
+        else
+        {
+            this.contactPoolSize -= 1;
+            contact = this.contactPool[this.contactPoolSize];
+        }
+
+        contact[51] = 1.0; // new contact
+
+        return contact;
     }
 
-    contact[51] = 1.0; // new contact
+    static deallocate(contact: Float32Array): void
+    {
+        this.contactPool[this.contactPoolSize] = contact;
+        this.contactPoolSize += 1;
 
-    return contact;
-};
-
-WebGLPhysicsContact.deallocate = function deallocateFn(contact)
-{
-    this.contactPool[this.contactPoolSize] = contact;
-    this.contactPoolSize += 1;
-
-    // Contact jAccN is cached between updates. Needs to be reset if contact is re-used.
-    contact[40] = 0;
-};
+        // Contact jAccN is cached between updates. Needs to be reset if contact is re-used.
+        contact[40] = 0;
+    }
+}
 
 //
 // WebGLPhysicsPublicContact
 //
-function WebGLPhysicsPublicContact()
+class WebGLPhysicsPublicContact
 {
-    this._private = null;
-    return this;
+    static publicContacts = [WebGLPhysicsPublicContact.create(),
+                             WebGLPhysicsPublicContact.create(),
+                             WebGLPhysicsPublicContact.create()];
+    static callbackContacts = [];
+
+    localPointOnA  : any;  // v3 - getter
+    localPointOnB  : any;  // v3 - getter
+    worldNormalOnB : any; // v3 - getter
+    added          : bool;
+    distance       : number;
+
+    private _private: any; // TODO: who sets this?
+
+    constructor()
+    {
+        this._private = null;
+        return this;
+    }
+
+    static create(): WebGLPhysicsPublicContact
+    {
+        var p = new WebGLPhysicsPublicContact();
+
+        Object.defineProperty(p, "localPointOnA", {
+            get : function getLocalPointOnA()
+            {
+                var pr = this._private;
+                return VMath.v3Build(pr[0], pr[1], pr[2]);
+            },
+            set : function setLocalPointOnA(point)
+            {
+                var pr = this._private;
+                pr[0] = point[0];
+                pr[1] = point[1];
+                pr[2] = point[2];
+            },
+            enumerable : true
+        });
+
+        Object.defineProperty(p, "localPointOnB", {
+            get : function getLocalPointOnB()
+            {
+                var pr = this._private;
+                return VMath.v3Build(pr[3], pr[4], pr[5]);
+            },
+            set : function setLocalPointOnB(point)
+            {
+                var pr = this._private;
+                pr[3] = point[0];
+                pr[4] = point[1];
+                pr[5] = point[2];
+            },
+            enumerable : true
+        });
+
+        Object.defineProperty(p, "worldNormalOnB", {
+            get : function getWorldNormalOnB()
+            {
+                var pr = this._private;
+                return VMath.v3Build(pr[12], pr[13], pr[14]);
+            },
+            set : function setWorldNormalOnB(normal)
+            {
+                var pr = this._private;
+                pr[12] = normal[0];
+                pr[13] = normal[1];
+                pr[14] = normal[2];
+            },
+            enumerable : true
+        });
+
+        Object.defineProperty(p, "added", {
+            get : function getAdded()
+            {
+                var pr = this._private;
+                return (0.0 < pr[51]);
+            },
+            enumerable : true
+        });
+
+        Object.defineProperty(p, "distance", {
+            get : function getDistance()
+            {
+                var pr = this._private;
+                return pr[21];
+            },
+            enumerable : true
+        });
+
+        return p;
+    }
 }
-
-WebGLPhysicsPublicContact.create = function webGLPhysicsPublicContactCreate()
-{
-    var p = new WebGLPhysicsPublicContact();
-
-    Object.defineProperty(p, "localPointOnA", {
-        get : function getLocalPointOnA()
-        {
-            var pr = this._private;
-            return VMath.v3Build(pr[0], pr[1], pr[2]);
-        },
-        set : function setLocalPointOnA(point)
-        {
-            var pr = this._private;
-            pr[0] = point[0];
-            pr[1] = point[1];
-            pr[2] = point[2];
-        },
-        enumerable : true
-    });
-
-    Object.defineProperty(p, "localPointOnB", {
-        get : function getLocalPointOnB()
-        {
-            var pr = this._private;
-            return VMath.v3Build(pr[3], pr[4], pr[5]);
-        },
-        set : function setLocalPointOnB(point)
-        {
-            var pr = this._private;
-            pr[3] = point[0];
-            pr[4] = point[1];
-            pr[5] = point[2];
-        },
-        enumerable : true
-    });
-
-    Object.defineProperty(p, "worldNormalOnB", {
-        get : function getWorldNormalOnB()
-        {
-            var pr = this._private;
-            return VMath.v3Build(pr[12], pr[13], pr[14]);
-        },
-        set : function setWorldNormalOnB(normal)
-        {
-            var pr = this._private;
-            pr[12] = normal[0];
-            pr[13] = normal[1];
-            pr[14] = normal[2];
-        },
-        enumerable : true
-    });
-
-    Object.defineProperty(p, "added", {
-        get : function getAdded()
-        {
-            var pr = this._private;
-            return (0.0 < pr[51]);
-        },
-        enumerable : true
-    });
-
-    Object.defineProperty(p, "distance", {
-        get : function getDistance()
-        {
-            var pr = this._private;
-            return pr[21];
-        },
-        enumerable : true
-    });
-
-    return p;
-};
-
-WebGLPhysicsContact.publicContacts = [WebGLPhysicsPublicContact.create(),
-                                      WebGLPhysicsPublicContact.create(),
-                                      WebGLPhysicsPublicContact.create()];
-WebGLPhysicsContact.callbackContacts = [];
 
 //
 // WebGLPhysicsArbiter
 //
-function WebGLPhysicsArbiter()
+class WebGLPhysicsArbiter
 {
-    // Initialise all properties of arbiters
-    // which will ever be used.
+    static version = 1;
 
-    // Object between which this contact patch is defined.
-    // Precondition: objectA.id < objectB.id
-    this.objectA = null;
-    this.objectB = null;
+    objectA: WebGLPhysicsCollisionObject;
+    objectB: WebGLPhysicsCollisionObject;
+    shapeA: WebGLPhysicsShape;
+    shapeB: WebGLPhysicsShape;
+    friction: number;
+    restitution: number;
+    contacts: Float32Array[];
+    activeContacts: WebGLPhysicsPublicContact[];
+    active: bool;
+    skipDiscreteCollisions: bool;
+    contactFlags: number;
+    trigger: bool;
 
-    // Shapes between which this contact patch is defined.
-    // Precondition: object#.shape = shape#
-    this.shapeA = null;
-    this.shapeB = null;
+    construct()
+    {
+        // Initialise all properties of arbiters
+        // which will ever be used.
 
-    // Pairwise friction and restitution values.
-    this.friction    = 0;
-    this.restitution = 0;
+        // Object between which this contact patch is defined.
+        // Precondition: objectA.id < objectB.id
+        this.objectA = null;
+        this.objectB = null;
 
-    // Set of contacts in patch.
-    this.contacts = [];
+        // Shapes between which this contact patch is defined.
+        // Precondition: object#.shape = shape#
+        this.shapeA = null;
+        this.shapeB = null;
 
-    // Set of contacts with negative distance for physics computaions.
-    this.activeContacts = [];
+        // Pairwise friction and restitution values.
+        this.friction    = 0;
+        this.restitution = 0;
 
-    // Whether contact is active (As compared to being sleeping).
-    this.active = true;
+        // Set of contacts in patch.
+        this.contacts = [];
 
-    // Flag used to ignore unneccesary discrete collision checks in post-continuous collisions.
-    this.skipDiscreteCollisions = false;
+        // Set of contacts with negative distance for physics computaions.
+        this.activeContacts = [];
 
-    // Flags to signal processing of contact callbacks
-    this.contactFlags = 0; // 1 - added, 2 - processed, 4 - removed
+        // Whether contact is active (As compared to being sleeping).
+        this.active = true;
 
-    // Flag to disable contact response
-    this.trigger = false;
+        // Flag used to ignore unneccesary discrete collision checks in post-continuous collisions.
+        this.skipDiscreteCollisions = false;
 
-    return this;
-}
+        // Flags to signal processing of contact callbacks
+        this.contactFlags = 0; // 1 - added, 2 - processed, 4 - removed
 
-WebGLPhysicsArbiter.prototype = {
+        // Flag to disable contact response
+        this.trigger = false;
 
-    version : 1,
+        return this;
+    }
 
-    insertContact : function insertContactFn(worldA, worldB, normal, distance, concave)
+    insertContact(worldA, worldB, normal, distance, concave)
     {
         var cn0 = normal[0];
         var cn1 = normal[1];
@@ -6596,9 +6398,9 @@ WebGLPhysicsArbiter.prototype = {
             this.contactFlags |= 4; // removed
         }
         /*jshint bitwise: true*/
-    },
+    }
 
-    refreshContacts : function refreshContactsFn()
+    refreshContacts()
     {
         var contacts = this.contacts;
         var objectA = this.objectA;
@@ -6697,9 +6499,9 @@ WebGLPhysicsArbiter.prototype = {
         this.contactFlags |= 2; // processed
 
         return (contacts.length === 0);
-    },
+    }
 
-    preStep : function arbiterPreStepFn(timeStepRatio, timeStep)
+    preStep(timeStepRatio, timeStep)
     {
         if (this.trigger)
         {
@@ -6740,7 +6542,11 @@ WebGLPhysicsArbiter.prototype = {
         var activeContacts = this.activeContacts;
         activeContacts.length = 0;
 
-        var baum = (objectA.collisionObject || objectB.collisionObject) ?
+        // TOOD: REMOVE the <any> casts.  objectA appears to be a
+        // WebGLPhysicsCollisionObject.  Does that have a
+        // 'collisionObject' property?
+
+        var baum = ((<any>objectA).collisionObject || (<any>objectB).collisionObject) ?
                       WebGLPhysicsConfig.CONTACT_STATIC_BAUMGRAUTE :
                       WebGLPhysicsConfig.CONTACT_BAUMGRAUTE;
 
@@ -6895,9 +6701,9 @@ WebGLPhysicsArbiter.prototype = {
             // scale cached impulse for change in time step
             data[40] *= timeStepRatio;
         }
-    },
+    }
 
-    applyCachedImpulses : function arbiterApplyCachedImpulsesFn()
+    applyCachedImpulses()
     {
         if (this.trigger)
         {
@@ -6940,9 +6746,9 @@ WebGLPhysicsArbiter.prototype = {
             velB[4] += (data[26] * jn);
             velB[5] += (data[27] * jn);
         }
-    },
+    }
 
-    computeAndApplyBiasImpulses : function arbiterBiasImpulsesFn()
+    computeAndApplyBiasImpulses()
     {
         if (this.trigger)
         {
@@ -7047,9 +6853,9 @@ WebGLPhysicsArbiter.prototype = {
         vec[9] = wb0;
         vec[10] = wb1;
         vec[11] = wb2;
-    },
+    }
 
-    computeAndApplyImpulses : function arbiterImpulsesFn()
+    computeAndApplyImpulses()
     {
         if (this.trigger)
         {
@@ -7216,163 +7022,175 @@ WebGLPhysicsArbiter.prototype = {
         vec[3] = wb0;
         vec[4] = wb1;
         vec[5] = wb2;
-    },
+    }
 
-    invalidateParameters : function invalidateParametersFn()
+    invalidateParameters()
     {
         this.restitution = (this.objectA.restitution * this.objectB.restitution);
         this.friction = (this.objectA.friction * this.objectB.friction);
     }
-};
 
-//
-// Arbiter objects are object pooled due to being frequently
-// created and destroyed.
-//
-// Arbiters are thus instead allocated an deallocated with no
-// create method.
-//
-// Object pool for arbiters
-WebGLPhysicsArbiter.arbiterPool = [];
-WebGLPhysicsArbiter.arbiterPoolSize = 0;
+    //
+    // Arbiter objects are object pooled due to being frequently
+    // created and destroyed.
+    //
+    // Arbiters are thus instead allocated an deallocated with no
+    // create method.
+    //
+    // Object pool for arbiters
 
-WebGLPhysicsArbiter.allocate = function allocateFn(shapeA, shapeB, objectA, objectB)
-{
-    var arbiter;
-    if (this.arbiterPoolSize === 0)
+    static arbiterPool: WebGLPhysicsArbiter[] = [];
+    static arbiterPoolSize = 0;
+
+    static allocate(shapeA: WebGLPhysicsShape,
+                    shapeB: WebGLPhysicsShape,
+                    objectA: WebGLPhysicsCollisionObject,
+                    objectB: WebGLPhysicsCollisionObject) : WebGLPhysicsArbiter
     {
-        arbiter = new WebGLPhysicsArbiter();
+        var arbiter;
+        if (this.arbiterPoolSize === 0)
+        {
+            arbiter = new WebGLPhysicsArbiter();
+        }
+        else
+        {
+            arbiter = this.arbiterPool[this.arbiterPoolSize - 1];
+            this.arbiterPoolSize -= 1;
+        }
+
+        arbiter.active = true;
+
+        arbiter.shapeA = shapeA;
+        arbiter.shapeB = shapeB;
+        arbiter.objectA = objectA;
+        arbiter.objectB = objectB;
+        arbiter.invalidateParameters();
+
+        return arbiter;
     }
-    else
+
+    static deallocate(arbiter: WebGLPhysicsArbiter): void
     {
-        arbiter = this.arbiterPool[this.arbiterPoolSize - 1];
-        this.arbiterPoolSize -= 1;
+        // Prevent object pooled arbiter from keeping shapes/objects
+        // from potential GC.
+        arbiter.shapeA = null;
+        arbiter.shapeB = null;
+        arbiter.objectA = null;
+        arbiter.objectB = null;
+
+        // Ensure flag is reset.
+        arbiter.skipDiscreteCollisions = false;
+
+        // clear contact information
+        arbiter.activeContacts.length = 0;
+        arbiter.contactFlags = 0;
+        arbiter.trigger = false;
+
+        this.arbiterPool[this.arbiterPoolSize] = arbiter;
+        this.arbiterPoolSize += 1;
     }
-
-    arbiter.active = true;
-
-    arbiter.shapeA = shapeA;
-    arbiter.shapeB = shapeB;
-    arbiter.objectA = objectA;
-    arbiter.objectB = objectB;
-    arbiter.invalidateParameters();
-
-    return arbiter;
-};
-
-WebGLPhysicsArbiter.deallocate = function deallocateFn(arbiter)
-{
-    // Prevent object pooled arbiter from keeping shapes/objects
-    // from potential GC.
-    arbiter.shapeA = null;
-    arbiter.shapeB = null;
-    arbiter.objectA = null;
-    arbiter.objectB = null;
-
-    // Ensure flag is reset.
-    arbiter.skipDiscreteCollisions = false;
-
-    // clear contact information
-    arbiter.activeContacts.length = 0;
-    arbiter.contactFlags = 0;
-    arbiter.trigger = false;
-
-    this.arbiterPool[this.arbiterPoolSize] = arbiter;
-    this.arbiterPoolSize += 1;
-};
-
+}
 
 //
 // WebGLPhysicsIsland
 //
-function WebGLPhysicsIsland()
+class WebGLPhysicsIsland
 {
-    // Initialise all properties of islands
-    // which will ever be used.
+    static version = 1;
 
-    // Set of rigid bodies in island
-    this.bodies = [];
+    bodies: WebGLPhysicsRigidBody[];
+    constraints: WebGLPhysicsConstraint[];
+    wakeTimeStamp: number;
+    active: bool;
 
-    // Set of constraints in island
-    this.constraints = [];
+    constructor()
+    {
+        // Initialise all properties of islands
+        // which will ever be used.
 
-    // Local max wakeTimeStamp for island
-    this.wakeTimeStamp = 0;
+        // Set of rigid bodies in island
+        this.bodies = [];
 
-    // Active state of island (compared to sleeping)
-    this.active = false;
+        // Set of constraints in island
+        this.constraints = [];
 
-    return this;
+        // Local max wakeTimeStamp for island
+        this.wakeTimeStamp = 0;
+
+        // Active state of island (compared to sleeping)
+        this.active = false;
+
+        return this;
+    }
+
+    // Island objects are object pooled due to being frequently created
+    // and destroyed.
+    //
+    // Island are thus instead allocated and deallocated with no create
+    // method.
+    //
+    // Object pool for islands
+
+    static islandPool: WebGLPhysicsIsland[] = [];
+    static islandPoolSize = 0;
+
+    static allocate() : WebGLPhysicsIsland
+    {
+        var island;
+        if (this.islandPoolSize === 0)
+        {
+            island = new WebGLPhysicsIsland();
+        }
+        else
+        {
+            island = this.islandPool[this.islandPoolSize - 1];
+            this.islandPoolSize -= 1;
+        }
+
+        return island;
+    }
+
+    static deallocate(island: WebGLPhysicsIsland) : void
+    {
+        this.islandPool[this.islandPoolSize] = island;
+        this.islandPoolSize += 1;
+
+        // Make sure to reset local max wakeTimeStamp back to 0.
+        island.wakeTimeStamp = 0;
+    }
 }
-
-WebGLPhysicsIsland.prototype = {
-
-    version : 1
-
-};
-
-// Island objects are object pooled due to being frequently created
-// and destroyed.
-//
-// Island are thus instead allocated and deallocated with no create
-// method.
-//
-// Object pool for islands
-WebGLPhysicsIsland.islandPool = [];
-WebGLPhysicsIsland.islandPoolSize = 0;
-
-WebGLPhysicsIsland.allocate = function allocateFn()
-{
-    var island;
-    if (this.islandPoolSize === 0)
-    {
-        island = new WebGLPhysicsIsland();
-    }
-    else
-    {
-        island = this.islandPool[this.islandPoolSize - 1];
-        this.islandPoolSize -= 1;
-    }
-
-    return island;
-};
-
-WebGLPhysicsIsland.deallocate = function deallocateFn(island)
-{
-    this.islandPool[this.islandPoolSize] = island;
-    this.islandPoolSize += 1;
-
-    // Make sure to reset local max wakeTimeStamp back to 0.
-    island.wakeTimeStamp = 0;
-};
 
 //
 // WebGLPhysicsTriangleShape
 //
-function WebGLPhysicsTriangleShape()
+class WebGLPhysicsTriangleShape
 {
-    // Initialise all properties of Triangle shape
-    // which will ever be used.
+    static version = 1;
 
-    // Index into parent WebGLTriangleArray::triangles list.
-    this.index = 0;
+    type : string; // prototype
 
-    // Collision radius in collision algorithms, this is taken from parent mesh shape.
-    this.collisionRadius = 0;
+    private index: number;
+    private collisionRadius: number;
+    private triangleArray: WebGLPhysicsTriangleArray;
 
-    // The parent TriangleArray.
-    this.triangleArray = null;
+    constructor()
+    {
+        // Initialise all properties of Triangle shape
+        // which will ever be used.
 
-    return this;
-}
+        // Index into parent WebGLTriangleArray::triangles list.
+        this.index = 0;
 
-WebGLPhysicsTriangleShape.prototype = {
+        // Collision radius in collision algorithms, this is taken from parent mesh shape.
+        this.collisionRadius = 0;
 
-    type : "TRIANGLE_MESH_TRIANGLE",
+        // The parent TriangleArray.
+        this.triangleArray = null;
 
-    version : 1,
+        return this;
+    }
 
-    localSupportWithoutMargin : function triangleShapeLocalSupportFn(vec, dst)
+    localSupportWithoutMargin(vec, dst)
     {
         var vec0 = vec[0];
         var vec1 = vec[1];
@@ -7414,204 +7232,240 @@ WebGLPhysicsTriangleShape.prototype = {
         }
     }
 
-};
-//
-// Triangle shapes are used for collision detection with triangles of a triangle mesh.
-// In most cases there is one persistant object used. In the case of continuous collisions
-// we need to reuse many of these objects, so an object pool is used with allocate and
-// deallocate methods instead of a create method.
-//
-// Object pool for Triangles
-WebGLPhysicsTriangleShape.trianglePool = [];
-WebGLPhysicsTriangleShape.trianglePoolSize = 0;
+    //
+    // Triangle shapes are used for collision detection with triangles
+    // of a triangle mesh.  In most cases there is one persistant
+    // object used. In the case of continuous collisions we need to
+    // reuse many of these objects, so an object pool is used with
+    // allocate and deallocate methods instead of a create method.
+    //
+    // Object pool for Triangles
 
-WebGLPhysicsTriangleShape.allocate = function allocateFn()
-{
-    var triangle;
-    if (this.trianglePoolSize === 0)
+    trianglePool: WebGLPhysicsTriangleShape[] = [];
+    trianglePoolSize = 0;
+
+    static allocate(): WebGLPhysicsTriangleShape
     {
-        triangle = new WebGLPhysicsTriangleShape();
+        var triangle;
+        if (this.trianglePoolSize === 0)
+        {
+            triangle = new WebGLPhysicsTriangleShape();
+        }
+        else
+        {
+            triangle = this.trianglePool[this.trianglePoolSize - 1];
+            this.trianglePoolSize -= 1;
+        }
+
+        return triangle;
     }
-    else
+
+    static deallocate(triangle: WebGLPhysicsTriangleShape): void
     {
-        triangle = this.trianglePool[this.trianglePoolSize - 1];
-        this.trianglePoolSize -= 1;
+        this.trianglePool[this.trianglePoolSize] = triangle;
+        this.trianglePoolSize += 1;
+
+        // Ensure reference is null'ed so that an object pooled Triangle Shape
+        // cannot prevent the TriangleArray from being GC'ed.
+        this.triangleArray = null;
     }
+}
 
-    return triangle;
-};
-
-WebGLPhysicsTriangleShape.deallocate = function deallocateFn(triangle)
-{
-    this.trianglePool[this.trianglePoolSize] = triangle;
-    this.trianglePoolSize += 1;
-
-    // Ensure reference is null'ed so that an object pooled Triangle Shape
-    // cannot prevent the TriangleArray from being GC'ed.
-    this.triangleArray = null;
-};
+WebGLPhysicsTriangleShape.prototype.type = "TRIANGLE_MESH_TRIANGLE";
 
 //
 // WebGLPhysicsTOIEvent
 //
-function WebGLPhysicsTOIEvent()
+class WebGLPhysicsTOIEvent
 {
-    // Initialise all properties of TOI Event
-    // which will ever be used.
+    static version = 1;
+
+    objectA  : WebGLPhysicsCollisionObject;
+    objectB  : WebGLPhysicsCollisionObject;
+    shapeA   : WebGLPhysicsTriangleShape;
+    shapeB   : WebGLPhysicsTriangleShape;
+
+    closestA : any; // v3
+    closestB : any; // v3
+    axis     : any; // v3
+    distance : number;
+    toi      : number;
+    frozenA  : bool;
+    frozenB  : bool;
+    concave  : bool;
+
+    constructor()
+    {
+        // Initialise all properties of TOI Event
+        // which will ever be used.
+        //
+        // This object is made to dual as a cache in contactPairTest.
+
+        // Objects TOI Event relates to.
+        this.objectA = null;
+        this.objectB = null;
+
+        // Shapes TOI Event relates to.
+        // Precondition: object#.shape = shape#
+        this.shapeA = null;
+        this.shapeB = null;
+
+        // Closest points on shapes forming the contact point.
+        this.closestA = VMath.v3BuildZero();
+        this.closestB = VMath.v3BuildZero();
+
+        // Seperating axis / MTV axis forming contact normal.
+        this.axis = VMath.v3BuildZero();
+
+        // Penetration distance for contact of TOI event.
+        this.distance = 0.0;
+
+        // Time of impact for this event.
+        this.toi = 0.0;
+
+        // Cache defining the frozen state of objects during continuous collision detection.
+        // Used to invalidate TOI Event when an object's sweepFrozen differs.
+        this.frozenA = false;
+        this.frozenB = false;
+
+        // Marks this event as corresponding to a concave triangle mesh.
+        // This value is passed to insertContact to prevent culling contacts
+        // based on normals.
+        this.concave = false;
+
+        return this;
+    }
+
     //
-    // This object is made to dual as a cache in contactPairTest.
+    // TOI Events are object pooled due to being frequently created
+    // and destroyed. TOI Events are thus instead allocated and
+    // deallocated with no create method.
+    //
+    // Object pool for TOI Events
 
-    // Objects TOI Event relates to.
-    this.objectA = null;
-    this.objectB = null;
+    eventPool: WebGLPhysicsTOIEvent[] = [];
+    eventPoolSize = 0;
 
-    // Shapes TOI Event relates to.
-    // Precondition: object#.shape = shape#
-    this.shapeA = null;
-    this.shapeB = null;
+    static allocate(): WebGLPhysicsTOIEvent
+    {
+        var toi;
+        if (this.eventPoolSize === 0)
+        {
+            toi = new WebGLPhysicsTOIEvent();
+        }
+        else
+        {
+            toi = this.eventPool[this.eventPoolSize - 1];
+            this.eventPoolSize -= 1;
+        }
 
-    // Closest points on shapes forming the contact point.
-    this.closestA = VMath.v3BuildZero();
-    this.closestB = VMath.v3BuildZero();
+        return toi;
+    }
 
-    // Seperating axis / MTV axis forming contact normal.
-    this.axis = VMath.v3BuildZero();
+    static deallocate(toi: WebGLPhysicsTOIEvent): void
+    {
+        this.eventPool[this.eventPoolSize] = toi;
+        this.eventPoolSize += 1;
 
-    // Penetration distance for contact of TOI event.
-    this.distance = 0.0;
+        // Ensure that if this is a concave TOI Event, that we also
+        // deallocate the related TriangleShape that is generated.
+        if (toi.concave)
+        {
+            WebGLPhysicsTriangleShape.deallocate(toi.shapeB);
+            toi.concave = false;
+        }
 
-    // Time of impact for this event.
-    this.toi = 0.0;
-
-    // Cache defining the frozen state of objects during continuous collision detection.
-    // Used to invalidate TOI Event when an object's sweepFrozen differs.
-    this.frozenA = false;
-    this.frozenB = false;
-
-    // Marks this event as corresponding to a concave triangle mesh.
-    // This value is passed to insertContact to prevent culling contacts
-    // based on normals.
-    this.concave = false;
-
-    return this;
+        // Ensure that object references are set to null to permit GC
+        // even if this is in the object pool.
+        toi.objectA = null;
+        toi.objectB = null;
+        toi.shapeA = null;
+        toi.shapeB = null;
+    }
 }
-
-WebGLPhysicsTOIEvent.prototype = {
-
-    version : 1
-
-};
-//
-// TOI Events are object pooled due to being frequently created and destroyed
-//
-// TOI Events are thus instead allocated and deallocated with no create method.
-//
-// Object pool for TOI Events
-WebGLPhysicsTOIEvent.eventPool = [];
-WebGLPhysicsTOIEvent.eventPoolSize = 0;
-
-WebGLPhysicsTOIEvent.allocate = function allocateFn()
-{
-    var toi;
-    if (this.eventPoolSize === 0)
-    {
-        toi = new WebGLPhysicsTOIEvent();
-    }
-    else
-    {
-        toi = this.eventPool[this.eventPoolSize - 1];
-        this.eventPoolSize -= 1;
-    }
-
-    return toi;
-};
-
-WebGLPhysicsTOIEvent.deallocate = function deallocateFn(toi)
-{
-    this.eventPool[this.eventPoolSize] = toi;
-    this.eventPoolSize += 1;
-
-    // Ensure that if this is a concave TOI Event, that we also
-    // deallocate the related TriangleShape that is generated.
-    if (toi.concave)
-    {
-        WebGLPhysicsTriangleShape.deallocate(toi.shapeB);
-        toi.concave = false;
-    }
-
-    // Ensure that object references are set to null to permit GC
-    // even if this is in the object pool.
-    toi.objectA = null;
-    toi.objectB = null;
-    toi.shapeA = null;
-    toi.shapeB = null;
-};
-
 
 //
 // WebGLPhysicsWorld
 //
-class WebGLPhysicsWorld implements DynamicsWorld
+class WebGLPhysicsWorld implements PhysicsWorld
 {
     static version = 1;
 
-    timeStamp: number;
+    // PhysicsWorld
+    gravity           : any; // v3
+    maxSubSteps       : number;
+    fixedTimeStep     : number;
+    maxGiveUpTimeStep : number;
+    minimumTimeStep   : number;
+    maximumTimeStep   : number;
+    performanceData   : any;
+
+    timeStamp         : number;
 
     private _private: WebGLPrivatePhysicsWorld;
+
+    contactCallbackObjects: WebGLPhysicsCollisionObject[];
 
     update()
     {
         this._private.update();
     }
 
-    rayTest(ray)
+    rayTest(ray: RayTestParameters): RayHit
     {
         return this._private.rayTest(ray);
     }
 
-    convexSweepTest(params)
+    convexSweepTest(params: ConvexSweepTestParameters): RayHit
     {
         return this._private.convexSweepTest(params);
     }
 
-    addCollisionObject(collisionObject)
+    addCollisionObject(collisionObject: PhysicsCollisionObject)
     {
         return this._private.addBody(collisionObject._private);
     }
 
-    removeCollisionObject(collisionObject)
+    removeCollisionObject(collisionObject: PhysicsCollisionObject)
     {
         return this._private.removeBody(collisionObject._private);
     }
 
-    addRigidBody(rigidBody)
+    addRigidBody(rigidBody: PhysicsRigidBody)
     {
         return this._private.addBody(rigidBody._private);
     }
 
-    removeRigidBody(rigidBody)
+    removeRigidBody(rigidBody: PhysicsRigidBody)
     {
         return this._private.removeBody(rigidBody._private);
     }
 
-    addConstraint(constraint)
+    addConstraint(constraint: PhysicsConstraint)
     {
-        return this._private.addConstraint(constraint._private);
+        return this._private.addConstraint(
+            (<WebGLPhysicsConstraint>constraint)._private);
     }
 
-    removeConstraint(constraint)
+    removeConstraint(constraint: PhysicsConstraint)
     {
-        return this._private.removeConstraint(constraint._private);
+        return this._private.removeConstraint(
+            (<WebGLPhysicsConstraint>constraint)._private);
     }
 
-    addCharacter(character)
+    addCharacter(character: PhysicsCharacter)
     {
         return this._private.addBody(character._private.rigidBody._private);
     }
 
-    removeCharacter(character)
+    removeCharacter(character: PhysicsCharacter)
     {
         return this._private.removeBody(character._private.rigidBody._private);
+    }
+
+    wakeBody(body: WebGLPhysicsPrivateBody)
+    {
+        this._private.wakeBody(body);
     }
 
     flush()
@@ -7667,8 +7521,6 @@ class WebGLPhysicsWorld implements DynamicsWorld
                 enumerable : true
             });
         }
-
-
 
         // read only, getter needed to make copy
         Object.defineProperty(rets, "gravity", {
@@ -7735,12 +7587,58 @@ class WebGLPhysicsWorld implements DynamicsWorld
     }
 }
 
-function WebGLPrivatePhysicsWorld() { return this; }
-WebGLPrivatePhysicsWorld.prototype = {
+class WebGLPrivatePhysicsWorld
+{
+    static version = 1;
 
-    version : 1,
+    _public                        : WebGLPhysicsWorld;
 
-    m43InverseOrthonormalTransformVector : function m43InverseOrthonormalTransformVectorFn(m, v, dst)
+    gravity                        : any; // v3
+    maxSubSteps                    : number;
+    fixedTimeStep                  : number;
+    variableMinStep                : number;
+    variableMaxStep                : number;
+    variableStep                   : bool;
+    maxGiveUpTimeStep              : number;
+    staticSpatialMap               : AABBTree;
+    dynamicSpatialMap              : AABBTree;
+    collisionObjects               : WebGLPhysicsCollisionObject[];
+    rigidBodies                    : WebGLPhysicsRigidBody[];
+    constraints                    : WebGLPhysicsConstraint[];
+    kinematicBodies                : WebGLPhysicsCollisionObject[];
+
+    activeArbiters                 : WebGLPhysicsArbiter[];
+
+    activeBodies                   : WebGLPhysicsRigidBody[];
+    activeKinematics               : WebGLPhysicsCollisionObject[];
+    activeConstraints              : WebGLPhysicsConstraint [];
+
+    persistantObjectsList          : WebGLPhysicsRigidBody[];
+    persistantObjectsList2         : WebGLPhysicsRigidBody[];
+    persistantTrianglesList        : WebGLPhysicsTriangleArray[];
+    persistantTOIEventList         : WebGLPhysicsTOIEvent[];
+
+    timeStamp                      : number;
+
+    // timing information
+    performanceData                : {
+        discrete                   : number;
+        sleepComputation           : number;
+        prestepContacts            : number;
+        prestepConstraints         : number;
+        integrateVelocities        : number;
+        warmstartContacts          : number;
+        warmstartConstraints       : number;
+        physicsIterations          : number;
+        integratePositions         : number;
+        continuous                 : number;
+    };
+
+    syncExtents                    : Float32Array;
+    contactCallbackObjects         : WebGLPhysicsContactCallbacks[];
+    contactCallbackRemovedArbiters : WebGLPhysicsArbiter[];
+
+    m43InverseOrthonormalTransformVector(m, v, dst)
     {
         if (dst === undefined)
         {
@@ -7753,9 +7651,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         dst[1] = (m[3] * v0 + m[4] * v1 + m[5] * v2);
         dst[2] = (m[6] * v0 + m[7] * v1 + m[8] * v2);
         return dst;
-    },
+    }
 
-    m43InverseOrthonormalTransformPoint : function m43InverseOrthonormalTransformPointFn(m, v, dst)
+    m43InverseOrthonormalTransformPoint(m, v, dst)
     {
         if (dst === undefined)
         {
@@ -7768,11 +7666,12 @@ WebGLPrivatePhysicsWorld.prototype = {
         dst[1] = (m[3] * v0 + m[4] * v1 + m[5] * v2);
         dst[2] = (m[6] * v0 + m[7] * v1 + m[8] * v2);
         return dst;
-    },
+    }
 
-    // Determine if shape intersects the plane containing triangle number 'index' in triangle array
-    // With given shape and triangle transforms.
-    trianglePlaneDiscard : function trianglePlaneDiscardFn(shape, xform, triangleArray, index, txform)
+    // Determine if shape intersects the plane containing triangle
+    // number 'index' in triangle array With given shape and triangle
+    // transforms.
+    trianglePlaneDiscard(shape, xform, triangleArray, index, txform)
     {
         if (this.planeAxis === undefined)
         {
@@ -7868,10 +7767,10 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         return (seperation - shape.collisionRadius) > 0;
-    },
+    }
 
     // Determine if pair of objects is permitted to collide.
-    filtered : function filteredFn(objectA, objectB)
+    filtered(objectA, objectB)
     {
         if (objectA === objectB)
         {
@@ -7892,11 +7791,12 @@ WebGLPrivatePhysicsWorld.prototype = {
         /*jshint bitwise: true*/
 
         return false;
-    },
+    }
 
     // perform narrow phase collision detection between shapes A and B
-    // owned by respective objects objectA, objectB (objectA.shape === shapeA etc)
-    narrowPhase : function narrowPhaseFn(shapeA, shapeB, objectA, objectB)
+    // owned by respective objects objectA, objectB (objectA.shape ===
+    // shapeA etc)
+    narrowPhase(shapeA, shapeB, objectA, objectB)
     {
         // Objects reused in all narrowPhase calls.
         if (this.narrowTriangle === undefined)
@@ -8123,12 +8023,12 @@ WebGLPrivatePhysicsWorld.prototype = {
             // immediately deallocate for re-use.
             WebGLPhysicsArbiter.deallocate(arb);
         }
-    },
+    }
 
     // Compute islands of interaction rigid bodies and constraints
     // And put to sleep those islands that are to be considered
     // stationary.
-    computeSleeping : function computeSleepingFn(timeStep)
+    computeSleeping(timeStep)
     {
         // Implementation of union-find algorithm with union by rank
         // and path compression.
@@ -8324,10 +8224,10 @@ WebGLPrivatePhysicsWorld.prototype = {
                 }
             }
         }
-    },
+    }
 
     // Wake up a sleeping island.
-    wakeIsland : function wakeIslandFn(island)
+    wakeIsland(island)
     {
         while (island.bodies.length > 0)
         {
@@ -8364,9 +8264,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         WebGLPhysicsIsland.deallocate(island);
-    },
+    }
 
-    wakeRelated : function wakeRelatedFn(body)
+    wakeRelated(body)
     {
         // Wake any related constraints
         var constraints = body.constraints;
@@ -8398,10 +8298,12 @@ WebGLPrivatePhysicsWorld.prototype = {
                 this.wakeBody(arb.objectB);
             }
         }
-    },
+    }
+
+    // TODO: Should this be taking the private object?
 
     // Wake up a rigid body.
-    wakeBody : function wakeBodyFn(body)
+    wakeBody(body: WebGLPhysicsPrivateBody)
     {
         if (body.collisionObject && !body.kinematic)
         {
@@ -8442,10 +8344,10 @@ WebGLPrivatePhysicsWorld.prototype = {
                 this.syncBody(body);
             }
         }
-    },
+    }
 
     // Sync body with broadphase
-    syncBody : function syncBodyFn(body)
+    syncBody(body)
     {
         var extents = this.syncExtents;
         body.calculateExtents(extents);
@@ -8482,10 +8384,10 @@ WebGLPrivatePhysicsWorld.prototype = {
 
             body.previouslyActive = body.active;
         }
-    },
+    }
 
     // Wake up a constraint
-    wakeConstraint : function wakeConstraintFn(constraint)
+    wakeConstraint(constraint)
     {
         constraint.wakeTimeStamp = this.timeStamp + (this.midStep ? 0 : 1);
         if (!constraint.active)
@@ -8509,10 +8411,10 @@ WebGLPrivatePhysicsWorld.prototype = {
                 this.wakeIsland(constraint.island);
             }
         }
-    },
+    }
 
     // Implemenmtation of Conservative Advancement for two moving objects.
-    dynamicSweep : function dynamicSweepFn(toi, timeStep, lowerBound, negRadius)
+    dynamicSweep(toi, timeStep, lowerBound, negRadius)
     {
         var objectA = toi.objectA;
         var objectB = toi.objectB;
@@ -8626,10 +8528,11 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         toi.toi = curTOI;
-    },
+    }
 
-    // Determine if TOI event corresponds to a seperation of the objects, and can be ignored.
-    seperatingTOI : function seperatingTOIFn(toi)
+    // Determine if TOI event corresponds to a seperation of the
+    // objects, and can be ignored.
+    seperatingTOI(toi)
     {
         var objectA = toi.objectA;
         var objectB = toi.objectB;
@@ -8668,11 +8571,11 @@ WebGLPrivatePhysicsWorld.prototype = {
         var axis = toi.axis;
         var dot = (vrel0 * axis[0]) + (vrel1 * axis[1]) + (vrel2 * axis[2]);
         return dot >= 0;
-    },
+    }
 
-    // Implemenmtation of Conservative Advancement for a moving body against a static body.
-    // (Optimised compared with dynamicSweep)
-    staticSweep : function staticSweepFn(toi, timeStep, lowerBound, negRadius)
+    // Implemenmtation of Conservative Advancement for a moving body
+    // against a static body.  (Optimised compared with dynamicSweep)
+    staticSweep(toi, timeStep, lowerBound, negRadius)
     {
         var objectA = toi.objectA; //dynamic
         var objectB = toi.objectB; //static
@@ -8758,9 +8661,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         toi.toi = curTOI;
-    },
+    }
 
-    performStaticTOIBase : function performStaticTOIBaseFn(slop, timeStep, events, numEvents, objectA, objectB)
+    performStaticTOIBase(slop, timeStep, events, numEvents, objectA, objectB)
     {
         var triangles = this.persistantTrianglesList;
         // Objects used in all executions of continuous collisions.
@@ -8877,9 +8780,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         return numEvents;
-    },
+    }
 
-    update : function updateFn()
+    update()
     {
         var dynamicMap = this.dynamicSpatialMap;
         var staticMap = this.staticSpatialMap;
@@ -9682,9 +9585,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         this.updateContactCallbacks();
 
         this.midStep = false;
-    },
+    }
 
-    rayTest : function worldRayTestFn(ray)
+    rayTest(ray)
     {
         var group = ray.group;
         var mask = ray.mask;
@@ -9747,7 +9650,7 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         return ret;
-    },
+    }
 
     //
     // cache having properties
@@ -9757,7 +9660,7 @@ WebGLPrivatePhysicsWorld.prototype = {
     //      axis is 'on' object B.
     //   closestA <-- to be populated by this function
     //   closestB <-- to be populated by this function
-    contactPairTest : function contactPairTest(cache, xformA, xformB)
+    contactPairTest(cache, xformA, xformB)
     {
         var axis = cache.axis;
         var shapeA = cache.shapeA;
@@ -9964,11 +9867,12 @@ WebGLPrivatePhysicsWorld.prototype = {
                 return undefined;
             }
         }
-    },
+    }
 
-    // callback of the form HitResult -> Bool
-    // if callback is undefined, then a callback of function (x) { return true; } is implied.
-    convexSweepTest : function convexSweepTestFn(params, callback)
+    // callback of the form HitResult -> Bool if callback is
+    // undefined, then a callback of function (x) { return true; } is
+    // implied.
+    convexSweepTest(params, callback)
     {
         //
         // Initialise objects reused in all convexSweepTest calls.
@@ -10306,9 +10210,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         return minResult;
-    },
+    }
 
-    addBody : function addBodyFn(body)
+    addBody(body)
     {
         if (body.world)
         {
@@ -10351,9 +10255,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         return true;
-    },
+    }
 
-    removeBody : function removeBodyFn(body)
+    removeBody(body)
     {
         if (body.world !== this)
         {
@@ -10409,9 +10313,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         return true;
-    },
+    }
 
-    addConstraint : function addConstraintFn(constraint)
+    addConstraint(constraint)
     {
         if (constraint.world)
         {
@@ -10444,9 +10348,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         return true;
-    },
+    }
 
-    removeConstraint : function removeConstraintFn(constraint)
+    removeConstraint(constraint)
     {
         if (constraint.world !== this)
         {
@@ -10493,9 +10397,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         return true;
-    },
+    }
 
-    flush : function physicsFlushFn()
+    flush()
     {
         // Use public remove# methods to ensure necessary side effects
         // Occur and avoid code duplication.
@@ -10521,9 +10425,9 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
 
         this.timeStamp = 0;
-    },
+    }
 
-    removeArbitersFromObject : function removeArbitersFromObjectFn(object)
+    removeArbitersFromObject(object)
     {
         var arbiters = object.arbiters;
         var worldArbiters = this.activeArbiters;
@@ -10552,9 +10456,9 @@ WebGLPrivatePhysicsWorld.prototype = {
 
             WebGLPhysicsArbiter.deallocate(arb);
         }
-    },
+    }
 
-    removeFromContactCallbacks : function removeFromContactCallbacksFn(object)
+    removeFromContactCallbacks(object)
     {
         var contactCallbackObjects = this.contactCallbackObjects;
         var numObjects = contactCallbackObjects.length;
@@ -10573,9 +10477,9 @@ WebGLPrivatePhysicsWorld.prototype = {
             }
         }
         object.addedToContactCallbacks = false;
-    },
+    }
 
-    updateContactCallbacks : function updateContactCallbacksFn()
+    updateContactCallbacks()
     {
         var contactCallbackObjects = this.contactCallbackObjects;
         var numObjects = contactCallbackObjects.length;
@@ -10705,14 +10609,12 @@ WebGLPrivatePhysicsWorld.prototype = {
         }
         contactCallbackRemovedArbiters.length = 0;
     }
-};
-
+}
 
 //
 // WebGL Physics Device
 //
-
-class WebGLPhysicsDevice
+class WebGLPhysicsDevice implements PhysicsDevice
 {
     FILTER_DYNAMIC     : number; // 1 (on prototype)
     FILTER_STATIC      : number; // 2 (on prototype)

@@ -44,7 +44,7 @@ class TGALoader
     SIGNATURE         : string; // prototype
     RLE_PACKETSIZE    : number; // prototype
 
-    processBytes : function processBytesFn(bytes)
+    processBytes(bytes)
     {
         var header = this.parseHeader(bytes);
         if (!this.isValidHeader(header))
@@ -264,9 +264,9 @@ class TGALoader
         }
 
         this.data = data;
-    },
+    }
 
-    parseHeader : function parseHeaderFn(bytes)
+    parseHeader(bytes)
     {
         /*jshint bitwise: false*/
         var header = {
@@ -297,9 +297,9 @@ class TGALoader
         };
         /*jshint bitwise: true*/
         return header;
-    },
+    }
 
-    isValidHeader : function isValidHeaderFn(header)
+    isValidHeader(header)
     {
         if (this.TYPE_MAPPED_RLE === header.imageType ||
             this.TYPE_MAPPED === header.imageType)
@@ -361,9 +361,9 @@ class TGALoader
         }
 
         return true;
-    },
+    }
 
-    expandRLE : function expandRLEFn(data)
+    expandRLE(data)
     {
         var pelbytes = this.bytesPerPixel;
         var width = this.width;
@@ -428,9 +428,9 @@ class TGALoader
         while (dest < size);
 
         return dst;
-    },
+    }
 
-    expandColorMap : function expandColorMapFn(data)
+    expandColorMap(data)
     {
         // Unpack image
         var pelbytes = this.bytesPerPixel;
@@ -464,9 +464,9 @@ class TGALoader
         }
 
         return dst;
-    },
+    }
 
-    flipHorz : function flipHorzFn(data)
+    flipHorz(data)
     {
         var pelbytes = this.bytesPerPixel;
         var width = this.width;
@@ -486,9 +486,9 @@ class TGALoader
             }
             data += pitch;
         }
-    },
+    }
 
-    flipVert : function flipVertFn(data)
+    flipVert(data)
     {
         var pelbytes = this.bytesPerPixel;
         var width = this.width;
@@ -506,9 +506,9 @@ class TGALoader
                 data[destRow + j] = tmp;
             }
         }
-    },
+    }
 
-    convertBGR2RGB : function convertBGR2RGBFn(data)
+    convertBGR2RGB(data)
     {
         // Rearrange the colors from BGR to RGB
         var bytesPerPixel = this.bytesPerPixel;
@@ -524,9 +524,9 @@ class TGALoader
             offset += bytesPerPixel;
         }
         while (offset < size);
-    },
+    }
 
-    convertARGB2RGBA : function convertARGB2RGBAFn(data)
+    convertARGB2RGBA(data)
     {
         // Rearrange the colors from ARGB to RGBA (2 bytes)
         var bytesPerPixel = this.bytesPerPixel;
@@ -567,7 +567,7 @@ class TGALoader
         }
     }
 
-    static create(tgaParams: any) : TGALoader;
+    static create(tgaParams: any) : TGALoader
     {
         var loader = new TGALoader();
         loader.gd = params.gd;
