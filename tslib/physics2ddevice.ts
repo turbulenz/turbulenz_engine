@@ -1837,24 +1837,10 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 {
     type = "PULLEY";
 
-    // // Inherited
-    // wake  = Physics2DConstraint.prototype.wake;
-    // sleep = Physics2DConstraint.prototype.sleep;
-
-    // configure  = Physics2DConstraint.prototype.configure;
-    // isEnabled  = Physics2DConstraint.prototype.isEnabled;
-    // isDisabled = Physics2DConstraint.prototype.isDisabled;
-    // enable     = Physics2DConstraint.prototype.enable;
-    // disable    = Physics2DConstraint.prototype.disable;
-
-    addEventListener    = Physics2DConstraint.prototype.addEventListener;
-    removeEventListener = Physics2DConstraint.prototype.removeEventListener;
-
     _drawLink: { (debug: any, x1, y1, x2, y2, nx, ny, nl, bias, scale,
                   colSA, colSB): void; };
 
     dimension: number;
-    //_data: any; // Physics2DDevice.prototype.floatArray((/*PULLEY_DATA_SIZE*/37));
 
     // Our own properties
     bodyC: Physics2DRigidBody;
@@ -1909,14 +1895,10 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 
     // Inherited
     _ANCHOR_A = (/*PULLEY_LANCHOR1*/11);
-    getAnchorA = Physics2DConstraint.prototype.getAnchorA;
-    setAnchorA = Physics2DConstraint.prototype.setAnchorA;
-
     _ANCHOR_B = (/*PULLEY_LANCHOR2*/13);
-    getAnchorB = Physics2DConstraint.prototype.getAnchorB;
-    setAnchorB = Physics2DConstraint.prototype.setAnchorB;
 
     _ANCHOR_C = (/*PULLEY_LANCHOR3*/15);
+
     getAnchorC(dst)
     {
         if (dst === undefined)
@@ -2643,18 +2625,18 @@ class Physics2DMotorConstraint extends Physics2DConstraint
 {
     type = "MOTOR";
 
-    // Inherited
-    wake  = Physics2DConstraint.prototype.wake;
-    sleep = Physics2DConstraint.prototype.sleep;
+    // // Inherited
+    // wake  = Physics2DConstraint.prototype.wake;
+    // sleep = Physics2DConstraint.prototype.sleep;
 
-    configure  = Physics2DConstraint.prototype.configure;
-    isEnabled  = Physics2DConstraint.prototype.isEnabled;
-    isDisabled = Physics2DConstraint.prototype.isDisabled;
-    enable     = Physics2DConstraint.prototype.enable;
-    disable    = Physics2DConstraint.prototype.disable;
+    // configure  = Physics2DConstraint.prototype.configure;
+    // isEnabled  = Physics2DConstraint.prototype.isEnabled;
+    // isDisabled = Physics2DConstraint.prototype.isDisabled;
+    // enable     = Physics2DConstraint.prototype.enable;
+    // disable    = Physics2DConstraint.prototype.disable;
 
-    addEventListener    = Physics2DConstraint.prototype.addEventListener;
-    removeEventListener = Physics2DConstraint.prototype.removeEventListener;
+    // addEventListener    = Physics2DConstraint.prototype.addEventListener;
+    // removeEventListener = Physics2DConstraint.prototype.removeEventListener;
 
     // Ours
     dimension: number;
@@ -2688,15 +2670,6 @@ class Physics2DMotorConstraint extends Physics2DConstraint
             this.wake(true);
         }
     }
-
-    // =========================================================
-
-    // Inherited
-    _inWorld          = Physics2DConstraint.prototype.twoBodyInWorld;
-    _outWorld         = Physics2DConstraint.prototype.twoBodyOutWorld;
-    _pairExists       = Physics2DConstraint.prototype.twoBodyPairExists;
-    _wakeConnected    = Physics2DConstraint.prototype.twoBodyWakeConnected;
-    _sleepComputation = Physics2DConstraint.prototype.twoBodySleepComputation;
 
     // ==========================================================
 
@@ -2809,6 +2782,18 @@ class Physics2DMotorConstraint extends Physics2DConstraint
     }
 }
 
+// Point these methods at specific methods on the base class.
+Physics2DMotorConstraint.prototype._inWorld =
+    Physics2DConstraint.prototype.twoBodyInWorld;
+Physics2DMotorConstraint.prototype._outWorld =
+    Physics2DConstraint.prototype.twoBodyOutWorld;
+Physics2DMotorConstraint.prototype._pairExists =
+    Physics2DConstraint.prototype.twoBodyPairExists;
+Physics2DMotorConstraint.prototype._wakeConnected =
+    Physics2DConstraint.prototype.twoBodyWakeConnected;
+Physics2DMotorConstraint.prototype._sleepComputation =
+    Physics2DConstraint.prototype.twoBodySleepComputation;
+
 // =========================================================================
 //
 // Line Constraint
@@ -2841,21 +2826,6 @@ class Physics2DMotorConstraint extends Physics2DConstraint
 class Physics2DLineConstraint extends Physics2DConstraint
 {
     type = "LINE";
-
-    // Inherited
-    wake  = Physics2DConstraint.prototype.wake;
-    sleep = Physics2DConstraint.prototype.sleep;
-
-    configure  = Physics2DConstraint.prototype.configure;
-    isEnabled  = Physics2DConstraint.prototype.isEnabled;
-    isDisabled = Physics2DConstraint.prototype.isDisabled;
-    enable     = Physics2DConstraint.prototype.enable;
-    disable    = Physics2DConstraint.prototype.disable;
-
-    addEventListener    = Physics2DConstraint.prototype.addEventListener;
-    removeEventListener = Physics2DConstraint.prototype.removeEventListener;
-
-    // Ours
 
     dimension: number;
 
@@ -2893,12 +2863,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
 
     // Inherited
     _ANCHOR_A = (/*LINE_LANCHOR1*/7);
-    getAnchorA = Physics2DConstraint.prototype.getAnchorA;
-    setAnchorA = Physics2DConstraint.prototype.setAnchorA;
-
     _ANCHOR_B = (/*LINE_LANCHOR2*/9);
-    getAnchorB = Physics2DConstraint.prototype.getAnchorB;
-    setAnchorB = Physics2DConstraint.prototype.setAnchorB;
 
     getAxis(dst)
     {
@@ -2934,15 +2899,6 @@ class Physics2DLineConstraint extends Physics2DConstraint
             this.wake(true);
         }
     }
-
-    // =========================================================
-
-    // Inherited
-    _inWorld          = Physics2DConstraint.prototype.twoBodyInWorld;
-    _outWorld         = Physics2DConstraint.prototype.twoBodyOutWorld;
-    _pairExists       = Physics2DConstraint.prototype.twoBodyPairExists;
-    _wakeConnected    = Physics2DConstraint.prototype.twoBodyWakeConnected;
-    _sleepComputation = Physics2DConstraint.prototype.twoBodySleepComputation;
 
     // ==========================================================
 
@@ -3364,6 +3320,19 @@ class Physics2DLineConstraint extends Physics2DConstraint
     }
 }
 
+// Redirect some methods
+
+Physics2DLineConstraint.prototype._inWorld =
+    Physics2DConstraint.prototype.twoBodyInWorld;
+Physics2DLineConstraint.prototype._outWorld =
+    Physics2DConstraint.prototype.twoBodyOutWorld;
+Physics2DLineConstraint.prototype._pairExists =
+    Physics2DConstraint.prototype.twoBodyPairExists;
+Physics2DLineConstraint.prototype._wakeConnected =
+    Physics2DConstraint.prototype.twoBodyWakeConnected;
+Physics2DLineConstraint.prototype._sleepComputation =
+    Physics2DConstraint.prototype.twoBodySleepComputation;
+
 // =========================================================================
 //
 // Distance Constraint
@@ -3392,19 +3361,6 @@ class Physics2DLineConstraint extends Physics2DConstraint
 class Physics2DDistanceConstraint extends Physics2DConstraint
 {
     type = "DISTANCE";
-
-    // Inherited
-    wake  = Physics2DConstraint.prototype.wake;
-    sleep = Physics2DConstraint.prototype.sleep;
-
-    configure  = Physics2DConstraint.prototype.configure;
-    isEnabled  = Physics2DConstraint.prototype.isEnabled;
-    isDisabled = Physics2DConstraint.prototype.isDisabled;
-    enable     = Physics2DConstraint.prototype.enable;
-    disable    = Physics2DConstraint.prototype.disable;
-
-    addEventListener    = Physics2DConstraint.prototype.addEventListener;
-    removeEventListener = Physics2DConstraint.prototype.removeEventListener;
 
     // Ours
     dimension: number;
@@ -3444,21 +3400,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
 
     // Inherited
     _ANCHOR_A = (/*DIST_LANCHOR1*/7);
-    getAnchorA = Physics2DConstraint.prototype.getAnchorA;
-    setAnchorA = Physics2DConstraint.prototype.setAnchorA;
-
     _ANCHOR_B = (/*DIST_LANCHOR2*/9);
-    getAnchorB = Physics2DConstraint.prototype.getAnchorB;
-    setAnchorB = Physics2DConstraint.prototype.setAnchorB;
-
-    // =========================================================
-
-    // Inherited
-    _inWorld          = Physics2DConstraint.prototype.twoBodyInWorld;
-    _outWorld         = Physics2DConstraint.prototype.twoBodyOutWorld;
-    _pairExists       = Physics2DConstraint.prototype.twoBodyPairExists;
-    _wakeConnected    = Physics2DConstraint.prototype.twoBodyWakeConnected;
-    _sleepComputation = Physics2DConstraint.prototype.twoBodySleepComputation;
 
     // =======================================================
 
@@ -3843,6 +3785,19 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
     }
 }
 
+// Redirect some methods
+
+Physics2DDistanceConstraint.prototype._inWorld =
+    Physics2DConstraint.prototype.twoBodyInWorld;
+Physics2DDistanceConstraint.prototype._outWorld =
+    Physics2DConstraint.prototype.twoBodyOutWorld;
+Physics2DDistanceConstraint.prototype._pairExists =
+    Physics2DConstraint.prototype.twoBodyPairExists;
+Physics2DDistanceConstraint.prototype._wakeConnected =
+    Physics2DConstraint.prototype.twoBodyWakeConnected;
+Physics2DDistanceConstraint.prototype._sleepComputation =
+    Physics2DConstraint.prototype.twoBodySleepComputation;
+
 // =========================================================================
 //
 // Angle Constraint
@@ -3866,19 +3821,6 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
 class Physics2DAngleConstraint extends Physics2DConstraint
 {
     type = "ANGLE";
-
-    // Inherited
-    wake  = Physics2DConstraint.prototype.wake;
-    sleep = Physics2DConstraint.prototype.sleep;
-
-    configure  = Physics2DConstraint.prototype.configure;
-    isEnabled  = Physics2DConstraint.prototype.isEnabled;
-    isDisabled = Physics2DConstraint.prototype.isDisabled;
-    enable     = Physics2DConstraint.prototype.enable;
-    disable    = Physics2DConstraint.prototype.disable;
-
-    addEventListener    = Physics2DConstraint.prototype.addEventListener;
-    removeEventListener = Physics2DConstraint.prototype.removeEventListener;
 
     _drawForBody: { (debug: any, x1, y1, x2, y2, nx, nl, bias, scale,
                      colSA, colSB): void; };
@@ -4262,12 +4204,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
 
     // Inherited
     _ANCHOR_A = (/*WELD_LANCHOR1*/5);
-    getAnchorA = Physics2DConstraint.prototype.getAnchorA;
-    setAnchorA = Physics2DConstraint.prototype.setAnchorA;
-
     _ANCHOR_B = (/*WELD_LANCHOR2*/7);
-    getAnchorB = Physics2DConstraint.prototype.getAnchorB;
-    setAnchorB = Physics2DConstraint.prototype.setAnchorB;
 
     getPhase()
     {
