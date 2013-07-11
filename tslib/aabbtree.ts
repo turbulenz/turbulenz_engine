@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 /*global Float32Array: false*/
 
-interface AABBTreeRayTestResult
+interface AABBTreeRayTestResult extends RayHit
 {
     factor: number;
 };

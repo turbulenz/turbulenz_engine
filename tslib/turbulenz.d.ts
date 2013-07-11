@@ -784,11 +784,11 @@ interface GraphicsDevice
 
 interface PhysicsShape
 {
+    type: string;
     margin: number;
     radius: number;
     halfExtents: any; // v3
     inertia: any; // v3
-    type: string;
 }
 
 interface PhysicsTriangleArray

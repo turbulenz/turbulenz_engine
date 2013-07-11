@@ -11,12 +11,16 @@
 /// <reference path="../vmath.ts" />
 /// <reference path="../aabbtree.ts" />
 
+// TODO: is this related to RayHit?
+
 interface WebGLPhysicsShapeRayTestResult
 {
     factor    : number;
     hitPoint  : any; // v3
     hitNormal : any; // v3
 }
+
+// -----------------------------------------------------------------------------
 
 //
 // WebGLPhysicsShape
@@ -42,27 +46,6 @@ class WebGLPhysicsShape implements PhysicsShape
     // TODO: inherit the subclasses rather than using _public /
     // _private membes
 }
-
-interface WebGLPhysicsPrivateTriangleArray
-{
-    _public: WebGLPhysicsTriangleArray;
-
-    numVertices: number;
-    numTriangles: number;
-    extents: Float32Array;
-    vertices: Float32Array;
-    indices: any;   // Uint16Array / Uint32Array
-    triangles: Float32Array;
-    spatialMap: AABBTree;
-};
-declare var WebGLPhysicsPrivateTriangleArray :
-{
-    new(): WebGLPhysicsPrivateTriangleArray;
-    prototype: any;
-    create(params: any): WebGLPhysicsShape;
-};
-
-// -----------------------------------------------------------------------------
 
 //
 // WebGLPhysicsConfig
@@ -228,6 +211,8 @@ var initShapeProperties = function initShapePropertiesFn(s: WebGLPhysicsShape,
     });
 }
 
+// TODO: probably better to inherit from WebGLPhysicsShape here
+
 //
 // WebGLPhysicsPlaneShape
 //
@@ -235,7 +220,12 @@ class WebGLPhysicsPlaneShape implements PhysicsShape
 {
     static version = 1;
 
+    // PhysicsShape
     type            : string; // prototype
+    margin          : number;
+    radius          : number;
+    halfExtents     : any;    // v3
+    inertia         : any;    // v3
 
     _public         : WebGLPhysicsShape;
     collisionRadius : number;
@@ -243,9 +233,6 @@ class WebGLPhysicsPlaneShape implements PhysicsShape
     normal          : any;    // v3
     center          : any;    // v3
 
-    radius          : number;
-    halfExtents     : any;    // v3
-    inertia         : any;    // v3
 
     rayTest(ray)
     {
@@ -698,14 +685,15 @@ class WebGLPhysicsBoxShape implements PhysicsShape
 {
     static version = 1;
 
-    type            : string;
+    type            : string; // prototype
+    margin          : number;
+    radius          : number;
+    halfExtents     : any; // v3
+    inertia         : any; // v3
 
     _public         : WebGLPhysicsShape;
 
     center          : any; // v3
-    radius          : number;
-    halfExtents     : any; // v3
-    inertia         : any; // v3
     collisionRadius : number;
 
     rayTest(ray)
@@ -879,14 +867,15 @@ class WebGLPhysicsCylinderShape implements PhysicsShape
     static version = 1;
 
     type            : string; // prototype
+    margin          : number;
+    radius          : number;
+    halfExtents     : any; // v3
+    inertia         : any; // v3
 
     _public         : WebGLPhysicsShape;
     center          : any; // v3
-    radius          : number;
-    halfExtents     : any; // v3
     cylinderRadius  : number;
     halfHeight      : number;
-    inertia         : any; // v3
     collisionRadius : number;
 
     rayTest(ray)
@@ -1062,18 +1051,17 @@ class WebGLPhysicsConeShape implements PhysicsShape
 {
     static version = 1;
 
-    type : string; // prototype
+    type            : string; // prototype
+    margin          : number;
+    radius          : number;
+    halfExtents     : any; // v3
+    inertia         : any; // v3
 
-
-    _public: WebGLPhysicsShape;
-
-    halfHeight: number;
-    coneRadius: number;
-    radius: number;
-    halfExtents: any; // v3
-    inertia: any; // v3
-    collisionRadius: number;
-    center: any; // v3
+    _public         : WebGLPhysicsShape;
+    halfHeight      : number;
+    coneRadius      : number;
+    collisionRadius : number;
+    center          : any; // v3
 
     rayTest(ray)
     {
@@ -1262,144 +1250,11 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
 {
     static version = 1;
 
-    // Size of each 'triangle' in triangles array.
-    TRIANGLE_SIZE        : number; // prototype
+    // PhysicsTriangleArray
+    vertices : Float32Array; // getter for _private.vertices
+    indices  : any;          // Uint16Array / Uint32Array
 
-    vertices             : Float32Array;
-    indices              : any;
-
-    triangles    : Float32Array;
-    private spatialMap   : AABBTree;
-    private numTriangles : number;
-    private _private     : WebGLPhysicsPrivateTriangleArray;
-
-    rayTest(ray)
-    {
-        var triangles = this.triangles;
-        var spatialMap = this.spatialMap;
-
-        function rayCallback(tree, triangle, ray, unusedAABBDistance, upperBound)
-        {
-            var dir = ray.direction;
-            var dir0 = dir[0];
-            var dir1 = dir[1];
-            var dir2 = dir[2];
-
-            var origin = ray.origin;
-            var o0 = origin[0];
-            var o1 = origin[1];
-            var o2 = origin[2];
-
-            var i = triangle.index;
-            var n0 = triangles[i];
-            var n1 = triangles[i + 1];
-            var n2 = triangles[i + 2];
-
-            //var dot = VMath.v3Dot(ray.direction, normal);
-            var dot = ((dir0 * n0) + (dir1 * n1) + (dir2 * n2));
-            // If ray is parallel to triangle plane
-            // Assume it cannot intersect triangle
-            if ((dot * dot) < WebGLPhysicsConfig.COPLANAR_THRESHOLD)
-            {
-                return null;
-            }
-
-            var d = triangles[i + 16];
-            var v00 = triangles[i + 3];
-            var v01 = triangles[i + 4];
-            var v02 = triangles[i + 5];
-            //var distance = VMath.v3Dot(VMath.v3Sub(v0, ray.origin), normal) / dot;
-            var distance = ((d - ((o0 * n0) + (o1 * n1) + (o2 * n2))) / dot);
-            if (distance < 0 || distance >= upperBound)
-            {
-                return null;
-            }
-
-            // Make sure normal points correct direction for ray cast result
-            if (dot > 0)
-            {
-                //normal = VMath.v3Neg(normal);
-                n0 = -n0;
-                n1 = -n1;
-                n2 = -n2;
-
-                dot = -dot;
-            }
-
-            //var hitPoint = VMath.v3Add(ray.origin, VMath.v3ScalarMul(ray.direction, distance));
-            var hit0 = (o0 + (dir0 * distance));
-            var hit1 = (o1 + (dir1 * distance));
-            var hit2 = (o2 + (dir2 * distance));
-
-            // Compute barycentric coordinates in triangle.
-            //var w = VMath.v3Sub(hitPoint, v0);
-            var wx = (hit0 - v00);
-            var wy = (hit1 - v01);
-            var wz = (hit2 - v02);
-
-            var dotuu = triangles[i + 12];
-            var dotvv = triangles[i + 13];
-            var dotuv = triangles[i + 14];
-            var negLimit = triangles[i + 15];
-
-            var u0 = triangles[i + 6];
-            var u1 = triangles[i + 7];
-            var u2 = triangles[i + 8];
-            var v0 = triangles[i + 9];
-            var v1 = triangles[i + 10];
-            var v2 = triangles[i + 11];
-            //var dotwu = VMath.v3Dot(w, u);
-            //var dotwv = VMath.v3Dot(w, v);
-            var dotwu = (wx * u0) + (wy * u1) + (wz * u2);
-            var dotwv = (wx * v0) + (wy * v1) + (wz * v2);
-
-            var alpha = ((dotuv * dotwv) - (dotvv * dotwu));
-            if (alpha > 0 || alpha < negLimit)
-            {
-                return null;
-            }
-
-            var beta  = ((dotuv * dotwu) - (dotuu * dotwv));
-            if (beta > 0 || (alpha + beta) < negLimit)
-            {
-                return null;
-            }
-
-            return {
-                factor: distance,
-                hitPoint: VMath.v3Build(hit0, hit1, hit2),
-                hitNormal: VMath.v3Build(n0, n1, n2)
-            };
-        }
-
-        if (spatialMap)
-        {
-            return AABBTree.rayTest([spatialMap], ray, rayCallback);
-        }
-        else
-        {
-            var minimumResult = null;
-            var upperBound = ray.maxFactor;
-
-            var triNode = {
-                index: 0
-            };
-            var i;
-            var numTris = this.numTriangles * WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE;
-            for (i = 0; i < numTris; i += WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE)
-            {
-                triNode.index = i;
-                var result = rayCallback(null, triNode, ray, 0, upperBound);
-                if (result)
-                {
-                    minimumResult = result;
-                    upperBound = minimumResult.factor;
-                }
-            }
-
-            return minimumResult;
-        }
-    }
+    _private : WebGLPhysicsPrivateTriangleArray;
 
     static create(params: any): WebGLPhysicsTriangleArray
     {
@@ -1602,7 +1457,152 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
     }
 }
 
-WebGLPhysicsTriangleArray.prototype.TRIANGLE_SIZE = 17;
+class WebGLPhysicsPrivateTriangleArray
+{
+    static version = 1;
+
+    // Size of each 'triangle' in triangles array.
+    TRIANGLE_SIZE : number; // prototype
+
+    _public       : WebGLPhysicsTriangleArray;
+    numVertices   : number;
+    extents       : Float32Array;
+    vertices      : Float32Array;
+    indices       : any;   // Uint16Array / Uint32Array
+    triangles     : Float32Array;
+    numTriangles  : number;
+    spatialMap    : AABBTree;
+
+    rayTest(ray)
+    {
+        var triangles = this.triangles;
+        var spatialMap = this.spatialMap;
+
+        function rayCallback(tree, triangle, ray, unusedAABBDistance, upperBound)
+        {
+            var dir = ray.direction;
+            var dir0 = dir[0];
+            var dir1 = dir[1];
+            var dir2 = dir[2];
+
+            var origin = ray.origin;
+            var o0 = origin[0];
+            var o1 = origin[1];
+            var o2 = origin[2];
+
+            var i = triangle.index;
+            var n0 = triangles[i];
+            var n1 = triangles[i + 1];
+            var n2 = triangles[i + 2];
+
+            //var dot = VMath.v3Dot(ray.direction, normal);
+            var dot = ((dir0 * n0) + (dir1 * n1) + (dir2 * n2));
+            // If ray is parallel to triangle plane
+            // Assume it cannot intersect triangle
+            if ((dot * dot) < WebGLPhysicsConfig.COPLANAR_THRESHOLD)
+            {
+                return null;
+            }
+
+            var d = triangles[i + 16];
+            var v00 = triangles[i + 3];
+            var v01 = triangles[i + 4];
+            var v02 = triangles[i + 5];
+            //var distance = VMath.v3Dot(VMath.v3Sub(v0, ray.origin), normal) / dot;
+            var distance = ((d - ((o0 * n0) + (o1 * n1) + (o2 * n2))) / dot);
+            if (distance < 0 || distance >= upperBound)
+            {
+                return null;
+            }
+
+            // Make sure normal points correct direction for ray cast result
+            if (dot > 0)
+            {
+                //normal = VMath.v3Neg(normal);
+                n0 = -n0;
+                n1 = -n1;
+                n2 = -n2;
+
+                dot = -dot;
+            }
+
+            //var hitPoint = VMath.v3Add(ray.origin, VMath.v3ScalarMul(ray.direction, distance));
+            var hit0 = (o0 + (dir0 * distance));
+            var hit1 = (o1 + (dir1 * distance));
+            var hit2 = (o2 + (dir2 * distance));
+
+            // Compute barycentric coordinates in triangle.
+            //var w = VMath.v3Sub(hitPoint, v0);
+            var wx = (hit0 - v00);
+            var wy = (hit1 - v01);
+            var wz = (hit2 - v02);
+
+            var dotuu = triangles[i + 12];
+            var dotvv = triangles[i + 13];
+            var dotuv = triangles[i + 14];
+            var negLimit = triangles[i + 15];
+
+            var u0 = triangles[i + 6];
+            var u1 = triangles[i + 7];
+            var u2 = triangles[i + 8];
+            var v0 = triangles[i + 9];
+            var v1 = triangles[i + 10];
+            var v2 = triangles[i + 11];
+            //var dotwu = VMath.v3Dot(w, u);
+            //var dotwv = VMath.v3Dot(w, v);
+            var dotwu = (wx * u0) + (wy * u1) + (wz * u2);
+            var dotwv = (wx * v0) + (wy * v1) + (wz * v2);
+
+            var alpha = ((dotuv * dotwv) - (dotvv * dotwu));
+            if (alpha > 0 || alpha < negLimit)
+            {
+                return null;
+            }
+
+            var beta  = ((dotuv * dotwu) - (dotuu * dotwv));
+            if (beta > 0 || (alpha + beta) < negLimit)
+            {
+                return null;
+            }
+
+            return {
+                factor: distance,
+                hitPoint: VMath.v3Build(hit0, hit1, hit2),
+                hitNormal: VMath.v3Build(n0, n1, n2)
+            };
+        }
+
+        if (spatialMap)
+        {
+            return AABBTree.rayTest([spatialMap], ray, rayCallback);
+        }
+        else
+        {
+            var minimumResult = null;
+            var upperBound = ray.maxFactor;
+
+            var triNode = {
+                index: 0
+            };
+            var i;
+            var numTris = this.numTriangles * WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE;
+            for (i = 0; i < numTris; i += WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE)
+            {
+                triNode.index = i;
+                var result = rayCallback(null, triNode, ray, 0, upperBound);
+                if (result)
+                {
+                    minimumResult = result;
+                    upperBound = minimumResult.factor;
+                }
+            }
+
+            return minimumResult;
+        }
+    }
+}
+
+WebGLPhysicsPrivateTriangleArray.prototype.TRIANGLE_SIZE = 17;
 
 //
 // WebGL Physics Convex Hull helpers.
@@ -2105,16 +2105,17 @@ class WebGLPhysicsTriangleMeshShape implements PhysicsShape
 {
     static version = 1;
 
-    type : string; // prototype
+    type            : string; // prototype
+    margin          : number;
+    radius          : number;
+    halfExtents     : any; // v3
+    inertia         : any; // v3
 
-    _public: WebGLPhysicsShape;
+    _public         : WebGLPhysicsShape;
 
-    triangleArray: WebGLPhysicsTriangleArray;
-    radius: number;
-    halfExtents: any; // v3
-    center: any; // v3
-    inertia: any; // v3
-    collisionRadius: any; // v3
+    triangleArray   : WebGLPhysicsPrivateTriangleArray;
+    center          : any; // v3
+    collisionRadius : any; // v3
 
     rayTest(ray)
     {
@@ -2183,17 +2184,19 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
 {
     static version = 1;
 
-    type : string;
+    type            : string;
+    margin          : number;
+    radius          : number;
+    halfExtents     : any; // v3
+    inertia         : any; // v3
 
-    _public: WebGLPhysicsShape;
-    radius: number;
-    halfExtents: any; // v3
-    center: any; // v3
-    inertia: any; // v3
-    collisionRadius: number;
-    points: Float32Array;
-    triangleArray: WebGLPhysicsTriangleArray;
-    supportTopology: any; // Int32Array / Int16Array
+    _public         : WebGLPhysicsShape;
+    center          : any; // v3
+    collisionRadius : number;
+    points          : Float32Array;
+
+    triangleArray   : WebGLPhysicsPrivateTriangleArray;
+    supportTopology : any; // Int32Array / Int16Array
 
     private lastSupport: number;
 
@@ -2366,11 +2369,14 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
                 c.triangleArray = WebGLPhysicsConvexHullHelpers.makeConvexHull(points);
             }
 
-            // Produce edge topology for faster support search.
-            // Each vertex keeps a reference to each neighbouring vertex on triangulated surface.
+            // Produce edge topology for faster support search.  Each
+            // vertex keeps a reference to each neighbouring vertex on
+            // triangulated surface.
             //
-            // Experiment showed that even for a planar convex hull of 3 vertices, we only search
-            // on average 1.6 vertices instead of all 3 so is better even for this smallest case.
+            // Experiment showed that even for a planar convex hull of
+            // 3 vertices, we only search on average 1.6 vertices
+            // instead of all 3 so is better even for this smallest
+            // case.
             var supportTopology = [];
 
             points = c.triangleArray.vertices;
@@ -3062,7 +3068,7 @@ class WebGLPhysicsCollisionObject implements PhysicsCollisionObject
 
     sweepFrozen: bool;
 
-    private _private: WebGLPhysicsPrivateBody;
+    _private: WebGLPhysicsPrivateBody;
     _public: any;  // TODO: what's this.  Seems to be refered to.
 
     private static sharedInverseInertiaLocal = VMath.v3BuildZero();
@@ -3628,9 +3634,17 @@ class WebGLPhysicsConstraint implements PhysicsConstraint
 {
     static version = 1;
 
-    world    : WebGLPhysicsWorld;
-    type     : string;
-    userData : any;
+    // PhysicsConstraint
+    bodyA      : PhysicsCollisionObject;
+    bodyB      : PhysicsCollisionObject;
+    transformA : any; // m43
+    transformB : any; // m43
+    type       : string;
+
+    world      : WebGLPhysicsWorld;
+    userData   : any;
+
+    _private   : any;
 
     preStep(/* timeStep */)
     {
@@ -3644,7 +3658,7 @@ class WebGLPhysicsConstraint implements PhysicsConstraint
     {
     }
 
-    create(type: string, params: any): WebGLPhysicsConstraint
+    static create(type: string, params: any): WebGLPhysicsConstraint
     {
         var s = new WebGLPhysicsConstraint();
 
@@ -3738,6 +3752,8 @@ class WebGLPhysicsPoint2PointConstraint implements PhysicsPoint2PointConstraint
     bodyB: PhysicsCollisionObject;
     transformA: any; // m43
     transformB: any; // m43
+    // TODO: move into the class?
+    _private: WebGLPhysicsPrivatePoint2PointConstraint;
 
     // PhysicsPoint2PointConstraint
     pivotA: any; // v3
@@ -3746,10 +3762,7 @@ class WebGLPhysicsPoint2PointConstraint implements PhysicsPoint2PointConstraint
     damping: number;
     impulseClamp: number;
 
-    // TODO: move into the class
-    private _private: WebGLPhysicsPrivatePoint2PointConstraint;
-
-    create(params: any): WebGLPhysicsPoint2PointConstraint
+    static create(params: any): WebGLPhysicsPoint2PointConstraint
     {
         var c = new WebGLPhysicsPoint2PointConstraint();
         var pc = new WebGLPhysicsPrivatePoint2PointConstraint();
@@ -7168,10 +7181,9 @@ class WebGLPhysicsTriangleShape
     static version = 1;
 
     type : string; // prototype
-
-    private index: number;
-    private collisionRadius: number;
-    private triangleArray: WebGLPhysicsTriangleArray;
+    index: number;
+    collisionRadius: number;
+    triangleArray: WebGLPhysicsPrivateTriangleArray;
 
     constructor()
     {
@@ -7423,22 +7435,26 @@ class WebGLPhysicsWorld implements PhysicsWorld
 
     addCollisionObject(collisionObject: PhysicsCollisionObject)
     {
-        return this._private.addBody(collisionObject._private);
+        return this._private.addBody(
+            (<WebGLPhysicsCollisionObject>collisionObject)._private);
     }
 
     removeCollisionObject(collisionObject: PhysicsCollisionObject)
     {
-        return this._private.removeBody(collisionObject._private);
+        return this._private.removeBody(
+            (<WebGLPhysicsCollisionObject>collisionObject)._private);
     }
 
     addRigidBody(rigidBody: PhysicsRigidBody)
     {
-        return this._private.addBody(rigidBody._private);
+        return this._private.addBody(
+            (<WebGLPhysicsRigidBody>rigidBody)._private);
     }
 
     removeRigidBody(rigidBody: PhysicsRigidBody)
     {
-        return this._private.removeBody(rigidBody._private);
+        return this._private.removeBody(
+            (<WebGLPhysicsRigidBody>rigidBody)._private);
     }
 
     addConstraint(constraint: PhysicsConstraint)
@@ -7455,12 +7471,14 @@ class WebGLPhysicsWorld implements PhysicsWorld
 
     addCharacter(character: PhysicsCharacter)
     {
-        return this._private.addBody(character._private.rigidBody._private);
+        return this._private.addBody(
+            (<WebGLPhysicsCharacter>character)._private.rigidBody._private);
     }
 
     removeCharacter(character: PhysicsCharacter)
     {
-        return this._private.removeBody(character._private.rigidBody._private);
+        return this._private.removeBody(
+            (<WebGLPhysicsCharacter>character)._private.rigidBody._private);
     }
 
     wakeBody(body: WebGLPhysicsPrivateBody)
@@ -7587,6 +7605,15 @@ class WebGLPhysicsWorld implements PhysicsWorld
     }
 }
 
+interface WebGLPhysicsNarrowCache
+{
+    axis     : any; // v3
+    shapeA   : any; // TODO: what is this
+    shapeB   : any; // TODO: what is this
+    closestA : any; // v3
+    closestB : any; // v3
+}
+
 class WebGLPrivatePhysicsWorld
 {
     static version = 1;
@@ -7607,18 +7634,69 @@ class WebGLPrivatePhysicsWorld
     constraints                    : WebGLPhysicsConstraint[];
     kinematicBodies                : WebGLPhysicsCollisionObject[];
 
+    planeAxis                      : any; // v3
+    planeSA                        : any; // v3
+    planeSB                        : any; // v3
+
+    midStep: bool;
+
+    narrowTriangle: WebGLPhysicsTriangleShape;
+    narrowCache: WebGLPhysicsNarrowCache;
+    narrowCache2: WebGLPhysicsNarrowCache;
+    narrowFakeBody: {
+        transform : any; // v3
+        shape : any; // TODO: what is this
+    };
+
+    narrowTransform: any; // m43
+    narrowExtents: Float32Array;
+
+    continuousFakeBody: {
+        shape : any; // TODO: type
+        transform : any; // m43
+        startTransform : any; // m43
+    };
+    continuousInvTransform: any; // m43
+    continuousExtents: Float32Array;
+
     activeArbiters                 : WebGLPhysicsArbiter[];
 
-    activeBodies                   : WebGLPhysicsRigidBody[];
-    activeKinematics               : WebGLPhysicsCollisionObject[];
+    activeBodies                   : WebGLPhysicsPrivateBody[];
+    activeKinematics               : WebGLPhysicsPrivateBody[];
     activeConstraints              : WebGLPhysicsConstraint [];
 
     persistantObjectsList          : WebGLPhysicsRigidBody[];
     persistantObjectsList2         : WebGLPhysicsRigidBody[];
-    persistantTrianglesList        : WebGLPhysicsTriangleArray[];
+    persistantTrianglesList        : any[]; // TODO: type?
     persistantTOIEventList         : WebGLPhysicsTOIEvent[];
 
+    prevTimeStep: number;
+
+    prevTimeStamp                  : number;
     timeStamp                      : number;
+
+    contactGJK: WebGLGJKContactSolver;
+    contactEPA: WebGLContactEPA;
+
+    // TODO: reuse narrocache type?
+    sweepCache: {
+        axis : any; // v3
+        shapeA : any; // TODO: type
+        shapeB : any; // TODO: type
+        closestA : any; // v3
+        closestB : any; // v3
+    };
+    sweepTriangle: WebGLPhysicsTriangleShape;
+    sweepDelta: any; // v3
+    sweepFromExtents: Float32Array;
+    sweepToExtents: Float32Array;
+    sweepExtents: Float32Array;
+    sweepFakeBody: {
+        shape : any;
+        transform : any;
+    };
+    sweepTransform: any; // m43
+    sweepTransform2: any; // m43
 
     // timing information
     performanceData                : {
@@ -7635,10 +7713,10 @@ class WebGLPrivatePhysicsWorld
     };
 
     syncExtents                    : Float32Array;
-    contactCallbackObjects         : WebGLPhysicsContactCallbacks[];
+    contactCallbackObjects         : WebGLPhysicsPrivateBody[];
     contactCallbackRemovedArbiters : WebGLPhysicsArbiter[];
 
-    m43InverseOrthonormalTransformVector(m, v, dst)
+    m43InverseOrthonormalTransformVector(m, v, dst?)
     {
         if (dst === undefined)
         {
@@ -7653,7 +7731,7 @@ class WebGLPrivatePhysicsWorld
         return dst;
     }
 
-    m43InverseOrthonormalTransformPoint(m, v, dst)
+    m43InverseOrthonormalTransformPoint(m, v, dst?)
     {
         if (dst === undefined)
         {
@@ -8300,7 +8378,9 @@ class WebGLPrivatePhysicsWorld
         }
     }
 
-    // TODO: Should this be taking the private object?
+    // TODO: Should this be taking the private object?  Seems to be
+    // given a WebGLPhysicsPrivateBody, but puts it on
+    // activeKinematics which
 
     // Wake up a rigid body.
     wakeBody(body: WebGLPhysicsPrivateBody)
@@ -9872,7 +9952,9 @@ class WebGLPrivatePhysicsWorld
     // callback of the form HitResult -> Bool if callback is
     // undefined, then a callback of function (x) { return true; } is
     // implied.
-    convexSweepTest(params, callback)
+    //
+    // TODO: add type of callback?  { (rayHit: RayHit): bool; }; ?
+    convexSweepTest(params, callback?)
     {
         //
         // Initialise objects reused in all convexSweepTest calls.
@@ -10627,8 +10709,8 @@ class WebGLPhysicsDevice implements PhysicsDevice
     FILTER_USER_MAX    : number; // 0x8000 (on prototype)
     FILTER_ALL         : number; // 0xffff (on prototype)
 
-    version           = 1;
-    vendor            = "Turbulenz";
+    static version     = 1;
+    static vendor      = "Turbulenz";
 
     constructor()
     {
@@ -10705,24 +10787,32 @@ class WebGLPhysicsDevice implements PhysicsDevice
         return WebGLPhysicsPoint2PointConstraint.create(params);
     }
 
-    createHingeConstraint(params) : WebGLPhysicsConstraint
+    createHingeConstraint(params) : PhysicsHingeConstraint
     {
-        return WebGLPhysicsConstraint.create("HINGE", params);
+        // TODO: remove the casts
+        return <PhysicsHingeConstraint><any>
+            (WebGLPhysicsConstraint.create("HINGE", params));
     }
 
-    createConeTwistConstraint(params) : WebGLPhysicsConstraint
+    createConeTwistConstraint(params) : PhysicsConeTwistConstraint
     {
-        return WebGLPhysicsConstraint.create("CONETWIST", params);
+        // TODO: remove the casts
+        return <PhysicsConeTwistConstraint><any>
+            (WebGLPhysicsConstraint.create("CONETWIST", params));
     }
 
-    create6DOFConstraint(params) : WebGLPhysicsConstraint
+    create6DOFConstraint(params) : Physics6DOFConstraint
     {
-        return WebGLPhysicsConstraint.create("D6", params);
+        // TODO: remove the casts
+        return <Physics6DOFConstraint><any>
+            (WebGLPhysicsConstraint.create("D6", params));
     }
 
-    createSliderConstraint(params) : WebGLPhysicsConstraint
+    createSliderConstraint(params) : PhysicsSliderConstraint
     {
-        return WebGLPhysicsConstraint.create("SLIDER", params);
+        // TODO: remove the casts
+        return <PhysicsSliderConstraint><any>
+            (WebGLPhysicsConstraint.create("SLIDER", params));
     }
 
     createCharacter(params) : WebGLPhysicsCharacter
