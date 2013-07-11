@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-07-11
+
+- When setting a negative or invalid score the leaderboard manager will now raise an error.
+
 2013-06-12
 
 - Added sphere loading to load_model sample.

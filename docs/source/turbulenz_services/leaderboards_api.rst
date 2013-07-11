@@ -632,6 +632,7 @@ The ``callbackFn`` is called with the following arguments:
 ``score``
     A JavaScript number.
     The score value that was requested to be set.
+    This cannot be a negative value.
 
 ``newBest``
     A JavaScript boolean.
