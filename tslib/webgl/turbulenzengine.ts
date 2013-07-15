@@ -8,12 +8,13 @@
 /*global Float32Array*/
 /*global console*/
 /*global window*/
-//"use strict";
 
 /// <reference path="networkdevice.ts" />
 /// <reference path="inputdevice.ts" />
 /// <reference path="sounddevice.ts" />
 /// <reference path="graphicsdevice.ts" />
+
+"use strict";
 
 interface Window
 {

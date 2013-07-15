@@ -1,12 +1,15 @@
 // Copyright (c) 2011-2012 Turbulenz Limited
+
 /*global TurbulenzEngine*/
 /*global Uint8Array*/
 /*global window*/
-"use strict";
 
 /// <reference path="sounddevice.ts" />
 
-// Some old browsers had a broken implementation of ArrayBuffer without a "slice" method
+"use strict";
+
+// Some old browsers had a broken implementation of ArrayBuffer
+// without a "slice" method
 if ((typeof ArrayBuffer !== "undefined") &&
     (ArrayBuffer.prototype !== undefined) &&
     (ArrayBuffer.prototype.slice === undefined))

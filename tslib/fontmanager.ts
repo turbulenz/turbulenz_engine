@@ -4,12 +4,12 @@
 /*global Observer: false*/
 /*global Float32Array: false*/
 
-"use strict";
-
 /// <reference path="debug.ts" />
 /// <reference path="turbulenz.d.ts" />
 /// <reference path="requesthandler.ts" />
 /// <reference path="observer.ts" />
+
+"use strict";
 
 interface FontDimensions
 {

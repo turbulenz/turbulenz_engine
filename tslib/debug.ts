@@ -39,6 +39,17 @@ interface TurbulenzDebug
     assert(condition: any, msg?: string): void
     log(msg: string): void;
 
+    isNumber(s: any): bool;
+    isVec2(v): bool;
+    isVec3(v): bool;
+    isVec4(v): bool;
+    isAABB(v): bool;
+    isQuat(v): bool;
+    isMtx33(v): bool;
+    isMtx43(v): bool;
+    isMtx34(v): bool;
+    isMtx44(v): bool;
+    isQuatPos(v): bool;
 }
 
 var debug : TurbulenzDebug = {
@@ -109,6 +120,60 @@ var debug : TurbulenzDebug = {
     log : function debugAssertLogFn(msg)
     {
         window.console.log(msg);
-    }
+    },
 
+    isNumber : function debugIsNumber(s)
+    {
+        return "number" === typeof s;
+    },
+
+    isVec2 : function debugIsVec2Fn(v)
+    {
+        return (2 === v.length);
+    },
+
+    isVec3 : function debugIsVec3Fn(v)
+    {
+        return (3 === v.length);
+    },
+
+    isVec4 : function debugIsVec4Fn(v)
+    {
+        return (4 === v.length);
+    },
+
+    isAABB : function debugIsAABBFn(v)
+    {
+        return (6 === v.length);
+    },
+
+    isQuat : function debugIsQuatFn(v)
+    {
+        return (4 === v.length);
+    },
+
+    isMtx33 : function debugIsMtx33Fn(v)
+    {
+        return (9 === v.length);
+    },
+
+    isMtx43 : function debugIsMtx43Fn(v)
+    {
+        return (12 === v.length);
+    },
+
+    isMtx34 : function debugIsMtx34Fn(v)
+    {
+        return (12 === v.length);
+    },
+
+    isMtx44 : function debugIsMtx44Fn(v)
+    {
+        return (16 === v.length);
+    },
+
+    isQuatPos : function debugIsQuatPos(v)
+    {
+        return (7 === v.length);
+    }
 };

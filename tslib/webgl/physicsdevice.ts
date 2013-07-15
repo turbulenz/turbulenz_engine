@@ -6,10 +6,10 @@
 /*global AABBTree: false*/
 /*global TurbulenzEngine: false*/
 
-//"use strict";
-
 /// <reference path="../vmath.ts" />
 /// <reference path="../aabbtree.ts" />
+
+"use strict";
 
 // TODO: is this related to RayHit?
 

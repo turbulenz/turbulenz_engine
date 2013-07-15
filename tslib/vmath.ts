@@ -61,69 +61,6 @@ if ((typeof Float32Array !== "undefined") &&
     };
 }
 
-interface TurbulenzDebug
-{
-    isNumber(s: any): bool;
-    isVec2(v): bool;
-    isVec3(v): bool;
-    isVec4(v): bool;
-    isAABB(v): bool;
-    isQuat(v): bool;
-    isMtx33(v): bool;
-    isMtx43(v): bool;
-    isMtx34(v): bool;
-    isMtx44(v): bool;
-    isQuatPos(v): bool;
-}
-
-if (debug)
-{
-    debug.isNumber = function debugIsNumber(s)
-    {
-        return "number" === typeof s;
-    };
-    debug.isVec2 = function debugIsVec2Fn(v)
-    {
-        return (2 === v.length);
-    };
-    debug.isVec3 = function debugIsVec3Fn(v)
-    {
-        return (3 === v.length);
-    };
-    debug.isVec4 = function debugIsVec4Fn(v)
-    {
-        return (4 === v.length);
-    };
-    debug.isAABB = function debugIsAABBFn(v)
-    {
-        return (6 === v.length);
-    };
-    debug.isQuat = function debugIsQuatFn(v)
-    {
-        return (4 === v.length);
-    };
-    debug.isMtx33 = function debugIsMtx33Fn(v)
-    {
-        return (9 === v.length);
-    };
-    debug.isMtx43 = function debugIsMtx43Fn(v)
-    {
-        return (12 === v.length);
-    };
-    debug.isMtx34 = function debugIsMtx34Fn(v)
-    {
-        return (12 === v.length);
-    };
-    debug.isMtx44 = function debugIsMtx44Fn(v)
-    {
-        return (16 === v.length);
-    };
-    debug.isQuatPos = function debugIsQuatPos(v)
-    {
-        return (7 === v.length);
-    };
-}
-
 var VMath : MathDevice =
 {
     version : 1,

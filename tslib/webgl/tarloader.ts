@@ -1,10 +1,12 @@
 // Copyright (c) 2011-2012 Turbulenz Limited
+
 /*global TurbulenzEngine*/
 /*global Uint8Array*/
 /*global window*/
-"use strict";
 
 /// <reference path="graphicsdevice.ts" />
+
+"use strict";
 
 //
 // TARLoader

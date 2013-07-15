@@ -1,7 +1,5 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
-"use strict";
-
 /*global Reference: false*/
 /*global Observer: false*/
 /*global TurbulenzEngine: false*/
@@ -9,6 +7,8 @@
 /// <reference path="turbulenz.d.ts" />
 /// <reference path="observer.ts" />
 /// <reference path="requesthandler.ts" />
+
+"use strict";
 
 class TextureInstance
 {

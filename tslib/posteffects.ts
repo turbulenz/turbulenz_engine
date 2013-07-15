@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2011 Turbulenz Limited
 
 /// <reference path="turbulenz.d.ts" />
+/// <reference path="shadermanager.ts" />
 
 interface PostEffectsEntry
 {

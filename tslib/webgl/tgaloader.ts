@@ -3,9 +3,10 @@
 /*global Uint8Array*/
 /*global Uint16Array*/
 /*global window*/
-"use strict";
 
 /// <reference path="graphicsdevice.ts" />
+
+"use strict";
 
 //
 // TGALoader

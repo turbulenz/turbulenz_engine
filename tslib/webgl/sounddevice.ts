@@ -5,12 +5,13 @@
 /*global VMath: false*/
 /*global window: false*/
 /*global Uint8Array: false*/
-"use strict";
 
 /// <reference path="../vmath.ts" />
 
 /// <reference path="turbulenzengine.ts" />
 /// <reference path="soundtarloader.ts" />
+
+"use strict";
 
 interface WebGLSoundDeviceSoundCheckCall
 {

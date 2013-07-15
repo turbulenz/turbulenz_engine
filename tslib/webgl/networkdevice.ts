@@ -1,8 +1,9 @@
 // Copyright (c) 2011-2012 Turbulenz Limited
-/*global window*/
-"use strict";
 
+/// <reference path="../base.d.ts" />
 /// <reference path="../turbulenz.d.ts" />
+
+"use strict";
 
 //
 // WebGLNetworkDevice

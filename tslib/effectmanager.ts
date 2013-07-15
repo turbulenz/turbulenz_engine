@@ -7,7 +7,6 @@
 /// <reference path="geometry.ts" />
 /// <reference path="utilities.ts" />
 
-
 "use strict";
 
 //

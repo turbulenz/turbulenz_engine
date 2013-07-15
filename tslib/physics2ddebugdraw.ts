@@ -1,5 +1,3 @@
-// Complains in various parts about use of (/*NAME*/value) constants.
-
 // Copyright (c) 2012 Turbulenz Limited
 
 /*global
@@ -13,10 +11,11 @@ Physics2DAngleConstraint: false
 Physics2DLineConstraint: false
 Physics2DPulleyConstraint: false
 */
-"use strict";
 
 /// <reference path="turbulenz.d.ts" />
 /// <reference path="physics2ddevice.ts" />
+
+"use strict";
 
 //
 // Physics2D DebugDraw

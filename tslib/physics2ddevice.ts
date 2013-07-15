@@ -7,11 +7,11 @@ Float32Array: false
 Uint16Array: false
 BoxTree: false
 */
-"use strict";
 
 /// <reference path="debug.ts" />
 /// <reference path="boxtree.ts" />
 
+"use strict";
 
 //
 // Physics2D Configuration

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2013 Turbulenz Limited
+
 /*global TurbulenzEngine*/
 /*global TGALoader*/
 /*global DDSLoader*/
@@ -15,7 +16,6 @@
 /*global DataView*/
 /*global window*/
 /*global debug*/
-"use strict";
 
 /// <reference path="../turbulenz.d.ts" />
 /// <reference path="../external/webgl.d.ts" />
@@ -24,6 +24,8 @@
 /// <reference path="tarloader.ts" />
 /// <reference path="tgaloader.ts" />
 /// <reference path="ddsloader.ts" />
+
+"use strict";
 
 interface WebGLSampler
 {

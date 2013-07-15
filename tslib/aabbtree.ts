@@ -1,6 +1,8 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 /*global Float32Array: false*/
 
+/// <reference path="turbulenz.d.ts" />
+
 interface AABBTreeRayTestResult extends RayHit
 {
     factor: number;
