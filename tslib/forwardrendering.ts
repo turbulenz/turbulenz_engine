@@ -9,25 +9,11 @@ interface ForwardRendererInfo
     far: number;
     id: number;
     shadowMappingUpdate: { (camera: Camera, md: MathDevice): void; };
-};
-
-// TODO: Turn ShaderManager into a full class and get rid of this (TSC
-// doesn't pick this up from the .d.ts for some reason).
-
-interface ShaderManager
-{
-    load(a, b?): Shader;
-};
+}
 
 //
 // ForwardRendering
 //
-
-/*global ShadowMapping: false, VMath: false,
-         VMathArrayConstructor:false, Effect: false,
-         renderingCommonCreateRendererInfoFn: false,
-         renderingCommonGetTechniqueIndexFn: false,
-         renderingCommonSortKeyFn: false*/
 
 class ForwardRendering
 {
@@ -182,7 +168,7 @@ class ForwardRendering
         {
             shadowMaps.updateShader(shaderManager);
         }
-    };
+    }
 
     static createNodeRendererInfo(node, md)
     {
@@ -192,7 +178,7 @@ class ForwardRendering
             worldViewInverseTranspose: md.m33BuildIdentity()
         };
         ForwardRendering.nextNodeID += 1;
-    };
+    }
 
     createRendererInfo(renderable): ForwardRendererInfo
     {
@@ -229,7 +215,7 @@ class ForwardRendering
         rendererInfo.id = (nodeId ? (1.0 / (1.0 + nodeId)) : 0);
 
         return rendererInfo;
-    };
+    }
 
     prepareRenderables(camera, scene)
     {
@@ -336,7 +322,7 @@ class ForwardRendering
             }
             while (n < numVisibleRenderables);
         }
-    };
+    }
 
     prepareLights(gd, scene)
     {
@@ -470,7 +456,7 @@ class ForwardRendering
         localDirectionalLights.length = numLocalDirectional;
         pointLights.length = numPoint;
         spotLights.length = numSpot;
-    };
+    }
 
     addToDiffuseQueue(gd, renderableDrawParameters,
                       lightInstanceTechniqueParameters)
@@ -485,7 +471,7 @@ class ForwardRendering
 
             queue[queueLength] = renderableDrawParameters;
         }
-    };
+    }
 
     //TODO name.
     lightFindVisibleRenderables(gd, lightInstance, scene): bool
@@ -660,7 +646,7 @@ class ForwardRendering
         lightInstance.numVisibleDrawParameters = numVisibleDrawParameters;
 
         return (0 < numVisibleDrawParameters);
-    };
+    }
 
     directionalLightsUpdateVisibleRenderables(gd /*, scene */) : bool
     {
@@ -711,7 +697,7 @@ class ForwardRendering
 
 
         return (0 < totalVisibleDrawParameters);
-    };
+    }
 
     update(gd, camera, scene, currentTime)
     {
@@ -1007,7 +993,7 @@ class ForwardRendering
             }
             while (l < numSpotInstances);
         }
-    };
+    }
 
     destroyBuffers()
     {
@@ -1026,7 +1012,7 @@ class ForwardRendering
             this.depthBuffer.destroy();
             this.depthBuffer = null;
         }
-    };
+    }
 
     updateBuffers(gd, deviceWidth, deviceHeight): bool
     {
@@ -1072,7 +1058,7 @@ class ForwardRendering
         this.bufferHeight = 0;
         this.destroyBuffers();
         return false;
-    };
+    }
 
     drawAmbientPass(gd, ambientColor)
     {
@@ -1080,7 +1066,7 @@ class ForwardRendering
         gd.drawArray(this.passes[this.passIndex.ambient],
                      [this.globalTechniqueParameters,
                       this.ambientTechniqueParameters], -1);
-    };
+    }
 
     drawShadowMaps(gd, globalTechniqueParameters, lightInstances, shadowMaps, minExtentsHigh)
     {
@@ -1117,14 +1103,14 @@ class ForwardRendering
             l += 1;
         }
         while (l < numInstances);
-    };
+    }
 
     draw(gd,
-                                          clearColor,
-                                          drawDecalsFn,
-                                          drawTransparentFn,
-                                          drawDebugFn,
-                                          postFXsetupFn)
+         clearColor,
+         drawDecalsFn,
+         drawTransparentFn,
+         drawDebugFn,
+         postFXsetupFn)
     {
         var globalTechniqueParameters = this.globalTechniqueParameters;
         var ambientColor = this.ambientColor;
@@ -1250,17 +1236,17 @@ class ForwardRendering
             gd.setStream(this.quadVertexBuffer, this.quadSemantics);
             gd.draw(this.quadPrimitive, 4);
         }
-    };
+    }
 
     setLightingScale(scale)
     {
         this.lightingScale = scale;
-    };
+    }
 
     getDefaultSkinBufferSize(): number
     {
         return this.defaultSkinBufferSize;
-    };
+    }
 
     destroy()
     {
@@ -1350,7 +1336,7 @@ class ForwardRendering
         this.destroyBuffers();
 
         delete this.md;
-    };
+    }
 
     // Constructor function
     static create(gd: GraphicsDevice, md: MathDevice,
@@ -3205,5 +3191,5 @@ class ForwardRendering
         effect.add(rigid, effectTypeData);
 
         return fr;
-    };
-};
+    }
+}

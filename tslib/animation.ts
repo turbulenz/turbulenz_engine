@@ -389,7 +389,8 @@ class InterpolatorController implements ControllerBaseClass
         {
             var data = nodeData[j];
             var jointChannels = data.channels;
-            var jointHasScale = jointChannels ? jointChannels.scale : animHasScale;
+            var jointHasScale =
+                jointChannels ? jointChannels.scale : animHasScale;
             var hasScale = jointHasScale || animHasScale;
             var jointKeys = data.keyframes;
             var jointBase = data.baseframe;
@@ -402,7 +403,7 @@ class InterpolatorController implements ControllerBaseClass
                 basePos = jointBase.translation;
                 baseScale = jointBase.scale;
                 /*jshint bitwise: false*/
-                jointHasScale |= baseScale !== undefined;
+                jointHasScale = jointHasScale || (baseScale !== undefined);
                 /*jshint bitwise: true*/
             }
 
@@ -1039,6 +1040,8 @@ class ReferenceController
     referenceSource: ControllerBaseClass;
     setReferenceController: { (controller: ControllerBaseClass): void; };
 
+    private __proto__ : any; //
+
     // Constructor function
     static create(baseController): ReferenceController
     {
@@ -1046,7 +1049,7 @@ class ReferenceController
         var c = new ReferenceController();
         /*jshint nomen: false*/
         /*jshint proto: true*/
-        c['__proto__'] = baseController;
+        c.__proto__ = baseController;
         /*jshint proto: false*/
         /*jshint nomen: true*/
 
@@ -1066,7 +1069,7 @@ class ReferenceController
 
             /*jshint nomen: false*/
             /*jshint proto: true*/
-            this['__proto__'] = controller;
+            this.__proto__ = controller;
             /*jshint proto: false*/
             /*jshint nomen: true*/
             this.referenceSource = controller;
@@ -1081,7 +1084,8 @@ class ReferenceController
     }
 }
 
-// The TransitionController interpolates between the fixed state of input controllers across a period of time
+// The TransitionController interpolates between the fixed state of
+// input controllers across a period of time
 class TransitionController implements ControllerBaseClass
 {
     static version = 1;
@@ -1875,7 +1879,7 @@ class PoseController implements ControllerBaseClass
     onFinishedCallback: { (controller: ControllerBaseClass): bool; };
     // Controller Base End
 
-    addTime(/* delta */)
+    addTime( delta )
     {
     }
 
@@ -1956,11 +1960,11 @@ class PoseController implements ControllerBaseClass
         return Animation.standardGetJointWorldTransform(this, jointId, this.mathDevice, asMatrix);
     }
 
-    setTime(/* time */)
+    setTime(time)
     {
     }
 
-    setRate(/* rate */)
+    setRate(rate)
     {
     }
 

@@ -35,13 +35,13 @@ class NetworkLatencyBehaviour
 			}
 		}
 		return result;
-	};
+	}
 
 	scheduleNextDelay(baseTime)
 	{
 		this.startDelayTime = baseTime + Math.random() * this.delayPeriod / 1000;
 		this.endDelayTime = this.startDelayTime + Math.random() * this.delayDuration / 1000;
-	};
+	}
 
     static create(config) : NetworkLatencyBehaviour
     {
@@ -51,8 +51,8 @@ class NetworkLatencyBehaviour
 	    result.delayDuration = config.delayDuration;
 	    result.scheduleNextDelay(TurbulenzEngine.time);
 	    return result;
-    };
-};
+    }
+}
 
 //
 // NetworkLatencySimulator
@@ -80,7 +80,7 @@ class NetworkLatencySimulator
 
 		queue.push(messageFunction);
 		TurbulenzEngine.setTimeout(processCallback, delay);
-	};
+	}
 
 	processMessage(queue)
 	{
@@ -89,7 +89,7 @@ class NetworkLatencySimulator
 			var messageFn = queue.shift();
 			messageFn.call();
 		}
-	};
+	}
 
 	flushQueues()
 	{
@@ -106,7 +106,7 @@ class NetworkLatencySimulator
 				}
 			}
 		}
-	};
+	}
 
 	addMultiplayerSession(multiplayerSession)
 	{
@@ -173,7 +173,7 @@ class NetworkLatencySimulator
 			that.flushQueues();
 			oldDestroy.call(multiplayerSession);
 		};
-	};
+	}
 
     static create(behaviour) : NetworkLatencySimulator
     {
@@ -238,5 +238,5 @@ class NetworkLatencySimulator
 	    };
 
 	    return simulator;
-    };
-};
+    }
+}

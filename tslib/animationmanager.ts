@@ -7,7 +7,10 @@
 
 // -----------------------------------------------------------------------------
 
-interface AnimationList{ [name: string]: Animation; };
+interface AnimationList
+{
+    [name: string]: Animation;
+};
 
 class AnimationManager
 {
@@ -32,7 +35,7 @@ class AnimationManager
     { debug.abort("abstract method"); }
 
     static create(errorCallback?: { (msg: string): void; },
-                  log?          : HTMLElement              ): AnimationManager
+                  log?: HTMLElement): AnimationManager
     {
         if (!errorCallback)
         {
@@ -269,7 +272,7 @@ class AnimationManager
             }
         };
 
-        var nodeHasSkeleton = function nodeHasSkeletonFn(node)
+        var nodeHasSkeleton = function nodeHasSkeletonFn(node) : Skeleton
         {
             var renderables = node.renderables;
             if (renderables)

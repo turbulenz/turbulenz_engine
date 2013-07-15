@@ -7,15 +7,11 @@
 //
 // renderingCommonGetTechniqueIndexFn
 //
-declare var renderingCommonGetTechniqueIndexFn :
-{
+var renderingCommonGetTechniqueIndexFn = <{
     (techniqueName: string): number;
     techniquesIndexMap: { [techniqueName: string] : number; };
     numTechniques: number;
-};
-
-var renderingCommonGetTechniqueIndexFn =
-    function renderingCommonGetTechniqueIndexFnFn(techniqueName)
+}> function renderingCommonGetTechniqueIndexFnFn(techniqueName)
 {
     var dataStore = renderingCommonGetTechniqueIndexFn;
     var techniqueIndex = dataStore.techniquesIndexMap[techniqueName];

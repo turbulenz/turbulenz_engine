@@ -45,7 +45,7 @@ class SimpleRendering
 
     updateShader(sm: ShaderManager)
     {
-    };
+    }
 
     sortRenderablesAndLights(camera, scene)
     {
@@ -109,7 +109,7 @@ class SimpleRendering
             while (n < numVisibleRenderables);
 
         }
-    };
+    }
 
     update(gd, camera, scene, currentTime)
     {
@@ -134,12 +134,12 @@ class SimpleRendering
         this.globalTechniqueParameters['time'] = currentTime;
         this.camera = camera;
         this.scene = scene;
-    };
+    }
 
     updateBuffers(/* gd, deviceWidth, deviceHeight */) : bool
     {
         return true;
-    };
+    }
 
     draw(gd: GraphicsDevice,
          clearColor: any,
@@ -192,7 +192,7 @@ class SimpleRendering
         }
 
         this.lightPositionUpdated = false;
-    };
+    }
 
     setGlobalLightPosition(pos)
     {
@@ -200,33 +200,33 @@ class SimpleRendering
         this.lightPosition[0] = pos[0];
         this.lightPosition[1] = pos[1];
         this.lightPosition[2] = pos[2];
-    };
+    }
 
     setGlobalLightColor(color)
     {
         this.globalTechniqueParameters['lightColor'] = color;
-    };
+    }
 
     setAmbientColor(color)
     {
         this.globalTechniqueParameters['ambientColor'] = color;
-    };
+    }
 
     setDefaultTexture(tex)
     {
         this.globalTechniqueParameters['diffuse'] = tex;
-    };
+    }
 
     setWireframe(wireframeEnabled, wireframeInfo)
     {
         this.wireframeInfo = wireframeInfo;
         this.wireframe = wireframeEnabled;
-    };
+    }
 
     getDefaultSkinBufferSize() : number
     {
         return this.defaultSkinBufferSize;
-    };
+    }
 
     destroy()
     {
@@ -234,7 +234,7 @@ class SimpleRendering
         delete this.lightPosition;
         delete this.eyePosition;
         delete this.passes;
-    };
+    }
 
     //
     // simplePrepare
@@ -275,7 +275,7 @@ class SimpleRendering
         }
 
         geometryInstance.renderUpdate = this.update;
-    };
+    }
 
     //
     // Constructor function
@@ -1329,5 +1329,5 @@ class SimpleRendering
         effect.add(rigid, effectTypeData);
 
         return dr;
-    };
-};
+    }
+}

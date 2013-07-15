@@ -8,13 +8,7 @@ interface PostEffectsEntry
     techniqueParameters : TechniqueParameters;
     textureName         : String;
     callback            : (gd: GraphicsDevice, colTex: Texture) => void;
-};
-
-// TODO: Clear this hack out when ShaderManager is a class
-interface ShaderManager
-{
-    load(a, b?, c?): Shader;
-};
+}
 
 //
 // PostEffects

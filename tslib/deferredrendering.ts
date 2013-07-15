@@ -148,7 +148,7 @@ class DeferredRendering
         {
             shadowMaps.updateShader(sm);
         }
-    };
+    }
 
     sortRenderablesAndLights(camera, scene)
     {
@@ -280,7 +280,7 @@ class DeferredRendering
             // Sort fog lights back to front
             fogLights.sort(distanceReverseCompareFn);
         }
-    };
+    }
 
     update(gd, camera, scene, currentTime)
     {
@@ -578,7 +578,7 @@ class DeferredRendering
             }
             while (l < numFogInstances);
         }
-    };
+    }
 
     lightFindVisibleRenderables(lightInstance, scene) : bool
     {
@@ -689,7 +689,7 @@ class DeferredRendering
         }
 
         return false;
-    };
+    }
 
     destroyBuffers()
     {
@@ -748,7 +748,7 @@ class DeferredRendering
             this.albedoTexture.destroy();
             this.albedoTexture = null;
         }
-    };
+    }
 
     updateBuffers(gd, deviceWidth, deviceHeight) : bool
     {
@@ -882,12 +882,12 @@ class DeferredRendering
         this.bufferHeight = 0;
         this.destroyBuffers();
         return false;
-    };
+    }
 
     pixelCountCompare(nodeA, nodeB)
     {
         return (nodeB.pixelCount - nodeA.pixelCount);
-    };
+    }
 
     draw(gd, clearColor, drawDecalsFn, drawTransparentFn, drawDebugFn,
          postFXsetupFn)
@@ -1554,17 +1554,17 @@ class DeferredRendering
         gd.setStream(quadVertexBuffer, quadSemantics);
 
         gd.draw(quadPrimitive, 4);
-    };
+    }
 
     setLightingScale(scale)
     {
         this.mixTechniqueParameters['lightingScale'] = scale;
-    };
+    }
 
     getDefaultSkinBufferSize(): number
     {
         return this.defaultSkinBufferSize;
-    };
+    }
 
     destroy()
     {
@@ -1635,7 +1635,7 @@ class DeferredRendering
 
         delete this.black;
         delete this.md;
-    };
+    }
 
     static create(gd, md, shaderManager, effectManager, settings)
     {
@@ -3044,5 +3044,5 @@ class DeferredRendering
         effect.add(skinned, effectTypeData);
 
         return dr;
-    };
-};
+    }
+}

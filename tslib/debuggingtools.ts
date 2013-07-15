@@ -19,7 +19,8 @@ var DebuggingTools = {
 
     dataBreakpoints: [],
 
-    log: function DebuggingToolsLogFn()
+    log: function DebuggingToolsLogFn(a0?: string, a1?: string, a2?: string,
+                                      a3?: string, a4?: string, a5?: string)
     {
 	    var console = window.console;
 	    if (console)

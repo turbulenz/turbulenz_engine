@@ -91,13 +91,13 @@ class DrawPrimitives
                     }
                 });
         }
-    };
+    }
 
     setTechnique(technique, isTechnique2D)
     {
         this.technique = technique;
         this.isTechnique2D = isTechnique2D;
-    };
+    }
 
     updateParameters(params)
     {
@@ -115,7 +115,7 @@ class DrawPrimitives
         }
 
         this.techniqueParameters = gd.createTechniqueParameters(parameters);
-    };
+    }
 
     update2DTex(posa, posb)
     {
@@ -151,7 +151,7 @@ class DrawPrimitives
             positions.unmap(writer);
             this.isTextured = true;
         }
-    };
+    }
 
     update2D(posa, posb)
     {
@@ -178,7 +178,7 @@ class DrawPrimitives
 
             positions.unmap(writer);
         }
-    };
+    }
 
     update(posa, posb)
     {
@@ -214,7 +214,7 @@ class DrawPrimitives
 
             positions.unmap(writer);
         }
-    };
+    }
 
     dispatch(camera)
     {
@@ -262,7 +262,7 @@ class DrawPrimitives
             gd.setStream(vertexBuffer, semantics);
             gd.draw(primitive, numVertices);
         }
-    };
+    }
 
     static create(gd, shaderPath, shaderName, techniqueName): DrawPrimitives
     {
@@ -273,5 +273,5 @@ class DrawPrimitives
         dp.isTextured = false;
         dp.initalize(gd, shaderPath);
         return dp;
-    };
-};
+    }
+}
