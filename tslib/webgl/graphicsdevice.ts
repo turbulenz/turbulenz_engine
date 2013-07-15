@@ -4820,8 +4820,11 @@ WebGLGraphicsDevice.prototype =
 
     setStream : function setStreamFn(vertexBuffer, semantics, offset)
     {
-        debug.assert(vertexBuffer instanceof WebGLVertexBuffer);
-        debug.assert(semantics instanceof WebGLSemantics);
+        if (debug)
+        {
+            debug.assert(vertexBuffer instanceof WebGLVertexBuffer);
+            debug.assert(semantics instanceof WebGLSemantics);
+        }
 
         if (offset)
         {

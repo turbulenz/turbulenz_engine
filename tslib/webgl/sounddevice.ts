@@ -1063,11 +1063,14 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
             {
                 // We do not support panning of stereo sources
                 gainNode.connect(masterGainNode);
-                debug.assert(source.relative &&
-                             position[0] === 0 &&
-                             position[1] === 0 &&
-                             position[2] === 0,
-                             "Stereo sounds only supported for relatative sources at origin!");
+                if (debug)
+                {
+                    debug.assert(source.relative &&
+                                 position[0] === 0 &&
+                                 position[1] === 0 &&
+                                 position[2] === 0,
+                                 "Stereo sounds only supported for relatative sources at origin!");
+                }
             }
             else
             {
