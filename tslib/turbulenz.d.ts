@@ -356,26 +356,16 @@ interface ShaderParameter
 
 interface Shader
 {
-    gd             : GraphicsDevice;
     name           : string;
-    initialized    : bool;
-    programs       : any;
-    linkedPrograms : any;
-
     numTechniques  : number;
-    techniques     : {}; // Technique[];
-
     numParameters  : number;
-    parameters     : any;
-
-    samplers       : any;
 
     // Methods
 
     getTechnique(name: any): Technique;
-    setTechnique(technique: Technique): void;
     getParameter(index: number): ShaderParameter;
     getParameter(name: string): ShaderParameter;
+    destroy();
 }
 
 interface TechniqueParameters
@@ -458,6 +448,7 @@ interface RenderTargetParameters
     colorTexture3? : Texture;
     depthBuffer?   : RenderBuffer;
     depthTexture?  : RenderBuffer;
+    face?          : number;
 }
 
 interface RenderTarget
@@ -483,6 +474,13 @@ interface Semantics
     [index: number]: any;
 }
 
+interface VertexAttribute
+{
+    stride: number;
+    numComponents: number;
+    format: any;
+}
+
 interface VertexBufferParameters
 {
     numVertices : number;
@@ -496,7 +494,7 @@ interface VertexBufferParameters
 interface VertexWriteIterator
 {
     (... data: any[]): void;
-    write(... data: any[]): void;
+    write: (... data: any[]) => void;
 }
 
 interface VertexBuffer
@@ -510,7 +508,6 @@ interface VertexBuffer
     // Methods
 
     setData(data: any, offset: number, numVertices: number): void;
-    setAttributes(attributes: number[]): number; // Returns stride
     map(offset?: number, count?: number): VertexWriteIterator;
     unmap(writer: VertexWriteIterator): void;
     destroy(): void;
@@ -560,7 +557,7 @@ interface DrawParameters
     firstIndex      : number;
     sortKey         : number;
     userData        : any;
-    [index: number] : any; // TODO
+    [idx: number]   : any; // TODO
 
     // Methods
 
@@ -611,6 +608,7 @@ interface GraphicsDevice
     PIXELFORMAT_L8A8         : number;
     PIXELFORMAT_R5G5B5A1     : number;
     PIXELFORMAT_R5G6B5       : number;
+    PIXELFORMAT_R4G4B4A4     : number;
     PIXELFORMAT_R8G8B8A8     : number;
     PIXELFORMAT_R8G8B8       : number;
     PIXELFORMAT_D24S8        : number;
@@ -774,8 +772,11 @@ interface GraphicsDevice
     endDraw(writer: VertexWriteIterator): void;
 
     loadTexturesArchive(params: any): void;
+
+    // Returns 'any', since the output may be a data url (string) in
+    // the case of compressed images, or number[].
     getScreenshot(compress: bool, x?: number, y?: number,
-                  width?: number, height?: number): number[];
+                  width?: number, height?: number): any;
 }
 
 // -----------------------------------------------------------------------------
@@ -1009,7 +1010,6 @@ interface Sound
     length     : number;
     compressed : bool;
 
-
     destroy(): void;
 }
 
@@ -1196,7 +1196,7 @@ interface SoundDevice
 
 interface NetworkDevice
 {
-    createWebSocket(url: string): WebSocket;
+    createWebSocket(url: string, protocol?: string): WebSocket;
     update(): void;
 }
 
@@ -1216,8 +1216,17 @@ interface InputDeviceEventListener
     (...arg0: any[]): void; //?, arg1?, arg2?, arg3?, arg4?, arg5?): void;
 }
 
+interface InputDeviceUnicodeResult
+{
+    [keyCode: number]: string;
+}
+
 interface InputDevice
 {
+    // These maps are 'any' so that application code can do any do
+    // keyCodes.A or keyCodes['A'].  The string indexer doesn't allow
+    // the first style.
+
     keyCodes   : any; // { [keyName: string]: number; }
     mouseCodes : any; // { [keyName: string]: number; }
     padCodes   : any; // { [keyName: string]: number; }
@@ -1234,7 +1243,7 @@ interface InputDevice
     showMouse(): bool;
     isHidden(): bool;
     isFocused(): bool;
-    convertToUnicode(keyCodes: number[]): string[];
+    convertToUnicode(keyCodes: number[]): InputDeviceUnicodeResult;
     isSupported(feature: string): bool;
 }
 

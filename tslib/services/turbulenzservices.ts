@@ -263,7 +263,7 @@ class TurbulenzServices
 
         argsQueue: [],
         handler: function nopFn() {},
-        context: undefined,
+        context: <any>undefined,
         paused: true,
         onEvent: function onEventFn(handler, context) {
             this.handler = handler;

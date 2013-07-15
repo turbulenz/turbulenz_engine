@@ -12,49 +12,6 @@
 /// <reference path="turbulenzengine.ts" />
 /// <reference path="soundtarloader.ts" />
 
-interface WebGLSoundSource extends SoundSource
-{
-    sd: WebGLSoundDevice;
-    id: number;
-
-    sound: WebGLSound;
-    playing: bool;
-    paused: bool;
-    looping: bool;
-
-    position: any; // v3 // getter and setter
-    direction: any; //v3 // getter and setter
-    velocity: any; // v3 // getter and setter
-
-    audioContext: any; // window.AudioContext || window.webkitAudioContext
-    bufferNode: any; // window.AudioContext.createbufferSource()
-    playStart: number;
-    playPaused: number;
-    pannerNode: any; // window.AudioContext.createPanner()
-    gainNode: any; // window.AudioContext.createGain()
-
-    relative: bool;
-    minDistance: number;
-    maxDistance: number;
-    rollOff: number;
-
-    audio: HTMLAudioElement;
-    gainFactor: number;
-    pitch: number;
-
-    createBufferNode: { (WebGLSound): any; };
-    updateAudioVolume: { (): void; };
-    loopAudio: { (): void; };
-    updateRelativePosition(lp0: number, lp1: number, lp2: number): void;
-};
-
-declare var WebGLSoundSource :
-{
-    new(): WebGLSoundSource;
-    prototype: any;
-    create(soundDevice: WebGLSoundDevice, id: number, params: any);
-};
-
 interface WebGLSoundDeviceSoundCheckCall
 {
     (): bool;
@@ -65,33 +22,6 @@ interface WebGLSoundDeviceSourceMap
     [id: string] : WebGLSoundSource;
 };
 
-interface WebGLSoundDevice extends SoundDevice
-{
-    renderer            : string;
-    audioContext        : any;   //
-    gainNode            : any;   //
-    linearDistance      : bool;
-    loadingSounds       : WebGLSoundDeviceSoundCheckCall[];
-    loadingInterval     : number;  // window.setIntervalID id
-    playingSources      : WebGLSoundDeviceSourceMap;
-    lastSourceID        : number;
-
-    loopingSupported    : bool;
-    supportedExtensions : { [extName: string] : bool; };
-
-    isResourceSupported(soundPath: string) : bool;
-    addLoadingSound(call: WebGLSoundDeviceSoundCheckCall);
-    removePlayingSource(source: WebGLSoundSource): void;
-    destroy(): void;
-};
-
-declare var WebGLSoundDevice :
-{
-    new(): WebGLSoundDevice;
-    prototype: any;
-    create(params: any): WebGLSoundDevice;
-};
-
 //
 // WebGLSound
 //
@@ -99,6 +29,15 @@ class WebGLSound implements Sound
 {
     static version = 1;
 
+    // Sound
+    name         : string;
+    frequency    : number;
+    channels     : number;
+    bitrate      : number;
+    length       : number;
+    compressed   : bool;
+
+    // WebGLSound
     audioContext : any; // TODO
     buffer       : any; // TODO
     data         : any; // TODO
@@ -517,13 +456,45 @@ class WebGLSound implements Sound
 //
 // WebGLSoundSource
 //
-function WebGLSoundSource() { return this; }
-WebGLSoundSource.prototype =
+class WebGLSoundSource implements SoundSource
 {
-    version : 1,
+    static version = 1;
+
+    // SoundSource
+    position    : any; // v3
+    velocity    : any; // v3
+    direction   : any; // v3
+    gain        : number;
+    minDistance : number;
+    maxDistance : number;
+    rollOff     : number;
+    relative    : bool;
+    looping     : bool;
+    pitch       : number;
+    playing     : bool;
+    paused      : bool;
+    tell        : number;
+
+    // WebGLSoundSource
+    sd: WebGLSoundDevice;
+    id: number;
+    sound: WebGLSound;
+    audioContext: any; // window.AudioContext || window.webkitAudioContext
+    bufferNode: any; // window.AudioContext.createbufferSource()
+    playStart: number;
+    playPaused: number;
+    pannerNode: any; // window.AudioContext.createPanner()
+    gainNode: any; // window.AudioContext.createGain()
+    audio: HTMLAudioElement;
+    gainFactor: number;
+
+    createBufferNode: { (WebGLSound): any; };
+    updateAudioVolume: { (): void; };
+    loopAudio: { (): void; };
+    updateRelativePosition: { (lp0: number, lp1: number, lp2: number): void; };
 
     // Public API
-    play : function sourcePlayFn(sound, seek)
+    play(sound: Sound, seek?: number)
     {
         var audioContext = this.audioContext;
         if (audioContext)
@@ -547,7 +518,7 @@ WebGLSoundSource.prototype =
 
             bufferNode = this.createBufferNode(sound);
 
-            this.sound = sound;
+            this.sound = <WebGLSound>sound;
 
             if (!this.playing)
             {
@@ -564,7 +535,7 @@ WebGLSoundSource.prototype =
 
             if (0 < seek)
             {
-                var buffer = sound.buffer;
+                var buffer = (<WebGLSound>sound).buffer;
                 if (bufferNode.loop)
                 {
                     bufferNode.start(0, seek, buffer.duration);
@@ -589,17 +560,17 @@ WebGLSoundSource.prototype =
             {
                 this.stop();
 
-                if (sound.data)
+                if ((<WebGLSound>sound).data)
                 {
                     audio = new Audio();
                     audio.mozSetup(sound.channels, sound.frequency);
                 }
                 else
                 {
-                    audio = sound.audio.cloneNode(true);
+                    audio = (<WebGLSound>sound).audio.cloneNode(true);
                 }
 
-                this.sound = sound;
+                this.sound = <WebGLSound>sound;
                 this.audio = audio;
 
                 audio.loop = this.looping;
@@ -644,9 +615,9 @@ WebGLSoundSource.prototype =
                 }
             }
 
-            if (sound.data)
+            if ((<WebGLSound>sound).data)
             {
-                audio.mozWriteAudio(sound.data);
+                audio.mozWriteAudio((<WebGLSound>sound).data);
             }
             else
             {
@@ -655,9 +626,9 @@ WebGLSoundSource.prototype =
         }
 
         return true;
-    },
+    }
 
-    stop : function sourceStopFn()
+    stop()
     {
         var playing = this.playing;
         if (playing)
@@ -698,9 +669,9 @@ WebGLSoundSource.prototype =
         }
 
         return playing;
-    },
+    }
 
-    pause : function sourcePauseFn()
+    pause()
     {
         if (this.playing)
         {
@@ -729,9 +700,9 @@ WebGLSoundSource.prototype =
         }
 
         return false;
-    },
+    }
 
-    resume : function sourceResumeFn(seek)
+    resume(seek?: number)
     {
         if (this.paused)
         {
@@ -795,9 +766,9 @@ WebGLSoundSource.prototype =
         }
 
         return false;
-    },
+    }
 
-    rewind : function sourceRewindFn()
+    rewind()
     {
         if (this.playing)
         {
@@ -831,9 +802,9 @@ WebGLSoundSource.prototype =
         }
 
         return false;
-    },
+    }
 
-    seek : function sourceSeekFn(seek)
+    seek(seek)
     {
         if (this.playing)
         {
@@ -895,22 +866,26 @@ WebGLSoundSource.prototype =
         }
 
         return false;
-    },
+    }
 
-    clear : function sourceClearFn()
+    clear()
     {
         this.stop();
-    },
+    }
 
-    setAuxiliarySendFilter : function setAuxiliarySendFilterFn()
+    setAuxiliarySendFilter(index: number,
+                           effectSlot: SoundEffectSlot,
+                           filter: SoundFilter)
     {
-    },
+        return false;
+    }
 
-    setDirectFilter : function setDirectFilterFn()
+    setDirectFilter(filter: SoundFilter)
     {
-    },
+        return false;
+    }
 
-    destroy : function sourceDestroyFn()
+    destroy()
     {
         this.stop();
 
@@ -927,63 +902,63 @@ WebGLSoundSource.prototype =
             delete this.audioContext;
         }
     }
-};
 
-WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
-{
-    var source = new WebGLSoundSource();
-
-    source.sd = sd;
-    source.id = id;
-
-    source.sound = null;
-    source.playing = false;
-    source.paused = false;
-
-    var gain = (typeof params.gain === "number" ? params.gain : 1);
-    var looping = (params.looping || false);
-    var pitch = (params.pitch || 1);
-    var position, direction, velocity;
-
-    var audioContext = sd.audioContext;
-    if (audioContext)
+    static create(sd: WebGLSoundDevice, id: number,
+                  params: SoundSourceParameters): WebGLSoundSource
     {
-        source.audioContext = audioContext;
-        source.bufferNode = null;
-        source.playStart = -1;
-        source.playPaused = -1;
+        var source = new WebGLSoundSource();
 
-        var masterGainNode = sd.gainNode;
+        source.sd = sd;
+        source.id = id;
 
-        var pannerNode = audioContext.createPanner();
-        source.pannerNode = pannerNode;
-        pannerNode.connect(masterGainNode);
+        source.sound = null;
+        source.playing = false;
+        source.paused = false;
 
-        var gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
-        source.gainNode = gainNode;
+        var gain = (typeof params.gain === "number" ? params.gain : 1);
+        var looping = (params.looping || false);
+        var pitch = (params.pitch || 1);
+        var position, direction, velocity;
 
-        if (sd.linearDistance)
+        var audioContext = sd.audioContext;
+        if (audioContext)
         {
-            if (typeof pannerNode.distanceModel === "string")
+            source.audioContext = audioContext;
+            source.bufferNode = null;
+            source.playStart = -1;
+            source.playPaused = -1;
+
+            var masterGainNode = sd.gainNode;
+
+            var pannerNode = audioContext.createPanner();
+            source.pannerNode = pannerNode;
+            pannerNode.connect(masterGainNode);
+
+            var gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
+            source.gainNode = gainNode;
+
+            if (sd.linearDistance)
             {
-                pannerNode.distanceModel = "linear";
+                if (typeof pannerNode.distanceModel === "string")
+                {
+                    pannerNode.distanceModel = "linear";
+                }
+                else if (typeof pannerNode.LINEAR_DISTANCE === "number")
+                {
+                    pannerNode.distanceModel = pannerNode.LINEAR_DISTANCE;
+                }
             }
-            else if (typeof pannerNode.LINEAR_DISTANCE === "number")
+
+            if (typeof pannerNode.panningModel === "string")
             {
-                pannerNode.distanceModel = pannerNode.LINEAR_DISTANCE;
+                pannerNode.panningModel = "equalpower";
             }
-        }
+            else
+            {
+                pannerNode.panningModel = pannerNode.EQUALPOWER;
+            }
 
-        if (typeof pannerNode.panningModel === "string")
-        {
-            pannerNode.panningModel = "equalpower";
-        }
-        else
-        {
-            pannerNode.panningModel = pannerNode.EQUALPOWER;
-        }
-
-        Object.defineProperty(source, "position", {
+            Object.defineProperty(source, "position", {
                 get : function getPositionFn() {
                     return position.slice();
                 },
@@ -998,7 +973,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "direction", {
+            Object.defineProperty(source, "direction", {
                 get : function getDirectionFn() {
                     return direction.slice();
                 },
@@ -1010,7 +985,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "velocity", {
+            Object.defineProperty(source, "velocity", {
                 get : function getVelocityFn() {
                     return velocity.slice();
                 },
@@ -1022,7 +997,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "gain", {
+            Object.defineProperty(source, "gain", {
                 get : function getGainFn() {
                     return gain;
                 },
@@ -1034,78 +1009,78 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        source.createBufferNode = function createBufferNodeFn(sound)
-        {
-            var buffer = sound.buffer;
+            source.createBufferNode = function createBufferNodeFn(sound)
+            {
+                var buffer = sound.buffer;
 
-            var bufferNode = audioContext.createBufferSource();
-            bufferNode.buffer = buffer;
-            bufferNode.loop = looping;
-            if (bufferNode.playbackRate)
-            {
-                bufferNode.playbackRate.value = pitch;
-            }
-            bufferNode.connect(gainNode);
-
-            gainNode.disconnect();
-            if (1 < sound.channels)
-            {
-                // We do not support panning of stereo sources
-                gainNode.connect(masterGainNode);
-                debug.assert(source.relative &&
-                             position[0] === 0 &&
-                             position[1] === 0 &&
-                             position[2] === 0,
-                             "Stereo sounds only supported for relatative sources at origin!");
-            }
-            else
-            {
-                gainNode.connect(pannerNode);
-            }
-
-            // Backwards compatibility
-            if (!bufferNode.start)
-            {
-                bufferNode.start = function audioStart(when, offset, duration)
+                var bufferNode = audioContext.createBufferSource();
+                bufferNode.buffer = buffer;
+                bufferNode.loop = looping;
+                if (bufferNode.playbackRate)
                 {
-                    if (arguments.length <= 1)
-                    {
-                        this.noteOn(when);
-                    }
-                    else
-                    {
-                        this.noteGrainOn(when, offset, duration);
-                    }
-                };
-            }
+                    bufferNode.playbackRate.value = pitch;
+                }
+                bufferNode.connect(gainNode);
 
-            if (!bufferNode.stop)
-            {
-                bufferNode.stop = function audioStop(when)
+                gainNode.disconnect();
+                if (1 < sound.channels)
                 {
-                    this.noteOff(when);
-                };
-            }
+                    // We do not support panning of stereo sources
+                    gainNode.connect(masterGainNode);
+                    debug.assert(source.relative &&
+                                 position[0] === 0 &&
+                                 position[1] === 0 &&
+                                 position[2] === 0,
+                                 "Stereo sounds only supported for relatative sources at origin!");
+                }
+                else
+                {
+                    gainNode.connect(pannerNode);
+                }
 
-            this.bufferNode = bufferNode;
+                // Backwards compatibility
+                if (!bufferNode.start)
+                {
+                    bufferNode.start = function audioStart(when, offset, duration)
+                    {
+                        if (arguments.length <= 1)
+                        {
+                            this.noteOn(when);
+                        }
+                        else
+                        {
+                            this.noteGrainOn(when, offset, duration);
+                        }
+                    };
+                }
 
-            return bufferNode;
-        };
+                if (!bufferNode.stop)
+                {
+                    bufferNode.stop = function audioStop(when)
+                    {
+                        this.noteOff(when);
+                    };
+                }
 
-        source.updateRelativePosition = function updateRelativePositionFn(listenerPosition0,
-                                                                          listenerPosition1,
-                                                                          listenerPosition2)
-        {
-            if (1 >= this.sound.channels)
+                this.bufferNode = bufferNode;
+
+                return bufferNode;
+            };
+
+            source.updateRelativePosition = function updateRelativePositionFn(listenerPosition0,
+                                                                              listenerPosition1,
+                                                                              listenerPosition2)
             {
-                // We only support panning of mono sources
-                pannerNode.setPosition(position[0] + listenerPosition0,
-                                       position[1] + listenerPosition1,
-                                       position[2] + listenerPosition2);
-            }
-        };
+                if (1 >= this.sound.channels)
+                {
+                    // We only support panning of mono sources
+                    pannerNode.setPosition(position[0] + listenerPosition0,
+                                           position[1] + listenerPosition1,
+                                           position[2] + listenerPosition2);
+                }
+            };
 
-        Object.defineProperty(source, "looping", {
+            Object.defineProperty(source, "looping", {
                 get : function getLoopingFn() {
                     return looping;
                 },
@@ -1121,7 +1096,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "pitch", {
+            Object.defineProperty(source, "pitch", {
                 get : function getPitchFn() {
                     return pitch;
                 },
@@ -1140,29 +1115,29 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "tell", {
-            get : function tellFn() {
-                if (this.playing)
-                {
-                    if (this.paused)
+            Object.defineProperty(source, "tell", {
+                get : function tellFn() {
+                    if (this.playing)
                     {
-                        return (this.playPaused - this.playStart);
+                        if (this.paused)
+                        {
+                            return (this.playPaused - this.playStart);
+                        }
+                        else
+                        {
+                            return (audioContext.currentTime - this.playStart);
+                        }
                     }
                     else
                     {
-                        return (audioContext.currentTime - this.playStart);
+                        return 0;
                     }
-                }
-                else
-                {
-                    return 0;
-                }
-            },
-            enumerable : true,
-            configurable : false
-        });
+                },
+                enumerable : true,
+                configurable : false
+            });
 
-        Object.defineProperty(source, "minDistance", {
+            Object.defineProperty(source, "minDistance", {
                 get : function getMinDistanceFn() {
                     return pannerNode.refDistance;
                 },
@@ -1177,7 +1152,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "maxDistance", {
+            Object.defineProperty(source, "maxDistance", {
                 get : function getMaxDistanceFn() {
                     return pannerNode.maxDistance;
                 },
@@ -1192,7 +1167,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "rollOff", {
+            Object.defineProperty(source, "rollOff", {
                 get : function getRolloffFactorFn() {
                     return pannerNode.rolloffFactor;
                 },
@@ -1202,33 +1177,33 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 enumerable : true,
                 configurable : false
             });
-    }
-    else
-    {
-        source.audio = null;
-
-        source.gainFactor = 1;
-        source.pitch = pitch;
-
-        source.updateAudioVolume = function updateAudioVolumeFn()
+        }
+        else
         {
-            var audio = this.audio;
-            if (audio)
-            {
-                var volume = Math.min((this.gainFactor * gain), 1);
-                audio.volume = volume;
-                if (0 >= volume)
-                {
-                    audio.muted = true;
-                }
-                else
-                {
-                    audio.muted = false;
-                }
-            }
-        };
+            source.audio = null;
 
-        Object.defineProperty(source, "position", {
+            source.gainFactor = 1;
+            source.pitch = pitch;
+
+            source.updateAudioVolume = function updateAudioVolumeFn()
+            {
+                var audio = this.audio;
+                if (audio)
+                {
+                    var volume = Math.min((this.gainFactor * gain), 1);
+                    audio.volume = volume;
+                    if (0 >= volume)
+                    {
+                        audio.muted = true;
+                    }
+                    else
+                    {
+                        audio.muted = false;
+                    }
+                }
+            };
+
+            Object.defineProperty(source, "position", {
                 get : function getPositionFn() {
                     return position.slice();
                 },
@@ -1239,7 +1214,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "direction", {
+            Object.defineProperty(source, "direction", {
                 get : function getDirectionFn() {
                     return direction.slice();
                 },
@@ -1250,7 +1225,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "velocity", {
+            Object.defineProperty(source, "velocity", {
                 get : function getVelocityFn() {
                     return velocity.slice();
                 },
@@ -1261,7 +1236,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        Object.defineProperty(source, "gain", {
+            Object.defineProperty(source, "gain", {
                 get : function getGainFn() {
                     return gain;
                 },
@@ -1273,9 +1248,9 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                 configurable : false
             });
 
-        if (sd.loopingSupported)
-        {
-            Object.defineProperty(source, "looping", {
+            if (sd.loopingSupported)
+            {
+                Object.defineProperty(source, "looping", {
                     get : function getLoopingFn() {
                         return looping;
                     },
@@ -1291,145 +1266,178 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                     configurable : false
                 });
 
-            source.loopAudio = function loopAudioFn() {
-                var audio = source.audio;
-                if (audio)
-                {
-                    source.playing = false;
-                    source.sd.removePlayingSource(source);
-                }
-            };
-        }
-        else
-        {
-            source.looping = looping;
-
-            source.loopAudio = function loopAudioFn() {
-                var audio = source.audio;
-                if (audio)
-                {
-                    if (source.looping)
-                    {
-                        audio.currentTime = 0;
-                        audio.play();
-                    }
-                    else
+                source.loopAudio = function loopAudioFn() {
+                    var audio = source.audio;
+                    if (audio)
                     {
                         source.playing = false;
                         source.sd.removePlayingSource(source);
                     }
+                };
+            }
+            else
+            {
+                source.looping = looping;
+
+                source.loopAudio = function loopAudioFn() {
+                    var audio = source.audio;
+                    if (audio)
+                    {
+                        if (source.looping)
+                        {
+                            audio.currentTime = 0;
+                            audio.play();
+                        }
+                        else
+                        {
+                            source.playing = false;
+                            source.sd.removePlayingSource(source);
+                        }
+                    }
+                };
+            }
+
+            Object.defineProperty(source, "tell", {
+                get : function tellFn() {
+                    var audio = source.audio;
+                    if (audio)
+                    {
+                        return audio.currentTime;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            source.updateRelativePosition = function updateRelativePositionFn(listenerPosition0,
+                                                                              listenerPosition1,
+                                                                              listenerPosition2)
+            {
+                // Change volume depending on distance to listener
+                var minDistance = this.minDistance;
+                var maxDistance = this.maxDistance;
+                var position0 = position[0];
+                var position1 = position[1];
+                var position2 = position[2];
+
+                var distanceSq;
+                if (this.relative)
+                {
+                    distanceSq = ((position0 * position0) + (position1 * position1) + (position2 * position2));
+                }
+                else
+                {
+                    var delta0 = (listenerPosition0 - position0);
+                    var delta1 = (listenerPosition1 - position1);
+                    var delta2 = (listenerPosition2 - position2);
+                    distanceSq = ((delta0 * delta0) + (delta1 * delta1) + (delta2 * delta2));
+                }
+
+                var gainFactor;
+                if (distanceSq <= (minDistance * minDistance))
+                {
+                    gainFactor = 1;
+                }
+                else if (distanceSq >= (maxDistance * maxDistance))
+                {
+                    gainFactor = 0;
+                }
+                else
+                {
+                    var distance = Math.sqrt(distanceSq);
+                    if (this.sd.linearDistance)
+                    {
+                        gainFactor = ((maxDistance - distance) / (maxDistance - minDistance));
+                    }
+                    else
+                    {
+                        gainFactor = minDistance / (minDistance + (this.rollOff * (distance - minDistance)));
+                    }
+                }
+
+                gainFactor *= this.sd.listenerGain;
+
+                if (this.gainFactor !== gainFactor)
+                {
+                    this.gainFactor = gainFactor;
+                    this.updateAudioVolume();
                 }
             };
+
         }
 
-        Object.defineProperty(source, "tell", {
-            get : function tellFn() {
-                var audio = source.audio;
-                if (audio)
-                {
-                    return audio.currentTime;
-                }
-                else
-                {
-                    return 0;
-                }
-            },
-            enumerable : true,
-            configurable : false
-        });
+        source.relative = params.relative;
+        source.position = (params.position || VMath.v3BuildZero());
+        source.direction = (params.direction || VMath.v3BuildZero());
+        source.velocity = (params.velocity || VMath.v3BuildZero());
+        source.minDistance = (params.minDistance || 1);
+        source.maxDistance = (params.maxDistance || 3.402823466e+38);
+        source.rollOff = (params.rollOff || 1);
 
-        source.updateRelativePosition = function updateRelativePositionFn(listenerPosition0,
-                                                                          listenerPosition1,
-                                                                          listenerPosition2)
-        {
-            // Change volume depending on distance to listener
-            var minDistance = this.minDistance;
-            var maxDistance = this.maxDistance;
-            var position0 = position[0];
-            var position1 = position[1];
-            var position2 = position[2];
-
-            var distanceSq;
-            if (this.relative)
-            {
-                distanceSq = ((position0 * position0) + (position1 * position1) + (position2 * position2));
-            }
-            else
-            {
-                var delta0 = (listenerPosition0 - position0);
-                var delta1 = (listenerPosition1 - position1);
-                var delta2 = (listenerPosition2 - position2);
-                distanceSq = ((delta0 * delta0) + (delta1 * delta1) + (delta2 * delta2));
-            }
-
-            var gainFactor;
-            if (distanceSq <= (minDistance * minDistance))
-            {
-                gainFactor = 1;
-            }
-            else if (distanceSq >= (maxDistance * maxDistance))
-            {
-                gainFactor = 0;
-            }
-            else
-            {
-                var distance = Math.sqrt(distanceSq);
-                if (this.sd.linearDistance)
-                {
-                    gainFactor = ((maxDistance - distance) / (maxDistance - minDistance));
-                }
-                else
-                {
-                    gainFactor = minDistance / (minDistance + (this.rollOff * (distance - minDistance)));
-                }
-            }
-
-            gainFactor *= this.sd.listenerGain;
-
-            if (this.gainFactor !== gainFactor)
-            {
-                this.gainFactor = gainFactor;
-                this.updateAudioVolume();
-            }
-        };
-
+        return source;
     }
+}
 
-    source.relative = params.relative;
-    source.position = (params.position || VMath.v3BuildZero());
-    source.direction = (params.direction || VMath.v3BuildZero());
-    source.velocity = (params.velocity || VMath.v3BuildZero());
-    source.minDistance = (params.minDistance || 1);
-    source.maxDistance = (params.maxDistance || 3.402823466e+38);
-    source.rollOff = (params.rollOff || 1);
-
-    return source;
-};
-
+interface WebGLSoundDeviceExtensions
+{
+    ogg: bool;
+    mp3: bool;
+    wav: bool;
+}
 
 //
 // WebGLSoundDevice
 //
-function WebGLSoundDevice() { return this; }
-WebGLSoundDevice.prototype =
+class WebGLSoundDevice implements SoundDevice
 {
-    version : 1,
+    static version = 1;
 
-    vendor : "Turbulenz",
+    // SoundDevice
+    vendor               : string; // prototype
+    renderer             : string;
+    version              : string;
+    deviceSpecifier      : string;
+    extensions           : string;
+    listenerTransform    : any; // m43
+    listenerVelocity     : any; // v3
+    listenerGain         : number;
+    frequency            : number;
+    dopplerFactor        : number;
+    dopplerVelocity      : number;
+    speedOfSound         : number;
+    alcVersion           : string;
+    alcExtensions        : string;
+    alcEfxVersion        : string;
+    alcMaxAuxiliarySends : number;
+
+    // WebGLSoundDevice
+    audioContext         : any;   //
+    gainNode             : any;   //
+    linearDistance       : bool;
+    loadingSounds        : WebGLSoundDeviceSoundCheckCall[];
+    loadingInterval      : number;  // window.setIntervalID id
+    playingSources       : WebGLSoundDeviceSourceMap;
+    lastSourceID         : number;
+    loopingSupported     : bool;
+    supportedExtensions  : WebGLSoundDeviceExtensions;
 
     // Public API
-    createSource : function createSourceFn(params)
+    createSource(params)
     {
         this.lastSourceID += 1;
         return WebGLSoundSource.create(this, this.lastSourceID, params);
-    },
+    }
 
-    createSound : function createSoundFn(params)
+    createSound(params)
     {
         return WebGLSound.create(this, params);
-    },
+    }
 
-    loadSoundsArchive : function loadSoundsArchiveFn(params)
+    loadSoundsArchive(params)
     {
         var src = params.src;
         if (typeof SoundTARLoader !== 'undefined')
@@ -1465,24 +1473,24 @@ WebGLSoundDevice.prototype =
                 'Missing archive loader required for ' + src);
             return false;
         }
-    },
+    }
 
-    createEffect : function createEffectFn(/* params */)
+    createEffect(params: SoundEffectParameters): SoundEffect
     {
         return null;
-    },
+    }
 
-    createEffectSlot : function createEffectSlotFn(/* params */)
+    createEffectSlot(params: SoundEffectSlotParameters): SoundEffectSlot
     {
         return null;
-    },
+    }
 
-    createFilter : function createFilterFn(/* params */)
+    createFilter(params: SoundFilterParameters): SoundFilter
     {
         return null;
-    },
+    }
 
-    update : function soundUpdateFn()
+    update()
     {
         var listenerTransform = this.listenerTransform;
         var listenerPosition0 = listenerTransform[9];
@@ -1501,9 +1509,9 @@ WebGLSoundDevice.prototype =
                                               listenerPosition2);
             }
         }
-    },
+    }
 
-    isSupported : function isSupportedFn(name)
+    isSupported(name): bool
     {
         if ("FILEFORMAT_OGG" === name)
         {
@@ -1518,10 +1526,10 @@ WebGLSoundDevice.prototype =
             return this.supportedExtensions.wav;
         }
         return false;
-    },
+    }
 
     // Private API
-    addLoadingSound : function addLoadingSoundFn(soundCheckCall)
+    addLoadingSound(soundCheckCall)
     {
         var loadingSounds = this.loadingSounds;
         loadingSounds[loadingSounds.length] = soundCheckCall;
@@ -1558,25 +1566,25 @@ WebGLSoundDevice.prototype =
                 }
             }, 100);
         }
-    },
+    }
 
-    addPlayingSource : function addPlayingSourceFn(source)
+    addPlayingSource(source)
     {
         this.playingSources[source.id] = source;
-    },
+    }
 
-    removePlayingSource : function removePlayingSourceFn(source)
+    removePlayingSource(source)
     {
         delete this.playingSources[source.id];
-    },
+    }
 
-    isResourceSupported : function isResourceSupportedFn(soundPath)
+    isResourceSupported(soundPath)
     {
         var extension = soundPath.slice(-3).toLowerCase();
         return this.supportedExtensions[extension];
-    },
+    }
 
-    destroy : function soundDeviceDestroyFn()
+    destroy()
     {
         var loadingInterval = this.loadingInterval;
         if (loadingInterval !== null)
@@ -1610,67 +1618,65 @@ WebGLSoundDevice.prototype =
             this.playingSources = null;
         }
     }
-};
 
-// Constructor function
-WebGLSoundDevice.create = function webGLSoundDeviceFn(params)
-{
-    var sd = new WebGLSoundDevice();
-
-    sd.extensions = '';
-    sd.renderer = 'HTML5 Audio';
-    sd.alcVersion = "0";
-    sd.alcExtensions = '';
-    sd.alcEfxVersion = "0";
-    sd.alcMaxAuxiliarySends = 0;
-
-    sd.deviceSpecifier = (params.deviceSpecifier || null);
-    sd.frequency = (params.frequency || 44100);
-    sd.dopplerFactor = (params.dopplerFactor || 1);
-    sd.dopplerVelocity = (params.dopplerVelocity || 1);
-    sd.speedOfSound = (params.speedOfSound || 343.29998779296875);
-    sd.linearDistance = (params.linearDistance !== undefined ? params.linearDistance : true);
-
-    sd.loadingSounds = [];
-    sd.loadingInterval = null;
-
-    sd.playingSources = <WebGLSoundDeviceSourceMap><any>{};
-    sd.lastSourceID = 0;
-
-    var AudioContextConstructor = (window.AudioContext || window.webkitAudioContext);
-    if (AudioContextConstructor)
+    static create(params: any): WebGLSoundDevice
     {
-        var audioContext;
-        try
+        var sd = new WebGLSoundDevice();
+
+        sd.extensions = '';
+        sd.renderer = 'HTML5 Audio';
+        sd.alcVersion = "0";
+        sd.alcExtensions = '';
+        sd.alcEfxVersion = "0";
+        sd.alcMaxAuxiliarySends = 0;
+
+        sd.deviceSpecifier = (params.deviceSpecifier || null);
+        sd.frequency = (params.frequency || 44100);
+        sd.dopplerFactor = (params.dopplerFactor || 1);
+        sd.dopplerVelocity = (params.dopplerVelocity || 1);
+        sd.speedOfSound = (params.speedOfSound || 343.29998779296875);
+        sd.linearDistance = (params.linearDistance !== undefined ? params.linearDistance : true);
+
+        sd.loadingSounds = [];
+        sd.loadingInterval = null;
+
+        sd.playingSources = <WebGLSoundDeviceSourceMap><any>{};
+        sd.lastSourceID = 0;
+
+        var AudioContextConstructor = (window.AudioContext || window.webkitAudioContext);
+        if (AudioContextConstructor)
         {
-            audioContext = new AudioContextConstructor();
-        }
-        catch (error)
-        {
-            (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
-                'Failed to create AudioContext:' + error);
-            return null;
-        }
+            var audioContext;
+            try
+            {
+                audioContext = new AudioContextConstructor();
+            }
+            catch (error)
+            {
+                (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                    'Failed to create AudioContext:' + error);
+                return null;
+            }
 
-        if (audioContext.sampleRate === 0)
-        {
-            return null;
-        }
+            if (audioContext.sampleRate === 0)
+            {
+                return null;
+            }
 
-        sd.renderer = 'WebAudio';
-        sd.audioContext = audioContext;
-        sd.frequency = audioContext.sampleRate;
+            sd.renderer = 'WebAudio';
+            sd.audioContext = audioContext;
+            sd.frequency = audioContext.sampleRate;
 
-        sd.gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
-        sd.gainNode.connect(audioContext.destination);
+            sd.gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
+            sd.gainNode.connect(audioContext.destination);
 
-        var listener = audioContext.listener;
-        listener.dopplerFactor = sd.dopplerFactor;
-        listener.speedOfSound = sd.speedOfSound;
+            var listener = audioContext.listener;
+            listener.dopplerFactor = sd.dopplerFactor;
+            listener.speedOfSound = sd.speedOfSound;
 
-        var listenerTransform, listenerVelocity;
+            var listenerTransform, listenerVelocity;
 
-        Object.defineProperty(sd, "listenerTransform", {
+            Object.defineProperty(sd, "listenerTransform", {
                 get : function getListenerTransformFn() {
                     return listenerTransform.slice();
                 },
@@ -1690,7 +1696,7 @@ WebGLSoundDevice.create = function webGLSoundDeviceFn(params)
                 configurable : false
             });
 
-        Object.defineProperty(sd, "listenerVelocity", {
+            Object.defineProperty(sd, "listenerVelocity", {
                 get : function getListenerVelocityFn() {
                     return listenerVelocity.slice();
                 },
@@ -1702,110 +1708,113 @@ WebGLSoundDevice.create = function webGLSoundDeviceFn(params)
                 configurable : false
             });
 
-        sd.update = function soundDeviceUpdate()
-        {
-            this.gainNode.gain.value = this.listenerGain;
-
-            var listenerPosition0 = listenerTransform[9];
-            var listenerPosition1 = listenerTransform[10];
-            var listenerPosition2 = listenerTransform[11];
-
-            var playingSources = this.playingSources;
-            var stopped = [];
-            var id;
-
-            for (id in playingSources)
+            sd.update = function soundDeviceUpdate()
             {
-                if (playingSources.hasOwnProperty(id))
+                this.gainNode.gain.value = this.listenerGain;
+
+                var listenerPosition0 = listenerTransform[9];
+                var listenerPosition1 = listenerTransform[10];
+                var listenerPosition2 = listenerTransform[11];
+
+                var playingSources = this.playingSources;
+                var stopped = [];
+                var id;
+
+                for (id in playingSources)
                 {
-                    var source = playingSources[id];
-
-                    var tell = (audioContext.currentTime - source.playStart);
-                    if (source.bufferNode.buffer.duration < tell)
+                    if (playingSources.hasOwnProperty(id))
                     {
-                        if (source.looping)
+                        var source = playingSources[id];
+
+                        var tell = (audioContext.currentTime - source.playStart);
+                        if (source.bufferNode.buffer.duration < tell)
                         {
-                            source.playStart = (audioContext.currentTime - (tell - source.bufferNode.buffer.duration));
+                            if (source.looping)
+                            {
+                                source.playStart = (audioContext.currentTime - (tell - source.bufferNode.buffer.duration));
+                            }
+                            else
+                            {
+                                source.playing = false;
+                                source.sound = null;
+                                source.bufferNode.disconnect();
+                                source.bufferNode = null;
+                                stopped[stopped.length] = id;
+                                continue;
+                            }
                         }
-                        else
+
+                        if (source.relative)
                         {
-                            source.playing = false;
-                            source.sound = null;
-                            source.bufferNode.disconnect();
-                            source.bufferNode = null;
-                            stopped[stopped.length] = id;
-                            continue;
+                            source.updateRelativePosition(listenerPosition0,
+                                                          listenerPosition1,
+                                                          listenerPosition2);
                         }
                     }
+                }
 
-                    if (source.relative)
-                    {
-                        source.updateRelativePosition(listenerPosition0,
-                                                      listenerPosition1,
-                                                      listenerPosition2);
-                    }
+                var numStopped = stopped.length;
+                var n;
+                for (n = 0; n < numStopped; n += 1)
+                {
+                    delete playingSources[stopped[n]];
+                }
+            };
+        }
+
+        sd.listenerTransform = (params.listenerTransform || VMath.m43BuildIdentity());
+        sd.listenerVelocity = (params.listenerVelocity || VMath.v3BuildZero());
+        sd.listenerGain = (typeof params.listenerGain === "number" ? params.listenerGain : 1);
+
+        // Need a temporary Audio element to test capabilities
+        var audio = new Audio();
+
+        if (sd.audioContext)
+        {
+            sd.loopingSupported = true;
+        }
+        else
+        {
+            if (audio.mozSetup)
+            {
+                try
+                {
+                    audio.mozSetup(1, 22050);
+                }
+                catch (e)
+                {
+                    return null;
                 }
             }
 
-            var numStopped = stopped.length;
-            var n;
-            for (n = 0; n < numStopped; n += 1)
-            {
-                delete playingSources[stopped[n]];
-            }
-        };
-    }
-
-    sd.listenerTransform = (params.listenerTransform || VMath.m43BuildIdentity());
-    sd.listenerVelocity = (params.listenerVelocity || VMath.v3BuildZero());
-    sd.listenerGain = (typeof params.listenerGain === "number" ? params.listenerGain : 1);
-
-    // Need a temporary Audio element to test capabilities
-    var audio = new Audio();
-
-    if (sd.audioContext)
-    {
-        sd.loopingSupported = true;
-    }
-    else
-    {
-        if (audio.mozSetup)
-        {
-            try
-            {
-                audio.mozSetup(1, 22050);
-            }
-            catch (e)
-            {
-                return null;
-            }
+            // Check for looping support
+            sd.loopingSupported = (typeof audio.loop === 'boolean');
         }
 
-        // Check for looping support
-        sd.loopingSupported = (typeof audio.loop === 'boolean');
-    }
+        // Check for supported extensions
+        var supportedExtensions : WebGLSoundDeviceExtensions = {
+            ogg: false,
+            mp3: false,
+            wav: false,
+        };
+        if (audio.canPlayType('application/ogg'))
+        {
+            supportedExtensions.ogg = true;
+        }
+        if (audio.canPlayType('audio/mp3'))
+        {
+            supportedExtensions.mp3 = true;
+        }
+        if (audio.canPlayType('audio/wav'))
+        {
+            supportedExtensions.wav = true;
+        }
+        sd.supportedExtensions = supportedExtensions;
 
-    // Check for supported extensions
-    var supportedExtensions = {
-        ogg: false,
-        mp3: false,
-        wav: false,
-    };
-    if (audio.canPlayType('application/ogg'))
-    {
-        supportedExtensions.ogg = true;
-    }
-    if (audio.canPlayType('audio/mp3'))
-    {
-        supportedExtensions.mp3 = true;
-    }
-    if (audio.canPlayType('audio/wav'))
-    {
-        supportedExtensions.wav = true;
-    }
-    sd.supportedExtensions = supportedExtensions;
+        audio = null;
 
-    audio = null;
+        return sd;
+    }
+}
 
-    return sd;
-};
+WebGLSoundDevice.prototype.vendor = "Turbulenz";

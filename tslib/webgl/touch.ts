@@ -11,7 +11,7 @@ class Touch
     radiusY: number;
     rotationAngle: number;
 
-    create(params: any): Touch
+    static create(params: any): Touch
     {
         var touch = new Touch();
 

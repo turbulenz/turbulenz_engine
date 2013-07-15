@@ -79,6 +79,11 @@ interface Window
     opera: bool;
 }
 
+interface WebSocket
+{
+    destroy?: () => void;
+}
+
 // Document
 interface Document
 {
@@ -140,7 +145,7 @@ interface HTMLAudioElement
     mozSetup(channels: number, sampleRate: number);
 }
 
-interface WebGLVideo
+interface HTMLCanvasElement
 {
-    elementAdded: bool;
+
 }

@@ -27,10 +27,12 @@ class TGALoader
     width             : number;
     height            : number;
     bytesPerPixel     : number;
-    horzRev           : number;
-    vertRev           : number;
+    horzRev           : bool;
+    vertRev           : bool;
     format            : number;
     colorMap          : number[];
+
+    colorMapBytesPerPixel: number;
 
     TYPE_MAPPED       : number; // prototype
     TYPE_COLOR        : number; // prototype
@@ -60,7 +62,7 @@ class TGALoader
         this.bytesPerPixel = Math.floor(header.bpp / 8);
 
         /*jshint bitwise: false*/
-        this.horzRev = (header.descriptor & this.DESC_HORIZONTAL);
+        this.horzRev = <bool><any>(header.descriptor & this.DESC_HORIZONTAL);
         this.vertRev = !(header.descriptor & this.DESC_VERTICAL);
         /*jshint bitwise: true*/
 
@@ -567,7 +569,7 @@ class TGALoader
         }
     }
 
-    static create(tgaParams: any) : TGALoader
+    static create(params: any) : TGALoader
     {
         var loader = new TGALoader();
         loader.gd = params.gd;

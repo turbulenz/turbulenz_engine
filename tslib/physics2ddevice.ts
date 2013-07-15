@@ -3875,15 +3875,6 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         }
     }
 
-    // =========================================================
-
-    // Inherited
-    _inWorld          = Physics2DConstraint.prototype.twoBodyInWorld;
-    _outWorld         = Physics2DConstraint.prototype.twoBodyOutWorld;
-    _pairExists       = Physics2DConstraint.prototype.twoBodyPairExists;
-    _wakeConnected    = Physics2DConstraint.prototype.twoBodyWakeConnected;
-    _sleepComputation = Physics2DConstraint.prototype.twoBodySleepComputation;
-
     // =======================================================
 
     // Inherited
@@ -4156,6 +4147,19 @@ class Physics2DAngleConstraint extends Physics2DConstraint
     }
 }
 
+// Inherited
+
+Physics2DAngleConstraint.prototype._inWorld =
+    Physics2DConstraint.prototype.twoBodyInWorld;
+Physics2DAngleConstraint.prototype._outWorld =
+    Physics2DConstraint.prototype.twoBodyOutWorld;
+Physics2DAngleConstraint.prototype._pairExists =
+    Physics2DConstraint.prototype.twoBodyPairExists;
+Physics2DAngleConstraint.prototype._wakeConnected =
+    Physics2DConstraint.prototype.twoBodyWakeConnected;
+Physics2DAngleConstraint.prototype._sleepComputation =
+    Physics2DConstraint.prototype.twoBodySleepComputation;
+
 // =========================================================================
 //
 // Weld Constraint
@@ -4182,19 +4186,6 @@ class Physics2DWeldConstraint extends Physics2DConstraint
 
     type = "WELD";
 
-    // Inherited
-    wake  = Physics2DConstraint.prototype.wake;
-    sleep = Physics2DConstraint.prototype.sleep;
-
-    configure  = Physics2DConstraint.prototype.configure;
-    isEnabled  = Physics2DConstraint.prototype.isEnabled;
-    isDisabled = Physics2DConstraint.prototype.isDisabled;
-    enable     = Physics2DConstraint.prototype.enable;
-    disable    = Physics2DConstraint.prototype.disable;
-
-    addEventListener    = Physics2DConstraint.prototype.addEventListener;
-    removeEventListener = Physics2DConstraint.prototype.removeEventListener;
-
     // Ours
 
     dimension: number;
@@ -4219,15 +4210,6 @@ class Physics2DWeldConstraint extends Physics2DConstraint
             this.wake(true);
         }
     }
-
-    // =========================================================
-
-    // Inherited
-    _inWorld          = Physics2DConstraint.prototype.twoBodyInWorld;
-    _outWorld         = Physics2DConstraint.prototype.twoBodyOutWorld;
-    _pairExists       = Physics2DConstraint.prototype.twoBodyPairExists;
-    _wakeConnected    = Physics2DConstraint.prototype.twoBodyWakeConnected;
-    _sleepComputation = Physics2DConstraint.prototype.twoBodySleepComputation;
 
     // =======================================================
 
@@ -4593,6 +4575,19 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     }
 }
 
+// Inherited
+
+Physics2DWeldConstraint.prototype._inWorld =
+    Physics2DConstraint.prototype.twoBodyInWorld;
+Physics2DWeldConstraint.prototype._outWorld =
+    Physics2DConstraint.prototype.twoBodyOutWorld;
+Physics2DWeldConstraint.prototype._pairExists =
+    Physics2DConstraint.prototype.twoBodyPairExists;
+Physics2DWeldConstraint.prototype._wakeConnected =
+    Physics2DConstraint.prototype.twoBodyWakeConnected;
+Physics2DWeldConstraint.prototype._sleepComputation =
+    Physics2DConstraint.prototype.twoBodySleepComputation;
+
 // =========================================================================
 //
 // Point Constraint
@@ -4615,21 +4610,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
 
 class Physics2DPointConstraint extends Physics2DConstraint
 {
-
     type = "POINT";
-
-    // Inherited
-    wake  = Physics2DConstraint.prototype.wake;
-    sleep = Physics2DConstraint.prototype.sleep;
-
-    configure  = Physics2DConstraint.prototype.configure;
-    isEnabled  = Physics2DConstraint.prototype.isEnabled;
-    isDisabled = Physics2DConstraint.prototype.isDisabled;
-    enable     = Physics2DConstraint.prototype.enable;
-    disable    = Physics2DConstraint.prototype.disable;
-
-    addEventListener    = Physics2DConstraint.prototype.addEventListener;
-    removeEventListener = Physics2DConstraint.prototype.removeEventListener;
 
     // Ours
 
@@ -4639,23 +4620,9 @@ class Physics2DPointConstraint extends Physics2DConstraint
 
     // Inherited
     _ANCHOR_A = (/*POINT_LANCHOR1*/5);
-    getAnchorA = Physics2DConstraint.prototype.getAnchorA;
-    setAnchorA = Physics2DConstraint.prototype.setAnchorA;
-
     _ANCHOR_B = (/*POINT_LANCHOR2*/7);
-    getAnchorB = Physics2DConstraint.prototype.getAnchorB;
-    setAnchorB = Physics2DConstraint.prototype.setAnchorB;
 
     // =========================================================
-
-    // Inherited
-    _inWorld          = Physics2DConstraint.prototype.twoBodyInWorld;
-    _outWorld         = Physics2DConstraint.prototype.twoBodyOutWorld;
-    _pairExists       = Physics2DConstraint.prototype.twoBodyPairExists;
-    _wakeConnected    = Physics2DConstraint.prototype.twoBodyWakeConnected;
-    _sleepComputation = Physics2DConstraint.prototype.twoBodySleepComputation;
-
-    // =======================================================
 
     // Inherited
     _JACC = (/*POINT_JACC*/16);
@@ -4979,6 +4946,22 @@ class Physics2DPointConstraint extends Physics2DConstraint
     }
 }
 
+// Inherited
+
+Physics2DPointConstraint.prototype._inWorld =
+    Physics2DConstraint.prototype.twoBodyInWorld;
+Physics2DPointConstraint.prototype._outWorld =
+    Physics2DConstraint.prototype.twoBodyOutWorld;
+Physics2DPointConstraint.prototype._pairExists =
+    Physics2DConstraint.prototype.twoBodyPairExists;
+Physics2DPointConstraint.prototype._wakeConnected =
+    Physics2DConstraint.prototype.twoBodyWakeConnected;
+Physics2DPointConstraint.prototype._sleepComputation =
+    Physics2DConstraint.prototype.twoBodySleepComputation;
+
+    // =======================================================
+
+
 // =========================================================================
 //
 // Common to both circles and polygons
@@ -5288,17 +5271,6 @@ class Physics2DCircle extends Physics2DShape
     static version = 1;
     type = "CIRCLE";
 
-    // Inherited
-    getMaterial = Physics2DShape.prototype.getMaterial;
-    setMaterial = Physics2DShape.prototype.setMaterial;
-    getGroup    = Physics2DShape.prototype.getGroup;
-    setGroup    = Physics2DShape.prototype.setGroup;
-    getMask     = Physics2DShape.prototype.getMask;
-    setMask     = Physics2DShape.prototype.setMask;
-
-    addEventListener    = Physics2DShape.prototype.addEventListener;
-    removeEventListener = Physics2DShape.prototype.removeEventListener;
-
     // ==============================================================
 
     computeArea()
@@ -5584,19 +5556,6 @@ class Physics2DPolygon extends Physics2DShape
     static version = 1;
 
     type = "POLYGON";
-
-    // Inherited
-    getMaterial = Physics2DShape.prototype.getMaterial;
-    setMaterial = Physics2DShape.prototype.setMaterial;
-    getGroup    = Physics2DShape.prototype.getGroup;
-    setGroup    = Physics2DShape.prototype.setGroup;
-    getMask     = Physics2DShape.prototype.getMask;
-    setMask     = Physics2DShape.prototype.setMask;
-
-    addEventListener    = Physics2DShape.prototype.addEventListener;
-    removeEventListener = Physics2DShape.prototype.removeEventListener;
-
-    // ===========================================================================
 
     computeArea()
     {
@@ -6101,6 +6060,8 @@ class Physics2DPolygon extends Physics2DShape
         return p;
     }
 }
+
+Physics2DPolygon
 
 // =========================================================================
 
@@ -7242,33 +7203,6 @@ class Physics2DRigidBody
 // Physics2D Callback
 //
 
-interface Physics2DCallback
-{
-    thisObject: any;
-    callback: Physics2DCallbackFn;
-
-    // Used to ensure time ordering of deferred events.
-    // -1 if event corresponds to action performed before step()
-    // 0  if event is a standard event during step()
-    // 1  if event is result of a continuous collision during step()
-    time: number;
-
-    // Interaction events
-    index: number;
-    arbiter: Physics2DArbiter;
-
-    next: Physics2DCallback;
-}
-declare var Physics2DCallback :
-{
-    new(): Physics2DCallback;
-    prototype: any;
-
-    pool: any;
-    allocate: { (): Physics2DCallback; };
-    deallocate: { (callback: Physics2DCallback): void; };
-}
-
 // EVENT TYPES
 // !! Must use regexp to change these globally (in all files) !!
 //
@@ -7287,56 +7221,77 @@ declare var Physics2DCallback :
 ///*EVENT_TIME_STANDARD*/0
 ///*EVENT_TIME_CONTINUOUS*/1
 
-function Physics2DCallback() {
-    // All events
-    this.thisObject = null;
-    this.callback = null;
+class Physics2DCallback
+{
+    thisObject: any;
+    callback: Physics2DCallbackFn;
 
     // Used to ensure time ordering of deferred events.
     // -1 if event corresponds to action performed before step()
     // 0  if event is a standard event during step()
     // 1  if event is result of a continuous collision during step()
-    this.time = 0;
+    time: number;
 
     // Interaction events
-    this.index = 0;
-    this.arbiter = null;
+    index: number;
+    arbiter: Physics2DArbiter;
 
-    this.next = null;
+    next: Physics2DCallback;
 
-    return this;
+    constructor()
+    {
+        // All events
+        this.thisObject = null;
+        this.callback = null;
+
+        // Used to ensure time ordering of deferred events.
+        // -1 if event corresponds to action performed before step()
+        // 0  if event is a standard event during step()
+        // 1  if event is result of a continuous collision during step()
+        this.time = 0;
+
+        // Interaction events
+        this.index = 0;
+        this.arbiter = null;
+
+        this.next = null;
+
+        return this;
+    }
+
+    // Object pooled;
+
+    static pool = null;
+    static allocate(): Physics2DCallback
+    {
+        if (Physics2DCallback.pool)
+        {
+            var ret = Physics2DCallback.pool;
+            Physics2DCallback.pool = ret.next;
+            ret.next = null;
+            return ret;
+        }
+        else
+        {
+            return (new Physics2DCallback());
+        }
+    }
+
+    static deallocate(callback: Physics2DCallback): void
+    {
+        callback.next = Physics2DCallback.pool;
+        Physics2DCallback.pool = callback;
+
+        callback.thisObject = null;
+        callback.callback = null;
+        callback.arbiter = null;
+    }
 }
-// Object pooled;
-Physics2DCallback.pool = null;
-Physics2DCallback.allocate = function ()
-{
-    if (Physics2DCallback.pool)
-    {
-        var ret = Physics2DCallback.pool;
-        Physics2DCallback.pool = ret.next;
-        ret.next = null;
-        return ret;
-    }
-    else
-    {
-        return (new Physics2DCallback());
-    }
-};
-
-Physics2DCallback.deallocate = function (callback)
-{
-    callback.next = Physics2DCallback.pool;
-    Physics2DCallback.pool = callback;
-
-    callback.thisObject = null;
-    callback.callback = null;
-    callback.arbiter = null;
-};
 
 // =====================================================================
 
 //
-// Physics2D Island
+// Physics2DIsland
 //
 class Physics2DIsland
 {
@@ -7394,7 +7349,7 @@ class Physics2DIsland
 //
 ///*TOI_DATA_SIZE*/7
 
-interface Physics2DTOIEvent
+class Physics2DTOIEvent
 {
     next: Physics2DTOIEvent;
     shapeA: Physics2DShape;
@@ -7407,58 +7362,51 @@ interface Physics2DTOIEvent
     staticType: bool;
     kinematic: bool;
     _data: any; // Physics2DDevice.prototype.floatArray((/*TOI_DATA_SIZE*/7));
-}
-declare var Physics2DTOIEvent :
-{
-    new(): Physics2DTOIEvent;
-    prototype: any;
 
-    pool: any;
-    allocate: { (): Physics2DTOIEvent; };
-    deallocate: { (toi: Physics2DTOIEvent): void; };
-};
-
-function Physics2DTOIEvent() {
-    this.next = null;
-    this.shapeA = null;
-    this.shapeB = null;
-    this.frozenA = this.frozenB = false;
-    this.arbiter = null;
-    this.failed = false;
-    this.slipped = false;
-    this._data = new Physics2DDevice.prototype.floatArray((/*TOI_DATA_SIZE*/7));
-
-    return this;
-}
-
-// Object pooled.
-Physics2DTOIEvent.pool = null;
-Physics2DTOIEvent.allocate = function ()
-{
-    if (Physics2DTOIEvent.pool)
+    constructor()
     {
-        var ret = Physics2DTOIEvent.pool;
-        Physics2DTOIEvent.pool = ret.next;
-        ret.next = null;
-        return ret;
+        this.next = null;
+        this.shapeA = null;
+        this.shapeB = null;
+        this.frozenA = this.frozenB = false;
+        this.arbiter = null;
+        this.failed = false;
+        this.slipped = false;
+        this._data = new Physics2DDevice.prototype.floatArray((/*TOI_DATA_SIZE*/7));
+
+        return this;
     }
-    else
+
+    // Object pooled.
+
+    static pool = null;
+
+    static allocate(): Physics2DTOIEvent
     {
-        return (new Physics2DTOIEvent());
+        if (Physics2DTOIEvent.pool)
+        {
+            var ret = Physics2DTOIEvent.pool;
+            Physics2DTOIEvent.pool = ret.next;
+            ret.next = null;
+            return ret;
+        }
+        else
+        {
+            return (new Physics2DTOIEvent());
+        }
     }
-};
 
-Physics2DTOIEvent.deallocate = function (toi)
-{
-    toi.next = Physics2DTOIEvent.pool;
-    Physics2DTOIEvent.pool = toi;
+    static deallocate(toi: Physics2DTOIEvent)
+    {
+        toi.next = Physics2DTOIEvent.pool;
+        Physics2DTOIEvent.pool = toi;
 
-    toi.shapeA = toi.shapeB = null;
-    toi.failed = false;
-    toi.slipped = false;
-    toi.arbiter = null;
-};
-
+        toi.shapeA = toi.shapeB = null;
+        toi.failed = false;
+        toi.slipped = false;
+        toi.arbiter = null;
+    }
+}
 
 // =====================================================================
 
@@ -7942,27 +7890,6 @@ class Physics2DSweepAndPrune
 // Physics2D Contact
 //
 
-interface Physics2DContact
-{
-    _data: any; // Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
-    fresh: bool;
-    _hash: number;
-    _timeStamp: number;
-    _next: Physics2DContact;
-    active: bool;
-    virtual: bool;
-}
-declare var Physics2DContact :
-{
-    new(): Physics2DContact;
-    prototype: any;
-
-    pool: any;
-    allocate: { (): Physics2DContact; };
-    deallocate: { (contact: Physics2DContact): void; };
-};
-
-
 //
 // CONTACT DATA CONSTANTS
 // !! Must use regexp to change these globally (in all files) !!
@@ -7982,24 +7909,32 @@ declare var Physics2DContact :
 //
 ///*CON_DATA_SIZE*/17
 
-function Physics2DContact()
+class Physics2DContact
 {
-    this._data = new Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
-    this.fresh = false;
-    this._hash = 0;
-    this._timeStamp = 0;
-    this._next = null;
-    this.active = false;
-    this.virtual = false;
+    static version = 1;
 
-    return this;
-}
+    _data: any; // Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
+    fresh: bool;
+    _hash: number;
+    _timeStamp: number;
+    _next: Physics2DContact;
+    active: bool;
+    virtual: bool;
 
-Physics2DContact.prototype = {
+    constructor()
+    {
+        this._data = new Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
+        this.fresh = false;
+        this._hash = 0;
+        this._timeStamp = 0;
+        this._next = null;
+        this.active = false;
+        this.virtual = false;
 
-    version : 1,
+        return this;
+    }
 
-    getPosition : function getPositionFn(dst)
+    getPosition(dst)
     {
         if (dst === undefined)
         {
@@ -8009,47 +7944,46 @@ Physics2DContact.prototype = {
         dst[0] = data[(/*CON_POS*/0)];
         dst[1] = data[(/*CON_POS*/0) + 1];
         return dst;
-    },
+    }
 
-    getPenetration : function getPenetrationFn()
+    getPenetration()
     {
         return (-this._data[(/*CON_DIST*/2)]);
-    },
+    }
 
-    getNormalImpulse : function getNormalImpulseFn()
+    getNormalImpulse()
     {
         return (this.virtual ? 0 : this._data[(/*CON_JNACC*/11)]);
-    },
+    }
 
-    getTangentImpulse : function getTangentImpulseFn()
+    getTangentImpulse()
     {
         return (this.virtual ? 0 : this._data[(/*CON_JTACC*/12)]);
     }
-};
 
+    static pool = null;
 
-Physics2DContact.pool = null;
-Physics2DContact.allocate = function allocateContactFn()
-{
-    if (!this.pool)
+    static allocate(): Physics2DContact
     {
-        return new Physics2DContact();
+        if (!this.pool)
+        {
+            return new Physics2DContact();
+        }
+        else
+        {
+            var ret = this.pool;
+            this.pool = ret._next;
+            ret._next = null;
+            return ret;
+        }
     }
-    else
+
+    static deallocate(contact: Physics2DContact)
     {
-        var ret = this.pool;
-        this.pool = ret._next;
-        ret._next = null;
-        return ret;
+        contact._next = this.pool;
+        this.pool = contact;
     }
-};
-
-Physics2DContact.deallocate = function deallocateContactFn(contact)
-{
-    contact._next = this.pool;
-    this.pool = contact;
-};
-
+}
 
 // =====================================================================
 
@@ -10450,7 +10384,7 @@ class Physics2DWorld
                 }
 
                 /*jshint bitwise: false*/
-                if (ctype && (arb._state & (/*STATE_ACCEPT*/1) !== 0))
+                if (ctype && ((arb._state & (/*STATE_ACCEPT*/1)) !== 0))
                 /*jshint bitwise: true*/
                 {
                     if (b1._type === (/*TYPE_DYNAMIC*/0) && b1.sleeping && !b1._deferred)

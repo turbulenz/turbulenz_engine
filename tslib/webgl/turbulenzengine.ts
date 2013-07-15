@@ -188,7 +188,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
         else
         {
-            var networkDevice = WebGLNetworkDevice.create(/* params */);
+            var networkDevice = WebGLNetworkDevice.create(params);
             this.networkDevice = networkDevice;
             return networkDevice;
         }

@@ -505,6 +505,9 @@ interface WebGLRenderingContext {
 	vertexAttrib4fv(indx : number, values : number[]) : void;
 	vertexAttribPointer(indx : number, size : number, type : number, normalized : bool, stride : number, offset : number) : void;
 	viewport(x : number, y : number, width : number, height : number) : void;
+
+    drawingBufferWidth?: number;
+    drawingBufferHeight?: number;
 }
 
 interface WebGLContextEvent extends Event {
@@ -512,8 +515,8 @@ interface WebGLContextEvent extends Event {
 	initWebGLContextEvent(typeArg : string, canBubbleArg : bool, cancelableArg : bool, statusMessageArg : string) : void;
 }
 
-//Extend the window object with cross Browser callbacks so TS will not complain 
-//Also add the (non-standard) Canvas Element parameter for performance improvement 
+//Extend the window object with cross Browser callbacks so TS will not complain
+//Also add the (non-standard) Canvas Element parameter for performance improvement
 interface WindowAnimationTiming {
     requestAnimationFrame(callback: FrameRequestCallback, canvas: HTMLCanvasElement): number;
     msRequestAnimationFrame(callback: FrameRequestCallback, canvas: HTMLCanvasElement): number;
@@ -526,7 +529,18 @@ interface WindowAnimationTiming {
 	oCancelRequestAnimationFrame(handle: number): void;
 }
 
-//To make WebGL work 
+//To make WebGL work
 interface HTMLCanvasElement {
 	getContext(contextId: string, params : {}): WebGLRenderingContext;
+    toDataURL(format?: string);
+
+    ALLOW_KEYBOARD_INPUT?: any;
+
+    webkitRequestFullScreenWithKeys?: () => void;
+    requestFullScreenWithKeys?: () => void;
+    webkitRequestFullScreen?: (flags?: any) => void;
+    mozRequestFullScreen?: () => void;
+    requestFullScreen?: () => void;
+    requestFullscreen?: () => void;
+
 }

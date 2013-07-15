@@ -197,7 +197,7 @@ class TARLoader
         return true;
     }
 
-    create(params: TARLoaderParameters): TARLoader
+    static create(params: TARLoaderParameters): TARLoader
     {
         var loader = new TARLoader();
         loader.gd = params.gd;

@@ -446,6 +446,17 @@ interface LeaderboardDataSpec
 // LeaderboardResult
 // =============================================================================
 
+interface LeaderboardResultsData
+{
+    spec: any; // TODO:
+    overlap: any; // TODO:
+    player?: any; // TODO:
+    ranking?: any[]; // TODO;
+    playerIndex?: number;
+    top?: bool;
+    bottom?: bool;
+}
+
 class LeaderboardResult
 {
     leaderboardManager: LeaderboardManager;
@@ -751,16 +762,11 @@ class LeaderboardResult
         return this.results;
     }
 
-    parseResults(key, spec, data)
+    private parseResults(key, spec, data): LeaderboardResultsData
     {
-        var results = {
+        var results : LeaderboardResultsData = {
             spec: spec,
-            overlap: <any>(null),
-            player: undefined,
-            ranking: undefined,
-            playerIndex: undefined,
-            top: undefined,
-            bottom: undefined
+            overlap: null
         };
 
         var player = results.player = data.player;

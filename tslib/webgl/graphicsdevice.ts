@@ -25,13 +25,15 @@
 /// <reference path="tgaloader.ts" />
 /// <reference path="ddsloader.ts" />
 
-
-declare var Shader :
+interface WebGLSampler
 {
-    new(): Shader;
-    prototype: any;
-    create(gd: any, params: any): Shader;
-};
+    minFilter: number;
+    magFilter: number;
+    wrapS: number;
+    wrapT: number;
+    wrapR: number;
+    maxAnisotropy: number;
+}
 
 interface WebGLVideoSupportedExtensions
 {
@@ -45,21 +47,24 @@ class TZWebGLTexture implements Texture
     static version = 1;
 
     // Texture
-    name                 : string;
-    width                : number;
-    height               : number;
-    depth                : number;
-    format               : number;
-    numDataLevels        : number;
-    mipmaps              : bool;
-    cubemap              : bool;
-    dynamic              : bool;
-    renderable           : bool;
+    name              : string;
+    width             : number;
+    height            : number;
+    depth             : number;
+    format            : number;
+    numDataLevels     : number;
+    mipmaps           : bool;
+    cubemap           : bool;
+    dynamic           : bool;
+    renderable        : bool;
 
     // TZWebGLTexture
-    gd                   : any;
-    failed               : bool;
-    glDepthAttachment    : number;  // If renderable and a depth format
+    gd                : any;
+    failed            : bool;
+    glDepthAttachment : number;  // If renderable and a depth format
+    target            : number;
+    glTexture         : WebGLTexture;
+    sampler           : WebGLSampler;
 
     setData(data)
     {
@@ -631,7 +636,8 @@ class TZWebGLTexture implements Texture
         return false;
     }
 
-    static create(gd: GraphicsDevice, params: TextureParameters): TZWebGLTexture
+    static create(gd: WebGLGraphicsDevice, params: TextureParameters)
+    : TZWebGLTexture
     {
         var tex = new TZWebGLTexture();
         tex.gd = gd;
@@ -905,17 +911,18 @@ class WebGLVideo implements Video
     static version = 1;
 
     // Video
-    looping : bool;
-    playing : bool;
-    paused  : bool;
-    tell    : number;
+    looping      : bool;
+    playing      : bool;
+    paused       : bool;
+    tell         : number;
 
     // WebGLVideo
-    video: HTMLElement;
-    src: string;
-    length: number;
-    width: number;
-    height: number;
+    video        : HTMLVideoElement;
+    src          : string;
+    length       : number;
+    width        : number;
+    height       : number;
+    elementAdded : bool;
 
     // Public API
     play(seek?: number)
@@ -983,7 +990,7 @@ class WebGLVideo implements Video
         return false;
     }
 
-    resume(seek)
+    resume(seek?: number)
     {
         if (this.paused)
         {
@@ -1188,7 +1195,7 @@ class WebGLRenderBuffer implements RenderBuffer
     format : number;
 
     // WebGLRenderBuffer
-    glBuffer: WebGLBuffer;
+    glBuffer: WebGLRenderbuffer;
     glDepthAttachment: number;
     gd: any;
 
@@ -1289,12 +1296,12 @@ class WebGLRenderTarget implements RenderTarget
     width         : number;
     height        : number;
     face          : number;
-    colorTexture0 : Texture;
-    colorTexture1 : Texture;
-    colorTexture2 : Texture;
-    colorTexture3 : Texture;
-    depthBuffer   : RenderBuffer;
-    depthTexture  : Texture;
+    colorTexture0 : TZWebGLTexture;
+    colorTexture1 : TZWebGLTexture;
+    colorTexture2 : TZWebGLTexture;
+    colorTexture3 : TZWebGLTexture;
+    depthBuffer   : WebGLRenderBuffer;
+    depthTexture  : TZWebGLTexture;
 
     // WebGLRenderTarget
     gd: any;
@@ -1436,17 +1443,20 @@ class WebGLRenderTarget implements RenderTarget
         }
     }
 
-    static create(gd: GraphicsDevice, params: RenderTargetParameters) :
+    static create(gd: WebGLGraphicsDevice, params: RenderTargetParameters) :
     WebGLRenderTarget
     {
         var renderTarget = new WebGLRenderTarget();
 
-        var colorTexture0 = params.colorTexture0;
-        var colorTexture1 = (colorTexture0 ? (params.colorTexture1 || null) : null);
-        var colorTexture2 = (colorTexture1 ? (params.colorTexture2 || null) : null);
-        var colorTexture3 = (colorTexture2 ? (params.colorTexture3 || null) : null);
-        var depthBuffer = params.depthBuffer || null;
-        var depthTexture = params.depthTexture || null;
+        var colorTexture0 = <TZWebGLTexture>(params.colorTexture0);
+        var colorTexture1 = <TZWebGLTexture>
+            (colorTexture0 ? (params.colorTexture1 || null) : null);
+        var colorTexture2 = <TZWebGLTexture>
+            (colorTexture1 ? (params.colorTexture2 || null) : null);
+        var colorTexture3 = <TZWebGLTexture>
+            (colorTexture2 ? (params.colorTexture3 || null) : null);
+        var depthBuffer = <WebGLRenderBuffer>(params.depthBuffer || null);
+        var depthTexture = <TZWebGLTexture>(params.depthTexture || null);
         var face = params.face;
 
         var maxSupported  = gd.maxSupported("RENDERTARGET_COLOR_TEXTURES");
@@ -1647,7 +1657,7 @@ class WebGLIndexBuffer implements IndexBuffer
     gd: any;
     glBuffer: WebGLBuffer;
 
-    map(offset, numIndices)
+    map(offset?: number, numIndices?: number)
     {
         if (offset === undefined)
         {
@@ -1858,12 +1868,10 @@ class WebGLIndexBuffer implements IndexBuffer
         }
         ib.stride = stride;
 
-        /*jshint sub: true*/
         // Avoid dot notation lookup to prevent Google Closure complaining about transient being a keyword
         ib['transient'] = (params['transient'] || false);
         ib.dynamic = (params.dynamic || ib['transient']);
         ib.usage = (ib['transient'] ? gl.STREAM_DRAW : (ib.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW));
-        /*jshint sub: false*/
 
         ib.glBuffer = gl.createBuffer();
 
@@ -1892,7 +1900,7 @@ class WebGLSemantics implements Semantics
     // Semantics
     length: number;
 
-    create(gd: WebGLGraphicsDevice, attributes: any[])
+    static create(gd: WebGLGraphicsDevice, attributes: any[]): WebGLSemantics
     {
         var semantics = new WebGLSemantics();
 
@@ -1916,7 +1924,18 @@ class WebGLSemantics implements Semantics
 }
 
 //
-// VertexBuffer
+// WebGLVertexWriteIterator
+//
+interface WebGLVertexWriteIterator extends VertexWriteIterator
+{
+    data: any;
+    offset: number;
+    getNumWrittenVertices: () => number;
+    getNumWrittenValues: () => number;
+}
+
+//
+// WebGLVertexBuffer
 //
 class WebGLVertexBuffer implements VertexBuffer
 {
@@ -1930,10 +1949,14 @@ class WebGLVertexBuffer implements VertexBuffer
     dynamic     : bool;
 
     // WebGLVertexBuffer
-    gd: any;
-    glBuffer: WebGLBuffer;
+    gd          : any;
+    glBuffer    : WebGLBuffer;
+    attributes  : WebGLGraphicsDeviceVertexFormat[];
+    hasSingleFormat: bool;
+    strideInBytes : number;
+    numAttributes : number;
 
-    map(offset, numVertices)
+    map(offset?: number, numVertices?: number): WebGLVertexWriteIterator
     {
         if (offset === undefined)
         {
@@ -1951,7 +1974,7 @@ class WebGLVertexBuffer implements VertexBuffer
         var attributes = this.attributes;
         var numAttributes = attributes.length;
 
-        var data, writer;
+        var data, writer: WebGLVertexWriteIterator;
         var numValues = 0;
 
         if (this.hasSingleFormat)
@@ -1988,7 +2011,8 @@ class WebGLVertexBuffer implements VertexBuffer
                 data = new Uint32Array(maxNumValues);
             }
 
-            writer = function vertexBufferWriterSingleFn()
+            writer = <WebGLVertexWriteIterator>
+                function vertexBufferWriterSingleFn()
             {
                 var numArguments = arguments.length;
                 var currentArgument = 0;
@@ -2076,7 +2100,8 @@ class WebGLVertexBuffer implements VertexBuffer
             {
                 var dataView = new DataView(data);
 
-                writer = function vertexBufferWriterDataViewFn()
+                writer = <WebGLVertexWriteIterator>
+                    function vertexBufferWriterDataViewFn()
                 {
                     var numArguments = arguments.length;
                     var currentArgument = 0;
@@ -2160,7 +2185,8 @@ class WebGLVertexBuffer implements VertexBuffer
             }
             else
             {
-                writer = function vertexBufferWriterMultiFn()
+                writer = <WebGLVertexWriteIterator>
+                    function vertexBufferWriterMultiFn()
                 {
                     var numArguments = arguments.length;
                     var currentArgument = 0;
@@ -2536,7 +2562,6 @@ class WebGLVertexBuffer implements VertexBuffer
         var vertexAttributes = this.attributes;
         var stride = this.strideInBytes;
         var attributeMask = 0;
-        /*jshint bitwise: false*/
         for (var n = 0; n < numAttributes; n += 1)
         {
             var vertexAttribute = vertexAttributes[n];
@@ -2553,11 +2578,10 @@ class WebGLVertexBuffer implements VertexBuffer
 
             offset += vertexAttribute.stride;
         }
-        /*jshint bitwise: true*/
         return attributeMask;
     }
 
-    setAttributes(attributes)
+    setAttributes(attributes: WebGLGraphicsDeviceVertexFormat[])
     {
         var gd = this.gd;
 
@@ -2643,14 +2667,12 @@ class WebGLVertexBuffer implements VertexBuffer
 
         var strideInBytes = vb.setAttributes(params.attributes);
 
-        /*jshint sub: true*/
         // Avoid dot notation lookup to prevent Google Closure complaining
         // about transient being a keyword
 
         vb['transient'] = (params['transient'] || false);
         vb.dynamic = (params.dynamic || vb['transient']);
         vb.usage = (vb['transient'] ? gl.STREAM_DRAW : (vb.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW));
-        /*jshint sub: false*/
         vb.glBuffer = gl.createBuffer();
 
         var bufferSize = (numVertices * strideInBytes);
@@ -2715,6 +2737,7 @@ class WebGLPass implements Pass
     numParameters: number;
     states: PassState[];
     statesSet: any;
+    dirty: bool;
 
     updateParametersData(gd)
     {
@@ -2934,7 +2957,6 @@ class WebGLPass implements Pass
                 }
             }
 
-            /*jshint bitwise: false*/
             var numSemantics = semanticNames.length;
             semanticsMask = 0;
             for (s = 0; s < numSemantics; s += 1)
@@ -2947,7 +2969,6 @@ class WebGLPass implements Pass
                     gl.bindAttribLocation(glProgram, attribute, ("ATTR" + attribute));
                 }
             }
-            /*jshint bitwise: true*/
 
             gl.linkProgram(glProgram);
 
@@ -3051,20 +3072,18 @@ class WebGLPass implements Pass
     }
 }
 
-
 //
-// Technique
+// WebGLTechnique
 //
-
 class WebGLTechnique implements Technique
 {
     static version = 1;
 
     // Technique
     initialized: bool;
-    shader: Shader;
+    shader: TZWebGLShader;
     name: string;
-    passes: Pass[];
+    passes: WebGLPass[];
     numPasses: number;
     numParameters: number;
     device: any;
@@ -3086,9 +3105,7 @@ class WebGLTechnique implements Technique
         }
         else
         {
-            /*jshint bitwise: false*/
             id = (id | 0);
-            /*jshint bitwise: true*/
             if (id < numPasses)
             {
                 return passes[id];
@@ -3490,12 +3507,12 @@ class WebGLTechnique implements Technique
     }
 
     static create(gd: any, shader: Shader, name: string, passes: Pass[])
-    : Technique
+    : WebGLTechnique
     {
-        var technique = new Technique();
+        var technique = new WebGLTechnique();
 
         technique.initialized = false;
-        technique.shader = shader;
+        technique.shader = <TZWebGLShader>shader;
         technique.name = name;
 
         var numPasses = passes.length, n;
@@ -3521,14 +3538,13 @@ class WebGLTechnique implements Technique
 }
 
 //
-// Shader
+// TZWebGLShader
 //
-class WebGLShader implements Shader
+class TZWebGLShader implements Shader
 {
     static version = 1;
 
     // Shader
-    gd             : GraphicsDevice;
     name           : string;
     initialized    : bool;
     programs       : any;
@@ -3542,7 +3558,9 @@ class WebGLShader implements Shader
 
     samplers       : any;
 
-    getTechnique(name)
+    gd             : WebGLGraphicsDevice;
+
+    getTechnique(name): Technique
     {
         if (typeof name === "string")
         {
@@ -3569,7 +3587,7 @@ class WebGLShader implements Shader
         }
     }
 
-    getParameter(name)
+    getParameter(name: any): ShaderParameter
     {
         if (typeof name === "string")
         {
@@ -3577,9 +3595,7 @@ class WebGLShader implements Shader
         }
         else
         {
-            /*jshint bitwise: false*/
             name = (name | 0);
-            /*jshint bitwise: true*/
             var parameters = this.parameters;
             for (var p in parameters)
             {
@@ -3715,11 +3731,11 @@ class WebGLShader implements Shader
         }
     }
 
-    static create(gd, params): WebGLShader
+    static create(gd, params): TZWebGLShader
     {
         var gl = gd.gl;
 
-        var shader = new WebGLShader();
+        var shader = new TZWebGLShader();
 
         shader.initialized = false;
 
@@ -3887,7 +3903,7 @@ class WebGLShader implements Shader
         {
             if (techniques.hasOwnProperty(p))
             {
-                shaderTechniques[p] = Technique.create(gd, shader, p, techniques[p]);
+                shaderTechniques[p] = WebGLTechnique.create(gd, shader, p, techniques[p]);
                 numTechniques += 1;
             }
         }
@@ -3898,15 +3914,13 @@ class WebGLShader implements Shader
 }
 
 //
-// TechniqueParameters
+// WebGLTechniqueParameters
 //
-class WebGLTechniqueParamteres implements TechniqueParameters
+class WebGLTechniqueParameters implements TechniqueParameters
 {
-    [paramName: string]: any
-
-    create(params: any): TechniqueParameters
+    static create(params: any): TechniqueParameters
     {
-        var techniqueParameters = new TechniqueParameters();
+        var techniqueParameters = new WebGLTechniqueParameters();
 
         if (params)
         {
@@ -3927,7 +3941,7 @@ class WebGLTechniqueParamteres implements TechniqueParameters
 // TechniqueParameterBuffer
 //
 var techniqueParameterBufferCreate =
-    function techniqueParameterBufferCreateFn(params)
+    function techniqueParameterBufferCreateFn(params): Float32Array
 {
     if (Float32Array.prototype.map === undefined)
     {
@@ -3962,7 +3976,7 @@ var techniqueParameterBufferCreate =
             return techniqueParameterBufferWriter;
         };
 
-        Float32Array.prototype.unmap = function techniqueParameterBufferUnmap(/* writer */) {
+        Float32Array.prototype.unmap = function techniqueParameterBufferUnmap(writer) {
         };
 
         Float32Array.prototype.setData = function techniqueParameterBufferSetData(data,
@@ -3994,14 +4008,13 @@ class WebGLDrawParameters implements DrawParameters
     static version = 1;
 
     // DrawParameters
-    technique       : Technique;
+    technique       : WebGLTechnique;
     primitive       : number;
-    indexBuffer     : IndexBuffer;
+    indexBuffer     : WebGLIndexBuffer;
     count           : number;
     firstIndex      : number;
     sortKey         : number;
     userData        : any;
-    [index: number] : any // TODO
 
     // WebGLDrawParameters
     endStreams: number;
@@ -4126,7 +4139,7 @@ class WebGLDrawParameters implements DrawParameters
         }
     }
 
-    getVertexBuffer(indx)
+    getVertexBuffer(indx: number): WebGLVertexBuffer
     {
         if (indx < 16)
         {
@@ -4138,7 +4151,7 @@ class WebGLDrawParameters implements DrawParameters
         }
     }
 
-    getSemantics(indx)
+    getSemantics(indx: number): WebGLSemantics
     {
         if (indx < 16)
         {
@@ -4150,11 +4163,12 @@ class WebGLDrawParameters implements DrawParameters
         }
     }
 
-    getOffset(indx)
+    getOffset(indx: number): number
     {
         if (indx < 16)
         {
-            return this[(indx * 3) + 2];
+            var i : number = (indx * 3) + 2;
+            return this[0];
         }
         else
         {
@@ -4182,9 +4196,9 @@ class WebGLDrawParameters implements DrawParameters
         return (this.endInstances - ((16 * 3) + 8));
     }
 
-    create(params: any): DrawParameters
+    static create(): WebGLDrawParameters
     {
-        return new DrawParameters();
+        return new WebGLDrawParameters();
     }
 }
 
@@ -4201,7 +4215,7 @@ interface WebGLGraphicsDeviceVertexFormat
     normalized: bool;
     normalizationScale: number;
     typedSetter: { () : void; };
-    typedArray: ArrayBufferView;
+    typedArray: any; // ArrayBufferView constructor
 };
 
 interface WebGLGraphicsDeviceState
@@ -4269,6 +4283,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     PIXELFORMAT_L8A8         : number;
     PIXELFORMAT_R5G5B5A1     : number;
     PIXELFORMAT_R5G6B5       : number;
+    PIXELFORMAT_R4G4B4A4     : number;
     PIXELFORMAT_R8G8B8A8     : number;
     PIXELFORMAT_R8G8B8       : number;
     PIXELFORMAT_D24S8        : number;
@@ -4353,14 +4368,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     SEMANTIC_ATTR14          : number;
     SEMANTIC_ATTR15          : number;
 
-    DEFAULT_SAMPLER: {
-        minFilter: number;
-        magFilter: number;
-        wrapS: number;
-        wrapT: number;
-        wrapR: number;
-        maxAnisotropy: number;
-    };
+    DEFAULT_SAMPLER          : WebGLSampler;
 
     // Members
     width: number;
@@ -4388,7 +4396,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     clientStateMask: number;
     attributeMask: number;
-    activeTechnique: Technique;
+    activeTechnique: WebGLTechnique;
     activeIndexBuffer: WebGLIndexBuffer;
     bindedVertexBuffer: WebGLVertexBuffer;
     activeRenderTarget: WebGLRenderTarget;
@@ -4397,7 +4405,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
     immediatePrimitive: number;
     immediateSemantics: WebGLSemantics;
 
-    fps: number;
     numFrames: number;
     previousFrameTime: number;
 
@@ -4405,7 +4412,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     compressedTexturesExtension: any;
     WEBGL_compressed_texture_s3tc: bool;
-    TEXTURE_MAX_ANISOTROPY_EXT: bool;
+    TEXTURE_MAX_ANISOTROPY_EXT: number;
     maxAnisotropy: number;
     WEBGL_draw_buffers: bool;
     drawBuffersExtension: any;
@@ -4414,7 +4421,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     metrics: WebGLMetrics;
 
-    drawIndexed(primitive, numIndices, first)
+    drawIndexed(primitive: number, numIndices: number, first?: number)
     {
         var gl = this.gl;
         var indexBuffer = this.activeIndexBuffer;
@@ -4443,7 +4450,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             activeTechnique.checkProperties(this);
         }
 
-        /*jshint bitwise: false*/
         if (1 === numPasses)
         {
             mask = (passes[0].semanticsMask & attributeMask);
@@ -4481,10 +4487,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
         }
-        /*jshint bitwise: true*/
     }
 
-    draw(primitive, numVertices, first)
+    draw(primitive: number, numVertices: number, first?: number)
     {
         var gl = this.gl;
 
@@ -4500,7 +4505,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             activeTechnique.checkProperties(this);
         }
 
-        /*jshint bitwise: false*/
         if (1 === numPasses)
         {
             mask = (passes[0].semanticsMask & attributeMask);
@@ -4538,7 +4542,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
         }
-        /*jshint bitwise: true*/
     }
 
     setTechniqueParameters()
@@ -4560,7 +4563,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var gl = gd.gl;
 
         var parameters = passes[0].parameters;
-        /*jshint forin: true*/
         for (var p in techniqueParameters)
         {
             var parameter = parameters[p];
@@ -4632,7 +4634,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
         }
-        /*jshint forin: false*/
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
@@ -4641,7 +4642,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var gl = gd.gl;
 
         var parameters = passes[0].parameters;
-        /*jshint forin: true*/
         for (var p in techniqueParameters)
         {
             var parameter = parameters[p];
@@ -4718,7 +4718,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
         }
-        /*jshint forin: false*/
     }
 
     setParametersDeferred(gd, passes, techniqueParameters)
@@ -4732,7 +4731,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             var parameters = pass.parameters;
             pass.dirty = true;
 
-            /*jshint forin: true*/
             for (var p in techniqueParameters)
             {
                 var parameter = parameters[p];
@@ -4769,7 +4767,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     }
                 }
             }
-            /*jshint forin: false*/
         }
     }
 
@@ -4825,43 +4822,46 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    setStream(vertexBuffer, semantics, offset)
+    setStream(vertexBuffer: VertexBuffer,
+              semantics: Semantics,
+              offset?: number)
     {
         debug.assert(vertexBuffer instanceof WebGLVertexBuffer);
         debug.assert(semantics instanceof WebGLSemantics);
 
         if (offset)
         {
-            offset *= vertexBuffer.strideInBytes;
+            offset *= (<WebGLVertexBuffer>vertexBuffer).strideInBytes;
         }
         else
         {
             offset = 0;
         }
 
-        this.bindVertexBuffer(vertexBuffer.glBuffer);
+        this.bindVertexBuffer((<WebGLVertexBuffer>vertexBuffer).glBuffer);
 
         var attributes = semantics;
         var numAttributes = attributes.length;
-        if (numAttributes > vertexBuffer.numAttributes)
+        if (numAttributes > (<WebGLVertexBuffer>vertexBuffer).numAttributes)
         {
-            numAttributes = vertexBuffer.numAttributes;
+            numAttributes = (<WebGLVertexBuffer>vertexBuffer).numAttributes;
         }
 
-        /*jshint bitwise: false*/
-        this.attributeMask |= vertexBuffer.bindAttributes(numAttributes, attributes, offset);
-        /*jshint bitwise: true*/
+        this.attributeMask |=
+            (<WebGLVertexBuffer>vertexBuffer).bindAttributes(numAttributes,
+                                                             attributes,
+                                                             offset);
     }
 
-    setIndexBuffer(indexBuffer)
+    setIndexBuffer(indexBuffer: IndexBuffer)
     {
-        if (this.activeIndexBuffer !== indexBuffer)
+        if (this.activeIndexBuffer !== <WebGLIndexBuffer>indexBuffer)
         {
-            this.activeIndexBuffer = indexBuffer;
+            this.activeIndexBuffer = <WebGLIndexBuffer>indexBuffer;
             var glBuffer;
             if (indexBuffer)
             {
-                glBuffer = indexBuffer.glBuffer;
+                glBuffer = (<WebGLIndexBuffer>indexBuffer).glBuffer;
             }
             else
             {
@@ -4877,7 +4877,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    drawArray(drawParametersArray, globalTechniqueParametersArray, sortMode)
+    drawArray(drawParametersArray: DrawParameters[],
+              globalTechniqueParametersArray: TechniqueParameters[],
+              sortMode?: number)
     {
         var gl = this.gl;
         var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
@@ -4927,7 +4929,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         for (var n = 0; n < numDrawParameters; n += 1)
         {
-            var drawParameters = drawParametersArray[n];
+            var drawParameters = <WebGLDrawParameters>(drawParametersArray[n]);
             var technique = drawParameters.technique;
             var endTechniqueParameters = drawParameters.endTechniqueParameters;
             var endStreams = drawParameters.endStreams;
@@ -5013,7 +5015,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
 
-            /*jshint bitwise: false*/
             if (indexBuffer)
             {
                 if (activeIndexBuffer !== indexBuffer)
@@ -5208,13 +5209,13 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     }
                 }
             }
-            /*jshint bitwise: true*/
         }
 
         this.activeIndexBuffer = activeIndexBuffer;
     }
 
-    beginDraw(primitive, numVertices, formats, semantics)
+    beginDraw(primitive: number, numVertices: number, formats: any[],
+              semantics: Semantics): WebGLVertexWriteIterator
     {
         this.immediatePrimitive = primitive;
         if (numVertices)
@@ -5271,7 +5272,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             var stride = immediateVertexBuffer.strideInBytes;
             var offset = 0;
 
-            /*jshint bitwise: false*/
             var vertexAttributes = immediateVertexBuffer.attributes;
 
             var semantics = this.immediateSemantics;
@@ -5295,7 +5295,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 offset += vertexAttribute.stride;
             }
             this.attributeMask |= deltaAttributeMask;
-            /*jshint bitwise: true*/
 
             this.draw(this.immediatePrimitive, numVerticesWritten, 0);
         }
@@ -5333,7 +5332,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    clear(color, depth, stencil)
+    clear(color: number[], depth?: number, stencil?: number)
     {
         var gl = this.gl;
         var state = this.state;
@@ -5445,7 +5444,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         this.attributeMask = 0;
 
-        /*jshint bitwise: false*/
         var clientStateMask = this.clientStateMask;
         var n;
         if (clientStateMask)
@@ -5459,7 +5457,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             }
             this.clientStateMask = 0;
         }
-        /*jshint bitwise: true*/
 
         this.resetStates();
 
@@ -5481,16 +5478,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return !(document.hidden || document['webkitHidden']);
     }
 
-    beginRenderTarget(renderTarget)
+    beginRenderTarget(renderTarget: RenderTarget): bool
     {
-        this.activeRenderTarget = renderTarget;
+        this.activeRenderTarget = <WebGLRenderTarget>renderTarget;
 
         if (debug)
         {
             this.metrics.renderTargetChanges +=1;
         }
 
-        return renderTarget.bind();
+        return (<WebGLRenderTarget>renderTarget).bind();
     }
 
     endRenderTarget()
@@ -5556,27 +5553,27 @@ class WebGLGraphicsDevice implements GraphicsDevice
         this.checkFullScreen();
     }
 
-    createTechniqueParameters(params)
+    createTechniqueParameters(params?): WebGLTechniqueParameters
     {
-        return TechniqueParameters.create(params);
+        return WebGLTechniqueParameters.create(params);
     }
 
-    createSemantics(attributes)
+    createSemantics(attributes: any[]): WebGLSemantics
     {
         return WebGLSemantics.create(this, attributes);
     }
 
-    createVertexBuffer(params)
+    createVertexBuffer(params: VertexBufferParameters): WebGLVertexBuffer
     {
         return WebGLVertexBuffer.create(this, params);
     }
 
-    createIndexBuffer(params)
+    createIndexBuffer(params: IndexBufferParameters): WebGLIndexBuffer
     {
         return WebGLIndexBuffer.create(this, params);
     }
 
-    createTexture(params)
+    createTexture(params: TextureParameters): TZWebGLTexture
     {
         return TZWebGLTexture.create(this, params);
     }
@@ -5586,37 +5583,40 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return WebGLVideo.create(params);
     }
 
-    createShader(params)
+    createShader(params: any): TZWebGLShader
     {
-        return Shader.create(this, params);
+        return TZWebGLShader.create(this, params);
     }
 
-    createTechniqueParameterBuffer(params)
+    createTechniqueParameterBuffer(params): TechniqueParameterBuffer
     {
-        return techniqueParameterBufferCreate(params);
+        // TOOD: We're returning a float array, which doesn't have all
+        // the proprties that are expected.
+        return <TechniqueParameterBuffer><any>
+            techniqueParameterBufferCreate(params);
     }
 
-    createRenderBuffer(params)
+    createRenderBuffer(params): WebGLRenderBuffer
     {
         return WebGLRenderBuffer.create(this, params);
     }
 
-    createRenderTarget(params)
+    createRenderTarget(params: RenderTargetParameters): WebGLRenderTarget
     {
         return WebGLRenderTarget.create(this, params);
     }
 
-    createOcclusionQuery(/* params */)
+    createOcclusionQuery(): OcclusionQuery
     {
         return null;
     }
 
-    createDrawParameters(params)
+    createDrawParameters(): WebGLDrawParameters
     {
-        return DrawParameters.create(params);
+        return WebGLDrawParameters.create();
     }
 
-    isSupported(name)
+    isSupported(name: string): bool
     {
         var gl = this.gl;
         if ("OCCLUSION_QUERIES" === name)
@@ -5701,7 +5701,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return undefined;
     }
 
-    maxSupported(name)
+    maxSupported(name: string): number
     {
         var gl = this.gl;
         if ("ANISOTROPY" === name)
@@ -5742,7 +5742,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return 0;
     }
 
-    loadTexturesArchive(params)
+    loadTexturesArchive(params: any)
     {
         var src = params.src;
         if (typeof TARLoader !== 'undefined')
@@ -5780,7 +5780,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    getScreenshot(compress, x?, y?, width?, height?)
+    getScreenshot(compress: bool, x?: number, y?: number,
+                  width?: number, height?: number): any
     {
         var gl = this.gl;
         var canvas = gl.canvas;
@@ -5801,7 +5802,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 y = 0;
             }
 
-            var target = this.activeRenderTarget;
+            var target : { width: number; height: number; } =
+                this.activeRenderTarget;
             if (!target)
             {
                 target = canvas;
@@ -5857,7 +5859,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    requestFullScreen(fullscreen)
+    requestFullScreen(fullscreen:bool): bool
     {
         if (fullscreen)
         {
@@ -5902,6 +5904,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 document.exitFullscreen();
             }
         }
+        return true;
     }
 
     createSampler(sampler)
@@ -6100,7 +6103,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var oldMask = this.clientStateMask;
         this.clientStateMask = mask;
 
-        /*jshint bitwise: false*/
         var disableMask = (oldMask & (~mask));
         var enableMask  = ((~oldMask) & mask);
         var n;
@@ -6150,7 +6152,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             }
             while (enableMask);
         }
-        /*jshint bitwise: true*/
     }
 
     setTexture(textureUnitIndex, texture, sampler)
