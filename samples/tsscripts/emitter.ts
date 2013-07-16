@@ -51,7 +51,7 @@ class ParticleSystem
     setWorldPosition(worldPosition)
     {
         this.worldPosition = worldPosition;
-    };
+    }
 
     createParticle(particle)
     {
@@ -86,7 +86,7 @@ class ParticleSystem
 
         // Set the next particle spawn time
         this.spawnNextParticle = spawnTime + this.minSpawnTime + (random() * this.diffSpawnTime);
-    };
+    }
 
     initialize()
     {
@@ -105,7 +105,7 @@ class ParticleSystem
                 color : v4One.slice()
             };
         }
-    };
+    }
 
     update(currentTime, deltaTime)
     {
@@ -187,7 +187,7 @@ class ParticleSystem
 
         this.numActiveParticles = numActiveParticles;
         this.dirtyWorldExtents = dirtyWorldExtents;
-    };
+    }
 
     getWorldExtents()
     {
@@ -244,7 +244,7 @@ class ParticleSystem
         extents[4] = yMax + halfSize;
         extents[5] = zMax + halfSize;
         return extents;
-    };
+    }
 
     destroy()
     {}
@@ -369,8 +369,8 @@ class ParticleSystem
         p.initialize();
 
         return p;
-    };
-};
+    }
+}
 
 ParticleSystem.prototype.indexBuffer = null;
 
@@ -485,7 +485,7 @@ class ParticleSystemRenderer
         }
 
         vertexBuffer.setData(vertexData, 0, numVerticesChanged);
-    };
+    }
 
     updateRenderableWorldExtents(particleSystem)
     {
@@ -497,7 +497,7 @@ class ParticleSystemRenderer
             geometryInstance.addCustomWorldExtents(worldExtents);
             particleSystem.dirtyWorldExtents = false;
         }
-    };
+    }
 
     initialize(particleSystem, material, node)
     {
@@ -548,7 +548,7 @@ class ParticleSystemRenderer
         particleSystem.node = node;
         particleSystem.extents = new Float32Array(6);
         particleSystem.vertexData = new Float32Array(numVertexBufferVertices * (3 + 2 + 4));
-    };
+    }
 
     destroy(particleSystems)
     {
@@ -565,7 +565,7 @@ class ParticleSystemRenderer
             ps.geometryInstance.destroy();
             delete ps.geometryInstance;
         }
-    };
+    }
 
     // ParticleSystemRenderer Constructor function
     static create(gd: GraphicsDevice, md: MathDevice): ParticleSystemRenderer
@@ -574,8 +574,8 @@ class ParticleSystemRenderer
         p.gd = gd;
         p.md = md;
         return p;
-    };
-};
+    }
+}
 
 //
 //  Emitter Object
@@ -604,7 +604,7 @@ class Emitter
         particleSystemRenderer.update(particleSystem, camera);
 
         particleSystemRenderer.updateRenderableWorldExtents(particleSystem);
-    };
+    }
 
     setMaterial(material)
     {
@@ -612,25 +612,25 @@ class Emitter
         var geometryInstance = particleSystem.geometryInstance;
 
         geometryInstance.setMaterial(material);
-    };
+    }
 
     setParticleColors(colorList)
     {
         var particleSystem = this.particleSystem;
         particleSystem.colorList = colorList;
-    };
+    }
 
     getNumActiveParticles()
     {
         return this.particleSystem.numActiveParticles;
-    };
+    }
 
     destroy()
     {
         // Must destroy renderer first
         this.particleSystemRenderer.destroy([this.particleSystem]);
         this.particleSystem.destroy();
-    };
+    }
 
     // Emitter Constructor function
     static create(gd: GraphicsDevice, md: MathDevice, material, node,
@@ -648,5 +648,5 @@ class Emitter
         e.particleSystemRenderer.initialize(e.particleSystem, material, node);
 
         return e;
-    };
-};
+    }
+}

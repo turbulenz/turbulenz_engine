@@ -2,8 +2,6 @@
 
 /*global BF: false*/
 
-declare var BF;
-
 //
 //  Passing vars vs `this` scope vs outer scope
 //
@@ -19,7 +17,7 @@ class VariablePass
     init()
     {
 
-    };
+    }
 
     run()
     {
@@ -55,21 +53,20 @@ class VariablePass
             d = func1(a, b, c, d, e);
             e = func1(a, b, c, d, e);
         }
-    };
+    }
 
     destroy()
     {
 
-    };
+    }
 
     // Constructor function
     static create()
     {
         var p = new VariablePass();
         return p;
-    };
-
-};
+    }
+}
 
 //
 //  VariableScopeThis: Call a function, accessing variables from `this` pointer
@@ -97,7 +94,7 @@ class VariableScopeThis
                 (c * c) *
                 (d * d) *
                 (e * e));
-    };
+    }
 
     init()
     {
@@ -106,7 +103,7 @@ class VariableScopeThis
         this.c = 0;
         this.d = 0;
         this.e = 0;
-    };
+    }
 
     run()
     {
@@ -132,12 +129,12 @@ class VariableScopeThis
             this.d = this.func4();
             this.e = this.func4();
         }
-    };
+    }
 
     destroy()
     {
 
-    };
+    }
 
     // Constructor function
     static create()
@@ -149,8 +146,8 @@ class VariableScopeThis
         p.d = 0;
         p.e = 0;
         return p;
-    };
-};
+    }
+}
 
 //
 //  VariableScopeOuter: Call a function, accessing the parameters from outer scope
@@ -163,7 +160,7 @@ class VariableScopeOuter
     init()
     {
 
-    };
+    }
 
     run()
     {
@@ -199,20 +196,20 @@ class VariableScopeOuter
             d = func2();
             e = func2();
         }
-    };
+    }
 
     destroy()
     {
 
-    };
+    }
 
     // Constructor function
     static create()
     {
         var p = new VariableScopeOuter();
         return p;
-    };
-};
+    }
+}
 
 var variablePass = VariablePass.create();
 var variableScopeThis = VariableScopeThis.create();

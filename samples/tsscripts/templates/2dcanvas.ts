@@ -31,10 +31,11 @@ TurbulenzEngine.onload = function onloadFn()
     var mathDeviceParameters = {};
     var mathDevice = TurbulenzEngine.createMathDevice(mathDeviceParameters);
 
-    /*{% if not tz_canvas %}*/
-    var graphicsDeviceParameters = { };
-    var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
-    /*{% endif %}*/
+    if (!TurbulenzEngine.canvas)
+    {
+        var graphicsDeviceParameters = { };
+        var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
+    }
 
     var canvas, ctx, crateImage, stonesImage, stonesPattern;
 
@@ -44,44 +45,46 @@ TurbulenzEngine.onload = function onloadFn()
     // Create game session and load textures
     var mappingTableReceived = function mappingTableReceivedFn(mappingTable)
     {
-        /*{% if tz_canvas %}*/
-        var crateImageLoading = new Image();
-        crateImageLoading.onload = function ()
+        if (TurbulenzEngine.canvas)
         {
-            crateImage = crateImageLoading;
-        };
-        crateImageLoading.src = mappingTable.getURL("textures/crate.jpg");
-
-        var stonesImageLoading = new Image();
-        stonesImageLoading.onload = function ()
-        {
-            stonesImage = stonesImageLoading;
-        };
-        stonesImageLoading.src = mappingTable.getURL("textures/stones.jpg");
-
-        /*{% else %}*/
-        var crateImageParameters =
-        {
-            src     : mappingTable.getURL("textures/crate.jpg"),
-            mipmaps : true,
-            onload  : function (texture)
+            var crateImageLoading = new Image();
+            crateImageLoading.onload = function ()
             {
-                crateImage = texture;
-            }
-        };
-        graphicsDevice.createTexture(crateImageParameters);
+                crateImage = crateImageLoading;
+            };
+            crateImageLoading.src = mappingTable.getURL("textures/crate.jpg");
 
-        var stonesImageParameters =
-        {
-            src     : mappingTable.getURL("textures/stones.jpg"),
-            mipmaps : true,
-            onload  : function (texture)
+            var stonesImageLoading = new Image();
+            stonesImageLoading.onload = function ()
             {
-                stonesImage = texture;
-            }
-        };
-        graphicsDevice.createTexture(stonesImageParameters);
-        /*{% endif %}*/
+                stonesImage = stonesImageLoading;
+            };
+            stonesImageLoading.src = mappingTable.getURL("textures/stones.jpg");
+        }
+        else
+        {
+            var crateImageParameters =
+                {
+                    src     : mappingTable.getURL("textures/crate.jpg"),
+                    mipmaps : true,
+                    onload  : function (texture)
+                    {
+                        crateImage = texture;
+                    }
+                };
+            graphicsDevice.createTexture(crateImageParameters);
+
+            var stonesImageParameters =
+                {
+                    src     : mappingTable.getURL("textures/stones.jpg"),
+                    mipmaps : true,
+                    onload  : function (texture)
+                    {
+                        stonesImage = texture;
+                    }
+                };
+            graphicsDevice.createTexture(stonesImageParameters);
+        }
     };
 
     var gameSessionCreated = function gameSessionCreatedFn(gameSession)
@@ -93,15 +96,18 @@ TurbulenzEngine.onload = function onloadFn()
     var gameSession = TurbulenzServices.createGameSession(requestHandler, gameSessionCreated);
 
     // Create canvas object
-    /*{% if tz_canvas %}*/
-    canvas = TurbulenzEngine.canvas;
 
-    var numFrames = 0;
-    var lastSecond = 0;
+    if (TurbulenzEngine.canvas)
+    {
+        canvas = TurbulenzEngine.canvas;
 
-    /*{% else %}*/
-    canvas = Canvas.create(graphicsDevice, mathDevice);
-    /*{% endif %}*/
+        var numFrames = 0;
+        var lastSecond = 0;
+    }
+    else
+    {
+        canvas = Canvas.create(graphicsDevice, mathDevice);
+    }
 
     ctx = canvas.getContext('2d');
 
@@ -219,10 +225,10 @@ TurbulenzEngine.onload = function onloadFn()
     radgrad4.addColorStop(0.99, 'rgba(228,199,0,0)');
     radgrad4.addColorStop(1, 'rgba(228,199,0,0)');
 
-    //
+
     // Update: Should update the input, physics, sound and other js libraries used.
     //         The function should then trigger the rendering using the graphicsDevice
-    //
+
     function update()
     {
         // Gets the currentTime to be used in calculations for this frame
@@ -238,28 +244,37 @@ TurbulenzEngine.onload = function onloadFn()
         var deviceWidth, deviceHeight, i, j, points, numPoints, point;
 
         // Render the color
-        /*{% if not tz_canvas %}*/
-        if (graphicsDevice.beginFrame())
+
+        var ok = false;
+        if (TurbulenzEngine.canvas)
         {
-            deviceWidth = graphicsDevice.width;
-            deviceHeight = graphicsDevice.height;
-
-            if (canvas.width !== deviceWidth)
-            {
-                canvas.width = deviceWidth;
-            }
-            if (canvas.height !== deviceHeight)
-            {
-                canvas.height = deviceHeight;
-            }
-
-            ctx.beginFrame();
-
-        /*{% else %}*/
             deviceWidth = canvas.width;
             deviceHeight = canvas.height;
-        /*{% endif %}*/
+            ok =true;
+        }
+        else
+        {
+            if (graphicsDevice.beginFrame())
+            {
+                deviceWidth = graphicsDevice.width;
+                deviceHeight = graphicsDevice.height;
 
+                if (canvas.width !== deviceWidth)
+                {
+                    canvas.width = deviceWidth;
+                }
+                if (canvas.height !== deviceHeight)
+                {
+                    canvas.height = deviceHeight;
+                }
+
+                ctx.beginFrame();
+                ok = true;
+            }
+        }
+
+        if (ok)
+        {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, deviceWidth, deviceHeight);
 
@@ -498,25 +513,26 @@ TurbulenzEngine.onload = function onloadFn()
             //ctx.shadowOffsetX = 0;
             //ctx.shadowOffsetY = 0;
 
-        /*{% if tz_canvas %}*/
-
-            numFrames += 1;
-
-            if ((currentTime - lastSecond) >= 1)
+            if (TurbulenzEngine.canvas)
             {
-                currentFPS = (numFrames / ((currentTime - lastSecond))).toFixed(2);
-                numFrames = 0;
-                lastSecond = currentTime;
+                numFrames += 1;
+
+                if ((currentTime - lastSecond) >= 1)
+                {
+                    currentFPS = (numFrames / ((currentTime - lastSecond))).toFixed(2);
+                    numFrames = 0;
+                    lastSecond = currentTime;
+                }
             }
+            else
+            {
+                ctx.endFrame();
 
-        /*{% else %}*/
-            ctx.endFrame();
+                graphicsDevice.endFrame();
 
-            graphicsDevice.endFrame();
-
-            currentFPS = (graphicsDevice.fps).toFixed(2);
+                currentFPS = (graphicsDevice.fps).toFixed(2);
+            }
         }
-        /*{% endif %}*/
 
         if (lastFPS !== currentFPS)
         {

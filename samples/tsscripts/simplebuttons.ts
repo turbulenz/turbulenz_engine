@@ -56,25 +56,25 @@ class SimpleButtonManager
     {
         var onMouseUp = (mouseButton: number, x: number, y: number) =>
         {
-            loopButtons((button: SimpleButton) => {
-                    if (this.checkOverlap(x, y, button))
-                    {
-                        button.callback();
-                    }
-                });
+            SimpleButtonManager.loopButtons((button: SimpleButton) => {
+                if (this.checkOverlap(x, y, button))
+                {
+                    button.callback();
+                }
+            });
         };
         inputDevice.addEventListener('mouseup', onMouseUp);
 
         var onMouseOver = (x: number, y: number) =>
         {
-            mouseX = x;
-            mouseY = y;
-            loopButtons((button: SimpleButton) => {
-                    button.hovering = this.checkOverlap(x, y, button);
-                });
+            var mouseX = x;
+            var mouseY = y;
+            SimpleButtonManager.loopButtons((button: SimpleButton) => {
+                button.hovering = this.checkOverlap(x, y, button);
+            });
         };
         inputDevice.addEventListener('mouseover', onMouseOver);
-    };
+    }
 
     static addButton(params: SimpleButtonParams)
     {
@@ -91,10 +91,10 @@ class SimpleButtonManager
         button.hovering = this.checkOverlap(this.mouseX, this.mouseY, button);
 
         SimpleButtonManager.buttons[button.id] = button;
-    };
+    }
 
     static clearButtons()
     {
         SimpleButtonManager.buttons = {};
-    };
-};
+    }
+}

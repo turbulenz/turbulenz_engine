@@ -2,10 +2,9 @@
 
 /*global BF: false*/
 
-declare var BF;
-
 //
-//  Recursive vs iterative: Perform functionality on a set of data by accessing it in both methods
+//  Recursive vs iterative: Perform functionality on a set of data by
+//  accessing it in both methods
 //
 
 //
@@ -42,7 +41,7 @@ class Recursive
         }
 
         this.root = createNode(this.childrenCount, this.depth);
-    };
+    }
 
     run()
     {
@@ -70,21 +69,21 @@ class Recursive
         }
 
         this.result = processNodeFn(this.root, 0);
-    };
+    }
 
     destroy()
     {
         this.root = {};
         this.result = 0;
-    };
+    }
 
     // Constructor function
     static create()
     {
         var r = new Recursive();
         return r;
-    };
-};
+    }
+}
 
 //
 //  Iterative: Perform a task on a data set by iterating over a custom stack
@@ -121,7 +120,7 @@ class Iterative
         }
 
         this.root = createNode(this.childrenCount, this.depth);
-    };
+    }
 
     run()
     {
@@ -154,21 +153,21 @@ class Iterative
         while (length !== 0);
 
         this.result = accum;
-    };
+    }
 
     destroy()
     {
         this.root = {};
         this.result = 0;
-    };
+    }
 
     // Constructor function
     static create()
     {
         var i = new Iterative();
         return i;
-    };
-};
+    }
+}
 
 var recursive = Recursive.create();
 var iterative = Iterative.create();

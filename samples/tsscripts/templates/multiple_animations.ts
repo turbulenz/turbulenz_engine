@@ -59,11 +59,10 @@
 /*global window: false */
 
 // We put some custom data onto Scene
-class CustomScene extends Scene
+declare class CustomScene extends Scene
 {
     skinnedNodes: SceneNode[];
-};
-
+}
 
 TurbulenzEngine.onload = function onloadFn()
 {

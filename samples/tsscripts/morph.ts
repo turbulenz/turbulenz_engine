@@ -596,13 +596,13 @@ class MorphShape extends Geometry
     //
     // MorphShape Constructor
     //
-    static create(initialWeight): MorphShape
+    static create(initialWeight?): MorphShape
     {
         var m = <MorphShape>(Geometry.create());
         m.initialWeight = initialWeight;
         return m;
-    };
-};
+    }
+}
 
 //
 // Morph
@@ -650,7 +650,7 @@ class Morph
             result = true;
         }
         return result;
-    };
+    }
 
     //
     // generateSemanticsNames
@@ -729,12 +729,12 @@ class Morph
         }
         this.semanticsNamesArray = semanticsNamesArray;
         return true;
-    };
+    }
 
     getShapeCount()
     {
         return (this.shapes.length + 1);
-    };
+    }
 
     //
     // destroy
@@ -750,7 +750,7 @@ class Morph
 
         delete this.type;
         delete this.semanticsNamesArray;
-    };
+    }
 
     //
     // Morph Constructor
@@ -769,8 +769,8 @@ class Morph
         morph.type = "morph";
 
         return morph;
-    };
-};
+    }
+}
 
 //
 // MorphInstance
@@ -824,7 +824,7 @@ class MorphInstance
         newInstance.worldExtentsUpdate = -1;
 
         return newInstance;
-    };
+    }
 
     //
     // setNode
@@ -849,7 +849,7 @@ class MorphInstance
             }
         }
         this.worldExtentsUpdate = -1;
-    };
+    }
 
     //
     // getNode
@@ -857,7 +857,7 @@ class MorphInstance
     getNode()
     {
         return this.node;
-    };
+    }
 
     //
     // setMaterial
@@ -871,7 +871,7 @@ class MorphInstance
 
         this.renderUpdate = undefined;
         this.rendererInfo = undefined;
-    };
+    }
 
     //
     // getMaterial
@@ -879,7 +879,7 @@ class MorphInstance
     getMaterial()
     {
         return this.sharedMaterial;
-    };
+    }
 
     //
     // getWorldExtents
@@ -935,7 +935,7 @@ class MorphInstance
             worldExtents[5] = (ct2 + ht2);
         }
         return worldExtents;
-    };
+    }
 
     //
     // addCustomWorldExtents
@@ -946,7 +946,7 @@ class MorphInstance
         var alreadyHadCustomExtents = (this.worldExtentsUpdate === this.maxUpdateValue);
         this.worldExtentsUpdate = this.maxUpdateValue;
         this.node.renderableWorldExtentsUpdated(alreadyHadCustomExtents);
-    };
+    }
 
     //
     // removeCustomWorldExtents
@@ -955,7 +955,7 @@ class MorphInstance
     {
         this.worldExtentsUpdate = -1;
         this.node.renderableWorldExtentsRemoved();
-    };
+    }
 
     //
     // getCustomWorldExtents
@@ -967,7 +967,7 @@ class MorphInstance
             return this.worldExtents;
         }
         return undefined;
-    };
+    }
 
     //
     // hasCustomWorldExtents
@@ -975,7 +975,7 @@ class MorphInstance
     hasCustomWorldExtents()
     {
         return this.worldExtentsUpdate === this.maxUpdateValue;
-    };
+    }
 
     //
     // destroy
@@ -1002,7 +1002,7 @@ class MorphInstance
         delete this.sorting;
         delete this.cachedSemantics;
         delete this.semanticsHashes;
-    };
+    }
 
     //
     // prepareDrawParameters
@@ -1055,7 +1055,7 @@ class MorphInstance
             drawParameters.firstIndex =  surface.first;
             drawParameters.count = surface.numVertices;
         }
-    };
+    }
 
     //
     // generateSemantics
@@ -1071,12 +1071,12 @@ class MorphInstance
             cachedSemantics[semanticsHash] = semantics;
         }
         return semanticsHash;
-    };
+    }
 
     setWeights(weights)
     {
         this.techniqueParameters['morphWeights'] = weights;
-    };
+    }
 
     //
     // registerEffects
@@ -1155,7 +1155,7 @@ class MorphInstance
                             loadTechniques : loadTechniques };
         effectTypeData.loadTechniques(shaderManager);
         effect.add(morph, effectTypeData);
-    };
+    }
 
     //
     // Constructor function
@@ -1191,5 +1191,5 @@ class MorphInstance
         }
 
         return instance;
-    };
-};
+    }
+}

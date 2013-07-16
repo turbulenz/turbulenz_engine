@@ -47,12 +47,12 @@ class BenchmarkFramework
 
         params.targetRuns = (targetMean === 0) ? 1 : floor(testExecutionTime / targetMean);
         tests[tests.length] = params;
-    };
+    }
 
     setTZ(tz)
     {
         this.tz = tz;
-    };
+    }
 
     nextEstimateTest(index)
     {
@@ -74,7 +74,7 @@ class BenchmarkFramework
         {
             this.runEstimateTest(index);
         }
-    };
+    }
 
     runEstimateTest(index)
     {
@@ -122,7 +122,7 @@ class BenchmarkFramework
         {
             finishTest();
         }
-    };
+    }
 
     startEstimateRuns(index)
     {
@@ -141,7 +141,7 @@ class BenchmarkFramework
         yieldBenchmark(this.runEstimateTest(index));
 
         return true;
-    };
+    }
 
     hasFinishedEstimate(index)
     {
@@ -151,7 +151,7 @@ class BenchmarkFramework
             return false;
         }
         return (tests[index].estimatedRuns !== undefined);
-    };
+    }
 
     hasFinishedAllEstimates()
     {
@@ -165,7 +165,7 @@ class BenchmarkFramework
             }
         }
         return true;
-    };
+    }
 
     clearAllEstimates()
     {
@@ -175,7 +175,7 @@ class BenchmarkFramework
         {
             tests[i].estimatedRuns = undefined;
         }
-    };
+    }
 
     yieldBenchmark(callback)
     {
@@ -185,7 +185,7 @@ class BenchmarkFramework
         {
             tz.setTimeout(callback, yieldTimeout);
         }
-    };
+    }
 
     flush()
     {
@@ -195,14 +195,14 @@ class BenchmarkFramework
         {
             tz.flush();
         }
-    };
+    }
 
     getBenchmarkTime()
     {
         var tz = this.tz;
         //Note: Only use for calculating relative time in seconds
         return (tz ? tz.time : (new Date().getTime() / 1000));
-    };
+    }
 
     findTestIndex(name)
     {
@@ -220,12 +220,12 @@ class BenchmarkFramework
             }
         }
         return undefined;
-    };
+    }
 
     getTestCount()
     {
         return (this.tests.length);
-    };
+    }
 
     // Constructor function
     static create(params): BenchmarkFramework
@@ -237,5 +237,5 @@ class BenchmarkFramework
         b.yieldTimeout = params.yieldTimeout; // Milliseconds
         b.estimateElapsed = params.estimateElapsed; // Seconds
         return b;
-    };
-};
+    }
+}

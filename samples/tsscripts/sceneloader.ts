@@ -42,7 +42,7 @@ class SceneLoader
             }
         }
         return this.dependenciesLoaded;
-    };
+    }
 
     load(parameters)
     {
@@ -165,13 +165,13 @@ class SceneLoader
         }
 
         this.request(parameters.assetPath, sceneReceivedFn);
-    };
+    }
 
     setPathRemapping(prm, assetUrl)
     {
         this.pathRemapping = prm;
         this.pathPrefix = assetUrl;
-    };
+    }
 
     static create()
     {
@@ -191,5 +191,5 @@ class SceneLoader
         sceneLoader.pathPrefix = "";
 
         return sceneLoader;
-    };
-};
+    }
+}

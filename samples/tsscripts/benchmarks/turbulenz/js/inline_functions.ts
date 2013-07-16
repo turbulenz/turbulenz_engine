@@ -2,8 +2,6 @@
 
 /*global BF: false*/
 
-declare var BF;
-
 //
 //  Inline functions vs non-inline functions
 //
@@ -37,7 +35,7 @@ class InlineFunction
                 };
         }
         this.array = array;
-    };
+    }
 
     run()
     {
@@ -115,7 +113,7 @@ class InlineFunction
                 obj.quatRes = [q1x + q2x, q1y + q2y, q1z + q2z, q1w + q2w];
             }
         }
-    };
+    }
 
     destroy()
     {
@@ -126,7 +124,7 @@ class InlineFunction
             delete array[i];
         }
         delete this.array;
-    };
+    }
 
     // Constructor function
     static create()
@@ -134,8 +132,8 @@ class InlineFunction
         var a = new InlineFunction();
         a.array = [];
         return a;
-    };
-};
+    }
+}
 
 //
 //  Non-inline function: Call the non-inline version of a math function
@@ -166,7 +164,7 @@ class NonInlineFunction
                 };
         }
         this.array = array;
-    };
+    }
 
     run()
     {
@@ -249,7 +247,7 @@ class NonInlineFunction
 
             obj.quatRes = quatslerp(j1, j2, delta);
         }
-    };
+    }
 
     destroy()
     {
@@ -260,7 +258,7 @@ class NonInlineFunction
             delete array[i];
         }
         delete this.array;
-    };
+    }
 
     // Constructor function
     static create()
@@ -268,8 +266,8 @@ class NonInlineFunction
         var a = new NonInlineFunction();
         a.array = [];
         return a;
-    };
-};
+    }
+}
 
 var inlineFunction = InlineFunction.create();
 var nonInlineFunction = NonInlineFunction.create();

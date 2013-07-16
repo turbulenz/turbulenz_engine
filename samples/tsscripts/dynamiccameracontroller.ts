@@ -37,17 +37,17 @@ class DynamicCameraController
     setRate(rate)
     {
         this.rate = rate;
-    };
+    }
 
     setChaseRate(rate)
     {
         this.chaseRate = rate;
-    };
+    }
 
     setTracking(isTracking)
     {
         this.isTracking = isTracking;
-    };
+    }
 
     // TODO: are these args really optional?
     setCameraTargetPos(pos, time?, delta?)
@@ -63,7 +63,7 @@ class DynamicCameraController
         this.currentTime = time;
         this.startTime = time;
         this.endTime = this.currentTime + delta;
-    };
+    }
 
     setTrackTarget(pos)
     {
@@ -73,7 +73,7 @@ class DynamicCameraController
         var p2 = pos[2];
 
         this.trackCurPos = md.v3Build(p0, p1, p2);
-    };
+    }
 
     setCameraMode(mode)
     {
@@ -98,19 +98,19 @@ class DynamicCameraController
             // Not a recognised mode
             return false;
         }
-    };
+    }
 
     snapCameraToTarget()
     {
         var md = this.md;
         md.m43SetPos(this.camera.matrix, this.camTargetPos);
-    };
+    }
 
     isCameraAtTarget(): bool
     {
         var md = this.md;
         return md.v3Equal(md.m43Pos(this.camera.matrix), this.camTargetPos);
-    };
+    }
 
     getLookAtMatrix()
     {
@@ -127,7 +127,7 @@ class DynamicCameraController
         var yaxis = v3Cross.call(md, zaxis, xaxis);
 
         return md.m43Build(xaxis, yaxis, zaxis, currentPos);
-    };
+    }
 
     transform(delta)
     {
@@ -166,12 +166,12 @@ class DynamicCameraController
         }
 
         md.m43SetPos(this.camera.matrix, posResult);
-    };
+    }
 
     rotate()
     {
         this.camera.matrix = this.getLookAtMatrix();
-    };
+    }
 
     update(delta)
     {
@@ -232,7 +232,7 @@ class DynamicCameraController
         {
             this.camera.updateViewMatrix();
         }
-    };
+    }
 
     // Constructor function
     static create(camera: Camera, gd: GraphicsDevice): DynamicCameraController
@@ -257,5 +257,5 @@ class DynamicCameraController
         c.isTracking = false;
 
         return c;
-    };
-};
+    }
+}
