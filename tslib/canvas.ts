@@ -952,6 +952,7 @@ class CanvasContext
     subBufferDataCache       : {};
 
     tempRect                 : any; // floatArrayConstructor(8);
+    tempPoint                : any; // floatArrayConstructor(2);
 
     tempVertices             : number[];
 
@@ -1115,6 +1116,7 @@ class CanvasContext
         this.subBufferDataCache = {};
 
         this.tempRect = new floatArrayConstructor(8);
+        this.tempPoint = new floatArrayConstructor(2);
         /*jshint newcap: true*/
 
         this.tempVertices = [];
@@ -1692,7 +1694,7 @@ class CanvasContext
         }
         else
         {
-            var p0 = this.untransformPoint(currentSubPath[numCurrentSubPathElements - 1]);
+            var p0 = this.untransformPoint(currentSubPath[numCurrentSubPathElements - 1], this.tempPoint);
             x0 = p0[0];
             y0 = p0[1];
         }
@@ -3852,7 +3854,7 @@ class CanvasContext
         this.resetTransformMethods();
     };
 
-    untransformPoint(p)
+    untransformPoint(p, dst)
     {
         if (this.transformPoint === this.transformPointIdentity)
         {
@@ -3865,8 +3867,9 @@ class CanvasContext
 
         if (this.transformPoint === this.transformPointTranslate)
         {
-            return [(x - m[2]),
-                    (y - m[5])];
+            dst[0] = (x - m[2]);
+            dst[1] = (y - m[5]);
+            return dst;
         }
 
         var m0 = m[0];
@@ -3882,7 +3885,7 @@ class CanvasContext
         var det = (m0 * m4 - m1 * m3);
         if (det === 0.0)
         {
-            return [x, y];
+            return p;
         }
 
         r0 = m4;
@@ -3903,8 +3906,9 @@ class CanvasContext
             r5 *= detrecp;
         }
 
-        return [((x * r0) + (y * r1) + r2),
-                ((x * r3) + (y * r4) + r5)];
+        dst[0] = ((x * r0) + (y * r1) + r2);
+        dst[1] = ((x * r3) + (y * r4) + r5);
+        return dst;
     };
 
     calculateGradientUVtransform(gradientMatrix)
