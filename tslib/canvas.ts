@@ -4382,7 +4382,7 @@ class CanvasContext
         var numPoints = points.length;
         var angle, angleDiff, i, j;
 
-        var angleStep = (2.0 / (radius * this.pixelRatio));
+        var angleStep = (1.0 / Math.sqrt(radius * this.pixelRatio));
 
         var m = this.matrix;
         var m0 = (m[0] * radius);
