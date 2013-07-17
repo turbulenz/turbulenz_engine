@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-07-17
+
+- Added id property to Texture, VertexBuffer, IndexBuffer, RenderBuffer, RenderTarget, Shader, and Technique objects.
+
 2013-07-15
 
 - Canvas 2D API no longer requires a MathDevice object.
