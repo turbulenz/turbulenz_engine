@@ -3168,6 +3168,7 @@ Technique.prototype =
         {
             if (p !== 'version' &&
                 p !== 'name' &&
+                p !== 'id' &&
                 p !== 'passes' &&
                 p !== 'numPasses' &&
                 p !== 'device' &&
@@ -3491,6 +3492,12 @@ Technique.prototype =
                 });
 
             Object.defineProperty(this, 'name', {
+                    writable : false,
+                    enumerable : false,
+                    configurable : false
+                });
+
+            Object.defineProperty(this, 'id', {
                     writable : false,
                     enumerable : false,
                     configurable : false
