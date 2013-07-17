@@ -10,9 +10,14 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-07-15
+
+- Canvas 2D API no longer requires a MathDevice object.
+
 2013-07-11
 
 - When setting a negative or invalid score the leaderboard manager will now raise an error.
+- Added getTime method to TurbulenzEngine.
 
 2013-06-12
 
