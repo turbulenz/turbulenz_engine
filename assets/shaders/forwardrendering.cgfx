@@ -1365,6 +1365,23 @@ technique normalmap_alphatest_skinned
     }
 }
 
+technique normalmap_specularmap_alphamap_skinned
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = false;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+
+        VertexProgram   = compile glslv vp_normalmap_skinned();
+        FragmentProgram = compile glslf fp_normalmap_specularmap_alphamap();
+    }
+}
+
 technique normalmap_specularmap_alphatest_skinned
 {
     pass
