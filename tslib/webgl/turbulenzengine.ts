@@ -846,7 +846,10 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             if (looksLikeNetbook())
             {
                 systemInfo.platformProfile = "tablet";
-                debug.log("Setting platformProfile to 'tablet'");
+                if (debug)
+                {
+                    debug.log("Setting platformProfile to 'tablet'");
+                }
             }
         }
         else
@@ -881,7 +884,10 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                     if (looksLikeNetbook())
                     {
                         systemInfo.platformProfile = "tablet";
-                        debug.log("Setting platformProfile to 'tablet'");
+                        if (debug)
+                        {
+                            debug.log("Setting platformProfile to 'tablet'");
+                        }
                     }
                 }
                 else

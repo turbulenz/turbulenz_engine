@@ -399,7 +399,7 @@ CanvasLinearGradient.prototype =
         var stops = this.stops;
         var numStops = stops.length;
 
-        var parsedColor = parseCSSColor(color, []);
+        var parsedColor = parseCSSColor(color, new Array(4));
 
         if (parsedColor[3] < 1.0)
         {
@@ -638,7 +638,7 @@ CanvasRadialGradient.prototype =
 
         var stops = this.stops;
         var numStops = stops.length;
-        var parsedColor = parseCSSColor(color, []);
+        var parsedColor = parseCSSColor(color, new Array(4));
 
         if (parsedColor[3] < 1.0)
         {
@@ -902,7 +902,6 @@ class CanvasContext
 
     // private variables
     gd                       : GraphicsDevice;
-    md                       : MathDevice;
 
     fm                       : FontManager;
 
@@ -953,6 +952,7 @@ class CanvasContext
     subBufferDataCache       : {};
 
     tempRect                 : any; // floatArrayConstructor(8);
+    tempPoint                : any; // floatArrayConstructor(2);
 
     tempVertices             : number[];
 
@@ -1029,7 +1029,7 @@ class CanvasContext
     //
     // CanvasContext
     //
-    constructor(canvas, gd, md, width, height)
+    constructor(canvas, gd, width, height)
     {
         // public variables
         this.canvas = canvas;
@@ -1052,7 +1052,6 @@ class CanvasContext
 
         // private variables
         this.gd = gd;
-        this.md = md;
 
         this.fm = null;
 
@@ -1064,14 +1063,18 @@ class CanvasContext
         this.width = width;
         this.height = height;
 
-        this.screen = md.v4Build((2 / width), (-2 / height), -1, 1);
+        /*jshint newcap: false*/
+        var floatArrayConstructor = this.floatArrayConstructor;
+
+        this.screen = new floatArrayConstructor(4);
+        this.screen[0] = (2 / width);
+        this.screen[1] = (-2 / height);
+        this.screen[2] = -1;
+        this.screen[3] = 1;
 
         this.subPaths = [];
         this.needToSimplifyPath = [];
         this.currentSubPath = [];
-
-        /*jshint newcap: false*/
-        var floatArrayConstructor = this.floatArrayConstructor;
 
         this.activeVertexBuffer = null;
         this.activeTechnique = null;
@@ -1113,14 +1116,24 @@ class CanvasContext
         this.subBufferDataCache = {};
 
         this.tempRect = new floatArrayConstructor(8);
+        this.tempPoint = new floatArrayConstructor(2);
         /*jshint newcap: true*/
 
         this.tempVertices = [];
 
         this.tempStack = [];
 
-        this.v4Zero = md.v4BuildZero();
-        this.v4One = md.v4BuildOne();
+        this.v4Zero = new floatArrayConstructor(4);
+        this.v4Zero[0] = 0;
+        this.v4Zero[1] = 0;
+        this.v4Zero[2] = 0;
+        this.v4Zero[3] = 0;
+
+        this.v4One = new floatArrayConstructor(4);
+        this.v4One[0] = 1;
+        this.v4One[1] = 1;
+        this.v4One[2] = 1;
+        this.v4One[3] = 1;
 
         this.cachedColors = {};
         this.numCachedColors = 0;
@@ -1135,8 +1148,8 @@ class CanvasContext
         this.uvtransform[4] = 1;
         this.uvtransform[5] = 0;
 
-        this.tempColor = md.v4BuildZero();
-        this.tempScreen = md.v4BuildZero();
+        this.tempColor = new floatArrayConstructor(4);
+        this.tempScreen = new floatArrayConstructor(4);
 
         this.tempImage = null;
         this.imageTechnique = shader.getTechnique("image");
@@ -1681,7 +1694,7 @@ class CanvasContext
         }
         else
         {
-            var p0 = this.untransformPoint(currentSubPath[numCurrentSubPathElements - 1]);
+            var p0 = this.untransformPoint(currentSubPath[numCurrentSubPathElements - 1], this.tempPoint);
             x0 = p0[0];
             y0 = p0[1];
         }
@@ -3017,7 +3030,12 @@ class CanvasContext
         var globalAlpha = this.globalAlpha;
         if (globalAlpha < 1.0)
         {
-            color = this.md.v4Build(color[0], color[1], color[2], (color[3] * globalAlpha), this.tempColor);
+            var tempColor = this.tempColor;
+            tempColor[0] = color[0];
+            tempColor[1] = color[1];
+            tempColor[2] = color[2];
+            tempColor[3] = (color[3] * globalAlpha);
+            color = tempColor;
         }
 
         var technique = this.textureTechniques[this.globalCompositeOperation];
@@ -3206,11 +3224,12 @@ class CanvasContext
                 var globalAlpha = this.globalAlpha;
                 if (globalAlpha < 1.0)
                 {
-                    color = this.md.v4Build(color[0],
-                                            color[1],
-                                            color[2],
-                                            (color[3] * globalAlpha),
-                                            this.tempColor);
+                    var tempColor = this.tempColor;
+                    tempColor[0] = color[0];
+                    tempColor[1] = color[1];
+                    tempColor[2] = color[2];
+                    tempColor[3] = (color[3] * globalAlpha);
+                    color = tempColor;
                 }
 
                 this.setTechniqueWithColor(technique, this.screen, color);
@@ -3375,7 +3394,7 @@ class CanvasContext
     //
     // Public Turbulenz Canvas Context API
     //
-    beginFrame(target, viewportRect): bool
+    beginFrame(target, viewportRect?): bool
     {
         if (this.target)
         {
@@ -3835,7 +3854,7 @@ class CanvasContext
         this.resetTransformMethods();
     };
 
-    untransformPoint(p)
+    untransformPoint(p, dst)
     {
         if (this.transformPoint === this.transformPointIdentity)
         {
@@ -3848,8 +3867,9 @@ class CanvasContext
 
         if (this.transformPoint === this.transformPointTranslate)
         {
-            return [(x - m[2]),
-                    (y - m[5])];
+            dst[0] = (x - m[2]);
+            dst[1] = (y - m[5]);
+            return dst;
         }
 
         var m0 = m[0];
@@ -3865,7 +3885,7 @@ class CanvasContext
         var det = (m0 * m4 - m1 * m3);
         if (det === 0.0)
         {
-            return [x, y];
+            return p;
         }
 
         r0 = m4;
@@ -3886,8 +3906,9 @@ class CanvasContext
             r5 *= detrecp;
         }
 
-        return [((x * r0) + (y * r1) + r2),
-                ((x * r3) + (y * r4) + r5)];
+        dst[0] = ((x * r0) + (y * r1) + r2);
+        dst[1] = ((x * r3) + (y * r4) + r5);
+        return dst;
     };
 
     calculateGradientUVtransform(gradientMatrix)
@@ -4038,20 +4059,23 @@ class CanvasContext
 
         if (alpha < 1.0)
         {
-            color = this.md.v4Build((color[0] * alpha),
-                                    (color[1] * alpha),
-                                    (color[2] * alpha),
-                                    alpha,
-                                    this.tempColor);
+            var tempColor = this.tempColor;
+            tempColor[0] = (color[0] * alpha);
+            tempColor[1] = (color[1] * alpha);
+            tempColor[2] = (color[2] * alpha);
+            tempColor[3] = alpha;
+            color = tempColor;
         }
 
         var screen = this.screen;
         var screenScaleX = screen[0];
         var screenScaleY = screen[1];
-        screen = this.md.v4Build(screenScaleX, screenScaleY,
-                                (screen[2] + (shadowOffsetX * screenScaleX)),
-                                (screen[3] + (shadowOffsetY * screenScaleY)),
-                                this.tempScreen);
+        var tempScreen = this.tempScreen;
+        tempScreen[0] = screenScaleX;
+        tempScreen[1] = screenScaleY;
+        tempScreen[2] = (screen[2] + (shadowOffsetX * screenScaleX));
+        tempScreen[3] = (screen[3] + (shadowOffsetY * screenScaleY));
+        screen = tempScreen;
 
         var technique;
 
@@ -4138,11 +4162,12 @@ class CanvasContext
             var alpha = (color[3] * this.globalAlpha);
             if (alpha < 1.0)
             {
-                color = this.md.v4Build((color[0] * alpha),
-                                        (color[1] * alpha),
-                                        (color[2] * alpha),
-                                        alpha,
-                                        this.tempColor);
+                var tempColor = this.tempColor;
+                tempColor[0] = (color[0] * alpha);
+                tempColor[1] = (color[1] * alpha);
+                tempColor[2] = (color[2] * alpha);
+                tempColor[3] = alpha;
+                color = tempColor;
             }
 
             if (globalCompositeOperation !== 'source-over' ||
@@ -4338,7 +4363,7 @@ class CanvasContext
             this.numCachedColors = 0;
         }
 
-        color = parseCSSColor(colorText, this.md.v4BuildZero());
+        color = parseCSSColor(colorText, new this.floatArrayConstructor(4));
         if (color)
         {
             this.cachedColors[colorText] = color;
@@ -4361,7 +4386,7 @@ class CanvasContext
         var numPoints = points.length;
         var angle, angleDiff, i, j;
 
-        var angleStep = (2.0 / (radius * this.pixelRatio));
+        var angleStep = (1.0 / Math.sqrt(radius * this.pixelRatio));
 
         var m = this.matrix;
         var m0 = (m[0] * radius);
@@ -6442,9 +6467,9 @@ class CanvasContext
 }
 
     // Constructor function
-    static create(canvas, gd, md, width, height): CanvasContext
+    static create(canvas, gd, width, height): CanvasContext
     {
-        return new CanvasContext(canvas, gd, md, width, height);
+        return new CanvasContext(canvas, gd, width, height);
     };
 };
 
@@ -6533,14 +6558,14 @@ class Canvas
     };
 
     // Constructor function
-    static create(gd, md): Canvas
+    static create(gd): Canvas
     {
         var width = gd.width;
         var height = gd.height;
 
         var c = new Canvas();
 
-        c.context = CanvasContext.create(c, gd, md, width, height);
+        c.context = CanvasContext.create(c, gd, width, height);
 
         if (Object.defineProperty)
         {

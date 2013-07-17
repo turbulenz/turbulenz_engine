@@ -311,8 +311,6 @@ Viewer.create = function viewerCreateFn()
             lightRadius = (len * 4);
         }
 
-        GPUSkinController.setDefaultBufferSize(vi.renderer.getDefaultSkinBufferSize());
-
         scene.skinnedNodes = [];
         var nodeHasSkeleton = animationManager.nodeHasSkeleton;
 

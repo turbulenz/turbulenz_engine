@@ -883,6 +883,27 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
     **Unfollowed Count:** This is the number of times the Unfollow button was clicked for the game on Dec 31.
     This number may be falsely increased by a user by constant switching between Follow/Unfollow.
 
+    **Completed transactions:** This is the total number of completed transactions, per day, for the game.
+    A transaction is a single purchase with a real payment provider (test payments on preview games are not included)
+    containing any mix or amount of basket items (offerings).
+
+    **Revenue (USD dollars):** This is the total revenue per day for the game.
+    This only includes transactions with a real payment provider (test payments on preview games are not included).
+    This is not the total amount that you will receive.
+    The developer revenue share depends on the payment provider used and your agreement with Turbulenz.
+
+    **Offering "X" purchased:** This is the amount of purchases of the "X" offering per day.
+    This only includes transactions with a real payment provider (test payments on preview games are not included).
+    A transaction with multiple offerings in the basket will increase this value by the total amount of the offering
+    "X" in the basket.
+
+    **Offering "X" Revenue:** This is the total revenue from the "X" offering per day.
+    This only includes transactions with a real payment provider (test payments on preview games are not included).
+    A transaction with multiple offerings in the basket will increase this value by the total revenue earned from the
+    offering "X" in the basket.
+    This is not the amount that you will receive.
+    The developer revenue share depends on the payment provider used and your agreement with Turbulenz.
+
 Turbulenz also allows you to track :ref:`custom events <turbulenzservices_sendcustommetricevent>` you define within your game.
 
     **Custom Metrics:** For each unique event key the game uses, this is calculated in three parts.

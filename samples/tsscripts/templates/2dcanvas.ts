@@ -27,10 +27,6 @@
 
 TurbulenzEngine.onload = function onloadFn()
 {
-    // Create each of the native engine API devices to be used
-    var mathDeviceParameters = {};
-    var mathDevice = TurbulenzEngine.createMathDevice(mathDeviceParameters);
-
     /*{% if not tz_canvas %}*/
     var graphicsDeviceParameters = { };
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
@@ -100,7 +96,7 @@ TurbulenzEngine.onload = function onloadFn()
     var lastSecond = 0;
 
     /*{% else %}*/
-    canvas = Canvas.create(graphicsDevice, mathDevice);
+    canvas = Canvas.create(graphicsDevice);
     /*{% endif %}*/
 
     ctx = canvas.getContext('2d');
@@ -565,7 +561,6 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Clear each native engine reference
         graphicsDevice = null;
-        mathDevice = null;
 
         TurbulenzEngine.onunload = null;
     };
