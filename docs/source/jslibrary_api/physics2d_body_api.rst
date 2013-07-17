@@ -509,10 +509,10 @@ This may be set on any body type at any time though it will have an affect only 
     This value must be between 0 and 1.
 
 .. index::
-    pair: RigidBody; getLinearDrag
+    pair: RigidBody; getAngularDrag
 
-`getLinearDrag`
----------------
+`getAngularDrag`
+----------------
 
 **Summary**
 
@@ -520,13 +520,13 @@ Retrieve the current value for the angular drag applied to this body.
 
 **Syntax** ::
 
-    var angularDrag = body.getLinearDrag();
+    var angularDrag = body.getAngularDrag();
 
 .. index::
-    pair: RigidBody; setLinearDrag
+    pair: RigidBody; setAngularDrag
 
-`setLinearDrag`
----------------
+`setAngularDrag`
+----------------
 
 **Summary**
 
@@ -536,7 +536,7 @@ This may be set on any body type at any time though it will have an affect only 
 
 **Syntax** ::
 
-    body.setLinearDrag(angularDrag);
+    body.setAngularDrag(angularDrag);
 
 ``angularDrag``
     The new angular drag for this body.
