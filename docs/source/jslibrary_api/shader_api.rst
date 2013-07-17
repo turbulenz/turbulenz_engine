@@ -105,6 +105,23 @@ usually the path to the CgFX file that originated the shader definition used to 
 
 
 .. index::
+    pair: Shader; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the Shader object.
+
+**Syntax** ::
+
+    var shaderId = shader.id;
+
+.. note:: Read Only
+
+
+.. index::
     pair: Shader; numTechniques
 
 `numTechniques`
@@ -165,6 +182,23 @@ The name of the shading technique.
 **Syntax** ::
 
     var techniqueName = technique.name;
+
+.. note:: Read Only
+
+
+.. index::
+    pair: Technique; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the Technique object.
+
+**Syntax** ::
+
+    var techniqueId = technique.id;
 
 .. note:: Read Only
 

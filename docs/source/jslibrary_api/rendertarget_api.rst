@@ -68,6 +68,23 @@ Properties
 ==========
 
 .. index::
+    pair: RenderTarget; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the RenderTarget object.
+
+**Syntax** ::
+
+    var renderTargetId = renderTarget.id;
+
+.. note:: Read Only
+
+
+.. index::
     pair: RenderTarget; colorTexture0
 
 `colorTexture0`
