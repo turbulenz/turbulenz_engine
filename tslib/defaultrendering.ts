@@ -12,7 +12,6 @@
 
 /*global TurbulenzEngine: false*/
 /*global renderingCommonCreateRendererInfoFn: false*/
-/*global renderingCommonGetTechniqueIndexFn: false*/
 /*global renderingCommonSortKeyFn: false*/
 /*global Effect: false*/
 
@@ -594,7 +593,7 @@ class DefaultRendering
             {
                 that.shader = shader;
                 that.technique = shader.getTechnique(that.techniqueName);
-                that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+                that.techniqueIndex = that.technique.id;
             };
             shaderManager.load(this.shaderName, callback);
         };

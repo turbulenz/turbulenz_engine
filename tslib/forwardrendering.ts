@@ -26,7 +26,6 @@ interface ShaderManager
 /*global ShadowMapping: false, VMath: false,
          VMathArrayConstructor:false, Effect: false,
          renderingCommonCreateRendererInfoFn: false,
-         renderingCommonGetTechniqueIndexFn: false,
          renderingCommonSortKeyFn: false*/
 
 class ForwardRendering
@@ -225,8 +224,8 @@ class ForwardRendering
             ForwardRendering.createNodeRendererInfo(node, this.md);
         }
 
-        var nodeId = node.rendererInfo.id;
-        rendererInfo.id = (nodeId ? (1.0 / (1.0 + nodeId)) : 0);
+        var vertexBufferId = renderable.geometry.vertexBuffer.id;
+        rendererInfo.id = (1.0 / (1.0 + vertexBufferId));
 
         return rendererInfo;
     };
@@ -1554,7 +1553,7 @@ class ForwardRendering
                     drawParameters.technique = fr.glowmapRigidTechnique;
                 }
 
-                drawParameters.sortKey = renderingCommonSortKeyFn(renderingCommonGetTechniqueIndexFn(drawParameters.technique.name),
+                drawParameters.sortKey = renderingCommonSortKeyFn(drawParameters.technique.id,
                                                                   meta.materialIndex);
                 //Now add common for world and skin data. materialColor is also copied here.
                 drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
@@ -1659,7 +1658,7 @@ class ForwardRendering
                     }
                 }
 
-                var techniqueIndex = renderingCommonGetTechniqueIndexFn(drawParameters.technique.name);
+                var techniqueIndex = drawParameters.technique.id;
                 if (alpha)
                 {
                     drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex, meta.materialIndex);
@@ -1743,7 +1742,7 @@ class ForwardRendering
                         drawParameters.technique = fr.ambientRigidTechnique;
                     }
                 }
-                drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | renderingCommonGetTechniqueIndexFn(drawParameters.technique.name),
+                drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | drawParameters.technique.id,
                                                                   meta.materialIndex);
                 //Now add common for world and skin data. materialColor is also copied here.
                 drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
@@ -1901,7 +1900,7 @@ class ForwardRendering
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
-            drawParameters.sortKey = renderingCommonSortKeyFn(renderingCommonGetTechniqueIndexFn(drawParameters.technique.name),
+            drawParameters.sortKey = renderingCommonSortKeyFn(drawParameters.technique.id,
                                                               meta.materialIndex);
             geometryInstance.drawParameters.push(drawParameters);
 
@@ -1913,7 +1912,7 @@ class ForwardRendering
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
-            drawParameters.sortKey = renderingCommonSortKeyFn(opaqueSortOffset | renderingCommonGetTechniqueIndexFn(drawParameters.technique.name),
+            drawParameters.sortKey = renderingCommonSortKeyFn(opaqueSortOffset | drawParameters.technique.id,
                                                               meta.materialIndex);
             geometryInstance.drawParameters.push(drawParameters);
 
@@ -2295,7 +2294,7 @@ class ForwardRendering
             {
                 that.shader = shader;
                 that.technique = shader.getTechnique(that.techniqueName);
-                that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+                that.techniqueIndex =  that.technique.id;
             };
             shaderManager.load(this.shaderName, callback);
 
@@ -2307,7 +2306,7 @@ class ForwardRendering
                     {
                         that.shadowMappingShader = shader;
                         that.shadowMappingTechnique = shader.getTechnique(that.shadowMappingTechniqueName);
-                        that.shadowMappingTechniqueIndex = renderingCommonGetTechniqueIndexFn(that.shadowMappingTechniqueName);
+                        that.shadowMappingTechniqueIndex = that.shadowMappingTechnique.id;
                     };
                     shaderManager.load(this.shadowMappingShaderName, shadowMappingCallback);
                 }
@@ -2318,7 +2317,7 @@ class ForwardRendering
                     {
                         that.shadowShader = shader;
                         that.shadowTechnique = shader.getTechnique(that.shadowTechniqueName);
-                        that.shadowTechniqueIndex = renderingCommonGetTechniqueIndexFn(that.shadowTechniqueName);
+                        that.shadowTechniqueIndex = that.shadowTechnique.id;
                     };
                     shaderManager.load(this.shadowShaderName, shadowCallback);
                 }

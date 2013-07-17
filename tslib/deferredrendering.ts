@@ -28,14 +28,12 @@ interface DeferredEffectTypeData extends EffectPrepareObject
 // DeferredRendering
 //
 /*global ShadowMapping: false, VMath: false, Effect: false,
-         renderingCommonCreateRendererInfoFn: false,  renderingCommonGetTechniqueIndexFn: false,
+         renderingCommonCreateRendererInfoFn: false,
          renderingCommonSortKeyFn: false*/
 
 class DeferredRendering
 {
     static version = 1;
-
-    static nextNodeID: number = 0;
 
     minPixelCount = 256;
 
@@ -1884,15 +1882,6 @@ class DeferredRendering
 
             geometryInstance.renderUpdate = this.update;
 
-            var node = geometryInstance.node;
-            if (!node.rendererInfo)
-            {
-                node.rendererInfo = {
-                    id: DeferredRendering.nextNodeID
-                };
-                DeferredRendering.nextNodeID += 1;
-            }
-
             //
             // shadows
             //
@@ -1913,7 +1902,7 @@ class DeferredRendering
                     drawParameters.technique = this.shadowTechnique;
 
                     drawParameters.sortKey = renderingCommonSortKeyFn(this.shadowTechniqueIndex,
-                                                                      node.rendererInfo.id);
+                                                                      geometryInstance.geometry.vertexBuffer.id);
 
                     var shadowTechniqueParameters = gd.createTechniqueParameters();
                     geometryInstance.shadowTechniqueParameters = shadowTechniqueParameters;
@@ -2311,7 +2300,7 @@ class DeferredRendering
             {
                 that.shader = shader;
                 that.technique = shader.getTechnique(that.techniqueName);
-                that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+                that.techniqueIndex =  that.technique.id;
             };
             shaderManager.load(this.shaderName, callback);
 
@@ -2321,7 +2310,7 @@ class DeferredRendering
                 {
                     that.shadowShader = shader;
                     that.shadowTechnique = shader.getTechnique(that.shadowMappingTechniqueName);
-                    that.shadowTechniqueIndex =  renderingCommonGetTechniqueIndexFn(that.shadowMappingTechniqueName);
+                    that.shadowTechniqueIndex =  that.shadowTechnique.id;
                 };
                 shaderManager.load(this.shadowMappingShaderName, shadowCallback);
             }
