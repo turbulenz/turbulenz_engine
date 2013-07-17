@@ -667,6 +667,7 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
     tex.dynamic = params.dynamic;
     tex.renderable = params.renderable;
     tex.numDataLevels = 0;
+    tex.id = ++gd.counters.textures;
 
     var src = params.src;
     if (src)
@@ -1293,6 +1294,7 @@ WebGLRenderBuffer.create = function webGLRenderBufferFn(gd, params)
     renderBuffer.format = format;
     renderBuffer.glDepthAttachment = attachment;
     renderBuffer.glBuffer = glBuffer;
+    renderBuffer.id = ++gd.counters.renderBuffers;
 
     return renderBuffer;
 };
@@ -1632,6 +1634,8 @@ WebGLRenderTarget.create = function webGLRenderTargetFn(gd, params)
         renderTarget.buffers = buffers;
     }
 
+    renderTarget.id = ++gd.counters.renderTargets;
+
     return renderTarget;
 };
 
@@ -1896,6 +1900,8 @@ WebGLIndexBuffer.create = function webGLIndexBufferCreateFn(gd, params)
 
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, (numIndices * stride), ib.usage);
     }
+
+    ib.id = ++gd.counters.indexBuffers;
 
     return ib;
 };
@@ -2699,6 +2705,8 @@ WebGLVertexBuffer.create = function webGLVertexBufferCreateFn(gd, params)
 
         gl.bufferData(gl.ARRAY_BUFFER, bufferSize, vb.usage);
     }
+
+    vb.id = ++gd.counters.vertexBuffers;
 
     return vb;
 };
@@ -3551,6 +3559,8 @@ Technique.create = function webGLTechniqueCreateFn(gd, shader, name, passes)
 
     technique.device = null;
 
+    technique.id = ++gd.counters.techniques;
+
     return technique;
 };
 
@@ -3914,6 +3924,8 @@ Shader.create = function webGLShaderCreateFn(gd, params)
         }
     }
     shader.numTechniques = numTechniques;
+
+    shader.id = ++gd.counters.shaders;
 
     return shader;
 };
@@ -4289,6 +4301,16 @@ interface WebGLMetrics
     addPrimitives: { (primitive: number, count: number) : void; };
 };
 
+interface WebGLCreationCounters
+{
+    textures: number;
+    vertexBuffers: number;
+    indexBuffers: number;
+    renderTargets: number;
+    renderBuffers: number;
+    shaders: number;
+    techniques: number;
+};
 
 interface WebGLGraphicsDevice extends GraphicsDevice
 {
@@ -4327,6 +4349,8 @@ interface WebGLGraphicsDevice extends GraphicsDevice
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
 
     metrics: WebGLMetrics;
+
+    counters: WebGLCreationCounters;
 
     // Methods
     bindTexture(target: number, texture: WebGLTexture) : void;
@@ -6712,6 +6736,16 @@ WebGLGraphicsDevice.create = function webGLGraphicsDeviceCreateFn(canvas, params
             program : null
         };
     gd.state = currentState;
+
+    gd.counters = <WebGLCreationCounters>{
+        textures: 0,
+        vertexBuffers: 0,
+        indexBuffers: 0,
+        renderTargets: 0,
+        renderBuffers: 0,
+        shaders: 0,
+        techniques: 0
+    };
 
     if (debug)
     {
