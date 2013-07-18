@@ -899,7 +899,7 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
     A transaction with multiple offerings in the basket will increase this value by the total amount of the offering
     "X" in the basket.
 
-    **Offering "X" Revenue:** This is the approximate total revenue from the "X" offering per day
+    **Offering "X" Revenue:** This is the approximate total revenue from the "X" offering per day.
     This only includes transactions with a real payment provider (test payments on preview games are not included).
     This is an approximation as it assumes all items are purchased in USD (but some Google Play transactions may charge
     at a local exchange rate).
