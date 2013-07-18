@@ -23,5 +23,5 @@ class Point
         }
 
         return point;
-    };
-};
+    }
+}
