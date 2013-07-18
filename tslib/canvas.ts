@@ -985,25 +985,24 @@ class CanvasContext
         'destination-in' : 1,
         'destination-out' : 1,
         'destination-over' : 1,
-        'lighter' : 1,
-        'copy' : 1,
-        'xor' : 1
+        lighter : 1,
+        copy : 1,
+        xor : 1
     };
 
     capStyles =
     {
-        'butt' : 1,
-        'round' : 1,
-        'square' : 1
+        butt : 1,
+        round : 1,
+        square : 1
     };
 
     joinStyles =
     {
-        'bevel' : 1,
-        'round' : 1,
-        'miter' : 1
+        bevel : 1,
+        round : 1,
+        miter : 1
     };
-
 
     //
     // CanvasContext
@@ -5517,7 +5516,7 @@ class CanvasContext
         return false;
     }
 
-    shaderDefinition = {
+    private shaderDefinition = {
  "version": 1,
  "name": "canvas.cgfx",
  "samplers":

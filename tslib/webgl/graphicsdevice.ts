@@ -4169,8 +4169,7 @@ class WebGLDrawParameters implements DrawParameters
     {
         if (indx < 16)
         {
-            var i : number = (indx * 3) + 2;
-            return this[0];
+            return this[(indx * 3) + 2];
         }
         else
         {
