@@ -4,15 +4,17 @@ interface BenchmarkParameters
 {
     name: string;
     targetMean: number;
+    description: string[];
+    path: string;
 
     destroy: () => void;
-    isWaiting: () => bool;
+    isWaiting?: () => bool;
     init: () => void;
     run: () => void;
 
-    estimateCount: number;
-    estimateStartTime: number;
-    estimatedRuns: number;
+    estimateCount?: number;
+    estimateStartTime?: number;
+    estimatedRuns?: number;
 
     // internal
     targetRuns?: number;

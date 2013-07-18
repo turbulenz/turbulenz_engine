@@ -1,13 +1,5 @@
 /*{# Copyright (c) 2010-2012 Turbulenz Limited #}*/
 
-/*
- * @title: Multiple animations
- * @description:
- * This sample demonstrates how the Turbulenz engine can render a high number of animated skinned characters each one
- * with their own separate animation.
- * You can use the slider to increase or decrease the number of character to animate and render at the same time.
-*/
-
 /*{{ javascript("jslib/aabbtree.js") }}*/
 /*{{ javascript("jslib/camera.js") }}*/
 /*{{ javascript("jslib/geometry.js") }}*/
@@ -57,6 +49,11 @@
 /*global VMath: false */
 /*global HTMLControls: false */
 /*global window: false */
+
+// HACK: TypeScript 0.9.0 removes the above comments without this
+// (since the comments get associated with the declare, which
+// generates no code).
+void 0;
 
 // We put some custom data onto Scene
 declare class CustomScene extends Scene
