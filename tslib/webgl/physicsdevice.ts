@@ -5877,86 +5877,10 @@ WebGLContactEPA.prototype.MAX_VERTICES = 64;
 WebGLContactEPA.prototype.MAX_FACES = 128;
 
 //
-// WebGLPhysicsContact
-//
-
-// [0,  3) : localA (vector3)
-// [3,  6) : localB (vector3)
-// [6,  9) : relA   (vector3)
-// [9, 12) : relB   (vector3)
-// [12,15) : normal (vector3)  ('on' object B)
-// [15,18) : tangent (vector3)
-// [18,21) : bitangent (vector3)
-// [21,22) : distance
-// [22,25) : Jacobian : normal x relA * iInertiaA (vector3)
-// [25,28) : Jacobian : normal x relB * iInertiaB (vector3)
-// [28,31) : Jacobian : tangent x relA * iInertiaA (vector3)
-// [31,34) : Jacobian : tangent x relB * iInertiaB (vector3)
-// [34,37) : Jacobian : bitangent x relA * iInertiaA (vector3)
-// [37,40) : Jacobian : bitangent x relB * iInertiaB (vector3)
-// [40,43) : jAcc (normal, tangent, bitangent) (vector3)
-// [43,44) : bias
-// [44,45) : jAccBias
-// [45,46) : penetration constraint, effective mass (kN)
-// [46,50) : friction constraint, effective mass
-//           [ kfA   kfBC ]
-//           [ kfBC   kfD ]
-// [50,51) : bounce
-// [51,52) : new
-//
-
-//
-// Contact objects are object pooled due to being frequently
-// created and destroyed.
-//
-// Contacts are thus instead allocated an deallocated with no
-// create method.
-//
-class WebGLPhysicsContact
-{
-    static contactPool: Float32Array[] = [];
-    static contactPoolSize = 0;
-    static publicContacts: WebGLPhysicsPublicContact[];
-    static callbackContacts: WebGLPhysicsPublicContact[];
-
-    static allocate(): Float32Array
-    {
-        var contact;
-        if (this.contactPoolSize === 0)
-        {
-            contact = new Float32Array(52);
-        }
-        else
-        {
-            this.contactPoolSize -= 1;
-            contact = this.contactPool[this.contactPoolSize];
-        }
-
-        contact[51] = 1.0; // new contact
-
-        return contact;
-    }
-
-    static deallocate(contact: Float32Array): void
-    {
-        this.contactPool[this.contactPoolSize] = contact;
-        this.contactPoolSize += 1;
-
-        // Contact jAccN is cached between updates. Needs to be reset if contact is re-used.
-        contact[40] = 0;
-    }
-}
-
-//
 // WebGLPhysicsPublicContact
 //
 class WebGLPhysicsPublicContact
 {
-    static publicContacts = [WebGLPhysicsPublicContact.create(),
-                             WebGLPhysicsPublicContact.create(),
-                             WebGLPhysicsPublicContact.create()];
-    static callbackContacts = [];
-
     localPointOnA  : any;  // v3 - getter
     localPointOnB  : any;  // v3 - getter
     worldNormalOnB : any; // v3 - getter
@@ -6046,6 +5970,86 @@ class WebGLPhysicsPublicContact
 }
 
 //
+// WebGLPhysicsContact
+//
+
+// [0,  3) : localA (vector3)
+// [3,  6) : localB (vector3)
+// [6,  9) : relA   (vector3)
+// [9, 12) : relB   (vector3)
+// [12,15) : normal (vector3)  ('on' object B)
+// [15,18) : tangent (vector3)
+// [18,21) : bitangent (vector3)
+// [21,22) : distance
+// [22,25) : Jacobian : normal x relA * iInertiaA (vector3)
+// [25,28) : Jacobian : normal x relB * iInertiaB (vector3)
+// [28,31) : Jacobian : tangent x relA * iInertiaA (vector3)
+// [31,34) : Jacobian : tangent x relB * iInertiaB (vector3)
+// [34,37) : Jacobian : bitangent x relA * iInertiaA (vector3)
+// [37,40) : Jacobian : bitangent x relB * iInertiaB (vector3)
+// [40,43) : jAcc (normal, tangent, bitangent) (vector3)
+// [43,44) : bias
+// [44,45) : jAccBias
+// [45,46) : penetration constraint, effective mass (kN)
+// [46,50) : friction constraint, effective mass
+//           [ kfA   kfBC ]
+//           [ kfBC   kfD ]
+// [50,51) : bounce
+// [51,52) : new
+//
+
+//
+// Contact objects are object pooled due to being frequently
+// created and destroyed.
+//
+// Contacts are thus instead allocated an deallocated with no
+// create method.
+//
+interface WebGLPhysicsContact extends Float32Array
+{
+}
+
+var WebGLPhysicsContact =
+{
+    contactPool: <WebGLPhysicsContact[]>[],
+    contactPoolSize: 0,
+
+    publicContacts: <WebGLPhysicsPublicContact[]>
+        [WebGLPhysicsPublicContact.create(),
+         WebGLPhysicsPublicContact.create(),
+         WebGLPhysicsPublicContact.create()],
+    callbackContacts: <WebGLPhysicsPublicContact[]>[],
+
+    allocate: function webglPhyssicsContactAllocateFn(): WebGLPhysicsContact
+    {
+        var contact : WebGLPhysicsContact;
+        if (this.contactPoolSize === 0)
+        {
+            contact = new Float32Array(52);
+        }
+        else
+        {
+            this.contactPoolSize -= 1;
+            contact = this.contactPool[this.contactPoolSize];
+        }
+
+        contact[51] = 1.0; // new contact
+
+        return contact;
+    },
+
+    deallocate:
+    function webglPhyssicsContactDeallocateFn(contact: WebGLPhysicsContact)
+    {
+        this.contactPool[this.contactPoolSize] = contact;
+        this.contactPoolSize += 1;
+
+        // Contact jAccN is cached between updates. Needs to be reset if contact is re-used.
+        contact[40] = 0;
+    }
+}
+
+//
 // WebGLPhysicsArbiter
 //
 class WebGLPhysicsArbiter
@@ -6058,14 +6062,14 @@ class WebGLPhysicsArbiter
     shapeB: WebGLPhysicsShape;
     friction: number;
     restitution: number;
-    contacts: Float32Array[];
+    contacts: WebGLPhysicsContact[];
     activeContacts: WebGLPhysicsPublicContact[];
     active: bool;
     skipDiscreteCollisions: bool;
     contactFlags: number;
     trigger: bool;
 
-    construct()
+    constructor()
     {
         // Initialise all properties of arbiters
         // which will ever be used.
@@ -6149,7 +6153,7 @@ class WebGLPhysicsArbiter
         var d0, d1, d2;
         while (i < contacts.length)
         {
-            var datad = contacts[i];
+            var datad : WebGLPhysicsContact = contacts[i];
             // 0.9 chosen based on rough experimental results.
             if ((!concave) && ((cn0 * datad[12]) + (cn1 * datad[13]) + (cn2 * datad[14])) < 0.9)
             {
@@ -7253,8 +7257,8 @@ class WebGLPhysicsTriangleShape
     //
     // Object pool for Triangles
 
-    trianglePool: WebGLPhysicsTriangleShape[] = [];
-    trianglePoolSize = 0;
+    static trianglePool: WebGLPhysicsTriangleShape[] = [];
+    static trianglePoolSize = 0;
 
     static allocate(): WebGLPhysicsTriangleShape
     {
@@ -7355,8 +7359,8 @@ class WebGLPhysicsTOIEvent
     //
     // Object pool for TOI Events
 
-    eventPool: WebGLPhysicsTOIEvent[] = [];
-    eventPoolSize = 0;
+    static eventPool: WebGLPhysicsTOIEvent[] = [];
+    static eventPoolSize = 0;
 
     static allocate(): WebGLPhysicsTOIEvent
     {
