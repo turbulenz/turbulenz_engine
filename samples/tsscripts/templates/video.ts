@@ -1,13 +1,25 @@
-/* Copyright (c) 2012 Turbulenz Limited */
+/*{# Copyright (c) 2012 Turbulenz Limited #}*/
+
+/*
+ * @title: Video playback
+ * @description:
+ * This sample shows how to play a video into a texture.
+*/
+
+/*{{ javascript("jslib/observer.js") }}*/
+/*{{ javascript("jslib/requesthandler.js") }}*/
+/*{{ javascript("jslib/utilities.js") }}*/
+/*{{ javascript("jslib/services/turbulenzservices.js") }}*/
+/*{{ javascript("jslib/services/turbulenzbridge.js") }}*/
+/*{{ javascript("jslib/services/gamesession.js") }}*/
+/*{{ javascript("jslib/services/mappingtable.js") }}*/
 
 /*global TurbulenzEngine: true */
 /*global TurbulenzServices: false */
 /*global RequestHandler: false */
 
-//TurbulenzEngine.onload = function onloadFn()
+TurbulenzEngine.onload = function onloadFn()
 {
-    /*
-
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
     var soundDevice = TurbulenzEngine.createSoundDevice({});
     var mathDevice = TurbulenzEngine.createMathDevice({});
@@ -299,6 +311,4 @@
             gameSession = null;
         }
     };
-
-    */
 };
