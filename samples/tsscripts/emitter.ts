@@ -110,7 +110,6 @@ class ParticleSystem
     update(currentTime, deltaTime)
     {
         var md = this.md;
-        var v3AddScalarMul = md.v3AddScalarMul;
         var numActiveParticles = this.numActiveParticles;
         var particles = this.particles;
         var maxParticles = this.maxParticles;
@@ -154,7 +153,7 @@ class ParticleSystem
                 p.size += deltaSize;
                 velocity = p.velocity;
                 position = p.position;
-                p.position = v3AddScalarMul.call(md, position, velocity, deltaTime, position);
+                p.position = md.v3AddScalarMul(position, velocity, deltaTime, position);
 
                 if (deltaVelocity)
                 {
@@ -404,16 +403,14 @@ class ParticleSystemRenderer
         geometry.numIndices = surface.numIndices = 6 * numParticles;
 
         var cameraMatrix = camera.matrix;
-        var up = md.m43Up(cameraMatrix);
-        var right = md.m43Right(cameraMatrix);
 
-        var up0 = up[0];
-        var up1 = up[1];
-        var up2 = up[2];
+        var right0 = cameraMatrix[0];
+        var right1 = cameraMatrix[1];
+        var right2 = cameraMatrix[2];
 
-        var right0 = right[0];
-        var right1 = right[1];
-        var right2 = right[2];
+        var up0 = cameraMatrix[3];
+        var up1 = cameraMatrix[4];
+        var up2 = cameraMatrix[5];
 
         for (var i = 0, n = 0; i < numParticles; i += 1)
         {

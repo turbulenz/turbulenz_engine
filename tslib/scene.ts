@@ -144,6 +144,7 @@ class Scene
     drawAnimationHierarchy: (gd, sm, camera, hierarchy, numJoints, controller, matrix, boneColor, boundsColor) => void;
     getDebugSemanticsPos: () => Semantics;
     getDebugSemanticsPosCol: () => Semantics;
+    getMetrics: () => any;
     getVisibilityMetrics: () => any;
     drawWireframe: (gd, sm, camera, wireframeInfo) => void;
     attributeComponents: (attribute) => number;
@@ -4188,6 +4189,7 @@ class Scene
                                 destSurface.indexBuffer = indexBuffer;
                                 destSurface.numIndices = numIndices;
                                 destSurface.first = (indexBufferBaseIndex + indexBufferOffset);
+                                destSurface.numVertices = totalNumVertices;
 
                                 if (baseIndex)
                                 {
@@ -4273,6 +4275,7 @@ class Scene
                         }
 
                         shape.first = surface.first;
+                        shape.numVertices = surface.numVertices;
 
                         if (surface.indexBuffer)
                         {
@@ -4282,10 +4285,6 @@ class Scene
                             {
                                 shape.indexData = surface.indexData;
                             }
-                        }
-                        else
-                        {
-                            shape.numVertices = surface.numVertices;
                         }
                     }
 

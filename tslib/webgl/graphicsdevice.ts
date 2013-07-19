@@ -647,6 +647,7 @@ class TZWebGLTexture implements Texture
         tex.dynamic = params.dynamic;
         tex.renderable = params.renderable;
         tex.numDataLevels = 0;
+        tex.id = ++gd.counters.textures;
 
         var src = params.src;
         if (src)
@@ -1281,6 +1282,7 @@ class WebGLRenderBuffer implements RenderBuffer
         renderBuffer.format = format;
         renderBuffer.glDepthAttachment = attachment;
         renderBuffer.glBuffer = glBuffer;
+        renderBuffer.id = ++gd.counters.renderBuffers;
 
         return renderBuffer;
     }
@@ -1625,6 +1627,8 @@ class WebGLRenderTarget implements RenderTarget
             renderTarget.buffers = buffers;
         }
 
+        renderTarget.id = ++gd.counters.renderTargets;
+
         return renderTarget;
     }
 }
@@ -1887,6 +1891,8 @@ class WebGLIndexBuffer implements IndexBuffer
 
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, (numIndices * stride), ib.usage);
         }
+
+        ib.id = ++gd.counters.indexBuffers;
 
         return ib;
     }
@@ -2690,6 +2696,8 @@ class WebGLVertexBuffer implements VertexBuffer
             gl.bufferData(gl.ARRAY_BUFFER, bufferSize, vb.usage);
         }
 
+        vb.id = ++gd.counters.vertexBuffers;
+
         return vb;
     }
 }
@@ -3145,6 +3153,7 @@ class WebGLTechnique implements Technique
         {
             if (p !== 'version' &&
                 p !== 'name' &&
+                p !== 'id' &&
                 p !== 'passes' &&
                 p !== 'numPasses' &&
                 p !== 'device' &&
@@ -3473,6 +3482,12 @@ class WebGLTechnique implements Technique
                     configurable : false
                 });
 
+            Object.defineProperty(this, 'id', {
+                    writable : false,
+                    enumerable : false,
+                    configurable : false
+                });
+
             Object.defineProperty(this, 'passes', {
                     writable : false,
                     enumerable : false,
@@ -3534,6 +3549,8 @@ class WebGLTechnique implements Technique
         technique.numParameters = numParameters;
 
         technique.device = null;
+
+        technique.id = ++gd.counters.techniques;
 
         return technique;
     }
@@ -3911,6 +3928,8 @@ class TZWebGLShader implements Shader
         }
         shader.numTechniques = numTechniques;
 
+        shader.id = ++gd.counters.shaders;
+
         return shader;
     }
 }
@@ -4274,6 +4293,17 @@ interface WebGLMetrics
     addPrimitives: { (primitive: number, count: number) : void; };
 };
 
+interface WebGLCreationCounters
+{
+    textures: number;
+    vertexBuffers: number;
+    indexBuffers: number;
+    renderTargets: number;
+    renderBuffers: number;
+    shaders: number;
+    techniques: number;
+};
+
 class WebGLGraphicsDevice implements GraphicsDevice
 {
     static version = 1;
@@ -4421,6 +4451,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
 
     metrics: WebGLMetrics;
+
+    counters: WebGLCreationCounters;
 
     drawIndexed(primitive: number, numIndices: number, first?: number)
     {
@@ -4827,8 +4859,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
               semantics: Semantics,
               offset?: number)
     {
-        debug.assert(vertexBuffer instanceof WebGLVertexBuffer);
-        debug.assert(semantics instanceof WebGLSemantics);
+        if (debug)
+        {
+            debug.assert(vertexBuffer instanceof WebGLVertexBuffer);
+            debug.assert(semantics instanceof WebGLSemantics);
+        }
 
         if (offset)
         {
@@ -5400,7 +5435,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
 
-            if (depth !== undefined)
+            if (typeof depth === 'number')
             {
                 if (!depthMask)
                 {
@@ -5424,7 +5459,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
 
-            if (depth !== undefined)
+            if (typeof depth === 'number')
             {
                 if (!depthMask)
                 {
@@ -6716,6 +6751,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
             program : null
         };
         gd.state = currentState;
+
+        gd.counters = <WebGLCreationCounters>{
+            textures: 0,
+            vertexBuffers: 0,
+            indexBuffers: 0,
+            renderTargets: 0,
+            renderBuffers: 0,
+            shaders: 0,
+            techniques: 0
+        };
 
         if (debug)
         {

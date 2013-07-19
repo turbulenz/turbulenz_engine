@@ -89,7 +89,7 @@ Anything outside of this region will be clipped.
 ``rectangle``
     The rectangle in screen pixels to be drawn to.
 
-    If using :ref:`Draw2D <draw2d>` in conjunction with Physics2D, then you would most likely find that using the value of `draw2D.getSreenSpaceViewport()` is the best fit for the Screen viewport so that debug drawing is correctly aligned.
+    If using :ref:`Draw2D <draw2d>` in conjunction with Physics2D, then you would most likely find that using the value of `draw2D.getScreenSpaceViewport()` is the best fit for the Screen viewport so that debug drawing is correctly aligned.
 
 
 .. index::

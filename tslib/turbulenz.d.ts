@@ -335,6 +335,7 @@ interface Pass
 
 interface Technique
 {
+    id: number;
     initialized: bool;
     shader: Shader;
     name: string;
@@ -356,6 +357,7 @@ interface ShaderParameter
 
 interface Shader
 {
+    id             : number;
     name           : string;
     numTechniques  : number;
     numParameters  : number;
@@ -393,6 +395,7 @@ interface TechniqueParameterBuffer
 
 interface RenderBuffer
 {
+    id     : number;
     width  : number;
     height : number;
     format : number;
@@ -422,6 +425,7 @@ interface TextureParameters
 
 interface Texture
 {
+    id: number;
     name: string;
     width: number;
     height: number;
@@ -453,6 +457,7 @@ interface RenderTargetParameters
 
 interface RenderTarget
 {
+    id            : number;
     width         : number;
     height        : number;
     face          : number;
@@ -499,6 +504,7 @@ interface VertexWriteIterator
 
 interface VertexBuffer
 {
+    id          : number;
     numVertices : number;
     usage       : number;
     stride      : number;
@@ -532,6 +538,7 @@ interface IndexWriteIterator
 
 interface IndexBuffer
 {
+    id         : number;
     numIndices : number;
     format     : number;
     stride     : number;

@@ -319,10 +319,12 @@ class ShadowMapping
             }
             else // directional
             {
-                direction = md.m43TransformVector(matrix, light.direction);
-                var lightSize = md.v3Length(halfExtents);
-                md.v3AddScalarMul(nodePos, direction, lightSize, target);
-                origin = md.v3AddScalarMul(nodePos, direction, -lightSize);
+                direction = light.direction;
+                var scaledDirection = md.v3Mul(direction, halfExtents);
+                md.m43TransformVector(matrix, scaledDirection, scaledDirection);
+                origin = md.v3Sub(nodePos, scaledDirection);
+                md.v3Add(nodePos, scaledDirection, target);
+                direction = md.m43TransformVector(matrix, direction);
                 camera.parallel = true;
             }
 
@@ -409,7 +411,7 @@ class ShadowMapping
                 var m7 = viewMatrix[7];
                 lightViewWindowX = ((m0 < 0 ? -m0 : m0) * halfExtents0 + (m3 < 0 ? -m3 : m3) * halfExtents1 + (m6 < 0 ? -m6 : m6) * halfExtents2);
                 lightViewWindowY = ((m1 < 0 ? -m1 : m1) * halfExtents0 + (m4 < 0 ? -m4 : m4) * halfExtents1 + (m7 < 0 ? -m7 : m7) * halfExtents2);
-                lightDepth = 2 * Math.sqrt((halfExtents0 * halfExtents0) + (halfExtents1 * halfExtents1) + (halfExtents2 * halfExtents2));
+                lightDepth = md.v3Length(md.v3Sub(target, origin));
             }
 
             lightInstance.lightViewWindowX = lightViewWindowX;

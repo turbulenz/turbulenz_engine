@@ -8891,12 +8891,12 @@ class WebGLPrivatePhysicsWorld
         var prevTime = this.prevTimeStamp;
         if (prevTime === undefined)
         {
-            this.prevTimeStamp = TurbulenzEngine.time;
+            this.prevTimeStamp = TurbulenzEngine.getTime() * 0.001;
             return;
         }
 
         // Compute number of sub-steps needed.
-        var curTime = TurbulenzEngine.time;
+        var curTime = TurbulenzEngine.getTime() * 0.001;
         var timeDelta = (curTime - prevTime);
 
         var numSteps, timeStep;
@@ -9023,7 +9023,7 @@ class WebGLPrivatePhysicsWorld
 
             // ####################################################################
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
 
             // Prepare broadphase
             staticMap.finalize();
@@ -9135,19 +9135,19 @@ class WebGLPrivatePhysicsWorld
                     }
                 }
             }
-            performance.discrete += (TurbulenzEngine.time - preTime);
+            performance.discrete += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
             // ####################################################################
             // Compute islands and perform sleeping.
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
             this.computeSleeping(timeStep);
-            performance.sleepComputation += (TurbulenzEngine.time - preTime);
+            performance.sleepComputation += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
             // ####################################################################
 
             // Prestep arbiters
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
             i = 0;
             var arb;
             while (i < arbiters.length)
@@ -9194,20 +9194,20 @@ class WebGLPrivatePhysicsWorld
 
                 i += 1;
             }
-            performance.prestepContacts += (TurbulenzEngine.time - preTime);
+            performance.prestepContacts += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
             // Prestep constraints
             limit = constraints.length;
             for (i = 0; i < limit; i += 1)
             {
                 constraints[i].preStep(timeStepRatio, timeStep);
             }
-            performance.prestepConstraints += (TurbulenzEngine.time - preTime);
+            performance.prestepConstraints += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
             // ####################################################################
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
             // Integrate velocities, apply gravity
             limit = rigidBodies.length;
             for (i = 0; i < limit; i += 1)
@@ -9216,31 +9216,31 @@ class WebGLPrivatePhysicsWorld
                 body.integrateVelocity(gravity, timeStep);
             }
 
-            performance.integrateVelocities += (TurbulenzEngine.time - preTime);
+            performance.integrateVelocities += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
             // ####################################################################
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
             // Warmstart arbiters
             limit = arbiters.length;
             for (i = 0; i < limit; i += 1)
             {
                 arbiters[i].applyCachedImpulses();
             }
-            performance.warmstartContacts += (TurbulenzEngine.time - preTime);
+            performance.warmstartContacts += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
             // Warmstart constraints
             limit = constraints.length;
             for (i = 0; i < limit; i += 1)
             {
                 constraints[i].applyCachedImpulses();
             }
-            performance.warmstartConstraints += (TurbulenzEngine.time - preTime);
+            performance.warmstartConstraints += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
             // ####################################################################
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
             // Physics iterations
             var numIterations = 10; //TODO: make configurable.
             for (i = 0; i < numIterations; i += 1)
@@ -9268,7 +9268,7 @@ class WebGLPrivatePhysicsWorld
                 }
             }
 
-            performance.physicsIterations += (TurbulenzEngine.time - preTime);
+            performance.physicsIterations += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
             // ####################################################################
 
@@ -9278,7 +9278,7 @@ class WebGLPrivatePhysicsWorld
             var unfrozen = this.persistantObjectsList2;
             var numUnfrozen = 0;
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
             limit = rigidBodies.length;
             var radius;
 
@@ -9349,11 +9349,11 @@ class WebGLPrivatePhysicsWorld
                 dynamicMap.update(body, extents);
             }
 
-            performance.integratePositions += (TurbulenzEngine.time - preTime);
+            performance.integratePositions += (TurbulenzEngine.getTime() * 0.001 - preTime);
 
             // ####################################################################
 
-            preTime = TurbulenzEngine.time;
+            preTime = TurbulenzEngine.getTime() * 0.001;
 
             // We must finalize the broadphase once more.
             // Any objects that have gone to sleep (or been woken up) will have effected
@@ -9652,7 +9652,7 @@ class WebGLPrivatePhysicsWorld
                 }
             }
 
-            performance.continuous += (TurbulenzEngine.time - preTime);
+            performance.continuous += (TurbulenzEngine.getTime() * 0.001 - preTime);
         }
 
         // Ensure kinematic bodies are moved 'EXACTLY' to their set transform.

@@ -98,6 +98,23 @@ usually the path to the image file that provided the pixel data.
 
 
 .. index::
+    pair: Texture; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the Texture object.
+
+**Syntax** ::
+
+    var textureId = texture.id;
+
+.. note:: Read Only
+
+
+.. index::
     pair: Texture; width
 
 `width`

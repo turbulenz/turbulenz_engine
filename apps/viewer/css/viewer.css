@@ -94,23 +94,25 @@ body {
     margin: 14px 16px 18px 0px;
 }
 
-#light-details {
+#scene-details {
     background: #DFDDDE;
     border-top: 1px solid #F6F6F6;
     border-bottom: 1px solid #898989;
     position: relative;
     bottom: 0;
-    height: 65px;
     left: 0;
     font-weight: bold;
     padding-left: 15px;
     padding-top: 12px;
 }
 
-#light-details table {
-    font-size: 11px;
+#scene-details table {
     font-weight: normal;
+    width: 90%;
+}
 
+#scene-details td {
+    padding: 2px;
 }
 
 .engine-control {

@@ -220,8 +220,11 @@ if platform.system() == "Windows":
     # pylint: disable=F0401, E0602
     def find_devenv(versions_to_check=None):
         from _winreg import OpenKey, QueryValueEx, HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY, KEY_READ
-        sxs_key = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
-                          0, KEY_READ | KEY_WOW64_32KEY)
+        try:
+            sxs_key = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
+                              0, KEY_READ | KEY_WOW64_32KEY)
+        except WindowsError:
+            sxs_key = None
         if not sxs_key:
             return None, None, None
 

@@ -24,9 +24,6 @@ TurbulenzEngine.onload = function onloadFn()
     TurbulenzEngine.onerror = errorCallback;
 
     // Create each of the native engine API devices to be used
-    var mathDeviceParameters = {};
-    var mathDevice = TurbulenzEngine.createMathDevice(mathDeviceParameters);
-
     var graphicsDeviceParameters = { };
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
 
@@ -1034,7 +1031,7 @@ TurbulenzEngine.onload = function onloadFn()
     loadSVGfile(initialSVGfile);
 
     // Create canvas object
-    canvas = Canvas.create(graphicsDevice, mathDevice);
+    canvas = Canvas.create(graphicsDevice);
 
     ctx = canvas.getContext('2d');
 
@@ -1156,7 +1153,6 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Clear each native engine reference
         graphicsDevice = null;
-        mathDevice = null;
 
         TurbulenzEngine.onunload = null;
     };

@@ -240,8 +240,12 @@ class LeaderboardManager
 
         if (typeof(score) !== 'number' || isNaN(score))
         {
-            errorCallback("Score must be a number.");
-            return;
+            throw new Error("Score must be a number.");
+        }
+
+        if (score < 0)
+        {
+            throw new Error("Score cannot be negative.");
         }
 
         var sortBy = meta.sortBy;

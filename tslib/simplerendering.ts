@@ -3,7 +3,7 @@
 //
 // SimpleRendering
 //
-/*global renderingCommonCreateRendererInfoFn: false,  renderingCommonGetTechniqueIndexFn: false
+/*global renderingCommonCreateRendererInfoFn: false,
          renderingCommonSortKeyFn: false */
 /*global TurbulenzEngine: false */
 /*global Effect: false */
@@ -573,7 +573,7 @@ class SimpleRendering
             {
                 that.shader = shader;
                 that.technique = shader.getTechnique(that.techniqueName);
-                that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+                that.techniqueIndex = (that.technique ? that.technique.id : 0);
             };
             shaderManager.load(this.shaderName, callback);
         };

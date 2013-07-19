@@ -849,6 +849,23 @@ This returns ``false`` until :ref:`TurbulenzEngine.unload() <turbulenzengine_unl
     ``false`` until :ref:`TurbulenzEngine.unload() <turbulenzengine_unload>` has been called then returns ``true``.
 
 
+.. index::
+    pair: TurbulenzEngine; getTime
+
+.. _turbulenzengine_gettime:
+
+`getTime`
+---------
+
+**Summary**
+
+Returns time in **milliseconds**. The precision will be in the sub-millisecond range.
+
+**Syntax** ::
+
+    var currentTime = TurbulenzEngine.getTime();
+
+
 Properties
 ==========
 

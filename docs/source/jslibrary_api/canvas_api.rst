@@ -137,7 +137,7 @@ Turbulenz Canvas only supports `butt` for `lineCap` and `miter` for `lineJoin`.
 
 **Graphics/Math device required**
 
-When using the Turbulenz Canvas implementation, you are required to provide a mathDevice and graphicsDevice object.
+When using the Turbulenz Canvas implementation, you are required to provide a graphicsDevice object.
 This is so the implementation can setup the canvas element.
 When running in plugin mode, this will use the plugin object. In canvas mode, this will attempt to create a WebGL 3D context.
 
@@ -145,22 +145,20 @@ When running in plugin mode, this will use the plugin object. In canvas mode, th
 
     If using the Turbulenz Canvas with either plugin or canvas (WebGL), you will not be able to request the canvas context directly i.e.::
 
-        var mathDevice = TurbulenzEngine.createMathDevice({});
         var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
 
         var canvasElem = TurbulenzEngine.canvas;
-        var canvas = Canvas.create(graphicsDevice, mathDevice);
+        var canvas = Canvas.create(graphicsDevice);
 
         //BAD: ctx === null
         var ctx = canvasElem.getContext('2d');
 
     since a context has already been created by the graphics device. To access it call::
 
-        var mathDevice = TurbulenzEngine.createMathDevice({});
         var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
 
         var canvasElem = TurbulenzEngine.canvas;
-        var canvas = Canvas.create(graphicsDevice, mathDevice);
+        var canvas = Canvas.create(graphicsDevice);
 
         //OK: ctx === Turbulenz Canvas Context
         var ctx = canvas.getContext('2d');
@@ -184,8 +182,7 @@ Creates and returns a Canvas object with default state.
 **Syntax** ::
 
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
-    var mathDevice = TurbulenzEngine.createMathDevice({});
-    var canvas = Canvas.create(graphicsDevice, mathDevice);
+    var canvas = Canvas.create(graphicsDevice);
 
 
 Methods

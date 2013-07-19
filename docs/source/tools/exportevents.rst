@@ -55,7 +55,9 @@ Options
 .. cmdoption:: --daterange=DATERANGE, -d DATERANGE
 
     Individual 'yyyy-mm-dd' or range 'yyyy-mm-dd : yyyy-mm-dd' of dates to get the data for (defaults to today).
-    This range gets clamped from when the project was created to today.
+    This range gets clamped from when the project was created to today. The range of data queried is from midnight
+    UTC at the start of the start date to either midnight UTC at the end of the start date (if only one date is given)
+    or midnight UTC at the end of the end date.
 
 .. cmdoption:: --outputdir=OUTPUTDIR, -o OUTPUTDIR
 
@@ -97,3 +99,13 @@ When exporting user information:
     Entries in the downloaded user information may contain an additional `isTurbulenz` or `isDeveloper` flag.
     The `isTurbulenz` flag will be set for anyone who is a Turbulenz employee.
     The `isDeveloper` flag will be set for anyone listed as a game team member via the project :ref:`Edit tab <hub_edit_project_metadata>` on the Hub.
+
+.. NOTE::
+
+    When requesting a daterange which includes the current day the output files will contain data up to the current
+    point in time. The filenames will reflect the exact time range which was queried, and thus running the query
+    multiple times will generate different filenames with potentially different events.
+
+.. NOTE::
+
+    All times and dateranges should be specified in UTC, all resulting metrics also specify times in UTC.

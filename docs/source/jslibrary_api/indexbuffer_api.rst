@@ -138,6 +138,23 @@ Properties
 ==========
 
 .. index::
+    pair: IndexBuffer; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the IndexBuffer object.
+
+**Syntax** ::
+
+    var indexBufferId = indexBuffer.id;
+
+.. note:: Read Only
+
+
+.. index::
     pair: IndexBuffer; numIndices
 
 `numIndices`

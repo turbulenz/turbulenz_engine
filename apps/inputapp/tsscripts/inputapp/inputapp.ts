@@ -28,7 +28,6 @@
 class Application
 {
     inputDevice: InputDevice;
-    mathDevice: MathDevice;
     graphicsDevice: GraphicsDevice;
     canvas: Canvas;
     canvas2dContext: CanvasContext;
@@ -806,16 +805,13 @@ class Application
     createDevices(canvas)
     {
         var graphicsDevice;
-        var mathDevice;
         var inputDevice;
-        var mathDeviceParameters        = {};
         var inputDeviceParameters       = {};
         var graphicsDeviceParameters    =
         {
             multisample : 4
         };
 
-        mathDevice = TurbulenzEngine.createMathDevice(mathDeviceParameters);
         inputDevice = TurbulenzEngine.createInputDevice(inputDeviceParameters);
 
         if (!this.isCanvas)
@@ -829,7 +825,7 @@ class Application
                 return false;
             }
 
-            this.canvas             = Canvas.create(graphicsDevice, mathDevice);
+            this.canvas             = Canvas.create(graphicsDevice);
             this.canvas2dContext    = this.canvas.getContext('2d');
         }
         else
@@ -840,7 +836,6 @@ class Application
 
         this.graphicsDevice = graphicsDevice;
         this.inputDevice    = inputDevice;
-        this.mathDevice     = mathDevice;
 
         this.keyCodes   = inputDevice.keyCodes;
         this.mouseCodes = inputDevice.mouseCodes;
@@ -1531,7 +1526,6 @@ class Application
             TurbulenzEngine.flush();
 
             this.inputDevice     = null;
-            this.mathDevice      = null;
             this.graphicsDevice  = null;
         }
     }
@@ -1575,7 +1569,6 @@ class Application
 
         // Devices and canvas
         application.inputDevice     = null;
-        application.mathDevice      = null;
         application.graphicsDevice  = null;
         application.canvas          = canvas;
         application.canvas2dContext = null;
@@ -1748,5 +1741,9 @@ class Application
         application.cursorImageLocked   = null;
 
         return application;
+    };
+};
     }
 }
+    };
+};
