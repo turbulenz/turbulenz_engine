@@ -395,9 +395,5 @@ class Motion
         m.variantRotation = md.m43BuildIdentity();
 
         return m;
-    };
-};
     }
 }
-    };
-};

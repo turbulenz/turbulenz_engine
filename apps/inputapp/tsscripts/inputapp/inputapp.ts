@@ -1741,9 +1741,5 @@ class Application
         application.cursorImageLocked   = null;
 
         return application;
-    };
-};
     }
 }
-    };
-};
