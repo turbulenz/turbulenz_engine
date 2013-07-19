@@ -94,7 +94,7 @@ class TicTacToeGame
                 draw: true
             };
         }
-    };
+    }
 
     serialize(): string
     {
@@ -102,7 +102,7 @@ class TicTacToeGame
                 moves: this.moves,
                 firstMove: this.firstMove
             });
-    };
+    }
 
     getPlayerPiece(username: string): string
     {
@@ -114,7 +114,7 @@ class TicTacToeGame
         {
             return this.cross;
         }
-    };
+    }
 
     forfeit()
     {
@@ -125,7 +125,7 @@ class TicTacToeGame
             moves[currentUser] = [];
         }
         moves[currentUser].push('forfeit');
-    };
+    }
 
     checkPieceWin(piece: string): bool
     {
@@ -162,13 +162,13 @@ class TicTacToeGame
             return true;
         }
         return false;
-    };
+    }
 
     canMove(x: number, y: number): bool
     {
         return (!this.roundEnd &&
                 this.boardState[x + y * 3] === undefined)
-    };
+    }
 
     doMove(x: number, y: number): void
     {
@@ -183,7 +183,7 @@ class TicTacToeGame
         {
             this.firstMove = currentUsername;
         }
-    };
+    }
 
     playerJoined(username: string): void
     {
@@ -193,7 +193,7 @@ class TicTacToeGame
             moves[username] = [];
             this.otherUser = username;
         }
-    };
+    }
 
     getUsers(): string[]
     {
@@ -204,7 +204,7 @@ class TicTacToeGame
             users.push(otherUser);
         }
         return users;
-    };
+    }
 
     static create(username: string, host: string): TicTacToeGame
     {
@@ -232,5 +232,5 @@ class TicTacToeGame
         ticTacToeGame.roundEnd = null;
 
         return ticTacToeGame;
-    };
+    }
 }

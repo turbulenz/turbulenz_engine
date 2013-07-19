@@ -146,7 +146,7 @@ class Application
         this.gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreated);
 
         this.intervalID = TurbulenzEngine.setInterval(this.loadingUpdate.bind(this), 100);
-    };
+    }
 
     createGame()
     {
@@ -161,7 +161,7 @@ class Application
             this.invalidateButtons = true;
         }
         this.dataShareManager.createDataShare(dataShareCreated);
-    };
+    }
 
     findDataShares()
     {
@@ -254,7 +254,7 @@ class Application
         }
         // find any joinable datashares
         this.dataShareManager.findDataShares({callback: foundDataSharesCallback});
-    };
+    }
 
     playerJoined(notification)
     {
@@ -265,7 +265,7 @@ class Application
             // has moved
             this.readMoves();
         }
-    };
+    }
 
     yourTurn(notification)
     {
@@ -273,7 +273,7 @@ class Application
         {
             this.readMoves();
         }
-    };
+    }
 
     leaveGame()
     {
@@ -288,14 +288,14 @@ class Application
             this.findDataShares();
         }
         this.currentDataShare.leave(dataShareLeft);
-    };
+    }
 
     toLobby()
     {
         this.currentDataShare = null;
         this.currentGame = null;
         this.findDataShares();
-    };
+    }
 
     forfeitGame()
     {
@@ -348,7 +348,7 @@ class Application
                     callback: gameStateSet
                 });
         }
-    };
+    }
 
     getPlayGameFn(dataShare: DataShare): { (): void; }
     {
@@ -358,7 +358,7 @@ class Application
             this.currentGame = this.joinedGames[dataShare.id];
             this.readMoves();
         }
-    };
+    }
 
     readMoves(callback?: { (): void; }): void
     {
@@ -377,7 +377,7 @@ class Application
             }
         }
         this.currentDataShare.get('game-state', getMovesCallback);
-    };
+    }
 
     getJoinGameFn(dataShare: DataShare): { (): void; }
     {
@@ -430,7 +430,7 @@ class Application
             }
             dataShare.join(joinedDataShare);
         }
-    };
+    }
 
     getOnClickFn(x: number, y: number): { (): void; }
     {
@@ -497,7 +497,7 @@ class Application
                 this.readMoves();
             }
         }
-    };
+    }
 
     segmentFont(x: number, y: number, text: string, clickCallback?, id?: string)
     {
@@ -547,7 +547,7 @@ class Application
             spacing : 0,
             alignment : 0
         });
-    };
+    }
 
     renderGame()
     {
@@ -671,7 +671,7 @@ class Application
 
             draw2D.end();
         }
-    };
+    }
 
     renderLobby()
     {
@@ -753,7 +753,7 @@ class Application
         this.segmentFont(0, offsetY, 'Refresh', this.findDataShares.bind(this), 'refresh');
         this.segmentFont(20, offsetY, 'Create new game', this.createGame.bind(this), 'create');
         offsetY += textSpacingY;
-    };
+    }
 
     update()
     {
@@ -793,7 +793,7 @@ class Application
         }
 
         graphicsDevice.endFrame();
-    };
+    }
 
     loadingUpdate()
     {
@@ -879,7 +879,7 @@ class Application
             TurbulenzEngine.clearInterval(this.intervalID);
             this.intervalID = TurbulenzEngine.setInterval(this.update.bind(this), 1000 / 60);
         }
-    };
+    }
 
     // Attempts to free memory - called from onbeforeunload and/or
     // TurbulenzEngine.onUnload
@@ -898,12 +898,12 @@ class Application
             this.mathDevice      = null;
             this.graphicsDevice  = null;
         }
-    };
+    }
 
     errorCallback(message)
     {
         Utilities.log(message);
-    };
+    }
 
     // Application constructor function
     static create()
@@ -966,5 +966,5 @@ class Application
         application.oldHeight = 0;
 
         return application;
-    };
-};
+    }
+}

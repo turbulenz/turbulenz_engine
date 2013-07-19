@@ -51,7 +51,7 @@ class AppScene
     errorCallback(msg)
     {
         window.alert(msg);
-    };
+    }
 
     // Tests whether there are things being loaded
     hasLoaded()
@@ -78,7 +78,7 @@ class AppScene
         {
             return true;
         }
-    };
+    }
 
     // Loads the cube asset
     loadCube()
@@ -109,7 +109,7 @@ class AppScene
         };
 
         this.sceneLoader.load(cubeLoadingParameters);
-    };
+    }
 
     createMaterials()
     {
@@ -200,7 +200,7 @@ class AppScene
                 }
             }
         }
-    };
+    }
 
     // Populates the scene with board and worm
     setupScene()
@@ -229,7 +229,7 @@ class AppScene
         this.createBoard(boardCenter, boardSpacing, horizontalCubes, verticalCubes);
 
         scene.update();
-    };
+    }
 
     // Setup the camera
     setupCamera()
@@ -251,7 +251,7 @@ class AppScene
         camera.updateViewMatrix();
 
         this.camera = camera;
-    };
+    }
 
     // Resets the worm to starting state
     resetWorm(wormIndex)
@@ -269,7 +269,7 @@ class AppScene
         }
 
         wormPartsNodes.length = 0;
-    };
+    }
 
     // Creates our reference cube node to be duplicated
     createCubeNodes(maxPlayers)
@@ -325,7 +325,7 @@ class AppScene
             foodCubeNode.addRenderable(n === 0 ? foodCubeRenderable : foodCubeRenderable.clone());
             foodCubeNodes[n] = foodCubeNode;
         }
-    };
+    }
 
     // Sets up the root node and children for the game
     createNodeStructure(maxPlayers)
@@ -385,7 +385,7 @@ class AppScene
 
         // Add game as root node
         scene.addRootNode(gameNode);
-    };
+    }
 
     // Create the back grid to play on
     createBoard(boardCenter, boardSpacing, horizontalCubes, verticalCubes)
@@ -428,14 +428,14 @@ class AppScene
 
             x += boardSpacing;
         }
-    };
+    }
 
     // Update function - called every frame
     update()
     {
         this.updateGameScene();
         this.updateCamera();
-    };
+    }
 
     // Updates the camera
     updateCamera()
@@ -453,7 +453,7 @@ class AppScene
             camera.updateProjectionMatrix();
         }
         camera.updateViewProjectionMatrix();
-    };
+    }
 
     // Updates the worm node
     updateGameScene()
@@ -516,7 +516,7 @@ class AppScene
         this.previousGameState = currentState;
 
         this.updateTransforms();
-    };
+    }
 
     // Updates the local transforms of the worm part nodes
     moveWormNodes(wormIndex)
@@ -578,7 +578,7 @@ class AppScene
 
             wormPartNode.setLocalTransform(local);
         }
-    };
+    }
 
     // Update scene from game
     updateTransforms()
@@ -615,7 +615,7 @@ class AppScene
         }
 
         this.scene.update();
-    };
+    }
 
     // Sets node renderable with material specified
     setMaterial(renderable, materialName)
@@ -630,7 +630,7 @@ class AppScene
                 renderable.setMaterial(this.scene.getMaterial(materialName));
             }
         }
-    };
+    }
 
     // AppScene constructor function
     static create(devices, managers, requestHandler, mappingTable, game)
@@ -681,5 +681,5 @@ class AppScene
         appScene.loadCube();
 
         return appScene;
-    };
-};
+    }
+}

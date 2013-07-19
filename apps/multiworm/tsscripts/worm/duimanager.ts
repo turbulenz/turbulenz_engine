@@ -52,7 +52,7 @@ class DynamicUIManager
         this._setters[id] = setValue;
         this._getters[id] = getValue;
         return id;
-    };
+    }
 
     /**
      * Utility function to handle "watch stashed object" events.
@@ -68,7 +68,7 @@ class DynamicUIManager
         var options = params.options || {};
         var groupId = params.groupId || this._watchGroup;
         this.watchVariable(title, this._objects[id], property, ui, groupId, options);
-    };
+    }
 
     /**
      * Adds a slider to the specified group.
@@ -84,7 +84,7 @@ class DynamicUIManager
     addSlider(title, getValue, setValue, groupId, options)
     {
         return this._addUI('slider', title, getValue, setValue, groupId, options);
-    };
+    }
 
     /**
      * Adds a checkbox to the specified group.
@@ -100,7 +100,7 @@ class DynamicUIManager
     addCheckbox(title, getValue, setValue, groupId, options)
     {
         return this._addUI('checkbox', title, getValue, setValue, groupId, options);
-    };
+    }
 
     /**
      * Adds a drop-down selector to the specified group.
@@ -116,7 +116,7 @@ class DynamicUIManager
     addSelect(title, getValue, setValue, groupId, options)
     {
         return this._addUI('select', title, getValue, setValue, groupId, options);
-    };
+    }
 
     /**
      * Adds an updatable label to the specified group.
@@ -132,7 +132,7 @@ class DynamicUIManager
     addWatch(title, getValue, setValue, groupId, options)
     {
         return this._addUI('watch', title, getValue, setValue, groupId, options);
-    };
+    }
 
     /**
      * Adds a set of radio buttons to the specified group.
@@ -148,7 +148,7 @@ class DynamicUIManager
     addRadioButton(title, getValue, setValue, groupId, options)
     {
         return this._addUI('radio', title, getValue, setValue, groupId, options);
-    };
+    }
 
     /**
      * Destroys the specified UI element.
@@ -161,7 +161,7 @@ class DynamicUIManager
         TurbulenzBridge.emit('dynamicui.destroy', JSON.stringify({
             id: id
         }));
-    };
+    }
 
     /**
      * Updates the specified UI element with a new value.
@@ -175,7 +175,7 @@ class DynamicUIManager
             id: id,
             value: value
         }));
-    };
+    }
 
     /**
      * Adds a group to the dynamid UI.
@@ -193,7 +193,7 @@ class DynamicUIManager
             groupId: groupId || null
         }));
         return id;
-    };
+    }
 
     /**
      * Adds a UI element to an existing group. The element is moved, so if it is already a member of a group it
@@ -208,7 +208,7 @@ class DynamicUIManager
             id: id,
             groupId: groupId
         }));
-    };
+    }
 
     /**
      * Removes a UI element from a group. This does not destroy the UI element so it can be used to temporarily hide
@@ -223,7 +223,7 @@ class DynamicUIManager
             id: id,
             groupId: groupId
         }));
-    };
+    }
 
     /**
      * Helper function to watch the specified property of an object. This automatically sets up the getter and setter
@@ -281,7 +281,7 @@ class DynamicUIManager
         }
 
         return id;
-    };
+    }
 
     showObject(title, object, editable, group)
     {
@@ -311,7 +311,7 @@ class DynamicUIManager
             }
         }
         return objectGroup;
-    };
+    }
 
     /**
      * Registers a named path to an object so that the object can be referenced from another context for the creation of
@@ -327,7 +327,7 @@ class DynamicUIManager
         this._objects[id] = object;
         TurbulenzBridge.emit('dynamicui.stash-add', id + ':' + path);
         return id;
-    };
+    }
 
     /**
      * Creates a DynamicUI manager and initialises it, registering against events.
@@ -371,8 +371,8 @@ class DynamicUIManager
         });
 
         return uiMan;
-    };
-};
+    }
+}
 
 DynamicUIManager.prototype._newId = (function () {
     var id = 0;

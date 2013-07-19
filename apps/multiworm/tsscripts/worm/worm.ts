@@ -95,7 +95,7 @@ class Worm
                 this.updated = true;
             }
         }
-    };
+    }
 
     // Update called every frame
     update()
@@ -116,7 +116,7 @@ class Worm
         }
 
         this.killedBy = null;
-    };
+    }
 
     // Collided with something
     die(killedBy)
@@ -125,7 +125,7 @@ class Worm
         this.killedBy = killedBy;
         this.updated = true;
         this.playerInfo.status = "is bird-food.";
-    };
+    }
 
     // Serialize worm information
     serialize()
@@ -163,7 +163,7 @@ class Worm
             color: this.playerInfo.color,
             team: this.playerInfo.team,
             status: this.playerInfo.status,
-            killedBy: undefined
+            killedBy: <number>undefined
         };
 
         var killedBy = this.killedBy;
@@ -173,7 +173,7 @@ class Worm
         }
 
         return data;
-    };
+    }
 
     // Deserialize from external data
     deserialize(isHost, data)
@@ -235,7 +235,7 @@ class Worm
         this.playerInfo.team = data.team;
         this.playerInfo.status = data.status;
         this.playerInfo.color = data.color;
-    };
+    }
 
     // Moves all of worm parts as required
     moveBody()
@@ -257,7 +257,7 @@ class Worm
             partsPositionX[i] = partsPositionX[i - 1];
             partsPositionY[i] = partsPositionY[i - 1];
         }
-    };
+    }
 
     // Moves head and loops over board edge if necessary
     moveHead()
@@ -300,7 +300,7 @@ class Worm
 
         partsPositionX[0] = headPositionX;
         partsPositionY[0] = headPositionY;
-    };
+    }
 
     // Increases worm length by 1
     addToTail()
@@ -333,7 +333,7 @@ class Worm
         if (length > 12) {
             this.playerInfo.status = "is feeling bloated.";
         }
-    };
+    }
 
     // Tests for self intersection
     isIntersectingSelf()
@@ -356,7 +356,7 @@ class Worm
         }
 
         return false;
-    };
+    }
 
     // Tests for intersection with other worms
     isIntersecting(otherWorm)
@@ -380,7 +380,7 @@ class Worm
         }
 
         return false;
-    };
+    }
 
     // Tests if position x,y is covered by worm
     containsPosition(x, y)
@@ -401,7 +401,7 @@ class Worm
         }
 
         return false;
-    };
+    }
 
     // Test if position x,y is covered by worm head
     isOnHead(x, y)
@@ -413,7 +413,7 @@ class Worm
         }
 
         return false;
-    };
+    }
 
     // Resets worm to original state
     reset(x, y)
@@ -438,7 +438,7 @@ class Worm
         this.playerInfo.score = 0;
 
         this.updated = true;
-    };
+    }
 
     static create(gameSettings): Worm
     {
@@ -467,8 +467,8 @@ class Worm
         };
 
         return worm;
-    };
-};
+    }
+}
 
 Worm.prototype.direction = {
     NONE : -1,

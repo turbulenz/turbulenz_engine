@@ -18,20 +18,20 @@ class Leaderboard
     onBeforeSet()
     {
         this.isUpdating = true;
-    };
+    }
 
     // When leaderboard set callback is made
     onSuccessfulSet(bestScore)
     {
         this.currentScore = bestScore;
         this.isUpdating = false;
-    };
+    }
 
     // When leaderboard set failed
     onUnsuccessfulSet()
     {
         this.isUpdating = false;
-    };
+    }
 
     static create(sortBy, title)
     {
@@ -95,5 +95,5 @@ class Leaderboard
         }
 
         return leaderboard;
-    };
-};
+    }
+}

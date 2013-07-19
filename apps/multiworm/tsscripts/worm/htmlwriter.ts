@@ -103,7 +103,7 @@ class HtmlWriter
                 this.addBadgeHtml(badgeDiv);
             }
         }
-    };
+    }
 
     // Creates html structure for a leaderboard
     addLeaderboardHtml(leaderboard)
@@ -133,7 +133,7 @@ class HtmlWriter
         leaderboardDataDiv.id = (leaderboardName + "_data");
         leaderboardDataDiv.className = "leaderboard-block-score";
         leaderboardDiv.appendChild(leaderboardDataDiv);
-    };
+    }
 
     // Creates html structure for a badge
     addBadgeHtml(badge)
@@ -177,14 +177,14 @@ class HtmlWriter
         badgeDataDiv.id = badgeName + "_data";
         badgeDataDiv.className = "badge-block-progress";
         badgeDiv.appendChild(badgeDataDiv);
-    };
+    }
 
     // (Re)Writes the current score html
     writeScore()
     {
         this.writeTextContent(this.scoreDiv, this.game.score);
         this.writeTextContent(this.killsDiv, this.game.kills);
-    };
+    }
 
     // (Re)Writes all leaderboards html
     writeLeaderboards()
@@ -200,7 +200,7 @@ class HtmlWriter
                 this.writeLeaderboard(leaderboard);
             }
         }
-    };
+    }
 
     // (Re)Writes all badges html
     writeBadges()
@@ -225,7 +225,7 @@ class HtmlWriter
                 this.writeUnachievedBadge(badge);
             }
         }
-    };
+    }
 
     // (Re)Write leaderboard html content
     writeLeaderboard(leaderboardName)
@@ -244,7 +244,7 @@ class HtmlWriter
         }
 
         this.writeTextContent(this.leaderboardDivs[leaderboardName]['dataDiv'], leaderboardString);
-    };
+    }
 
     // (Re)Write achieved badge html content
     writeAchievedBadge(badgeName)
@@ -257,7 +257,7 @@ class HtmlWriter
 
         this.writeTextContent(badgeDiv['dataDiv'], badgeString);
         this.writeTextContent(badgeDiv['descriptionDiv'], badge.description);
-    };
+    }
 
     // (Re)Write unachieved badge html content
     writeUnachievedBadge(badgeName)
@@ -282,7 +282,7 @@ class HtmlWriter
 
         this.writeTextContent(badgeDiv['dataDiv'], badgeString);
         this.writeTextContent(badgeDiv['descriptionDiv'], badgeDescription);
-    };
+    }
 
     // Writes text to element specified
     writeTextContent(element, value)
@@ -308,7 +308,7 @@ class HtmlWriter
                 element.innerText = value;
             }
         }
-    };
+    }
 
     // Refreshed the score/leaderboards/badges html content if necessary
     update()
@@ -339,7 +339,7 @@ class HtmlWriter
             game.hasChangedScore = false;
             this.writeScore();
         }
-    };
+    }
 
     static create(leaderboards, badges, game): HtmlWriter
     {
@@ -363,5 +363,5 @@ class HtmlWriter
         htmlWriter.init("scores", "kills", "leaderboards", "badges");
 
         return htmlWriter;
-    };
-};
+    }
+}

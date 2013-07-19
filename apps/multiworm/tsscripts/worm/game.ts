@@ -68,7 +68,7 @@ class Game
     update(isHost, moveWorms)
     {
         (this.gameStates[this.currentState]).call(this, isHost, moveWorms);
-    };
+    }
 
     // Check collisions between worms and foods
     checkCollisions()
@@ -160,7 +160,7 @@ class Game
                 }
             }
         }
-    };
+    }
 
     // Update loop whilst playing
     play(isHost, moveWorms)
@@ -195,7 +195,7 @@ class Game
         {
             this.checkCollisions();
         }
-    };
+    }
 
     // Update loop whilst dead
     dead(isHost /*, moveWorms */)
@@ -204,7 +204,7 @@ class Game
         {
             this.checkCollisions();
         }
-    };
+    }
 
     // My worm eat food
     scored()
@@ -214,7 +214,7 @@ class Game
         this.hasChangedScore = true;
         this.badges.addBadge("abstract_cube_devourer");
         this.worms[this.myWormIndex].playerInfo.score = this.score;
-    };
+    }
 
     // Someone collided against me
     kill()
@@ -222,7 +222,7 @@ class Game
         this.kills += 1;
         this.hasChangedScore = true;
         this.badges.addBadge("abstract_killer");
-    };
+    }
 
     // My worm died
     died(killedBy)
@@ -241,7 +241,7 @@ class Game
 
         leaderboards.setScore("best-score", this.score);
         leaderboards.setScore("most-kills", this.kills);
-    };
+    }
 
     // Randomly places food into a free space
     placeFood(foodIndex)
@@ -289,7 +289,7 @@ class Game
         food.x = randomX;
         food.y = randomY;
         food.updated = true;
-    };
+    }
 
     // Randomly places worm into a free space
     placeWorm(wormIndex)
@@ -334,7 +334,7 @@ class Game
         while (n < maxPlayers);
 
         worms[wormIndex].reset(randomX, randomY);
-    };
+    }
 
     // serialize the whole game
     serialize(data)
@@ -369,7 +369,7 @@ class Game
 
         data.worms = wormsState;
         data.foods = foodsState;
-    };
+    }
 
     // serialize delta information
     serializeDelta(isHost, delta)
@@ -440,7 +440,7 @@ class Game
         }
 
         return updated;
-    };
+    }
 
     // Deserialize game
     deserialize(isHost, data)
@@ -520,19 +520,19 @@ class Game
         }
 
         return updated;
-    };
+    }
 
     // Returns the requested food
     getFood(foodIndex)
     {
         return this.foods[foodIndex];
-    };
+    }
 
     // Returns the requested worm
     getWorm(wormIndex)
     {
         return this.worms[wormIndex];
-    };
+    }
 
     // Resets the worm, and food
     reset()
@@ -543,7 +543,7 @@ class Game
         this.kills = 0;
         this.hasChangedScore = true;
         this.startTime = TurbulenzEngine.time;
-    };
+    }
 
     // Start the game
     start()
@@ -562,7 +562,7 @@ class Game
         {
             this.placeFood(n);
         }
-    };
+    }
 
     // Handles input
     onKeyDown(keynum)
@@ -636,7 +636,7 @@ class Game
             this.graphicsDevice.fullscreen = !this.graphicsDevice.fullscreen;
             break;
         }
-    };
+    }
 
     // Handles mouse input
     onMouseDown(button)
@@ -697,7 +697,7 @@ class Game
                 break;
             }
         }
-    };
+    }
 
     static create(gameSettings, graphicsDevice,
                   gameSession, leaderboards, badges,
@@ -776,8 +776,8 @@ class Game
         game.startTime = TurbulenzEngine.time;
 
         return game;
-    };
-};
+    }
+}
 
 Game.prototype.state = {
     PLAY : 0,
