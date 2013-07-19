@@ -49,6 +49,7 @@ class TZWebGLTexture implements Texture
     static version = 1;
 
     // Texture
+    id                : number;
     name              : string;
     width             : number;
     height            : number;
@@ -1193,6 +1194,7 @@ class WebGLRenderBuffer implements RenderBuffer
     static version = 1;
 
     // RenderBuffer
+    id     : number;
     width  : number;
     height : number;
     format : number;
@@ -1297,6 +1299,7 @@ class WebGLRenderTarget implements RenderTarget
     static version = 1;
 
     // RenderTarget
+    id            : number;
     width         : number;
     height        : number;
     face          : number;
@@ -1652,6 +1655,7 @@ class WebGLIndexBuffer implements IndexBuffer
     static version = 1;
 
     // IndexBuffer
+    id         : number;
     numIndices : number;
     format     : number;
     stride     : number;
@@ -1950,6 +1954,7 @@ class WebGLVertexBuffer implements VertexBuffer
     static version = 1;
 
     // VertexBuffer
+    id          : number;
     numVertices : number;
     usage       : number;
     stride      : number;
@@ -3090,13 +3095,14 @@ class WebGLTechnique implements Technique
     static version = 1;
 
     // Technique
-    initialized: bool;
-    shader: TZWebGLShader;
-    name: string;
-    passes: WebGLPass[];
-    numPasses: number;
-    numParameters: number;
-    device: any;
+    id            : number;
+    initialized   : bool;
+    shader        : TZWebGLShader;
+    name          : string;
+    passes        : WebGLPass[];
+    numPasses     : number;
+    numParameters : number;
+    device        : any;
 
     getPass(id)
     {
@@ -3564,6 +3570,7 @@ class TZWebGLShader implements Shader
     static version = 1;
 
     // Shader
+    id             : number;
     name           : string;
     initialized    : bool;
     programs       : any;
