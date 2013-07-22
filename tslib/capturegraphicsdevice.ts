@@ -2460,6 +2460,7 @@ class PlaybackGraphicsDevice
     writerData: any[];
     entities:   any[];
     numPendingResources: number;
+    numResourcesAdded: number;
     onerror:    any;
 
     constructor(gd)
@@ -2472,6 +2473,7 @@ class PlaybackGraphicsDevice
         this.entities = [];
         this.writerData = [];
         this.numPendingResources = 0;
+        this.numResourcesAdded = 0;
         this.onerror = null;
     }
 
@@ -2530,6 +2532,7 @@ class PlaybackGraphicsDevice
         function makeResourceLoader(src)
         {
             self.numPendingResources += 1;
+            self.numResourcesAdded += 1;
             return function resourceLoaded(resource, status)
             {
                 if (resource)
@@ -2620,6 +2623,7 @@ class PlaybackGraphicsDevice
                         if (archive.hasOwnProperty(name))
                         {
                             this.numPendingResources += 1;
+                            this.numResourcesAdded += 1;
                         }
                     }
                     params.ontextureload = makArchiveTextureLoader(archive);
