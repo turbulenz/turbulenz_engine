@@ -887,8 +887,10 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
     A transaction is a single purchase with a real payment provider (test payments on preview games are not included)
     containing any mix or amount of basket items (offerings).
 
-    **Revenue (USD dollars):** This is the total revenue per day for the game.
+    **Revenue (USD):** This is the approximate total revenue per day for the game.
     This only includes transactions with a real payment provider (test payments on preview games are not included).
+    This is an approximation as it assumes all items are purchased in USD (but some Google Play transactions may charge
+    at a local exchange rate).
     This is not the total amount that you will receive.
     The developer revenue share depends on the payment provider used and your agreement with Turbulenz.
 
@@ -897,8 +899,10 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
     A transaction with multiple offerings in the basket will increase this value by the total amount of the offering
     "X" in the basket.
 
-    **Offering "X" Revenue:** This is the total revenue from the "X" offering per day.
+    **Offering "X" Revenue (USD):** This is the approximate total revenue from the "X" offering per day.
     This only includes transactions with a real payment provider (test payments on preview games are not included).
+    This is an approximation as it assumes all items are purchased in USD (but some Google Play transactions may charge
+    at a local exchange rate).
     A transaction with multiple offerings in the basket will increase this value by the total revenue earned from the
     offering "X" in the basket.
     This is not the amount that you will receive.
