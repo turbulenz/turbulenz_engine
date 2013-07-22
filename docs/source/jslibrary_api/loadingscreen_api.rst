@@ -16,7 +16,6 @@ It can fade in and out smoothly if requested.
 
 The LoadingScreen object requires::
 
-    /*{{ javascript("jslib/assettracker.js") }}*/
     /*{{ javascript("jslib/loadingscreen.js") }}*/
 
 Constructor
@@ -83,9 +82,17 @@ All color fields are in RGBA format.
 ``barBorderSize``
     The number of pixels between the sides of the loading bar and its background.
 
-``assetTracker``
+``progress`` (Optional)
+    A JavaScript number between 0 and 1.
+    The current progress to display.
+    This can also be set with the :ref:`loadingScreen.setProgress <loadingscreen_setprogress>` method.
+    If this field is not specified, the ``assetTracker`` property must be set or the loading bar will not be rendered
+    until :ref:`loadingScreen.setProgress <loadingscreen_setprogress>` is called.
+
+``assetTracker`` (Optional)
     An object used to count the number of assets loaded and to perform the loading progress calculation.
-    If this field is **not** specified, the progress loading bar will **not** be rendered.
+    If ``progress`` is unset, this generates the progress from the loading assets.
+    If this field is not specified, the ``progress`` property must be set or the loading bar will not be rendered.
 
     For more information, see :ref:`AssetTracker object <assetTrackerObject>`.
 
@@ -93,6 +100,22 @@ All color fields are in RGBA format.
 Method
 ======
 
+.. index::
+    pair: LoadingScreen; setProgress
+
+`setProgress`
+-------------
+
+**Summary**
+
+**Syntax** ::
+
+    loadingScreen.setProgress(progress);
+
+``progress``
+    A JavaScript number between 0 and 1.
+    The current progress to display.
+    Set to ``null`` to use the progress generated from an :ref:`AssetTracker object <assetTrackerObject>`.
 
 .. index::
     pair: LoadingScreen; loadAndSetTexture
