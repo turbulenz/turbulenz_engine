@@ -2940,13 +2940,8 @@ WebGLPass.prototype =
         delete this.glProgram;
         delete this.semanticsMask;
         delete this.parameters;
-
-        var states = this.states;
-        if (states)
-        {
-            states.length = 0;
-            delete this.states;
-        }
+        delete this.states;
+        delete this.statesSet;
     }
 };
 
@@ -6080,11 +6075,7 @@ WebGLGraphicsDevice.prototype =
         }
 
         // Copy set renderstates to be reset later
-        renderStatesToReset.length = numRenderStates;
-        for (r = 0; r < numRenderStates; r += 1)
-        {
-            renderStatesToReset[r] = renderStates[r];
-        }
+        state.renderStatesToReset = renderStates;
 
         // Reset texture units
         var lastMaxTextureUnit = state.lastMaxTextureUnit;
