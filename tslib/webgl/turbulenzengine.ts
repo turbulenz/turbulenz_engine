@@ -101,7 +101,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     clearInterval(i)
     {
-        return window.clearInterval(i);
+        window.clearInterval(i);
     };
 
     createGraphicsDevice(params): WebGLGraphicsDevice
@@ -330,7 +330,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             return;
         }
 
-        function httpRequestCallback()
+        var httpRequestCallback = function httpRequestCallbackFn()
         {
             if (xhr.readyState === 4) /* 4 == complete */
             {
@@ -391,7 +391,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 xhr = null;
                 callback = null;
             }
-        }
+        };
 
         xhr.open('GET', url, true);
         if (callback)
@@ -466,7 +466,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
     };
 
-    isUnloading()
+    isUnloading(): bool
     {
         return this.unloading;
     };
