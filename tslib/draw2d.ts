@@ -1454,6 +1454,7 @@ class Draw2D
             indexBufferParameters.numIndices = newSize;
             this.indexBuffer.destroy();
             this.indexBuffer = graphicsDevice.createIndexBuffer(indexBufferParameters);
+            indexBufferParameters.data = null;
             graphicsDevice.setIndexBuffer(this.indexBuffer);
         }
 
@@ -2434,6 +2435,7 @@ class Draw2D
             data : o.indexData((initialVertices * 1.5))
         };
         o.indexBuffer = gd.createIndexBuffer(o.indexBufferParameters);
+        o.indexBufferParameters.data = null;
 
         // Render Target API
         // -----------------
