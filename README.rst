@@ -639,7 +639,7 @@ as described in the setup section.
 
 - **Local Development Server** - Setting up the environment also includes a locally hosted web server which can be
   used for development of HTML5 games and applications. See the
-  `Local Server <http://docs.turbulenz.com/local/index.html>`__ section in the documentation for more details.
+  `Local Server <https://github.com/turbulenz/turbulenz_local>`__ repository for more details.
 
 
 Getting Started With The API
