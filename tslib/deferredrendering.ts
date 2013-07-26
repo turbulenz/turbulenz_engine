@@ -1751,8 +1751,8 @@ class DeferredRendering
         }
 
         var identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
+        var flareIndexBuffer, flareSemantics, flareVertexData;
         var worldView; // Temp variable for reused matrix
-        var flareIndexBuffer, flareSemantics;
 
         // Version of m33Mul that can be applied to just the 3x3 part of 2
         // M43 matrices, resulting in an M33.
@@ -1999,6 +1999,8 @@ class DeferredRendering
                     });
 
                     flareSemantics = gd.createSemantics(['POSITION', 'TEXCOORD']);
+
+                    flareVertexData = new Float32Array(6 * (3 + 2));
                 }
 
                 var oldGeometry = geometryInstance.geometry;
@@ -2199,7 +2201,6 @@ class DeferredRendering
             var cameraToBottom0 = (bottom0 - cameraMatrix[9]);
             var cameraToBottom1 = (bottom1 - cameraMatrix[10]);
             var cameraToBottom2 = (bottom2 - cameraMatrix[11]);
-            var writer;
             if (((normal0 * cameraToBottom0) + (normal1 * cameraToBottom1) + (normal2 * cameraToBottom2)) < 0)
             {
                 geometry.lastTimeVisible = true;
@@ -2249,34 +2250,49 @@ class DeferredRendering
                 var br1 = (bottom1 + flareRight1 - flareUp1 + flareAt1);
                 var br2 = (bottom2 + flareRight2 - flareUp2 + flareAt2);
 
-                writer = vertexBuffer.map();
-                if (writer)
-                {
-                    writer(tl0,     tl1,     tl2,     1.0, 0.0);
-                    writer(tr0,     tr1,     tr2,     1.0, 1.0);
-                    writer(top0,    top1,    top2,    0.5, 0.0);
-                    writer(br0,     br1,     br2,     1.0, 0.0);
-                    writer(bottom0, bottom1, bottom2, 0.5, 1.0);
-                    writer(bl0,     bl1,     bl2,     1.0, 1.0);
-                    vertexBuffer.unmap(writer);
-                }
+                var data = flareVertexData;
+                data[0] = tl0;
+                data[1] = tl1;
+                data[2] = tl2;
+                data[3] = 1.0;
+                data[4] = 0.0;
+                data[5] = tr0;
+                data[6] = tr1;
+                data[7] = tr2;
+                data[8] = 1.0;
+                data[9] = 1.0;
+                data[10] = top0;
+                data[11] = top1;
+                data[12] = top2;
+                data[13] = 0.5;
+                data[14] = 0.0;
+                data[15] = br0;
+                data[16] = br1;
+                data[17] = br2;
+                data[18] = 1.0;
+                data[19] = 0.0;
+                data[20] = bottom0;
+                data[21] = bottom1;
+                data[22] = bottom2;
+                data[23] = 0.5;
+                data[24] = 1.0;
+                data[25] = bl0;
+                data[26] = bl1;
+                data[27] = bl2;
+                data[28] = 1.0;
+                data[29] = 1.0;
+                vertexBuffer.setData(data, 0, 6);
             }
             else
             {
                 if (geometry.lastTimeVisible)
                 {
                     geometry.lastTimeVisible = false;
-                    writer = vertexBuffer.map();
-                    if (writer)
+                    for (var n = 0; n < 30; n += 1)
                     {
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        vertexBuffer.unmap(writer);
+                        flareVertexData[n] = 0;
                     }
+                    vertexBuffer.setData(flareVertexData, 0, 6);
                 }
             }
         }
