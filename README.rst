@@ -14,8 +14,6 @@ Examples using the Turbulenz Engine
 Games
 -----
 
-`Changelog <docs/source/changelog.rst>`__
-
 * `Polycraft <https://turbulenz.com/games/polycraft>`__ - 3D
 * `Save the day <https://turbulenz.com/games/save-the-day>`__ - 2D
 * `Denki Blocks! <https://turbulenz.com/games/denkiblocks>`__ - 2D
