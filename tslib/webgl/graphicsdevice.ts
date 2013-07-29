@@ -7508,13 +7508,17 @@ WebGLGraphicsDevice.create = function webGLGraphicsDeviceCreateFn(canvas, params
     // Need a temporary elements to test capabilities
     var video = <HTMLVideoElement>document.createElement('video');
     var supportedVideoExtensions : WebGLVideoSupportedExtensions = {};
-    if (video.canPlayType('video/webm'))
+
+    if (video)
     {
-        supportedVideoExtensions.webm = true;
-    }
-    if (video.canPlayType('video/mp4'))
-    {
-        supportedVideoExtensions.mp4 = true;
+        if (video.canPlayType('video/webm'))
+        {
+            supportedVideoExtensions.webm = true;
+        }
+        if (video.canPlayType('video/mp4'))
+        {
+            supportedVideoExtensions.mp4 = true;
+        }
     }
     gd.supportedVideoExtensions = supportedVideoExtensions;
     video = null;
