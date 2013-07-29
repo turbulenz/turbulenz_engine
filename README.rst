@@ -14,92 +14,94 @@ Examples using the Turbulenz Engine
 Games
 -----
 
-* [Polycraft](https://turbulenz.com/games/polycraft) - 3D
-* [Save the day](https://turbulenz.com/games/save-the-day) - 2D
-* [Denki Blocks!](https://turbulenz.com/games/denkiblocks) - 2D
-* [Denki Word Quest](https://turbulenz.com/games/denkiwordquest) - 2D
-* [Score Rush](https://turbulenz.com/games/scorerush) - 2D
-* [Score Rush MP](https://turbulenz.com/games/scorerush-mp) - multiplayer
-* [Space Ark](https://turbulenz.com/games/space-ark) - 3D
-* [Apathy](http://apathy.plankhead.com/) - [src](https://github.com/Zacqary/Apathy) - 2D
-* Salty Dogs - [src](https://github.com/zacqary/salty-dogs)
+`Changelog <docs/source/changelog.rst>`__
+
+* `Polycraft <https://turbulenz.com/games/polycraft>`__ - 3D
+* `Save the day <https://turbulenz.com/games/save-the-day>`__ - 2D
+* `Denki Blocks! <https://turbulenz.com/games/denkiblocks>`__ - 2D
+* `Denki Word Quest <https://turbulenz.com/games/denkiwordquest>`__ - 2D
+* `Score Rush <https://turbulenz.com/games/scorerush>`__ - 2D
+* `Score Rush MP <https://turbulenz.com/games/scorerush-mp>`__ - multiplayer
+* `Space Ark <https://turbulenz.com/games/space-ark>`__ - 3D
+* `Apathy <http://apathy.plankhead.com/>`__ - `src <https://github.com/Zacqary/Apathy>`__ - 2D
+* Salty Dogs - `src <https://github.com/zacqary/salty-dogs>`__
 
 Apps
 ----
 
-* Sample app - [src](apps/sampleapp/scripts/sampleappmain.js)
-* Touch, keyboard, mouse and pad controller input app - [src](apps/inputapp/tsscripts/inputapp)
-* Viewer - [src](apps/viewer/scripts/viewer.js)
-* Realtime multiplayer worm app - [src](apps/multiworm/tsscripts/worm)
-* Asynchronous turn based multiplayer tic-tac-toe app - [src](apps/tictactoe/tsscripts/tictactoe)
+* Sample app - `src <apps/sampleapp/scripts/sampleappmain.js>`__
+* Touch, keyboard, mouse and pad controller input app - `src <apps/inputapp/tsscripts/inputapp>`__
+* Viewer - `src <apps/viewer/scripts/viewer.js>`__
+* Realtime multiplayer worm app - `src <apps/multiworm/tsscripts/worm>`__
+* Asynchronous turn based multiplayer tic-tac-toe app - `src <apps/tictactoe/tsscripts/tictactoe>`__
 
 Prototyping
 -----------
 
-* Prototyping sample app - [src](apps/protolibsampleapp/scripts/protolibsampleapp.js)
-* Prototyping template app - [src](apps/protolibtemplateapp/scripts/app.js)
+* Prototyping sample app - `src <apps/protolibsampleapp/scripts/protolibsampleapp.js>`__
+* Prototyping template app - `src <apps/protolibtemplateapp/scripts/app.js>`__
 
 Samples
 -------
 
 * Setup:
 
-  * [Device Initialization](http://biz.turbulenz.com/sample_assets/device_initialization.canvas.release.html) - [src](samples/tsscripts/templates/device_initialization.ts)
-  * [Basic Loop](http://biz.turbulenz.com/sample_assets/basic_loop.canvas.release.html) - [src](samples/tsscripts/templates/basic_loop.ts)
+  * `Device Initialization <http://biz.turbulenz.com/sample_assets/device_initialization.canvas.release.html>`__ - `src <samples/tsscripts/templates/device_initialization.ts>`__
+  * `Basic Loop <http://biz.turbulenz.com/sample_assets/basic_loop.canvas.release.html>`__ - `src <samples/tsscripts/templates/basic_loop.ts>`__
 
 * 2D Rendering:
 
-  * [2D Canvas](http://biz.turbulenz.com/sample_assets/2dcanvas.canvas.release.html) - [src](samples/tsscripts/templates/2dcanvas.ts)
-  * [Draw2D](http://biz.turbulenz.com/sample_assets/draw2d.canvas.release.html) - [src](samples/tsscripts/templates/draw2d.ts)
-  * [TextureEffects](http://biz.turbulenz.com/sample_assets/textureeffects.canvas.release.html) - [src](samples/tsscripts/templates/textureeffects.ts)
-  * [Immediate Mode Rendering](http://biz.turbulenz.com/sample_assets/immediate_mode_rendering.canvas.release.html) - [src](samples/tsscripts/templates/immediate_mode_rendering.ts)
-  * Loading - [src](samples/tsscripts/templates/loading.ts)
-  * SVG - [src](samples/tsscripts/templates/svg.ts)
+  * `2D Canvas <http://biz.turbulenz.com/sample_assets/2dcanvas.canvas.release.html>`__ - `src <samples/tsscripts/templates/2dcanvas.ts>`__
+  * `Draw2D <http://biz.turbulenz.com/sample_assets/draw2d.canvas.release.html>`__ - `src <samples/tsscripts/templates/draw2d.ts>`__
+  * `TextureEffects <http://biz.turbulenz.com/sample_assets/textureeffects.canvas.release.html>`__ - `src <samples/tsscripts/templates/textureeffects.ts>`__
+  * `Immediate Mode Rendering <http://biz.turbulenz.com/sample_assets/immediate_mode_rendering.canvas.release.html>`__ - `src <samples/tsscripts/templates/immediate_mode_rendering.ts>`__
+  * Loading - `src <samples/tsscripts/templates/loading.ts>`__
+  * SVG - `src <samples/tsscripts/templates/svg.ts>`__
 
 * 3D Rendering:
 
-  * [Camera](http://biz.turbulenz.com/sample_assets/camera.canvas.release.html) - [src](samples/tsscripts/templates/camera.ts)
-  * [Material](http://biz.turbulenz.com/sample_assets/material.canvas.release.html) - [src](samples/tsscripts/templates/material.ts)
-  * [Forward rendering](http://biz.turbulenz.com/sample_assets/forward_rendering.canvas.release.html) - [src](samples/tsscripts/templates/forward_rendering.ts)
-  * [Morphing](http://biz.turbulenz.com/sample_assets/morphing.canvas.release.html) - [src](samples/tsscripts/templates/morphing.ts)
-  * [Post effects](http://biz.turbulenz.com/sample_assets/postfx.canvas.release.html) - [src](samples/tsscripts/templates/postfx.ts)
-  * [Particles](http://biz.turbulenz.com/sample_assets/particles.canvas.release.html) - [src](samples/tsscripts/templates/particles.ts)
-  * Deferred Rendering - [src](samples/tsscripts/templates/deferred_rendering.ts)
-  * Load model - [src](samples/tsscripts/templates/load_model.ts)
-  * Scene loading - [src](samples/tsscripts/templates/scene_loading.ts)
+  * `Camera <http://biz.turbulenz.com/sample_assets/camera.canvas.release.html>`__ - `src <samples/tsscripts/templates/camera.ts>`__
+  * `Material <http://biz.turbulenz.com/sample_assets/material.canvas.release.html>`__ - `src <samples/tsscripts/templates/material.ts>`__
+  * `Forward rendering <http://biz.turbulenz.com/sample_assets/forward_rendering.canvas.release.html>`__ - `src <samples/tsscripts/templates/forward_rendering.ts>`__
+  * `Morphing <http://biz.turbulenz.com/sample_assets/morphing.canvas.release.html>`__ - `src <samples/tsscripts/templates/morphing.ts>`__
+  * `Post effects <http://biz.turbulenz.com/sample_assets/postfx.canvas.release.html>`__ - `src <samples/tsscripts/templates/postfx.ts>`__
+  * `Particles <http://biz.turbulenz.com/sample_assets/particles.canvas.release.html>`__ - `src <samples/tsscripts/templates/particles.ts>`__
+  * Deferred Rendering - `src <samples/tsscripts/templates/deferred_rendering.ts>`__
+  * Load model - `src <samples/tsscripts/templates/load_model.ts>`__
+  * Scene loading - `src <samples/tsscripts/templates/scene_loading.ts>`__
 
 * Animation:
 
-  * [Animation](http://biz.turbulenz.com/sample_assets/animation.canvas.release.html) - [src](samples/tsscripts/templates/animation.ts)
-  * [Multiple animations](http://biz.turbulenz.com/sample_assets/multiple_animations.canvas.release.html) - [src](samples/tsscripts/templates/multiple_animations.ts)
+  * `Animation <http://biz.turbulenz.com/sample_assets/animation.canvas.release.html>`__ - `src <samples/tsscripts/templates/animation.ts>`__
+  * `Multiple animations <http://biz.turbulenz.com/sample_assets/multiple_animations.canvas.release.html>`__ - `src <samples/tsscripts/templates/multiple_animations.ts>`__
 
 * 2D Physics:
 
-  * [2D Physics](http://biz.turbulenz.com/sample_assets/physics2d.canvas.release.html) - [src](samples/tsscripts/templates/physics2d.ts)
-  * [2D Physics constraints](http://biz.turbulenz.com/sample_assets/physics2d_constraints.canvas.release.html) - [src](samples/tsscripts/templates/physics2d_constraints.ts)
-  * [2D Physics callbacks](http://biz.turbulenz.com/sample_assets/physics2d_callbacks.canvas.release.html) - [src](samples/tsscripts/templates/physics2d_callbacks.ts)
+  * `2D Physics <http://biz.turbulenz.com/sample_assets/physics2d.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics2d.ts>`__
+  * `2D Physics constraints <http://biz.turbulenz.com/sample_assets/physics2d_constraints.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics2d_constraints.ts>`__
+  * `2D Physics callbacks <http://biz.turbulenz.com/sample_assets/physics2d_callbacks.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics2d_callbacks.ts>`__
 
 * 3D Physics:
 
-  * [3D Physics](http://biz.turbulenz.com/sample_assets/physics.canvas.release.html) - [src](samples/tsscripts/templates/physics.ts)
-  * [3D Physics] benchmark(http://biz.turbulenz.com/sample_assets/physics_benchmark.canvas.release.html) - [src](samples/tsscripts/templates/physics_benchmark.ts)
-  * [3D Physics collision mesh](http://biz.turbulenz.com/sample_assets/physics_collisionmesh.canvas.release.html) - [src](samples/tsscripts/templates/physics_collisionmesh.ts)
-  * 3D Physics constraints - [src](samples/tsscripts/templates/physics_constraints.ts)
+  * `3D Physics <http://biz.turbulenz.com/sample_assets/physics.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics.ts>`__
+  * `3D Physics <benchmark(http://biz.turbulenz.com/sample_assets/physics_benchmark.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics_benchmark.ts>`__
+  * `3D Physics collision mesh <http://biz.turbulenz.com/sample_assets/physics_collisionmesh.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics_collisionmesh.ts>`__
+  * 3D Physics constraints - `src <samples/tsscripts/templates/physics_constraints.ts>`__
 
 * Sound:
 
-  * [Sound](http://biz.turbulenz.com/sample_assets/sound.canvas.release.html) - [src](samples/tsscripts/templates/sound.ts)
+  * `Sound <http://biz.turbulenz.com/sample_assets/sound.canvas.release.html>`__ - `src <samples/tsscripts/templates/sound.ts>`__
 
 * Video:
 
-  * [Video playback](http://biz.turbulenz.com/sample_assets/video.canvas.release.html) - [src](samples/tsscripts/templates/video.ts)
+  * `Video playback <http://biz.turbulenz.com/sample_assets/video.canvas.release.html>`__ - `src <samples/tsscripts/templates/video.ts>`__
 
 * Services:
 
-  * Leaderboards - [src](samples/tsscripts/templates/leaderboards.ts)
-  * Multichat - [src](samples/tsscripts/templates/multichat.ts)
-  * Payments - [src](samples/tsscripts/templates/payments.ts)
-  * Userdata - [src](samples/tsscripts/templates/userdata.ts)
+  * Leaderboards - `src <samples/tsscripts/templates/leaderboards.ts>`__
+  * Multichat - `src <samples/tsscripts/templates/multichat.ts>`__
+  * Payments - `src <samples/tsscripts/templates/payments.ts>`__
+  * Userdata - `src <samples/tsscripts/templates/userdata.ts>`__
 
 Features
 ========
