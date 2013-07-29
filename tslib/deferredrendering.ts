@@ -450,9 +450,8 @@ class DeferredRendering
         var numSpotInstances = spotInstances.length;
         if (numSpotInstances)
         {
-            var lightView, lightViewInverse, lightProjection, lightViewInverseProjection;
-
-            lightProjection = md.m43Copy(this.lightProjection);
+            var lightProjection = this.lightProjection;
+            var lightView, lightViewInverse, lightViewInverseProjection;
 
             l = 0;
             do
