@@ -103,6 +103,8 @@ Method
 .. index::
     pair: LoadingScreen; setProgress
 
+.. _loadingscreen_setprogress:
+
 `setProgress`
 -------------
 
