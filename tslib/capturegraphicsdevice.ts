@@ -920,7 +920,7 @@ class CaptureGraphicsDevice
                             (value instanceof Float32Array ||
                              value instanceof Array) &&
                             value._id === undefined &&
-                            value.length === currentValue.length &&
+                            value.length <= currentValue.length &&
                             this._equalFloatArrays(value, currentValue, value.length))
                         {
                             continue;

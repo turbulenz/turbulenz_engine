@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-07-22
+
+- Added a setProgress method to the LoadingScreen object.
+
 2013-07-17
 
 - Added id property to Texture, VertexBuffer, IndexBuffer, RenderBuffer, RenderTarget, Shader, and Technique objects.
