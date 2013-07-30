@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-07-30
+
+- Fixed background sound source bug in Protolib.
+
 2013-07-22
 
 - Added a setProgress method to the LoadingScreen object.
