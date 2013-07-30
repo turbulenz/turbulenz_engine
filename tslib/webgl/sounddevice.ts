@@ -1069,7 +1069,7 @@ WebGLSoundSource.create = function webGLSoundSourceCreateFn(sd, id, params)
                                  position[0] === 0 &&
                                  position[1] === 0 &&
                                  position[2] === 0,
-                                 "Stereo sounds only supported for relatative sources at origin!");
+                                 "Stereo sounds only supported for relative sources at origin!");
                 }
             }
             else
