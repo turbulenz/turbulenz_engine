@@ -36,6 +36,7 @@ Apps
 Prototyping
 -----------
 
+* Prototyping basic app - `jsfiddle <http://jsfiddle.net/jamesaustin/WF47C/>`__
 * Prototyping sample app - `src <apps/protolibsampleapp/scripts/protolibsampleapp.js>`__
 * Prototyping template app - `src <apps/protolibtemplateapp/scripts/app.js>`__
 
@@ -49,7 +50,7 @@ Samples
 
 * 2D Rendering:
 
-  * `2D Canvas <http://biz.turbulenz.com/sample_assets/2dcanvas.canvas.release.html>`__ - `src <samples/tsscripts/templates/2dcanvas.ts>`__
+  * `2D Canvas <http://biz.turbulenz.com/sample_assets/2dcanvas.canvas.release.html>`__ - `src <samples/tsscripts/templates/2dcanvas.ts>`__ - `jsfiddle <http://jsfiddle.net/jamesaustin/HRAw7/>`__
   * `Draw2D <http://biz.turbulenz.com/sample_assets/draw2d.canvas.release.html>`__ - `src <samples/tsscripts/templates/draw2d.ts>`__
   * `TextureEffects <http://biz.turbulenz.com/sample_assets/textureeffects.canvas.release.html>`__ - `src <samples/tsscripts/templates/textureeffects.ts>`__
   * `Immediate Mode Rendering <http://biz.turbulenz.com/sample_assets/immediate_mode_rendering.canvas.release.html>`__ - `src <samples/tsscripts/templates/immediate_mode_rendering.ts>`__
