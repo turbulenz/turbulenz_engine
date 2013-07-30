@@ -3022,7 +3022,7 @@ class PlaybackGraphicsDevice
     }
 
     // This skip method would fail when updating the same data multiple times for next frame to use
-    private _skip(endIndex)
+    public skip(endIndex)
     {
         var nextIndex = this.nextFrameIndex;
         while (nextIndex < endIndex)
@@ -3070,7 +3070,7 @@ class PlaybackGraphicsDevice
     {
         if (this.nextFrameIndex < frameIndex)
         {
-            this._skip(frameIndex);
+            this.skip(frameIndex);
         }
 
         var frame = this.frames[frameIndex];
