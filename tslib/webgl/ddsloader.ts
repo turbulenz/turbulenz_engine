@@ -1068,7 +1068,10 @@ DDSLoader.create = function ddsLoaderFn(params)
                     // Hopefully, nobody will get a valid response with no headers and no body!
                     if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
                     {
-                        loader.onload('', 0);
+                        if (loader.onerror)
+                        {
+                            loader.onerror();
+                        }
                         return;
                     }
 

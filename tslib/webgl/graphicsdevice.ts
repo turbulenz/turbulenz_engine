@@ -5781,7 +5781,7 @@ WebGLGraphicsDevice.prototype =
                 {
                     if (params.onload)
                     {
-                        params.onload(true, status);
+                        params.onload(success, status);
                     }
                 },
                 onerror : function tarFailedFn()
