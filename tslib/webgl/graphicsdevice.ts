@@ -730,12 +730,12 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
                             params.onload(result ? tex : null, status);
                         }
                     },
-                    onerror : function tgaFailedFn()
+                    onerror : function tgaFailedFn(status)
                     {
                         tex.failed = true;
                         if (params.onload)
                         {
-                            params.onload(null);
+                            params.onload(null, status);
                         }
                     },
                     data: undefined,
@@ -770,12 +770,12 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
                             params.onload(result ? tex : null, status);
                         }
                     },
-                    onerror : function ddsFailedFn()
+                    onerror : function ddsFailedFn(status)
                     {
                         tex.failed = true;
                         if (params.onload)
                         {
-                            params.onload(null);
+                            params.onload(null, status);
                         }
                     },
                     data: undefined,
@@ -5784,7 +5784,7 @@ WebGLGraphicsDevice.prototype =
                         params.onload(success, status);
                     }
                 },
-                onerror : function tarFailedFn()
+                onerror : function tarFailedFn(status)
                 {
                     if (params.onload)
                     {

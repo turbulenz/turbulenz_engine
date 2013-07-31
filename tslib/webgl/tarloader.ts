@@ -16,7 +16,7 @@ interface TARLoaderParameters
     mipmaps: bool;
     ontextureload: { (Texture): void; };
     onload: { (success: bool, status: number): void; };
-    onerror: { (msg?: string): void; };
+    onerror: { (status: number): void; };
 };
 
 interface TARLoader
@@ -26,7 +26,7 @@ interface TARLoader
     src: string;
     ontextureload: { (texture: Texture): void; };
     onload: { (success: bool, status: number): void; };
-    onerror: { (): void; };
+    onerror: { (status: number): void; };
     texturesLoading: number;
 
     processBytes: { (bytes: Uint8Array): bool; };
@@ -239,7 +239,7 @@ TARLoader.create = function TarLoaderCreateFn(params)
         {
             if (params.onerror)
             {
-                params.onerror("No XMLHTTPRequest object could be created");
+                params.onerror(0);
             }
             return null;
         }
@@ -258,7 +258,10 @@ TARLoader.create = function TarLoaderCreateFn(params)
                     // Hopefully, nobody will get a valid response with no headers and no body!
                     if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
                     {
-                        loader.onload(false, 0);
+                        if (loader.onerror)
+                        {
+                            loader.onerror(0);
+                        }
                         return;
                     }
 
@@ -318,7 +321,7 @@ TARLoader.create = function TarLoaderCreateFn(params)
                         {
                             if (loader.onerror)
                             {
-                                loader.onerror();
+                                loader.onerror(xhrStatus);
                             }
                         }
                     }
@@ -326,7 +329,7 @@ TARLoader.create = function TarLoaderCreateFn(params)
                     {
                         if (loader.onerror)
                         {
-                            loader.onerror();
+                            loader.onerror(xhrStatus);
                         }
                     }
                 }

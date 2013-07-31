@@ -20,7 +20,7 @@ interface TGALoader
 
     onload: { (data: Uint8Array, width: number, height: number, format: number,
                status: number): void; };
-    onerror: { (msg?: string): void; };
+    onerror: { (status: number): void; };
 
     width: number;
     height: number;
@@ -615,7 +615,7 @@ TGALoader.create = function tgaLoaderFn(params)
         {
             if (params.onerror)
             {
-                params.onerror("No XMLHTTPRequest object could be created");
+                params.onerror(0);
             }
             return null;
         }
@@ -636,7 +636,7 @@ TGALoader.create = function tgaLoaderFn(params)
                     {
                         if (loader.onerror)
                         {
-                            loader.onerror();
+                            loader.onerror(0);
                         }
                         return;
                     }
@@ -686,7 +686,7 @@ TGALoader.create = function tgaLoaderFn(params)
                         {
                             if (loader.onerror)
                             {
-                                loader.onerror();
+                                loader.onerror(xhrStatus);
                             }
                         }
                     }
@@ -694,7 +694,7 @@ TGALoader.create = function tgaLoaderFn(params)
                     {
                         if (loader.onerror)
                         {
-                            loader.onerror();
+                            loader.onerror(xhrStatus);
                         }
                     }
                 }
@@ -733,7 +733,7 @@ TGALoader.create = function tgaLoaderFn(params)
         {
             if (loader.onerror)
             {
-                loader.onerror();
+                loader.onerror(0);
             }
         }
     }

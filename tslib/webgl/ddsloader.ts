@@ -1049,7 +1049,7 @@ DDSLoader.create = function ddsLoaderFn(params)
         {
             if (params.onerror)
             {
-                params.onerror("No XMLHTTPRequest object could be created");
+                params.onerror(0);
             }
             return null;
         }
@@ -1070,7 +1070,7 @@ DDSLoader.create = function ddsLoaderFn(params)
                     {
                         if (loader.onerror)
                         {
-                            loader.onerror();
+                            loader.onerror(0);
                         }
                         return;
                     }
@@ -1120,7 +1120,7 @@ DDSLoader.create = function ddsLoaderFn(params)
                         {
                             if (loader.onerror)
                             {
-                                loader.onerror();
+                                loader.onerror(xhrStatus);
                             }
                         }
                     }
@@ -1128,7 +1128,7 @@ DDSLoader.create = function ddsLoaderFn(params)
                     {
                         if (loader.onerror)
                         {
-                            loader.onerror();
+                            loader.onerror(xhrStatus);
                         }
                     }
                 }
@@ -1167,7 +1167,7 @@ DDSLoader.create = function ddsLoaderFn(params)
         {
             if (loader.onerror)
             {
-                loader.onerror();
+                loader.onerror(0);
             }
         }
     }

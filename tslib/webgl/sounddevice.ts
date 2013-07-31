@@ -266,7 +266,7 @@ WebGLSound.create = function webGLSoundCreateFn(sd, params)
                             {
                                 if (onload)
                                 {
-                                    onload(null);
+                                    onload(null, xhrStatus);
                                 }
                             }
                         }
