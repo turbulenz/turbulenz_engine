@@ -894,6 +894,10 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
     This is not the total amount that you will receive.
     The developer revenue share depends on the payment provider used and your agreement with Turbulenz.
 
+    **X Completed transactions:** This is the total number of completed transactions broken down by payment provider.
+
+    **X Revenue (USD):** This is the approximate total revenue broken down by payment provider.
+
     **Offering "X" purchased:** This is the amount of purchases of the "X" offering per day.
     This only includes transactions with a real payment provider (test payments on preview games are not included).
     A transaction with multiple offerings in the basket will increase this value by the total amount of the offering
