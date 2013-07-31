@@ -848,11 +848,11 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
     For sessions that were still running, whenever the session does complete, it will go back and update the metric for Dec 31.
     Over a period of time this number should be fairly close to the Play Count, otherwise indicates frequent crashes.
 
-    **Daily Unique Players:** This is the unique number of people that started the game on Dec 31.
+    **Daily Active Users (DAU):** This is the unique number of people that started the game on Dec 31.
 
-    **Weekly Unique Players:** This is the unique number of people that started the game during Dec 25 to Dec 31 (7 days).
+    **Weekly Active Users (WAU):** This is the unique number of people that started the game during Dec 25 to Dec 31 (7 days).
 
-    **Monthly Unique Players:** This is the unique number of people that started the game during Dec 02 to Dec 31 (30 days).
+    **Monthly Active Users (MAU):** This is the unique number of people that started the game during Dec 02 to Dec 31 (30 days).
 
     **Engagement Ratio (Weekly):** Daily Unique Players divided by Weekly Unique Players.
 
@@ -864,7 +864,7 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
 
     **Monthly User Retention:** This indicates retention rate (ranging 0-1) calculated by: (Intersection length of unique players for the 'months' Nov 02 to Dec 01 and Dec 02 to Dec 31) / (Number of unique players during Nov 02 to Dec 02).
 
-    **Users:** Total number of unique users that have played the game up to Dec 31.
+    **Lifetime Total Users:** Total number of unique users that have played the game up to Dec 31.
 
     **Cumulative Daily Retention:** Game activation on day 0 has a retention of 1, subsequent days show the proportion of players from the previous day that also played on this day, up to the total number of days the game has been active.
 
@@ -887,7 +887,7 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
     A transaction is a single purchase with a real payment provider (test payments on preview games are not included)
     containing any mix or amount of basket items (offerings).
 
-    **Revenue (USD):** This is the approximate total revenue per day for the game.
+    **Daily Revenue (USD):** This is the approximate total revenue per day for the game.
     This only includes transactions with a real payment provider (test payments on preview games are not included).
     This is an approximation as it assumes all items are purchased in USD (but some Google Play transactions may charge
     at a local exchange rate).
@@ -896,7 +896,7 @@ To explain the behaviour of metrics in a simple way, let's assume these metrics 
 
     **X Completed transactions:** This is the total number of completed transactions broken down by payment provider.
 
-    **X Revenue (USD):** This is the approximate total revenue broken down by payment provider.
+    **X Daily Revenue (USD):** This is the approximate total revenue broken down by payment provider.
 
     **Offering "X" purchased:** This is the amount of purchases of the "X" offering per day.
     This only includes transactions with a real payment provider (test payments on preview games are not included).
@@ -931,6 +931,16 @@ Turbulenz also allows you to track :ref:`custom events <turbulenzservices_sendcu
 
 The custom metrics, along with the feed and follow metrics, are always up-to-date when viewed on the Hub.
 The remaining metrics are currently updated for a 24-hour period after UTC midnight.
+
+.. NOTE::
+    The following metrics were renamed on 1st August 2013 to better match common used terms in the industry.
+    The changes to keys in the csv and json key value exports are also listed.
+        * "Daily Unique Players" -> "Daily Active Players (DAU)" (dailyUniquePlayers -> DAU)
+        * "Weekly Unique Players" -> "Weekly Active Players (WAU)" (weeklyUniquePlayers -> WAU)
+        * "Monthly Unique Players" -> "Monthly Active Players (MAU)" (monthlyUniquePlayers -> MAU)
+        * "Users" -> "Lifetime Total Users" (users -> lifetimeUsers)
+        * "Revenue (USD)" -> "Daily Revenue (USD)" (revenue -> dailyRevenue)
+
 
 A/B Testing
 -----------
