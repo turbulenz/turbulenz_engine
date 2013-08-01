@@ -2456,6 +2456,8 @@ class PlaybackGraphicsDevice
     nextFrameIndex: number;
     srcWidth:   number;
     srcHeight:  number;
+    playWidth: number;
+    playHeight: number;
     frames:     any[];
     writerData: any[];
     entities:   any[];
@@ -2469,6 +2471,8 @@ class PlaybackGraphicsDevice
         this.nextFrameIndex = 0;
         this.srcWidth = 0;
         this.srcHeight = 0;
+        this.playWidth = 0;
+        this.playHeight = 0;
         this.frames = [];
         this.entities = [];
         this.writerData = [];
@@ -3122,6 +3126,9 @@ class PlaybackGraphicsDevice
             gd.setScissor(offsetX, offsetY, width, height);
             gd.setViewport(offsetX, offsetY, width, height);
         }
+
+        this.playWidth = width;
+        this.playHeight = height;
 
         var numCommands = frame.length;
         var c;
