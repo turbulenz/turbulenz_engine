@@ -425,7 +425,7 @@ class CharacterController
 
             rotate = axisRotation.call(md, md.v3BuildYAxis(), turn);
 
-            this.walkDirection = md.m43TransformVector(rotate, this.walkDirection);
+            this.walkDirection = md.m43TransformVector(rotate, this.walkDirection, this.walkDirection);
 
             matrix = mul.call(md, matrix, rotate);
         }
