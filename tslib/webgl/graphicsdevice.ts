@@ -3563,6 +3563,15 @@ Technique.create = function webGLTechniqueCreateFn(gd, shader, name, passes)
 
     technique.id = ++gd.counters.techniques;
 
+    if (1 < numPasses)
+    {
+        if (gd.drawArray !== gd.drawArrayMultiPass)
+        {
+            gd.drawArray = gd.drawArrayMultiPass;
+            debug.log("Detected technique with multiple passes, switching to multi pass support.");
+        }
+    }
+
     return technique;
 };
 
@@ -4060,14 +4069,16 @@ function DrawParameters()
     this.primitive = -1;
     this.userData = null;
 
-    // Initialize for 1 Stream, 2 TechniqueParameters and 8 Instances
-    this[0] = undefined;
-    this[1] = undefined;
-    this[2] = undefined;
+    // Initialize for 1 Stream
+    this[0] = null;
+    this[1] = null;
+    this[2] = 0;
 
-    this[(16 * 3) + 0] = undefined;
-    this[(16 * 3) + 1] = undefined;
-
+    // Initialize for 2 TechniqueParameters
+    this[(16 * 3) + 0] = null;
+    this[(16 * 3) + 1] = null;
+/*
+    // Initialize for 8 instances
     this[((16 * 3) + 8) + 0] = undefined;
     this[((16 * 3) + 8) + 1] = undefined;
     this[((16 * 3) + 8) + 2] = undefined;
@@ -4076,6 +4087,7 @@ function DrawParameters()
     this[((16 * 3) + 8) + 5] = undefined;
     this[((16 * 3) + 8) + 6] = undefined;
     this[((16 * 3) + 8) + 7] = undefined;
+*/
 
     return this;
 }
@@ -4655,11 +4667,10 @@ WebGLGraphicsDevice.prototype =
     },
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
-    setParametersCaching : function setParametersCachingFn(gd, passes, techniqueParameters)
+    setParametersCaching : function setParametersCachingFn(parameters, techniqueParameters)
     {
-        var gl = gd.gl;
+        var gl = this.gl;
 
-        var parameters = passes[0].parameters;
         /*jshint forin: true*/
         for (var p in techniqueParameters)
         {
@@ -4702,7 +4713,7 @@ WebGLGraphicsDevice.prototype =
                         }
                         else if (paramInfo.sampler !== undefined)
                         {
-                            gd.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                            this.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
                         }
                         else
                         {
@@ -4738,6 +4749,12 @@ WebGLGraphicsDevice.prototype =
             }
         }
         /*jshint forin: false*/
+    },
+
+    // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAYMULTIPASS
+    setParametersCachingMultiPass : function setParametersCachingMultiPassFn(gd, passes, techniqueParameters)
+    {
+        gd.setParametersCaching(passes[0].parameters, techniqueParameters);
     },
 
     setParametersDeferred : function setParametersDeferredFn(gd, passes, techniqueParameters)
@@ -4899,12 +4916,219 @@ WebGLGraphicsDevice.prototype =
         }
     },
 
+    // This version only support technique with a single pass, but it is faster
     drawArray : function drawArrayFn(drawParametersArray, globalTechniqueParametersArray, sortMode)
     {
         var gl = this.gl;
         var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
 
-        var setParametersCaching = this.setParametersCaching;
+        var numGlobalTechniqueParameters = globalTechniqueParametersArray.length;
+
+        var numDrawParameters = drawParametersArray.length;
+        if (numDrawParameters > 1 && sortMode)
+        {
+            if (sortMode > 0)
+            {
+                drawParametersArray.sort(this._drawArraySortPositive);
+            }
+            else //if (sortMode < 0)
+            {
+                drawParametersArray.sort(this._drawArraySortNegative);
+            }
+        }
+
+        var activeIndexBuffer = this.activeIndexBuffer;
+        var attributeMask = this.attributeMask;
+        var lastTechnique = null;
+        var lastEndStreams = -1;
+        var lastDrawParameters = null;
+        var techniqueParameters = null;
+        var v = 0;
+        var streamsMatch = false;
+        var vertexBuffer = null;
+        var pass = null;
+        var passParameters = null;
+        var p = null;
+        var indexFormat = 0;
+        var indexStride = 0;
+        var mask = 0;
+        var t = 0;
+
+        if (activeIndexBuffer)
+        {
+            indexFormat = activeIndexBuffer.format;
+            indexStride = activeIndexBuffer.stride;
+        }
+
+        for (var n = 0; n < numDrawParameters; n += 1)
+        {
+            var drawParameters = drawParametersArray[n];
+            var technique = drawParameters.technique;
+            var endTechniqueParameters = drawParameters.endTechniqueParameters;
+            var endStreams = drawParameters.endStreams;
+            var endInstances = drawParameters.endInstances;
+            var indexBuffer = drawParameters.indexBuffer;
+            var primitive = drawParameters.primitive;
+            var count = drawParameters.count;
+            var firstIndex = drawParameters.firstIndex;
+
+            if (lastTechnique !== technique)
+            {
+                lastTechnique = technique;
+
+                this.setTechniqueCaching(technique);
+
+                pass = technique.passes[0];
+                passParameters = pass.parameters;
+
+                mask = (pass.semanticsMask & attributeMask);
+                if (mask !== this.clientStateMask)
+                {
+                    this.enableClientState(mask);
+                }
+
+                if (technique.checkProperties)
+                {
+                    technique.checkProperties(this);
+                }
+
+                for (t = 0; t < numGlobalTechniqueParameters; t += 1)
+                {
+                    this.setParametersCaching(passParameters, globalTechniqueParametersArray[t]);
+                }
+            }
+
+            for (t = (16 * 3); t < endTechniqueParameters; t += 1)
+            {
+                techniqueParameters = drawParameters[t];
+                if (techniqueParameters)
+                {
+                    this.setParametersCaching(passParameters, techniqueParameters);
+                }
+            }
+
+            streamsMatch = (lastEndStreams === endStreams);
+            for (v = 0; streamsMatch && v < endStreams; v += 3)
+            {
+                streamsMatch = (lastDrawParameters[v]     === drawParameters[v]     &&
+                                lastDrawParameters[v + 1] === drawParameters[v + 1] &&
+                                lastDrawParameters[v + 2] === drawParameters[v + 2]);
+            }
+
+            if (!streamsMatch)
+            {
+                lastEndStreams = endStreams;
+
+                for (v = 0; v < endStreams; v += 3)
+                {
+                    vertexBuffer = drawParameters[v];
+                    if (vertexBuffer)
+                    {
+                        this.setStream(vertexBuffer, drawParameters[v + 1], drawParameters[v + 2]);
+                    }
+                }
+
+                attributeMask = this.attributeMask;
+
+                mask = (pass.semanticsMask & attributeMask);
+                if (mask !== this.clientStateMask)
+                {
+                    this.enableClientState(mask);
+                }
+            }
+
+            lastDrawParameters = drawParameters;
+
+            /*jshint bitwise: false*/
+            if (indexBuffer)
+            {
+                if (activeIndexBuffer !== indexBuffer)
+                {
+                    activeIndexBuffer = indexBuffer;
+                    gl.bindBuffer(ELEMENT_ARRAY_BUFFER, indexBuffer.glBuffer);
+
+                    indexFormat = indexBuffer.format;
+                    indexStride = indexBuffer.stride;
+
+                    if (debug)
+                    {
+                        this.metrics.indexBufferChanges += 1;
+                    }
+                }
+
+                firstIndex *= indexStride;
+
+                t = ((16 * 3) + 8);
+                if (t < endInstances)
+                {
+                    do
+                    {
+                        this.setParametersCaching(passParameters, drawParameters[t]);
+
+                        gl.drawElements(primitive, count, indexFormat, firstIndex);
+
+                        if (debug)
+                        {
+                            this.metrics.addPrimitives(primitive, count);
+                        }
+
+                        t += 1;
+                    }
+                    while (t < endInstances);
+                }
+                else
+                {
+                    gl.drawElements(primitive, count, indexFormat, firstIndex);
+
+                    if (debug)
+                    {
+                        this.metrics.addPrimitives(primitive, count);
+                    }
+                }
+            }
+            else
+            {
+                t = ((16 * 3) + 8);
+                if (t < endInstances)
+                {
+                    do
+                    {
+                        this.setParametersCaching(passParameters, drawParameters[t]);
+
+                        gl.drawArrays(primitive, firstIndex, count);
+
+                        if (debug)
+                        {
+                            this.metrics.addPrimitives(primitive, count);
+                        }
+
+                        t += 1;
+                    }
+                    while (t < endInstances);
+                }
+                else
+                {
+                    gl.drawArrays(primitive, firstIndex, count);
+
+                    if (debug)
+                    {
+                        this.metrics.addPrimitives(primitive, count);
+                    }
+                }
+            }
+            /*jshint bitwise: true*/
+        }
+
+        this.activeIndexBuffer = activeIndexBuffer;
+    },
+
+    // This version suports technique with multiple passes but it is slower
+    drawArrayMultiPass : function drawArrayMultiPassFn(drawParametersArray, globalTechniqueParametersArray, sortMode)
+    {
+        var gl = this.gl;
+        var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
+
+        var setParametersCaching = this.setParametersCachingMultiPass;
         var setParametersDeferred = this.setParametersDeferred;
 
         var numGlobalTechniqueParameters = globalTechniqueParametersArray.length;
@@ -5013,7 +5237,6 @@ WebGLGraphicsDevice.prototype =
             if (!streamsMatch)
             {
                 lastEndStreams = endStreams;
-                lastDrawParameters = drawParameters;
 
                 for (v = 0; v < endStreams; v += 3)
                 {
@@ -5034,6 +5257,8 @@ WebGLGraphicsDevice.prototype =
                     }
                 }
             }
+
+            lastDrawParameters = drawParameters;
 
             /*jshint bitwise: false*/
             if (indexBuffer)
