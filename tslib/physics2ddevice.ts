@@ -19,21 +19,21 @@ BoxTree: false
 var Physics2DConfig = {
     // (Contact Physics)
     // Amount of slop permitted in contact penetration
-    CONTACT_SLOP : 0.01, // m
-    EFF_MASS_EPSILON : 1e-10,
-    ILL_THRESHOLD : 1e5,
-    CLIP_EPSILON : 1.65e-10, // m
+    CONTACT_SLOP: 0.01, // m
+    EFF_MASS_EPSILON: 1e-10,
+    ILL_THRESHOLD: 1e5,
+    CLIP_EPSILON: 1.65e-10, // m
 
     // Configuration of bias coeffecient computation
     // for percentage of error to resolve per-frame.
-    BIAS_COEF : 0.15,
-    STATIC_BIAS_COEF : 0.75, // for static-dynamic
-    CONT_BIAS_COEF : 0.5, // for continuous contacts.
-    CONT_STATIC_BIAS_COEF : 0.6, // for continuous, static-dynamic contacts.
+    BIAS_COEF: 0.15,
+    STATIC_BIAS_COEF: 0.75, // for static-dynamic
+    CONT_BIAS_COEF: 0.5, // for continuous contacts.
+    CONT_STATIC_BIAS_COEF: 0.6, // for continuous, static-dynamic contacts.
 
     // Bounce-target-velocity at contact below this value
     // will cause bouncing to be ignored.
-    BOUNCE_VELOCITY_THRESHOLD : 0.25, // m/s
+    BOUNCE_VELOCITY_THRESHOLD: 0.25, // m/s
 
     // Threshold at which static friction takes over from
     // dynamic.
@@ -45,134 +45,134 @@ var Physics2DConfig = {
     // Point
     // -----------
     // Percentage of error solved per-iteration
-    POINT_BIAS_COEF : 0.5,
+    POINT_BIAS_COEF: 0.5,
     // Maximum error to be resolved per-iteration
-    POINT_MAX_ERROR : 0.2, // m
-    POINT_MAX_ERROR_SQ : (0.2 * 0.2),
-    POINT_SLOP_SQ : 1e-6, // m^2
+    POINT_MAX_ERROR: 0.2, // m
+    POINT_MAX_ERROR_SQ: (0.2 * 0.2),
+    POINT_SLOP_SQ: 1e-6, // m^2
     // Squared error to consider error too large
     // to solve properly.
-    POINT_LARGE_ERROR_SQ : 0.01, //m^2
+    POINT_LARGE_ERROR_SQ: 0.01, //m^2
     // Percentage of error solved per-iteration in large error case
-    POINT_LARGE_ERROR_BIAS : 0.75,
+    POINT_LARGE_ERROR_BIAS: 0.75,
     // Maximum error to be resolve per-iteration in large error case
-    POINT_LARGE_ERROR_MAX : 0.4, // m
+    POINT_LARGE_ERROR_MAX: 0.4, // m
 
     // Weld
     // ----
     // Percentage of error solved per-iteration
-    WELD_BIAS_COEF : 0.5,
+    WELD_BIAS_COEF: 0.5,
     // Maximum error to be resolved per-iteration
-    WELD_MAX_LINEAR_ERROR : 0.2, // m
-    WELD_MAX_ANGULAR_ERROR : 0.5, // rad
-    WELD_MAX_LINEAR_ERROR_SQ : (0.2 * 0.2),
-    WELD_LINEAR_SLOP_SQ : 1e-6, // m^2
-    WELD_ANGULAR_SLOP_SQ : 1e-6, // rad^2
+    WELD_MAX_LINEAR_ERROR: 0.2, // m
+    WELD_MAX_ANGULAR_ERROR: 0.5, // rad
+    WELD_MAX_LINEAR_ERROR_SQ: (0.2 * 0.2),
+    WELD_LINEAR_SLOP_SQ: 1e-6, // m^2
+    WELD_ANGULAR_SLOP_SQ: 1e-6, // rad^2
     // Squared error to consider error too large
     // to solve properly.
-    WELD_LARGE_ERROR_SQ : 0.01, //m^2
+    WELD_LARGE_ERROR_SQ: 0.01, //m^2
     // Percentage of linear error solved per-iteration in large error case
-    WELD_LARGE_ERROR_BIAS : 0.75,
+    WELD_LARGE_ERROR_BIAS: 0.75,
     // Maximum linear error to be resolve per-iteration in large error case
-    WELD_LARGE_ERROR_MAX : 0.4, // m
+    WELD_LARGE_ERROR_MAX: 0.4, // m
 
     // Angle
     // -----
     // Percentage of error solved per-iteration
-    ANGLE_BIAS_COEF : 0.5,
-    ANGLE_SLOP_SQ : 1e-6, // rad^2
+    ANGLE_BIAS_COEF: 0.5,
+    ANGLE_SLOP_SQ: 1e-6, // rad^2
 
     // Distance
     // --------
     // Percentage of error solved per-iteration
-    DIST_BIAS_COEF : 0.5,
-    DIST_SLOP_SQ : 1e-6, // m^2
+    DIST_BIAS_COEF: 0.5,
+    DIST_SLOP_SQ: 1e-6, // m^2
     // Squared error to consider error too large
     // to solve properly.
-    DIST_LARGE_ERROR_SQ : 0.01, //m^2
+    DIST_LARGE_ERROR_SQ: 0.01, //m^2
     // Percentage of error to solve per-iteration in large error case
-    DIST_LARGE_ERROR_BIAS : 0.75,
+    DIST_LARGE_ERROR_BIAS: 0.75,
 
 
     // Line
     // ----
     // Percentage of error solved per-iteration
-    LINE_BIAS_COEF : 0.8,
-    LINE_SLOP_SQ : 1e-6, // m^2
+    LINE_BIAS_COEF: 0.8,
+    LINE_SLOP_SQ: 1e-6, // m^2
     // Squared error to consider error too large
     // to solve properly.
-    LINE_LARGE_ERROR_SQ : 0.01, // m^2
+    LINE_LARGE_ERROR_SQ: 0.01, // m^2
     // Percentage of error to solve per-iteration in large error case
-    LINE_LARGE_ERROR_BIAS : 0.9,
+    LINE_LARGE_ERROR_BIAS: 0.9,
 
     // Pulley
     // --------
     // Percentage of error solved per-iteration
-    PULLEY_BIAS_COEF : 0.5,
-    PULLEY_SLOP_SQ : 1e-6, // m^2
+    PULLEY_BIAS_COEF: 0.5,
+    PULLEY_SLOP_SQ: 1e-6, // m^2
     // Squared error to consider error too large
     // to solve properly.
-    PULLEY_LARGE_ERROR_SQ : 0.01, //m^2
+    PULLEY_LARGE_ERROR_SQ: 0.01, //m^2
     // Percentage of error to solve per-iteration in large error case
-    PULLEY_LARGE_ERROR_BIAS : 0.75,
+    PULLEY_LARGE_ERROR_BIAS: 0.75,
 
     // ================================================
     // (Continuous collisions)
     // Percentage of body radius body must move through.
-    MIN_LINEAR_STATIC_SWEEP : 0.05,
-    MIN_ANGULAR_STATIC_SWEEP : 0.005,
-    MIN_LINEAR_BULLET_SWEEP : 0.5,
-    MIN_ANGULAR_BULLET_SWEEP : 0.05,
+    MIN_LINEAR_STATIC_SWEEP: 0.05,
+    MIN_ANGULAR_STATIC_SWEEP: 0.005,
+    MIN_LINEAR_BULLET_SWEEP: 0.5,
+    MIN_ANGULAR_BULLET_SWEEP: 0.05,
 
     // Accuracy threshold for sweeps on distance.
-    SWEEP_LIMIT : 0.0005, // m
+    SWEEP_LIMIT: 0.0005, // m
     // Amount of slop permitted in a continuous collision.
-    SWEEP_SLOP : 0.05, // m
+    SWEEP_SLOP: 0.05, // m
 
     // Minimum fractional TOI-alpha advancement
-    MINIMUM_SWEEP_ADVANCE : 1e-6,
+    MINIMUM_SWEEP_ADVANCE: 1e-6,
     // Maximum sub-steps in sweep
-    MAX_SWEEP_ITER : 50,
+    MAX_SWEEP_ITER: 50,
 
     // Squared relative velocity in dynamic sweeps to ignore pair
-    EQUAL_SQ_VEL : 0.2, // (m/s)^2
+    EQUAL_SQ_VEL: 0.2, // (m/s)^2
     // Sum of angular-velocity * radius for pair of shapes to ignore pair in dynamic sweeps.
-    ZERO_ANG_BIAS : 0.02, // (m.rad/s)
+    ZERO_ANG_BIAS: 0.02, // (m.rad/s)
 
     // Scale factor for angular velocity when TOI has been permitted to slip.
     // This helps prevent an object getting 'stuck' for a few steps when in
     // a fast rotating continuous set of collisions at one point.
-    TOI_SLIP_SCALE : 0.75,
+    TOI_SLIP_SCALE: 0.75,
 
 
     // ================================================
     // (Arbiter/Contact persistance)
     // Number of simulation steps before inactive arbiter is killed.
-    DELAYED_DEATH : 30,
+    DELAYED_DEATH: 30,
 
     // ================================================
     // (Body integration)
-    DELTA_ROTATION_EPSILON : 1e-4, // rad^2
+    DELTA_ROTATION_EPSILON: 1e-4, // rad^2
 
     // ================================================
     // (Sleeping)
-    SLEEP_DELAY : 60,
+    SLEEP_DELAY: 60,
     // squared linear velocity for sleeping
-    SLEEP_LINEAR_SQ : 0.0006, // (m/s)^2
+    SLEEP_LINEAR_SQ: 0.0006, // (m/s)^2
     // squared tangent velocity for sleeping (body radius taken into account)
-    SLEEP_ANGULAR_SQ : 0.001, // (m/s)^2
+    SLEEP_ANGULAR_SQ: 0.001, // (m/s)^2
 
     // ================================================
     // (Point containment)
-    CONTAINS_EPSILON : 1e-6,
-    CONTAINS_SQ_EPSILON : 1e-12,
+    CONTAINS_EPSILON: 1e-6,
+    CONTAINS_SQ_EPSILON: 1e-12,
 
     // ================================================
     // (General)
-    COLLINEAR_EPSILON : 1e-5,
-    COLLINEAR_SQ_EPSILON : (1e-5 * 1e-5),
-    NORMALIZE_EPSILON : 1e-6,
-    NORMALIZE_SQ_EPSILON : (1e-6 * 1e-6),
+    COLLINEAR_EPSILON: 1e-5,
+    COLLINEAR_SQ_EPSILON: (1e-5 * 1e-5),
+    NORMALIZE_EPSILON: 1e-6,
+    NORMALIZE_SQ_EPSILON: (1e-6 * 1e-6),
 
 };
 
@@ -197,12 +197,12 @@ var Physics2DConfig = {
 //
 interface Physics2DMaterialParams
 {
-    elasticity? : number;
-    staticFriction? : number;
-    dynamicFriction? : number;
-    rollingFriction? : number;
-    density? : number;
-    userData? : any;
+    elasticity?: number;
+    staticFriction?: number;
+    dynamicFriction?: number;
+    rollingFriction?: number;
+    density?: number;
+    userData?: any;
 };
 class Physics2DMaterial
 {
@@ -213,40 +213,40 @@ class Physics2DMaterial
 
     static defaultMaterial: Physics2DMaterial;
 
-    getElasticity() : number
+    getElasticity(): number
     {
         return this._data[(/*MAT_ELASTICITY*/0)];
     };
 
-    getStaticFriction() : number
+    getStaticFriction(): number
     {
         return this._data[(/*MAT_STATIC*/1)];
     };
 
-    getDynamicFriction() : number
+    getDynamicFriction(): number
     {
         return this._data[(/*MAT_DYNAMIC*/2)];
     };
 
-    getRollingFriction() : number
+    getRollingFriction(): number
     {
         return this._data[(/*MAT_ROLLING*/3)];
     };
 
-    getDensity() : number
+    getDensity(): number
     {
         return this._data[(/*MAT_DENSITY*/4)];
     };
 
     // params = {
-    //    elasticity : ## = 0,
-    //    staticFriction : ## = 2,
-    //    dynamicFriction : ## = 1,
-    //    rollingFriction : ## = 0.005,
-    //    density : ## = 1,
-    //    userData : null
+    //    elasticity: ## = 0,
+    //    staticFriction: ## = 2,
+    //    dynamicFriction: ## = 1,
+    //    rollingFriction: ## = 0.005,
+    //    density: ## = 1,
+    //    userData: null
     // }
-    static create(params? : Physics2DMaterialParams) : Physics2DMaterial
+    static create(params?: Physics2DMaterialParams): Physics2DMaterial
     {
         var m = new Physics2DMaterial();
         var elasticity      = (params && params.elasticity      !== undefined ? params.elasticity      : 0);
@@ -295,7 +295,7 @@ interface Physics2DShapeCallbackFn {
 
 class Physics2DConstraint
 {
-    type : string;
+    type: string;
 
     _removeOnBreak: bool;
     _breakUnderError: bool;
@@ -305,7 +305,7 @@ class Physics2DConstraint
     sleeping: bool;
     _active: bool;
 
-    dimension : number;
+    dimension: number;
     _data: any;
 
     world: Physics2DWorld;
@@ -336,11 +336,11 @@ class Physics2DConstraint
     { debug.abort("abstract method"); }
     _outWorld()
     { debug.abort("abstract method"); }
-    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody) : bool
+    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
     { debug.abort("abstract method"); return false; }
     _wakeConnected()
     { debug.abort("abstract method"); }
-    _sleepComputation(union : Physics2DDSFUnionFn)
+    _sleepComputation(union: Physics2DDSFUnionFn)
     { debug.abort("abstract method"); }
     _preStep(deltaTime: number): bool
     { debug.abort("abstract method"); return false; }
@@ -641,7 +641,7 @@ class Physics2DConstraint
         constraints.pop();
     };
 
-    twoBodyPairExists(b1 : Physics2DRigidBody, b2 : Physics2DRigidBody) : bool
+    twoBodyPairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
     {
         return ((b1 === this.bodyA && b2 === this.bodyB) ||
                 (b2 === this.bodyA && b1 === this.bodyB));
@@ -662,7 +662,7 @@ class Physics2DConstraint
         }
     };
 
-    twoBodySleepComputation(union : Physics2DDSFUnionFn)
+    twoBodySleepComputation(union: Physics2DDSFUnionFn)
     {
         var body = this.bodyA;
         if (body._type === (/*TYPE_DYNAMIC*/0))
@@ -1191,7 +1191,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _pairExists(b1, b2) : bool
+    _pairExists(b1, b2): bool
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1232,7 +1232,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _sleepComputation(union : Physics2DDSFUnionFn)
+    _sleepComputation(union: Physics2DDSFUnionFn)
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1411,7 +1411,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _preStep(deltaTime) : bool
+    _preStep(deltaTime): bool
     {
         var dimension = this.dimension;
         var data = this._data;
@@ -1614,7 +1614,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _iterateVel() : bool
+    _iterateVel(): bool
     {
         var dimension = this.dimension;
         var data = this._data;
@@ -1696,7 +1696,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         return false;
     };
 
-    _iteratePos() : bool
+    _iteratePos(): bool
     {
         if (this._velocityOnly)
         {
@@ -2041,7 +2041,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         }
     };
 
-    _sleepComputation(union : Physics2DDSFUnionFn)
+    _sleepComputation(union: Physics2DDSFUnionFn)
     {
         var body = this.bodyA;
         if (body._type === (/*TYPE_DYNAMIC*/0))
@@ -5249,10 +5249,10 @@ class Physics2DShape
         }
 
         events.push({
-            callback : callback,
-            mask : callbackMask,
-            type : type,
-            deterministic : deterministic
+            callback: callback,
+            mask: callbackMask,
+            type: type,
+            deterministic: deterministic
         });
 
         if (this.body)
@@ -5550,7 +5550,7 @@ class Physics2DCircle extends Physics2DShape
         }
     };
 
-    _validate() : void
+    _validate(): void
     {
         var data = this._data;
         var originX = data[(/*CIRCLE_LOCAL*/7)];
@@ -5565,8 +5565,8 @@ class Physics2DCircle extends Physics2DShape
     computeCenterOfMass = Physics2DCircle.prototype.getOrigin;
 
     // params = {
-    //      radius : ##,
-    //      origin : [##, ##] = [0, 0],
+    //      radius: ##,
+    //      origin: [##, ##] = [0, 0],
     //      ... common shape props.
     // }
     static create(params): Physics2DCircle
@@ -5653,7 +5653,7 @@ class Physics2DPolygon extends Physics2DShape
         return (doubleArea * 0.5);
     };
 
-    computeMasslessInertia() : number
+    computeMasslessInertia(): number
     {
         var data = this._data;
         var index = (/*POLY_VERTICES*/6);
@@ -6122,7 +6122,7 @@ class Physics2DPolygon extends Physics2DShape
     };
 
     // params = {
-    //      vertices : [v2, v2, ...]  (CLOCKWISE)
+    //      vertices: [v2, v2, ...]  (CLOCKWISE)
     //      ... common shape props.
     // }
     // inVertices optionally replacing params.vertices
@@ -7144,23 +7144,23 @@ class Physics2DRigidBody
     };
 
     // params = {
-    //      shapes : [...],
-    //      mass : [...] = computed from shapes + type
-    //      inertia : [...] = computed from shapes + type
-    //      type : 'static', 'kinematic', 'dynamic' = 'kinematic'
-    //      sleeping : = false,
-    //      force : [, ] = [0,0],
-    //      torque : = 0
-    //      position : [...] = [0,0],
-    //      rotation : = 0
+    //      shapes: [...],
+    //      mass: [...] = computed from shapes + type
+    //      inertia: [...] = computed from shapes + type
+    //      type: 'static', 'kinematic', 'dynamic' = 'kinematic'
+    //      sleeping: = false,
+    //      force: [, ] = [0,0],
+    //      torque: = 0
+    //      position: [...] = [0,0],
+    //      rotation: = 0
     //      surfaceVelocity = [0,0]
-    //      velocity : = [0,0],
-    //      angularVelocity : = 0,
+    //      velocity: = [0,0],
+    //      angularVelocity: = 0,
     //      bullet = false,
     //      linearDrag = 0.05,
     //      angularDrag = 0.05
     // }
-    static create(params) : Physics2DRigidBody
+    static create(params): Physics2DRigidBody
     {
         var b = new Physics2DRigidBody();
         var data = b._data = new Physics2DDevice.prototype.floatArray((/*BODY_DATA_SIZE*/25));
@@ -7259,7 +7259,7 @@ class Physics2DRigidBody
 
         b._invalidated = true;
 
-        data[(/*BODY_LIN_DRAG*/21)] = Math.log(1 - (params.linearDrag  !== undefined ? params.linearDrag  : 0.05));
+        data[(/*BODY_LIN_DRAG*/21)] = Math.log(1 - (params.linearDrag  !== undefined ? params.linearDrag : 0.05));
         data[(/*BODY_ANG_DRAG*/22)] = Math.log(1 - (params.angularDrag !== undefined ? params.angularDrag : 0.05));
 
         b.userData = (params.userData || null);
@@ -7331,8 +7331,8 @@ class Physics2DCallback
         this.next = null;
     }
 
-    static pool : Physics2DCallback = null;
-    static allocate () : Physics2DCallback
+    static pool: Physics2DCallback = null;
+    static allocate (): Physics2DCallback
     {
         if (Physics2DCallback.pool)
         {
@@ -7347,7 +7347,7 @@ class Physics2DCallback
         }
     }
 
-    static deallocate (callback : Physics2DCallback)
+    static deallocate (callback: Physics2DCallback)
     {
         callback.next = Physics2DCallback.pool;
         Physics2DCallback.pool = callback;
@@ -7361,7 +7361,7 @@ class Physics2DCallback
 // =====================================================================
 
 interface Physics2DDSFUnionFn{
-    (obj1 : Physics2DIslandComponent, obj2 : Physics2DIslandComponent) : void;
+    (obj1: Physics2DIslandComponent, obj2: Physics2DIslandComponent): void;
 };
 
 //
@@ -7369,16 +7369,16 @@ interface Physics2DDSFUnionFn{
 //
 interface Physics2DIslandComponent
 {
-    sleeping : bool;
-    _wakeTime : number;
+    sleeping: bool;
+    _wakeTime: number;
 
-    _island : Physics2DIsland;
-    _islandRoot : Physics2DIslandComponent;
-    _islandRank : number;
+    _island: Physics2DIsland;
+    _islandRoot: Physics2DIslandComponent;
+    _islandRank: number;
 
-    _isBody : bool;
+    _isBody: bool;
 
-    _onSleep : Physics2DObjectCallbackFn[];
+    _onSleep: Physics2DObjectCallbackFn[];
 };
 
 
@@ -7400,7 +7400,7 @@ class Physics2DIsland
         this.next = null;
     };
 
-    static pool : Physics2DIsland = null;
+    static pool: Physics2DIsland = null;
 
     static allocate(): Physics2DIsland
     {
@@ -7468,7 +7468,7 @@ class Physics2DTOIEvent
     }
 
     static pool: Physics2DTOIEvent = null;
-    static allocate() : Physics2DTOIEvent
+    static allocate(): Physics2DTOIEvent
     {
         if (Physics2DTOIEvent.pool)
         {
@@ -7483,7 +7483,7 @@ class Physics2DTOIEvent
         }
     }
 
-    static deallocate(toi : Physics2DTOIEvent) : void
+    static deallocate(toi: Physics2DTOIEvent): void
     {
         toi.next = Physics2DTOIEvent.pool;
         Physics2DTOIEvent.pool = toi;
@@ -7516,7 +7516,7 @@ class Physics2DBoxTreeBroadphaseHandle
     }
 
     static pool: Physics2DBoxTreeBroadphaseHandle[] = [];
-    static allocate() : Physics2DBoxTreeBroadphaseHandle
+    static allocate(): Physics2DBoxTreeBroadphaseHandle
     {
         if (0 < this.pool.length)
         {
@@ -7725,8 +7725,8 @@ class Physics2DSweepAndPruneHandle
         this.isStatic = false;
     }
 
-    static pool : Physics2DSweepAndPruneHandle = null;
-    static allocate() : Physics2DSweepAndPruneHandle
+    static pool: Physics2DSweepAndPruneHandle = null;
+    static allocate(): Physics2DSweepAndPruneHandle
     {
         if (!this.pool)
         {
@@ -7793,7 +7793,7 @@ class Physics2DSweepAndPrune
         }
     };
 
-    insert(data, aabb, isStatic) : Physics2DSweepAndPruneHandle
+    insert(data, aabb, isStatic): Physics2DSweepAndPruneHandle
     {
         var handle = Physics2DSweepAndPruneHandle.allocate();
         var ab = handle._aabb;
@@ -7964,7 +7964,7 @@ class Physics2DSweepAndPrune
         }
     };
 
-    static create() : Physics2DSweepAndPrune
+    static create(): Physics2DSweepAndPrune
     {
         var b = new Physics2DSweepAndPrune();
         b._list = null;
@@ -8033,9 +8033,9 @@ function Physics2DContact()
 
 Physics2DContact.prototype = {
 
-    version : 1,
+    version: 1,
 
-    getPosition : function getPositionFn(dst)
+    getPosition: function getPositionFn(dst)
     {
         if (dst === undefined)
         {
@@ -8047,17 +8047,17 @@ Physics2DContact.prototype = {
         return dst;
     },
 
-    getPenetration : function getPenetrationFn()
+    getPenetration: function getPenetrationFn()
     {
         return (-this._data[(/*CON_DIST*/2)]);
     },
 
-    getNormalImpulse : function getNormalImpulseFn()
+    getNormalImpulse: function getNormalImpulseFn()
     {
         return (this.virtual ? 0 : this._data[(/*CON_JNACC*/11)]);
     },
 
-    getTangentImpulse : function getTangentImpulseFn()
+    getTangentImpulse: function getTangentImpulseFn()
     {
         return (this.virtual ? 0 : this._data[(/*CON_JTACC*/12)]);
     }
@@ -9580,7 +9580,7 @@ class Physics2DArbiter
         return dst;
     };
 
-    static pool : Physics2DArbiter = null;
+    static pool: Physics2DArbiter = null;
     static allocate(): Physics2DArbiter
     {
         if (!this.pool)
@@ -9608,13 +9608,13 @@ class Physics2DArbiter
 
 interface Physics2DSampler
 {
-    store : any[];
-    count : number;
-    collisions : Physics2DCollisionUtils;
+    store: any[];
+    count: number;
+    collisions: Physics2DCollisionUtils;
     sample(handle, bounds): void;
 
-    rectangleShape? : Physics2DShape;
-    circleShape? : Physics2DShape;
+    rectangleShape?: Physics2DShape;
+    circleShape?: Physics2DShape;
 };
 
 interface Physics2DRay
@@ -9633,50 +9633,50 @@ interface Physics2DRayCast
 {
     minNormal: any; // floatArray
     minShape: Physics2DShape;
-    minFactor : number;
-    userCallback : Physics2DCastCallback;
-    userThis : any;
-    ray : Physics2DRay;
-    noInner : bool;
-    normal : any; // floatArray
+    minFactor: number;
+    userCallback: Physics2DCastCallback;
+    userThis: any;
+    ray: Physics2DRay;
+    noInner: bool;
+    normal: any; // floatArray
     sample(handle, any): void;
 };
 
 interface Physics2DCastResult
 {
-    shape     : Physics2DShape;
-    hitNormal : any; // v3
-    hitPoint  : any; // v3
-    factor    : number;
+    shape: Physics2DShape;
+    hitNormal: any; // v3
+    hitPoint: any; // v3
+    factor: number;
 };
 
 interface Physics2DConvexCast
 {
-    toi : Physics2DTOIEvent;
-    minData : any; // floatArray
-    minShape : Physics2DShape;
-    minTOIAlpha : number;
-    userCallback : Physics2DCastCallback;
-    userThis : any;
-    deltaTime : number;
+    toi: Physics2DTOIEvent;
+    minData: any; // floatArray
+    minShape: Physics2DShape;
+    minTOIAlpha: number;
+    userCallback: Physics2DCastCallback;
+    userThis: any;
+    deltaTime: number;
     sample(handle, any): void;
 }
 
 interface Physics2DBroadphaseHandle
 {
-    data : any;
-    isStatic : bool;
+    data: any;
+    isStatic: bool;
 }
 
 interface Physics2DBroadphase
 {
-    sample(rectangle, lambda, thisObject) : void;
-    insert(data, aabb, isStatic) : Physics2DBroadphaseHandle;
-    update(handle, aabb, isStatic?: bool) : void;
-    remove(handle) : void;
-    clear(callback, thisObject) : void;
-    validate() : void;
-    perform(lambda, thisObject) : void;
+    sample(rectangle, lambda, thisObject): void;
+    insert(data, aabb, isStatic): Physics2DBroadphaseHandle;
+    update(handle, aabb, isStatic?: bool): void;
+    remove(handle): void;
+    clear(callback, thisObject): void;
+    validate(): void;
+    perform(lambda, thisObject): void;
 }
 
 //
@@ -10120,7 +10120,7 @@ class Physics2DWorld
     // =====================================================================
 
     rayCast(ray: Physics2DRay, noInnerSurfaces, customCallback,
-            thisObject) : Physics2DCastResult
+            thisObject): Physics2DCastResult
     {
         var origin = ray.origin;
         var direction = ray.direction;
@@ -10155,10 +10155,10 @@ class Physics2DWorld
             hitPoint[0] = (x1 + (direction[0] * callback.minFactor));
             hitPoint[1] = (y1 + (direction[1] * callback.minFactor));
             return {
-                shape     : callback.minShape,
-                hitNormal : hitNormal,
-                hitPoint  : hitPoint,
-                factor    : callback.minFactor
+                shape: callback.minShape,
+                hitNormal: hitNormal,
+                hitPoint: hitPoint,
+                factor: callback.minFactor
             };
         }
         else
@@ -10168,7 +10168,7 @@ class Physics2DWorld
     };
 
     convexCast(shape, deltaTime, customCallback,
-               thisObject) : Physics2DCastResult
+               thisObject): Physics2DCastResult
     {
         var body = shape.body;
         var bdata = body._data;
@@ -10210,10 +10210,10 @@ class Physics2DWorld
             hitPoint[0] = data[2];
             hitPoint[1] = data[3];
             return {
-                shape     : callback.minShape,
-                hitNormal : hitNormal,
-                hitPoint  : hitPoint,
-                factor    : (callback.minTOIAlpha * deltaTime)
+                shape: callback.minShape,
+                hitNormal: hitNormal,
+                hitPoint: hitPoint,
+                factor: (callback.minTOIAlpha * deltaTime)
             };
         }
         else
@@ -10795,7 +10795,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    __union(x : Physics2DIslandComponent, y : Physics2DIslandComponent) : void
+    __union(x: Physics2DIslandComponent, y: Physics2DIslandComponent): void
     {
         var stack, next;
         // x = __find(x)
@@ -10846,7 +10846,7 @@ class Physics2DWorld
         }
     };
 
-    __find(x : Physics2DIslandComponent) : Physics2DIslandComponent
+    __find(x: Physics2DIslandComponent): Physics2DIslandComponent
     {
         if (x === x._islandRoot)
         {
@@ -10873,7 +10873,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _sleepComputations(deltaTime : number) : void
+    _sleepComputations(deltaTime: number): void
     {
         // Build disjoint set forest.
         //
@@ -11099,7 +11099,7 @@ class Physics2DWorld
         }
     };
 
-    _pushCallbacks(thisObject : any, callbacks : Physics2DObjectCallbackFn[])
+    _pushCallbacks(thisObject: any, callbacks: Physics2DObjectCallbackFn[])
     {
         var cbs = this._callbacks;
         var limit = callbacks.length;
@@ -12266,10 +12266,10 @@ class Physics2DWorld
         var shapeSampler = function shapeSamplerFn(lambda)
         {
             return {
-                store : null,
-                count : 0,
-                collisions : w._collisions,
-                sample : function (handle, bounds)
+                store: null,
+                count: 0,
+                collisions: w._collisions,
+                sample: function (handle, bounds)
                 {
                     var shape = handle.data;
                     if (lambda.call(this, shape, bounds))
@@ -12284,10 +12284,10 @@ class Physics2DWorld
         var bodySampler = function bodySamplerFn(lambda)
         {
             return {
-                store : null,
-                count : 0,
-                collisions : w._collisions,
-                sample : function (handle, bounds)
+                store: null,
+                count: 0,
+                collisions: w._collisions,
+                sample: function (handle, bounds)
                 {
                     var shape = handle.data;
                     if (lambda.call(this, shape, bounds))
@@ -12338,7 +12338,7 @@ class Physics2DWorld
             new Physics2DDevice.prototype.floatArray(2),
             new Physics2DDevice.prototype.floatArray(2)
         ];
-        w._rectangleQueryShape = Physics2DPolygon.create({ vertices : w._rectangleQueryVertices });
+        w._rectangleQueryShape = Physics2DPolygon.create({ vertices: w._rectangleQueryVertices });
         w._shapeRectangleCallback.rectangleShape = w._rectangleQueryShape;
         w._bodyRectangleCallback.rectangleShape  = w._rectangleQueryShape;
 
@@ -12351,30 +12351,30 @@ class Physics2DWorld
         w._shapeCircleCallback = shapeSampler(circleSampler);
         w._bodyCircleCallback  = bodySampler(circleSampler);
 
-        w._circleQueryShape = Physics2DCircle.create({ radius : 1 });
+        w._circleQueryShape = Physics2DCircle.create({ radius: 1 });
         w._shapeCircleCallback.circleShape = w._circleQueryShape;
         w._bodyCircleCallback.circleShape  = w._circleQueryShape;
 
 
         var tempCastResult = {
-            shape : null,
-            hitPoint  : new Physics2DDevice.prototype.floatArray(2),
-            hitNormal : new Physics2DDevice.prototype.floatArray(2),
-            factor : 0
+            shape: null,
+            hitPoint: new Physics2DDevice.prototype.floatArray(2),
+            hitNormal: new Physics2DDevice.prototype.floatArray(2),
+            factor: 0
         };
 
         w._rayCast = {
-            minNormal : new Physics2DDevice.prototype.floatArray(2),
-            minShape : null,
-            minFactor : 0,
+            minNormal: new Physics2DDevice.prototype.floatArray(2),
+            minShape: null,
+            minFactor: 0,
 
-            userCallback : null,
-            userThis : null,
+            userCallback: null,
+            userThis: null,
 
-            ray : null,
-            noInner : false,
-            normal : new Physics2DDevice.prototype.floatArray(2),
-            sample : function sampleFn(handle, _)
+            ray: null,
+            noInner: false,
+            normal: new Physics2DDevice.prototype.floatArray(2),
+            sample: function sampleFn(handle, _)
             {
                 var shape = handle.data;
 
@@ -12423,17 +12423,17 @@ class Physics2DWorld
         };
 
         w._convexCast = {
-            toi : w._collisions._toi, // may as well re-use.
+            toi: w._collisions._toi, // may as well re-use.
 
-            minData : new Physics2DDevice.prototype.floatArray(4),
-            minShape : null,
-            minTOIAlpha : 0,
+            minData: new Physics2DDevice.prototype.floatArray(4),
+            minShape: null,
+            minTOIAlpha: 0,
 
-            userCallback : null,
-            userThis : null,
+            userCallback: null,
+            userThis: null,
 
-            deltaTime : 0,
-            sample : function sampleFn(handle, _)
+            deltaTime: 0,
+            sample: function sampleFn(handle, _)
             {
                 var toi = (<Physics2DConvexCast><any>this).toi;
                 var shape = handle.data;
@@ -12912,7 +12912,7 @@ class Physics2DCollisionUtils
         return curTOIAlpha;
     };
 
-    _staticSweep(toi: Physics2DTOIEvent, timeStep: number, negRadius?) : number
+    _staticSweep(toi: Physics2DTOIEvent, timeStep: number, negRadius?): number
     {
         var s1 = toi.shapeA; //dynamic
         var s2 = toi.shapeB; //static
@@ -14111,7 +14111,7 @@ class Physics2DDevice
         return Physics2DWorld.create(params);
     };
 
-    createMaterial(params : Physics2DMaterialParams) : Physics2DMaterial
+    createMaterial(params: Physics2DMaterialParams): Physics2DMaterial
     {
         return Physics2DMaterial.create(params);
     };
@@ -14171,7 +14171,7 @@ class Physics2DDevice
         return Physics2DCustomConstraint.create(params);
     };
 
-    createRectangleVertices(minX, minY, maxX, maxY) : any[] // floatArray[]
+    createRectangleVertices(minX, minY, maxX, maxY): any[] // floatArray[]
     {
         var tmp;
         if (maxX < minX)
@@ -14203,7 +14203,7 @@ class Physics2DDevice
         return [v0, v1, v2, v3];
     };
 
-    createBoxVertices(width, height) : any[] // floatArray[]
+    createBoxVertices(width, height): any[] // floatArray[]
     {
         var w = (width * 0.5);
         var h = (height * 0.5);
@@ -14224,7 +14224,7 @@ class Physics2DDevice
         return [v0, v1, v2, v3];
     };
 
-    createRegularPolygonVertices(diameterX, diameterY, numVertices) : any[]
+    createRegularPolygonVertices(diameterX, diameterY, numVertices): any[]
     {
         var rX = (diameterX  * 0.5);
         var rY = (diameterY * 0.5);
@@ -14245,7 +14245,7 @@ class Physics2DDevice
         return vertices;
     };
 
-    static create() : Physics2DDevice
+    static create(): Physics2DDevice
     {
         var pd = new Physics2DDevice();
         return pd;
