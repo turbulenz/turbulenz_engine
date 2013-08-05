@@ -35,6 +35,10 @@ var Physics2DConfig = {
     // will cause bouncing to be ignored.
     BOUNCE_VELOCITY_THRESHOLD : 0.25, // m/s
 
+    // Threshold at which static friction takes over from
+    // dynamic.
+    STATIC_FRIC_SQ_EPSILON: 1e-4, // (m/s)^2
+
 
     // ================================================
     // (Constraint physics)
@@ -170,9 +174,6 @@ var Physics2DConfig = {
     NORMALIZE_EPSILON : 1e-6,
     NORMALIZE_SQ_EPSILON : (1e-6 * 1e-6),
 
-    // TODO: This was missing
-    STATIC_FRIC_SQ_EPSILON: 1e-4,
-
 };
 
 
@@ -194,6 +195,15 @@ var Physics2DConfig = {
 //
 ///*MATERIAL_DATA_SIZE*/5
 //
+interface Physics2DMaterialParams
+{
+    elasticity? : number;
+    staticFriction? : number;
+    dynamicFriction? : number;
+    rollingFriction? : number;
+    density? : number;
+    userData? : any;
+};
 class Physics2DMaterial
 {
     static version = 1;
@@ -203,27 +213,27 @@ class Physics2DMaterial
 
     static defaultMaterial: Physics2DMaterial;
 
-    getElasticity()
+    getElasticity() : number
     {
         return this._data[(/*MAT_ELASTICITY*/0)];
     };
 
-    getStaticFriction()
+    getStaticFriction() : number
     {
         return this._data[(/*MAT_STATIC*/1)];
     };
 
-    getDynamicFriction()
+    getDynamicFriction() : number
     {
         return this._data[(/*MAT_DYNAMIC*/2)];
     };
 
-    getRollingFriction()
+    getRollingFriction() : number
     {
         return this._data[(/*MAT_ROLLING*/3)];
     };
 
-    getDensity()
+    getDensity() : number
     {
         return this._data[(/*MAT_DENSITY*/4)];
     };
@@ -236,7 +246,7 @@ class Physics2DMaterial
     //    density : ## = 1,
     //    userData : null
     // }
-    static create(params?) : Physics2DMaterial
+    static create(params? : Physics2DMaterialParams) : Physics2DMaterial
     {
         var m = new Physics2DMaterial();
         var elasticity      = (params && params.elasticity      !== undefined ? params.elasticity      : 0);
@@ -259,10 +269,14 @@ class Physics2DMaterial
     };
 };
 
-interface Physics2DCallbackFn
-{
-    (thisShape: Physics2DShape, otherShape: Physics2DShape): void;
-};
+// BREAK, WAKE, SLEEP callbacks on Constraints/RigidBody
+interface Physics2DObjectCallbackFn {
+    (): void;
+}
+// BEGIN, END, etc between two Shapes
+interface Physics2DShapeCallbackFn {
+    (arbiter: Physics2DArbiter, otherShape: Physics2DShape): void;
+}
 
 
 // =========================================================================
@@ -281,6 +295,8 @@ interface Physics2DCallbackFn
 
 class Physics2DConstraint
 {
+    type : string;
+
     _removeOnBreak: bool;
     _breakUnderError: bool;
     _breakUnderForce: bool;
@@ -289,19 +305,21 @@ class Physics2DConstraint
     sleeping: bool;
     _active: bool;
 
+    dimension : number;
     _data: any;
 
-    world: any; // TODO: Physics2DWorld
-    _islandRoot: Physics2DRigidBody;
+    world: Physics2DWorld;
+    _islandRoot: Physics2DIslandComponent;
     _islandRank: number;
     _island: Physics2DIsland;
+    _isBody: bool;
 
     _wakeTime: number;
     _woken: bool;
 
-    _onBreak: Physics2DCallback[];
-    _onWake: Physics2DCallback[];
-    _onSleep: Physics2DCallback[];
+    _onBreak: Physics2DObjectCallbackFn[];
+    _onWake:  Physics2DObjectCallbackFn[];
+    _onSleep: Physics2DObjectCallbackFn[];
     _equal: bool;
 
     bodyA: Physics2DRigidBody;
@@ -315,24 +333,23 @@ class Physics2DConstraint
     // Abstract methods to be overridden by subclasses
 
     _inWorld()
-    { debug.abort("abstact method"); };
+    { debug.abort("abstract method"); }
     _outWorld()
-    { debug.abort("abstact method"); };
+    { debug.abort("abstract method"); }
     _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody) : bool
-    { debug.abort("abstact method"); return false; };
+    { debug.abort("abstract method"); return false; }
     _wakeConnected()
-    { debug.abort("abstact method"); };
-    _sleepComputation(union: { (body: Physics2DRigidBody,
-                                constraint: Physics2DConstraint): void; })
-    { debug.abort("abstact method"); };
+    { debug.abort("abstract method"); }
+    _sleepComputation(union : Physics2DDSFUnionFn)
+    { debug.abort("abstract method"); }
     _preStep(deltaTime: number): bool
-    { debug.abort("abstact method"); return false; };
+    { debug.abort("abstract method"); return false; }
     _warmStart()
-    { debug.abort("abstact method"); };
+    { debug.abort("abstract method"); }
     _iterateVel(): bool
-    { debug.abort("abstact method"); return false; };
+    { debug.abort("abstract method"); return false; }
     _iteratePos(): bool
-    { debug.abort("abstact method"); return false; };
+    { debug.abort("abstract method"); return false; }
 
     // DebugDraw
 
@@ -359,6 +376,7 @@ class Physics2DConstraint
         con._islandRoot = null;
         con._islandRank = 0;
         con._island = null;
+        con._isBody = false;
 
         con._wakeTime = 0;
 
@@ -623,7 +641,7 @@ class Physics2DConstraint
         constraints.pop();
     };
 
-    twoBodyPairExists(b1, b2)
+    twoBodyPairExists(b1 : Physics2DRigidBody, b2 : Physics2DRigidBody) : bool
     {
         return ((b1 === this.bodyA && b2 === this.bodyB) ||
                 (b2 === this.bodyA && b1 === this.bodyB));
@@ -644,7 +662,7 @@ class Physics2DConstraint
         }
     };
 
-    twoBodySleepComputation(union)
+    twoBodySleepComputation(union : Physics2DDSFUnionFn)
     {
         var body = this.bodyA;
         if (body._type === (/*TYPE_DYNAMIC*/0))
@@ -1126,32 +1144,8 @@ class Physics2DCustomConstraint extends Physics2DConstraint
     addEventListener = Physics2DConstraint.prototype.addEventListener;
     removeEventListener = Physics2DConstraint.prototype.removeEventListener;
 
-    _removeOnBreak: bool;
-    _breakUnderError: bool;
-    _breakUnderForce: bool;
-    _stiff: bool;
-    _ignoreInteractions: bool;
-    sleeping: bool;
-    _active: bool;
-
-    world: any; // TODO: Physics2DWorld
-    _islandRoot: Physics2DRigidBody;
-    _islandRank: number;
-    _island: Physics2DIsland;
-
-    _wakeTime: number;
-
-    _onBreak: Physics2DCallback[];
-    _onWake: Physics2DCallback[];
-    _onSleep: Physics2DCallback[];
-
-    userData: any;
-
     // Ours
-
-    bodies: any[]; // TODO: Physics2DBody[];
-    _data: any; // new Physics2DDevice.prototype.floatArray(dataSize);
-    dimension: number;
+    bodies: Physics2DRigidBody[];
 
     _K_MASS: number;
     _K_CHOLESKY: number;
@@ -1165,7 +1159,6 @@ class Physics2DCustomConstraint extends Physics2DConstraint
 
     _posConsts: { (): void; };
     _posError: { (data, index): void; };
-    _velError: { (data, index): void; }; // TODO: not in docs
     _posClamp: { (data, index): void; };
     _velClamp: { (data, index): void; };
     _jacobian: { (data, index): void; };
@@ -1239,7 +1232,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _sleepComputation(union)
+    _sleepComputation(union : Physics2DDSFUnionFn)
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1791,7 +1784,6 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         p._draw      = params.debugDraw;
         p._posConsts = params.positionConstants;
         p._posError  = params.position;
-        p._velError  = params.velocity;
         p._posClamp  = params.positionClamp;
         p._velClamp  = params.velocityClamp;
         p._jacobian  = params.jacobian;
@@ -1838,6 +1830,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
 class Physics2DPulleyConstraint extends Physics2DConstraint
 {
     type = "PULLEY";
+    dimension = 1;
 
     // Inherited
     wake  = Physics2DConstraint.prototype.wake;
@@ -1854,9 +1847,6 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 
     _drawLink: { (debug: any, x1, y1, x2, y2, nx, ny, nl, bias, scale,
                   colSA, colSB): void; };
-
-    dimension: number;
-    //_data: any; // Physics2DDevice.prototype.floatArray((/*PULLEY_DATA_SIZE*/37));
 
     // Our own properties
     bodyC: Physics2DRigidBody;
@@ -2051,7 +2041,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         }
     };
 
-    _sleepComputation(union)
+    _sleepComputation(union : Physics2DDSFUnionFn)
     {
         var body = this.bodyA;
         if (body._type === (/*TYPE_DYNAMIC*/0))
@@ -2582,7 +2572,6 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
     static create(params): Physics2DPulleyConstraint
     {
         var p = new Physics2DPulleyConstraint();
-        p.dimension = 1;
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*PULLEY_DATA_SIZE*/37));
         Physics2DConstraint.prototype.init(p, params);
 
@@ -2644,6 +2633,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 class Physics2DMotorConstraint extends Physics2DConstraint
 {
     type = "MOTOR";
+    dimension = 1;
 
     // Inherited
     wake  = Physics2DConstraint.prototype.wake;
@@ -2657,9 +2647,6 @@ class Physics2DMotorConstraint extends Physics2DConstraint
 
     addEventListener    = Physics2DConstraint.prototype.addEventListener;
     removeEventListener = Physics2DConstraint.prototype.removeEventListener;
-
-    // Ours
-    dimension: number;
 
     // ===============================================
 
@@ -2797,7 +2784,6 @@ class Physics2DMotorConstraint extends Physics2DConstraint
     static create(params): Physics2DMotorConstraint
     {
         var p = new Physics2DMotorConstraint();
-        p.dimension = 1;
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*MOTOR_DATA_SIZE*/10));
         Physics2DConstraint.prototype.init(p, params);
 
@@ -2843,6 +2829,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
 class Physics2DLineConstraint extends Physics2DConstraint
 {
     type = "LINE";
+    dimension = 2;
 
     // Inherited
     wake  = Physics2DConstraint.prototype.wake;
@@ -2856,10 +2843,6 @@ class Physics2DLineConstraint extends Physics2DConstraint
 
     addEventListener    = Physics2DConstraint.prototype.addEventListener;
     removeEventListener = Physics2DConstraint.prototype.removeEventListener;
-
-    // Ours
-
-    dimension: number;
 
     // ===============================================
 
@@ -3339,7 +3322,6 @@ class Physics2DLineConstraint extends Physics2DConstraint
     static create(params): Physics2DLineConstraint
     {
         var p = new Physics2DLineConstraint();
-        p.dimension = 2;
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*LINE_DATA_SIZE*/33));
         Physics2DConstraint.prototype.init(p, params);
 
@@ -3394,6 +3376,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
 class Physics2DDistanceConstraint extends Physics2DConstraint
 {
     type = "DISTANCE";
+    dimension = 1;
 
     // Inherited
     wake  = Physics2DConstraint.prototype.wake;
@@ -3409,7 +3392,6 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
     removeEventListener = Physics2DConstraint.prototype.removeEventListener;
 
     // Ours
-    dimension: number;
     _slack: bool;
 
     // ===============================================
@@ -3816,7 +3798,6 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
     static create(params)
     {
         var p = new Physics2DDistanceConstraint();
-        p.dimension = 1;
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*DIST_DATA_SIZE*/24));
         Physics2DConstraint.prototype.init(p, params);
 
@@ -3868,6 +3849,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
 class Physics2DAngleConstraint extends Physics2DConstraint
 {
     type = "ANGLE";
+    dimension = 1;
 
     // Inherited
     wake  = Physics2DConstraint.prototype.wake;
@@ -3886,8 +3868,6 @@ class Physics2DAngleConstraint extends Physics2DConstraint
                      colSA, colSB): void; };
 
     // Ours
-
-    dimension: number;
     _slack: bool;
 
     // ===============================================
@@ -4198,7 +4178,6 @@ class Physics2DAngleConstraint extends Physics2DConstraint
     static create(params): Physics2DAngleConstraint
     {
         var p = new Physics2DAngleConstraint();
-        p.dimension = 1;
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*ANGLE_DATA_SIZE*/14));
         Physics2DConstraint.prototype.init(p, params);
 
@@ -4239,8 +4218,8 @@ class Physics2DAngleConstraint extends Physics2DConstraint
 
 class Physics2DWeldConstraint extends Physics2DConstraint
 {
-
     type = "WELD";
+    dimension = 3;
 
     // Inherited
     wake  = Physics2DConstraint.prototype.wake;
@@ -4256,8 +4235,6 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     removeEventListener = Physics2DConstraint.prototype.removeEventListener;
 
     // Ours
-
-    dimension: number;
     _slack: bool;
 
     // ===============================================
@@ -4637,7 +4614,6 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     static create(params): Physics2DWeldConstraint
     {
         var p = new Physics2DWeldConstraint();
-        p.dimension = 3;
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*WELD_DATA_SIZE*/28));
         Physics2DConstraint.prototype.init(p, params);
 
@@ -4680,8 +4656,8 @@ class Physics2DWeldConstraint extends Physics2DConstraint
 
 class Physics2DPointConstraint extends Physics2DConstraint
 {
-
     type = "POINT";
+    dimension = 2;
 
     // Inherited
     wake  = Physics2DConstraint.prototype.wake;
@@ -4695,10 +4671,6 @@ class Physics2DPointConstraint extends Physics2DConstraint
 
     addEventListener    = Physics2DConstraint.prototype.addEventListener;
     removeEventListener = Physics2DConstraint.prototype.removeEventListener;
-
-    // Ours
-
-    dimension: number;
 
     // ===============================================
 
@@ -5025,7 +4997,6 @@ class Physics2DPointConstraint extends Physics2DConstraint
     static create(params): Physics2DPointConstraint
     {
         var p = new Physics2DPointConstraint();
-        p.dimension = 2;
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*POINT_DATA_SIZE*/22));
         Physics2DConstraint.prototype.init(p, params);
 
@@ -5076,9 +5047,9 @@ class Physics2DShape
     userData: any;
     id: number;
 
-    _bphaseHandle: Physics2DBoxTreeBroadphaseHandle;
-    _onPreSolve: Physics2DCallback[];
-    _events: Physics2DCallback[]; // onBegin, onEnd, onProgress combined.
+    _bphaseHandle: Physics2DBroadphaseHandle;
+    _onPreSolve: Physics2DShapeCallbackFn[];
+    _events: Physics2DShapeCallbackFn[]; // onBegin, onEnd, onProgress combined.
     _material: Physics2DMaterial;
     _group: number;
     _type: number;
@@ -5086,8 +5057,8 @@ class Physics2DShape
     _data: any; // Physics2DDevice.prototype.floatArray();
     // _validate()
     // {
-    //     debug.abort("abstact method");
-    // };
+    //     debug.abort("abstract method");
+    // }
 
     // Abstract methods (have to have a body unfortunately)
 
@@ -5147,7 +5118,7 @@ class Physics2DShape
         }
     };
 
-    getMaterial(/* material */)
+    getMaterial()
     {
         return this._material;
     };
@@ -5222,8 +5193,7 @@ class Physics2DShape
 
     // =============================================================================
 
-    // TODO: static?
-    eventIndex(events, type, callback, callbackMask)
+    static eventIndex(events, type, callback, callbackMask)
     {
         var limit = events.length;
         var i;
@@ -5272,7 +5242,7 @@ class Physics2DShape
             deterministic = false;
         }
 
-        var index = Physics2DShape.prototype.eventIndex(events, type, callback, callbackMask);
+        var index = Physics2DShape.eventIndex(events, type, callback, callbackMask);
         if (index !== -1)
         {
             return false;
@@ -5315,7 +5285,7 @@ class Physics2DShape
             return false;
         }
 
-        var index = Physics2DShape.prototype.eventIndex(events, type, callback, callbackMask);
+        var index = Physics2DShape.eventIndex(events, type, callback, callbackMask);
         if (index === -1)
         {
             return false;
@@ -6222,7 +6192,7 @@ class Physics2DRigidBody
 
     _island: Physics2DIsland;
     _islandRank: number;
-    _islandRoot: Physics2DRigidBody;
+    _islandRoot: Physics2DIslandComponent;
 
     _isBody: bool;
     _wakeTime: number;
@@ -6230,8 +6200,8 @@ class Physics2DRigidBody
     _invalidated: bool;
     userData: any;
 
-    _onWake: Physics2DCallback[];
-    _onSleep: Physics2DCallback[];
+    _onWake: Physics2DObjectCallbackFn[];
+    _onSleep: Physics2DObjectCallbackFn[];
 
 
     isDynamic()
@@ -7307,10 +7277,10 @@ class Physics2DRigidBody
 // Physics2D Callback
 //
 
-interface Physics2DCallback
+class Physics2DCallback
 {
     thisObject: any;
-    callback: Physics2DCallbackFn;
+    callback: any;
 
     // Used to ensure time ordering of deferred events.
     // -1 if event corresponds to action performed before step()
@@ -7323,89 +7293,101 @@ interface Physics2DCallback
     arbiter: Physics2DArbiter;
 
     next: Physics2DCallback;
-};
-declare var Physics2DCallback :
-{
-    new(): Physics2DCallback;
-    prototype: any;
 
-    pool: any;
-    allocate: { (): Physics2DCallback; };
-    deallocate: { (callback: Physics2DCallback): void; };
-};
+    // EVENT TYPES
+    // !! Must use regexp to change these globally (in all files) !!
+    //
+    // (Order here is used to order deferred event dispatch)
+    ///*EVENT_WAKE*/0
+    ///*EVENT_BEGIN*/1
+    ///*EVENT_PROGRESS*/2
+    ///*EVENT_END*/3
+    ///*EVENT_SLEEP*/4
+    ///*EVENT_BREAK*/5
+    //
+    // (not deferred)
+    ///*EVENT_PRESOLVE*/6
 
-// EVENT TYPES
-// !! Must use regexp to change these globally (in all files) !!
-//
-// (Order here is used to order deferred event dispatch)
-///*EVENT_WAKE*/0
-///*EVENT_BEGIN*/1
-///*EVENT_PROGRESS*/2
-///*EVENT_END*/3
-///*EVENT_SLEEP*/4
-///*EVENT_BREAK*/5
-//
-// (not deferred)
-///*EVENT_PRESOLVE*/6
+    ///*EVENT_TIME_PRE*/-1
+    ///*EVENT_TIME_STANDARD*/0
+    ///*EVENT_TIME_CONTINUOUS*/1
 
-///*EVENT_TIME_PRE*/-1
-///*EVENT_TIME_STANDARD*/0
-///*EVENT_TIME_CONTINUOUS*/1
-
-function Physics2DCallback() {
-    // All events
-    this.thisObject = null;
-    this.callback = null;
-
-    // Used to ensure time ordering of deferred events.
-    // -1 if event corresponds to action performed before step()
-    // 0  if event is a standard event during step()
-    // 1  if event is result of a continuous collision during step()
-    this.time = 0;
-
-    // Interaction events
-    this.index = 0;
-    this.arbiter = null;
-
-    this.next = null;
-
-    return this;
-}
-// Object pooled;
-Physics2DCallback.pool = null;
-Physics2DCallback.allocate = function ()
-{
-    if (Physics2DCallback.pool)
+    constructor()
     {
-        var ret = Physics2DCallback.pool;
-        Physics2DCallback.pool = ret.next;
-        ret.next = null;
-        return ret;
+        // All events
+        this.thisObject = null;
+        this.callback = null;
+
+        // Used to ensure time ordering of deferred events.
+        // -1 if event corresponds to action performed before step()
+        // 0  if event is a standard event during step()
+        // 1  if event is result of a continuous collision during step()
+        this.time = 0;
+
+        // Interaction events
+        this.index = 0;
+        this.arbiter = null;
+
+        this.next = null;
     }
-    else
+
+    static pool : Physics2DCallback = null;
+    static allocate () : Physics2DCallback
     {
-        return (new Physics2DCallback());
+        if (Physics2DCallback.pool)
+        {
+            var ret = Physics2DCallback.pool;
+            Physics2DCallback.pool = ret.next;
+            ret.next = null;
+            return ret;
+        }
+        else
+        {
+            return (new Physics2DCallback());
+        }
     }
-};
 
-Physics2DCallback.deallocate = function (callback)
-{
-    callback.next = Physics2DCallback.pool;
-    Physics2DCallback.pool = callback;
+    static deallocate (callback : Physics2DCallback)
+    {
+        callback.next = Physics2DCallback.pool;
+        Physics2DCallback.pool = callback;
 
-    callback.thisObject = null;
-    callback.callback = null;
-    callback.arbiter = null;
+        callback.thisObject = null;
+        callback.callback = null;
+        callback.arbiter = null;
+    }
 };
 
 // =====================================================================
 
+interface Physics2DDSFUnionFn{
+    (obj1 : Physics2DIslandComponent, obj2 : Physics2DIslandComponent) : void;
+};
+
 //
-// Physics2D Island
+// Physics2DIslandComponent
+//
+interface Physics2DIslandComponent
+{
+    sleeping : bool;
+    _wakeTime : number;
+
+    _island : Physics2DIsland;
+    _islandRoot : Physics2DIslandComponent;
+    _islandRank : number;
+
+    _isBody : bool;
+
+    _onSleep : Physics2DObjectCallbackFn[];
+};
+
+
+//
+// Physics2DIsland
 //
 class Physics2DIsland
 {
-    components: any[]; // TODO:
+    components: Physics2DIslandComponent[];
     sleeping: bool;
     wakeTime: number;
     next: Physics2DIsland;
@@ -7459,7 +7441,7 @@ class Physics2DIsland
 //
 ///*TOI_DATA_SIZE*/7
 
-interface Physics2DTOIEvent
+class Physics2DTOIEvent
 {
     next: Physics2DTOIEvent;
     shapeA: Physics2DShape;
@@ -7472,56 +7454,45 @@ interface Physics2DTOIEvent
     staticType: bool;
     kinematic: bool;
     _data: any; // Physics2DDevice.prototype.floatArray((/*TOI_DATA_SIZE*/7));
-};
-declare var Physics2DTOIEvent :
-{
-    new(): Physics2DTOIEvent;
-    prototype: any;
 
-    pool: any;
-    allocate: { (): Physics2DTOIEvent; };
-    deallocate: { (toi: Physics2DTOIEvent): void; };
-};
-
-function Physics2DTOIEvent() {
-    this.next = null;
-    this.shapeA = null;
-    this.shapeB = null;
-    this.frozenA = this.frozenB = false;
-    this.arbiter = null;
-    this.failed = false;
-    this.slipped = false;
-    this._data = new Physics2DDevice.prototype.floatArray((/*TOI_DATA_SIZE*/7));
-
-    return this;
-}
-
-// Object pooled.
-Physics2DTOIEvent.pool = null;
-Physics2DTOIEvent.allocate = function ()
-{
-    if (Physics2DTOIEvent.pool)
+    constructor()
     {
-        var ret = Physics2DTOIEvent.pool;
-        Physics2DTOIEvent.pool = ret.next;
-        ret.next = null;
-        return ret;
+        this.next = null;
+        this.shapeA = null;
+        this.shapeB = null;
+        this.frozenA = this.frozenB = false;
+        this.arbiter = null;
+        this.failed = false;
+        this.slipped = false;
+        this._data = new Physics2DDevice.prototype.floatArray((/*TOI_DATA_SIZE*/7));
     }
-    else
+
+    static pool: Physics2DTOIEvent = null;
+    static allocate() : Physics2DTOIEvent
     {
-        return (new Physics2DTOIEvent());
+        if (Physics2DTOIEvent.pool)
+        {
+            var ret = Physics2DTOIEvent.pool;
+            Physics2DTOIEvent.pool = ret.next;
+            ret.next = null;
+            return ret;
+        }
+        else
+        {
+            return (new Physics2DTOIEvent());
+        }
     }
-};
 
-Physics2DTOIEvent.deallocate = function (toi)
-{
-    toi.next = Physics2DTOIEvent.pool;
-    Physics2DTOIEvent.pool = toi;
+    static deallocate(toi : Physics2DTOIEvent) : void
+    {
+        toi.next = Physics2DTOIEvent.pool;
+        Physics2DTOIEvent.pool = toi;
 
-    toi.shapeA = toi.shapeB = null;
-    toi.failed = false;
-    toi.slipped = false;
-    toi.arbiter = null;
+        toi.shapeA = toi.shapeB = null;
+        toi.failed = false;
+        toi.slipped = false;
+        toi.arbiter = null;
+    }
 };
 
 
@@ -7545,7 +7516,7 @@ class Physics2DBoxTreeBroadphaseHandle
     }
 
     static pool: Physics2DBoxTreeBroadphaseHandle[] = [];
-    static allocate()
+    static allocate() : Physics2DBoxTreeBroadphaseHandle
     {
         if (0 < this.pool.length)
         {
@@ -7571,7 +7542,7 @@ class Physics2DBoxTreeBroadphase
 
     staticTree: BoxTree;
     dynamicTree: BoxTree;
-    overlappingNodes: any[]; // TODO
+    overlappingNodes: BoxTreeNode[];
 
     constructor()
     {
@@ -9637,13 +9608,13 @@ class Physics2DArbiter
 
 interface Physics2DSampler
 {
-    store : Physics2DShape[];
+    store : any[];
     count : number;
     collisions : Physics2DCollisionUtils;
     sample(handle, bounds): void;
 
-    rectangleShape?: Physics2DShape;
-    circleShape?: Physics2DShape;
+    rectangleShape? : Physics2DShape;
+    circleShape? : Physics2DShape;
 };
 
 interface Physics2DRay
@@ -9668,7 +9639,7 @@ interface Physics2DRayCast
     ray : Physics2DRay;
     noInner : bool;
     normal : any; // floatArray
-    sample(handle): void;
+    sample(handle, any): void;
 };
 
 interface Physics2DCastResult
@@ -9688,7 +9659,24 @@ interface Physics2DConvexCast
     userCallback : Physics2DCastCallback;
     userThis : any;
     deltaTime : number;
-    sample(handle): void;
+    sample(handle, any): void;
+}
+
+interface Physics2DBroadphaseHandle
+{
+    data : any;
+    isStatic : bool;
+}
+
+interface Physics2DBroadphase
+{
+    sample(rectangle, lambda, thisObject) : void;
+    insert(data, aabb, isStatic) : Physics2DBroadphaseHandle;
+    update(handle, aabb, isStatic?: bool) : void;
+    remove(handle) : void;
+    clear(callback, thisObject) : void;
+    validate() : void;
+    perform(lambda, thisObject) : void;
 }
 
 //
@@ -9713,7 +9701,7 @@ class Physics2DWorld
     staticArbiters: Physics2DArbiter[];
 
     timeStamp: number;
-    broadphase: Physics2DBoxTreeBroadphase;
+    broadphase: Physics2DBroadphase;
 
     velocityIterations: number;
     positionIterations: number;
@@ -10154,6 +10142,7 @@ class Physics2DWorld
         callback.minFactor = ray.maxFactor;
         callback.userCallback = customCallback;
         callback.userThis = thisObject;
+        // TODO bug here.
         this.broadphase.sample(rect, callback.sample, callback);
 
         if (callback.minShape)
@@ -10806,7 +10795,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    __union(x, y)
+    __union(x : Physics2DIslandComponent, y : Physics2DIslandComponent) : void
     {
         var stack, next;
         // x = __find(x)
@@ -10857,7 +10846,7 @@ class Physics2DWorld
         }
     };
 
-    __find(x)
+    __find(x : Physics2DIslandComponent) : Physics2DIslandComponent
     {
         if (x === x._islandRoot)
         {
@@ -10884,7 +10873,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _sleepComputations(deltaTime)
+    _sleepComputations(deltaTime : number) : void
     {
         // Build disjoint set forest.
         //
@@ -11110,7 +11099,7 @@ class Physics2DWorld
         }
     };
 
-    _pushCallbacks(thisObject, callbacks)
+    _pushCallbacks(thisObject : any, callbacks : Physics2DObjectCallbackFn[])
     {
         var cbs = this._callbacks;
         var limit = callbacks.length;
@@ -12335,7 +12324,7 @@ class Physics2DWorld
         w._bodyPointCallback  = bodySampler(pointSampler);
 
 
-        var rectangleSampler = function rectangleSamplerFn(shape /*, unusedSampleBox */)
+        var rectangleSampler = function rectangleSamplerFn(shape, unusedSampleBox)
         {
             return (<Physics2DSampler>this).collisions._test(shape,
                                                              this.rectangleShape);
@@ -12354,7 +12343,7 @@ class Physics2DWorld
         w._bodyRectangleCallback.rectangleShape  = w._rectangleQueryShape;
 
 
-        var circleSampler = function circleSamplerFn(shape /*, unusedSampleBox */)
+        var circleSampler = function circleSamplerFn(shape, unusedSampleBox)
         {
             return (<Physics2DSampler>this).collisions._test(shape,
                                                              this.circleShape);
@@ -12385,7 +12374,7 @@ class Physics2DWorld
             ray : null,
             noInner : false,
             normal : new Physics2DDevice.prototype.floatArray(2),
-            sample : function sampleFn(handle /*, _ */)
+            sample : function sampleFn(handle, _)
             {
                 var shape = handle.data;
 
@@ -12444,7 +12433,7 @@ class Physics2DWorld
             userThis : null,
 
             deltaTime : 0,
-            sample : function sampleFn(handle /*, _ */)
+            sample : function sampleFn(handle, _)
             {
                 var toi = (<Physics2DConvexCast><any>this).toi;
                 var shape = handle.data;
@@ -14122,7 +14111,7 @@ class Physics2DDevice
         return Physics2DWorld.create(params);
     };
 
-    createMaterial(params): Physics2DMaterial
+    createMaterial(params : Physics2DMaterialParams) : Physics2DMaterial
     {
         return Physics2DMaterial.create(params);
     };
@@ -14182,7 +14171,7 @@ class Physics2DDevice
         return Physics2DCustomConstraint.create(params);
     };
 
-    createRectangleVertices(minX, minY, maxX, maxY): any[] // floatArray[]
+    createRectangleVertices(minX, minY, maxX, maxY) : any[] // floatArray[]
     {
         var tmp;
         if (maxX < minX)
@@ -14214,7 +14203,7 @@ class Physics2DDevice
         return [v0, v1, v2, v3];
     };
 
-    createBoxVertices(width, height): any[] // floatArray[]
+    createBoxVertices(width, height) : any[] // floatArray[]
     {
         var w = (width * 0.5);
         var h = (height * 0.5);
@@ -14235,7 +14224,7 @@ class Physics2DDevice
         return [v0, v1, v2, v3];
     };
 
-    createRegularPolygonVertices(diameterX, diameterY, numVertices): any[]
+    createRegularPolygonVertices(diameterX, diameterY, numVertices) : any[]
     {
         var rX = (diameterX  * 0.5);
         var rY = (diameterY * 0.5);
@@ -14256,7 +14245,7 @@ class Physics2DDevice
         return vertices;
     };
 
-    static create(): Physics2DDevice
+    static create() : Physics2DDevice
     {
         var pd = new Physics2DDevice();
         return pd;

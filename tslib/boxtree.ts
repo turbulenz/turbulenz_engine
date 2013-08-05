@@ -27,7 +27,7 @@ class BoxTreeNode
     static version = 1;
 
     escapeNodeOffset: number;
-    externalNode: any; // TODO
+    externalNode: BoxTreeNode;
     extents: number[];
 
     constructor(extents, escapeNodeOffset, externalNode)
