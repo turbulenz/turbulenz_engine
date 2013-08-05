@@ -10142,7 +10142,7 @@ class Physics2DWorld
         callback.minFactor = ray.maxFactor;
         callback.userCallback = customCallback;
         callback.userThis = thisObject;
-        // TODO bug here.
+        callback.minShape = null;
         this.broadphase.sample(rect, callback.sample, callback);
 
         if (callback.minShape)
