@@ -292,7 +292,21 @@ interface Physics2DShapeCallbackFn {
 ///*JOINT_MAX_FORCE*/2   // Force clamping for soft/rigid constraints
 ///*JOINT_MAX_ERROR*/3   // Error clamping for soft constraints only.
 ///*JOINT_PRE_DT*/4      // Previous time step value for impulse scaling
-
+interface Physics2DConstraintParams
+{
+    frequency?: number;
+    damping?: number;
+    maxForce?: number;
+    maxError?: number;
+    removeOnBreak?: bool;
+    breakUnderError?: bool;
+    breakUnderForce?: bool;
+    stiff?: bool;
+    ignoreInteractions?: bool;
+    sleeping?: bool;
+    disabled?: bool;
+    userData?: any;
+}
 class Physics2DConstraint
 {
     type: string;
@@ -332,19 +346,19 @@ class Physics2DConstraint
 
     // Abstract methods to be overridden by subclasses
 
-    _inWorld()
+    _inWorld(): void
     { debug.abort("abstract method"); }
-    _outWorld()
+    _outWorld(): void
     { debug.abort("abstract method"); }
     _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
     { debug.abort("abstract method"); return false; }
-    _wakeConnected()
+    _wakeConnected(): void
     { debug.abort("abstract method"); }
-    _sleepComputation(union: Physics2DDSFUnionFn)
+    _sleepComputation(union: Physics2DDSFUnionFn): void
     { debug.abort("abstract method"); }
     _preStep(deltaTime: number): bool
     { debug.abort("abstract method"); return false; }
-    _warmStart()
+    _warmStart(): void
     { debug.abort("abstract method"); }
     _iterateVel(): bool
     { debug.abort("abstract method"); return false; }
@@ -355,7 +369,7 @@ class Physics2DConstraint
 
     _draw: { (debug: any): void; };
 
-    init(con, params)
+    init(con: Physics2DConstraint, params: Physics2DConstraintParams): void
     {
         var data = con._data;
         data[(/*JOINT_FREQUENCY*/0)] = (params.frequency !== undefined ? params.frequency : 10.0);
@@ -387,7 +401,7 @@ class Physics2DConstraint
         con.userData = (params.userData || null);
     };
 
-    configure(params)
+    configure(params: Physics2DConstraintParams): void
     {
         var data = this._data;
         if (params.frequency !== undefined)
@@ -431,7 +445,7 @@ class Physics2DConstraint
 
     // ===============================================
 
-    addEventListener(eventType, callback)
+    addEventListener(eventType: string, callback: Physics2DObjectCallbackFn): bool
     {
         var events = (eventType === 'wake'  ? this._onWake  :
                       eventType === 'sleep' ? this._onSleep :
@@ -456,7 +470,7 @@ class Physics2DConstraint
         return true;
     };
 
-    removeEventListener(eventType, callback)
+    removeEventListener(eventType: string, callback: Physics2DObjectCallbackFn): bool
     {
         var events = (eventType === 'wake'  ? this._onWake  :
                       eventType === 'sleep' ? this._onSleep :
@@ -484,7 +498,7 @@ class Physics2DConstraint
 
     // ===============================================
 
-    wake(automated?: bool)
+    wake(automated?: bool): void
     {
         if (!this.world)
         {
@@ -494,7 +508,7 @@ class Physics2DConstraint
 
         this.world._wakeConstraint(this, !automated);
     };
-    sleep()
+    sleep(): void
     {
         if (!this.world)
         {
@@ -507,17 +521,17 @@ class Physics2DConstraint
 
     // ================================================
 
-    isEnabled()
+    isEnabled(): bool
     {
         return this._active;
     };
 
-    isDisabled()
+    isDisabled(): bool
     {
         return (!this._active);
     };
 
-    enable()
+    enable(): void
     {
         if (!this._active)
         {
@@ -530,7 +544,7 @@ class Physics2DConstraint
         }
     };
 
-    disable()
+    disable(): void
     {
         if (this._active)
         {
@@ -547,7 +561,7 @@ class Physics2DConstraint
 
     // ================================================
 
-    getAnchorA(dst)
+    getAnchorA(dst?: any): any // v2
     {
         if (dst === undefined)
         {
@@ -559,7 +573,7 @@ class Physics2DConstraint
         dst[1] = data[INDEX + 1];
         return dst;
     };
-    getAnchorB(dst)
+    getAnchorB(dst?: any): any // v2
     {
         if (dst === undefined)
         {
@@ -572,7 +586,7 @@ class Physics2DConstraint
         return dst;
     };
 
-    setAnchorA(anchor)
+    setAnchorA(anchor: any): void // v2
     {
         var data = this._data;
         var INDEX = this._ANCHOR_A;
@@ -585,7 +599,7 @@ class Physics2DConstraint
             this.wake(true);
         }
     };
-    setAnchorB(anchor)
+    setAnchorB(anchor: any): void // v2
     {
         var data = this._data;
         var INDEX = this._ANCHOR_B;
@@ -599,7 +613,7 @@ class Physics2DConstraint
         }
     };
 
-    rotateAnchor(data, body, LOCAL, RELATIVE)
+    rotateAnchor(data: any /*floatArray*/, body: Physics2DRigidBody, LOCAL: number, RELATIVE: number): void
     {
         var x = data[LOCAL];
         var y = data[LOCAL + 1];
@@ -612,7 +626,7 @@ class Physics2DConstraint
 
     // ================================================
 
-    dtRatio(data, deltaTime)
+    dtRatio(data: any /*floatArray*/, deltaTime: number): number
     {
         var preDt = data[(/*JOINT_PRE_DT*/4)];
         var dtRatio = (preDt === -1 ? 1.0 : (deltaTime / preDt));
@@ -622,13 +636,13 @@ class Physics2DConstraint
 
     // ================================================
 
-    twoBodyInWorld()
+    twoBodyInWorld(): void
     {
         this.bodyA.constraints.push(this);
         this.bodyB.constraints.push(this);
     };
 
-    twoBodyOutWorld()
+    twoBodyOutWorld(): void
     {
         var constraints = this.bodyA.constraints;
         var index = constraints.indexOf(this);
@@ -647,7 +661,7 @@ class Physics2DConstraint
                 (b2 === this.bodyA && b1 === this.bodyB));
     };
 
-    twoBodyWakeConnected()
+    twoBodyWakeConnected(): void
     {
         var body = this.bodyA;
         if (body._type === (/*TYPE_DYNAMIC*/0))
@@ -662,7 +676,7 @@ class Physics2DConstraint
         }
     };
 
-    twoBodySleepComputation(union: Physics2DDSFUnionFn)
+    twoBodySleepComputation(union: Physics2DDSFUnionFn): void
     {
         var body = this.bodyA;
         if (body._type === (/*TYPE_DYNAMIC*/0))
@@ -679,20 +693,23 @@ class Physics2DConstraint
 
     // ================================================
 
-    clearCache()
+    _clearCache(): void
+    { debug.abort("abstract method"); }
+
+    clearCache(): void
     {
         var data = this._data;
         data[this._JACC] = 0;
         data[(/*JOINT_PRE_DT*/4)] = -1;
     };
-    clearCache2()
+    clearCache2(): void
     {
         var data = this._data;
         var INDEX = this._JACC;
         data[INDEX] = data[INDEX + 1] = 0;
         data[(/*JOINT_PRE_DT*/4)] = -1;
     };
-    clearCache3()
+    clearCache3(): void
     {
         var data = this._data;
         var INDEX = this._JACC;
@@ -707,7 +724,7 @@ class Physics2DConstraint
     // scaling effective mass at KMASS
     // scaling bias at BIAS
     // and returning true if constraint was broken.
-    soft_params(data, KMASS, GAMMA, BIAS, deltaTime, breakUnderError)
+    soft_params(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: bool): bool
     {
         var bias = data[BIAS];
         var bsq = (bias * bias);
@@ -735,7 +752,7 @@ class Physics2DConstraint
         data[BIAS] = bias;
         return false;
     };
-    soft_params2(data, KMASS, GAMMA, BIAS, deltaTime, breakUnderError)
+    soft_params2(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: bool): bool
     {
         var biasX = data[BIAS];
         var biasY = data[BIAS + 1];
@@ -769,7 +786,7 @@ class Physics2DConstraint
         data[BIAS + 1] = biasY;
         return false;
     };
-    soft_params3(data, KMASS, GAMMA, BIAS, deltaTime, breakUnderError)
+    soft_params3(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: bool): bool
     {
         var biasX = data[BIAS];
         var biasY = data[BIAS + 1];
@@ -814,13 +831,13 @@ class Physics2DConstraint
     // Solve K * j = err, permitting degeneracies in K
     // indices JMASS, ERR, IMP
     // ERR may be equal to IMP.
-    safe_solve(data, KMASS, ERR, IMP)
+    safe_solve(data: any /*floatArray*/, KMASS: number, ERR: number, IMP: number): void
     {
         var err = data[ERR];
         var K = data[KMASS];
         data[IMP] = (K !== 0 ? (err / K) : 0);
     };
-    safe_solve2(data, KMASS, ERR, IMP)
+    safe_solve2(data: any /*floatArray*/, KMASS: number, ERR: number, IMP: number): void
     {
         var errX = data[ERR];
         var errY = data[ERR + 1];
@@ -843,7 +860,7 @@ class Physics2DConstraint
             data[IMP + 1] = (det * ((Ka * errY) - (Kb * errX)));
         }
     };
-    safe_solve3(data, KMASS, ERR, IMP)
+    safe_solve3(data: any /*floatArray*/, KMASS: number, ERR: number, IMP: number): void
     {
         var errX = data[ERR];
         var errY = data[ERR + 1];
@@ -925,7 +942,7 @@ class Physics2DConstraint
     // Invert matrix stored symmetrically in data at
     // indices KMASS
     // with accumulated impulse at indices JACC
-    safe_invert(data, KMASS, JACC)
+    safe_invert(data: any /*floatArray*/, KMASS: number, JACC: number): void
     {
         // Invert [K != 0] into [1 / K]
         // And otherwise into [0] with zero-ed JACC
@@ -939,7 +956,7 @@ class Physics2DConstraint
             data[KMASS] = (1 / K);
         }
     };
-    safe_invert2(data, KMASS, JACC)
+    safe_invert2(data: any /*floatArray*/, KMASS: number, JACC: number): void
     {
         var Ka = data[KMASS];
         var Kb = data[KMASS + 1];
@@ -978,7 +995,7 @@ class Physics2DConstraint
             data[KMASS + 2] = (det * Ka);
         }
     };
-    safe_invert3(data, KMASS, JACC)
+    safe_invert3(data: any /*floatArray*/, KMASS: number, JACC: number): void
     {
         var Ka = data[KMASS];
         var Kb = data[KMASS + 1];
@@ -1158,15 +1175,15 @@ class Physics2DCustomConstraint extends Physics2DConstraint
     // _draw: { (debugDrawObject, stiff): void; };
 
     _posConsts: { (): void; };
-    _posError: { (data, index): void; };
-    _posClamp: { (data, index): void; };
-    _velClamp: { (data, index): void; };
-    _jacobian: { (data, index): void; };
+    _posError: { (data: any /*floatArray*/, index: number): void; };
+    _posClamp: { (data: any /*floatArray*/, index: number): void; };
+    _velClamp: { (data: any /*floatArray*/, index: number): void; };
+    _jacobian: { (data: any /*floatArray*/, index: number): void; };
     _velocityOnly: bool;
 
     // ===============================================
 
-    _inWorld()
+    _inWorld(): void
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1177,7 +1194,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _outWorld()
+    _outWorld(): void
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1191,7 +1208,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _pairExists(b1, b2): bool
+    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1217,7 +1234,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         return false;
     };
 
-    _wakeConnected()
+    _wakeConnected(): void
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1232,7 +1249,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _sleepComputation(union: Physics2DDSFUnionFn)
+    _sleepComputation(union: Physics2DDSFUnionFn): void
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1249,7 +1266,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
 
     // =====================================================
 
-    _clearCache()
+    _clearCache(): void
     {
         var data = this._data;
 
@@ -1268,7 +1285,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
     // lower triangular matrix L. A stored
     // as symmetric matrix. and L a full matrix
     // for ease of computation.
-    _cholesky()
+    _cholesky(): void
     {
         var data = this._data;
         var A = this._K_MASS;
@@ -1329,7 +1346,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
 
     // Perform multiplication with inverse of eff-mass matrix.
     // X = (LL^T)^-1 * X for L = CHOLESKY
-    _transform(X)
+    _transform(X:any /*floatArray*/):void
     {
         var data = this._data;
         var Y = this._VECTOR_TMP;
@@ -1378,7 +1395,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     };
 
-    _effMass()
+    _effMass(): void
     {
         var data = this._data;
         var dimension = this.dimension;
@@ -1514,12 +1531,12 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         return false;
     };
 
-    _warmStart()
+    _warmStart(): void
     {
         this._applyImpulse(this._J_ACC);
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v2*/): any // v2
     {
         if (dst === undefined)
         {
@@ -1565,7 +1582,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         return dst;
     };
 
-    _applyImpulse(J, position?)
+    _applyImpulse(J: number, position?: bool = false)
     {
         var data = this._data;
         var JAC = this._JACOBIAN;
@@ -1855,11 +1872,11 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 
     // ===============================================
 
-    getRatio()
+    getRatio(): number
     {
         return this._data[(/*PULLEY_RATIO*/7)];
     };
-    setRatio(ratio)
+    setRatio(ratio: number): void
     {
         var data = this._data;
         if (data[(/*PULLEY_RATIO*/7)] !== ratio)
@@ -1869,16 +1886,16 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         }
     };
 
-    getLowerBound()
+    getLowerBound(): number
     {
         return this._data[(/*PULLEY_JOINTMIN*/5)];
     };
-    getUpperBound()
+    getUpperBound(): number
     {
         return this._data[(/*PULLEY_JOINTMAX*/6)];
     };
 
-    setLowerBound(lowerBound)
+    setLowerBound(lowerBound: number): void
     {
         var data = this._data;
         if (data[(/*PULLEY_JOINTMIN*/5)] !== lowerBound)
@@ -1888,7 +1905,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
             this.wake(true);
         }
     };
-    setUpperBound(upperBound)
+    setUpperBound(upperBound: number): void
     {
         var data = this._data;
         if (data[(/*PULLEY_JOINTMAX*/6)] !== upperBound)
@@ -1909,7 +1926,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
     setAnchorB = Physics2DConstraint.prototype.setAnchorB;
 
     _ANCHOR_C = (/*PULLEY_LANCHOR3*/15);
-    getAnchorC(dst)
+    getAnchorC(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -1921,7 +1938,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         dst[1] = data[INDEX + 1];
         return dst;
     };
-    setAnchorC(anchor)
+    setAnchorC(anchor: any /*v2*/): void
     {
         var data = this._data;
         var INDEX = this._ANCHOR_C;
@@ -1936,7 +1953,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
     };
 
     _ANCHOR_D = (/*PULLEY_LANCHOR4*/17);
-    getAnchorD(dst)
+    getAnchorD(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -1948,7 +1965,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         dst[1] = data[INDEX + 1];
         return dst;
     };
-    setAnchorD(anchor)
+    setAnchorD(anchor: any /*v2*/): void
     {
         var data = this._data;
         var INDEX = this._ANCHOR_D;
@@ -1964,7 +1981,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 
     // =========================================================
 
-    _inWorld()
+    _inWorld(): void
     {
         this.bodyA.constraints.push(this);
         this.bodyB.constraints.push(this);
@@ -1975,7 +1992,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         this.bodyD.constraints.push(this);
     };
 
-    _outWorld()
+    _outWorld(): void
     {
         var constraints = this.bodyA.constraints;
         var index = constraints.indexOf(this);
@@ -2001,7 +2018,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         constraints.pop();
     };
 
-    _pairExists(b1, b2)
+    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
     {
         var bodyA = this.bodyA;
         var bodyB = this.bodyB;
@@ -2014,7 +2031,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
                 (b1 === bodyD && (b2 === bodyA || b2 === bodyB || b2 === bodyC)));
     };
 
-    _wakeConnected()
+    _wakeConnected(): void
     {
         var body = this.bodyA;
         if (body._type === (/*TYPE_DYNAMIC*/0))
@@ -2041,7 +2058,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         }
     };
 
-    _sleepComputation(union: Physics2DDSFUnionFn)
+    _sleepComputation(union: Physics2DDSFUnionFn): void
     {
         var body = this.bodyA;
         if (body._type === (/*TYPE_DYNAMIC*/0))
@@ -2074,7 +2091,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
     _JACC = (/*PULLEY_JACC*/9);
     _clearCache = Physics2DConstraint.prototype.clearCache;
 
-    _posError()
+    _posError(): void
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -2177,7 +2194,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         data[(/*PULLEY_BIAS*/28)]    = (-err);
     };
 
-    _preStep(deltaTime)
+    _preStep(deltaTime: number): bool
     {
         this._posError();
         if (this._slack)
@@ -2236,7 +2253,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         return false;
     };
 
-    _warmStart()
+    _warmStart(): bool
     {
         if (this._slack)
         {
@@ -2277,7 +2294,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         b4[(/*BODY_VEL*/7) + 2] += (data[(/*PULLEY_CX4*/36)] * jAcc * b4[(/*BODY_IINERTIA*/1)]);
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -2324,7 +2341,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         return dst;
     };
 
-    _iterateVel()
+    _iterateVel(): bool
     {
         if (this._slack)
         {
@@ -2419,7 +2436,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         return false;
     };
 
-    _iteratePos()
+    _iteratePos(): bool
     {
         this._posError();
         if (this._slack)
@@ -2650,16 +2667,16 @@ class Physics2DMotorConstraint extends Physics2DConstraint
 
     // ===============================================
 
-    getRate()
+    getRate(): number
     {
         return this._data[(/*MOTOR_RATE*/5)];
     };
-    getRatio()
+    getRatio(): number
     {
         return this._data[(/*MOTOR_RATIO*/6)];
     };
 
-    setRate(rate)
+    setRate(rate: number): void
     {
         var data = this._data;
         if (data[(/*MOTOR_RATE*/5)] !== rate)
@@ -2668,7 +2685,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
             this.wake(true);
         }
     };
-    setRatio(ratio)
+    setRatio(ratio: number): void
     {
         var data = this._data;
         if (data[(/*MOTOR_RATIO*/6)] !== ratio)
@@ -2693,7 +2710,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
     _JACC = (/*MOTOR_JACC*/8);
     _clearCache = Physics2DConstraint.prototype.clearCache;
 
-    _preStep(deltaTime)
+    _preStep(deltaTime: number): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -2713,7 +2730,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         return false;
     };
 
-    _warmStart()
+    _warmStart(): void
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -2724,7 +2741,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (data[(/*MOTOR_RATIO*/6)] * j * b2[(/*BODY_IINERTIA*/1)]);
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -2738,7 +2755,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         return dst;
     };
 
-    _iterateVel()
+    _iterateVel(): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -2776,7 +2793,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
     };
 
     // Velocity only constraint.
-    _iteratePos()
+    _iteratePos(): bool
     {
         return false;
     };
@@ -2846,16 +2863,16 @@ class Physics2DLineConstraint extends Physics2DConstraint
 
     // ===============================================
 
-    getLowerBound()
+    getLowerBound(): number
     {
         return this._data[(/*LINE_JOINTMIN*/5)];
     };
-    getUpperBound()
+    getUpperBound(): number
     {
         return this._data[(/*LINE_JOINTMAX*/6)];
     };
 
-    setLowerBound(lowerBound)
+    setLowerBound(lowerBound: number): void
     {
         var data = this._data;
         if (data[(/*LINE_JOINTMIN*/5)] !== lowerBound)
@@ -2865,7 +2882,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
             this.wake(true);
         }
     };
-    setUpperBound(upperBound)
+    setUpperBound(upperBound: number): void
     {
         var data = this._data;
         if (data[(/*LINE_JOINTMAX*/6)] !== upperBound)
@@ -2885,7 +2902,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
     getAnchorB = Physics2DConstraint.prototype.getAnchorB;
     setAnchorB = Physics2DConstraint.prototype.setAnchorB;
 
-    getAxis(dst)
+    getAxis(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -2896,7 +2913,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         dst[1] = data[(/*LINE_LAXIS*/11) + 1];
         return dst;
     };
-    setAxis(axis)
+    setAxis(axis: any /*v2*/): void
     {
         var data = this._data;
         var newX = axis[0];
@@ -2935,7 +2952,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
     _JACC = (/*LINE_JACC*/22);
     _clearCache = Physics2DConstraint.prototype.clearCache2;
 
-    _posError()
+    _posError(): void
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -2991,7 +3008,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         data[(/*LINE_BIAS*/26) + 1] = (-errY);
     };
 
-    _preStep(deltaTime)
+    _preStep(deltaTime: number): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3050,7 +3067,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         return false;
     };
 
-    _warmStart()
+    _warmStart(): void
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3080,7 +3097,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
                                    b2[(/*BODY_IINERTIA*/1)]);
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -3119,7 +3136,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         return dst;
     };
 
-    _iterateVel()
+    _iterateVel(): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3199,7 +3216,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         return false;
     };
 
-    _iteratePos()
+    _iteratePos(): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3396,16 +3413,16 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
 
     // ===============================================
 
-    getLowerBound()
+    getLowerBound(): number
     {
         return this._data[(/*DIST_JOINTMIN*/5)];
     };
-    getUpperBound()
+    getUpperBound(): number
     {
         return this._data[(/*DIST_JOINTMAX*/6)];
     };
 
-    setLowerBound(lowerBound)
+    setLowerBound(lowerBound: number): void
     {
         var data = this._data;
         if (data[(/*DIST_JOINTMIN*/5)] !== lowerBound)
@@ -3415,7 +3432,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
             this.wake(true);
         }
     };
-    setUpperBound(upperBound)
+    setUpperBound(upperBound: number): void
     {
         var data = this._data;
         if (data[(/*DIST_JOINTMAX*/6)] !== upperBound)
@@ -3450,7 +3467,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
     _JACC = (/*DIST_JACC*/16);
     _clearCache = Physics2DConstraint.prototype.clearCache;
 
-    _posError()
+    _posError(): void
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3521,7 +3538,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         data[(/*DIST_BIAS*/19)]       = (-err);
     };
 
-    _preStep(deltaTime)
+    _preStep(deltaTime: number): bool
     {
         this._posError();
         if (this._slack)
@@ -3564,11 +3581,11 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         return false;
     };
 
-    _warmStart()
+    _warmStart(): void
     {
         if (this._slack)
         {
-            return false;
+            return;
         }
 
         var data = this._data;
@@ -3590,7 +3607,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (data[(/*DIST_CX2*/23)] * jAcc * b2[(/*BODY_IINERTIA*/1)]);
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -3623,7 +3640,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         return dst;
     };
 
-    _iterateVel()
+    _iterateVel(): bool
     {
         if (this._slack)
         {
@@ -3695,7 +3712,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         return false;
     };
 
-    _iteratePos()
+    _iteratePos(): bool
     {
         this._posError();
         if (this._slack)
@@ -3795,7 +3812,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
     //   lowerBound, upperBound
     //   .. common constraint params
     // }
-    static create(params)
+    static create(params): Physics2DDistanceConstraint
     {
         var p = new Physics2DDistanceConstraint();
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*DIST_DATA_SIZE*/24));
@@ -3872,20 +3889,20 @@ class Physics2DAngleConstraint extends Physics2DConstraint
 
     // ===============================================
 
-    getLowerBound()
+    getLowerBound(): number
     {
         return this._data[(/*ANGLE_JOINTMIN*/5)];
     };
-    getUpperBound()
+    getUpperBound(): number
     {
         return this._data[(/*ANGLE_JOINTMAX*/6)];
     };
-    getRatio()
+    getRatio(): number
     {
         return this._data[(/*ANGLE_RATIO*/7)];
     };
 
-    setLowerBound(lowerBound)
+    setLowerBound(lowerBound: number): void
     {
         var data = this._data;
         if (data[(/*ANGLE_JOINTMIN*/5)] !== lowerBound)
@@ -3895,7 +3912,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
             this.wake(true);
         }
     };
-    setUpperBound(upperBound)
+    setUpperBound(upperBound: number): void
     {
         var data = this._data;
         if (data[(/*ANGLE_JOINTMAX*/6)] !== upperBound)
@@ -3905,7 +3922,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
             this.wake(true);
         }
     };
-    setRatio(ratio)
+    setRatio(ratio: number): void
     {
         var data = this._data;
         if (data[(/*ANGLE_RATIO*/7)] !== ratio)
@@ -3930,7 +3947,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
     _JACC = (/*ANGLE_JACC*/9);
     _clearCache = Physics2DConstraint.prototype.clearCache;
 
-    _posError()
+    _posError(): void
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3971,7 +3988,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         data[(/*ANGLE_BIAS*/12)] = (-err);
     };
 
-    _preStep(deltaTime)
+    _preStep(deltaTime: number): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4016,11 +4033,11 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         return false;
     };
 
-    _warmStart()
+    _warmStart(): void
     {
         if (this._slack)
         {
-            return false;
+            return;
         }
 
         var data = this._data;
@@ -4032,7 +4049,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         b2[(/*BODY_VEL*/7) + 2] += (j * data[(/*ANGLE_RATIO*/7)] * b2[(/*BODY_IINERTIA*/1)]);
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -4048,7 +4065,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         return dst;
     };
 
-    _iterateVel()
+    _iterateVel(): bool
     {
         if (this._slack)
         {
@@ -4124,7 +4141,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         return false;
     };
 
-    _iteratePos()
+    _iteratePos(): bool
     {
         this._posError();
         if (this._slack)
@@ -4248,11 +4265,11 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     getAnchorB = Physics2DConstraint.prototype.getAnchorB;
     setAnchorB = Physics2DConstraint.prototype.setAnchorB;
 
-    getPhase()
+    getPhase(): number
     {
         return this._data[(/*WELD_PHASE*/13)];
     };
-    setPhase(phase)
+    setPhase(phase: number): void
     {
         var data = this._data;
         if (phase !== data[(/*WELD_PHASE*/13)])
@@ -4277,7 +4294,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     _JACC = (/*WELD_JACC*/20);
     _clearCache = Physics2DConstraint.prototype.clearCache3;
 
-    _preStep(deltaTime)
+    _preStep(deltaTime: number): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4333,7 +4350,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         return false;
     };
 
-    _warmStart()
+    _warmStart(): void
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4360,7 +4377,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
                                     b2[(/*BODY_IINERTIA*/1)]);
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -4396,7 +4413,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         return dst;
     };
 
-    _iterateVel()
+    _iterateVel(): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4473,7 +4490,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         return false;
     };
 
-    _iteratePos()
+    _iteratePos(): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4698,7 +4715,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
     _JACC = (/*POINT_JACC*/16);
     _clearCache = Physics2DConstraint.prototype.clearCache2;
 
-    _preStep(deltaTime)
+    _preStep(deltaTime: number): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4748,7 +4765,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         return false;
     };
 
-    _warmStart()
+    _warmStart(): void
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4772,7 +4789,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
                                     b2[(/*BODY_IINERTIA*/1)]);
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -4806,7 +4823,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         return dst;
     };
 
-    _iterateVel()
+    _iterateVel(): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4874,7 +4891,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         return false;
     };
 
-    _iteratePos()
+    _iteratePos(): bool
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -5036,6 +5053,14 @@ class Physics2DPointConstraint extends Physics2DConstraint
 ///*TYPE_POLYGON*/1
 //
 
+interface Physics2DShapeCallbackStore
+{
+    callback: Physics2DShapeCallbackFn;
+    mask: number;
+    type: number;
+    deterministic: bool;
+};
+
 class Physics2DShape
 {
     static uniqueId = 0;
@@ -5048,8 +5073,8 @@ class Physics2DShape
     id: number;
 
     _bphaseHandle: Physics2DBroadphaseHandle;
-    _onPreSolve: Physics2DShapeCallbackFn[];
-    _events: Physics2DShapeCallbackFn[]; // onBegin, onEnd, onProgress combined.
+    _onPreSolve: Physics2DShapeCallbackStore[];
+    _events: Physics2DShapeCallbackStore[]; // onBegin, onEnd, onProgress combined.
     _material: Physics2DMaterial;
     _group: number;
     _type: number;
@@ -5070,16 +5095,19 @@ class Physics2DShape
     {
         debug.abort("abstract method"); return 0;
     };
-    computeCenterOfMass: { (dst?: any): any; }; // floatArray
+    computeCenterOfMass(dst?: any /*v2*/): any /*v2*/
+    {
+        debug.abort("abstract method"); return null;
+    };
     // {
     //     debug.abort("abstract method"); return 0;
     // };
-    translate(translation, skip: bool)
+    translate(translation, skip: bool): void
     {
         debug.abort("abstract method");
     }
     _update(posX: number, posY: number, cos: number, sin: number,
-            skipAABB?: bool)
+            skipAABB?: bool): void
     {
         debug.abort("abstract method");
     };
@@ -5090,12 +5118,12 @@ class Physics2DShape
 
     // Methods
 
-    getGroup()
+    getGroup(): number
     {
         return this._group;
     };
 
-    setGroup(group)
+    setGroup(group: number): void
     {
         this._group = group;
         if (this.body)
@@ -5104,12 +5132,12 @@ class Physics2DShape
         }
     };
 
-    getMask()
+    getMask(): number
     {
         return this._mask;
     };
 
-    setMask(mask)
+    setMask(mask: number): void
     {
         this._mask = mask;
         if (this.body)
@@ -5118,12 +5146,12 @@ class Physics2DShape
         }
     };
 
-    getMaterial()
+    getMaterial(): Physics2DMaterial
     {
         return this._material;
     };
 
-    setMaterial(material)
+    setMaterial(material: Physics2DMaterial): void
     {
         if (this._material !== material)
         {
@@ -5143,7 +5171,7 @@ class Physics2DShape
         }
     };
 
-    copyCommon(from, to)
+    copyCommon(from: Physics2DShape, to: Physics2DShape): void
     {
         to._type = from._type;
 
@@ -5173,7 +5201,7 @@ class Physics2DShape
         to._events = []; // onBegin, onEnd, onProgress combined.
     };
 
-    init(shape, params)
+    init(shape: Physics2DShape, params): void
     {
         shape._material = params.material || Physics2DMaterial.create();
         shape._group = (params.group !== undefined) ? params.group : 1;
@@ -5193,7 +5221,7 @@ class Physics2DShape
 
     // =============================================================================
 
-    static eventIndex(events, type, callback, callbackMask)
+    static eventIndex(events: Physics2DShapeCallbackStore[], type: number, callback: Physics2DShapeCallbackFn, callbackMask: number): number
     {
         var limit = events.length;
         var i;
@@ -5211,7 +5239,7 @@ class Physics2DShape
         return -1;
     };
 
-    addEventListener(eventType, callback, callbackMask?, deterministic?)
+    addEventListener(eventType: string, callback: Physics2DShapeCallbackFn, callbackMask?: number, deterministic?: bool): bool
     {
         var events, type;
         if (eventType === 'preSolve')
@@ -5263,7 +5291,7 @@ class Physics2DShape
         return true;
     };
 
-    removeEventListener(eventType, callback, callbackMask)
+    removeEventListener(eventType: string, callback: Physics2DShapeCallbackFn, callbackMask?: number): bool
     {
         var events, type;
         if (eventType === 'preSolve')
@@ -5336,13 +5364,13 @@ class Physics2DCircle extends Physics2DShape
 
     // ==============================================================
 
-    computeArea()
+    computeArea(): number
     {
         var r = this._data[(/*CIRCLE_RADIUS*/6)];
         return (Math.PI * r * r);
     };
 
-    computeMasslessInertia()
+    computeMasslessInertia(): number
     {
         var data = this._data;
         var r = this._data[(/*CIRCLE_RADIUS*/6)];
@@ -5353,12 +5381,12 @@ class Physics2DCircle extends Physics2DShape
 
     // ==============================================================
 
-    getRadius()
+    getRadius(): number
     {
         return this._data[(/*CIRCLE_RADIUS*/6)];
     };
 
-    setRadius(radius)
+    setRadius(radius: number): void
     {
         var body = this.body;
         if (body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5380,7 +5408,7 @@ class Physics2DCircle extends Physics2DShape
 
     // ==============================================================
 
-    getOrigin(dst?)
+    getOrigin(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -5392,7 +5420,7 @@ class Physics2DCircle extends Physics2DShape
         return dst;
     };
 
-    setOrigin(origin)
+    setOrigin(origin: any /*v2*/): void
     {
         var body = this.body;
         if (body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5427,7 +5455,7 @@ class Physics2DCircle extends Physics2DShape
 
     // ==============================================================
 
-    scale(scale: number)
+    scale(scale: number): void
     {
         if (scale <= 0)
         {
@@ -5452,7 +5480,7 @@ class Physics2DCircle extends Physics2DShape
         }
     };
 
-    translate(translation, skip)
+    translate(translation: any /*v2*/, skip?: bool): void
     {
         var body = this.body;
         if (!skip && body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5471,7 +5499,7 @@ class Physics2DCircle extends Physics2DShape
         }
     };
 
-    rotate(rotation)
+    rotate(rotation: number): void
     {
         var body = this.body;
         if (body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5494,7 +5522,7 @@ class Physics2DCircle extends Physics2DShape
         }
     };
 
-    transform(matrix)
+    transform(matrix: any /*m23*/): void
     {
         var body = this.body;
         if (body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5532,7 +5560,7 @@ class Physics2DCircle extends Physics2DShape
 
     // ==============================================================
 
-    _update(posX, posY, cos, sin, skipAABB?)
+    _update(posX: number, posY: number, cos: number, sin: number, skipAABB?: bool): void
     {
         var data = this._data;
         var originX = data[(/*CIRCLE_LOCAL*/7)];
@@ -5562,7 +5590,10 @@ class Physics2DCircle extends Physics2DShape
         data[(/*SHAPE_SWEEP_FACTOR*/5)] = (data[(/*SHAPE_SWEEP_RADIUS*/4)] - Math.max(radius - olength, 0));
     };
 
-    computeCenterOfMass = Physics2DCircle.prototype.getOrigin;
+    computeCenterOfMass(dst?: any /*v2*/): any /*v2*/
+    {
+        return this.getOrigin(dst);
+    };
 
     // params = {
     //      radius: ##,
@@ -5633,7 +5664,7 @@ class Physics2DPolygon extends Physics2DShape
 
     // ===========================================================================
 
-    computeArea()
+    computeArea(): number
     {
         var data = this._data;
         var index = (/*POLY_VERTICES*/6);
@@ -5684,7 +5715,7 @@ class Physics2DPolygon extends Physics2DShape
     };
 
     // Workaround for TS lack of support for abstract methods
-    private _computeCenterOfMass(dst?)
+    computeCenterOfMass(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -5722,11 +5753,10 @@ class Physics2DPolygon extends Physics2DShape
 
         return dst;
     };
-    computeCenterOfMass = Physics2DPolygon.prototype._computeCenterOfMass;
 
     // ===========================================================================
 
-    setVertices(vertices)
+    setVertices(vertices: any[] /*v2[]*/): void
     {
         var body = this.body;
         if (body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5752,7 +5782,7 @@ class Physics2DPolygon extends Physics2DShape
 
     // ===========================================================================
 
-    scale(scaleX: number, scaleY?: number)
+    scale(scaleX: number, scaleY?: number): void
     {
         var body = this.body;
         if (body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5821,7 +5851,7 @@ class Physics2DPolygon extends Physics2DShape
         }
     };
 
-    translate(translation, skip)
+    translate(translation: any /*v2*/, skip?: bool): void
     {
         var body = this.body;
         if (!skip && body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5867,7 +5897,7 @@ class Physics2DPolygon extends Physics2DShape
         }
     };
 
-    rotate(rotation)
+    rotate(rotation: number): void
     {
         var body = this.body;
         if (body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5904,7 +5934,7 @@ class Physics2DPolygon extends Physics2DShape
         }
     };
 
-    transform(matrix)
+    transform(matrix: any /*m32*/): void
     {
         var body = this.body;
         if (body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5986,7 +6016,7 @@ class Physics2DPolygon extends Physics2DShape
 
     // ===========================================================================
 
-    _update(posX, posY, cos, sin, skipAABB?)
+    _update(posX: number, posY: number, cos: number, sin: number, skipAABB?: bool): void
     {
         var data = this._data;
         var limit = data.length;
@@ -6065,7 +6095,7 @@ class Physics2DPolygon extends Physics2DShape
         }
     };
 
-    _validate(vertices)
+    _validate(vertices: any[] /*v2[]*/): void
     {
         var vCount = vertices.length;
         var data = this._data;
@@ -6186,6 +6216,7 @@ class Physics2DRigidBody
     _customInertia: bool;
     sleeping: bool;
     bullet: bool;
+    _bullet: bool;
 
     _sweepFrozen: bool;
     _deferred: bool;
@@ -6203,13 +6234,12 @@ class Physics2DRigidBody
     _onWake: Physics2DObjectCallbackFn[];
     _onSleep: Physics2DObjectCallbackFn[];
 
-
-    isDynamic()
+    isDynamic(): bool
     {
         return (this._type === (/*TYPE_DYNAMIC*/0));
     };
 
-    setAsDynamic()
+    setAsDynamic(): void
     {
         if (this.world && this.world._midStep)
         {
@@ -6225,12 +6255,12 @@ class Physics2DRigidBody
         data[(/*BODY_IINERTIA*/1)] = (inertia === Number.POSITIVE_INFINITY ? 0 : (1 / inertia));
     };
 
-    isStatic()
+    isStatic(): bool
     {
         return (this._type === (/*TYPE_STATIC*/2));
     };
 
-    setAsStatic()
+    setAsStatic(): void
     {
         if (this.world && this.world._midStep)
         {
@@ -6244,12 +6274,12 @@ class Physics2DRigidBody
         data[(/*BODY_VEL*/7)] = data[(/*BODY_VEL*/7) + 1] = data[(/*BODY_VEL*/7) + 2] = 0;
     };
 
-    isKinematic()
+    isKinematic(): bool
     {
         return (this._type === (/*TYPE_KINEMATIC*/1));
     };
 
-    setAsKinematic()
+    setAsKinematic(): void
     {
         if (this.world && this.world._midStep)
         {
@@ -6261,7 +6291,7 @@ class Physics2DRigidBody
         data[(/*BODY_IMASS*/0)] = data[(/*BODY_IINERTIA*/1)] = 0;
     };
 
-    _setTypeValue(newType)
+    _setTypeValue(newType: number): void
     {
         if (newType === this._type)
         {
@@ -6279,7 +6309,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    applyImpulse(impulse, position?)
+    applyImpulse(impulse: any /*v2*/, position?: any /*v2*/): void
     {
         // Static cannot have velocity
         // Kinematic always has infinite mass/inertia (physics wise) so impulse has no effect.
@@ -6309,7 +6339,7 @@ class Physics2DRigidBody
         this.wake(true);
     };
 
-    setVelocityFromPosition(newPosition, newRotation, deltaTime)
+    setVelocityFromPosition(newPosition: any /*v2*/, newRotation: number, deltaTime: number): void
     {
         if (this._type === (/*TYPE_STATIC*/2))
         {
@@ -6326,7 +6356,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    transformWorldPointToLocal(src, dst)
+    transformWorldPointToLocal(src: any /*v2*/, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6342,7 +6372,7 @@ class Physics2DRigidBody
         return dst;
     };
 
-    transformWorldVectorToLocal(src, dst)
+    transformWorldVectorToLocal(src: any /*v2*/, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6358,7 +6388,7 @@ class Physics2DRigidBody
         return dst;
     };
 
-    transformLocalPointToWorld(src, dst)
+    transformLocalPointToWorld(src: any /*v2*/, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6374,7 +6404,7 @@ class Physics2DRigidBody
         return dst;
     };
 
-    transformLocalVectorToWorld(src, dst)
+    transformLocalVectorToWorld(src: any /*v2*/, dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6392,7 +6422,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    getPosition(dst)
+    getPosition(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6405,7 +6435,7 @@ class Physics2DRigidBody
         return dst;
     };
 
-    setPosition(position)
+    setPosition(position?: any /*v2*/): any /*v2*/
     {
         if (this.world && (this.world._midStep || this._type === (/*TYPE_STATIC*/2)))
         {
@@ -6424,12 +6454,12 @@ class Physics2DRigidBody
         }
     };
 
-    getRotation()
+    getRotation(): number
     {
         return this._data[(/*BODY_POS*/2) + 2];
     };
 
-    setRotation(rotation)
+    setRotation(rotation: number): void
     {
         if (this.world && (this.world._midStep || this._type === (/*TYPE_STATIC*/2)))
         {
@@ -6449,7 +6479,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    getVelocity(dst)
+    getVelocity(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6462,7 +6492,7 @@ class Physics2DRigidBody
         return dst;
     };
 
-    setVelocity(velocity)
+    setVelocity(velocity: any /*v2*/): void
     {
         // Static body cannot have velocity.
         if (this._type === (/*TYPE_STATIC*/2))
@@ -6481,12 +6511,12 @@ class Physics2DRigidBody
         }
     };
 
-    getAngularVelocity()
+    getAngularVelocity(): number
     {
         return this._data[(/*BODY_VEL*/7) + 2];
     };
 
-    setAngularVelocity(angularVelocity)
+    setAngularVelocity(angularVelocity: number): void
     {
         // Static body cannot have velocity.
         if (this._type === (/*TYPE_STATIC*/2))
@@ -6504,7 +6534,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    getForce(dst)
+    getForce(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6517,7 +6547,7 @@ class Physics2DRigidBody
         return dst;
     };
 
-    setForce(force)
+    setForce(force: any /*v2*/): any /*v2*/
     {
         var data = this._data;
         var newX = force[0];
@@ -6533,12 +6563,12 @@ class Physics2DRigidBody
         }
     };
 
-    getTorque()
+    getTorque(): number
     {
         return this._data[(/*BODY_FORCE*/10) + 2];
     };
 
-    setTorque(torque)
+    setTorque(torque: number): void
     {
         var data = this._data;
         if (data[(/*BODY_FORCE*/10) + 2] !== torque)
@@ -6553,7 +6583,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    getSurfaceVelocity(dst)
+    getSurfaceVelocity(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6566,7 +6596,7 @@ class Physics2DRigidBody
         return dst;
     };
 
-    setSurfaceVelocity(surfaceVelocity)
+    setSurfaceVelocity(surfaceVelocity: any /*v2*/): void
     {
         var data = this._data;
         data[(/*BODY_SURFACE_VEL*/13)]     = surfaceVelocity[0];
@@ -6576,17 +6606,17 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    getMass()
+    getMass(): number
     {
         return this._data[(/*BODY_MASS*/23)];
     };
 
-    getInertia()
+    getInertia(): number
     {
         return this._data[(/*BODY_INERTIA*/24)];
     };
 
-    setMass(mass)
+    setMass(mass: number): void
     {
         var data = this._data;
         var oldMass = data[(/*BODY_MASS*/23)];
@@ -6598,7 +6628,7 @@ class Physics2DRigidBody
         }
     };
 
-    setMassFromShapes()
+    setMassFromShapes(): void
     {
         if (this._customMass)
         {
@@ -6608,7 +6638,7 @@ class Physics2DRigidBody
         }
     };
 
-    setInertia(inertia)
+    setInertia(inertia: number): void
     {
         var data = this._data;
         var oldInertia = data[(/*BODY_INERTIA*/24)];
@@ -6620,7 +6650,7 @@ class Physics2DRigidBody
         }
     };
 
-    setInertiaFromShapes()
+    setInertiaFromShapes(): void
     {
         if (this._customInertia)
         {
@@ -6630,7 +6660,7 @@ class Physics2DRigidBody
         }
     };
 
-    _invalidateMassInertia()
+    _invalidateMassInertia(): void
     {
         var data = this._data;
         var mass    = data[(/*BODY_MASS*/23)];
@@ -6648,12 +6678,12 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    getLinearDrag()
+    getLinearDrag(): number
     {
         return (1 - Math.exp(this._data[(/*BODY_LIN_DRAG*/21)]));
     };
 
-    setLinearDrag(linearDrag)
+    setLinearDrag(linearDrag: number): void
     {
         this._data[(/*BODY_LIN_DRAG*/21)] = Math.log(1 - linearDrag);
         // We wake body, even if static/kinematic incase user has some crazy
@@ -6661,12 +6691,12 @@ class Physics2DRigidBody
         this.wake(true);
     };
 
-    getAngularDrag()
+    getAngularDrag(): number
     {
         return (1 - Math.exp(this._data[(/*BODY_ANG_DRAG*/22)]));
     };
 
-    setAngularDrag(angularDrag)
+    setAngularDrag(angularDrag: number): void
     {
         this._data[(/*BODY_ANG_DRAG*/22)] = Math.log(1 - angularDrag);
         // We wake body, even if static/kinematic incase user has some crazy
@@ -6676,7 +6706,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    addShape(shape)
+    addShape(shape: Physics2DShape): bool
     {
         if (this.world && (this.world._midStep || this._type === (/*TYPE_STATIC*/2)))
         {
@@ -6710,7 +6740,7 @@ class Physics2DRigidBody
         return true;
     };
 
-    removeShape(shape)
+    removeShape(shape: Physics2DShape): bool
     {
         if (this.world && (this.world._midStep || this._type === (/*TYPE_STATIC*/2)))
         {
@@ -6756,7 +6786,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    computeMassFromShapes()
+    computeMassFromShapes(): number
     {
         var mass = 0;
         var i;
@@ -6770,7 +6800,7 @@ class Physics2DRigidBody
         return mass;
     };
 
-    computeInertiaFromShapes()
+    computeInertiaFromShapes(): number
     {
         var inertia = 0;
         var i;
@@ -6786,7 +6816,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    wake(automated?: bool)
+    wake(automated?: bool): void
     {
         if (!this.world)
         {
@@ -6797,7 +6827,7 @@ class Physics2DRigidBody
         this.world._wakeBody(this, !automated);
     };
 
-    sleep()
+    sleep(): void
     {
         if (!this.world)
         {
@@ -6810,7 +6840,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    computeLocalCenterOfMass(dst?)
+    computeLocalCenterOfMass(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6839,7 +6869,7 @@ class Physics2DRigidBody
         return dst;
     };
 
-    computeWorldBounds(dst)
+    computeWorldBounds(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -6889,7 +6919,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    alignWithOrigin()
+    alignWithOrigin(): void
     {
         if (this.world && (this.world._midStep || this._type === (/*TYPE_STATIC*/2)))
         {
@@ -6912,7 +6942,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    _invalidate()
+    _invalidate(): void
     {
         this._invalidated = true;
 
@@ -6935,7 +6965,7 @@ class Physics2DRigidBody
         this.wake(true);
     };
 
-    _update()
+    _update(): void
     {
         if (this._invalidated)
         {
@@ -6958,7 +6988,7 @@ class Physics2DRigidBody
 
     // =====================================================================
 
-    _atRest(deltaTime, timeStamp)
+    _atRest(deltaTime: number, timeStamp: number): bool
     {
         if (this._type !== (/*TYPE_DYNAMIC*/0))
         {
@@ -7017,7 +7047,7 @@ class Physics2DRigidBody
 
     // =====================================================================
 
-    _deltaRotation(delta)
+    _deltaRotation(delta: number): number
     {
         var data = this._data;
         var rotation = (data[(/*BODY_POS*/2) + 2] += delta);
@@ -7058,7 +7088,7 @@ class Physics2DRigidBody
     };
 
     // Integrate to deltaTime from current sweepTime (back or forth).
-    _sweepIntegrate(deltaTime)
+    _sweepIntegrate(deltaTime: number): void
     {
         var data = this._data;
         var delta = (deltaTime - data[(/*BODY_SWEEP_TIME*/18)]);
@@ -7076,7 +7106,7 @@ class Physics2DRigidBody
         }
     };
 
-    integrate(deltaTime)
+    integrate(deltaTime: number): void
     {
         if (this.world && (this.world._midStep || this._type === (/*TYPE_STATIC*/2)))
         {
@@ -7094,7 +7124,7 @@ class Physics2DRigidBody
 
     // ==========================================================
 
-    addEventListener(eventType, callback)
+    addEventListener(eventType: string, callback: Physics2DObjectCallbackFn): bool
     {
         var events = (eventType === 'wake'  ? this._onWake  :
                       eventType === 'sleep' ? this._onSleep :
@@ -7118,7 +7148,7 @@ class Physics2DRigidBody
         return true;
     };
 
-    removeEventListener(eventType, callback)
+    removeEventListener(eventType: string, callback: Physics2DObjectCallbackFn): bool
     {
         var events = (eventType === 'wake'  ? this._onWake  :
                       eventType === 'sleep' ? this._onSleep :
@@ -7371,6 +7401,7 @@ interface Physics2DIslandComponent
 {
     sleeping: bool;
     _wakeTime: number;
+    _woken: bool;
 
     _island: Physics2DIsland;
     _islandRoot: Physics2DIslandComponent;
@@ -7378,6 +7409,7 @@ interface Physics2DIslandComponent
 
     _isBody: bool;
 
+    _onWake:  Physics2DObjectCallbackFn[];
     _onSleep: Physics2DObjectCallbackFn[];
 };
 
@@ -7551,7 +7583,7 @@ class Physics2DBoxTreeBroadphase
         this.overlappingNodes = [];
     }
 
-    sample(box, lambda, thisObject)
+    sample(box: any /*v4*/, lambda: Physics2DBroadphaseSampleFn, thisObject: any): void
     {
         var overlappingNodes = this.overlappingNodes;
 
@@ -7565,7 +7597,7 @@ class Physics2DBoxTreeBroadphase
         }
     };
 
-    insert(data, box, isStatic)
+    insert(data: any, box: any /*v4*/, isStatic: bool): Physics2DBoxTreeBroadphaseHandle
     {
         var handle = Physics2DBoxTreeBroadphaseHandle.allocate();
         handle.data = data;
@@ -7583,7 +7615,7 @@ class Physics2DBoxTreeBroadphase
         return handle;
     };
 
-    update(handle, box, isStatic?: bool)
+    update(handle: Physics2DBoxTreeBroadphaseHandle, box: any /*v4*/, isStatic?: bool): void
     {
         if (isStatic !== undefined &&
             handle.isStatic !== isStatic)
@@ -7613,7 +7645,7 @@ class Physics2DBoxTreeBroadphase
         }
     };
 
-    remove(handle)
+    remove(handle: Physics2DBoxTreeBroadphaseHandle): void
     {
         if (handle.isStatic)
         {
@@ -7978,27 +8010,6 @@ class Physics2DSweepAndPrune
 // Physics2D Contact
 //
 
-interface Physics2DContact
-{
-    _data: any; // Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
-    fresh: bool;
-    _hash: number;
-    _timeStamp: number;
-    _next: Physics2DContact;
-    active: bool;
-    virtual: bool;
-};
-declare var Physics2DContact :
-{
-    new(): Physics2DContact;
-    prototype: any;
-
-    pool: any;
-    allocate: { (): Physics2DContact; };
-    deallocate: { (contact: Physics2DContact): void; };
-};
-
-
 //
 // CONTACT DATA CONSTANTS
 // !! Must use regexp to change these globally (in all files) !!
@@ -8018,24 +8029,51 @@ declare var Physics2DContact :
 //
 ///*CON_DATA_SIZE*/17
 
-function Physics2DContact()
+class Physics2DContact
 {
-    this._data = new Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
-    this.fresh = false;
-    this._hash = 0;
-    this._timeStamp = 0;
-    this._next = null;
-    this.active = false;
-    this.virtual = false;
+    static version = 1;
 
-    return this;
-}
+    _data: any; // Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
+    fresh: bool;
+    _hash: number;
+    _timeStamp: number;
+    _next: Physics2DContact;
+    active: bool;
+    virtual: bool;
 
-Physics2DContact.prototype = {
+    static pool: Physics2DContact = null;
+    static allocate(): Physics2DContact
+    {
+        if (!this.pool)
+        {
+            return new Physics2DContact();
+        }
+        else
+        {
+            var ret = this.pool;
+            this.pool = ret._next;
+            ret._next = null;
+            return ret;
+        }
+    };
+    static deallocate(contact: Physics2DContact): void
+    {
+        contact._next = this.pool;
+        this.pool = contact;
+    };
 
-    version: 1,
+    constructor()
+    {
+        this._data = new Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
+        this.fresh = false;
+        this._hash = 0;
+        this._timeStamp = 0;
+        this._next = null;
+        this.active = false;
+        this.virtual = false;
+    };
 
-    getPosition: function getPositionFn(dst)
+    getPosition(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -8045,45 +8083,22 @@ Physics2DContact.prototype = {
         dst[0] = data[(/*CON_POS*/0)];
         dst[1] = data[(/*CON_POS*/0) + 1];
         return dst;
-    },
+    };
 
-    getPenetration: function getPenetrationFn()
+    getPenetration(): number
     {
         return (-this._data[(/*CON_DIST*/2)]);
-    },
+    };
 
-    getNormalImpulse: function getNormalImpulseFn()
+    getNormalImpulse(): number
     {
         return (this.virtual ? 0 : this._data[(/*CON_JNACC*/11)]);
-    },
+    };
 
-    getTangentImpulse: function getTangentImpulseFn()
+    getTangentImpulse(): number
     {
         return (this.virtual ? 0 : this._data[(/*CON_JTACC*/12)]);
-    }
-};
-
-
-Physics2DContact.pool = null;
-Physics2DContact.allocate = function allocateContactFn()
-{
-    if (!this.pool)
-    {
-        return new Physics2DContact();
-    }
-    else
-    {
-        var ret = this.pool;
-        this.pool = ret._next;
-        ret._next = null;
-        return ret;
-    }
-};
-
-Physics2DContact.deallocate = function deallocateContactFn(contact)
-{
-    contact._next = this.pool;
-    this.pool = contact;
+    };
 };
 
 
@@ -8253,7 +8268,7 @@ class Physics2DArbiter
 
     static version = 1;
 
-    getNormal(dst)
+    getNormal(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -8287,7 +8302,7 @@ class Physics2DArbiter
 
     // =========================================================
 
-    getElasticity()
+    getElasticity(): number
     {
         if (this.sensor)
         {
@@ -8298,7 +8313,7 @@ class Physics2DArbiter
         return this._data[(/*ARB_ELASTICITY*/2)];
     };
 
-    getDynamicFriction()
+    getDynamicFriction(): number
     {
         if (this.sensor)
         {
@@ -8309,7 +8324,7 @@ class Physics2DArbiter
         return this._data[(/*ARB_DYN_FRIC*/0)];
     };
 
-    getStaticFriction()
+    getStaticFriction(): number
     {
         if (this.sensor)
         {
@@ -8320,7 +8335,7 @@ class Physics2DArbiter
         return this._data[(/*ARB_STATIC_FRIC*/1)];
     };
 
-    getRollingFriction()
+    getRollingFriction(): number
     {
         if (this.sensor)
         {
@@ -8332,7 +8347,7 @@ class Physics2DArbiter
     };
 
     /*jshint bitwise: false*/
-    setElasticity(elasticity)
+    setElasticity(elasticity: number): void
     {
         if (this.sensor)
         {
@@ -8344,7 +8359,7 @@ class Physics2DArbiter
         this._invalidate(true);
     };
 
-    setDynamicFriction(dynamicFriction)
+    setDynamicFriction(dynamicFriction: number): void
     {
         if (this.sensor)
         {
@@ -8356,7 +8371,7 @@ class Physics2DArbiter
         this._invalidate(true);
     };
 
-    setStaticFriction(staticFriction)
+    setStaticFriction(staticFriction: number): void
     {
         if (this.sensor)
         {
@@ -8368,7 +8383,7 @@ class Physics2DArbiter
         this._invalidate(true);
     };
 
-    setRollingFriction(rollingFriction)
+    setRollingFriction(rollingFriction: number): void
     {
         if (this.sensor)
         {
@@ -8380,7 +8395,7 @@ class Physics2DArbiter
         this._invalidate(true);
     };
 
-    setElasticityFromShapes()
+    setElasticityFromShapes(): void
     {
         if (this.sensor)
         {
@@ -8391,7 +8406,7 @@ class Physics2DArbiter
         this._invalidate(true);
     };
 
-    setDynamicFrictionFromShapes()
+    setDynamicFrictionFromShapes(): void
     {
         if (this.sensor)
         {
@@ -8402,7 +8417,7 @@ class Physics2DArbiter
         this._invalidate(true);
     };
 
-    setStaticFrictionFromShapes()
+    setStaticFrictionFromShapes(): void
     {
         if (this.sensor)
         {
@@ -8413,7 +8428,7 @@ class Physics2DArbiter
         this._invalidate(true);
     };
 
-    setRollingFrictionFromShapes()
+    setRollingFrictionFromShapes(): void
     {
         if (this.sensor)
         {
@@ -8452,7 +8467,7 @@ class Physics2DArbiter
         }
     };
 
-    setAcceptedState(accepted)
+    setAcceptedState(accepted: bool): void
     {
         if (this.sensor)
         {
@@ -8470,7 +8485,7 @@ class Physics2DArbiter
         this._invalidate(true);
     };
 
-    setPersistentState(persistent)
+    setPersistentState(persistent: bool): void
     {
         if (this.sensor)
         {
@@ -8498,7 +8513,7 @@ class Physics2DArbiter
     // Effect is that in following step, arbiter is permitted
     // to persist one additional frame (for any end events)
     // and then in the next step retired fully and reused.
-    _lazyRetire(ignoreShape)
+    _lazyRetire(ignoreShape: Physics2DShape): void
     {
         this._lazyRetired = true;
         this._retired = true;
@@ -8522,7 +8537,7 @@ class Physics2DArbiter
         }
     };
 
-    _assign(s1, s2)
+    _assign(s1: Physics2DShape, s2: Physics2DShape): void
     {
         this.bodyA = s1.body;
         this.bodyB = s2.body;
@@ -8538,7 +8553,7 @@ class Physics2DArbiter
         this._invalidate();
     };
 
-    _retire()
+    _retire(): void
     {
         this.shapeA = this.shapeB = null;
         this.bodyA = this.bodyB = null;
@@ -8558,7 +8573,7 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _invalidate(dontSkip?: bool)
+    _invalidate(dontSkip?: bool): void
     {
         this._invalidated = true;
         if (dontSkip && !this._midStep)
@@ -8568,7 +8583,7 @@ class Physics2DArbiter
         }
     };
 
-    _validate()
+    _validate(): void
     {
         this._invalidated = false;
 
@@ -8624,7 +8639,8 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _injectContact(px, py, nx, ny, dist, hash, virtual)
+    _injectContact(px: number, py: number, nx: number, ny: number,
+            dist: number, hash: number, virtual: bool): Physics2DContact
     {
         var contact;
         var contacts = this.contacts;
@@ -8746,7 +8762,7 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _preStep(deltaTime, timeStamp, continuous): bool
+    _preStep(deltaTime: number, timeStamp: number, continuous?: bool): bool
     {
         if (!this._cleanContacts(timeStamp))
         {
@@ -8923,7 +8939,7 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _iterateVelocity()
+    _iterateVelocity(): void
     {
         var data1 = this.bodyA._data;
         var data2 = this.bodyB._data;
@@ -9161,7 +9177,7 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _refreshContactData()
+    _refreshContactData(): void
     {
         var data1 = this.bodyA._data;
         var data2 = this.bodyB._data;
@@ -9297,7 +9313,7 @@ class Physics2DArbiter
         }
     };
 
-    _iteratePosition()
+    _iteratePosition(): void
     {
         this._refreshContactData();
 
@@ -9463,7 +9479,7 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _warmStart()
+    _warmStart(): void
     {
         var data1 = this.bodyA._data;
         var data2 = this.bodyB._data;
@@ -9513,7 +9529,7 @@ class Physics2DArbiter
         }
     };
 
-    getImpulseForBody(body, dst)
+    getImpulseForBody(body: Physics2DRigidBody, dst?: any /*v3*/): any /*v3*/
     {
         if (dst === undefined)
         {
@@ -9666,8 +9682,11 @@ interface Physics2DBroadphaseHandle
 {
     data: any;
     isStatic: bool;
-}
-
+};
+interface Physics2DBroadphaseSampleFn
+{
+    (thisObject: any, node: Physics2DBroadphaseHandle, box: any /*v4*/): void;
+};
 interface Physics2DBroadphase
 {
     sample(rectangle, lambda, thisObject): void;
@@ -9677,7 +9696,7 @@ interface Physics2DBroadphase
     clear(callback, thisObject): void;
     validate(): void;
     perform(lambda, thisObject): void;
-}
+};
 
 //
 // Physics2D World
@@ -9733,7 +9752,7 @@ class Physics2DWorld
     _rayCast: Physics2DRayCast;
     _convexCast: Physics2DConvexCast;
 
-    getGravity(dst?): any
+    getGravity(dst?: any /*v2*/): any /*v2*/
     {
         if (dst === undefined)
         {
@@ -9745,7 +9764,7 @@ class Physics2DWorld
         return dst;
     };
 
-    setGravity(gravity)
+    setGravity(gravity: any /*v2*/): void
     {
         var newX = gravity[0];
         var newY = gravity[1];
@@ -9766,7 +9785,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _addShape(shape)
+    _addShape(shape: Physics2DShape): void
     {
         var body = shape.body;
         body._update();
@@ -9778,7 +9797,7 @@ class Physics2DWorld
     // precon: body was woken before calling this method.
     //         therefore all arbiters are in the world as
     //         non-sleeping.
-    _removeShape(shape, noCallbacks?: bool)
+    _removeShape(shape: Physics2DShape, noCallbacks?: bool): void
     {
         var body = shape.body;
         this.broadphase.remove(shape._bphaseHandle);
@@ -9813,7 +9832,7 @@ class Physics2DWorld
     // Call on constraint when:
     //  A)  active (outside world), and then added to world
     //  B)  in world (inactive), and then enabled
-    _enabledConstraint(constraint)
+    _enabledConstraint(constraint: Physics2DConstraint): void
     {
         // prepare constraint for disjoint set forest.
         constraint._islandRoot = constraint;
@@ -9829,7 +9848,7 @@ class Physics2DWorld
     // Call on constraint when:
     //  A)  active (in world), and then removed from world
     //  B)  in world (active), and then disabled.
-    _disabledConstraint(constraint)
+    _disabledConstraint(constraint: Physics2DConstraint): void
     {
         this._wakeConstraint(constraint);
 
@@ -9839,7 +9858,7 @@ class Physics2DWorld
         constraints.pop();
     };
 
-    addConstraint(constraint): bool
+    addConstraint(constraint: Physics2DConstraint): bool
     {
         if (constraint.world)
         {
@@ -9859,7 +9878,7 @@ class Physics2DWorld
         return true;
     };
 
-    removeConstraint(constraint): bool
+    removeConstraint(constraint: Physics2DConstraint): bool
     {
         if (constraint.world !== this)
         {
@@ -9882,7 +9901,7 @@ class Physics2DWorld
         return true;
     };
 
-    addRigidBody(body): bool
+    addRigidBody(body: Physics2DRigidBody): bool
     {
         if (body.world)
         {
@@ -9921,7 +9940,7 @@ class Physics2DWorld
         return true;
     };
 
-    removeRigidBody(body, noCallbacks?: bool): bool
+    removeRigidBody(body: Physics2DRigidBody, noCallbacks?: bool): bool
     {
         if (body.world !== this)
         {
@@ -9972,7 +9991,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    clear()
+    clear(): void
     {
         // Clean up rigidBodies, liveDynamics, liveKinematics
         var bodies = this.rigidBodies;
@@ -10012,7 +10031,7 @@ class Physics2DWorld
         // broadphase already clear by removal of shapes.
     };
 
-    _clearArbiters(arbiters)
+    _clearArbiters(arbiters): void
     {
         var limit = arbiters.length;
         while (limit > 0)
@@ -10027,12 +10046,12 @@ class Physics2DWorld
 
     // =====================================================================
 
-    shapePointQuery(point, store): number
+    shapePointQuery(point: any /*v2*/, store: Physics2DShape[]): number
     {
         return this._pointQuery(this._shapePointCallback, point, store);
     };
 
-    bodyPointQuery(point, store): number
+    bodyPointQuery(point: any /*v2*/, store: Physics2DRigidBody[]): number
     {
         return this._pointQuery(this._bodyPointCallback, point, store);
     };
@@ -10051,12 +10070,12 @@ class Physics2DWorld
 
     // -------------------------------------
 
-    shapeCircleQuery(center, radius, store): number
+    shapeCircleQuery(center: any /*v2*/, radius: number, store: Physics2DShape[]): number
     {
         return this._circleQuery(this._shapeCircleCallback, center, radius, store);
     };
 
-    bodyCircleQuery(center, radius, store): number
+    bodyCircleQuery(center: any /*v2*/, radius: number, store: Physics2DRigidBody[]): number
     {
         return this._circleQuery(this._bodyCircleCallback, center, radius, store);
     };
@@ -10084,14 +10103,14 @@ class Physics2DWorld
 
     // -------------------------------------
 
-    shapeRectangleQuery(point, store)
+    shapeRectangleQuery(aabb: any /*v4*/, store: Physics2DShape[]): number
     {
-        return this._rectangleQuery(this._shapeRectangleCallback, point, store);
+        return this._rectangleQuery(this._shapeRectangleCallback, aabb, store);
     };
 
-    bodyRectangleQuery(point, store)
+    bodyRectangleQuery(aabb: any /*v4*/, store: Physics2DRigidBody[]): number
     {
-        return this._rectangleQuery(this._bodyRectangleCallback, point, store);
+        return this._rectangleQuery(this._bodyRectangleCallback, aabb, store);
     };
 
     _rectangleQuery(callback, aabb, store)
@@ -10119,7 +10138,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    rayCast(ray: Physics2DRay, noInnerSurfaces, customCallback,
+    rayCast(ray: Physics2DRay, noInnerSurfaces: bool, customCallback,
             thisObject): Physics2DCastResult
     {
         var origin = ray.origin;
@@ -10167,7 +10186,7 @@ class Physics2DWorld
         }
     };
 
-    convexCast(shape, deltaTime, customCallback,
+    convexCast(shape: Physics2DShape, deltaTime: number, customCallback,
                thisObject): Physics2DCastResult
     {
         var body = shape.body;
@@ -10224,7 +10243,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    step(deltaTime)
+    step(deltaTime: number): void
     {
         this._midStep = true;
         this._eventTime = (/*EVENT_TIME_STANDARD*/0);
@@ -10284,13 +10303,13 @@ class Physics2DWorld
     // =========================================================================
     // =========================================================================
 
-    _discreteCollisions()
+    _discreteCollisions(): void
     {
         this.broadphase.perform(this._discreteNarrowPhase, this);
         this._doDeferredWake(false);
     };
 
-    _doDeferredWake(continuous)
+    _doDeferredWake(continuous: bool): void
     {
         // Waking of bodies by collision must be deferred,
         // Broadphase must not be modified during 'perform' call.
@@ -10311,7 +10330,8 @@ class Physics2DWorld
         }
     };
 
-    _collisionType(s1, s2, b1, b2)
+    _collisionType(s1: Physics2DShape, s2: Physics2DShape,
+            b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
     {
         if (b1 === b2)
         {
@@ -10349,7 +10369,8 @@ class Physics2DWorld
         return collisionType;
     };
 
-    _discreteNarrowPhase(handleA, handleB, continuous)
+    _discreteNarrowPhase(handleA: Physics2DBroadphaseHandle, handleB: Physics2DBroadphaseHandle,
+            continuous: bool): Physics2DArbiter
     {
         var s1 = handleA.data;
         var s2 = handleB.data;
@@ -10536,7 +10557,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _continuousCollisions(deltaTime)
+    _continuousCollisions(deltaTime: number): void
     {
         this.broadphase.perform(this._continuousNarrowPhase, this);
 
@@ -10722,7 +10743,7 @@ class Physics2DWorld
         this._doDeferredWake(true);
     };
 
-    _continuousNarrowPhase(handleA, handleB)
+    _continuousNarrowPhase(handleA: Physics2DBroadphaseHandle, handleB: Physics2DBroadphaseHandle): void
     {
         var s1 = handleA.data;
         var s2 = handleB.data;
@@ -11040,13 +11061,13 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _sortArbiters()
+    _sortArbiters(): void
     {
         this._subSortArbiters(this.dynamicArbiters);
         this._subSortArbiters(this.staticArbiters);
     };
 
-    _subSortArbiters(arbiters)
+    _subSortArbiters(arbiters: Physics2DArbiter[]): void
     {
         // Insertion sort of arbiters list using shape id's as
         // lexicographical keys.
@@ -11084,7 +11105,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _onWakeCallbacks(component)
+    _onWakeCallbacks(component: Physics2DIslandComponent): void
     {
         if (this._midStep)
         {
@@ -11099,7 +11120,7 @@ class Physics2DWorld
         }
     };
 
-    _pushCallbacks(thisObject: any, callbacks: Physics2DObjectCallbackFn[])
+    _pushCallbacks(thisObject: any, callbacks: Physics2DObjectCallbackFn[]): void
     {
         var cbs = this._callbacks;
         var limit = callbacks.length;
@@ -11115,7 +11136,7 @@ class Physics2DWorld
         }
     };
 
-    _pushInteractionEvents(eventType, arb)
+    _pushInteractionEvents(eventType: number, arb: Physics2DArbiter): void
     {
         var cbs = this._callbacks;
 
@@ -11172,7 +11193,7 @@ class Physics2DWorld
     // =====================================================================
 
     // precon: constraint was removed from live list.
-    _brokenConstraint(con)
+    _brokenConstraint(con: Physics2DConstraint): void
     {
         if (con._onBreak.length > 0)
         {
@@ -11198,7 +11219,7 @@ class Physics2DWorld
         con._clearCache();
     };
 
-    _preStep(deltaTime)
+    _preStep(deltaTime: number): void
     {
         var constraints = this.liveConstraints;
         var limit = constraints.length;
@@ -11223,7 +11244,7 @@ class Physics2DWorld
     };
 
     // Used in continuous collisions, only want to pre-step a single arbiter.
-    _preStepArbiter(arb, deltaTime, progressEvents?: bool)
+    _preStepArbiter(arb: Physics2DArbiter, deltaTime: number, progressEvents?: bool): void
     {
         var timeStamp = this.timeStamp;
 
@@ -11263,7 +11284,7 @@ class Physics2DWorld
     };
 
     // Used in usual case, pre stepping whole list of arbiters.
-    _preStepArbiters(arbiters, deltaTime)
+    _preStepArbiters(arbiters: Physics2DArbiter[], deltaTime: number): void
     {
         var timeStamp = this.timeStamp;
         var limit = arbiters.length;
@@ -11348,7 +11369,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _iterateVelocity(count)
+    _iterateVelocity(count: number): void
     {
         var constraints = this.liveConstraints;
         while (count > 0)
@@ -11376,7 +11397,7 @@ class Physics2DWorld
         }
     };
 
-    _iterateVelocityArbiters(arbiters)
+    _iterateVelocityArbiters(arbiters: Physics2DArbiter[]): void
     {
         var limit = arbiters.length;
         var i;
@@ -11395,7 +11416,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _iteratePosition(count)
+    _iteratePosition(count: number): void
     {
         var constraints = this.liveConstraints;
         while (count > 0)
@@ -11423,7 +11444,7 @@ class Physics2DWorld
         }
     };
 
-    _iteratePositionArbiters(arbiters)
+    _iteratePositionArbiters(arbiters: Physics2DArbiter[]): void
     {
         var limit = arbiters.length;
         var i;
@@ -11442,7 +11463,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _integrateVelocity(deltaTime)
+    _integrateVelocity(deltaTime: number): void
     {
         var gravityX = this._gravityX;
         var gravityY = this._gravityY;
@@ -11478,13 +11499,13 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _integratePosition(deltaTime)
+    _integratePosition(deltaTime: number): void
     {
         this._integratePositionBodies(this.liveDynamics, deltaTime);
         this._integratePositionBodies(this.liveKinematics, deltaTime);
     };
 
-    _integratePositionBodies(bodies, deltaTime)
+    _integratePositionBodies(bodies: Physics2DRigidBody[], deltaTime: number): void
     {
         var MAX_VEL = (2 * Math.PI / deltaTime);
         var idt2 = (1 / (deltaTime * deltaTime));
@@ -11568,7 +11589,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _finalize()
+    _finalize(): void
     {
         this._finalizeBodies(this.liveDynamics);
         this._finalizeBodies(this.liveKinematics);
@@ -11578,7 +11599,7 @@ class Physics2DWorld
         this._finalizeArbiters(this.staticArbiters);
     };
 
-    _finalizeArbiters(arbiters)
+    _finalizeArbiters(arbiters: Physics2DArbiter[]): void
     {
         var limit = arbiters.length;
         var i;
@@ -11592,7 +11613,7 @@ class Physics2DWorld
         }
     };
 
-    _finalizeBodies(bodies)
+    _finalizeBodies(bodies: Physics2DRigidBody[]): void
     {
         var bphase = this.broadphase;
         var limit = bodies.length;
@@ -11634,7 +11655,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _doCallbacks()
+    _doCallbacks(): void
     {
         // Order by event index so as to guarantee that event listeners
         // added first, are processed first.
@@ -11720,7 +11741,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _warmStart()
+    _warmStart(): void
     {
         var constraints = this.liveConstraints;
         var limit = constraints.length;
@@ -11734,7 +11755,7 @@ class Physics2DWorld
         this._warmStartArbiters(this.staticArbiters);
     };
 
-    _warmStartArbiters(arbiters)
+    _warmStartArbiters(arbiters: Physics2DArbiter[]): void
     {
         var limit = arbiters.length;
         var i;
@@ -11753,7 +11774,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _forceSleepBody(body)
+    _forceSleepBody(body: Physics2DRigidBody): void
     {
         if (body.sleeping || body._type !== (/*TYPE_DYNAMIC*/0))
         {
@@ -11807,7 +11828,7 @@ class Physics2DWorld
         }
     };
 
-    _forceSleepConstraint(constraint)
+    _forceSleepConstraint(constraint: Physics2DConstraint): void
     {
         if (constraint.sleeping)
         {
@@ -11825,7 +11846,7 @@ class Physics2DWorld
         }
     };
 
-    _wakeConstraint(constraint, noCallback?)
+    _wakeConstraint(constraint: Physics2DConstraint, noCallback?: bool): void
     {
         if (constraint.world !== this)
         {
@@ -11856,7 +11877,7 @@ class Physics2DWorld
         }
     };
 
-    _wakeBody(body, noCallback?, continuousCallbacks?)
+    _wakeBody(body: Physics2DRigidBody, noCallback?: bool, continuousCallbacks?: bool): void
     {
         if (body.world !== this)
         {
@@ -11916,7 +11937,7 @@ class Physics2DWorld
         }
     };
 
-    _wakeArbiter(arb, continuousCallbacks?: bool)
+    _wakeArbiter(arb: Physics2DArbiter, continuousCallbacks?: bool): void
     {
         arb.sleeping = false;
 
@@ -11948,7 +11969,7 @@ class Physics2DWorld
         }
     };
 
-    _continuousArbiterPrepare(arb, deltaTime, progressEvents?: bool)
+    _continuousArbiterPrepare(arb: Physics2DArbiter, deltaTime: number, progressEvents?: bool): void
     {
         this._preStepArbiter(arb, deltaTime, progressEvents);
         /*jshint bitwise: false*/
@@ -11963,7 +11984,7 @@ class Physics2DWorld
         }
     };
 
-    _wakeArbiters(arbiters, skip, continuousCallbacks)
+    _wakeArbiters(arbiters: Physics2DArbiter[], skip: bool, continuousCallbacks: bool): void
     {
         var limit = arbiters.length;
         var i;
@@ -12004,7 +12025,7 @@ class Physics2DWorld
         }
     };
 
-    _wakeIsland(island, noCallbackObject, continuousCallbacks?)
+    _wakeIsland(island: Physics2DIsland, noCallbackObject: Physics2DIslandComponent, continuousCallbacks?: bool): void
     {
         var bphase = this.broadphase;
         var bodies = this.liveDynamics;
@@ -12029,9 +12050,9 @@ class Physics2DWorld
             if (c._isBody)
             {
                 // only dynamic bodies are inserted to islands.
-                bodies.push(c);
+                bodies.push(<Physics2DRigidBody><any>c);
 
-                var shapes = c.shapes;
+                var shapes = (<Physics2DRigidBody><any>c).shapes;
                 var limit2 = shapes.length;
                 var i;
                 for (i = 0; i < limit2; i += 1)
@@ -12043,7 +12064,7 @@ class Physics2DWorld
             }
             else
             {
-                constraints.push(c);
+                constraints.push(<Physics2DConstraint><any>c);
             }
 
             // Body + Constraint
@@ -12058,7 +12079,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _transmitBodyType(body, newType)
+    _transmitBodyType(body: Physics2DRigidBody, newType: number): void
     {
         // Wake as old type.
         // Interactions that are presently active may
@@ -12165,7 +12186,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    _validate()
+    _validate(): void
     {
         this._validateBodies(this.liveDynamics);
         this._validateBodies(this.liveKinematics);
@@ -12185,7 +12206,7 @@ class Physics2DWorld
         }
     };
 
-    _validateBodies(bodies)
+    _validateBodies(bodies: Physics2DRigidBody[]): void
     {
         var bphase = this.broadphase;
         var i;
@@ -12503,13 +12524,14 @@ class Physics2DCollisionUtils
 {
     _toi: Physics2DTOIEvent;
 
-    containsPoint(shape, point): bool
+    containsPoint(shape: Physics2DShape, point: any /*v2*/): bool
     {
         shape.body._update();
         return this._contains(shape, point[0], point[1]);
     };
 
-    signedDistance(shapeA, shapeB, witnessA, witnessB, axis): number
+    signedDistance(shapeA: Physics2DShape, shapeB: Physics2DShape,
+            witnessA: any /*v2*/, witnessB: any /*v2*/, axis: any /*v2*/): number
     {
         shapeA.body._update();
         if (shapeB.body !== shapeA.body)
@@ -12529,7 +12551,7 @@ class Physics2DCollisionUtils
         return ret;
     };
 
-    intersects(shapeA, shapeB): bool
+    intersects(shapeA: Physics2DShape, shapeB: Physics2DShape): bool
     {
         shapeA.body._update();
         if (shapeB.body !== shapeA.body)
@@ -12540,13 +12562,13 @@ class Physics2DCollisionUtils
         return this._test(shapeA, shapeB);
     };
 
-    rayTest(shape, ray, normal, ignoreInnerSurfaces): number
+    rayTest(shape: Physics2DShape, ray: Physics2DRay, normal: any /*v2*/, ignoreInnerSurfaces: bool): number
     {
         shape.body._update();
         return this._rayTest(shape, ray, normal, ignoreInnerSurfaces);
     };
 
-    sweepTest(shapeA, shapeB, deltaTime, point, normal): number
+    sweepTest(shapeA: Physics2DShape, shapeB: Physics2DShape, deltaTime: number, point: any /*v2*/, normal: any /*v2*/): number
     {
         var toi = this._toi;
         toi.shapeA = shapeA;
