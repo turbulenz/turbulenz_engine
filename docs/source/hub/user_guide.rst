@@ -935,6 +935,7 @@ The remaining metrics are currently updated for a 24-hour period after UTC midni
 .. NOTE::
     The following metrics were renamed on 1st August 2013 to better match common used terms in the industry.
     The changes to keys in the csv and json key value exports are also listed.
+
         * "Daily Unique Players" -> "Daily Active Players (DAU)" (dailyUniquePlayers -> DAU)
         * "Weekly Unique Players" -> "Weekly Active Players (WAU)" (weeklyUniquePlayers -> WAU)
         * "Monthly Unique Players" -> "Monthly Active Players (MAU)" (monthlyUniquePlayers -> MAU)

@@ -56,11 +56,13 @@ Requirements
 ============
 
 You will need:
+
 - The Turbulenz SDK installed on your host machine.
 - The Turbulenz Android Development Client installed on your android
   device
 
 The following is also recommended:
+
 - The `Android SDK <http://developer.android.com/sdk/index.html>`_,
   including a working version of the adb tool.
 
