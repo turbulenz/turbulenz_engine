@@ -33,6 +33,7 @@ Welcome to the Turbulenz documentation!
     turbulenz_services/index
     protolib/index
     tools/index
+    android_readme
     conventions
     changelog
     contributors
