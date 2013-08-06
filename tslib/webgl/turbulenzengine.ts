@@ -786,15 +786,22 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             window.addEventListener('resize', tz.resizeCanvas, false);
         }
 
-        var previousOnBeforeUnload = window.onbeforeunload;
-        window.onbeforeunload = function ()
+        try
         {
-            tz.unload();
-
-            if (previousOnBeforeUnload)
+            var previousOnBeforeUnload = window.onbeforeunload;
+            window.onbeforeunload = function ()
             {
-                previousOnBeforeUnload.call(this);
-            }
+                tz.unload();
+
+                if (previousOnBeforeUnload)
+                {
+                    previousOnBeforeUnload.call(this);
+                }
+            };
+        }
+        catch (e)
+        {
+            // If the game is running as a CWS packaged app then onbeforeunload is not available
         };
 
         tz.time = 0;
