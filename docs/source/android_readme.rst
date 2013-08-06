@@ -16,8 +16,8 @@ Introduction
 
 The Turbulenz Android Development Client is a native implementation of
 some low-level components of the Turbulenz HTML5 Engine, which allows
-Turbulenz games to run on Android even when the installed browsers do
-not fully support HTML5 and related standards.
+Turbulenz games to run on Android devices, even when the installed
+browsers do not fully support HTML5 and related standards.
 
 This technology can be applied to deploy specific games to the various
 app stores, and integrate those games with the underlying platform
@@ -27,11 +27,19 @@ quickly test and iterate their Turbulenz games on Android devices
 during development.
 
 The client can load and run .tzjs and .tzo files via URLs, or paths to
-files on the local device.  See the Turbulenz Engine Documentation for
-details of how to build your application code and data.  Diagnostic
-and log output is available via the system log, and we recommend that
-developers install the Android SDK so that they can examine the log
-and run other development tools.
+files on the local device.  See the :ref:`getting_started_guide` for
+details of how to build your application code and data.
+
+.. NOTE::
+
+ The Turbulenz Development Client currently does not create an icon in
+ the Android Launcher.  It is intended to be run in response to
+ opening URLs, either via the browser or through the Android SDK
+ Tools.
+
+Diagnostic and log output is available via the system log, and we
+recommend that developers install the Android SDK so that they can
+examine the log and run other development tools.
 
 The development client requires the following permissions:
 
