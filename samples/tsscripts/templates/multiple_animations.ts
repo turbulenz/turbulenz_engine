@@ -501,7 +501,7 @@ TurbulenzEngine.onload = function onloadFn()
     };
 
     // Initialize the previous frame time
-    var previousFrameTime = TurbulenzEngine.time;
+    var previousFrameTime = 0;
     var nextGridUpdateTime = 0;
     var fpsElement = document.getElementById("fpscounter");
     var lastFPS = '';
@@ -517,8 +517,8 @@ TurbulenzEngine.onload = function onloadFn()
         var currentCharacterCount = character.count;
         var resetGrid = false;
 
-        var currentTime = TurbulenzEngine.time;
-        var deltaTime = (currentTime - previousFrameTime);
+        var currentTime = TurbulenzEngine.getTime();
+        var deltaTime = (currentTime - previousFrameTime) * 0.001;
         if (deltaTime > 0.1)
         {
             deltaTime = 0.1;
@@ -644,6 +644,8 @@ TurbulenzEngine.onload = function onloadFn()
             htmlControls.updateSlider(slider01ID, undefined);
 
             intervalID = TurbulenzEngine.setInterval(renderFrame, 1000 / 60);
+
+            previousFrameTime = TurbulenzEngine.getTime();
         }
     };
     intervalID = TurbulenzEngine.setInterval(loadingLoop, 1000 / 10);
