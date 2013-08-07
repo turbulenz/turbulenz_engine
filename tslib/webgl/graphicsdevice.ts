@@ -3178,7 +3178,7 @@ Technique.prototype =
             var passes = this.passes;
             if (passes.length === 1)
             {
-                gd.setParametersImmediate(gd, passes, fakeTechniqueParameters);
+                gd.setParametersImmediate(passes[0].parameters, fakeTechniqueParameters);
             }
             else
             {
@@ -4576,21 +4576,30 @@ WebGLGraphicsDevice.prototype =
     {
         var activeTechnique = this.activeTechnique;
         var passes = activeTechnique.passes;
-        var setParameters = (1 === passes.length ? this.setParametersImmediate : this.setParametersDeferred);
         var numTechniqueParameters = arguments.length;
-        for (var t = 0; t < numTechniqueParameters; t += 1)
+        if (1 === passes.length)
         {
-            setParameters(this, passes, arguments[t]);
+            var parameters = passes[0].parameters;
+            for (var t = 0; t < numTechniqueParameters; t += 1)
+            {
+                this.setParametersImmediate(parameters, arguments[t]);
+            }
+        }
+        else
+        {
+            for (var t = 0; t < numTechniqueParameters; t += 1)
+            {
+                this.setParametersDeferred(this, passes, arguments[t]);
+            }
         }
     },
 
     //Internal
 
-    setParametersImmediate : function setParametersImmediateFn(gd, passes, techniqueParameters)
+    setParametersImmediate : function setParametersImmediateFn(parameters, techniqueParameters)
     {
-        var gl = gd.gl;
+        var gl = this.gl;
 
-        var parameters = passes[0].parameters;
         /*jshint forin: true*/
         for (var p in techniqueParameters)
         {
@@ -4629,7 +4638,7 @@ WebGLGraphicsDevice.prototype =
                     }
                     else if (paramInfo.sampler !== undefined)
                     {
-                        gd.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                        this.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
                     }
                     else
                     {
