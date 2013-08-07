@@ -9,7 +9,7 @@ deploy_files:
 - js/*
 - staticmax/*
 deployed: Never
-engine_version: '0.26'
+engine_version: '0.27'
 is_temp: false
 mapping_table: mapping_table.json
 modified: 16:24 | 08/04/2011
