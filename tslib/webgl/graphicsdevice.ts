@@ -6621,6 +6621,12 @@ WebGLGraphicsDevice.create = function webGLGraphicsDeviceCreateFn(canvas, params
                 canvasParams.antialias = true;
             }
 
+            var alpha = params.alpha ;
+            if (alpha)
+            {
+                canvasParams.alpha = true;
+            }
+
             var numContexts = contextList.length, i;
             for (i = 0; i < numContexts; i += 1)
             {

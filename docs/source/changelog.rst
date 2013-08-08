@@ -10,10 +10,14 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-08-08
+
+- Added alpha channel support when creating the GraphicsDevice.
+
 2013-07-31
 
 - Updated hub documentation relating to changes in metrics display. See the Hub user guide metrics section for
-  details of changes
+  details of changes.
 
 2013-07-30
 
