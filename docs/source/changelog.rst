@@ -13,6 +13,7 @@ Version 1.x-dev
 2013-08-08
 
 - Added alpha channel support when creating the GraphicsDevice.
+- Added TEXTURE_UNITS and VERTEX_TEXTURE_UNITS to GraphicsDevice.maxSupported.
 
 2013-07-31
 

@@ -5995,6 +5995,14 @@ WebGLGraphicsDevice.prototype =
         {
             return gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
         }
+        else if ("TEXTURE_UNITS" === name)
+        {
+            return gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+        }
+        else if ("VERTEX_TEXTURE_UNITS" === name)
+        {
+            return gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+        }
         return 0;
     },
 
