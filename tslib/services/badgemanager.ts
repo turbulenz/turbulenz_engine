@@ -112,25 +112,14 @@ class BadgeManager
             dataSpec.current = current;
         }
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            TurbulenzServices.callOnBridge('badge.add', dataSpec, function unpackResponse(response)
-            {
-                cb(response, response.status);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data : dataSpec,
-                callback: cb,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data : dataSpec,
+            callback: cb,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'badge.add');
     }
 
     // list all badges (just queries the yaml file)

@@ -80,20 +80,13 @@ class GameSession
 
             dataSpec = {'gameSessionId': this.gameSessionId};
 
-            if (TurbulenzServices.bridgeServices)
-            {
-                TurbulenzServices.callOnBridge('gamesession.destroy', dataSpec, callbackFn);
-            }
-            else
-            {
-                Utilities.ajax({
-                    url: '/api/v1/games/destroy-session',
-                    method: 'POST',
-                    data: dataSpec,
-                    callback: callbackFn,
-                    requestHandler: this.requestHandler
-                });
-            }
+            this.service.request({
+                url: '/api/v1/games/destroy-session',
+                method: 'POST',
+                data: dataSpec,
+                callback: callbackFn,
+                requestHandler: this.requestHandler
+            }, 'gamesession.destroy');
         }
         else
         {
@@ -272,7 +265,7 @@ class GameSession
             callback: gameSessionRequestCallback,
             requestHandler: requestHandler,
             neverDiscard: true
-        });
+        }, 'gamesession.create');
 
         return gameSession;
     }

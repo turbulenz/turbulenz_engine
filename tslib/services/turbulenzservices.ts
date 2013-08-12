@@ -127,8 +127,28 @@ class ServiceRequester
     //     neverDiscard - Never discard the request. Always queues the request
     //                    for when the service is again available. (Ignores
     //                    server preference)
-    request(params)
+    request(params, serviceAction? : string)
     {
+        // If the bridgeServices are available send to call
+        if (TurbulenzServices.bridgeServices)
+        {
+            //TurbulenzServices.addSignature(dataSpec, url);
+            var processed = TurbulenzServices.callOnBridge(serviceAction ? serviceAction : params.url,
+                                                           params,
+                                                           function unpackResponse(response)
+            {
+                if (params.callback)
+                {
+                    params.callback(response, response.status);
+                }
+            });
+            // Processed indicates we are offline and the bridge has fully dealt with the service call
+            if (processed)
+            {
+                return true;
+            }
+        }
+
         var discardRequestFn = function discardRequestFn()
         {
             if (params.callback)
@@ -356,7 +376,7 @@ class TurbulenzServices
         TurbulenzBridge.on("bridgeservices.response", function (jsondata) { that.routeResponse(jsondata); });
     }
 
-    static callOnBridge(event, data, callback)
+    static callOnBridge(event, data, callback) : boolean
     {
         var request = {
             data: data,
@@ -369,6 +389,9 @@ class TurbulenzServices
             request.key = this.responseIndex;
         }
         TurbulenzBridge.emit('bridgeservices.' + event, JSON.stringify(request));
+        // Return true if the request is fully processed, i.e. we're offline
+        var offline = true;
+        return offline;
     }
 
     static addSignature(data, url)

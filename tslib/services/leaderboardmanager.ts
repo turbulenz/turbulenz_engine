@@ -302,26 +302,14 @@ class LeaderboardManager
         };
         var url = '/api/v1/leaderboards/scores/set/' + key;
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            dataSpec.key = key;
-            TurbulenzServices.callOnBridge('leaderboard.set', dataSpec, function unpackResponse(response)
-            {
-                setCallback(response, response.status);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data : dataSpec,
-                callback: setCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data : dataSpec,
+            callback: setCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'leaderboard.set');
     }
 
     // ONLY available on Local and Hub
@@ -425,7 +413,9 @@ class LeaderboardManager
                 }
                 else
                 {
-                    leaderboardManager.errorCallbackFn("TurbulenzServices.createLeaderboardManager error with HTTP status " + status + ": " + jsonResponse.msg, status);
+                    leaderboardManager.errorCallbackFn("TurbulenzServices.createLeaderboardManager " +
+                                                       "error with HTTP status " + status + ": " +
+                                                       jsonResponse.msg, status);
                 }
             },
             requestHandler: requestHandler,
@@ -824,7 +814,7 @@ class LeaderboardResult
         leaderboardResult.key = key;
 
         // patch up friendsOnly for frontend
-        spec.friendsOnly = (0 != spec.friendsonly);
+        spec.friendsOnly = (0 !== spec.friendsonly);
         delete spec.friendsonly;
         // store the original spec used to create the results
         leaderboardResult.originalSpec = spec;

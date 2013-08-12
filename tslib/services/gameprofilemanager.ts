@@ -63,25 +63,14 @@ class GameProfileManager
 
         var url = '/api/v1/game-profile/set';
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            TurbulenzServices.callOnBridge('gameprofile.set', dataSpec, function unpackResponse(response)
-            {
-                setCallback(response, response.status);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data : dataSpec,
-                callback: setCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data : dataSpec,
+            callback: setCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'gameprofile.set');
 
         return true;
     }
@@ -116,25 +105,14 @@ class GameProfileManager
 
         var url = '/api/v1/game-profile/remove';
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            TurbulenzServices.callOnBridge('gameprofile.remove', dataSpec, function unpackResponse(response)
-            {
-                removeCallbackFn(response, response.status);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data: dataSpec,
-                callback: removeCallbackFn,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data: dataSpec,
+            callback: removeCallbackFn,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'gameprofile.remove');
 
         return true;
     }
