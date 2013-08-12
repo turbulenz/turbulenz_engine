@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2013 Turbulenz Limited
 /*global TurbulenzEngine:false*/
 /*global Profile:false*/
 
@@ -8,6 +8,13 @@
 //
 // CharacterController
 //
+interface CharacterControllerTouch
+{
+    id: number;
+    originX: number;
+    originY: number;
+};
+
 class CharacterController
 {
     static version = 1;
@@ -26,6 +33,8 @@ class CharacterController
     padleft                      : number;
     padforward                   : number;
     padbackward                  : number;
+    looktouch                    : CharacterControllerTouch;
+    movetouch                    : CharacterControllerTouch;
     step                         : number;
     extents                      : any; //AABB;
 
@@ -63,6 +72,9 @@ class CharacterController
                                       rX: number, rY: number, rZ: number,
                                       dpadState: number): void; };
     onpaddown                    : { (buttonnum: number): void; };
+    ontouchstart                 : { (touchEvent: TouchEvent): void; };
+    ontouchend                   : { (touchEvent: TouchEvent): void; };
+    ontouchmove                  : { (touchEvent: TouchEvent): void; };
     attach                       : { (id: InputDevice): void; };
 
     static create(gd: GraphicsDevice, id: InputDevice, pd: PhysicsDevice,
@@ -85,6 +97,16 @@ class CharacterController
         c.padleft = 0.0;
         c.padforward = 0.0;
         c.padbackward = 0.0;
+        c.looktouch = {
+            id: -1,
+            originX: 0,
+            originY: 0
+        };
+        c.movetouch = {
+            id: -1,
+            originX: 0,
+            originY: 0
+        };
         c.step = 0.0;
         c.extents = md.aabbBuildEmpty();
 
@@ -375,6 +397,131 @@ class CharacterController
             }
         };
 
+        c.ontouchstart = function ontouchstartFn(touchEvent)
+        {
+            var changedTouches = touchEvent.changedTouches;
+            var numTouches = changedTouches.length;
+            var t;
+            var halfScreenWidth = gd.width * 0.5;
+            for (t = 0; t < numTouches; t += 1)
+            {
+                var touchId = changedTouches[t].identifier;
+                var touchX = changedTouches[t].positionX;
+                var touchY = changedTouches[t].positionY;
+                if (touchX < halfScreenWidth &&
+                    c.looktouch.id === -1)
+                {
+                    c.looktouch.id = touchId;
+                    c.looktouch.originX = touchX;
+                    c.looktouch.originY = touchY;
+                }
+                else if (touchX >= halfScreenWidth &&
+                         c.movetouch.id === -1)
+                {
+                    c.movetouch.id = touchId;
+                    c.movetouch.originX = touchX;
+                    c.movetouch.originY = touchY;
+                }
+            }
+        };
+
+        c.ontouchend = function ontouchendFn(touchEvent)
+        {
+            var changedTouches = touchEvent.changedTouches;
+            var numTouches = changedTouches.length;
+            var t;
+            for (t = 0; t < numTouches; t += 1)
+            {
+                var touchId = changedTouches[t].identifier;
+                if (c.looktouch.id === touchId)
+                {
+                    c.looktouch.id = -1;
+                    c.looktouch.originX = 0;
+                    c.looktouch.originY = 0;
+                    c.turn = 0;
+                    c.pitch = 0;
+                }
+                else if (c.movetouch.id === touchId)
+                {
+                    c.movetouch.id = -1;
+                    c.movetouch.originX = 0;
+                    c.movetouch.originY = 0;
+                    c.left = 0.0;
+                    c.right = 0.0;
+                    c.forward = 0.0;
+                    c.backward = 0.0;
+                }
+            }
+        };
+
+        c.ontouchmove = function ontouchmoveFn(touchEvent)
+        {
+            var changedTouches = touchEvent.changedTouches;
+            var numTouches = changedTouches.length;
+            var deadzone = 16.0;
+            var t;
+            for (t = 0; t < numTouches; t += 1)
+            {
+                var touchId = changedTouches[t].identifier;
+                var touchX = changedTouches[t].positionX;
+                var touchY = changedTouches[t].positionY;
+                if (c.looktouch.id === touchId)
+                {
+                    if (touchX - c.looktouch.originX > deadzone ||
+                        touchX - c.looktouch.originX < -deadzone)
+                    {
+                        c.turn = (touchX - c.looktouch.originX) / deadzone;
+                    }
+                    else
+                    {
+                        c.turn = 0.0;
+                    }
+                    if (touchY - c.looktouch.originY > deadzone ||
+                        touchY - c.looktouch.originY < -deadzone)
+                    {
+                        c.pitch = (touchY - c.looktouch.originY) / deadzone;
+                    }
+                    else
+                    {
+                        c.pitch = 0.0;
+                    }
+                }
+                else if (c.movetouch.id === touchId)
+                {
+                    if (touchX - c.movetouch.originX > deadzone)
+                    {
+                        c.left = 0.0;
+                        c.right = 1.0;
+                    }
+                    else if (touchX - c.movetouch.originX < -deadzone)
+                    {
+                        c.left = 1.0;
+                        c.right = 0.0;
+                    }
+                    else
+                    {
+                        c.left = 0.0;
+                        c.right = 0.0;
+                    }
+                    if (touchY - c.movetouch.originY > deadzone)
+                    {
+                        c.forward = 0.0;
+                        c.backward = 1.0;
+                    }
+                    else if (touchY - c.movetouch.originY < -deadzone)
+                    {
+                        c.forward = 1.0;
+                        c.backward = 0.0;
+                    }
+                    else
+                    {
+                        c.forward = 0.0;
+                        c.backward = 0.0;
+                    }
+                }
+            }
+        };
+
         // Attach to an InputDevice
         c.attach = function attachFn(inputDevice)
         {
@@ -384,6 +531,9 @@ class CharacterController
             inputDevice.addEventListener('mousemove', c.onmousemove);
             inputDevice.addEventListener('padmove', c.onpadmove);
             inputDevice.addEventListener('paddown', c.onpaddown);
+            inputDevice.addEventListener('touchstart', c.ontouchstart);
+            inputDevice.addEventListener('touchend', c.ontouchend);
+            inputDevice.addEventListener('touchmove', c.ontouchmove);
         };
 
         if (id)
