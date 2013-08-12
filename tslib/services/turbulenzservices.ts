@@ -133,15 +133,14 @@ class ServiceRequester
         if (TurbulenzServices.bridgeServices)
         {
             //TurbulenzServices.addSignature(dataSpec, url);
-            var processed = TurbulenzServices.callOnBridge(serviceAction ? serviceAction : params.url,
-                                                           params,
-                                                           function unpackResponse(response)
-            {
-                if (params.callback)
+            var processed = TurbulenzServices.callOnBridge(serviceAction ? serviceAction : params.url, params,
+                function unpackResponse(response)
                 {
-                    params.callback(response, response.status);
-                }
-            });
+                    if (params.callback)
+                    {
+                        params.callback(response, response.status);
+                    }
+                });
             // Processed indicates we are offline and the bridge has fully dealt with the service call
             if (processed)
             {
@@ -585,7 +584,7 @@ class TurbulenzServices
                     }
                 },
                 requestHandler: requestHandler
-            });
+            }, 'profile.user');
         }
 
         return userProfile;
@@ -684,7 +683,7 @@ class TurbulenzServices
             },
             requestHandler: requestHandler,
             encrypt: true
-        });
+        }, 'custommetrics.addevent');
     }
 
     static sendCustomMetricEventBatch(eventBatch: CustomMetricEventBatch,
@@ -786,7 +785,7 @@ class TurbulenzServices
             },
             requestHandler: requestHandler,
             encrypt: true
-        });
+        }, 'custommetrics.addeventbatch');
     }
 
     static services = {};

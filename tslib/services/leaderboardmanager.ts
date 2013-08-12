@@ -78,7 +78,7 @@ class LeaderboardManager
             data : dataSpec,
             callback: getOverviewCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'leaderboard.read');
     }
 
     getAggregates(spec, callbackFn, errorCallbackFn)
@@ -116,7 +116,7 @@ class LeaderboardManager
             data : dataSpec,
             callback: getAggregatesCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'leaderboard.aggregates');
     }
 
     getRaw(key, spec, callbackFn, errorCallbackFn): boolean
@@ -145,7 +145,7 @@ class LeaderboardManager
             data: spec,
             callback: getCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'leaderboard.read');
         return true;
     }
 
@@ -356,7 +356,7 @@ class LeaderboardManager
             method: 'POST',
             callback: resetCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'leaderboard.removeall');
     }
 
     static create(requestHandler: RequestHandler,
@@ -420,7 +420,7 @@ class LeaderboardManager
             },
             requestHandler: requestHandler,
             neverDiscard: true
-        });
+        }, 'leaderboard.meta');
 
         return leaderboardManager;
     }

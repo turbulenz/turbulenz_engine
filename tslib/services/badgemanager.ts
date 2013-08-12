@@ -54,7 +54,7 @@ class BadgeManager
             method: 'GET',
             callback: cb,
             requestHandler: this.requestHandler
-        });
+        }, 'badge.read');
     }
 
     awardUserBadge(badge_key, callbackFn, errorCallbackFn)
@@ -150,7 +150,7 @@ class BadgeManager
             method: 'GET',
             callback: cb,
             requestHandler: this.requestHandler
-        });
+        }, 'badge.meta');
     }
 
     errorCallbackFn()

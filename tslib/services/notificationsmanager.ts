@@ -378,7 +378,7 @@ class NotificationsManager
 
             },
             requestHandler: this.requestHandler
-        });
+        }, 'notifications.usersettings');
     }
 
     requestGameNotificationKeys(successCallback?: (data: any) => void,
@@ -402,7 +402,7 @@ class NotificationsManager
                 }
             },
             requestHandler: this.requestHandler
-        });
+        }, 'notifications.keys');
     }
 
     onInit(): void
