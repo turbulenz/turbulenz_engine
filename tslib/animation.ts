@@ -2475,7 +2475,7 @@ class GPUSkinController implements SkinControllerBase
         c.gd = gd;
         c.dirty = true;
         c.ltms = [];
-        c.outputMat = md.m43BuildIdentity();
+        c.outputMat = md.m34BuildIdentity();
         c.convertedquatPos = md.m43BuildIdentity();
         c.bufferSize = bufferSize || GPUSkinController.prototype.defaultBufferSize;
 
