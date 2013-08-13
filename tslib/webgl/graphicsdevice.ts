@@ -87,12 +87,42 @@ TZWebGLTexture.prototype =
 {
     version : 1,
 
-    setData : function textureSetDataFn(data)
+    setData : function textureSetDataFn(data: any,
+                                        face?: number,
+                                        level?: number,
+                                        x?:number,
+                                        y?:number,
+                                        w?:number,
+                                        h?:number)
     {
         var gd = this.gd;
         var target = this.target;
         gd.bindTexture(target, this.glTexture);
-        this.updateData(data);
+        debug.assert(arguments.length === 1 || 3 <= arguments.length);
+        if (3 <= arguments.length)
+        {
+            if (x === undefined)
+            {
+                x = 0;
+            }
+            if (y === undefined)
+            {
+                y = 0;
+            }
+            if (w === undefined)
+            {
+                w = (this.width - x);
+            }
+            if (h === undefined)
+            {
+                h = (this.height - y);
+            }
+            this.updateSubData(data, face, level, x, y, w, h);
+        }
+        else
+        {
+            this.updateData(data);
+        }
         gd.bindTexture(target, null);
     },
 
@@ -553,6 +583,227 @@ TZWebGLTexture.prototype =
         if (generateMipMaps)
         {
             gl.generateMipmap(target);
+        }
+    },
+
+    updateSubData : function updateSubDataFn(data, face, level, x, y, w, h)
+    {
+        debug.assert(data);
+        debug.assert(face === 0 || (this.cubemap && face < 6));
+        debug.assert(0 <= x && (x + w) <= this.width);
+        debug.assert(0 <= y && (y + h) <= this.height);
+        var gd = this.gd;
+        var gl = gd.gl;
+
+        var format = this.format;
+        var glformat, gltype, bufferData;
+        var compressedTexturesExtension;
+
+        if (format === gd.PIXELFORMAT_A8)
+        {
+            glformat = gl.ALPHA;
+            gltype = gl.UNSIGNED_BYTE;
+            if (data instanceof Uint8Array)
+            {
+                bufferData = data;
+            }
+            else
+            {
+                bufferData = new Uint8Array(data);
+            }
+        }
+        else if (format === gd.PIXELFORMAT_L8)
+        {
+            glformat = gl.LUMINANCE;
+            gltype = gl.UNSIGNED_BYTE;
+            if (data instanceof Uint8Array)
+            {
+                bufferData = data;
+            }
+            else
+            {
+                bufferData = new Uint8Array(data);
+            }
+        }
+        else if (format === gd.PIXELFORMAT_L8A8)
+        {
+            glformat = gl.LUMINANCE_ALPHA;
+            gltype = gl.UNSIGNED_BYTE;
+            if (data instanceof Uint8Array)
+            {
+                bufferData = data;
+            }
+            else
+            {
+                bufferData = new Uint8Array(data);
+            }
+        }
+        else if (format === gd.PIXELFORMAT_R5G5B5A1)
+        {
+            glformat = gl.RGBA;
+            gltype = gl.UNSIGNED_SHORT_5_5_5_1;
+            if (data instanceof Uint16Array)
+            {
+                bufferData = data;
+            }
+            else
+            {
+                bufferData = new Uint16Array(data);
+            }
+        }
+        else if (format === gd.PIXELFORMAT_R5G6B5)
+        {
+            glformat = gl.RGB;
+            gltype = gl.UNSIGNED_SHORT_5_6_5;
+            if (data instanceof Uint16Array)
+            {
+                bufferData = data;
+            }
+            else
+            {
+                bufferData = new Uint16Array(data);
+            }
+        }
+        else if (format === gd.PIXELFORMAT_R4G4B4A4)
+        {
+            glformat = gl.RGBA;
+            gltype = gl.UNSIGNED_SHORT_4_4_4_4;
+            if (data instanceof Uint16Array)
+            {
+                bufferData = data;
+            }
+            else
+            {
+                bufferData = new Uint16Array(data);
+            }
+        }
+        else if (format === gd.PIXELFORMAT_R8G8B8A8)
+        {
+            glformat = gl.RGBA;
+            gltype = gl.UNSIGNED_BYTE;
+            if (data instanceof Uint8Array)
+            {
+                // See comment above about Uint8ClampedArray on updateData
+                if (typeof Uint8ClampedArray !== "undefined" &&
+                    data instanceof Uint8ClampedArray)
+                {
+                    bufferData = new Uint8Array(data.buffer);
+                }
+                else
+                {
+                    bufferData = data;
+                }
+            }
+            else
+            {
+                bufferData = new Uint8Array(data);
+            }
+        }
+        else if (format === gd.PIXELFORMAT_R8G8B8)
+        {
+            glformat = gl.RGB;
+            gltype = gl.UNSIGNED_BYTE;
+            if (data instanceof Uint8Array)
+            {
+                // See comment above about Uint8ClampedArray on updateData
+                if (typeof Uint8ClampedArray !== "undefined" &&
+                    data instanceof Uint8ClampedArray)
+                {
+                    bufferData = new Uint8Array(data.buffer);
+                }
+                else
+                {
+                    bufferData = data;
+                }
+            }
+            else
+            {
+                bufferData = new Uint8Array(data);
+            }
+        }
+        else if (format === gd.PIXELFORMAT_DXT1 ||
+                 format === gd.PIXELFORMAT_DXT3 ||
+                 format === gd.PIXELFORMAT_DXT5)
+        {
+            compressedTexturesExtension = gd.compressedTexturesExtension;
+            if (compressedTexturesExtension)
+            {
+                if (format === gd.PIXELFORMAT_DXT1)
+                {
+                    glformat = compressedTexturesExtension.COMPRESSED_RGBA_S3TC_DXT1_EXT;
+                }
+                else if (format === gd.PIXELFORMAT_DXT3)
+                {
+                    glformat = compressedTexturesExtension.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                }
+                else //if (format === gd.PIXELFORMAT_DXT5)
+                {
+                    glformat = compressedTexturesExtension.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                }
+
+                if (data instanceof Uint8Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Uint8Array(data);
+                }
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else
+        {
+            return;   //unknown/unsupported format
+        }
+
+        var target;
+        if (this.cubemap)
+        {
+            if (data instanceof WebGLVideo)
+            {
+                return;   //unknown/unsupported format
+            }
+
+            target = (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face);
+        }
+        else if (data instanceof WebGLVideo)
+        {
+            target = gl.TEXTURE_2D;
+            // width and height are taken from video
+            gl.texSubImage2D(target, level,
+                             x, y,
+                             glformat, gltype, data.video);
+            return;
+        }
+        else
+        {
+            target = gl.TEXTURE_2D;
+        }
+
+        if (compressedTexturesExtension)
+        {
+            if (gd.WEBGL_compressed_texture_s3tc)
+            {
+                gl.compressedTexSubImage2D(target, level,
+                                           x, y, w, h,
+                                           glformat, bufferData);
+            }
+            else
+            {
+                compressedTexturesExtension.compressedTexSubImage2D(target, level,
+                                                                    x, y, w, h,
+                                                                    glformat, bufferData);
+            }
+        }
+        else
+        {
+            gl.texSubImage2D(target, level,
+                             x, y, w, h,
+                             glformat, gltype, bufferData);
         }
     },
 
