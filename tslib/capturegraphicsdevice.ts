@@ -17,7 +17,8 @@ var CaptureGraphicsCommand =
     setScissor:             12,
     setViewport:            13,
     beginOcclusionQuery:    14,
-    endOcclusionQuery:      15
+    endOcclusionQuery:      15,
+    updateTextureData:      16
 };
 
 class CaptureGraphicsDevice
@@ -265,7 +266,7 @@ class CaptureGraphicsDevice
         return id.toString();
     }
 
-    private _addCommand(method, arg1?, arg2?, arg3?, arg4?, arg5?): void
+    private _addCommand(method, arg1?, arg2?, arg3?, arg4?, arg5?, arg6?, arg7?, arg8?): void
     {
         var length = arguments.length;
 
@@ -1645,11 +1646,22 @@ class CaptureGraphicsDevice
             {
                 var integers = !(data instanceof Float32Array ||
                                  data instanceof Float64Array);
-                self._addCommand(CaptureGraphicsCommand.setAllData,
-                                 id,
-                                 self._addData(data, data.length, integers));
+                var clonedData = self._addData(data, data.length, integers);
+                if (arguments.length === 1)
+                {
+                    self._addCommand(CaptureGraphicsCommand.setAllData, id, clonedData);
 
-                setData.call(this, data);
+                    setData.call(this, data);
+                }
+                else
+                {
+                    self._addCommand(CaptureGraphicsCommand.updateTextureData, id, clonedData,
+                                     arguments[1], arguments[2],
+                                     arguments[3], arguments[4],
+                                     arguments[5], arguments[6]);
+
+                    setData.apply(this, arguments);
+                }
             };
             if (params.data)
             {
@@ -3061,6 +3073,13 @@ class PlaybackGraphicsDevice
                         target.setData(command[2]);
                     }
                 }
+                else if (method === CaptureGraphicsCommand.updateTextureData)
+                {
+                    command[1].setData(command[2],
+                                       command[3], command[4],
+                                       command[5], command[6],
+                                       command[7], command[8]);
+                }
             }
 
             nextIndex += 1;
@@ -3241,6 +3260,13 @@ class PlaybackGraphicsDevice
             else if (method === CaptureGraphicsCommand.endOcclusionQuery)
             {
                 gd.endOcclusionQuery(command[1]);
+            }
+            else if (method === CaptureGraphicsCommand.updateTextureData)
+            {
+                command[1].setData(command[2],
+                                   command[3], command[4],
+                                   command[5], command[6],
+                                   command[7], command[8]);
             }
             else
             {
