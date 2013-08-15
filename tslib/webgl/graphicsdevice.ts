@@ -1084,7 +1084,7 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
         }
 
         var img = new Image();
-        img.onload = function imageLoadedFn()
+        var imageLoaded = function imageLoadedFn()
         {
             tex.width = img.width;
             tex.height = img.height;
@@ -1097,6 +1097,7 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
                 params.onload(result ? tex : null, 200);
             }
         };
+        img.onload = imageLoaded;
         img.onerror = function imageFailedFn()
         {
             tex.failed = true;
@@ -1122,7 +1123,6 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
         else if (typeof URL !== "undefined" && URL.createObjectURL)
         {
             var xhr = new XMLHttpRequest();
-            xhr.responseType = 'blob';
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4)
                 {
@@ -1152,6 +1152,11 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
                         {
                             if (xhrStatus === 200 || xhrStatus === 0)
                             {
+                                img.onload = function blobImageLoadedFn()
+                                {
+                                    imageLoaded();
+                                    URL.revokeObjectURL(img.src);
+                                };
                                 img.src = URL.createObjectURL(xhr.response);
                             }
                             else
@@ -1160,10 +1165,12 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
                             }
                         }
                         xhr.onreadystatechange = null;
+                        xhr = null;
                     }
                 }
             };
             xhr.open('GET', src, true);
+            xhr.responseType = 'blob';
             xhr.send();
         }
         else
