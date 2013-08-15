@@ -1095,6 +1095,9 @@ DDSLoader.create = function ddsLoaderFn(params)
                                 loader.onerror(0);
                             }
                         }
+                        // break circular reference
+                        xhr.onreadystatechange = null;
+                        xhr = null;
                         return;
                     }
 

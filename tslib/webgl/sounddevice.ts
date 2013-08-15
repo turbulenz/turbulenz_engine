@@ -243,7 +243,7 @@ WebGLSound.create = function webGLSoundCreateFn(sd, params)
                             // before the message is sent (weird!).
                             // In order to address this we fail any completely empty responses.
                             // Hopefully, nobody will get a valid response with no headers and no body!
-                            if (xhr.getAllResponseHeaders() === "" && !response && xhrStatus === 200 && xhrStatusText === 'OK')
+                            if (xhr.getAllResponseHeaders() === "" && !response)
                             {
                                 if (onload)
                                 {
@@ -1456,18 +1456,18 @@ WebGLSoundDevice.prototype =
                 {
                     params.onsoundload(texture);
                 },
-                onload : function soundTarLoadedFn(success /*, status */)
+                onload : function soundTarLoadedFn(success, status)
                 {
                     if (params.onload)
                     {
-                        params.onload(success);
+                        params.onload(success, status);
                     }
                 },
-                onerror : function soundTarFailedFn()
+                onerror : function soundTarFailedFn(status)
                 {
                     if (params.onload)
                     {
-                        params.onload(false);
+                        params.onload(false, status);
                     }
                 }
             });
