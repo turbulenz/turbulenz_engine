@@ -1117,12 +1117,60 @@ TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
                 src = 'data:image/png;base64,' +
                     (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
             }
+            img.src = src;
+        }
+        else if (typeof URL !== "undefined" && URL.createObjectURL)
+        {
+            var xhr = new XMLHttpRequest();
+            xhr.responseType = 'blob';
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4)
+                {
+                    if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                    {
+                        var xhrStatus = xhr.status;
+                        // Fix for loading from file
+                        if (xhrStatus === 0 &&
+                            (window.location.protocol === "file:" ||
+                             window.location.protocol === "chrome-extension:"))
+                        {
+                            xhrStatus = 200;
+                        }
+
+                        // Sometimes the browser sets status to 200 OK when the connection is closed
+                        // before the message is sent (weird!).
+                        // In order to address this we fail any completely empty responses.
+                        // Hopefully, nobody will get a valid response with no headers and no body!
+                        if (xhr.getAllResponseHeaders() === "" && !xhr.response)
+                        {
+                            if (params.onload)
+                            {
+                                params.onload(null, 0);
+                            }
+                        }
+                        else
+                        {
+                            if (xhrStatus === 200 || xhrStatus === 0)
+                            {
+                                img.src = URL.createObjectURL(xhr.response);
+                            }
+                            else
+                            {
+                                params.onload(null, xhrStatus);
+                            }
+                        }
+                        xhr.onreadystatechange = null;
+                    }
+                }
+            };
+            xhr.open('GET', src, true);
+            xhr.send();
         }
         else
         {
             img.crossOrigin = 'anonymous';
+            img.src = src;
         }
-        img.src = src;
     }
     else
     {

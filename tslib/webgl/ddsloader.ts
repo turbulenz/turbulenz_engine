@@ -1061,16 +1061,39 @@ DDSLoader.create = function ddsLoaderFn(params)
                 {
                     var xhrStatus = xhr.status;
                     var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
+                    // Fix for loading from file
+                    if (xhrStatus === 0 &&
+                        (window.location.protocol === "file:" ||
+                         window.location.protocol === "chrome-extension:"))
+                    {
+                        xhrStatus = 200;
+                    }
 
                     // Sometimes the browser sets status to 200 OK when the connection is closed
                     // before the message is sent (weird!).
                     // In order to address this we fail any completely empty responses.
                     // Hopefully, nobody will get a valid response with no headers and no body!
-                    if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
+                    if (xhr.getAllResponseHeaders() === "")
                     {
-                        if (loader.onerror)
+                        var noBody;
+                        if (xhr.responseType === "arraybuffer")
                         {
-                            loader.onerror(0);
+                            noBody = !xhr.response;
+                        }
+                        else if (xhr.mozResponseArrayBuffer)
+                        {
+                            noBody = !xhr.mozResponseArrayBuffer;
+                        }
+                        else
+                        {
+                            noBody = !xhr.responseText;
+                        }
+                        if (noBody)
+                        {
+                            if (loader.onerror)
+                            {
+                                loader.onerror(0);
+                            }
                         }
                         return;
                     }
@@ -1098,12 +1121,6 @@ DDSLoader.create = function ddsLoaderFn(params)
                                 buffer[i] = (text.charCodeAt(i) & 0xff);
                             }
                             /*jshint bitwise: true*/
-                        }
-
-                        // Fix for loading from file
-                        if (xhrStatus === 0 && window.location.protocol === "file:")
-                        {
-                            xhrStatus = 200;
                         }
 
                         loader.processBytes(new Uint8Array(buffer));
