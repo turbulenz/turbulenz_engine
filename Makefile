@@ -27,7 +27,7 @@ help:
 # TSLIB build modules
 ############################################################
 
-TSC := node $(BUILDDIR)/../typescript/0.9.0/tsc.compact.js
+TSC := node $(BUILDDIR)/../typescript/0.9.1/tsc.js
 
 MODULAR ?= 0
 REFCHECK ?= 0
