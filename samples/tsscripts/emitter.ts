@@ -25,7 +25,7 @@ class ParticleSystem
     spawnNextParticle  : number;
     worldPosition      : any; // v3
     particles          : Particle[];
-    dirtyWorldExtents  : bool;
+    dirtyWorldExtents  : boolean;
     colorList          : any[]; // v4[]
     v3temp             : any; // v3
     extents            : Float32Array;

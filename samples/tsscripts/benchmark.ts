@@ -8,7 +8,7 @@ interface BenchmarkParameters
     path: string;
 
     destroy: () => void;
-    isWaiting?: () => bool;
+    isWaiting?: () => boolean;
     init: () => void;
     run: () => void;
 

@@ -1,7 +1,5 @@
 // Copyright (c) 2010-2011 Turbulenz Limited
 
-/// <reference path="../../external/definitelytyped/jqueryui/jqueryui-1.9.d.ts" />
-
 interface Window
 {
     $: JQueryStatic;
@@ -25,7 +23,7 @@ class HTMLControls
     checkboxControls: any; // Created by value
     buttonControls: any; // Created by value
     sliderControls: any; // Created by id
-    registered: bool;
+    registered: boolean;
 
     setSelectedRadio(groupName, index)
     {

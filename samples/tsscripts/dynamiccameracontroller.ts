@@ -32,7 +32,7 @@ class DynamicCameraController
     endTime       : number;
     camCurUp      : any; // v3
     trackCurPos   : any; // v3
-    isTracking    : bool;
+    isTracking    : boolean;
 
     setRate(rate)
     {
@@ -106,7 +106,7 @@ class DynamicCameraController
         md.m43SetPos(this.camera.matrix, this.camTargetPos);
     }
 
-    isCameraAtTarget(): bool
+    isCameraAtTarget(): boolean
     {
         var md = this.md;
         return md.v3Equal(md.m43Pos(this.camera.matrix), this.camTargetPos);

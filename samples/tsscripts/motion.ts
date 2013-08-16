@@ -69,8 +69,8 @@ class Motion
     motionWaveCos: number;
     movementDelta: number;
 
-    move: bool;
-    atTarget: bool;
+    move: boolean;
+    atTarget: boolean;
     atTargetDelta: number;
     targetPosition: any; // v3
 

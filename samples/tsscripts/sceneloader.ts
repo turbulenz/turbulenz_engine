@@ -20,14 +20,14 @@ class SceneLoader
     animationManager: AnimationManager;
     preSceneLoadFn: { (sceneData: any): void; };
     postSceneLoadFn: { (scene: Scene): void; };
-    dependenciesLoaded: bool;
-    sceneAssetsRequested: bool;
+    dependenciesLoaded: boolean;
+    sceneAssetsRequested: boolean;
     pathRemapping: { [path: string]: string; };
     pathPrefix: string;
     requestHandler: RequestHandler;
-    keepLights: bool;
-    keepCameras: bool;
-    sceneLoaded: bool;
+    keepLights: boolean;
+    keepCameras: boolean;
+    sceneLoaded: boolean;
     request: { (url: string, onload: any): void; };
 
     complete()

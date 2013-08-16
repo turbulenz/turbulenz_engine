@@ -802,7 +802,7 @@ class MorphInstance
     cachedSemantics: { [hash: string]: Semantics; };
     semanticsHashes: string[];
 
-    disabled: bool;
+    disabled: boolean;
 
     //
     // clone

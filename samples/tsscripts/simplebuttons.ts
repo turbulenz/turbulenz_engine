@@ -20,7 +20,7 @@ interface SimpleButton
     bottom: number;
     callback: { (): void; };
     hoverCallback?: { (): void; };
-    hovering: bool;
+    hovering: boolean;
 };
 
 class SimpleButtonManager

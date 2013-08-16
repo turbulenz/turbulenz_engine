@@ -34,8 +34,6 @@ var x = 1;
 /*global ButtonManager: true */
 /*global debug: false */
 
-/// <reference path="../simplebuttons.ts" />
-
 TurbulenzEngine.onload = function onloadFn()
 {
     //==========================================================================
