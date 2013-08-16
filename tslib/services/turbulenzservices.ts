@@ -129,6 +129,22 @@ class ServiceRequester
     //                    server preference)
     request(params, serviceAction? : string)
     {
+        // If there is a specific services domain set prefix any relative api urls
+        if (TurbulenzServices.servicesDomain)
+        {
+            if (params.url.indexOf('http') !== 0)
+            {
+                if (params.url[0] === '/')
+                {
+                    params.url = TurbulenzServices.servicesDomain + params.url;
+                }
+                else
+                {
+                    params.url = TurbulenzServices.servicesDomain + '/' + params.url;
+                }
+            }
+        }
+
         // If the bridgeServices are available send to call
         if (TurbulenzServices.bridgeServices)
         {
@@ -322,6 +338,7 @@ class TurbulenzServices
 
     static bridgeServices : boolean;
     static mode : string;
+    static servicesDomain : string;
 
     static available() : boolean
     {
@@ -356,6 +373,11 @@ class TurbulenzServices
             }
 
             that.bridgeServices = !!config.bridgeServices;
+
+            if (config.servicesDomain)
+            {
+                that.servicesDomain = config.servicesDomain;
+            }
         };
 
         // This should go once we have fully moved to the new system
@@ -387,10 +409,9 @@ class TurbulenzServices
             this.responseHandlers[this.responseIndex] = callback;
             request.key = this.responseIndex;
         }
-        TurbulenzBridge.emit('bridgeservices.' + event, JSON.stringify(request));
-        // Return true if the request is fully processed, i.e. we're offline
-        var offline = true;
-        return offline;
+        var resultJSON = TurbulenzBridge.emit('bridgeservices.' + event, JSON.stringify(request));
+        var result = JSON.parse(resultJSON);
+        return result.fullyProcessed;
     }
 
     static addSignature(data, url)

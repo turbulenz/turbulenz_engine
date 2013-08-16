@@ -60,11 +60,12 @@ class TurbulenzBridge
         return (this._bridge !== undefined);
     }
 
-    /* tslint:disable:no-empty */
-    static emit(serviceName: string, request?: string, arg?: any)
+    static emit(serviceName: string, request?: string) : string
     {
-    }
+        return "";
+    };
 
+    /* tslint:disable:no-empty */
     static on(serviceName: string, cb: { (data: string) : void; })
     {
     }

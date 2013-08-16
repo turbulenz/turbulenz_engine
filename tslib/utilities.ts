@@ -227,6 +227,7 @@ var Utilities : Utilities = {
             if (window.XMLHttpRequest)
             {
                 xhr = new window.XMLHttpRequest();
+                xhr.withCredentials = true;
             }
             else if (window.ActiveXObject)
             {
