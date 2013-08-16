@@ -2829,8 +2829,8 @@ class WebGLPhysicsPrivateBody
         var result = this.shape.rayTest(rayT);
         if (result !== null)
         {
-            result.hitPoint = VMath.m43TransformPoint(transform, result.hitPoint);
-            result.hitNormal = VMath.m43TransformVector(transform, result.hitNormal);
+            result.hitPoint = VMath.m43TransformPoint(transform, result.hitPoint, result.hitPoint);
+            result.hitNormal = VMath.m43TransformVector(transform, result.hitNormal, result.hitNormal);
         }
 
         return result;

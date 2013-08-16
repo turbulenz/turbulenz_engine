@@ -3833,40 +3833,42 @@ var VMath : MathDevice =
 
     m43TransformVector : function m43TransformVectorFn(m, v, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(v) || debug.isVec4(v));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
         var v0 = v[0];
         var v1 = v[1];
         var v2 = v[2];
-        dst[0] = (m[0] * v0 + m[3] * v1 + m[6] * v2);
-        dst[1] = (m[1] * v0 + m[4] * v1 + m[7] * v2);
-        dst[2] = (m[2] * v0 + m[5] * v1 + m[8] * v2);
-        return dst;
+        res[0] = (m[0] * v0 + m[3] * v1 + m[6] * v2);
+        res[1] = (m[1] * v0 + m[4] * v1 + m[7] * v2);
+        res[2] = (m[2] * v0 + m[5] * v1 + m[8] * v2);
+        return res;
     },
 
     m43TransformPoint : function m43TransformPointFn(m, v, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(v) || debug.isVec4(v));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isVec3(res));
 
         var v0 = v[0];
         var v1 = v[1];
         var v2 = v[2];
-        dst[0] = (m[0] * v0 + m[3] * v1 + m[6] * v2 + m[9]);
-        dst[1] = (m[1] * v0 + m[4] * v1 + m[7] * v2 + m[10]);
-        dst[2] = (m[2] * v0 + m[5] * v1 + m[8] * v2 + m[11]);
-        return dst;
+        res[0] = (m[0] * v0 + m[3] * v1 + m[6] * v2 + m[9]);
+        res[1] = (m[1] * v0 + m[4] * v1 + m[7] * v2 + m[10]);
+        res[2] = (m[2] * v0 + m[5] * v1 + m[8] * v2 + m[11]);
+        return res;
     },
 
     m43Mul : function m43MulFn(a, b, dst?)

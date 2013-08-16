@@ -18,7 +18,7 @@ interface TARLoaderParameters
     mipmaps: bool;
     ontextureload: { (Texture): void; };
     onload: { (success: bool, status: number): void; };
-    onerror: { (msg?: string): void; };
+    onerror: { (status: number): void; };
 };
 
 class TARLoader
@@ -30,7 +30,7 @@ class TARLoader
     src: string;
     ontextureload: { (texture: Texture): void; };
     onload: { (success: bool, status: number): void; };
-    onerror: { (): void; };
+    onerror: { (status: number): void; };
     texturesLoading: number;
 
     processBytes(bytes)
@@ -226,7 +226,7 @@ class TARLoader
             {
                 if (params.onerror)
                 {
-                    params.onerror("No XMLHTTPRequest object could be created");
+                    params.onerror(0);
                 }
                 return null;
             }
@@ -239,13 +239,43 @@ class TARLoader
                         var xhrStatus = xhr.status;
                         var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
 
+                        // Fix for loading from file
+                        if (xhrStatus === 0 &&
+                            (window.location.protocol === "file:" ||
+                             window.location.protocol === "chrome-extension:"))
+                        {
+                            xhrStatus = 200;
+                        }
+
                         // Sometimes the browser sets status to 200 OK when the connection is closed
                         // before the message is sent (weird!).
                         // In order to address this we fail any completely empty responses.
                         // Hopefully, nobody will get a valid response with no headers and no body!
-                        if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
+                        if (xhr.getAllResponseHeaders() === "")
                         {
-                            loader.onload(false, 0);
+                            var noBody;
+                            if (xhr.responseType === "arraybuffer")
+                            {
+                                noBody = !xhr.response;
+                            }
+                            else if (xhr.mozResponseArrayBuffer)
+                            {
+                                noBody = !xhr.mozResponseArrayBuffer;
+                            }
+                            else
+                            {
+                                noBody = !xhr.responseText;
+                            }
+                            if (noBody)
+                            {
+                                if (loader.onerror)
+                                {
+                                    loader.onerror(0);
+                                }
+                            }
+                            // break circular reference
+                            xhr.onreadystatechange = null;
+                            xhr = null;
                             return;
                         }
 
@@ -274,12 +304,6 @@ class TARLoader
                                 /*jshint bitwise: true*/
                             }
 
-                            // Fix for loading from file
-                            if (xhrStatus === 0 && window.location.protocol === "file:")
-                            {
-                                xhrStatus = 200;
-                            }
-
                             if (loader.processBytes(new Uint8Array(buffer)))
                             {
                                 if (loader.onload)
@@ -305,7 +329,7 @@ class TARLoader
                             {
                                 if (loader.onerror)
                                 {
-                                    loader.onerror();
+                                    loader.onerror(xhrStatus);
                                 }
                             }
                         }
@@ -313,7 +337,7 @@ class TARLoader
                         {
                             if (loader.onerror)
                             {
-                                loader.onerror();
+                                loader.onerror(xhrStatus);
                             }
                         }
                     }

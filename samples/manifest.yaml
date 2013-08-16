@@ -1,22 +1,17 @@
-aspect_ratio: '16:9'
-canvas_main: ''
+canvas_main: forward_rendering.canvas.js
 cover_art: cover_art.png
 deploy_files:
-- payments.tzjs
+- forward_rendering.tzjs
+- forward_rendering.canvas.js
 - mapping_table.json
 - staticmax/*
-- icons/*
-- storeitems.yaml
 deployed: Never
-engine_version: '0.26'
-flash_main: ''
-has_notifications: false
-is_multiplayer: false
+engine_version: '0.27'
 is_temp: false
 mapping_table: mapping_table.json
-modified: 11:24 | 02/07/2013
-path: ../../engine/samples
-plugin_main: payments.tzjs
+modified: 10:17 | 21/07/2011
+path: ../../samples
+plugin_main: forward_rendering.tzjs
 slug: samples
 title: Samples
 title_logo: ''

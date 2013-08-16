@@ -171,11 +171,11 @@ class WebGLSound implements Sound
                                 // before the message is sent (weird!).
                                 // In order to address this we fail any completely empty responses.
                                 // Hopefully, nobody will get a valid response with no headers and no body!
-                                if (xhr.getAllResponseHeaders() === "" && !response && xhrStatus === 200 && xhrStatusText === 'OK')
+                                if (xhr.getAllResponseHeaders() === "" && !response)
                                 {
                                     if (onload)
                                     {
-                                        onload(null);
+                                        onload(null, 0);
                                     }
                                 }
                                 else if (xhrStatus === 200 || xhrStatus === 0)
@@ -194,7 +194,7 @@ class WebGLSound implements Sound
                                 {
                                     if (onload)
                                     {
-                                        onload(null);
+                                        onload(null, xhrStatus);
                                     }
                                 }
                             }
@@ -1034,7 +1034,7 @@ class WebGLSoundSource implements SoundSource
                                      position[0] === 0 &&
                                      position[1] === 0 &&
                                      position[2] === 0,
-                                     "Stereo sounds only supported for relatative sources at origin!");
+                                     "Stereo sounds only supported for relative sources at origin!");
                     }
                 }
                 else
@@ -1454,18 +1454,18 @@ class WebGLSoundDevice implements SoundDevice
                 {
                     params.onsoundload(texture);
                 },
-                onload : function soundTarLoadedFn(success /*, status */)
+                onload : function soundTarLoadedFn(success, status)
                 {
                     if (params.onload)
                     {
-                        params.onload(success);
+                        params.onload(success, status);
                     }
                 },
-                onerror : function soundTarFailedFn()
+                onerror : function soundTarFailedFn(status)
                 {
                     if (params.onload)
                     {
-                        params.onload(false);
+                        params.onload(false, status);
                     }
                 }
             });

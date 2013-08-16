@@ -24,7 +24,7 @@ class AABBTreeNode
     static version = 1;
 
     escapeNodeOffset : number;
-    externalNode     : AABBTreeNode;
+    externalNode     : {};
     extents          : any;
 
     constructor(extents: any, escapeNodeOffset: number,

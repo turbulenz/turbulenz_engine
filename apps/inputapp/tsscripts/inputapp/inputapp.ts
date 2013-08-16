@@ -1687,7 +1687,7 @@ class Application
         application.logMouseMoveInput       = true;
         application.logMouseWheelInput      = true;
         application.logPadButtonInput       = true;
-        application.logPadMoveInput         = false;
+        application.logPadMoveInput         = true;
 
         // Colors
         application.defaultTextColor        = "#FFFFFF";

@@ -1607,6 +1607,7 @@ class MaskController implements ControllerBaseClass
         var outputChannels = this.outputChannels;
         var outputScale = outputChannels.scale;
 
+        var mathDevice = this.mathDevice;
         var controllers = this.controllers;
         var numControllers = controllers.length;
         var masks = this.masks;
@@ -1629,15 +1630,15 @@ class MaskController implements ControllerBaseClass
                 }
                 if (mask[j])
                 {
-                    output[j].rotation = controllerOutput[j].rotation.slice();
-                    output[j].translation = controllerOutput[j].translation.slice();
+                    output[j].rotation = mathDevice.quatCopy(controllerOutput[j].rotation, output[j].rotation);
+                    output[j].translation = mathDevice.v3Copy(controllerOutput[j].translation, output[j].translation);
                     if (createScale)
                     {
-                        output[j].scale = this.mathDevice.v3BuildOne();
+                        output[j].scale = mathDevice.v3BuildOne(output[j].scale);
                     }
                     else if (outputScale)
                     {
-                        output[j].scale = controllerOutput[j].scale.slice();
+                        output[j].scale = mathDevice.v3Copy(controllerOutput[j].scale, output[j].scale);
                     }
                 }
             }
@@ -2478,7 +2479,7 @@ class GPUSkinController implements SkinControllerBase
         c.gd = gd;
         c.dirty = true;
         c.ltms = [];
-        c.outputMat = md.m43BuildIdentity();
+        c.outputMat = md.m34BuildIdentity();
         c.convertedquatPos = md.m43BuildIdentity();
         c.bufferSize = bufferSize || GPUSkinController.prototype.defaultBufferSize;
 

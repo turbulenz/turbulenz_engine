@@ -439,7 +439,7 @@ interface Texture
 
     // Methods
 
-    setData(data: any);
+    setData(data: any, face?: number, level?: number, x?:number, y?:number, w?:number, h?:number);
     typedArrayIsValid(array: any);
     destroy();
 }

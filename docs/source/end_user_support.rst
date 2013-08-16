@@ -6,12 +6,13 @@
 
 .. _requirements:
 
---------------------------------
-Supported Platforms and Browsers
---------------------------------
+==================================
+ Supported Platforms and Browsers
+==================================
 
+---------
 End Users
-*********
+---------
 
 Currently the following platforms and browsers are supported by the
 Turbulenz Game Engine for playing games.
@@ -37,4 +38,11 @@ Turbulenz Game Engine for playing games.
 
   * *Chrome Beta*
   * *Firefox Beta*
-  * *Native App*
+
+----------
+Developers
+----------
+
+The Turbulenz Development Client for Android is available to
+developers.  Please see the :ref:`Android Client Section
+<android_readme>` for details.

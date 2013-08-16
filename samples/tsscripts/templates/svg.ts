@@ -27,6 +27,9 @@ TurbulenzEngine.onload = function onloadFn()
     var graphicsDeviceParameters = { };
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
 
+    // This sample only works on the local development server so we harcode the assets path
+    var assetPrefix = '/play/samples/';
+
     var canvas, ctx, svg;
     var zoom = 1;
 
@@ -1021,12 +1024,12 @@ TurbulenzEngine.onload = function onloadFn()
             }
         }
 
-        xhr.open("GET", url, true);
+        xhr.open("GET", assetPrefix + url, true);
         xhr.onreadystatechange = httpRequestCallback;
         xhr.send();
     }
 
-    // Create game session and load textures
+    // Load SVG file
     var initialSVGfile = "img/lion.svg";
     loadSVGfile(initialSVGfile);
 

@@ -10,4 +10,4 @@ Latest Release Notes
 .. toctree::
     :maxdepth: 2
 
-    release_notes_0.26.1
+    release_notes_0.27.0

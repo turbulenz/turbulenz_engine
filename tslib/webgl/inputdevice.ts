@@ -768,6 +768,23 @@ class WebGLInputDevice implements InputDevice
         if (keyCode === keyCodes.ESCAPE)
         {
             this.unlockMouse();
+
+            // Some apps environments will not exit fullscreen automatically on ESCAPE
+            if (document.fullscreenEnabled || document.mozFullScreen || document.webkitIsFullScreen)
+            {
+                if (document.webkitCancelFullScreen)
+                {
+                    document.webkitCancelFullScreen();
+                }
+                else if (document.cancelFullScreen)
+                {
+                    document.cancelFullScreen();
+                }
+                else if (document.exitFullscreen)
+                {
+                    document.exitFullscreen();
+                }
+            }
         }
         else if (undefined !== keyCode)
         {

@@ -8,7 +8,7 @@ deploy_files:
 - staticmax/*
 - gamenotifications.yaml
 deployed: Never
-engine_version: '0.26'
+engine_version: '0.27'
 flash_main: ''
 has_notifications: true
 is_multiplayer: false

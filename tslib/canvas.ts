@@ -1754,11 +1754,9 @@ class CanvasContext
 
         var cp = this.transformPoint(x, y);
 
-        var currentSubPath = this.currentSubPath;
-
         if (radius < 2.0)
         {
-            currentSubPath.push(cp);
+            this.currentSubPath.push(cp);
         }
         else
         {

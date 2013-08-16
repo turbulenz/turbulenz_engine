@@ -23,7 +23,7 @@ class TGALoader
     onload            : { (data: Uint8Array,
                            width: number, height: number,
                            format: number, status : number): void; };
-    onerror           : { (msg?: string): void; };
+    onerror           : { (status: number): void; };
 
     width             : number;
     height            : number;
@@ -594,7 +594,7 @@ class TGALoader
             {
                 if (params.onerror)
                 {
-                    params.onerror("No XMLHTTPRequest object could be created");
+                    params.onerror(0);
                 }
                 return null;
             }
@@ -607,13 +607,43 @@ class TGALoader
                         var xhrStatus = xhr.status;
                         var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
 
+                        // Fix for loading from file
+                        if (xhrStatus === 0 &&
+                            (window.location.protocol === "file:" ||
+                             window.location.protocol === "chrome-extension:"))
+                        {
+                            xhrStatus = 200;
+                        }
+
                         // Sometimes the browser sets status to 200 OK when the connection is closed
                         // before the message is sent (weird!).
                         // In order to address this we fail any completely empty responses.
                         // Hopefully, nobody will get a valid response with no headers and no body!
-                        if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
+                        if (xhr.getAllResponseHeaders() === "")
                         {
-                            loader.onload(new Uint8Array(0), 0, 0, 0, 0);
+                            var noBody;
+                            if (xhr.responseType === "arraybuffer")
+                            {
+                                noBody = !xhr.response;
+                            }
+                            else if (xhr.mozResponseArrayBuffer)
+                            {
+                                noBody = !xhr.mozResponseArrayBuffer;
+                            }
+                            else
+                            {
+                                noBody = !xhr.responseText;
+                            }
+                            if (noBody)
+                            {
+                                if (loader.onerror)
+                                {
+                                    loader.onerror(0);
+                                }
+                            }
+                            // break circular reference
+                            xhr.onreadystatechange = null;
+                            xhr = null;
                             return;
                         }
 
@@ -642,12 +672,6 @@ class TGALoader
                                 /*jshint bitwise: true*/
                             }
 
-                            // Fix for loading from file
-                            if (xhrStatus === 0 && window.location.protocol === "file:")
-                            {
-                                xhrStatus = 200;
-                            }
-
                             loader.processBytes(new Uint8Array(buffer));
                             if (loader.data)
                             {
@@ -662,7 +686,7 @@ class TGALoader
                             {
                                 if (loader.onerror)
                                 {
-                                    loader.onerror();
+                                    loader.onerror(xhrStatus);
                                 }
                             }
                         }
@@ -670,7 +694,7 @@ class TGALoader
                         {
                             if (loader.onerror)
                             {
-                                loader.onerror();
+                                loader.onerror(xhrStatus);
                             }
                         }
                     }
@@ -709,7 +733,7 @@ class TGALoader
             {
                 if (loader.onerror)
                 {
-                    loader.onerror();
+                    loader.onerror(0);
                 }
             }
         }

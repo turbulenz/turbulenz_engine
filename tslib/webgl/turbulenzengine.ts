@@ -50,7 +50,7 @@ declare var WebGLPhysicsDevice : WebGLPhysicsDeviceConstructor;
 
 class WebGLTurbulenzEngine implements TurbulenzEngine
 {
-    version = '0.26.1.0';
+    version = '0.27.0.0';
 
     time               : number;
 
@@ -100,7 +100,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     clearInterval(i)
     {
-        return window.clearInterval(i);
+        window.clearInterval(i);
     }
 
     createGraphicsDevice(params): WebGLGraphicsDevice
@@ -329,7 +329,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             return;
         }
 
-        function httpRequestCallback()
+        var httpRequestCallback = function httpRequestCallbackFn()
         {
             if (xhr.readyState === 4) /* 4 == complete */
             {
@@ -390,7 +390,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 xhr = null;
                 callback = null;
             }
-        }
+        };
 
         xhr.open('GET', url, true);
         if (callback)
@@ -465,7 +465,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
     }
 
-    isUnloading()
+    isUnloading(): bool
     {
         return this.unloading;
     }
@@ -776,8 +776,16 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             // Resize canvas to fill parent
             tz.resizeCanvas = function ()
             {
-                canvas.width = canvas.parentNode.clientWidth;
-                canvas.height = canvas.parentNode.clientHeight;
+                if (document.fullscreenEnabled || document.mozFullScreen || document.webkitIsFullScreen)
+                {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                else
+                {
+                    canvas.width = canvas.parentNode.clientWidth;
+                    canvas.height = canvas.parentNode.clientHeight;
+                }
             };
 
             tz.resizeCanvas();
@@ -785,15 +793,22 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             window.addEventListener('resize', tz.resizeCanvas, false);
         }
 
-        var previousOnBeforeUnload = window.onbeforeunload;
-        window.onbeforeunload = function ()
+        try
         {
-            tz.unload();
-
-            if (previousOnBeforeUnload)
+            var previousOnBeforeUnload = window.onbeforeunload;
+            window.onbeforeunload = function ()
             {
-                previousOnBeforeUnload.call(this);
-            }
+                tz.unload();
+
+                if (previousOnBeforeUnload)
+                {
+                    previousOnBeforeUnload.call(this);
+                }
+            };
+        }
+        catch (e)
+        {
+            // If the game is running as a CWS packaged app then onbeforeunload is not available
         };
 
         tz.time = 0;

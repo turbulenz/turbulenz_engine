@@ -39,11 +39,11 @@ def echo(message=''):
 def log(message):
     echo(' >> ' + message)
 
-COLORED_OUTPUT = sys.stdout.isatty() and SYSNAME != 'Windows'
+COLORED_OUTPUT = sys.stdout.isatty() and (SYSNAME != 'Windows' or 'ANSICON' in os.environ)
 
 def error(message):
     if COLORED_OUTPUT:
-        log('\033[31m[ERROR]\033[0m   - %s' % message)
+        log('\033[1m\033[31m[ERROR]\033[0m   - %s' % message)
     else:
         log('[ERROR]   - %s' % message)
 

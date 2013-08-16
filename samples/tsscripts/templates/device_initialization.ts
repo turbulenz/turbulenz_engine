@@ -79,6 +79,8 @@ TurbulenzEngine.onload = function onloadFn()
             "<li>TEXTURE_SIZE: " + graphicsDevice.maxSupported("TEXTURE_SIZE") + " <\/li>" +
             "<li>CUBEMAP_TEXTURE_SIZE: " + graphicsDevice.maxSupported("CUBEMAP_TEXTURE_SIZE") + " <\/li>" +
             "<li>3D_TEXTURE_SIZE: " + graphicsDevice.maxSupported("3D_TEXTURE_SIZE") + " <\/li>" +
+            "<li>TEXTURE_UNITS: " + graphicsDevice.maxSupported("TEXTURE_UNITS") + " <\/li>" +
+            "<li>VERTEX_TEXTURE_UNITS: " + graphicsDevice.maxSupported("VERTEX_TEXTURE_UNITS") + " <\/li>" +
             "<li>RENDERTARGET_COLOR_TEXTURES: " + graphicsDevice.maxSupported("RENDERTARGET_COLOR_TEXTURES") + " <\/li>" +
             "<li>RENDERBUFFER_SIZE: " + graphicsDevice.maxSupported("RENDERBUFFER_SIZE") + " <\/li>" +
             "<li>FILEFORMAT_WEBM: " + graphicsDevice.isSupported("FILEFORMAT_WEBM") + " <\/li>" +

@@ -5,7 +5,7 @@ from sys import argv, stdout
 from json import loads as load_json, dumps as dump_json
 from yaml import load as load_yaml
 from os.path import join as path_join, exists as path_exists, splitext, basename, normpath, getmtime
-from os import makedirs, listdir, unlink as remove_file, getenv as os_getenv
+from os import makedirs, listdir, environ, unlink as remove_file, getenv as os_getenv
 from shutil import copy2 as copy_file
 from hashlib import md5
 from base64 import urlsafe_b64encode
@@ -17,7 +17,7 @@ import multiprocessing
 import argparse
 
 import platform
-COLORED_OUTPUT = stdout.isatty() and platform.system() != 'Windows'
+COLORED_OUTPUT = stdout.isatty() and (platform.system() != 'Windows' or 'ANSICON' in environ)
 
 def warning(message):
     if COLORED_OUTPUT:
@@ -27,7 +27,7 @@ def warning(message):
 
 def error(message):
     if COLORED_OUTPUT:
-        print ' >> \033[31m[ERROR]\033[0m   - %s' % message
+        print '\033[1m\033[31m[ERROR]\033[0m   - %s' % message
     else:
         print ' >> [ERROR]   - %s' % message
 

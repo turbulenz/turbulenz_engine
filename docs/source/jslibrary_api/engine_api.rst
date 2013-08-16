@@ -41,7 +41,8 @@ If you call this function again it will fail. To get the previously created devi
 
     var graphicsDeviceOptions = {
             vsync: false,
-            multisample: 1
+            multisample: 1,
+            alpha: false
         };
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceOptions);
 
@@ -50,12 +51,24 @@ If you call this function again it will fail. To get the previously created devi
     It also limits the maximum frames per second to the frequency of the monitor.
     Defaults to false.
 
+    .. note::
+        This option is only supported in plugin mode.
+
 ``multisample``
     Enables multisample anti-aliasing.
     The bigger the number the less aliasing but performance could severely affected.
     Any value lower than 2 will effectively disable multisample anti-aliasing.
     Recommended valid values are 1, 2, 4, 8 and 16.
     Defaults to 1.
+
+``alpha``
+    Setting this option enables creation of an alpha channel, which allows blending of the rendered image with the
+    web page background when the alpha value of the pixel is lower than 1.
+    Defaults to false.
+
+    .. note::
+        This option is only supported in canvas mode.
+
 
 .. index::
     pair: TurbulenzEngine; getGraphicsDevice

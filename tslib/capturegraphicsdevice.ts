@@ -17,7 +17,8 @@ var CaptureGraphicsCommand =
     setScissor:             12,
     setViewport:            13,
     beginOcclusionQuery:    14,
-    endOcclusionQuery:      15
+    endOcclusionQuery:      15,
+    updateTextureData:      16
 };
 
 class CaptureGraphicsDevice
@@ -265,7 +266,7 @@ class CaptureGraphicsDevice
         return id.toString();
     }
 
-    private _addCommand(method, arg1?, arg2?, arg3?, arg4?, arg5?): void
+    private _addCommand(method, arg1?, arg2?, arg3?, arg4?, arg5?, arg6?, arg7?, arg8?): void
     {
         var length = arguments.length;
 
@@ -920,7 +921,7 @@ class CaptureGraphicsDevice
                             (value instanceof Float32Array ||
                              value instanceof Array) &&
                             value._id === undefined &&
-                            value.length === currentValue.length &&
+                            value.length <= currentValue.length &&
                             this._equalFloatArrays(value, currentValue, value.length))
                         {
                             continue;
@@ -1645,11 +1646,22 @@ class CaptureGraphicsDevice
             {
                 var integers = !(data instanceof Float32Array ||
                                  data instanceof Float64Array);
-                self._addCommand(CaptureGraphicsCommand.setAllData,
-                                 id,
-                                 self._addData(data, data.length, integers));
+                var clonedData = self._addData(data, data.length, integers);
+                if (arguments.length === 1)
+                {
+                    self._addCommand(CaptureGraphicsCommand.setAllData, id, clonedData);
 
-                setData.call(this, data);
+                    setData.call(this, data);
+                }
+                else
+                {
+                    self._addCommand(CaptureGraphicsCommand.updateTextureData, id, clonedData,
+                                     arguments[1], arguments[2],
+                                     arguments[3], arguments[4],
+                                     arguments[5], arguments[6]);
+
+                    setData.apply(this, arguments);
+                }
             };
             if (params.data)
             {
@@ -2456,10 +2468,13 @@ class PlaybackGraphicsDevice
     nextFrameIndex: number;
     srcWidth:   number;
     srcHeight:  number;
+    playWidth: number;
+    playHeight: number;
     frames:     any[];
     writerData: any[];
     entities:   any[];
     numPendingResources: number;
+    numResourcesAdded: number;
     onerror:    any;
 
     constructor(gd)
@@ -2468,10 +2483,13 @@ class PlaybackGraphicsDevice
         this.nextFrameIndex = 0;
         this.srcWidth = 0;
         this.srcHeight = 0;
+        this.playWidth = 0;
+        this.playHeight = 0;
         this.frames = [];
         this.entities = [];
         this.writerData = [];
         this.numPendingResources = 0;
+        this.numResourcesAdded = 0;
         this.onerror = null;
     }
 
@@ -2530,6 +2548,7 @@ class PlaybackGraphicsDevice
         function makeResourceLoader(src)
         {
             self.numPendingResources += 1;
+            self.numResourcesAdded += 1;
             return function resourceLoaded(resource, status)
             {
                 if (resource)
@@ -2620,6 +2639,7 @@ class PlaybackGraphicsDevice
                         if (archive.hasOwnProperty(name))
                         {
                             this.numPendingResources += 1;
+                            this.numResourcesAdded += 1;
                         }
                     }
                     params.ontextureload = makArchiveTextureLoader(archive);
@@ -3018,7 +3038,7 @@ class PlaybackGraphicsDevice
     }
 
     // This skip method would fail when updating the same data multiple times for next frame to use
-    private _skip(endIndex)
+    public skip(endIndex)
     {
         var nextIndex = this.nextFrameIndex;
         while (nextIndex < endIndex)
@@ -3053,6 +3073,13 @@ class PlaybackGraphicsDevice
                         target.setData(command[2]);
                     }
                 }
+                else if (method === CaptureGraphicsCommand.updateTextureData)
+                {
+                    command[1].setData(command[2],
+                                       command[3], command[4],
+                                       command[5], command[6],
+                                       command[7], command[8]);
+                }
             }
 
             nextIndex += 1;
@@ -3066,7 +3093,7 @@ class PlaybackGraphicsDevice
     {
         if (this.nextFrameIndex < frameIndex)
         {
-            this._skip(frameIndex);
+            this.skip(frameIndex);
         }
 
         var frame = this.frames[frameIndex];
@@ -3118,6 +3145,9 @@ class PlaybackGraphicsDevice
             gd.setScissor(offsetX, offsetY, width, height);
             gd.setViewport(offsetX, offsetY, width, height);
         }
+
+        this.playWidth = width;
+        this.playHeight = height;
 
         var numCommands = frame.length;
         var c;
@@ -3230,6 +3260,13 @@ class PlaybackGraphicsDevice
             else if (method === CaptureGraphicsCommand.endOcclusionQuery)
             {
                 gd.endOcclusionQuery(command[1]);
+            }
+            else if (method === CaptureGraphicsCommand.updateTextureData)
+            {
+                command[1].setData(command[2],
+                                   command[3], command[4],
+                                   command[5], command[6],
+                                   command[7], command[8]);
             }
             else
             {
