@@ -113,6 +113,7 @@ interface ServiceErrorCB
 
 class ServiceRequester
 {
+    static locationOrigin : string;
     running               : boolean;
     discardRequests       : boolean;
     serviceStatusObserver : Observer;
@@ -130,17 +131,25 @@ class ServiceRequester
     request(params, serviceAction? : string)
     {
         // If there is a specific services domain set prefix any relative api urls
-        if (TurbulenzServices.servicesDomain)
+        var servicesDomain = TurbulenzServices.servicesDomain;
+        if (servicesDomain)
         {
             if (params.url.indexOf('http') !== 0)
             {
                 if (params.url[0] === '/')
                 {
-                    params.url = TurbulenzServices.servicesDomain + params.url;
+                    params.url = servicesDomain + params.url;
                 }
                 else
                 {
-                    params.url = TurbulenzServices.servicesDomain + '/' + params.url;
+                    params.url = servicesDomain + '/' + params.url;
+                }
+            }
+            if (window.location)
+            {
+                if (servicesDomain !== ServiceRequester.locationOrigin)
+                {
+                    params.enableCORSCredentials = true;
                 }
             }
         }
@@ -255,6 +264,13 @@ class ServiceRequester
 
     static create(serviceName: string, params?): ServiceRequester
     {
+        // If the ServiceRequest locationOrigin hasn't been set yet then set it.
+        if (typeof(ServiceRequester.locationOrigin) === undefined &&
+            typeof(window.location) !== undefined)
+        {
+            ServiceRequester.locationOrigin = window.location.protocol + '//' + window.location.host;
+        }
+
         var serviceRequester = new ServiceRequester();
 
         if (!params)

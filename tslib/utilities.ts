@@ -116,6 +116,7 @@ var Utilities : Utilities = {
         var url = params.url;
         var requestHandler = params.requestHandler;
         var callbackFn = params.callback;
+        var withCredentials = params.enableCORSCredentials;
 
         if (encrypted)
         {
@@ -227,7 +228,11 @@ var Utilities : Utilities = {
             if (window.XMLHttpRequest)
             {
                 xhr = new window.XMLHttpRequest();
-                xhr.withCredentials = true;
+                // If the XMLHTTPRequest supports CORS credentials and the params asks for them enable it
+                if (withCredentials && "withCredentials" in xhr)
+                {
+                    xhr.withCredentials = true;
+                }
             }
             else if (window.ActiveXObject)
             {
