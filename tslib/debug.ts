@@ -39,17 +39,17 @@ interface TurbulenzDebug
     assert(condition: any, msg?: string): void
     log(msg: string): void;
 
-    isNumber(s: any): bool;
-    isVec2(v): bool;
-    isVec3(v): bool;
-    isVec4(v): bool;
-    isAABB(v): bool;
-    isQuat(v): bool;
-    isMtx33(v): bool;
-    isMtx43(v): bool;
-    isMtx34(v): bool;
-    isMtx44(v): bool;
-    isQuatPos(v): bool;
+    isNumber(s: any): boolean;
+    isVec2(v): boolean;
+    isVec3(v): boolean;
+    isVec4(v): boolean;
+    isAABB(v): boolean;
+    isQuat(v): boolean;
+    isMtx33(v): boolean;
+    isMtx43(v): boolean;
+    isMtx34(v): boolean;
+    isMtx44(v): boolean;
+    isQuatPos(v): boolean;
 }
 
 var debug : TurbulenzDebug = {

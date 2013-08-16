@@ -37,7 +37,7 @@ class LoadingScreen
     setProgress(progress: number)
     {
         this.progress = progress;
-    };
+    }
 
     setTexture(texture)
     {

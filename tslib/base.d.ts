@@ -28,10 +28,10 @@ interface Float32Array
 }
 
 // HTMLImageElement
-interface HTMLImageElement
-{
-    crossOrigin: string;
-}
+// interface HTMLImageElement
+// {
+//     crossOrigin: string;
+// }
 
 // Window
 interface Window
@@ -76,7 +76,7 @@ interface Window
     AudioContext: any;
     webkitAudioContext: any;
 
-    opera: bool;
+    opera: boolean;
 }
 
 interface WebSocket
@@ -91,9 +91,9 @@ interface Document
     cancelFullScreen?: { (): void; };
     exitFullscreen?: { (): void; };
 
-    fullscreenEnabled?: bool;
-    mozFullScreen?: bool;
-    webkitIsFullScreen?: bool;
+    fullscreenEnabled?: boolean;
+    mozFullScreen?: boolean;
+    webkitIsFullScreen?: boolean;
 
     pointerLockElement?: any;
     mozPointerLockElement?: any;
@@ -118,13 +118,13 @@ interface Navigator
 
     pointer: // TODO: Where is this type documented?
     {
-        isLocked: bool;
+        isLocked: boolean;
         lock(any): void;
         unlock(): void;
     };
     webkitPointer:
     {
-        isLocked: bool;
+        isLocked: boolean;
         lock(any): void;
         unlock(): void;
     };

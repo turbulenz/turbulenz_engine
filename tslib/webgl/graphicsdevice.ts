@@ -69,13 +69,13 @@ class TZWebGLTexture implements Texture
     glTexture         : WebGLTexture;
     sampler           : WebGLSampler;
 
-    setData : function textureSetDataFn(data: any,
-                                        face?: number,
-                                        level?: number,
-                                        x?:number,
-                                        y?:number,
-                                        w?:number,
-                                        h?:number)
+    setData(data: any,
+            face?: number,
+            level?: number,
+            x?:number,
+            y?:number,
+            w?:number,
+            h?:number)
     {
         var gd = this.gd;
         var target = this.target;
@@ -568,7 +568,7 @@ class TZWebGLTexture implements Texture
         }
     }
 
-    updateSubData : function updateSubDataFn(data, face, level, x, y, w, h)
+    updateSubData(data, face, level, x, y, w, h)
     {
         debug.assert(data);
         debug.assert(face === 0 || (this.cubemap && face < 6));
@@ -787,9 +787,9 @@ class TZWebGLTexture implements Texture
                              x, y, w, h,
                              glformat, gltype, bufferData);
         }
-    },
+    }
 
-    updateMipmaps : function updateMipmapsFn(face)
+    updateMipmaps(face)
     {
         if (this.mipmaps)
         {
@@ -890,328 +890,328 @@ class TZWebGLTexture implements Texture
         return false;
     }
 
-// Constructor function
-TZWebGLTexture.create = function webGLTextureCreateFn(gd, params)
-{
-    var tex = new TZWebGLTexture();
-    tex.gd = gd;
-    tex.mipmaps = params.mipmaps;
-    tex.dynamic = params.dynamic;
-    tex.renderable = params.renderable;
-    tex.numDataLevels = 0;
-    tex.id = ++gd.counters.textures;
-
-    var src = params.src;
-    if (src)
+    static create(gd: WebGLGraphicsDevice, params)
     {
-        tex.name = params.name || src;
-        var extension;
-        var data = params.data;
-        if (data)
+        var tex = new TZWebGLTexture();
+        tex.gd = gd;
+        tex.mipmaps = params.mipmaps;
+        tex.dynamic = params.dynamic;
+        tex.renderable = params.renderable;
+        tex.numDataLevels = 0;
+        tex.id = ++gd.counters.textures;
+
+        var src = params.src;
+        if (src)
         {
-            // do not trust file extensions if we got data...
-            if (data[0] === 137 &&
-                data[1] === 80 &&
-                data[2] === 78 &&
-                data[3] === 71)
+            tex.name = params.name || src;
+            var extension;
+            var data = params.data;
+            if (data)
             {
-                extension = '.png';
-            }
-            else if (data[0] === 255 &&
-                     data[1] === 216 &&
-                     data[2] === 255 &&
-                     (data[3] === 224 || data[3] === 225))
-            {
-                extension = '.jpg';
-            }
-            else if (data[0] === 68 &&
-                     data[1] === 68 &&
-                     data[2] === 83 &&
-                     data[3] === 32)
-            {
-                extension = '.dds';
+                // do not trust file extensions if we got data...
+                if (data[0] === 137 &&
+                    data[1] === 80 &&
+                    data[2] === 78 &&
+                    data[3] === 71)
+                {
+                    extension = '.png';
+                }
+                else if (data[0] === 255 &&
+                         data[1] === 216 &&
+                         data[2] === 255 &&
+                         (data[3] === 224 || data[3] === 225))
+                {
+                    extension = '.jpg';
+                }
+                else if (data[0] === 68 &&
+                         data[1] === 68 &&
+                         data[2] === 83 &&
+                         data[3] === 32)
+                {
+                    extension = '.dds';
+                }
+                else
+                {
+                    extension = src.slice(-4);
+                }
             }
             else
             {
                 extension = src.slice(-4);
             }
-        }
-        else
-        {
-            extension = src.slice(-4);
-        }
 
-        // DDS and TGA textures require out own image loaders
-        if (extension === '.dds' ||
-            extension === '.tga')
-        {
-            if (extension === '.tga' && typeof TGALoader !== 'undefined')
+            // DDS and TGA textures require out own image loaders
+            if (extension === '.dds' ||
+                extension === '.tga')
             {
-                var tgaParams = {
-                    gd: gd,
-                    onload : function tgaLoadedFn(data, width, height, format, status)
-                    {
-                        tex.width = width;
-                        tex.height = height;
-                        tex.depth = 1;
-                        tex.format = format;
-                        tex.cubemap = false;
-                        var result = tex.createGLTexture(data);
-                        if (params.onload)
+                if (extension === '.tga' && typeof TGALoader !== 'undefined')
+                {
+                    var tgaParams = {
+                        gd: gd,
+                        onload : function tgaLoadedFn(data, width, height, format, status)
                         {
-                            params.onload(result ? tex : null, status);
-                        }
-                    },
-                    onerror : function tgaFailedFn(status)
-                    {
-                        tex.failed = true;
-                        if (params.onload)
+                            tex.width = width;
+                            tex.height = height;
+                            tex.depth = 1;
+                            tex.format = format;
+                            tex.cubemap = false;
+                            var result = tex.createGLTexture(data);
+                            if (params.onload)
+                            {
+                                params.onload(result ? tex : null, status);
+                            }
+                        },
+                        onerror : function tgaFailedFn(status)
                         {
-                            params.onload(null, status);
-                        }
-                    },
-                    data: undefined,
-                    src: undefined
-                };
-                if (data)
-                {
-                    tgaParams.data = data;
-                }
-                else
-                {
-                    tgaParams.src = src;
-                }
-                TGALoader.create(tgaParams);
-                return tex;
-            }
-            else if (extension === '.dds' && typeof DDSLoader !== 'undefined')
-            {
-                var ddsParams = {
-                    gd: gd,
-                    onload : function ddsLoadedFn(data, width, height, format, numLevels, cubemap, depth, status)
+                            tex.failed = true;
+                            if (params.onload)
+                            {
+                                params.onload(null, status);
+                            }
+                        },
+                        data: undefined,
+                        src: undefined
+                    };
+                    if (data)
                     {
-                        tex.width = width;
-                        tex.height = height;
-                        tex.format = format;
-                        tex.cubemap = cubemap;
-                        tex.depth = depth;
-                        tex.numDataLevels = numLevels;
-                        var result = tex.createGLTexture(data);
-                        if (params.onload)
-                        {
-                            params.onload(result ? tex : null, status);
-                        }
-                    },
-                    onerror : function ddsFailedFn(status)
-                    {
-                        tex.failed = true;
-                        if (params.onload)
-                        {
-                            params.onload(null, status);
-                        }
-                    },
-                    data: undefined,
-                    src: undefined
-                };
-                if (data)
-                {
-                    ddsParams.data = data;
-                }
-                else
-                {
-                    ddsParams.src = src;
-                }
-                DDSLoader.create(ddsParams);
-                return tex;
-            }
-            else
-            {
-                (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
-                    'Missing image loader required for ' + src);
-
-                tex = TZWebGLTexture.create(gd, {
-                    name    : (params.name || src),
-                    width   : 2,
-                    height  : 2,
-                    depth   : 1,
-                    format  : 'R8G8B8A8',
-                    cubemap : false,
-                    mipmaps : params.mipmaps,
-                    dynamic : params.dynamic,
-                    renderable : params.renderable,
-                    data    : [255,  20, 147, 255,
-                               255,   0,   0, 255,
-                               255, 255, 255, 255,
-                               255,  20, 147, 255]
-                });
-
-                if (params.onload)
-                {
-                    if (TurbulenzEngine)
-                    {
-                        TurbulenzEngine.setTimeout(function () {
-                            params.onload(tex, 200);
-                        }, 0);
+                        tgaParams.data = data;
                     }
                     else
                     {
-                        window.setTimeout(function () {
-                            params.onload(tex, 200);
-                        }, 0);
+                        tgaParams.src = src;
                     }
+                    TGALoader.create(tgaParams);
+                    return tex;
                 }
-                return tex;
-            }
-        }
-
-        var img = new Image();
-        var imageLoaded = function imageLoadedFn()
-        {
-            tex.width = img.width;
-            tex.height = img.height;
-            tex.depth = 1;
-            tex.format = gd.PIXELFORMAT_R8G8B8A8;
-            tex.cubemap = false;
-            var result = tex.createGLTexture(img);
-            if (params.onload)
-            {
-                params.onload(result ? tex : null, 200);
-            }
-        };
-        img.onload = imageLoaded;
-        img.onerror = function imageFailedFn()
-        {
-            tex.failed = true;
-            if (params.onload)
-            {
-                params.onload(null);
-            }
-        };
-        if (data)
-        {
-            if (extension === '.jpg' || extension === '.jpeg')
-            {
-                src = 'data:image/jpeg;base64,' +
-                    (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
-            }
-            else if (extension === '.png')
-            {
-                src = 'data:image/png;base64,' +
-                    (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
-            }
-            img.src = src;
-        }
-        else if (typeof URL !== "undefined" && URL.createObjectURL)
-        {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4)
+                else if (extension === '.dds' && typeof DDSLoader !== 'undefined')
                 {
-                    if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
-                    {
-                        var xhrStatus = xhr.status;
-                        // Fix for loading from file
-                        if (xhrStatus === 0 &&
-                            (window.location.protocol === "file:" ||
-                             window.location.protocol === "chrome-extension:"))
+                    var ddsParams = {
+                        gd: gd,
+                        onload : function ddsLoadedFn(data, width, height, format, numLevels, cubemap, depth, status)
                         {
-                            xhrStatus = 200;
-                        }
-
-                        // Sometimes the browser sets status to 200 OK when the connection is closed
-                        // before the message is sent (weird!).
-                        // In order to address this we fail any completely empty responses.
-                        // Hopefully, nobody will get a valid response with no headers and no body!
-                        if (xhr.getAllResponseHeaders() === "" && !xhr.response)
-                        {
+                            tex.width = width;
+                            tex.height = height;
+                            tex.format = format;
+                            tex.cubemap = cubemap;
+                            tex.depth = depth;
+                            tex.numDataLevels = numLevels;
+                            var result = tex.createGLTexture(data);
                             if (params.onload)
                             {
-                                params.onload(null, 0);
+                                params.onload(result ? tex : null, status);
                             }
+                        },
+                        onerror : function ddsFailedFn(status)
+                        {
+                            tex.failed = true;
+                            if (params.onload)
+                            {
+                                params.onload(null, status);
+                            }
+                        },
+                        data: undefined,
+                        src: undefined
+                    };
+                    if (data)
+                    {
+                        ddsParams.data = data;
+                    }
+                    else
+                    {
+                        ddsParams.src = src;
+                    }
+                    DDSLoader.create(ddsParams);
+                    return tex;
+                }
+                else
+                {
+                    (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                        'Missing image loader required for ' + src);
+
+                    tex = TZWebGLTexture.create(gd, {
+                        name    : (params.name || src),
+                        width   : 2,
+                        height  : 2,
+                        depth   : 1,
+                        format  : 'R8G8B8A8',
+                        cubemap : false,
+                        mipmaps : params.mipmaps,
+                        dynamic : params.dynamic,
+                        renderable : params.renderable,
+                        data    : [255,  20, 147, 255,
+                                   255,   0,   0, 255,
+                                   255, 255, 255, 255,
+                                   255,  20, 147, 255]
+                    });
+
+                    if (params.onload)
+                    {
+                        if (TurbulenzEngine)
+                        {
+                            TurbulenzEngine.setTimeout(function () {
+                                params.onload(tex, 200);
+                            }, 0);
                         }
                         else
                         {
-                            if (xhrStatus === 200 || xhrStatus === 0)
-                            {
-                                img.onload = function blobImageLoadedFn()
-                                {
-                                    imageLoaded();
-                                    URL.revokeObjectURL(img.src);
-                                };
-                                img.src = URL.createObjectURL(xhr.response);
-                            }
-                            else
-                            {
-                                params.onload(null, xhrStatus);
-                            }
+                            window.setTimeout(function () {
+                                params.onload(tex, 200);
+                            }, 0);
                         }
-                        xhr.onreadystatechange = null;
-                        xhr = null;
                     }
                     return tex;
                 }
+            }
+
+            var img = new Image();
+            var imageLoaded = function imageLoadedFn()
+            {
+                tex.width = img.width;
+                tex.height = img.height;
+                tex.depth = 1;
+                tex.format = gd.PIXELFORMAT_R8G8B8A8;
+                tex.cubemap = false;
+                var result = tex.createGLTexture(img);
+                if (params.onload)
+                {
+                    params.onload(result ? tex : null, 200);
+                }
             };
-            xhr.open('GET', src, true);
-            xhr.responseType = 'blob';
-            xhr.send();
+            img.onload = imageLoaded;
+            img.onerror = function imageFailedFn()
+            {
+                tex.failed = true;
+                if (params.onload)
+                {
+                    params.onload(null);
+                }
+            };
+            if (data)
+            {
+                if (extension === '.jpg' || extension === '.jpeg')
+                {
+                    src = 'data:image/jpeg;base64,' +
+                        (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
+                }
+                else if (extension === '.png')
+                {
+                    src = 'data:image/png;base64,' +
+                        (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
+                }
+                img.src = src;
+            }
+            else if (typeof URL !== "undefined" && URL.createObjectURL)
+            {
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4)
+                    {
+                        if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                        {
+                            var xhrStatus = xhr.status;
+                            // Fix for loading from file
+                            if (xhrStatus === 0 &&
+                                (window.location.protocol === "file:" ||
+                                 window.location.protocol === "chrome-extension:"))
+                            {
+                                xhrStatus = 200;
+                            }
+
+                            // Sometimes the browser sets status to 200 OK when the connection is closed
+                            // before the message is sent (weird!).
+                            // In order to address this we fail any completely empty responses.
+                            // Hopefully, nobody will get a valid response with no headers and no body!
+                            if (xhr.getAllResponseHeaders() === "" && !xhr.response)
+                            {
+                                if (params.onload)
+                                {
+                                    params.onload(null, 0);
+                                }
+                            }
+                            else
+                            {
+                                if (xhrStatus === 200 || xhrStatus === 0)
+                                {
+                                    img.onload = function blobImageLoadedFn()
+                                    {
+                                        imageLoaded();
+                                        URL.revokeObjectURL(img.src);
+                                    };
+                                    img.src = URL.createObjectURL(xhr.response);
+                                }
+                                else
+                                {
+                                    params.onload(null, xhrStatus);
+                                }
+                            }
+                            xhr.onreadystatechange = null;
+                            xhr = null;
+                        }
+                        return tex;
+                    }
+                };
+                xhr.open('GET', src, true);
+                xhr.responseType = 'blob';
+                xhr.send();
+            }
+            else
+            {
+                img.crossOrigin = 'anonymous';
+                img.src = src;
+            }
         }
         else
         {
-            img.crossOrigin = 'anonymous';
-            img.src = src;
-        }
-    }
-    else
-    {
-        // Invalid src values like "" fall through to here
-        if ("" === src && params.onload)
-        {
-            // Assume the caller intended to pass in a valid url.
-            return null;
-        }
-
-        var format = params.format;
-        if (typeof format === 'string')
-        {
-            format = gd['PIXELFORMAT_' + format];
-        }
-
-        tex.width = params.width;
-        tex.height = params.height;
-        tex.depth = params.depth;
-        tex.format = format;
-        tex.cubemap = params.cubemap;
-        tex.name = params.name;
-
-        var result = tex.createGLTexture(params.data);
-        if (!result)
-        {
-            tex = null;
-        }
-
-        // If this is a depth-texture, note the attachment type
-        // required, based on the format.
-
-        if (params.renderable)
-        {
-            if (gd.PIXELFORMAT_D16 === format)
+            // Invalid src values like "" fall through to here
+            if ("" === src && params.onload)
             {
-                tex.glDepthAttachment = gd.gl.DEPTH_ATTACHMENT;
+                // Assume the caller intended to pass in a valid url.
+                return null;
             }
-            else if (gd.PIXELFORMAT_D24S8 === format)
+
+            var format = params.format;
+            if (typeof format === 'string')
             {
-                tex.glDepthAttachment = gd.gl.DEPTH_STENCIL_ATTACHMENT;
+                format = gd['PIXELFORMAT_' + format];
+            }
+
+            tex.width = params.width;
+            tex.height = params.height;
+            tex.depth = params.depth;
+            tex.format = format;
+            tex.cubemap = params.cubemap;
+            tex.name = params.name;
+
+            var result = tex.createGLTexture(params.data);
+            if (!result)
+            {
+                tex = null;
+            }
+
+            // If this is a depth-texture, note the attachment type
+            // required, based on the format.
+
+            if (params.renderable)
+            {
+                if (gd.PIXELFORMAT_D16 === format)
+                {
+                    tex.glDepthAttachment = gd.gl.DEPTH_ATTACHMENT;
+                }
+                else if (gd.PIXELFORMAT_D24S8 === format)
+                {
+                    tex.glDepthAttachment = gd.gl.DEPTH_STENCIL_ATTACHMENT;
+                }
+            }
+
+            if (params.onload)
+            {
+                params.onload(tex, 200);
             }
         }
 
-        if (params.onload)
-        {
-            params.onload(tex, 200);
-        }
+        return tex;
     }
-
-    return tex;
-};
+}
 
 //
 // WebGLVideo
@@ -5085,7 +5085,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     setParametersCachingMultiPass(gd, passes, techniqueParameters)
     {
         gd.setParametersCaching(passes[0].parameters, techniqueParameters);
-    },
+    }
 
     setParametersDeferred(gd, passes, techniqueParameters)
     {
@@ -5248,7 +5248,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // This version only support technique with a single pass, but it is faster
-    drawArray(drawParametersArray: DrawParameters[],
+    drawArray(drawParametersArray: WebGLDrawParameters[],
               globalTechniqueParametersArray: TechniqueParameters[],
               sortMode?: number)
     {
@@ -5453,10 +5453,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
 
         this.activeIndexBuffer = activeIndexBuffer;
-    },
+    }
 
     // This version suports technique with multiple passes but it is slower
-    drawArrayMultiPass : function drawArrayMultiPassFn(drawParametersArray, globalTechniqueParametersArray, sortMode)
+    drawArrayMultiPass(drawParametersArray, globalTechniqueParametersArray, sortMode)
     {
         var gl = this.gl;
         var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
