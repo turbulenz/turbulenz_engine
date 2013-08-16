@@ -202,7 +202,7 @@ class TextureEffects
         return dst;
     }
 
-    applyBloom(params): bool
+    applyBloom(params): boolean
     {
         var source = params.source;
         var blur1 = params.blurTarget1;
@@ -265,7 +265,7 @@ class TextureEffects
         return true;
     }
 
-    applyGaussianBlur(params): bool
+    applyGaussianBlur(params): boolean
     {
         var source = params.source;
         var blur = params.blurTarget;
@@ -299,7 +299,7 @@ class TextureEffects
         return true;
     }
 
-    applyColorMatrix(params): bool
+    applyColorMatrix(params): boolean
     {
         var source = params.source;
         var dest = params.destination;
@@ -337,7 +337,7 @@ class TextureEffects
         return true;
     }
 
-    applyDistort(params): bool
+    applyDistort(params): boolean
     {
         var source = params.source;
         var dest = params.destination;

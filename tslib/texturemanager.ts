@@ -531,7 +531,7 @@ class TextureManager
 
       @return {boolean}
     */
-    isArchiveLoaded(path): bool
+    isArchiveLoaded(path): boolean
     {
         return path in this.archivesLoaded;
     }
@@ -605,7 +605,7 @@ class TextureManager
 
       @return {boolean}
     */
-    isTextureLoaded(path): bool
+    isTextureLoaded(path): boolean
     {
         return (!(path in this.loadingTexture) && !(path in this.delayedTextures));
     }
@@ -622,7 +622,7 @@ class TextureManager
 
       @return {boolean}
     */
-    isTextureMissing(path): bool
+    isTextureMissing(path): boolean
     {
         return !(path in this.textureInstances);
     }

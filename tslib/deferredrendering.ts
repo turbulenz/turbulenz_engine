@@ -572,7 +572,7 @@ class DeferredRendering
         }
     }
 
-    lightFindVisibleRenderables(lightInstance, scene) : bool
+    lightFindVisibleRenderables(lightInstance, scene) : boolean
     {
         var origin, overlappingRenderables, numOverlappingRenderables;
         var overlapQueryRenderables, numOverlapQueryRenderables, renderable;
@@ -742,7 +742,7 @@ class DeferredRendering
         }
     }
 
-    updateBuffers(gd, deviceWidth, deviceHeight) : bool
+    updateBuffers(gd, deviceWidth, deviceHeight) : boolean
     {
         if (this.bufferWidth === deviceWidth && this.bufferHeight === deviceHeight)
         {

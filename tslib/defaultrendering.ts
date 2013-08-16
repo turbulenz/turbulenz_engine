@@ -178,7 +178,7 @@ class DefaultRendering
         this.scene = scene;
     }
 
-    updateBuffers(/* gd, deviceWidth, deviceHeight */): bool
+    updateBuffers(/* gd, deviceWidth, deviceHeight */): boolean
     {
         return true;
     }
@@ -297,7 +297,8 @@ class DefaultRendering
             techniqueParameters.uvTransform = DefaultRendering.identityUVTransform;
         }
 
-        drawParameters.technique = this.technique;
+        // TODO: remove this cast.  no static 'technique' property
+        drawParameters.technique = (<any>this).technique;
 
         drawParameters.setTechniqueParameters(0, sharedMaterial.techniqueParameters);
         drawParameters.setTechniqueParameters(1, techniqueParameters);
@@ -336,7 +337,7 @@ class DefaultRendering
         techniqueParameters.worldViewProjection = rendererInfo.worldViewProjection;
         techniqueParameters.lightPosition = rendererInfo.lightPosition;
 
-        var techniqueName = this.technique.name;
+        var techniqueName = (<any>this).technique.name;
         if (techniqueName.indexOf("flat") === -1 &&
             techniqueName.indexOf("lambert") === -1)
         {
@@ -352,18 +353,19 @@ class DefaultRendering
                 skinController.index = DefaultRendering.nextSkinID;
                 DefaultRendering.nextSkinID += 1;
             }
-            drawParameters.sortKey = -renderingCommonSortKeyFn(this.techniqueIndex,
+            drawParameters.sortKey = -renderingCommonSortKeyFn((<any>this).techniqueIndex,
                                                                skinController.index,
                                                                sharedMaterial.meta.materialIndex);
         }
         else
         {
-            drawParameters.sortKey = renderingCommonSortKeyFn(this.techniqueIndex,
+            drawParameters.sortKey = renderingCommonSortKeyFn((<any>this).techniqueIndex,
                                                               sharedMaterial.meta.materialIndex,
                                                               rendererInfo.id);
         }
 
-        geometryInstance.renderUpdate = this.update;
+        // TODO:
+        geometryInstance.renderUpdate = (<any>this).update;
     }
 
     //

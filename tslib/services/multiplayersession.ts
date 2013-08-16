@@ -160,7 +160,7 @@ class MultiPlayerSession
         }
     }
 
-    connected(): bool
+    connected(): boolean
     {
         return (!!this.socket);
     }

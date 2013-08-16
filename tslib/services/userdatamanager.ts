@@ -27,7 +27,7 @@ class UserDataManager
     gameSessionId: string;
     service: ServiceRequester;
 
-    validateKey(key): bool
+    validateKey(key): boolean
     {
         if (!key || typeof(key) !== "string")
         {

@@ -342,7 +342,7 @@ class SceneNode
     //
     // isInScene
     //
-    isInScene(): bool
+    isInScene(): boolean
     {
         if (this.getRoot().scene)
         {
@@ -622,7 +622,7 @@ class SceneNode
     //
     //getDisabled
     //
-    getDisabled(): bool
+    getDisabled(): boolean
     {
         return this.disabled;
     }
@@ -1444,7 +1444,7 @@ class SceneNode
     //
     //hasRenderables
     //
-    hasRenderables() : bool
+    hasRenderables() : boolean
     {
         return (this.renderables && this.renderables.length) ? true : false;
     }
@@ -1513,7 +1513,7 @@ class SceneNode
     //
     //hasLightInstances
     //
-    hasLightInstances(): bool
+    hasLightInstances(): boolean
     {
         return <boolean><any>(this.lightInstances && this.lightInstances.length);
     }

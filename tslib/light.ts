@@ -74,7 +74,7 @@ class Light
     //
     // isGlobal
     //
-    isGlobal() : bool
+    isGlobal() : boolean
     {
         return this.global;
     }

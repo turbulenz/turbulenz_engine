@@ -4,8 +4,6 @@
 /*global Uint16Array*/
 /*global window*/
 
-/// <reference path="graphicsdevice.ts" />
-
 "use strict";
 
 //

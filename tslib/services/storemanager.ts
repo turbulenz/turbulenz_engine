@@ -190,7 +190,7 @@ class StoreManager
             }, 0);
     }
 
-    addToBasket(key: string, amount: number): bool
+    addToBasket(key: string, amount: number): boolean
     {
         var offering = this.offerings[key];
         if (!offering ||
@@ -202,7 +202,7 @@ class StoreManager
         }
 
         var resources = this.resources;
-        function isOwnOffering(offering: StoreOffering) : bool
+        function isOwnOffering(offering: StoreOffering) : boolean
         {
             var outputKey;
             var output = offering.output;
@@ -220,7 +220,7 @@ class StoreManager
         }
 
         var userItems = this.userItems;
-        function allOutputOwned(offering: StoreOffering) : bool
+        function allOutputOwned(offering: StoreOffering) : boolean
         {
             var outputKey;
             var output = offering.output;
@@ -268,7 +268,7 @@ class StoreManager
         return true;
     }
 
-    removeFromBasket(key: string, amount: number): bool
+    removeFromBasket(key: string, amount: number): boolean
     {
         if (!this.offerings[key] ||
             Math.floor(amount) !== amount ||
@@ -299,7 +299,7 @@ class StoreManager
         this.basket.items = {};
     }
 
-    isBasketEmpty(): bool
+    isBasketEmpty(): boolean
     {
         var key;
         var basketItems = this.basket.items;
@@ -313,7 +313,7 @@ class StoreManager
         return true;
     }
 
-    showConfirmPurchase(): bool
+    showConfirmPurchase(): boolean
     {
         if (this.isBasketEmpty())
         {

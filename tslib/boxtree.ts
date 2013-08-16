@@ -37,7 +37,7 @@ class BoxTreeNode
         this.extents = extents;
     }
 
-    isLeaf(): bool
+    isLeaf(): boolean
     {
         return !!this.externalNode;
     }
@@ -256,7 +256,7 @@ class BoxTree
         }
     }
 
-    needsFinalize(): bool
+    needsFinalize(): boolean
     {
         return (this.needsRebuild || this.needsRebound);
     }

@@ -5,9 +5,6 @@
 //
 /*global renderingCommonCreateRendererInfoFn: false, Camera: false*/
 
-/// <reference path="scene.ts" />
-/// <reference path="renderingcommon.ts" />
-
 interface ShadowMap
 {
     shadowMapTexture: Texture;
@@ -195,7 +192,7 @@ class ShadowMapping
         }
     }
 
-    updateBuffers(sizeLow, sizeHigh): bool
+    updateBuffers(sizeLow, sizeHigh): boolean
     {
         if (this.sizeLow === sizeLow &&
             this.sizeHigh === sizeHigh)
@@ -270,7 +267,7 @@ class ShadowMapping
         return false;
     }
 
-    findVisibleRenderables(lightInstance): bool
+    findVisibleRenderables(lightInstance): boolean
     {
         var md = this.md;
 

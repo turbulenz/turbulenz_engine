@@ -2810,7 +2810,7 @@ class CanvasContext
         // TODO
     }
 
-    drawCustomFocusRing(/* element */): bool
+    drawCustomFocusRing(/* element */): boolean
     {
         // TODO
         return false;
@@ -2933,7 +2933,7 @@ class CanvasContext
         // TODO: non rectangular clipping
     }
 
-    isPointInPath(x, y): bool
+    isPointInPath(x, y): boolean
     {
         var subPaths = this.subPaths;
         var numSubPaths = subPaths.length;
@@ -3368,7 +3368,7 @@ class CanvasContext
     //
     // Public Turbulenz Canvas Context API
     //
-    beginFrame(target, viewportRect?): bool
+    beginFrame(target, viewportRect?): boolean
     {
         if (this.target)
         {
@@ -4003,7 +4003,7 @@ class CanvasContext
         return uvtransform;
     }
 
-    setShadowStyle(style, onlyTexture?): bool
+    setShadowStyle(style, onlyTexture?): boolean
     {
         var shadowOffsetX = this.shadowOffsetX;
         var shadowOffsetY = this.shadowOffsetY;
@@ -4663,7 +4663,7 @@ class CanvasContext
         return (numPoints + 1);
     }
 
-    isClosed(firstPoint, lastPoint): bool
+    isClosed(firstPoint, lastPoint): boolean
     {
         if (firstPoint === lastPoint)
         {
@@ -4680,7 +4680,7 @@ class CanvasContext
         return false;
     }
 
-    canTriangulateAsFan(points, numSegments): bool
+    canTriangulateAsFan(points, numSegments): boolean
     {
         if (numSegments < 4)
         {
@@ -5490,7 +5490,7 @@ class CanvasContext
         while (p < numVertices);
     }
 
-    isPointInPolygon(tx, ty, points, numPoints): bool
+    isPointInPolygon(tx, ty, points, numPoints): boolean
     {
         var yflag0, yflag1, inside;
         var vtx0, vtx1, vtxn;
@@ -5520,7 +5520,7 @@ class CanvasContext
         return inside;
     }
 
-    isPointInSubPath(tx, ty, points): bool
+    isPointInSubPath(tx, ty, points): boolean
     {
         var numPoints = points.length;
         if (numPoints > 2)

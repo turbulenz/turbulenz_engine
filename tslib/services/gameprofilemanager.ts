@@ -22,7 +22,7 @@ class GameProfileManager
     gameSessionId: string;
     service: ServiceRequester;
 
-    set(value, callbackFn, errorCallbackFn): bool
+    set(value, callbackFn, errorCallbackFn): boolean
     {
         if (!value)
         {
@@ -135,7 +135,7 @@ class GameProfileManager
         return true;
     }
 
-    get(username, callbackFn, errorCallbackFn): bool
+    get(username, callbackFn, errorCallbackFn): boolean
     {
         var callbackWrapper = function callbackWrapperFn(gameProfiles)
         {
@@ -151,7 +151,7 @@ class GameProfileManager
         return this.getList([username], callbackWrapper, errorCallbackFn);
     }
 
-    getList(usernames, callbackFn, errorCallbackFn): bool
+    getList(usernames, callbackFn, errorCallbackFn): boolean
     {
         if (usernames.length > this.maxGetListUsernames)
         {

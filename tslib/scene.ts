@@ -309,7 +309,7 @@ class Scene
     //
     // buildPortalPlanes
     //
-    buildPortalPlanes(points, planes, cX, cY, cZ, frustumPlanes) : bool
+    buildPortalPlanes(points, planes, cX, cY, cZ, frustumPlanes) : boolean
     {
         var numPoints = points.length;
         var numFrustumPlanes = frustumPlanes.length;
@@ -1310,7 +1310,7 @@ class Scene
     //
     // _findOverlappingNodesAreas
     //
-    _findOverlappingNodesAreas(tree, origin, extents, overlappingNodes): bool
+    _findOverlappingNodesAreas(tree, origin, extents, overlappingNodes): boolean
     {
         // Assume scene.update has been called before this function
         var cX = origin[0];
@@ -1486,7 +1486,7 @@ class Scene
     //
     // _findOverlappingRenderablesAreas
     //
-    _findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables): bool
+    _findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables): boolean
     {
         // Assume scene.update has been called before this function
         var cX = origin[0];
@@ -2091,7 +2091,7 @@ class Scene
     //
     // _updateVisibleNodesAreas
     //
-    _updateVisibleNodesAreas(camera): bool
+    _updateVisibleNodesAreas(camera): boolean
     {
         var cameraMatrix = camera.matrix;
         var cX = cameraMatrix[9];
@@ -2750,7 +2750,7 @@ class Scene
     //
     // hasMaterial
     //
-    hasMaterial(materialName): bool
+    hasMaterial(materialName): boolean
     {
         var material = this.materials[materialName];
         if (material)
@@ -5136,7 +5136,7 @@ class Scene
         return res;
     }
 
-    isInsidePlanesAABB(extents, planes) : bool
+    isInsidePlanesAABB(extents, planes) : boolean
     {
         var n0 = extents[0];
         var n1 = extents[1];
@@ -5162,7 +5162,7 @@ class Scene
         return true;
     }
 
-    isFullyInsidePlanesAABB(extents, planes) : bool
+    isFullyInsidePlanesAABB(extents, planes) : boolean
     {
         var n0 = extents[0];
         var n1 = extents[1];

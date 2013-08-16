@@ -142,7 +142,7 @@ interface HTMLVideoElement
     webkitDecodedFrameCount: number;
     crossorigin: string;
 
-    //canPlayType(type: string): bool
+    //canPlayType(type: string): boolean
 }
 
 interface HTMLAudioElement

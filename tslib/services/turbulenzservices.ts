@@ -298,10 +298,13 @@ class TurbulenzServices
     static bridgeServices : boolean;
     static mode : string;
 
-    static available() : bool
+    static available() : boolean
     {
         return window.gameSlug !== undefined;
     }
+
+    static responseHandlers: any[]; // TODO
+    static responseIndex: number;
 
     static addBridgeEvents()
     {

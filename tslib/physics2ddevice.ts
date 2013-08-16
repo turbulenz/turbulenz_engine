@@ -520,12 +520,12 @@ class Physics2DConstraint
 
     // ================================================
 
-    isEnabled(): bool
+    isEnabled(): boolean
     {
         return this._active;
     }
 
-    isDisabled(): bool
+    isDisabled(): boolean
     {
         return (!this._active);
     }
@@ -654,7 +654,7 @@ class Physics2DConstraint
         constraints.pop();
     }
 
-    twoBodyPairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
+    twoBodyPairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): boolean
     {
         return ((b1 === this.bodyA && b2 === this.bodyB) ||
                 (b2 === this.bodyA && b1 === this.bodyB));
@@ -723,7 +723,7 @@ class Physics2DConstraint
     // scaling effective mass at KMASS
     // scaling bias at BIAS
     // and returning true if constraint was broken.
-    soft_params(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): bool
+    soft_params(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): boolean
     {
         var bias = data[BIAS];
         var bsq = (bias * bias);
@@ -751,7 +751,7 @@ class Physics2DConstraint
         data[BIAS] = bias;
         return false;
     }
-    soft_params2(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): bool
+    soft_params2(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): boolean
     {
         var biasX = data[BIAS];
         var biasY = data[BIAS + 1];
@@ -785,7 +785,7 @@ class Physics2DConstraint
         data[BIAS + 1] = biasY;
         return false;
     }
-    soft_params3(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): bool
+    soft_params3(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): boolean
     {
         var biasX = data[BIAS];
         var biasY = data[BIAS + 1];
@@ -1205,7 +1205,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     }
 
-    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
+    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): boolean
     {
         var bodies = this.bodies;
         var limit = bodies.length;
@@ -1425,7 +1425,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     }
 
-    _preStep(deltaTime): bool
+    _preStep(deltaTime): boolean
     {
         var dimension = this.dimension;
         var data = this._data;
@@ -1628,7 +1628,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         }
     }
 
-    _iterateVel(): bool
+    _iterateVel(): boolean
     {
         var dimension = this.dimension;
         var data = this._data;
@@ -1710,7 +1710,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         return false;
     }
 
-    _iteratePos(): bool
+    _iteratePos(): boolean
     {
         if (this._velocityOnly)
         {
@@ -1998,7 +1998,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         constraints.pop();
     }
 
-    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
+    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody): boolean
     {
         var bodyA = this.bodyA;
         var bodyB = this.bodyB;
@@ -2173,7 +2173,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         data[(/*PULLEY_BIAS*/28)]    = (-err);
     }
 
-    _preStep(deltaTime: number): bool
+    _preStep(deltaTime: number): boolean
     {
         this._posError();
         if (this._slack)
@@ -2232,7 +2232,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         return false;
     }
 
-    _warmStart(): bool
+    _warmStart(): boolean
     {
         if (this._slack)
         {
@@ -2320,7 +2320,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         return dst;
     }
 
-    _iterateVel(): bool
+    _iterateVel(): boolean
     {
         if (this._slack)
         {
@@ -2415,7 +2415,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
         return false;
     }
 
-    _iteratePos(): bool
+    _iteratePos(): boolean
     {
         this._posError();
         if (this._slack)
@@ -2679,7 +2679,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
     // Inherited
     _JACC = (/*MOTOR_JACC*/8);
 
-    _preStep(deltaTime: number): bool
+    _preStep(deltaTime: number): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -2724,7 +2724,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         return dst;
     }
 
-    _iterateVel(): bool
+    _iterateVel(): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -2762,7 +2762,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
     }
 
     // Velocity only constraint.
-    _iteratePos(): bool
+    _iteratePos(): boolean
     {
         return false;
     }
@@ -2961,7 +2961,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         data[(/*LINE_BIAS*/26) + 1] = (-errY);
     }
 
-    _preStep(deltaTime: number): bool
+    _preStep(deltaTime: number): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3089,7 +3089,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         return dst;
     }
 
-    _iterateVel(): bool
+    _iterateVel(): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3169,7 +3169,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
         return false;
     }
 
-    _iteratePos(): bool
+    _iteratePos(): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3476,7 +3476,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         data[(/*DIST_BIAS*/19)]       = (-err);
     }
 
-    _preStep(deltaTime: number): bool
+    _preStep(deltaTime: number): boolean
     {
         this._posError();
         if (this._slack)
@@ -3578,7 +3578,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         return dst;
     }
 
-    _iterateVel(): bool
+    _iterateVel(): boolean
     {
         if (this._slack)
         {
@@ -3650,7 +3650,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
         return false;
     }
 
-    _iteratePos(): bool
+    _iteratePos(): boolean
     {
         this._posError();
         if (this._slack)
@@ -3916,7 +3916,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         data[(/*ANGLE_BIAS*/12)] = (-err);
     }
 
-    _preStep(deltaTime: number): bool
+    _preStep(deltaTime: number): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -3993,7 +3993,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         return dst;
     }
 
-    _iterateVel(): bool
+    _iterateVel(): boolean
     {
         if (this._slack)
         {
@@ -4069,7 +4069,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
         return false;
     }
 
-    _iteratePos(): bool
+    _iteratePos(): boolean
     {
         this._posError();
         if (this._slack)
@@ -4207,7 +4207,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     // Inherited
     _JACC = (/*WELD_JACC*/20);
 
-    _preStep(deltaTime: number): bool
+    _preStep(deltaTime: number): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4326,7 +4326,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         return dst;
     }
 
-    _iterateVel(): bool
+    _iterateVel(): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4403,7 +4403,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
         return false;
     }
 
-    _iteratePos(): bool
+    _iteratePos(): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4613,7 +4613,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
     // Inherited
     _JACC = (/*POINT_JACC*/16);
 
-    _preStep(deltaTime: number): bool
+    _preStep(deltaTime: number): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4721,7 +4721,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         return dst;
     }
 
-    _iterateVel(): bool
+    _iterateVel(): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -4789,7 +4789,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
         return false;
     }
 
-    _iteratePos(): bool
+    _iteratePos(): boolean
     {
         var data = this._data;
         var b1 = this.bodyA._data;
@@ -5153,7 +5153,7 @@ class Physics2DShape
         return -1;
     }
 
-    addEventListener(eventType: string, callback: Physics2DShapeCallbackFn, callbackMask?: number, deterministic?: boolean): bool
+    addEventListener(eventType: string, callback: Physics2DShapeCallbackFn, callbackMask?: number, deterministic?: boolean): boolean
     {
         var events, type;
         if (eventType === 'preSolve')
@@ -5205,7 +5205,7 @@ class Physics2DShape
         return true;
     }
 
-    removeEventListener(eventType: string, callback: Physics2DShapeCallbackFn, callbackMask?: number): bool
+    removeEventListener(eventType: string, callback: Physics2DShapeCallbackFn, callbackMask?: number): boolean
     {
         var events, type;
         if (eventType === 'preSolve')
@@ -5264,6 +5264,11 @@ class Physics2DCircle extends Physics2DShape
 {
     static version = 1;
     type = "CIRCLE";
+
+    constructor()
+    {
+        super();
+    }
 
     // ==============================================================
 
@@ -5553,6 +5558,11 @@ class Physics2DPolygon extends Physics2DShape
     static version = 1;
 
     type = "POLYGON";
+
+    constructor()
+    {
+        super();
+    }
 
     computeArea(): number
     {
@@ -6126,7 +6136,7 @@ class Physics2DRigidBody
     _onWake: Physics2DObjectCallbackFn[];
     _onSleep: Physics2DObjectCallbackFn[];
 
-    isDynamic(): bool
+    isDynamic(): boolean
     {
         return (this._type === (/*TYPE_DYNAMIC*/0));
     }
@@ -6147,7 +6157,7 @@ class Physics2DRigidBody
         data[(/*BODY_IINERTIA*/1)] = (inertia === Number.POSITIVE_INFINITY ? 0 : (1 / inertia));
     }
 
-    isStatic(): bool
+    isStatic(): boolean
     {
         return (this._type === (/*TYPE_STATIC*/2));
     }
@@ -6166,7 +6176,7 @@ class Physics2DRigidBody
         data[(/*BODY_VEL*/7)] = data[(/*BODY_VEL*/7) + 1] = data[(/*BODY_VEL*/7) + 2] = 0;
     }
 
-    isKinematic(): bool
+    isKinematic(): boolean
     {
         return (this._type === (/*TYPE_KINEMATIC*/1));
     }
@@ -6598,7 +6608,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    addShape(shape: Physics2DShape): bool
+    addShape(shape: Physics2DShape): boolean
     {
         if (this.world && (this.world._midStep || this._type === (/*TYPE_STATIC*/2)))
         {
@@ -6632,7 +6642,7 @@ class Physics2DRigidBody
         return true;
     }
 
-    removeShape(shape: Physics2DShape): bool
+    removeShape(shape: Physics2DShape): boolean
     {
         if (this.world && (this.world._midStep || this._type === (/*TYPE_STATIC*/2)))
         {
@@ -6880,7 +6890,7 @@ class Physics2DRigidBody
 
     // =====================================================================
 
-    _atRest(deltaTime: number, timeStamp: number): bool
+    _atRest(deltaTime: number, timeStamp: number): boolean
     {
         if (this._type !== (/*TYPE_DYNAMIC*/0))
         {
@@ -7016,7 +7026,7 @@ class Physics2DRigidBody
 
     // ==========================================================
 
-    addEventListener(eventType: string, callback: Physics2DObjectCallbackFn): bool
+    addEventListener(eventType: string, callback: Physics2DObjectCallbackFn): boolean
     {
         var events = (eventType === 'wake'  ? this._onWake  :
                       eventType === 'sleep' ? this._onSleep :
@@ -7040,7 +7050,7 @@ class Physics2DRigidBody
         return true;
     }
 
-    removeEventListener(eventType: string, callback: Physics2DObjectCallbackFn): bool
+    removeEventListener(eventType: string, callback: Physics2DObjectCallbackFn): boolean
     {
         var events = (eventType === 'wake'  ? this._onWake  :
                       eventType === 'sleep' ? this._onSleep :
@@ -8339,7 +8349,7 @@ class Physics2DArbiter
     // =========================================================
 
     /*jshint bitwise: false*/
-    isStateAccepted(): bool
+    isStateAccepted(): boolean
     {
         if (this.sensor)
         {
@@ -8351,7 +8361,7 @@ class Physics2DArbiter
         }
     }
 
-    isStatePersistent(): bool
+    isStatePersistent(): boolean
     {
         if (this.sensor)
         {
@@ -8600,7 +8610,7 @@ class Physics2DArbiter
         return contact;
     }
 
-    _cleanContacts(timeStamp): bool
+    _cleanContacts(timeStamp): boolean
     {
         var fst = true;
         this._position2Contact = false;
@@ -8658,7 +8668,7 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _preStep(deltaTime: number, timeStamp: number, continuous?: boolean): bool
+    _preStep(deltaTime: number, timeStamp: number, continuous?: boolean): boolean
     {
         if (!this._cleanContacts(timeStamp))
         {
@@ -9754,7 +9764,7 @@ class Physics2DWorld
         constraints.pop();
     }
 
-    addConstraint(constraint: Physics2DConstraint): bool
+    addConstraint(constraint: Physics2DConstraint): boolean
     {
         if (constraint.world)
         {
@@ -9774,7 +9784,7 @@ class Physics2DWorld
         return true;
     }
 
-    removeConstraint(constraint: Physics2DConstraint): bool
+    removeConstraint(constraint: Physics2DConstraint): boolean
     {
         if (constraint.world !== this)
         {
@@ -9797,7 +9807,7 @@ class Physics2DWorld
         return true;
     }
 
-    addRigidBody(body: Physics2DRigidBody): bool
+    addRigidBody(body: Physics2DRigidBody): boolean
     {
         if (body.world)
         {
@@ -9836,7 +9846,7 @@ class Physics2DWorld
         return true;
     }
 
-    removeRigidBody(body: Physics2DRigidBody, noCallbacks?: boolean): bool
+    removeRigidBody(body: Physics2DRigidBody, noCallbacks?: boolean): boolean
     {
         if (body.world !== this)
         {
@@ -10227,7 +10237,7 @@ class Physics2DWorld
     }
 
     _collisionType(s1: Physics2DShape, s2: Physics2DShape,
-            b1: Physics2DRigidBody, b2: Physics2DRigidBody): bool
+            b1: Physics2DRigidBody, b2: Physics2DRigidBody): boolean
     {
         if (b1 === b2)
         {
@@ -12420,7 +12430,7 @@ class Physics2DCollisionUtils
 {
     _toi: Physics2DTOIEvent;
 
-    containsPoint(shape: Physics2DShape, point: any /*v2*/): bool
+    containsPoint(shape: Physics2DShape, point: any /*v2*/): boolean
     {
         shape.body._update();
         return this._contains(shape, point[0], point[1]);
@@ -12447,7 +12457,7 @@ class Physics2DCollisionUtils
         return ret;
     }
 
-    intersects(shapeA: Physics2DShape, shapeB: Physics2DShape): bool
+    intersects(shapeA: Physics2DShape, shapeB: Physics2DShape): boolean
     {
         shapeA.body._update();
         if (shapeB.body !== shapeA.body)
@@ -12646,7 +12656,7 @@ class Physics2DCollisionUtils
     // no AABB check is performed.
     // Assume shape has been updated by a Body.
     // (need not be 'in' a body).
-    _contains(shape, x, y): bool
+    _contains(shape, x, y): boolean
     {
         if (shape._type === (/*TYPE_CIRCLE*/0))
         {
@@ -12658,7 +12668,7 @@ class Physics2DCollisionUtils
         }
     }
 
-    _containsCircle(circle, x, y): bool
+    _containsCircle(circle, x, y): boolean
     {
         var data = circle._data;
         var dx = (data[(/*CIRCLE_WORLD*/9)]     - x);
@@ -12667,7 +12677,7 @@ class Physics2DCollisionUtils
         return ((dx * dx) + (dy * dy) - (rad * rad)) <= Physics2DConfig.CONTAINS_SQ_EPSILON;
     }
 
-    _containsPolygon(poly, x, y): bool
+    _containsPolygon(poly, x, y): boolean
     {
         var data = poly._data;
         var index = (/*POLY_VERTICES*/6);

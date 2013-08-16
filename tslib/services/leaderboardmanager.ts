@@ -117,7 +117,7 @@ class LeaderboardManager
         });
     }
 
-    getRaw(key, spec, callbackFn, errorCallbackFn): bool
+    getRaw(key, spec, callbackFn, errorCallbackFn): boolean
     {
         var that = this;
         var errorCallback = errorCallbackFn || this.errorCallbackFn;
@@ -147,7 +147,7 @@ class LeaderboardManager
         return true;
     }
 
-    get(key, spec, callbackFn, errorCallbackFn): bool
+    get(key, spec, callbackFn, errorCallbackFn): boolean
     {
         var errorCallback = errorCallbackFn || this.errorCallbackFn;
         if (!this.meta)

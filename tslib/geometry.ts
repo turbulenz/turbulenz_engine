@@ -143,7 +143,7 @@ class GeometryInstance implements Renderable
     //
     // isSkinned
     //
-    isSkinned() : bool
+    isSkinned() : boolean
     {
         if (this.geometry.skeleton)
         {
@@ -310,7 +310,7 @@ class GeometryInstance implements Renderable
     //
     // hasCustomWorldExtents
     //
-    hasCustomWorldExtents() : bool
+    hasCustomWorldExtents() : boolean
     {
         return this.worldExtentsUpdate === this.maxUpdateValue;
     }

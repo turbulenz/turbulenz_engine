@@ -35,7 +35,7 @@ class AssetCache
         return this.cache.hasOwnProperty(key);
     }
 
-    isLoading(key): bool
+    isLoading(key): boolean
     {
         var cachedAsset = this.cache[key];
         if (cachedAsset)

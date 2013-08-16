@@ -129,7 +129,7 @@ class SimpleRendering
         this.scene = scene;
     }
 
-    updateBuffers(/* gd, deviceWidth, deviceHeight */) : bool
+    updateBuffers(/* gd, deviceWidth, deviceHeight */) : boolean
     {
         return true;
     }
@@ -241,7 +241,8 @@ class SimpleRendering
 
         var sharedMaterial = geometryInstance.sharedMaterial;
 
-        drawParameters.technique = this.technique;
+        // TODO:
+        drawParameters.technique = (<any>this).technique;
 
         drawParameters.setTechniqueParameters(0, sharedMaterial.techniqueParameters);
         drawParameters.setTechniqueParameters(1, geometryInstance.techniqueParameters);
@@ -259,7 +260,8 @@ class SimpleRendering
             drawParameters.userData.passIndex = SimpleRendering.passIndex.opaque;
         }
 
-        drawParameters.sortKey = renderingCommonSortKeyFn(this.techniqueIndex, sharedMaterial.meta.materialIndex);
+        // TODO: any cast
+        drawParameters.sortKey = renderingCommonSortKeyFn((<any>this).techniqueIndex, sharedMaterial.meta.materialIndex);
 
         if (!geometryInstance.sharedMaterial.techniqueParameters.uvTransform &&
             !geometryInstance.techniqueParameters.uvTransform)
@@ -267,7 +269,8 @@ class SimpleRendering
             geometryInstance.techniqueParameters.uvTransform = SimpleRendering.identityUVTransform;
         }
 
-        geometryInstance.renderUpdate = this.update;
+        // TODO: any cast
+        geometryInstance.renderUpdate = (<any>this).update;
     }
 
     //

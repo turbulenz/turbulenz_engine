@@ -470,7 +470,7 @@ class ForwardRendering
     }
 
     //TODO name.
-    lightFindVisibleRenderables(gd, lightInstance, scene): bool
+    lightFindVisibleRenderables(gd, lightInstance, scene): boolean
     {
         var origin, overlappingRenderables, numOverlappingRenderables;
         var n, meta, extents, lightFrameVisible;
@@ -644,7 +644,7 @@ class ForwardRendering
         return (0 < numVisibleDrawParameters);
     }
 
-    directionalLightsUpdateVisibleRenderables(gd /*, scene */) : bool
+    directionalLightsUpdateVisibleRenderables(gd /*, scene */) : boolean
     {
         var globalDirectionalLights = this.globalDirectionalLights;
         var numGlobalDirectionalLights = globalDirectionalLights.length;
@@ -1010,7 +1010,7 @@ class ForwardRendering
         }
     }
 
-    updateBuffers(gd, deviceWidth, deviceHeight): bool
+    updateBuffers(gd, deviceWidth, deviceHeight): boolean
     {
         if (this.bufferWidth === deviceWidth && this.bufferHeight === deviceHeight)
         {

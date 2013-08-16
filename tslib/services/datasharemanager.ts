@@ -134,7 +134,7 @@ class DataShare
         return key;
     }
 
-    getAccess(params: any): bool
+    getAccess(params: any): boolean
     {
         var access;
         if (params.hasOwnProperty('access'))
@@ -152,7 +152,7 @@ class DataShare
         return access;
     }
 
-    isJoined(username: string): bool
+    isJoined(username: string): boolean
     {
         var users = this.users;
         var usersLength = users.length;
