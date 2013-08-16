@@ -90,6 +90,10 @@ interface Document
     mozFullScreen?: bool;
     webkitIsFullScreen?: bool;
 
+    fullscreenElement?: any;
+    mozFullScreenElement?: any;
+    webkitFullscreenElement?: any;
+
     pointerLockElement?: any;
     mozPointerLockElement?: any;
     webkitPointerLockElement?: any;
