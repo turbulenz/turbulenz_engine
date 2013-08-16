@@ -15,19 +15,6 @@
 /*global NotificationsManager: false*/
 /*global debug: false*/
 
-/// <reference path="../requesthandler.ts" />
-
-/// <reference path="servicedatatypes.d.ts" />
-/// <reference path="turbulenzbridge.ts" />
-/// <reference path="badgemanager.ts" />
-/// <reference path="leaderboardmanager.ts" />
-/// <reference path="storemanager.ts" />
-/// <reference path="notificationsmanager.ts" />
-/// <reference path="multiplayersessionmanager.ts" />
-
-/// <reference path="gamesession.ts" />
-/// <reference path="mappingtable.ts" />
-
 interface UserProfile
 {
     username    : string;
@@ -35,8 +22,8 @@ interface UserProfile
     language    : string;
     country     : string;
     age         : number;
-    anonymous   : bool;
-    guest       : bool;
+    anonymous   : boolean;
+    guest       : boolean;
 };
 
 interface UserProfileReceivedCB
@@ -99,7 +86,7 @@ class CustomMetricEventBatch
 
 interface ServiceResponse
 {
-    ok   : bool;
+    ok   : boolean;
     msg  : string;
     data : any;
 };
@@ -112,7 +99,7 @@ interface ServiceRequestParams
     callback            : { (response: ServiceResponse,
                              status: number): void; };
     requestHandler      : RequestHandler;
-    neverDiscard?       : bool;
+    neverDiscard?       : boolean;
 };
 
 interface ServiceErrorCB
@@ -126,8 +113,8 @@ interface ServiceErrorCB
 
 class ServiceRequester
 {
-    running               : bool;
-    discardRequests       : bool;
+    running               : boolean;
+    discardRequests       : boolean;
     serviceStatusObserver : Observer;
     serviceName           : string;
     onServiceUnavailable  : { (service: ServiceRequester, callCtx?: any)
@@ -308,7 +295,7 @@ class TurbulenzServices
         }
     };
 
-    static bridgeServices : bool;
+    static bridgeServices : boolean;
     static mode : string;
 
     static available() : bool

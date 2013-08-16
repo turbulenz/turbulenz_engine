@@ -17,14 +17,6 @@
 /*global window*/
 /*global debug*/
 
-/// <reference path="../turbulenz.d.ts" />
-/// <reference path="../external/webgl.d.ts" />
-
-/// <reference path="turbulenzengine.ts" />
-/// <reference path="tarloader.ts" />
-/// <reference path="tgaloader.ts" />
-/// <reference path="ddsloader.ts" />
-
 "use strict";
 
 interface WebGLSampler
@@ -39,8 +31,8 @@ interface WebGLSampler
 
 interface WebGLVideoSupportedExtensions
 {
-    webm?: bool;
-    mp4?: bool;
+    webm?: boolean;
+    mp4?: boolean;
 };
 
 // -----------------------------------------------------------------------------
@@ -56,14 +48,14 @@ class TZWebGLTexture implements Texture
     depth             : number;
     format            : number;
     numDataLevels     : number;
-    mipmaps           : bool;
-    cubemap           : bool;
-    dynamic           : bool;
-    renderable        : bool;
+    mipmaps           : boolean;
+    cubemap           : boolean;
+    dynamic           : boolean;
+    renderable        : boolean;
 
     // TZWebGLTexture
     gd                : any;
-    failed            : bool;
+    failed            : boolean;
     glDepthAttachment : number;  // If renderable and a depth format
     target            : number;
     glTexture         : WebGLTexture;
@@ -1221,9 +1213,9 @@ class WebGLVideo implements Video
     static version = 1;
 
     // Video
-    looping      : bool;
-    playing      : bool;
-    paused       : bool;
+    looping      : boolean;
+    playing      : boolean;
+    paused       : boolean;
     tell         : number;
 
     // WebGLVideo
@@ -1232,7 +1224,7 @@ class WebGLVideo implements Video
     length       : number;
     width        : number;
     height       : number;
-    elementAdded : bool;
+    elementAdded : boolean;
 
     // Public API
     play(seek?: number)
@@ -1966,7 +1958,7 @@ class WebGLIndexBuffer implements IndexBuffer
     format     : number;
     stride     : number;
     length     : number;
-    dynamic    : bool;
+    dynamic    : boolean;
     usage      : number;
 
     // WebGLIndexBuffer
@@ -2264,14 +2256,14 @@ class WebGLVertexBuffer implements VertexBuffer
     numVertices : number;
     usage       : number;
     stride      : number;
-    transient   : bool;
-    dynamic     : bool;
+    transient   : boolean;
+    dynamic     : boolean;
 
     // WebGLVertexBuffer
     gd          : any;
     glBuffer    : WebGLBuffer;
     attributes  : WebGLGraphicsDeviceVertexFormat[];
-    hasSingleFormat: bool;
+    hasSingleFormat: boolean;
     strideInBytes : number;
     numAttributes : number;
 
@@ -3029,7 +3021,7 @@ interface PassParameter
 interface StateBase
 {
     name: string;
-    set: (bool) => void;
+    set: (boolean) => void;
     reset: () => void;
 };
 
@@ -3058,7 +3050,7 @@ class WebGLPass implements Pass
     numParameters: number;
     states: PassState[];
     statesSet: any;
-    dirty: bool;
+    dirty: boolean;
 
     updateParametersData(gd)
     {
@@ -3397,7 +3389,7 @@ class WebGLTechnique implements Technique
 
     // Technique
     id            : number;
-    initialized   : bool;
+    initialized   : boolean;
     shader        : TZWebGLShader;
     name          : string;
     passes        : WebGLPass[];
@@ -3882,7 +3874,7 @@ class TZWebGLShader implements Shader
     // Shader
     id             : number;
     name           : string;
-    initialized    : bool;
+    initialized    : boolean;
     programs       : any;
     linkedPrograms : any;
 
@@ -4184,7 +4176,7 @@ class TZWebGLShader implements Shader
                 var parameterType = parameter.type;
                 if (parameterType === "float" ||
                     parameterType === "int" ||
-                    parameterType === "bool")
+                    parameterType === "boolean")
                 {
                     var parameterValues = parameter.values;
                     if (parameterValues)
@@ -4552,7 +4544,7 @@ interface WebGLGraphicsDeviceVertexFormat
     stride: number;
     componentStride: number;
     format: number;
-    normalized: bool;
+    normalized: boolean;
     normalizationScale: number;
     typedSetter: { () : void; };
     typedArray: any; // ArrayBufferView constructor
@@ -4560,18 +4552,18 @@ interface WebGLGraphicsDeviceVertexFormat
 
 interface WebGLGraphicsDeviceState
 {
-    depthTestEnable         : bool;
-    blendEnable             : bool;
-    cullFaceEnable          : bool;
-    stencilTestEnable       : bool;
-    polygonOffsetFillEnable : bool;
-    depthMask               : bool;
+    depthTestEnable         : boolean;
+    blendEnable             : boolean;
+    cullFaceEnable          : boolean;
+    stencilTestEnable       : boolean;
+    polygonOffsetFillEnable : boolean;
+    depthMask               : boolean;
     depthFunc               : number;
     blendSrc                : number;
     blendDst                : number;
     cullFace                : number;
     frontFace               : number;
-    colorMask               : bool[];
+    colorMask               : boolean[];
     stencilFunc             : number;
     stencilRef              : number;
     stencilMask             : number;
@@ -4727,7 +4719,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     extensions: string;
     shadingLanguageVersion: number;
 
-    fullscreen: bool;
+    fullscreen: boolean;
 
     rendererVersion: number;
     renderer: string;
@@ -4743,7 +4735,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     state: WebGLGraphicsDeviceState;
     stateHandlers: any;
-    oldFullscreen: bool;
+    oldFullscreen: boolean;
 
     clientStateMask: number;
     attributeMask: number;
@@ -4762,10 +4754,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
     cachedSamplers: any;
 
     compressedTexturesExtension: any;
-    WEBGL_compressed_texture_s3tc: bool;
+    WEBGL_compressed_texture_s3tc: boolean;
     TEXTURE_MAX_ANISOTROPY_EXT: number;
     maxAnisotropy: number;
-    WEBGL_draw_buffers: bool;
+    WEBGL_draw_buffers: boolean;
     drawBuffersExtension: any;
 
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
@@ -6058,7 +6050,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return !(document.hidden || document['webkitHidden']);
     }
 
-    beginRenderTarget(renderTarget: RenderTarget): bool
+    beginRenderTarget(renderTarget: RenderTarget): boolean
     {
         this.activeRenderTarget = <WebGLRenderTarget>renderTarget;
 
@@ -6196,7 +6188,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return WebGLDrawParameters.create();
     }
 
-    isSupported(name: string): bool
+    isSupported(name: string): boolean
     {
         var gl = this.gl;
         if ("OCCLUSION_QUERIES" === name)
@@ -6368,7 +6360,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    getScreenshot(compress: bool, x?: number, y?: number,
+    getScreenshot(compress: boolean, x?: number, y?: number,
                   width?: number, height?: number): any
     {
         var gl = this.gl;
@@ -6447,7 +6439,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    requestFullScreen(fullscreen:bool): bool
+    requestFullScreen(fullscreen:boolean): boolean
     {
         if (fullscreen)
         {
@@ -8070,7 +8062,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             'transient': true
         });
         gd.immediatePrimitive = -1;
-        gd.immediateSemantics = WebGLSemantics.create(this, []);
+        gd.immediateSemantics = WebGLSemantics.create(gd, []);
 
         gd.fps = 0;
         gd.numFrames = 0;

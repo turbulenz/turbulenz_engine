@@ -1,9 +1,9 @@
 interface WebGLContextAttributes {
-	alpha : bool;
-	depth : bool;
-	stencil : bool;
-	antialias : bool;
-	premultipliedAlpha : bool;
+	alpha : boolean;
+	depth : boolean;
+	stencil : boolean;
+	antialias : boolean;
+	premultipliedAlpha : boolean;
 }
 
 interface WebGLObject {
@@ -347,7 +347,7 @@ interface WebGLRenderingContext {
 	BROWSER_DEFAULT_WEBGL : number;
 	canvas : HTMLCanvasElement;
 	getContextAttributes() : WebGLContextAttributes;
-	isContextLost() : bool;
+	isContextLost() : boolean;
 	getSupportedExtensions() : string[];
 	getExtension(name : string) : any;
 	activeTexture(texture : number) : void;
@@ -372,7 +372,7 @@ interface WebGLRenderingContext {
 	clearColor(red : number, green : number, blue : number, alpha : number) : void;
 	clearDepth(depth : number) : void;
 	clearStencil(s : number) : void;
-	colorMask(red : bool, green : bool, blue : bool, alpha : bool) : void;
+	colorMask(red : boolean, green : boolean, blue : boolean, alpha : boolean) : void;
 	compileShader(shader : WebGLShader) : void;
 	copyTexImage2D(target : number, level : number, internalformat : number, x : number, y : number, width : number, height : number, border : number) : void;
 	copyTexSubImage2D(target : number, level : number, xoffset : number, yoffset : number, x : number, y : number, width : number, height : number) : void;
@@ -390,7 +390,7 @@ interface WebGLRenderingContext {
 	deleteShader(shader : WebGLShader) : void;
 	deleteTexture(texture : WebGLTexture) : void;
 	depthFunc(func : number) : void;
-	depthMask(flag : bool) : void;
+	depthMask(flag : boolean) : void;
 	depthRange(zNear : number, zFar : number) : void;
 	detachShader(program : WebGLProgram, shader : WebGLShader) : void;
 	disable(cap : number) : void;
@@ -425,20 +425,20 @@ interface WebGLRenderingContext {
 	getVertexAttrib(index : number, pname : number) : any;
 	getVertexAttribOffset(index : number, pname : number) : number;
 	hint(target : number, mode : number) : void;
-	isBuffer(buffer : WebGLBuffer) : bool;
-	isEnabled(cap : number) : bool;
-	isFramebuffer(framebuffer : WebGLFramebuffer) : bool;
-	isProgram(program : WebGLProgram) : bool;
-	isRenderbuffer(renderbuffer : WebGLRenderbuffer) : bool;
-	isShader(shader : WebGLShader) : bool;
-	isTexture(texture : WebGLTexture) : bool;
+	isBuffer(buffer : WebGLBuffer) : boolean;
+	isEnabled(cap : number) : boolean;
+	isFramebuffer(framebuffer : WebGLFramebuffer) : boolean;
+	isProgram(program : WebGLProgram) : boolean;
+	isRenderbuffer(renderbuffer : WebGLRenderbuffer) : boolean;
+	isShader(shader : WebGLShader) : boolean;
+	isTexture(texture : WebGLTexture) : boolean;
 	lineWidth(width : number) : void;
 	linkProgram(program : WebGLProgram) : void;
 	pixelStorei(pname : number, param : number) : void;
 	polygonOffset(factor : number, units : number) : void;
 	readPixels(x : number, y : number, width : number, height : number, format : number, type : number, pixels : ArrayBufferView) : void;
 	renderbufferStorage(target : number, internalformat : number, width : number, height : number) : void;
-	sampleCoverage(value : number, invert : bool) : void;
+	sampleCoverage(value : number, invert : boolean) : void;
 	scissor(x : number, y : number, width : number, height : number) : void;
 	shaderSource(shader : WebGLShader, source : string) : void;
 	stencilFunc(func : number, ref : number, mask : number) : void;
@@ -483,12 +483,12 @@ interface WebGLRenderingContext {
 	uniform4i(location : WebGLUniformLocation, x : number, y : number, z : number, w : number) : void;
 	uniform4iv(location : WebGLUniformLocation, v : Int32Array) : void;
 	uniform4iv(location : WebGLUniformLocation, v : number[]) : void;
-	uniformMatrix2fv(location : WebGLUniformLocation, transpose : bool, value : Float32Array) : void;
-	uniformMatrix2fv(location : WebGLUniformLocation, transpose : bool, value : number[]) : void;
-	uniformMatrix3fv(location : WebGLUniformLocation, transpose : bool, value : Float32Array) : void;
-	uniformMatrix3fv(location : WebGLUniformLocation, transpose : bool, value : number[]) : void;
-	uniformMatrix4fv(location : WebGLUniformLocation, transpose : bool, value : Float32Array) : void;
-	uniformMatrix4fv(location : WebGLUniformLocation, transpose : bool, value : number[]) : void;
+	uniformMatrix2fv(location : WebGLUniformLocation, transpose : boolean, value : Float32Array) : void;
+	uniformMatrix2fv(location : WebGLUniformLocation, transpose : boolean, value : number[]) : void;
+	uniformMatrix3fv(location : WebGLUniformLocation, transpose : boolean, value : Float32Array) : void;
+	uniformMatrix3fv(location : WebGLUniformLocation, transpose : boolean, value : number[]) : void;
+	uniformMatrix4fv(location : WebGLUniformLocation, transpose : boolean, value : Float32Array) : void;
+	uniformMatrix4fv(location : WebGLUniformLocation, transpose : boolean, value : number[]) : void;
 	useProgram(program : WebGLProgram) : void;
 	validateProgram(program : WebGLProgram) : void;
 	vertexAttrib1f(indx : number, x : number) : void;
@@ -503,7 +503,7 @@ interface WebGLRenderingContext {
 	vertexAttrib4f(indx : number, x : number, y : number, z : number, w : number) : void;
 	vertexAttrib4fv(indx : number, values : Float32Array) : void;
 	vertexAttrib4fv(indx : number, values : number[]) : void;
-	vertexAttribPointer(indx : number, size : number, type : number, normalized : bool, stride : number, offset : number) : void;
+	vertexAttribPointer(indx : number, size : number, type : number, normalized : boolean, stride : number, offset : number) : void;
 	viewport(x : number, y : number, width : number, height : number) : void;
 
     drawingBufferWidth?: number;
@@ -512,7 +512,7 @@ interface WebGLRenderingContext {
 
 interface WebGLContextEvent extends Event {
 	statusMessage : string;
-	initWebGLContextEvent(typeArg : string, canBubbleArg : bool, cancelableArg : bool, statusMessageArg : string) : void;
+	initWebGLContextEvent(typeArg : string, canBubbleArg : boolean, cancelableArg : boolean, statusMessageArg : string) : void;
 }
 
 //Extend the window object with cross Browser callbacks so TS will not complain

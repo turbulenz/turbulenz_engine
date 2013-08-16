@@ -2,9 +2,6 @@
 
 // Workaround:
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="fontmanager.ts" />
-
 // This code relies on the fact that the plugin implements
 // a 'toBase64' method on arrays.
 
@@ -344,7 +341,7 @@ class CanvasLinearGradient
     numTextureStops : number;
     texture         : Texture;
 
-    opaque          : bool;
+    opaque          : boolean;
 
     // Public API
     addColorStop(offset, color)
@@ -600,7 +597,7 @@ class CanvasRadialGradient
     matrix          : any; // m33?
     numTextureStops : number;
     texture         : Texture;
-    opaque          : bool;
+    opaque          : boolean;
 
     // Public API
     addColorStop(offset, color)
@@ -899,7 +896,7 @@ class CanvasContext
 
     subPaths                 : any[];
     currentSubPath           : any[];
-    needToSimplifyPath       : bool[];
+    needToSimplifyPath       : boolean[];
 
     activeVertexBuffer       : VertexBuffer;
     activeTechnique          : Technique;
@@ -4353,7 +4350,7 @@ class CanvasContext
         }
     }
 
-    interpolateArc(x, y, radius, startAngle, endAngle, anticlockwise?: bool)
+    interpolateArc(x, y, radius, startAngle, endAngle, anticlockwise?: boolean)
     {
         var cos = Math.cos;
         var sin = Math.sin;
@@ -5093,7 +5090,7 @@ class CanvasContext
 
     triangulateConcave(points: any[], numSegments: number,
                        vertices: any[], numVertices: number,
-                       ownPoints: bool,
+                       ownPoints: boolean,
                        totalArea: number)
     {
         var canTriangulateAsFan = this.canTriangulateAsFan;

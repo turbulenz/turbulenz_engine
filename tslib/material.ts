@@ -2,11 +2,6 @@
 
 /*global Reference: false */
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="utilities.ts" />
-/// <reference path="scene.ts" />
-/// <reference path="texturemanager.ts" />
-
 //
 // Material
 //

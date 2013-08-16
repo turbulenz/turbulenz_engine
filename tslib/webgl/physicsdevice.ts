@@ -6,9 +6,6 @@
 /*global AABBTree: false*/
 /*global TurbulenzEngine: false*/
 
-/// <reference path="../vmath.ts" />
-/// <reference path="../aabbtree.ts" />
-
 "use strict";
 
 // TODO: is this related to RayHit?
@@ -157,7 +154,7 @@ var webGLPhysicsClone = function webGLPhysicsCloneFn(dst, src)
 
 var initShapeProperties = function initShapePropertiesFn(s: WebGLPhysicsShape,
                                                          type: string,
-                                                         nomargin?: bool) : void
+                                                         nomargin?: boolean) : void
 {
     // Capsule/Sphere have this defined differently.
     if (!nomargin)
@@ -2518,24 +2515,24 @@ class WebGLPhysicsPrivateBody
     island: WebGLPhysicsIsland;
     islandRoot: WebGLPhysicsPrivateBody;
     islandRank: number;
-    delaySleep: bool;
+    delaySleep: boolean;
     wakeTimeStamp: number;
 
     // set by RigidBody and CollisionObject constructors
     group: number;
     mask: number;
-    kinematic: bool;
-    fixedRotation: bool;
+    kinematic: boolean;
+    fixedRotation: boolean;
     mass: number;
     inverseMass: number;
     inverseInertiaLocal: any; // v3
     inverseInertia: Float32Array;
-    collisionObject: bool;
-    permitSleep: bool;
-    sweepFrozen: bool;
-    active: bool;
+    collisionObject: boolean;
+    permitSleep: boolean;
+    sweepFrozen: boolean;
+    active: boolean;
     //contactCallbacksMask: number;
-    //addedToContactCallbacks: bool;
+    //addedToContactCallbacks: boolean;
 
     contactCallbacks: WebGLPhysicsContactCallbacks;
 
@@ -3055,7 +3052,7 @@ class WebGLPhysicsCollisionObject implements PhysicsCollisionObject
     mask: number;   // getter for _private.mask
     friction: number; // getter for _private.friction
     restitution: number; // getter for _private.restitution
-    kinematic: bool; // getter for _private.kinematic
+    kinematic: boolean; // getter for _private.kinematic
     userData: any;
 
     inverseInertia: Float32Array;
@@ -3066,7 +3063,7 @@ class WebGLPhysicsCollisionObject implements PhysicsCollisionObject
 
     contactCallbacks: WebGLPhysicsContactCallbacks;
 
-    sweepFrozen: bool;
+    sweepFrozen: boolean;
 
     _private: WebGLPhysicsPrivateBody;
     _public: any;  // TODO: what's this.  Seems to be refered to.
@@ -3262,9 +3259,9 @@ class WebGLPhysicsCollisionObject implements PhysicsCollisionObject
 class WebGLPhysicsContactCallbacks
 {
     mask     : number;
-    added    : bool;
-    deferred : bool;
-    trigger  : bool;
+    added    : boolean;
+    deferred : boolean;
+    trigger  : boolean;
 
     onPreSolveContact: { (objectA: WebGLPhysicsCollisionObject,
                           objectB: WebGLPhysicsCollisionObject,
@@ -3315,14 +3312,14 @@ class WebGLPhysicsRigidBody implements PhysicsRigidBody
     mask: number;   // getter for _private.mask
     friction: number; // getter for _private.friction
     restitution: number; // getter for _private.restitution
-    kinematic: bool; // getter for _private.kinematic
+    kinematic: boolean; // getter for _private.kinematic
 
     // From WebGLPhysicsRigidBody
     linearVelocity  : any; // v3
     angularVelocity : any; // v3
     linearDamping   : number;
     angularDamping  : number;
-    active          : bool;
+    active          : boolean;
     mass            : number;
     inertia         : any; // v3
 
@@ -3646,7 +3643,7 @@ class WebGLPhysicsConstraint implements PhysicsConstraint
 
     _private   : any;
 
-    preStep(/* timeStep */)
+    preStep(timeStepRatio, timeStep)
     {
     }
 
@@ -4174,9 +4171,9 @@ class WebGLPhysicsCharacter implements PhysicsCharacter
 
     velocity      : any; // v3
     position      : any; // v3
-    onGround      : bool;
-    crouch        : bool;
-    dead          : bool;
+    onGround      : boolean;
+    crouch        : boolean;
+    dead          : boolean;
     maxJumpHeight : number;
     userData      : any;
 
@@ -4451,8 +4448,8 @@ class WebGLPhysicsPrivateCharacter
 {
     static version = 1;
 
-    crouch    : bool;
-    dead      : bool;
+    crouch    : boolean;
+    dead      : boolean;
     start     : any; // m43
     end       : any;   // m43
     rigidBody : WebGLPhysicsRigidBody;
@@ -4850,7 +4847,7 @@ class WebGLGJKContactSolver
         return true;
     }
 
-    closestPointTriangle(a, b, c, coords, computeDistance?: bool)
+    closestPointTriangle(a, b, c, coords, computeDistance?: boolean)
     {
         var simplex = this.simplex;
 
@@ -5884,10 +5881,11 @@ class WebGLPhysicsPublicContact
     localPointOnA  : any;  // v3 - getter
     localPointOnB  : any;  // v3 - getter
     worldNormalOnB : any; // v3 - getter
-    added          : bool;
+    added          : boolean;
     distance       : number;
 
-    private _private: any; // TODO: who sets this?
+    _private: any; // TODO: can this stuff just be turned into private
+                   // members?
 
     constructor()
     {
@@ -6064,10 +6062,10 @@ class WebGLPhysicsArbiter
     restitution: number;
     contacts: WebGLPhysicsContact[];
     activeContacts: WebGLPhysicsPublicContact[];
-    active: bool;
-    skipDiscreteCollisions: bool;
+    active: boolean;
+    skipDiscreteCollisions: boolean;
     contactFlags: number;
-    trigger: bool;
+    trigger: boolean;
 
     constructor()
     {
@@ -6578,7 +6576,9 @@ class WebGLPhysicsArbiter
                 continue;
             }
 
-            activeContacts[activeContacts.length] = data;
+            // TODO: remove this cast and fix the type error
+
+            activeContacts[activeContacts.length] = <WebGLPhysicsPublicContact><any>data;
 
             // cacheing friction impulses between steps
             // caused them to fight eachother instead of stabalising at 0.
@@ -7118,7 +7118,7 @@ class WebGLPhysicsIsland
     bodies: WebGLPhysicsRigidBody[];
     constraints: WebGLPhysicsConstraint[];
     wakeTimeStamp: number;
-    active: bool;
+    active: boolean;
 
     constructor()
     {
@@ -7283,7 +7283,8 @@ class WebGLPhysicsTriangleShape
 
         // Ensure reference is null'ed so that an object pooled Triangle Shape
         // cannot prevent the TriangleArray from being GC'ed.
-        this.triangleArray = null;
+
+        triangle.triangleArray = null;
     }
 }
 
@@ -7306,9 +7307,9 @@ class WebGLPhysicsTOIEvent
     axis     : any; // v3
     distance : number;
     toi      : number;
-    frozenA  : bool;
-    frozenB  : bool;
-    concave  : bool;
+    frozenA  : boolean;
+    frozenB  : boolean;
+    concave  : boolean;
 
     constructor()
     {
@@ -7629,7 +7630,7 @@ class WebGLPrivatePhysicsWorld
     fixedTimeStep                  : number;
     variableMinStep                : number;
     variableMaxStep                : number;
-    variableStep                   : bool;
+    variableStep                   : boolean;
     maxGiveUpTimeStep              : number;
     staticSpatialMap               : AABBTree;
     dynamicSpatialMap              : AABBTree;
@@ -7642,7 +7643,7 @@ class WebGLPrivatePhysicsWorld
     planeSA                        : any; // v3
     planeSB                        : any; // v3
 
-    midStep: bool;
+    midStep: boolean;
 
     narrowTriangle: WebGLPhysicsTriangleShape;
     narrowCache: WebGLPhysicsNarrowCache;
@@ -9957,7 +9958,7 @@ class WebGLPrivatePhysicsWorld
     // undefined, then a callback of function (x) { return true; } is
     // implied.
     //
-    // TODO: add type of callback?  { (rayHit: RayHit): bool; }; ?
+    // TODO: add type of callback?  { (rayHit: RayHit): boolean; }; ?
     convexSweepTest(params, callback?)
     {
         //
@@ -10169,7 +10170,8 @@ class WebGLPrivatePhysicsWorld
             objects[i] = undefined;
 
             /*jshint bitwise: false*/
-            var actual_object = object._public;
+            // TODO: remove cast
+            var actual_object = (<any>object)._public;
             if (actual_object === exclude || object.shape === shape ||
                (object.mask & group) === 0 || (object.group & mask) === 0)
             {
@@ -10181,9 +10183,11 @@ class WebGLPrivatePhysicsWorld
             var collisionShape = object.shape;
             if (collisionShape.type === "TRIANGLE_MESH")
             {
-                var triangleArray = collisionShape.triangleArray;
+                // TODO: remove cast and fix
+                var triangleArray = (<any>collisionShape).triangleArray;
                 triangle.triangleArray = triangleArray;
-                triangle.collisionRadius = collisionShape.collisionRadius;
+                // TODO: remove cast and fix
+                triangle.collisionRadius = (<any>collisionShape).collisionRadius;
 
                 var numTriangles;
                 if (triangleArray.spatialMap)
@@ -10256,7 +10260,8 @@ class WebGLPrivatePhysicsWorld
                 result = staticSweep(shape, transform2, delta, collisionShape, object.transform, upperBound);
                 if (result)
                 {
-                    if (object.collisionObject)
+                    // TODO: remove cast and fix
+                    if ((<any>object).collisionObject)
                     {
                         result.collisionObject = actual_object;
                         result.body = null;

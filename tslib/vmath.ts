@@ -3,9 +3,6 @@
 /*global TurbulenzEngine: false*/
 /*global debug: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-
 //
 // Vector math library
 //

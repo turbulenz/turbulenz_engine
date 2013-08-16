@@ -3,11 +3,6 @@
 /*global Observer: false*/
 /*global TurbulenzEngine: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-/// <reference path="requesthandler.ts" />
-/// <reference path="observer.ts" />
-
 "use strict";
 
 interface SoundManagerErrorCallback { (msg?: string): void; };
@@ -31,7 +26,7 @@ class SoundManager
     // method notation for all of these overridden methods, but TSC
     // forces us to give an implementation.
 
-    load                : { (path: string, uncompress?: bool,
+    load                : { (path: string, uncompress?: boolean,
                              onSoundLoaded? : SoundManagerOnSoundLoadedFn)
                             : void; };
     map                 : { (dst: string, src: string): void; };
@@ -46,8 +41,8 @@ class SoundManager
     reloadAll           : { (): void; };
     getAll              : { (): any; };
     getNumPendingSounds : { (): number; };
-    isSoundLoaded       : { (path: string): bool; };
-    isSoundMissing      : { (path: string): bool; };
+    isSoundLoaded       : { (path: string): boolean; };
+    isSoundMissing      : { (path: string): boolean; };
     setPathRemapping    : { (prm: any, assetUrl: string): void; };
     destroy             : { (): void; };
 
@@ -148,7 +143,7 @@ class SoundManager
            @name load
 
            @param {string} path Path to the sound file
-           @param {bool} uncompress Uncompress the sound for faster playback
+           @param {boolean} uncompress Uncompress the sound for faster playback
            @param {function()} onSoundLoaded function called once the sound has loaded
 
            @return {Sound} object, returns the default sound if the file at given path is not yet loaded

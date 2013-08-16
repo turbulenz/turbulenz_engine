@@ -4,8 +4,6 @@
 /*global Uint8Array*/
 /*global window*/
 
-/// <reference path="sounddevice.ts" />
-
 "use strict";
 
 // Some old browsers had a broken implementation of ArrayBuffer
@@ -56,9 +54,9 @@ class SoundTARLoader
     static version = 1;
 
     sd: WebGLSoundDevice;
-    uncompress: bool;
+    uncompress: boolean;
     onsoundload: { (sound: WebGLSound): void; };
-    onload: { (result: bool, status: number): void; };
+    onload: { (result: boolean, status: number): void; };
     onerror: { (status: number): void; };
     soundsLoading: number;
     src: string;

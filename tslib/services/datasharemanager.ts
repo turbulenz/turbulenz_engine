@@ -5,8 +5,6 @@
 /*global TurbulenzBridge: false*/
 /*global debug: false*/
 
-/// <reference path="turbulenzservices.ts" />
-
 interface DataShareManagerCreateDataShareCB
 {
     (datashare: DataShare): void;
@@ -20,7 +18,7 @@ interface DataShareManagerErrorCB
 interface DataShareManagerFindDataSharesCB
 {
     user?: string;
-    friendsOnly?: bool;
+    friendsOnly?: boolean;
     callback: {
         (dataShares: DataShare[]): void;
     };
@@ -29,7 +27,7 @@ interface DataShareManagerFindDataSharesCB
 
 interface DataShareJoinCB
 {
-    (success: bool): void;
+    (success: boolean): void;
 };
 
 interface DataShareGetCBData
@@ -61,7 +59,7 @@ interface DataShareCompareAndSetParams
     value: string;
     access?: number;
     callback?: {
-        (wasSet: bool, reason?: string): void; // reason - either 'changed' or 'read_only'
+        (wasSet: boolean, reason?: string): void; // reason - either 'changed' or 'read_only'
     };
     errorCallback?: DataShareManagerErrorCB;
 };
@@ -72,7 +70,7 @@ interface DataShareCreateParams
     created: number;
     owner: string;
     users: string[];
-    joinable: bool;
+    joinable: boolean;
 };
 
 //
@@ -106,7 +104,7 @@ class DataShare
     created: number;
     owner: string;
     users: string[];
-    joinable: bool;
+    joinable: boolean;
 
     validateKey(key: string): void
     {

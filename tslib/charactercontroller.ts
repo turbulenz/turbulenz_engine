@@ -2,9 +2,6 @@
 /*global TurbulenzEngine:false*/
 /*global Profile:false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="utilities.ts" />
-
 //
 // CharacterController
 //
@@ -49,12 +46,12 @@ class CharacterController
     maxStepHeight                : number;
     maxJumpHeight                : number;
 
-    jump                         : bool;
-    jumped                       : bool;
-    crouch                       : bool;
-    onGround                     : bool;
-    dead                         : bool;
-    god                          : bool;
+    jump                         : boolean;
+    jumped                       : boolean;
+    crouch                       : boolean;
+    onGround                     : boolean;
+    dead                         : boolean;
+    god                          : boolean;
 
     walkDirection                : any; // v3
 

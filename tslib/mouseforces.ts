@@ -1,8 +1,5 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="camera.ts" />
-
 //
 // MouseForces
 //
@@ -29,12 +26,12 @@ class MouseForces
     Y: number;
     Z: number;
 
-    grabBody: bool;
+    grabBody: boolean;
 
-    onmousewheel: { (delta: number): bool; };
-    onmousemove: { (deltaX: number, deltaY: number): bool; };
-    onmousedown: { (/* button, x, y */): bool; };
-    onmouseup: { (/* button, x, y */): bool; };
+    onmousewheel: { (delta: number): boolean; };
+    onmousemove: { (deltaX: number, deltaY: number): boolean; };
+    onmousedown: { (/* button, x, y */): boolean; };
+    onmouseup: { (/* button, x, y */): boolean; };
 
     generatePickRay(cameraTransform,
                     viewWindowX, viewWindowY,

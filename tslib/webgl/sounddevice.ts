@@ -6,16 +6,11 @@
 /*global window: false*/
 /*global Uint8Array: false*/
 
-/// <reference path="../vmath.ts" />
-
-/// <reference path="turbulenzengine.ts" />
-/// <reference path="soundtarloader.ts" />
-
 "use strict";
 
 interface WebGLSoundDeviceSoundCheckCall
 {
-    (): bool;
+    (): boolean;
 };
 
 interface WebGLSoundDeviceSourceMap
@@ -36,7 +31,7 @@ class WebGLSound implements Sound
     channels     : number;
     bitrate      : number;
     length       : number;
-    compressed   : bool;
+    compressed   : boolean;
 
     // WebGLSound
     audioContext : any; // TODO
@@ -469,11 +464,11 @@ class WebGLSoundSource implements SoundSource
     minDistance : number;
     maxDistance : number;
     rollOff     : number;
-    relative    : bool;
-    looping     : bool;
+    relative    : boolean;
+    looping     : boolean;
     pitch       : number;
-    playing     : bool;
-    paused      : bool;
+    playing     : boolean;
+    paused      : boolean;
     tell        : number;
 
     // WebGLSoundSource
@@ -1388,9 +1383,9 @@ class WebGLSoundSource implements SoundSource
 
 interface WebGLSoundDeviceExtensions
 {
-    ogg: bool;
-    mp3: bool;
-    wav: bool;
+    ogg: boolean;
+    mp3: boolean;
+    wav: boolean;
 }
 
 //
@@ -1421,12 +1416,12 @@ class WebGLSoundDevice implements SoundDevice
     // WebGLSoundDevice
     audioContext         : any;   //
     gainNode             : any;   //
-    linearDistance       : bool;
+    linearDistance       : boolean;
     loadingSounds        : WebGLSoundDeviceSoundCheckCall[];
     loadingInterval      : number;  // window.setIntervalID id
     playingSources       : WebGLSoundDeviceSourceMap;
     lastSourceID         : number;
-    loopingSupported     : bool;
+    loopingSupported     : boolean;
     supportedExtensions  : WebGLSoundDeviceExtensions;
 
     // Public API
@@ -1515,7 +1510,7 @@ class WebGLSoundDevice implements SoundDevice
         }
     }
 
-    isSupported(name): bool
+    isSupported(name): boolean
     {
         if ("FILEFORMAT_OGG" === name)
         {

@@ -14,20 +14,9 @@
 /*global Uint32Array*/
 /*global Float32Array*/
 
-/// <reference path="geometry.ts" />
-/// <reference path="material.ts" />
-/// <reference path="effectmanager.ts" />
-/// <reference path="aabbtree.ts" />
-/// <reference path="light.ts" />
-/// <reference path="indexbuffermanager.ts" />
-/// <reference path="vertexbuffermanager.ts" />
-/// <reference path="scenenode.ts" />
-/// <reference path="camera.ts" />
-/// <reference path="physicsmanager.ts" />
-
 interface ScenePortal
 {
-    disabled : bool;
+    disabled : boolean;
     area     : SceneArea;
     extents  : any; // Array[6] or Float32Array(6)?
     plane    : any; // v4 or Array
@@ -3156,7 +3145,7 @@ class Scene
     // findOverlappingAreas
     //
     findOverlappingAreas(startAreaIndex: number, extents: any,
-                         avoidDisabled?: bool)
+                         avoidDisabled?: boolean)
     {
         var area, portals, numPortals, n, portal, plane, d0, d1, d2, portalExtents, areaIndex, nextArea;
         var queryCounter = this.getQueryCounter();

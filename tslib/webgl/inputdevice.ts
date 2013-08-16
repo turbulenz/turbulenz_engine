@@ -5,8 +5,6 @@
 /*global TouchEvent: false*/
 /*global TurbulenzEngine: false*/
 
-/// <reference path="touchevent.ts" />
-
 //
 // WebGLInputDevice
 //
@@ -24,11 +22,11 @@ class WebGLInputDevice implements InputDevice
     lastX                        : number;
     lastY                        : number;
 
-    isMouseLocked                : bool;
-    isHovering                   : bool;
-    isWindowFocused              : bool;
-    isCursorHidden               : bool;
-    isOutsideEngine              : bool;
+    isMouseLocked                : boolean;
+    isHovering                   : boolean;
+    isWindowFocused              : boolean;
+    isCursorHidden               : boolean;
+    isOutsideEngine              : boolean;
 
     touches                      : any;
 
@@ -38,10 +36,10 @@ class WebGLInputDevice implements InputDevice
     canvas                       : any;
     previousCursor               : string;
     ignoreNextMouseMoves         : number;
-    ignoreNextBlur               : bool;
+    ignoreNextBlur               : boolean;
 
     // Used to screen out auto-repeats, dictionary from keycode to
-    // bool, true for each key currently pressed down
+    // boolean, true for each key currently pressed down
     pressedKeys                  : any;
 
     keyMap                       : any;
@@ -55,8 +53,8 @@ class WebGLInputDevice implements InputDevice
 
     keyCodeToUnicode             : any;
 
-    private macosx               : bool;
-    private webkit               : bool;
+    private macosx               : boolean;
+    private webkit               : boolean;
 
     private requestBrowserLock   : () => void;
     private requestBrowserUnlock : () => void;
@@ -1297,7 +1295,7 @@ class WebGLInputDevice implements InputDevice
         id.ignoreNextMouseMoves = 0;
         id.ignoreNextBlur = false;
 
-        // Used to screen out auto-repeats, dictionary from keycode to bool,
+        // Used to screen out auto-repeats, dictionary from keycode to boolean,
         // true for each key currently pressed down
         id.pressedKeys = {};
 

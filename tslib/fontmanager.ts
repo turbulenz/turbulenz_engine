@@ -4,11 +4,6 @@
 /*global Observer: false*/
 /*global Float32Array: false*/
 
-/// <reference path="debug.ts" />
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="requesthandler.ts" />
-/// <reference path="observer.ts" />
-
 "use strict";
 
 interface FontDimensions
@@ -29,8 +24,8 @@ class Font
 {
     static version = 1;
 
-    bold: bool;
-    italic: bool;
+    bold: boolean;
+    italic: boolean;
     pageWidth: number;
     pageHeight: number;
     baseline: any; // TODO
@@ -390,8 +385,8 @@ class FontManager
     getAll: { (): { [name: string]: Font; }; };
 
     getNumPendingFonts: { (): number; };
-    isFontLoaded: { (path: string): bool; };
-    isFontMissing: { (path: string): bool; };
+    isFontLoaded: { (path: string): boolean; };
+    isFontMissing: { (path: string): boolean; };
     setPathRemapping: { (prm, assetUrl: string): void; };
     calculateTextDimensions: { (path: string, text: string, scale: number,
                                 spacing: number): FontDimensions; };

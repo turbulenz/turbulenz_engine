@@ -8,9 +8,6 @@ Uint16Array: false
 BoxTree: false
 */
 
-/// <reference path="debug.ts" />
-/// <reference path="boxtree.ts" />
-
 "use strict";
 
 //
@@ -300,26 +297,26 @@ interface Physics2DConstraintParams
     damping?: number;
     maxForce?: number;
     maxError?: number;
-    removeOnBreak?: bool;
-    breakUnderError?: bool;
-    breakUnderForce?: bool;
-    stiff?: bool;
-    ignoreInteractions?: bool;
-    sleeping?: bool;
-    disabled?: bool;
+    removeOnBreak?: boolean;
+    breakUnderError?: boolean;
+    breakUnderForce?: boolean;
+    stiff?: boolean;
+    ignoreInteractions?: boolean;
+    sleeping?: boolean;
+    disabled?: boolean;
     userData?: any;
 }
 class Physics2DConstraint
 {
     type: string;
 
-    _removeOnBreak: bool;
-    _breakUnderError: bool;
-    _breakUnderForce: bool;
-    _stiff: bool;
-    _ignoreInteractions: bool;
-    sleeping: bool;
-    _active: bool;
+    _removeOnBreak: boolean;
+    _breakUnderError: boolean;
+    _breakUnderForce: boolean;
+    _stiff: boolean;
+    _ignoreInteractions: boolean;
+    sleeping: boolean;
+    _active: boolean;
 
     dimension: number;
     _data: any;
@@ -328,15 +325,15 @@ class Physics2DConstraint
     _islandRoot: Physics2DIslandComponent;
     _islandRank: number;
     _island: Physics2DIsland;
-    _isBody: bool;
+    _isBody: boolean;
 
     _wakeTime: number;
-    _woken: bool;
+    _woken: boolean;
 
     _onBreak: Physics2DObjectCallbackFn[];
     _onWake:  Physics2DObjectCallbackFn[];
     _onSleep: Physics2DObjectCallbackFn[];
-    _equal: bool;
+    _equal: boolean;
 
     bodyA: Physics2DRigidBody;
     bodyB: Physics2DRigidBody;
@@ -352,19 +349,19 @@ class Physics2DConstraint
     { debug.abort("abstract method"); }
     _outWorld() : void
     { debug.abort("abstract method"); }
-    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody) : bool
+    _pairExists(b1: Physics2DRigidBody, b2: Physics2DRigidBody) : boolean
     { debug.abort("abstract method"); return false; }
     _wakeConnected() : void
     { debug.abort("abstract method"); }
     _sleepComputation(union: Physics2DDSFUnionFn) : void
     { debug.abort("abstract method"); }
-    _preStep(deltaTime: number) : bool
+    _preStep(deltaTime: number) : boolean
     { debug.abort("abstract method"); return false; }
     _warmStart() : void
     { debug.abort("abstract method"); }
-    _iterateVel() : bool
+    _iterateVel() : boolean
     { debug.abort("abstract method"); return false; }
-    _iteratePos() : bool
+    _iteratePos() : boolean
     { debug.abort("abstract method"); return false; }
 
     // DebugDraw
@@ -447,7 +444,7 @@ class Physics2DConstraint
 
     // ===============================================
 
-    addEventListener(eventType: string, callback: Physics2DObjectCallbackFn): bool
+    addEventListener(eventType: string, callback: Physics2DObjectCallbackFn): boolean
     {
         var events = (eventType === 'wake'  ? this._onWake  :
                       eventType === 'sleep' ? this._onSleep :
@@ -472,7 +469,7 @@ class Physics2DConstraint
         return true;
     }
 
-    removeEventListener(eventType: string, callback: Physics2DObjectCallbackFn): bool
+    removeEventListener(eventType: string, callback: Physics2DObjectCallbackFn): boolean
     {
         var events = (eventType === 'wake'  ? this._onWake  :
                       eventType === 'sleep' ? this._onSleep :
@@ -500,7 +497,7 @@ class Physics2DConstraint
 
     // ===============================================
 
-    wake(automated?: bool): void
+    wake(automated?: boolean): void
     {
         if (!this.world)
         {
@@ -726,7 +723,7 @@ class Physics2DConstraint
     // scaling effective mass at KMASS
     // scaling bias at BIAS
     // and returning true if constraint was broken.
-    soft_params(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: bool): bool
+    soft_params(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): bool
     {
         var bias = data[BIAS];
         var bsq = (bias * bias);
@@ -754,7 +751,7 @@ class Physics2DConstraint
         data[BIAS] = bias;
         return false;
     }
-    soft_params2(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: bool): bool
+    soft_params2(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): bool
     {
         var biasX = data[BIAS];
         var biasY = data[BIAS + 1];
@@ -788,7 +785,7 @@ class Physics2DConstraint
         data[BIAS + 1] = biasY;
         return false;
     }
-    soft_params3(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: bool): bool
+    soft_params3(data: any /*floatArray*/, KMASS: number, GAMMA: number, BIAS: number, deltaTime: number, breakUnderError: boolean): bool
     {
         var biasX = data[BIAS];
         var biasY = data[BIAS + 1];
@@ -1179,7 +1176,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
     _posClamp: { (data: any /*floatArray*/, index: number): void; };
     _velClamp: { (data: any /*floatArray*/, index: number): void; };
     _jacobian: { (data: any /*floatArray*/, index: number): void; };
-    _velocityOnly: bool;
+    _velocityOnly: boolean;
 
     // ===============================================
 
@@ -1582,7 +1579,7 @@ class Physics2DCustomConstraint extends Physics2DConstraint
         return dst;
     }
 
-    _applyImpulse(J: number, position?: bool)
+    _applyImpulse(J: number, position?: boolean)
     {
         var data = this._data;
         var JAC = this._JACOBIAN;
@@ -1855,7 +1852,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
     // Our own properties
     bodyC: Physics2DRigidBody;
     bodyD: Physics2DRigidBody;
-    _slack: bool;
+    _slack: boolean;
 
     // ===============================================
 
@@ -3365,7 +3362,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
     dimension = 1;
 
     // Ours
-    _slack: bool;
+    _slack: boolean;
 
     // ===============================================
 
@@ -3826,7 +3823,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
                      colSA, colSB): void; };
 
     // Ours
-    _slack: bool;
+    _slack: boolean;
 
     // ===============================================
 
@@ -4183,7 +4180,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     dimension = 3;
 
     // Ours
-    _slack: bool;
+    _slack: boolean;
 
     // ===============================================
 
@@ -4975,7 +4972,7 @@ interface Physics2DShapeCallbackStore
     callback: Physics2DShapeCallbackFn;
     mask: number;
     type: number;
-    deterministic: bool;
+    deterministic: boolean;
 };
 
 class Physics2DShape
@@ -4984,7 +4981,7 @@ class Physics2DShape
 
     body: Physics2DRigidBody;
     type: string;
-    sensor: bool;
+    sensor: boolean;
     arbiters: Physics2DArbiter[];
     userData: any;
     id: number;
@@ -5019,12 +5016,12 @@ class Physics2DShape
     // {
     //     debug.abort("abstract method"); return 0;
     // }
-    translate(translation, skip: bool): void
+    translate(translation, skip: boolean): void
     {
         debug.abort("abstract method");
     }
     _update(posX: number, posY: number, cos: number, sin: number,
-            skipAABB?: bool): void
+            skipAABB?: boolean): void
     {
         debug.abort("abstract method");
     }
@@ -5156,7 +5153,7 @@ class Physics2DShape
         return -1;
     }
 
-    addEventListener(eventType: string, callback: Physics2DShapeCallbackFn, callbackMask?: number, deterministic?: bool): bool
+    addEventListener(eventType: string, callback: Physics2DShapeCallbackFn, callbackMask?: number, deterministic?: boolean): bool
     {
         var events, type;
         if (eventType === 'preSolve')
@@ -5386,7 +5383,7 @@ class Physics2DCircle extends Physics2DShape
         }
     }
 
-    translate(translation: any /*v2*/, skip?: bool): void
+    translate(translation: any /*v2*/, skip?: boolean): void
     {
         var body = this.body;
         if (!skip && body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5466,7 +5463,7 @@ class Physics2DCircle extends Physics2DShape
 
     // ==============================================================
 
-    _update(posX: number, posY: number, cos: number, sin: number, skipAABB?: bool): void
+    _update(posX: number, posY: number, cos: number, sin: number, skipAABB?: boolean): void
     {
         var data = this._data;
         var originX = data[(/*CIRCLE_LOCAL*/7)];
@@ -5744,7 +5741,7 @@ class Physics2DPolygon extends Physics2DShape
         }
     }
 
-    translate(translation: any /*v2*/, skip?: bool): void
+    translate(translation: any /*v2*/, skip?: boolean): void
     {
         var body = this.body;
         if (!skip && body && body.world && (body._type === (/*TYPE_STATIC*/2) || body.world._midStep))
@@ -5909,7 +5906,7 @@ class Physics2DPolygon extends Physics2DShape
 
     // ===========================================================================
 
-    _update(posX: number, posY: number, cos: number, sin: number, skipAABB?: bool): void
+    _update(posX: number, posY: number, cos: number, sin: number, skipAABB?: boolean): void
     {
         var data = this._data;
         var limit = data.length;
@@ -6107,23 +6104,23 @@ class Physics2DRigidBody
     constraints: Physics2DConstraint[];
     world: Physics2DWorld;
 
-    _customMass: bool;
-    _customInertia: bool;
-    sleeping: bool;
-    bullet: bool;
-    _bullet: bool;
+    _customMass: boolean;
+    _customInertia: boolean;
+    sleeping: boolean;
+    bullet: boolean;
+    _bullet: boolean;
 
-    _sweepFrozen: bool;
-    _deferred: bool;
+    _sweepFrozen: boolean;
+    _deferred: boolean;
 
     _island: Physics2DIsland;
     _islandRank: number;
     _islandRoot: Physics2DIslandComponent;
 
-    _isBody: bool;
+    _isBody: boolean;
     _wakeTime: number;
-    _woken: bool;
-    _invalidated: bool;
+    _woken: boolean;
+    _invalidated: boolean;
     userData: any;
 
     _onWake: Physics2DObjectCallbackFn[];
@@ -6711,7 +6708,7 @@ class Physics2DRigidBody
 
     // ===============================================================================
 
-    wake(automated?: bool): void
+    wake(automated?: boolean): void
     {
         if (!this.world)
         {
@@ -7299,15 +7296,15 @@ interface Physics2DDSFUnionFn
 //
 interface Physics2DIslandComponent
 {
-    sleeping: bool;
+    sleeping: boolean;
     _wakeTime: number;
-    _woken: bool;
+    _woken: boolean;
 
     _island: Physics2DIsland;
     _islandRoot: Physics2DIslandComponent;
     _islandRank: number;
 
-    _isBody: bool;
+    _isBody: boolean;
 
     _onWake:  Physics2DObjectCallbackFn[];
     _onSleep: Physics2DObjectCallbackFn[];
@@ -7320,7 +7317,7 @@ interface Physics2DIslandComponent
 class Physics2DIsland
 {
     components: Physics2DIslandComponent[];
-    sleeping: bool;
+    sleeping: boolean;
     wakeTime: number;
     next: Physics2DIsland;
 
@@ -7378,13 +7375,13 @@ class Physics2DTOIEvent
     next: Physics2DTOIEvent;
     shapeA: Physics2DShape;
     shapeB: Physics2DShape;
-    frozenA: bool;
-    frozenB: bool;
+    frozenA: boolean;
+    frozenB: boolean;
     arbiter: Physics2DArbiter;
-    failed: bool;
-    slipped: bool;
-    staticType: bool;
-    kinematic: bool;
+    failed: boolean;
+    slipped: boolean;
+    staticType: boolean;
+    kinematic: boolean;
     _data: any; // Physics2DDevice.prototype.floatArray((/*TOI_DATA_SIZE*/7));
 
     constructor()
@@ -7437,7 +7434,7 @@ class Physics2DBoxTreeBroadphaseHandle
 {
     boxTreeIndex: number;
     data: any; //
-    isStatic: bool;
+    isStatic: boolean;
 
     constructor()
     {
@@ -7497,7 +7494,7 @@ class Physics2DBoxTreeBroadphase
         }
     }
 
-    insert(data: any, box: any /*v4*/, isStatic: bool): Physics2DBoxTreeBroadphaseHandle
+    insert(data: any, box: any /*v4*/, isStatic: boolean): Physics2DBoxTreeBroadphaseHandle
     {
         var handle = Physics2DBoxTreeBroadphaseHandle.allocate();
         handle.data = data;
@@ -7515,7 +7512,7 @@ class Physics2DBoxTreeBroadphase
         return handle;
     }
 
-    update(handle: Physics2DBoxTreeBroadphaseHandle, box: any /*v4*/, isStatic?: bool): void
+    update(handle: Physics2DBoxTreeBroadphaseHandle, box: any /*v4*/, isStatic?: boolean): void
     {
         if (isStatic !== undefined &&
             handle.isStatic !== isStatic)
@@ -7645,7 +7642,7 @@ class Physics2DSweepAndPruneHandle
     _aabb: any; // Physics2DDevice.prototype.floatArray(4);
 
     data: any; //
-    isStatic: bool;
+    isStatic: boolean;
 
     constructor()
     {
@@ -7934,12 +7931,12 @@ class Physics2DContact
     static version = 1;
 
     _data: any; // Physics2DDevice.prototype.floatArray((/*CON_DATA_SIZE*/17));
-    fresh: bool;
+    fresh: boolean;
     _hash: number;
     _timeStamp: number;
     _next: Physics2DContact;
-    active: bool;
-    virtual: bool;
+    active: boolean;
+    virtual: boolean;
 
     static pool: Physics2DContact = null;
     static allocate(): Physics2DContact
@@ -8079,16 +8076,16 @@ class Physics2DArbiter
     shapeB: Physics2DShape;
     bodyA: Physics2DRigidBody;
     bodyB: Physics2DRigidBody;
-    sensor: bool;
+    sensor: boolean;
 
     _next: Physics2DArbiter;
 
     // set to true when arbiter is lazily retired to be removed in step()
-    _retired: bool;
+    _retired: boolean;
 
-    _reverse: bool;
-    _lazyRetired: bool;
-    _static: bool;
+    _reverse: boolean;
+    _lazyRetired: boolean;
+    _static: boolean;
     _state: number;
 
     _createStamp: number; // time stamp at which arbiter was created.
@@ -8097,7 +8094,7 @@ class Physics2DArbiter
     _timeStamp: number;   // time stamp set before collision detection so that
                           // injected contacts have correct time set without later
                           // iteration.
-    _createContinuous: bool; // Marks createStamp as having been set during
+    _createContinuous: boolean; // Marks createStamp as having been set during
                              // continuous collisions for callbacks.
     _endGenerated: number; // time stamp at which end event was generated.
                            // This deals with another corner case where
@@ -8105,18 +8102,18 @@ class Physics2DArbiter
                            // needing to generate a begin even for the same pair of
                            // objects (same arbiter) in the same step!.
 
-    _midStep: bool; // Set to true before preSolve events are called to avoid waking bodies.
+    _midStep: boolean; // Set to true before preSolve events are called to avoid waking bodies.
 
-    sleeping: bool;
-    active: bool;
-    _invalidated: bool;
+    sleeping: boolean;
+    active: boolean;
+    _invalidated: boolean;
 
     _data: any; // Physics2DDevice.prototype.floatArray((/*ARB_DATA_SIZE*/24));
     contacts: Physics2DContact[];
 
     _userdef: number; // bit-flags for if user has set an elasticity/friction value.
-    _velocity2Contact: bool;
-    _position2Contact: bool;
+    _velocity2Contact: boolean;
+    _position2Contact: boolean;
     _contact1: Physics2DContact;
     _contact2: Physics2DContact;
     _faceType: number; // FACE_CIRCLE/FACE_1/FACE_2
@@ -8366,7 +8363,7 @@ class Physics2DArbiter
         }
     }
 
-    setAcceptedState(accepted: bool): void
+    setAcceptedState(accepted: boolean): void
     {
         if (this.sensor)
         {
@@ -8384,7 +8381,7 @@ class Physics2DArbiter
         this._invalidate(true);
     }
 
-    setPersistentState(persistent: bool): void
+    setPersistentState(persistent: boolean): void
     {
         if (this.sensor)
         {
@@ -8472,7 +8469,7 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _invalidate(dontSkip?: bool): void
+    _invalidate(dontSkip?: boolean): void
     {
         this._invalidated = true;
         if (dontSkip && !this._midStep)
@@ -8539,7 +8536,7 @@ class Physics2DArbiter
     // =====================================================================
 
     _injectContact(px: number, py: number, nx: number, ny: number,
-            dist: number, hash: number, virtual: bool): Physics2DContact
+            dist: number, hash: number, virtual: boolean): Physics2DContact
     {
         var contact;
         var contacts = this.contacts;
@@ -8661,7 +8658,7 @@ class Physics2DArbiter
 
     // =====================================================================
 
-    _preStep(deltaTime: number, timeStamp: number, continuous?: bool): bool
+    _preStep(deltaTime: number, timeStamp: number, continuous?: boolean): bool
     {
         if (!this._cleanContacts(timeStamp))
         {
@@ -9541,7 +9538,7 @@ interface Physics2DRay
 
 interface Physics2DCastCallback
 {
-    (userThis: any, ray: Physics2DRay, result: Physics2DCastResult): bool;
+    (userThis: any, ray: Physics2DRay, result: Physics2DCastResult): boolean;
 }
 
 interface Physics2DRayCast
@@ -9552,7 +9549,7 @@ interface Physics2DRayCast
     userCallback: Physics2DCastCallback;
     userThis: any;
     ray: Physics2DRay;
-    noInner: bool;
+    noInner: boolean;
     normal: any; // floatArray
     sample(handle, any): void;
 }
@@ -9580,7 +9577,7 @@ interface Physics2DConvexCast
 interface Physics2DBroadphaseHandle
 {
     data: any;
-    isStatic: bool;
+    isStatic: boolean;
 };
 interface Physics2DBroadphaseSampleFn
 {
@@ -9590,7 +9587,7 @@ interface Physics2DBroadphase
 {
     sample(rectangle, lambda, thisObject): void;
     insert(data, aabb, isStatic): Physics2DBroadphaseHandle;
-    update(handle, aabb, isStatic?: bool): void;
+    update(handle, aabb, isStatic?: boolean): void;
     remove(handle): void;
     clear(callback, thisObject): void;
     validate(): void;
@@ -9629,7 +9626,7 @@ class Physics2DWorld
     _deferredWake: Physics2DRigidBody[];
     _eventTime: number;
     _callbacks: Physics2DCallback[];
-    _midStep: bool;
+    _midStep: boolean;
     _deltaTime: number;
     _gravityX: number;
     _gravityY: number;
@@ -9696,7 +9693,7 @@ class Physics2DWorld
     // precon: body was woken before calling this method.
     //         therefore all arbiters are in the world as
     //         non-sleeping.
-    _removeShape(shape: Physics2DShape, noCallbacks?: bool): void
+    _removeShape(shape: Physics2DShape, noCallbacks?: boolean): void
     {
         var body = shape.body;
         this.broadphase.remove(shape._bphaseHandle);
@@ -9839,7 +9836,7 @@ class Physics2DWorld
         return true;
     }
 
-    removeRigidBody(body: Physics2DRigidBody, noCallbacks?: bool): bool
+    removeRigidBody(body: Physics2DRigidBody, noCallbacks?: boolean): bool
     {
         if (body.world !== this)
         {
@@ -10037,7 +10034,7 @@ class Physics2DWorld
 
     // =====================================================================
 
-    rayCast(ray: Physics2DRay, noInnerSurfaces: bool, customCallback,
+    rayCast(ray: Physics2DRay, noInnerSurfaces: boolean, customCallback,
             thisObject): Physics2DCastResult
     {
         var origin = ray.origin;
@@ -10208,7 +10205,7 @@ class Physics2DWorld
         this._doDeferredWake(false);
     }
 
-    _doDeferredWake(continuous: bool): void
+    _doDeferredWake(continuous: boolean): void
     {
         // Waking of bodies by collision must be deferred,
         // Broadphase must not be modified during 'perform' call.
@@ -10269,7 +10266,7 @@ class Physics2DWorld
     }
 
     _discreteNarrowPhase(handleA: Physics2DBroadphaseHandle, handleB: Physics2DBroadphaseHandle,
-            continuous: bool): Physics2DArbiter
+            continuous: boolean): Physics2DArbiter
     {
         var s1 = handleA.data;
         var s2 = handleB.data;
@@ -11143,7 +11140,7 @@ class Physics2DWorld
     }
 
     // Used in continuous collisions, only want to pre-step a single arbiter.
-    _preStepArbiter(arb: Physics2DArbiter, deltaTime: number, progressEvents?: bool): void
+    _preStepArbiter(arb: Physics2DArbiter, deltaTime: number, progressEvents?: boolean): void
     {
         var timeStamp = this.timeStamp;
 
@@ -11745,7 +11742,7 @@ class Physics2DWorld
         }
     }
 
-    _wakeConstraint(constraint: Physics2DConstraint, noCallback?: bool): void
+    _wakeConstraint(constraint: Physics2DConstraint, noCallback?: boolean): void
     {
         if (constraint.world !== this)
         {
@@ -11776,7 +11773,7 @@ class Physics2DWorld
         }
     }
 
-    _wakeBody(body: Physics2DRigidBody, noCallback?: bool, continuousCallbacks?: bool): void
+    _wakeBody(body: Physics2DRigidBody, noCallback?: boolean, continuousCallbacks?: boolean): void
     {
         if (body.world !== this)
         {
@@ -11836,7 +11833,7 @@ class Physics2DWorld
         }
     }
 
-    _wakeArbiter(arb: Physics2DArbiter, continuousCallbacks?: bool): void
+    _wakeArbiter(arb: Physics2DArbiter, continuousCallbacks?: boolean): void
     {
         arb.sleeping = false;
 
@@ -11868,7 +11865,7 @@ class Physics2DWorld
         }
     }
 
-    _continuousArbiterPrepare(arb: Physics2DArbiter, deltaTime: number, progressEvents?: bool): void
+    _continuousArbiterPrepare(arb: Physics2DArbiter, deltaTime: number, progressEvents?: boolean): void
     {
         this._preStepArbiter(arb, deltaTime, progressEvents);
         /*jshint bitwise: false*/
@@ -11883,7 +11880,7 @@ class Physics2DWorld
         }
     }
 
-    _wakeArbiters(arbiters: Physics2DArbiter[], skip: bool, continuousCallbacks: bool): void
+    _wakeArbiters(arbiters: Physics2DArbiter[], skip: boolean, continuousCallbacks: boolean): void
     {
         var limit = arbiters.length;
         var i;
@@ -11924,7 +11921,7 @@ class Physics2DWorld
         }
     }
 
-    _wakeIsland(island: Physics2DIsland, noCallbackObject: Physics2DIslandComponent, continuousCallbacks?: bool): void
+    _wakeIsland(island: Physics2DIsland, noCallbackObject: Physics2DIslandComponent, continuousCallbacks?: boolean): void
     {
         var bphase = this.broadphase;
         var bodies = this.liveDynamics;
@@ -12461,7 +12458,7 @@ class Physics2DCollisionUtils
         return this._test(shapeA, shapeB);
     }
 
-    rayTest(shape: Physics2DShape, ray: Physics2DRay, normal: any /*v2*/, ignoreInnerSurfaces: bool): number
+    rayTest(shape: Physics2DShape, ray: Physics2DRay, normal: any /*v2*/, ignoreInnerSurfaces: boolean): number
     {
         shape.body._update();
         return this._rayTest(shape, ray, normal, ignoreInnerSurfaces);
@@ -12696,7 +12693,7 @@ class Physics2DCollisionUtils
     // This is also to disable slipping TOI's and terminate as soon
     // as objects intersect.
     _dynamicSweep(toi: Physics2DTOIEvent, timeStep: number,
-                  negRadius: number, slowSweep?: bool): number
+                  negRadius: number, slowSweep?: boolean): number
     {
         var s1 = toi.shapeA;
         var s2 = toi.shapeB;

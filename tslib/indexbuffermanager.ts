@@ -1,8 +1,5 @@
 // Copyright (c) 2010-2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-
 interface IndexBufferPoolChunk
 {
     baseIndex: number;
@@ -41,7 +38,7 @@ class IndexBufferManager
     indexBuffersPools: IndexBuffersPool[];  //Array keyed-off attribute
     debugCreatedIndexBuffers: number;
     graphicsDevice: GraphicsDevice;
-    dynamicIndexBuffers: bool;
+    dynamicIndexBuffers: boolean;
 
     //
     // bucket
@@ -457,7 +454,7 @@ class IndexBufferManager
     // create
     //
     static create(graphicsDevice: GraphicsDevice,
-                  dynamicIndexBuffers?: bool) : IndexBufferManager
+                  dynamicIndexBuffers?: boolean) : IndexBufferManager
     {
         var manager = new IndexBufferManager();
 

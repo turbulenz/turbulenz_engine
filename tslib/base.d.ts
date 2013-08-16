@@ -77,6 +77,11 @@ interface Window
     webkitAudioContext: any;
 
     opera: boolean;
+
+    webkitRequestAnimationFrame: any;
+    oRequestAnimationFrame: any;
+    mozRequestAnimationFrame: any;
+
 }
 
 interface WebSocket

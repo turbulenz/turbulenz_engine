@@ -870,7 +870,7 @@ class CaptureGraphicsDevice
         return (first << 1); // Bin elements ocupy two slots, multiply by 2
     }
 
-    private _equalFloatArrays(a, b, length) : bool
+    private _equalFloatArrays(a, b, length) : boolean
     {
         var n = 0;
         var threshold = this.precision;
@@ -886,7 +886,7 @@ class CaptureGraphicsDevice
         return true;
     }
 
-    private _equalIntegerArrays(a, b, length) : bool
+    private _equalIntegerArrays(a, b, length) : boolean
     {
         var n = 0;
         do
@@ -2149,7 +2149,7 @@ class CaptureGraphicsDevice
         return framesString;
     }
 
-    private _getDataBinSize(dataBins: {}, integers: bool) : number
+    private _getDataBinSize(dataBins: {}, integers: boolean) : number
     {
         var totalSize = 0;
         var p, dataBin, binLength, n, data;
@@ -2186,7 +2186,7 @@ class CaptureGraphicsDevice
         return totalSize;
     }
 
-    private _getDataBinBuffer(ints: any, offset: number, dataBins: {}, integers: bool) : number
+    private _getDataBinBuffer(ints: any, offset: number, dataBins: {}, integers: boolean) : number
     {
         var p, dataBin, binLength, n, j;
         for (p in dataBins)

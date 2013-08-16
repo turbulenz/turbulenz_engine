@@ -5,8 +5,6 @@
 /*global Utilities*/
 /*global TurbulenzEngine*/
 
-/// <reference path="scene.ts" />
-
 interface SceneMetrics
 {
     numNodes       : number;

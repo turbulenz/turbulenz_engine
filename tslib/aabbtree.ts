@@ -1,8 +1,6 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 /*global Float32Array: false*/
 
-/// <reference path="turbulenz.d.ts" />
-
 interface AABBTreeRayTestResult extends RayHit
 {
     factor: number;
@@ -88,20 +86,20 @@ class AABBTree
 
     nodes:  AABBTreeNode[];
     endNode: number;
-    needsRebuild: bool;
-    needsRebound: bool;
+    needsRebuild: boolean;
+    needsRebound: boolean;
     numAdds: number;
     numUpdates: number;
     numExternalNodes: number;
     startUpdate: number;
     endUpdate: number;
-    highQuality: bool;
-    ignoreY: bool;
+    highQuality: boolean;
+    ignoreY: boolean;
     nodesStack: number[];
 
     arrayConstructor: any;
 
-    constructor(highQuality: bool)
+    constructor(highQuality: boolean)
     {
         this.nodes = [];
         this.endNode = 0;
@@ -146,7 +144,7 @@ class AABBTree
     static rayTest: { (trees, ray: AABBTreeRay,
                        callback): AABBTreeRayTestResult; };
 
-    static create: { (highQuality?: bool): AABBTree; };
+    static create: { (highQuality?: boolean): AABBTree; };
 };
 
 AABBTree.prototype.add = function addFn(externalNode, extents)

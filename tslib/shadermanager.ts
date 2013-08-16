@@ -3,11 +3,6 @@
 /*global Observer: false*/
 /*global TurbulenzEngine: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-/// <reference path="requesthandler.ts" />
-/// <reference path="observer.ts" />
-
 "use strict";
 
 //
@@ -25,8 +20,8 @@ class ShaderManager
     reload: (path: string, callback: { (shader: Shader): void; }) => void;
     reloadAll: () => void;
     getNumPendingShaders: () => number;
-    isShaderLoaded: (path: string) => bool;
-    isShaderMissing: (path: string) => bool;
+    isShaderLoaded: (path: string) => boolean;
+    isShaderMissing: (path: string) => boolean;
     setPathRemapping: (prm, assetUrl) => void;
     setAutomaticParameterResize: (name: string, size: number) => void;
     destroy: () => void;

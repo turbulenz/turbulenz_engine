@@ -4,8 +4,6 @@
 /*global TurbulenzBridge*/
 /*global Utilities*/
 
-/// <reference path="turbulenzservices.ts" />
-
 //
 // API
 //

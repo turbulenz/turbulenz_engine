@@ -5,8 +5,6 @@
 /*global TurbulenzEngine: false*/
 /*global TurbulenzServices: false*/
 
-/// <reference path="turbulenzservices.ts" />
-
 //
 // API
 //
@@ -45,7 +43,7 @@ class GameSession
     requestHandler: RequestHandler;
     service: ServiceRequester;
     status: number;
-    destroyed: bool;
+    destroyed: boolean;
 
     postData: { () : void; };
 

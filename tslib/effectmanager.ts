@@ -1,12 +1,6 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 /*global Utilities: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="shadermanager.ts" />
-/// <reference path="material.ts" />
-/// <reference path="geometry.ts" />
-/// <reference path="utilities.ts" />
-
 "use strict";
 
 //

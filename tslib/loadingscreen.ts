@@ -1,8 +1,5 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="assettracker.ts" />
-
 class LoadingScreen
 {
     static version = 1;

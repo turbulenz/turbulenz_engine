@@ -6,11 +6,6 @@
 // DeferredEffectTypeData
 //
 
-/// <reference path="scene.ts" />
-/// <reference path="shadowmapping.ts" />
-/// <reference path="renderingcommon.ts" />
-/// <reference path="shadermanager.ts" />
-
 interface DeferredEffectTypeData extends EffectPrepareObject
 {
 

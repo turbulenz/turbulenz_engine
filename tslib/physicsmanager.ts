@@ -3,9 +3,6 @@
 /*global Utilities: false */
 /*global SceneNode: false */
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="scenenode.ts" />
-
 // TODO: Does this inherit from some base Node?
 interface PhysicsNode
 {
@@ -14,8 +11,8 @@ interface PhysicsNode
 
     origin?        : any; // v3
     triangleArray? : any; // number[] or Float32Array
-    dynamic?       : bool;
-    kinematic?     : bool;
+    dynamic?       : boolean;
+    kinematic?     : boolean;
 
     worldUpdate?   : any;
 };

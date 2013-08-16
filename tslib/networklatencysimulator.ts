@@ -3,9 +3,6 @@
 /*global TurbulenzEngine: false*/
 /*global Utilities: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="utilities.ts" />
-
 //
 // NetworkLatencyBehaviour
 //	Implement nextMessageDelay() that returns an integer value in ms

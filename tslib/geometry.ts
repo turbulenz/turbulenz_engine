@@ -3,10 +3,6 @@
 /*global TurbulenzEngine: false*/
 /*global Reference: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="material.ts" />
-/// <reference path="animation.ts" />
-
 //
 // Surface
 //
@@ -122,7 +118,7 @@ class GeometryInstance implements Renderable
     sharedMaterial      : Material;
     worldExtentsUpdate  : number;
     worldUpdate         : number;
-    disabled            : bool;
+    disabled            : boolean;
     sorting             : number; // TODO: can't see any ref to this in jslib.  Is it used?
 
     arrayConstructor: any; // array constructor

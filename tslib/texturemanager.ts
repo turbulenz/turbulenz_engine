@@ -4,10 +4,6 @@
 /*global Observer: false*/
 /*global TurbulenzEngine: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="observer.ts" />
-/// <reference path="requesthandler.ts" />
-
 "use strict";
 
 class TextureInstance
@@ -88,7 +84,7 @@ class TextureInstance
 
 interface TextureManagerDelayedTexture
 {
-    nomipmaps: bool;
+    nomipmaps: boolean;
     onload: { (texture: Texture): void; };
 }
 
@@ -108,7 +104,7 @@ class TextureManager
     static version = 1;
 
     textureInstances: { [idx: string]: TextureInstance; };
-    loadingTexture: { [idx: string]: bool; };
+    loadingTexture: { [idx: string]: boolean; };
     loadedTextureObservers: { [idx: string]: Observer; };
     delayedTextures: { [idx: string]: TextureManagerDelayedTexture; };
     numLoadingTextures: number;
@@ -118,7 +114,7 @@ class TextureManager
     loadedArchiveObservers: { [path: string]: Observer; };
     numLoadingArchives: number;
 
-    internalTexture: { [path: string]: bool; };
+    internalTexture: { [path: string]: boolean; };
     pathRemapping: { [path: string]: string; };
     pathPrefix: string;
 
@@ -145,7 +141,7 @@ class TextureManager
       @param {string} name Name of the texture
       @param {Texture} texture Texture
     */
-    add(name, texture, internal?: bool)
+    add(name, texture, internal?: boolean)
     {
         var textureInstance = this.textureInstances[name];
         if (!textureInstance)

@@ -1,9 +1,6 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 /*global TurbulenzEngine: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="scenenode.ts" />
-
 interface Bounds
 {
     center: any;     // v3
@@ -31,12 +28,12 @@ interface ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
 
     // Methods
 
@@ -49,7 +46,7 @@ interface ControllerBaseClass
     updateBounds(): void;
 
     getJointTransform(jointId: number): any; // m43
-    getJointWorldTransform(jointId: number, asMatrix?: bool): any; // m43
+    getJointWorldTransform(jointId: number, asMatrix?: boolean): any; // m43
 };
 
 //
@@ -180,7 +177,7 @@ var Animation =
     function StandardGetJointWorldTransformFn(controller: ControllerBaseClass,
                                               jointId: number,
                                               mathDevice: MathDevice,
-                                              asMatrix?: bool): any
+                                              asMatrix?: boolean): any
     {
         var quatMulTranslate = mathDevice.quatMulTranslate;
         var m43FromRTS = mathDevice.m43FromRTS;
@@ -264,17 +261,17 @@ class InterpolatorController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     rate                 : number;
     currentTime          : number;
-    looping              : bool;
+    looping              : boolean;
 
     currentAnim          : Animation;
     translationEndFrames : Uint32Array;
@@ -790,7 +787,7 @@ class InterpolatorController implements ControllerBaseClass
         }
     }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool): any
+    getJointWorldTransform(jointId: number, asMatrix?: boolean): any
     {
         if (this.dirty)
         {
@@ -916,12 +913,12 @@ class OverloadedNodeController
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     baseController: ControllerBaseClass;
@@ -982,7 +979,7 @@ class OverloadedNodeController
         return this.baseController.getJointTransform(jointId);
     }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         // TODO: check if the jointId is overloaded and return the correct one
         return this.baseController.getJointWorldTransform(jointId, asMatrix);
@@ -1029,12 +1026,12 @@ class ReferenceController
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     referenceSource: ControllerBaseClass;
@@ -1095,12 +1092,12 @@ class TransitionController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     rate: number;
@@ -1109,7 +1106,7 @@ class TransitionController implements ControllerBaseClass
     transitionTime: number;
     transitionLength: number;
 
-    onFinishedTransitionCallback: { (controller: ControllerBaseClass): bool; };
+    onFinishedTransitionCallback: { (controller: ControllerBaseClass): boolean; };
 
     addTime(delta)
     {
@@ -1250,7 +1247,7 @@ class TransitionController implements ControllerBaseClass
         return jointOutput;
     }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         if (this.dirty)
         {
@@ -1336,12 +1333,12 @@ class BlendController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     controllers: ControllerBaseClass[];
@@ -1485,7 +1482,7 @@ class BlendController implements ControllerBaseClass
         return this.output[jointId];
     }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         if (this.dirty)
         {
@@ -1576,16 +1573,16 @@ class MaskController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     controllers: ControllerBaseClass[];
-    masks: { [idx: number]: bool; }[];
+    masks: { [idx: number]: boolean; }[];
 
     addTime(delta)
     {
@@ -1709,7 +1706,7 @@ class MaskController implements ControllerBaseClass
         return this.output[jointId];
     }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         if (this.dirty)
         {
@@ -1872,12 +1869,12 @@ class PoseController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     addTime( delta )
@@ -1956,7 +1953,7 @@ class PoseController implements ControllerBaseClass
         return output[jointId];
     }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         return Animation.standardGetJointWorldTransform(this, jointId, this.mathDevice, asMatrix);
     }
@@ -2032,12 +2029,12 @@ class NodeTransformController
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     ltms: any[];     // m43[]  bone-local to model space?
@@ -2220,7 +2217,7 @@ class NodeTransformController
 
 interface SkinControllerBase
 {
-    dirty: bool;
+    dirty: boolean;
     skeleton: Skeleton;
     inputController: ControllerBaseClass;
 
@@ -2241,12 +2238,12 @@ class SkinController implements SkinControllerBase
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     // SkinControllerBase
@@ -2348,12 +2345,12 @@ class GPUSkinController implements SkinControllerBase
     // renamed
     output: TechniqueParameterBuffer;
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     // SkinControllerBase

@@ -12,9 +12,6 @@ Physics2DLineConstraint: false
 Physics2DPulleyConstraint: false
 */
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="physics2ddevice.ts" />
-
 "use strict";
 
 //
@@ -26,13 +23,13 @@ class Physics2DDebugDraw
 
     private _width: number;
     private _height: number;
-    private _invalidated: bool;
+    private _invalidated: boolean;
 
     private _graphicsDevice: GraphicsDevice;
     private _screenPort: any; // new Physics2DDevice.prototype.floatArray(4);
-    private _screenPortEnabled: bool;
+    private _screenPortEnabled: boolean;
     private _physics2DPort: any; // new Physics2DDevice.prototype.floatArray(4);
-    private _physics2DPortEnabled: bool;
+    private _physics2DPortEnabled: boolean;
 
     physics2DToScreen: number;
     screenToPhysics2D: number;
@@ -48,7 +45,7 @@ class Physics2DDebugDraw
 
     minSpringLength: number;
 
-    showConstraints: bool;
+    showConstraints: boolean;
     constraintAnchorRadius: number;
     constraintSpringRadius: number;
     constraintSpringNumCoils: number;
@@ -72,8 +69,8 @@ class Physics2DDebugDraw
     constraintErrorColorD: any; // v4
     constraintErrorSleepingColorD: any; // v4
 
-    showContacts: bool;
-    showContactImpulses: bool;
+    showContacts: boolean;
+    showContactImpulses: boolean;
     contactRadius: number;
     contactImpulseScale: number;
     dynamicContactColor: any; // v4
@@ -81,11 +78,11 @@ class Physics2DDebugDraw
     normalImpulseColor: any; // v4
     frictionImpulseColor: any; // v4
 
-    showRigidBodies: bool;
-    showColliderShapes: bool;
-    showSensorsShapes: bool;
-    showBodyDetail: bool;
-    showShapeDetail: bool;
+    showRigidBodies: boolean;
+    showColliderShapes: boolean;
+    showSensorsShapes: boolean;
+    showBodyDetail: boolean;
+    showShapeDetail: boolean;
     bodyPositionRadius: number;
     circleOriginRadius: number;
     bodyDetailColor: any; // v4

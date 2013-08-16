@@ -2,10 +2,6 @@
 /*global TurbulenzEngine:false*/
 /*global VMath:false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="requesthandler.ts" />
-/// <reference path="vmath.ts" />
-
 interface LoadParameters
 {
     nodesNamePrefix?: string;
@@ -15,7 +11,7 @@ interface LoadParameters
     nodes: SceneNodeParameters[];
     parentNode: any; // TODO: SceneNode / SceneNodeParameters;
     requestHandler?: RequestHandler;
-    isReference: bool;
+    isReference: boolean;
 
     data: any; // TODO: SceneData?
 
@@ -23,7 +19,7 @@ interface LoadParameters
 
 interface SceneParameters extends LoadParameters
 {
-    append: bool;
+    append: boolean;
     skin: any; // TODO:
 };
 
@@ -36,7 +32,7 @@ interface SceneNodeParameters // extends SceneNode
 {
     reference?: string;
     geometryinstances?: { [name: string]: GeometryInstanceParameters; };
-    inplace: bool;
+    inplace: boolean;
     skin: any; // ?
     nodes: { [name: string]: SceneNodeParameters; };
     matrix: number[];
@@ -52,7 +48,7 @@ class ResourceLoader
     nodesMap             : { [name: string]: SceneNodeParameters; };
     referencesPending    : { [name: string]: any[]; }; // TODO
     numReferencesPending : number;
-    animationsPending    : { [name: string]: bool; };
+    animationsPending    : { [name: string]: boolean; };
     skeletonNames        : { [name: string]: string; };
     data                 : any;
 

@@ -1,8 +1,5 @@
 // Copyright (c) 2011-2012 Turbulenz Limited
 
-/// <reference path="../base.d.ts" />
-/// <reference path="../turbulenz.d.ts" />
-
 "use strict";
 
 //

@@ -3,8 +3,6 @@
 /*global TurbulenzServices: false*/
 /*global MultiPlayerSession: false*/
 
-/// <reference path="multiplayersession.ts" />
-
 //
 // API
 //

@@ -1,7 +1,5 @@
 // Copyright (c) 2009-2011 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-
 //
 // Camera
 //

@@ -4,7 +4,7 @@ class Touch
 {
     force: number;
     identifier: number;
-    isGameTouch: bool;
+    isGameTouch: boolean;
     positionX: number;
     positionY: number;
     radiusX: number;

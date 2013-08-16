@@ -2,8 +2,6 @@
 
 /*global TurbulenzEngine: false*/
 
-/// <reference path="../turbulenz.d.ts" />
-
 //
 // SessionToken
 //

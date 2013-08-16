@@ -1,8 +1,5 @@
 // Copyright (c) 2010-2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-
 interface VertexBuffersBucketChunk
 {
     length: number;
@@ -47,7 +44,7 @@ class VertexBufferManager
     vertexBuffersPools: VertexBuffersPool[];  //Array keyed-off attribute
     debugCreatedVertexBuffers: number;
     graphicsDevice: GraphicsDevice;
-    dynamicVertexBuffers: bool;
+    dynamicVertexBuffers: boolean;
 
     //
     // bucket
@@ -477,7 +474,7 @@ class VertexBufferManager
     // create
     //
     static create(graphicsDevice: GraphicsDevice,
-                  dynamicVertexBuffers?: bool) : VertexBufferManager
+                  dynamicVertexBuffers?: boolean) : VertexBufferManager
     {
         var manager = new VertexBufferManager();
 

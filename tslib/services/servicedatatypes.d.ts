@@ -102,7 +102,7 @@ interface StoreOfferingOutput
 //
 interface StoreOffering extends StoreItem
 {
-    available : bool;
+    available : boolean;
     price     : string;
     output    : StoreOfferingOutput;
 }
@@ -128,7 +128,7 @@ interface StoreOfferingPriceAPI
 //
 interface StoreOfferingAPIResponse extends StoreItem
 {
-    available : bool;
+    available : boolean;
     prices    : StoreOfferingPriceAPI;
     output    : StoreOfferingOutput;
 }

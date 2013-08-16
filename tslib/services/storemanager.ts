@@ -6,10 +6,6 @@
 /*global SessionToken: false*/
 /*global debug: false*/
 
-/// <reference path="turbulenzservices.ts" />
-
-/// <reference path="sessiontoken.ts" />
-
 //
 // UserItem - A record of an Item owned by the user
 //
@@ -68,7 +64,7 @@ class StoreManager
     basketUpdateRequestToken: SessionToken;
     userItemsRequestToken   : SessionToken;
     consumeRequestToken     : SessionToken;
-    ready                   : bool;
+    ready                   : boolean;
     currency                : string;
     offerings               : StoreOfferingList;
     resources               : StoreResourceList;

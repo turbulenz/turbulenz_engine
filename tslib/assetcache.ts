@@ -5,7 +5,7 @@ interface CachedAsset
 {
     cacheHit: number;
     asset: any;
-    isLoading: bool;
+    isLoading: boolean;
 };
 
 interface AssetCacheOnLoadFn { (key: string,

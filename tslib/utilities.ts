@@ -5,13 +5,9 @@
 /*global TurbulenzEngine: false*/
 /*exported MathDeviceConvert*/
 
-/// <reference path="turbulenz.d.ts" />
-
-/// <reference path="observer.ts" />
-
 interface Utilities
 {
-    skipAsserts: bool;
+    skipAsserts: boolean;
     assert: { (test: any, msg?: string): void; };
     beget: { (o: any): any; };
     log: { (... arguments: any[]): void; };
@@ -693,7 +689,7 @@ var Profile =
 interface JSProfiling
 {
     createArray(rootNode: any): any[];
-    sort(array: any[], propertyName: string, descending: bool): void;
+    sort(array: any[], propertyName: string, descending: boolean): void;
 };
 
 var JSProfiling = <JSProfiling>{};

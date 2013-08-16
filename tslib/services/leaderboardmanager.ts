@@ -4,8 +4,6 @@
 /*global TurbulenzBridge*/
 /*global TurbulenzServices*/
 
-/// <reference path="turbulenzservices.ts" />
-
 //
 // API
 //
@@ -27,7 +25,7 @@ class LeaderboardManager
     errorCallbackFn : ServiceErrorCB;
     service         : ServiceRequester;
     requestHandler  : RequestHandler;
-    ready           : bool;
+    ready           : boolean;
     meta            : any;
 
     getOverview(spec, callbackFn, errorCallbackFn)
@@ -440,7 +438,7 @@ interface LeaderboardDataSpec
 {
     type?: string;
     size?: number;
-    friendsOnly?: bool;
+    friendsOnly?: boolean;
     friendsonly?: number;
     score?: number;
     time?: number;
@@ -457,8 +455,8 @@ interface LeaderboardResultsData
     player?: any; // TODO:
     ranking?: any[]; // TODO;
     playerIndex?: number;
-    top?: bool;
-    bottom?: bool;
+    top?: boolean;
+    bottom?: boolean;
 }
 
 class LeaderboardResult
@@ -470,13 +468,13 @@ class LeaderboardResult
     results: any;      // TODO
     viewTop: number;
     viewSize: number;
-    viewLock: bool;
+    viewLock: boolean;
     view: { player;    // TODO
             ranking;   // TODO
             playerIndex: number;
-            top: bool;
-            bottom: bool; };
-    invalidView: bool;
+            top: boolean;
+            bottom: boolean; };
+    invalidView: boolean;
     onSlidingWindowUpdate: any; // TODO
 
     // Prototype:

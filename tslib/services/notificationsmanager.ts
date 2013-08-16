@@ -6,10 +6,6 @@
 /*global SessionToken: false*/
 /*global debug: false*/
 
-/// <reference path="turbulenzservices.ts" />
-/// <reference path="sessiontoken.ts" />
-
-
 interface NotificationMessage
 {
     text: string;
@@ -37,7 +33,7 @@ class NotificationPromise
     __error: NotificationError = null;
 
     __nm: NotificationsManager = null;
-    __toCancel: bool = false;
+    __toCancel: boolean = false;
 
     constructor(nm: NotificationsManager)
     {
@@ -128,7 +124,7 @@ interface SendNotificationParameters
 
     recipient?      : string;
     delay?          : number;
-    noNotification? : bool;
+    noNotification? : boolean;
 }
 
 //
@@ -144,7 +140,7 @@ class NotificationsManager
 
     currentUser             : string;
     keys                    : string[] = [];
-    ready                   : bool;
+    ready                   : boolean;
     userSettings            : any;
     notificationKeys        : any;
     handlers                : any;

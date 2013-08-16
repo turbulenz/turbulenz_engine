@@ -2,8 +2,6 @@
 
 /*global TurbulenzServices: false*/
 
-/// <reference path="turbulenzservices.ts" />
-
 //
 // API
 //

@@ -3,10 +3,6 @@
 /*global Utilities: false*/
 /*global Observer: false*/
 
-/// <reference path="scene.ts" />
-/// <reference path="debug.ts" />
-/// <reference path="animation.ts" />
-
 //
 // Renderable
 //
@@ -32,8 +28,8 @@ interface Renderable
     // Methods
 
     clone(): Renderable;
-    isSkinned(): bool;
-    hasCustomWorldExtents(): bool;
+    isSkinned(): boolean;
+    hasCustomWorldExtents(): boolean;
     addCustomWorldExtents(extents: any);
     setNode(node: SceneNode);
     destroy();
@@ -48,12 +44,12 @@ class SceneNode
 
     name                            : string;
     mathDevice                      : MathDevice;
-    dynamic                         : bool;
-    disabled                        : bool;
+    dynamic                         : boolean;
+    disabled                        : boolean;
 
-    dirtyWorld                      : bool;
-    dirtyWorldExtents               : bool;
-    dirtyLocalExtents               : bool;
+    dirtyWorld                      : boolean;
+    dirtyWorldExtents               : boolean;
+    dirtyLocalExtents               : boolean;
 
     //Counter of number of times modified.
     worldUpdate                     : number;
@@ -68,7 +64,7 @@ class SceneNode
     customLocalExtents              : any; //
 
     worldExtents                    : any; //
-    worldExtentsUpdate              : bool;
+    worldExtentsUpdate              : boolean;
     customWorldExtents              : any; //
     numCustomRenderableWorldExtents : number;
 
@@ -77,7 +73,7 @@ class SceneNode
     camera                          : Camera;
 
     parent                          : SceneNode;
-    notifiedParent                  : bool;
+    notifiedParent                  : boolean;
     scene                           : Scene;
     children                        : SceneNode[];
     childNeedsUpdateCount           : number;
@@ -94,14 +90,14 @@ class SceneNode
 
     // Physics
     physicsNodes                    : PhysicsNode[];
-    kinematic: bool;
+    kinematic: boolean;
 
     // Geometry
     geometryinstances               : { [name: string]: GeometryInstance; };
 
     // // During loading
     // reference: string;
-    // inplace: bool;
+    // inplace: boolean;
 
     arrayConstructor: any; // on prototype
 
@@ -1519,7 +1515,7 @@ class SceneNode
     //
     hasLightInstances(): bool
     {
-        return <bool><any>(this.lightInstances && this.lightInstances.length);
+        return <boolean><any>(this.lightInstances && this.lightInstances.length);
     }
 
     //

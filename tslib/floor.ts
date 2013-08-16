@@ -1,8 +1,5 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="camera.ts" />
-
 class Floor
 {
     static version = 1;

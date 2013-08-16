@@ -3,8 +3,6 @@
 /*global TurbulenzEngine*/
 /*global Observer*/
 
-/// <reference path="utilities.ts" />
-
 interface RequestFn
 {
     (src: string, responseCallback, callContext: RequestHandlerCallContext)
@@ -19,7 +17,7 @@ interface RequestOwner
 interface RequestHandlerResponseFilter
 {
     (callContext: RequestHandlerCallContext, makeRequest: { (): void; },
-     responseAsset: string, status: number): bool;
+     responseAsset: string, status: number): boolean;
 };
 
 interface RequestHandlerCallContext
@@ -37,14 +35,14 @@ class RequestHandler
     notifyTime: number;
     maxRetryTime: number;
 
-    notifiedConnectionLost: bool;
-    connected: bool;
+    notifiedConnectionLost: boolean;
+    connected: boolean;
     reconnectedObserver: Observer;
     reconnectTest: any;
 
     connectionLostTime: number;
 
-    destroyed: bool;
+    destroyed: boolean;
 
     onReconnected: { (reason: number, reconnectTest: any): void; };
     onRequestTimeout: { (reason: number,

@@ -2,10 +2,6 @@
 /*global TurbulenzEngine: false */
 /*global VMath: false */
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="vmath.ts" />
-/// <reference path="material.ts" />
-
 //
 // Light
 //
@@ -16,10 +12,10 @@ class Light
     name                : string;
     color               : any; // v3
 
-    directional         : bool;
-    spot                : bool;
-    ambient             : bool;
-    point               : bool;
+    directional         : boolean;
+    spot                : boolean;
+    ambient             : boolean;
+    point               : boolean;
 
     origin              : any; // v3
     radius              : number;
@@ -30,17 +26,17 @@ class Light
     center              : any; // v3
     halfExtents         : any; // v3
 
-    shadows             : bool;
-    dynamicshadows      : bool;
-    disabled            : bool;
-    dynamic             : bool;
+    shadows             : boolean;
+    dynamicshadows      : boolean;
+    disabled            : boolean;
+    dynamic             : boolean;
 
     material            : Material;
     techniqueParameters : TechniqueParameters;
     sharedMaterial      : Material;
 
-    fog                 : bool;
-    global              : bool;
+    fog                 : boolean;
+    global              : boolean;
 
     target: any; // v3?  TODO: can't see where this is actualy set
 
@@ -260,7 +256,7 @@ class LightInstance
     worldExtentsUpdate : number;
 
     arrayConstructor   : any; //
-    disabled           : bool;
+    disabled           : boolean;
 
 
     //

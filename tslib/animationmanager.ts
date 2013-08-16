@@ -2,9 +2,6 @@
 
 /*global TurbulenzEngine: false*/
 
-/// <reference path="animation.ts" />
-/// <reference path="debug.ts" />
-
 // -----------------------------------------------------------------------------
 
 interface AnimationList

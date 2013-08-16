@@ -1,7 +1,5 @@
 // Copyright (c) 2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-
 interface TextureEffect
 {
     technique   : Technique;

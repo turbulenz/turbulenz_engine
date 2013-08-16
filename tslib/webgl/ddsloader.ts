@@ -5,9 +5,6 @@
 /*global Uint16Array*/
 /*global window*/
 
-/// <reference path="../base.d.ts" />
-/// <reference path="../turbulenz.d.ts" />
-
 "use strict";
 
 //

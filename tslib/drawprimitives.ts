@@ -2,17 +2,14 @@
 
 /*global TurbulenzEngine: false */
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-
 class DrawPrimitives
 {
     static version = 1;
 
     private shaderName: string;
     private techniqueName: string;
-    private isTechnique2D: bool;
-    private isTextured: bool;
+    private isTechnique2D: boolean;
+    private isTextured: boolean;
 
     private device: GraphicsDevice;
     private technique: Technique;

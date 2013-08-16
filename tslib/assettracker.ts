@@ -2,8 +2,6 @@
 
 /*global Utilities: false*/
 
-/// <reference path="utilities.ts" />
-
 class AssetTracker
 {
     static version = 1;
@@ -12,7 +10,7 @@ class AssetTracker
     loadingProgress: number;
     numberAssetsToLoad: number;
     callback: { (): void; };
-    displayLog: bool;
+    displayLog: boolean;
 
     eventOnLoadHandler: { (event): void; }; // TODO: ? who calls this?
 
@@ -78,7 +76,7 @@ class AssetTracker
     }
 
     // Constructor function
-    static create(numberAssetsToLoad: number, displayLog: bool): AssetTracker
+    static create(numberAssetsToLoad: number, displayLog: boolean): AssetTracker
     {
         var f = new AssetTracker();
 

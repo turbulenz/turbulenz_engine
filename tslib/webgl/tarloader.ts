@@ -4,8 +4,6 @@
 /*global Uint8Array*/
 /*global window*/
 
-/// <reference path="graphicsdevice.ts" />
-
 "use strict";
 
 //
@@ -15,9 +13,9 @@ interface TARLoaderParameters
 {
     gd: any;
     src: string;
-    mipmaps: bool;
+    mipmaps: boolean;
     ontextureload: { (Texture): void; };
-    onload: { (success: bool, status: number): void; };
+    onload: { (success: boolean, status: number): void; };
     onerror: { (status: number): void; };
 };
 
@@ -26,10 +24,10 @@ class TARLoader
     static version = 1;
 
     gd: WebGLGraphicsDevice;
-    mipmaps: bool;
+    mipmaps: boolean;
     src: string;
     ontextureload: { (texture: Texture): void; };
-    onload: { (success: bool, status: number): void; };
+    onload: { (success: boolean, status: number): void; };
     onerror: { (status: number): void; };
     texturesLoading: number;
 

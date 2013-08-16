@@ -28,8 +28,8 @@ class TGALoader
     width             : number;
     height            : number;
     bytesPerPixel     : number;
-    horzRev           : bool;
-    vertRev           : bool;
+    horzRev           : boolean;
+    vertRev           : boolean;
     format            : number;
     colorMap          : number[];
 
@@ -63,7 +63,7 @@ class TGALoader
         this.bytesPerPixel = Math.floor(header.bpp / 8);
 
         /*jshint bitwise: false*/
-        this.horzRev = <bool><any>(header.descriptor & this.DESC_HORIZONTAL);
+        this.horzRev = <boolean><any>(header.descriptor & this.DESC_HORIZONTAL);
         this.vertRev = !(header.descriptor & this.DESC_VERTICAL);
         /*jshint bitwise: true*/
 

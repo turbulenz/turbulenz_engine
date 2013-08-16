@@ -82,21 +82,21 @@ class BoxTree
 
     nodes: BoxTreeNode[];
     endNode: number;
-    needsRebuild: bool;
-    needsRebound: bool;
+    needsRebuild: boolean;
+    needsRebound: boolean;
     numAdds: number;
     numUpdates: number;
     numExternalNodes: number;
     startUpdate: number;
     endUpdate: number;
-    highQuality: bool;
+    highQuality: boolean;
 
     numNodesLeaf = 4;
 
     // prototype
     arrayConstructor: any;
 
-    constructor(highQuality: bool)
+    constructor(highQuality: boolean)
     {
         this.nodes = [];
         this.endNode = 0;

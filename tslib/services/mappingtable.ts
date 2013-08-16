@@ -2,8 +2,6 @@
 
 /*global TurbulenzServices: false*/
 
-/// <reference path="turbulenzservices.ts" />
-
 interface MappingTableErrorCB { (errMsg: string, status?: number): void; };
 interface MappingTableOnloadCB { (mappingTable: MappingTable): void; };
 

@@ -4,10 +4,6 @@
 /*global debug: false*/
 /*jshint nomen: false*/
 
-/// <reference path="../debug.ts" />
-
-/// <reference path="turbulenzservices.ts" />
-
 /*
  * An object that takes care of communication with the gamesite and, among
  * other things, replaces the deprecated 'osdlib' module.

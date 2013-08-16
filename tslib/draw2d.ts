@@ -5,8 +5,6 @@ Draw2D: false
 Float32Array: false
 */
 
-/// <reference path="turbulenz.d.ts" />
-
 //
 // Draw2DGroup. Wraps vertex buffer data with pairings of indices and textures
 // representing subsets of buffer relating to a set of equal-texture quads.
@@ -583,17 +581,17 @@ var Draw2DSpriteData = {
 interface Draw2DRenderTargetParams
 {
     name?       : string;
-    backBuffer? : bool;
+    backBuffer? : boolean;
     width?      : number;
     height?     : number;
 }
 
 interface Draw2DRenderTarget
 {
-    managed      : bool;
+    managed      : boolean;
     renderTarget : RenderTarget;
     texture      : Texture;
-    backBuffer   : bool;
+    backBuffer   : boolean;
     actualWidth  : number;
     actualHeight : number;
 }
@@ -767,7 +765,7 @@ class Draw2D
 
     // Methods
 
-    clear(clearColor?): bool
+    clear(clearColor?): boolean
     {
         if (this.state !== this.drawStates.ready)
         {

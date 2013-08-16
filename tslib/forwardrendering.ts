@@ -1,9 +1,5 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
-/// <reference path="scene.ts" />
-/// <reference path="renderingcommon.ts" />
-/// <reference path="shadowmapping.ts" />
-
 interface ForwardRendererInfo
 {
     far: number;

@@ -1,11 +1,5 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="camera.ts" />
-/// <reference path="scene.ts" />
-/// <reference path="renderingcommon.ts" />
-/// <reference path="shadermanager.ts" />
-
 //
 // DefaultRendering
 //
@@ -53,9 +47,9 @@ class DefaultRendering
 
     md                        : MathDevice;
     sm                        : ShaderManager;
-    lightPositionUpdated      : bool;
+    lightPositionUpdated      : boolean;
     lightPosition             : any; // v3
-    eyePositionUpdated        : bool;
+    eyePositionUpdated        : boolean;
     eyePosition               : any; // v3
     globalTechniqueParameters : TechniqueParameters;
     globalTechniqueParametersArray : TechniqueParameters[];
@@ -65,7 +59,7 @@ class DefaultRendering
     scene                     : Scene;
 
     wireframeInfo             : any; // TODO
-    wireframe                 : bool;
+    wireframe                 : boolean;
 
     defaultPrepareFn          : { (geometryInstance: Geometry): void; };
     defaultUpdateFn           : { (camera: Camera): void; };

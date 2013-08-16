@@ -9,11 +9,6 @@
 /*global console*/
 /*global window*/
 
-/// <reference path="networkdevice.ts" />
-/// <reference path="inputdevice.ts" />
-/// <reference path="sounddevice.ts" />
-/// <reference path="graphicsdevice.ts" />
-
 "use strict";
 
 interface Window
@@ -59,7 +54,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     //VMath?             : any;
 
-    encryptionEnabled : bool;
+    encryptionEnabled : boolean;
 
     pluginId: string;
     plugin: any; // TODO:
@@ -77,7 +72,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     // Internal
 
-    private unloading: bool;
+    private unloading: boolean;
     private networkDevice: WebGLNetworkDevice;
     private inputDevice: WebGLInputDevice;
     private physicsDevice: WebGLPhysicsDevice;
@@ -290,7 +285,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         return null;
     }
 
-    verifySignature(msg: string, sig: string): bool
+    verifySignature(msg: string, sig: string): boolean
     {
         return true;
     }
@@ -465,7 +460,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
     }
 
-    isUnloading(): bool
+    isUnloading(): boolean
     {
         return this.unloading;
     }
@@ -533,11 +528,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                     return performance.now();
                 };
             }
-            else if (performance.webkitNow)
+            else if ((<any>performance).webkitNow)
             {
                 getTime = function getTimeFn()
                 {
-                    return performance.webkitNow();
+                    return (<any>performance).webkitNow();
                 };
             }
         }
@@ -830,7 +825,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             userLocale: (navigator.language || navigator.userLanguage).replace('-', '_')
         };
 
-        var looksLikeNetbook = function looksLikeNetbookFn(): bool
+        var looksLikeNetbook = function looksLikeNetbookFn(): boolean
         {
             var minScreenDim =
                 Math.min(window.screen.height, window.screen.width)

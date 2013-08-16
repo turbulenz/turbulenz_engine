@@ -8,13 +8,6 @@
 /*global TurbulenzEngine: false */
 /*global Effect: false */
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="camera.ts" />
-/// <reference path="geometry.ts" />
-/// <reference path="shadermanager.ts" />
-/// <reference path="effectmanager.ts" />
-/// <reference path="renderingcommon.ts" />
-
 class SimpleRendering
 {
     static version = 1;
@@ -25,9 +18,9 @@ class SimpleRendering
 
     md                        : MathDevice;
     sm                        : ShaderManager;
-    lightPositionUpdated      : bool;
+    lightPositionUpdated      : boolean;
     lightPosition             : any; // v3
-    eyePositionUpdated        : bool;
+    eyePositionUpdated        : boolean;
     eyePosition               : any; // v3
     globalTechniqueParameters : TechniqueParameters;
     passes                    : DrawParameters[][];
@@ -35,7 +28,7 @@ class SimpleRendering
     camera                    : Camera;
     scene                     : Scene;
 
-    wireframe                 : bool;
+    wireframe                 : boolean;
     wireframeInfo             : any; // TODO
 
     simplePrepare             : { (geometryInstance: GeometryInstance): void; };
