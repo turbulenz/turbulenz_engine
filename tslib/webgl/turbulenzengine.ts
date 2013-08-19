@@ -771,15 +771,18 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             // Resize canvas to fill parent
             tz.resizeCanvas = function ()
             {
-                if (document.fullscreenEnabled || document.mozFullScreen || document.webkitIsFullScreen)
+                if (document.fullscreenElement === canvas ||
+                    document.mozFullScreenElement === canvas ||
+                    document.webkitFullscreenElement === canvas)
                 {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;
                 }
                 else
                 {
-                    canvas.width = canvas.parentNode.clientWidth;
-                    canvas.height = canvas.parentNode.clientHeight;
+                    var parentNode = canvas.parentNode;
+                    canvas.width = parentNode.clientWidth;
+                    canvas.height = parentNode.clientHeight;
                 }
             };
 
