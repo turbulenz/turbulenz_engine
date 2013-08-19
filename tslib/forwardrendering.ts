@@ -114,8 +114,6 @@ class ForwardRendering
     bufferWidth: number;
     bufferHeight: number;
 
-    techniqueIndex: number;
-
     //minPixelCount: 16,
     //minPixelCountShadows: 256,
 
