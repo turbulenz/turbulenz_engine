@@ -11,6 +11,9 @@ interface EffectPrepareObject
     prepare(renderable: Renderable);
     shaderName: string;
     techniqueName: string;
+    shader?: Shader;
+    technique?: Technique;
+    techniqueIndex?: number;
     update(camera: Camera);
     loadTechniques(shaderManager: ShaderManager);
 };
