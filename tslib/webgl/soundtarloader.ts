@@ -307,11 +307,12 @@ class SoundTARLoader
                                 {
                                     loader.onerror(0);
                                 }
+
+                                // break circular reference
+                                xhr.onreadystatechange = null;
+                                xhr = null;
+                                return;
                             }
-                            // break circular reference
-                            xhr.onreadystatechange = null;
-                            xhr = null;
-                            return;
                         }
 
                         if (xhrStatus === 200 || xhrStatus === 0)

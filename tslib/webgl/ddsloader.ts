@@ -1042,37 +1042,38 @@ class DDSLoader
                             xhrStatus = 200;
                         }
 
-                    // Sometimes the browser sets status to 200 OK when the connection is closed
-                    // before the message is sent (weird!).
-                    // In order to address this we fail any completely empty responses.
-                    // Hopefully, nobody will get a valid response with no headers and no body!
-                    if (xhr.getAllResponseHeaders() === "")
-                    {
-                        var noBody;
-                        if (xhr.responseType === "arraybuffer")
+                        // Sometimes the browser sets status to 200 OK when the connection is closed
+                        // before the message is sent (weird!).
+                        // In order to address this we fail any completely empty responses.
+                        // Hopefully, nobody will get a valid response with no headers and no body!
+                        if (xhr.getAllResponseHeaders() === "")
                         {
-                            noBody = !xhr.response;
-                        }
-                        else if (xhr.mozResponseArrayBuffer)
-                        {
-                            noBody = !xhr.mozResponseArrayBuffer;
-                        }
-                        else
-                        {
-                            noBody = !xhr.responseText;
-                        }
-                        if (noBody)
-                        {
-                            if (loader.onerror)
+                            var noBody;
+                            if (xhr.responseType === "arraybuffer")
                             {
-                                loader.onerror(0);
+                                noBody = !xhr.response;
+                            }
+                            else if (xhr.mozResponseArrayBuffer)
+                            {
+                                noBody = !xhr.mozResponseArrayBuffer;
+                            }
+                            else
+                            {
+                                noBody = !xhr.responseText;
+                            }
+                            if (noBody)
+                            {
+                                if (loader.onerror)
+                                {
+                                    loader.onerror(0);
+                                }
+
+                                // break circular reference
+                                xhr.onreadystatechange = null;
+                                xhr = null;
+                                return;
                             }
                         }
-                        // break circular reference
-                        xhr.onreadystatechange = null;
-                        xhr = null;
-                        return;
-                    }
 
                         if (xhrStatus === 200 || xhrStatus === 0)
                         {
