@@ -11955,6 +11955,8 @@ class Physics2DWorld
 
             if (c._isBody)
             {
+                // TODO: fix <any> casts
+
                 // only dynamic bodies are inserted to islands.
                 bodies.push(<Physics2DRigidBody><any>c);
 
