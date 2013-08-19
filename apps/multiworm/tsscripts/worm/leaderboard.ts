@@ -7,12 +7,12 @@ class Leaderboard
 {
     sortBy: number;
     title: string;
-    isUpdating: bool;
+    isUpdating: boolean;
     newScore: number;
 
     currentScore: number;
     setScore: { (score: number): void; };
-    hasImprovedScore: () =>bool;
+    hasImprovedScore: () =>boolean;
 
     // Before the leaderboard set call is made
     onBeforeSet()

@@ -43,11 +43,11 @@ class Worm
     previousTailY   : number;
 
     killedBy        : number;
-    updated         : bool;
+    updated         : boolean;
 
     playerInfo      : PlayerInfo;
 
-    hasLooped: bool;
+    hasLooped       : boolean;
 
     // Changes the worm's direction
     changeDirection(newDirection)

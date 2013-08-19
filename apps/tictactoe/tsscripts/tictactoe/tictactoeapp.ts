@@ -17,10 +17,10 @@ class Application
     notificationsManager: NotificationsManager;
     userProfile: UserProfile;
 
-    setButtons: bool;
-    invalidateButtons: bool;
+    setButtons: boolean;
+    invalidateButtons: boolean;
     intervalID: number;
-    hasShutdown: bool;
+    hasShutdown: boolean;
 
     currentDataShare: DataShare;
     joinedDataShares: DataShare[];
@@ -300,7 +300,7 @@ class Application
     forfeitGame()
     {
         var currentGame = this.currentGame;
-        var gameStateSet = (wasSet: bool, reason?: string) =>
+        var gameStateSet = (wasSet: boolean, reason?: string) =>
         {
             if (wasSet)
             {
@@ -383,7 +383,7 @@ class Application
     {
         return () =>
         {
-            var joinedDataShare = (success: bool) =>
+            var joinedDataShare = (success: boolean) =>
             {
                 if (success)
                 {
@@ -437,7 +437,7 @@ class Application
         return () =>
         {
             var currentGame = this.currentGame;
-            var gameStateSet = (wasSet: bool, reason?: string) =>
+            var gameStateSet = (wasSet: boolean, reason?: string) =>
             {
                 if (wasSet)
                 {

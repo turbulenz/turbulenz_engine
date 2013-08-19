@@ -13,18 +13,6 @@
 /*global Canvas: false*/
 /*global HTMLControls: false*/
 
-/// <reference path="../../../../jslib-modular/turbulenz.d.ts" />
-/// <reference path="../../../../jslib-modular/fontmanager.d.ts" />
-/// <reference path="../../../../jslib-modular/canvas.d.ts" />
-/// <reference path="../../../../jslib-modular/utilities.d.ts" />
-/// <reference path="../../../../jslib-modular/servicedatatypes.d.ts" />
-/// <reference path="../../../../jslib-modular/services.d.ts" />
-
-/// <reference path="../../../../external/definitelytyped/jquery/jquery-1.8.d.ts" />
-/// <reference path="../../scripts/htmlcontrols.d.ts" />
-
-/// <reference path="point.ts" />
-
 class Application
 {
     inputDevice: InputDevice;
@@ -35,16 +23,16 @@ class Application
     mappingTable: any;
     fps: number;
 
-    isHovering: bool;
-    isFocused: bool;
-    isClicking: bool;
-    isMouseOver: bool;
-    isMouseMove: bool;
-    isMouseWheel: bool;
-    isPadMove: bool;
-    isCanvas: bool;
-    hasPadSupport: bool;
-    hasShutDown: bool;
+    isHovering: boolean;
+    isFocused: boolean;
+    isClicking: boolean;
+    isMouseOver: boolean;
+    isMouseMove: boolean;
+    isMouseWheel: boolean;
+    isPadMove: boolean;
+    isCanvas: boolean;
+    hasPadSupport: boolean;
+    hasShutDown: boolean;
 
     // Text
     textSize                = "32px";
@@ -109,13 +97,13 @@ class Application
 
         // Logging and control related vars
     htmlControls: HTMLControls;
-    logKeyboardInput: bool;
-    logMouseButtonInput: bool;
-    logMouseOverInput: bool;
-    logMouseMoveInput: bool;
-    logMouseWheelInput: bool;
-    logPadButtonInput: bool;
-    logPadMoveInput: bool;
+    logKeyboardInput: boolean;
+    logMouseButtonInput: boolean;
+    logMouseOverInput: boolean;
+    logMouseMoveInput: boolean;
+    logMouseWheelInput: boolean;
+    logPadButtonInput: boolean;
+    logPadMoveInput: boolean;
 
     // Colors
     defaultTextColor        = "#FFFFFF";
@@ -171,7 +159,7 @@ class Application
 
     gameSession: GameSession;
     intervalID: number;
-    hasShutdown: bool;
+    hasShutdown: boolean;
 
     // Initialize the application
     init()
@@ -883,7 +871,7 @@ class Application
     }
 
     // Checks for xbox 360 gamepad support
-    getPadSupport(): bool
+    getPadSupport(): boolean
     {
         var systemInfo      = TurbulenzEngine.getSystemInfo();
         var isWindows       = (-1 !== systemInfo.osName.indexOf("Windows"));

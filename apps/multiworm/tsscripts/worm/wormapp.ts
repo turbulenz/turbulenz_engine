@@ -25,8 +25,8 @@ interface Technique2DParameters extends TechniqueParameters
 class Application
 {
     // Ensures shutdown function is only called once
-    hasShutDown               : bool;
-    runInEngine               : bool; // TODO: seems not to be used
+    hasShutDown               : boolean;
+    runInEngine               : boolean; // TODO: seems not to be used
 
     previousGameUpdateTime    : number;
     gameSession               : GameSession;
@@ -43,13 +43,13 @@ class Application
     devices                   : any;
     managers                  : any;
     others                    : any;
-    isHost                    : bool;
+    isHost                    : boolean;
     connectionTime            : number;
     previousHeartbeatTime     : number;
     lastSentMessageTime       : number;
     frameCounter              : number;
     hostFrameCounter          : number;
-    needToRender              : bool;
+    needToRender              : boolean;
     requestHandler            : RequestHandler;
     intervalID                : number;
     mappingTable              : any;
@@ -59,7 +59,7 @@ class Application
     technique2D               : Technique;
     technique2Dparameters     : Technique2DParameters;
 
-    hasShutdown               : bool;
+    hasShutdown               : boolean;
 
     gameSettings = {
         width : 30,  // Must be a multiple of 2
@@ -1411,7 +1411,7 @@ class Application
     }
 
     // Application constructor function
-    static create(runInEngine?: bool)
+    static create(runInEngine?: boolean)
     {
         var application = new Application();
 

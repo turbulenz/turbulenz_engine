@@ -17,7 +17,7 @@ class HtmlWriter
     badgeDivs: { [name: string]: HTMLElement; };
 
     // To avoid writing to the page if run as tzjs
-    runAsTzjs: bool;
+    runAsTzjs: boolean;
 
     init(scoreDivID, killsDivID, leaderboardDivId, badgesDivId)
     {

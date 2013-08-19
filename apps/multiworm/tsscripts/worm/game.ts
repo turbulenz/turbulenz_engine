@@ -15,7 +15,7 @@ interface Food
 {
     x: number;
     y: number;
-    updated: bool;
+    updated: boolean;
     eatenBy: number;
 };
 
@@ -32,37 +32,37 @@ interface GameState
 class Game
 {
     // Enums for states
-    state                   : GameState;
+    state            : GameState;
 
-    currentState            : number;
-    gameSession             : GameSession;
+    currentState     : number;
+    gameSession      : GameSession;
 
-    hasChangedScore         : bool;
-    score                   : number;
-    kills                   : number;
+    hasChangedScore  : boolean;
+    score            : number;
+    kills            : number;
 
-    myWormIndex             : number;
+    myWormIndex      : number;
 
-    gameStates              : { (isHost : bool, moveWorms: bool): void; }[];
+    gameStates       : { (isHost : boolean, moveWorms: boolean): void; }[];
 
-    graphicsDevice          : GraphicsDevice;
-    scoreIncrement          : number;
+    graphicsDevice   : GraphicsDevice;
+    scoreIncrement   : number;
 
-    gameSettings            : GameSettings;
-    leaderboards            : GameLeaderboards;
-    badges                  : GameBadges;
+    gameSettings     : GameSettings;
+    leaderboards     : GameLeaderboards;
+    badges           : GameBadges;
 
-    keyCodes                : any;
-    mouseCodes              : any;
+    keyCodes         : any;
+    mouseCodes       : any;
 
-    foods                   : Food[];
-    worms                   : Worm[];
+    foods            : Food[];
+    worms            : Worm[];
 
-    newWormDirection        : number;
-    startTime               : number;
+    newWormDirection : number;
+    startTime        : number;
 
-    join_error              : string;
-    join_error_cb           : { (): void; };
+    join_error       : string;
+    join_error_cb    : { (): void; };
 
     // Update game
     update(isHost, moveWorms)

@@ -15,17 +15,17 @@ class GameBadges
     achievedBadges: { [name: string]: Badge; };
 
     // Stores badges that will be awarded irrespective of current progress
-    awardedBadges: { [name: string]: bool; };
-    hasChanged: bool;
+    awardedBadges: { [name: string]: boolean; };
+    hasChanged: boolean;
 
     // Used to know when to write html output
-    hasChangedData: bool;
+    hasChangedData: boolean;
 
     // True only if we have a leaderboard manager, and we are initialised
-    isActive: bool;
+    isActive: boolean;
 
     // Vars to manage situation where connection to badges server is lost
-    hasConnection: bool;
+    hasConnection: boolean;
     updateInterval: number;
     maxInterval: number;
     lastUpdateTime: number;

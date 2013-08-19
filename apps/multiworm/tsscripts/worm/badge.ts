@@ -5,16 +5,16 @@
 //
 class Badge
 {
-    isNonProgress: bool;
+    isNonProgress: boolean;
 
     currentProgress: number;
     totalRequired: number;
-    hasProgressed: bool;
+    hasProgressed: boolean;
 
     predescription: string;
     description: string;
     title: string;
-    isUpdating: bool;
+    isUpdating: boolean;
 
     // Update the status of the badge before updateuserbadgeprogress is called
     onBeforeSet()

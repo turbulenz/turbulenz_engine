@@ -12,16 +12,16 @@ class GameLeaderboards
     onInitialization: { (): void; };
 
     leaderboards: { [name: string]: Leaderboard; };
-    hasChanged: bool;
+    hasChanged: boolean;
 
     // Used to know when to write html output
-    hasChangedData: bool;
+    hasChangedData: boolean;
 
     // True only if we have a leaderboard manager, and we are initialised
-    isActive: bool;
+    isActive: boolean;
 
     // Vars to manage situation where connection to badges server is lost
-    hasConnection: bool;
+    hasConnection: boolean;
     updateInterval: number;
     maxInterval: number;
     lastUpdateTime: number;
