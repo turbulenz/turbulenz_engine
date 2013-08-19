@@ -37,6 +37,7 @@ class CaptureGraphicsDevice
     destroyedIds: number[];
     integerData:    {};
     floatData:      {};
+    mixedData:      {};
     objects:    {};
     objectArray: any[];
     names:      {};
@@ -88,6 +89,7 @@ class CaptureGraphicsDevice
         this.destroyedIds = [];
         this.integerData = {};
         this.floatData = {};
+        this.mixedData = {};
         this.objects = {};
         this.objectArray = [];
         this.names = {};
@@ -137,7 +139,20 @@ class CaptureGraphicsDevice
     {
         var lowerIndex;
 
-        var dataBins = (integers ? this.integerData : this.floatData);
+        var dataBins;
+        if (data instanceof ArrayBuffer)
+        {
+            dataBins = this.mixedData;
+        }
+        else if (integers)
+        {
+            dataBins = this.integerData;
+        }
+        else
+        {
+            dataBins = this.floatData;
+        }
+
         var dataBin = dataBins[length];
         if (dataBin === undefined)
         {
@@ -146,7 +161,11 @@ class CaptureGraphicsDevice
         }
         else
         {
-            if (integers)
+            if (data instanceof ArrayBuffer)
+            {
+                lowerIndex = this._lowerBoundGeneric(dataBin, new Uint8Array(data, 0, length), length, 0);
+            }
+            else if (integers)
             {
                 lowerIndex = this._lowerBoundGeneric(dataBin, data, length, 0);
             }
@@ -164,7 +183,11 @@ class CaptureGraphicsDevice
         }
 
         var clonedData;
-        if (integers)
+        if (data instanceof ArrayBuffer)
+        {
+            clonedData = new Uint8Array(data.slice(0, length));
+        }
+        else if (integers)
         {
             if (data.BYTES_PER_ELEMENT)
             {
@@ -1405,11 +1428,21 @@ class CaptureGraphicsDevice
                     numVertices = this.numVertices;
                 }
 
+                var length;
+                if (data instanceof ArrayBuffer)
+                {
+                    length = (numVertices * this.strideInBytes);
+                }
+                else
+                {
+                    length = (numVertices * this.stride);
+                }
+
                 if (offset === 0 && numVertices === this.numVertices)
                 {
                     self._addCommand(CaptureGraphicsCommand.setAllData,
                                      id,
-                                     self._addData(data, (numVertices * this.stride), false));
+                                     self._addData(data, length, false));
                 }
                 else if (0 < numVertices)
                 {
@@ -1417,7 +1450,7 @@ class CaptureGraphicsDevice
                                      id,
                                      offset,
                                      numVertices,
-                                     self._addData(data, (numVertices * this.stride), false));
+                                     self._addData(data, length, false));
                 }
 
                 setData.call(this, data, offset, numVertices);
@@ -2282,6 +2315,7 @@ class CaptureGraphicsDevice
         var totalSize = 4 + 4; // header + version
         totalSize += this._getDataBinSize(this.integerData, true);
         totalSize += this._getDataBinSize(this.floatData, false);
+        totalSize += this._getDataBinSize(this.mixedData, true);
 
         var buffer = new ArrayBuffer(totalSize);
 
@@ -2299,6 +2333,7 @@ class CaptureGraphicsDevice
         var offset = 2;
         offset = this._getDataBinBuffer(ints, offset, this.integerData, true);
         offset = this._getDataBinBuffer(ints, offset, this.floatData, false);
+        offset = this._getDataBinBuffer(ints, offset, this.mixedData, true);
 
         return bytes;
     }
@@ -2369,6 +2404,7 @@ class CaptureGraphicsDevice
         // Clean data bins and reclaim the ids for reuse
         this._recycleDataBinIds(this.integerData);
         this._recycleDataBinIds(this.floatData);
+        this._recycleDataBinIds(this.mixedData);
         this._recycleDataBinIds(this.objects);
 
         var recycledIds = this.recycledIds;
@@ -2432,6 +2468,7 @@ class CaptureGraphicsDevice
         this.destroyedIds = null;
         this.integerData = null;
         this.floatData = null;
+        this.mixedData = null;
         this.objects = null;
         this.objectArray = null;
         this.names = null;
@@ -2857,6 +2894,38 @@ class PlaybackGraphicsDevice
                 this._storeEntity(id, data);
 
                 offset += length;
+            }
+        }
+
+        // Mixed
+        if (offset < ints.length)
+        {
+            for (;;)
+            {
+                binLength = ints[offset];
+                offset += 1;
+                if (binLength < 0)
+                {
+                    break;
+                }
+
+                length = ints[offset];
+                offset += 1;
+
+                for (n = 0; n < binLength; n += 1)
+                {
+                    id = ints[offset];
+
+                    // add 2 for id and type (type is unused)
+                    offset += 2;
+
+                    data = dataBuffer.slice((offset * 4), ((offset * 4) + length));
+
+                    this._storeEntity(id, data);
+
+                    // pad element size to multiple of 4
+                    offset += ((data.byteLength + 3) >>> 2);
+                }
             }
         }
     }
