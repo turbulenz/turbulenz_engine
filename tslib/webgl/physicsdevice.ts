@@ -3024,7 +3024,8 @@ class WebGLPhysicsPrivateBody
     // used for dynamics.
     isActive(/* timeStep */)
     {
-        if (!this.permitSleep) {
+        if (!this.permitSleep)
+        {
             return true;
         }
 
@@ -3132,7 +3133,8 @@ class WebGLPhysicsCollisionObject implements PhysicsCollisionObject
             {
                 var pr = this._private;
                 // can only set transform if kinematic, or else for non kinematic IF NOT in a world.
-                if (pr.kinematic || !pr.world) {
+                if (pr.kinematic || !pr.world)
+                {
                     VMath.m43Copy(transform, pr.transform);
                     if (pr.world)
                     {
