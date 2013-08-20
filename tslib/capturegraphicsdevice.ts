@@ -3058,6 +3058,11 @@ class PlaybackGraphicsDevice
             {
                 command[1] = this._resolveEntity(command[1]); // Query
             }
+            else if (method === CaptureGraphicsCommand.updateTextureData)
+            {
+                command[1] = this._resolveEntity(command[1]); // Object
+                command[2] = this._resolveEntity(command[2]); // Data
+            }
             else
             {
                 if (this.onerror)
