@@ -2816,7 +2816,7 @@ class PlaybackGraphicsDevice
 
         // TODO: chech version number and endianness
         var offset = 2;
-        var binLength, length, n, id, type, data;
+        var binLength, length, n, id, type, byteOffset, data;
 
         // Integers
         for (;;)
@@ -2839,29 +2839,31 @@ class PlaybackGraphicsDevice
                 type = ints[offset];
                 offset += 1;
 
+                byteOffset = (offset << 2);
+
                 if (type === 8)
                 {
-                    data = new Uint8Array(dataBuffer, (offset * 4), length);
+                    data = new Uint8Array(dataBuffer, byteOffset, length);
                 }
                 else if (type === -8)
                 {
-                    data = new Int8Array(dataBuffer, (offset * 4), length);
+                    data = new Int8Array(dataBuffer, byteOffset, length);
                 }
                 else if (type === 16)
                 {
-                    data = new Uint16Array(dataBuffer, (offset * 4), length);
+                    data = new Uint16Array(dataBuffer, byteOffset, length);
                 }
                 else if (type === -16)
                 {
-                    data = new Int16Array(dataBuffer, (offset * 4), length);
+                    data = new Int16Array(dataBuffer, byteOffset, length);
                 }
                 else if (type === 32)
                 {
-                    data = new Uint32Array(dataBuffer, (offset * 4), length);
+                    data = new Uint32Array(dataBuffer, byteOffset, length);
                 }
                 else
                 {
-                    data = new Int32Array(dataBuffer, (offset * 4), length);
+                    data = new Int32Array(dataBuffer, byteOffset, length);
                 }
 
                 this._storeEntity(id, data);
@@ -2889,7 +2891,9 @@ class PlaybackGraphicsDevice
                 id = ints[offset];
                 offset += 1;
 
-                data = new Float32Array(dataBuffer, (offset * 4), length);
+                byteOffset = (offset << 2);
+
+                data = new Float32Array(dataBuffer, byteOffset, length);
 
                 this._storeEntity(id, data);
 
@@ -2919,7 +2923,9 @@ class PlaybackGraphicsDevice
                     // add 2 for id and type (type is unused)
                     offset += 2;
 
-                    data = dataBuffer.slice((offset * 4), ((offset * 4) + length));
+                    byteOffset = (offset << 2);
+
+                    data = dataBuffer.slice(byteOffset, (byteOffset + length));
 
                     this._storeEntity(id, data);
 
