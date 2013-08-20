@@ -496,7 +496,7 @@ class CaptureGraphicsDevice
         if (object.BYTES_PER_ELEMENT)
         {
             length = object.length;
-            if (raw || length == 0)
+            if (raw || length === 0)
             {
                 result = new Array(length);
                 for (index = 0; index < length; index += 1)
