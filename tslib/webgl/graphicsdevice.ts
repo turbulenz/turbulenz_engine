@@ -1080,15 +1080,37 @@ class TZWebGLTexture implements Texture
             };
             if (data)
             {
-                if (extension === '.jpg' || extension === '.jpeg')
+                if (typeof Blob !== "undefined" && typeof URL !== "undefined" && URL.createObjectURL)
                 {
-                    src = 'data:image/jpeg;base64,' +
-                        (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
+                    var dataBlob;
+                    if (extension === '.jpg' || extension === '.jpeg')
+                    {
+                        dataBlob = new Blob([data], {type: "image/jpeg"});
+                    }
+                    else if (extension === '.png')
+                    {
+                        dataBlob = new Blob([data], {type: "image/png"});
+                    }
+                    debug.assert(data.length === dataBlob.size, "Blob constructor does not support typed arrays.");
+                    img.onload = function blobImageLoadedFn()
+                    {
+                        imageLoaded();
+                        URL.revokeObjectURL(img.src);
+                    };
+                    src = URL.createObjectURL(dataBlob);
                 }
-                else if (extension === '.png')
+                else
                 {
-                    src = 'data:image/png;base64,' +
-                        (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
+                    if (extension === '.jpg' || extension === '.jpeg')
+                    {
+                        src = 'data:image/jpeg;base64,' +
+                            (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
+                    }
+                    else if (extension === '.png')
+                    {
+                        src = 'data:image/png;base64,' +
+                            (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
+                    }
                 }
                 img.src = src;
             }
