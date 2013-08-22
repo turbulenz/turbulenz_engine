@@ -711,8 +711,8 @@ With the local server still running:
 
    .. NOTE::
 
-     On Linux, the SDK only supports running in canvas mode.  Use the
-     command for canvas-debug below in order to run the app.
+     On Linux, the SDK only supports running in canvas mode. Use the command
+     for canvas-debug below in order to run the app on Linux browsers.
 
 6. Back in your browser, click on the *Play* button for your newly
    created project.  The page should list the file just created
