@@ -926,7 +926,7 @@ The :ref:`maptool` command can be used to manipulate
 ``mapping_table.json``, adding profiles as part of an asset build.
 See :ref:`mappingtable` for a description of how profiles are used.
 
-:ref:`maptool` is designed for the case where a primary build generaes
+:ref:`maptool` is designed for the case where a primary build generates
 some default assets, and secondary build generates assets intended to
 be used instead of the default set under certain conditions.
 
