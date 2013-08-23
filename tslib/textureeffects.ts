@@ -188,6 +188,21 @@ class TextureEffects
         return dst;
     }
 
+    additiveMatrix(additiveRGB, dst)
+    {
+        if (dst === undefined) {
+            dst = this.mathDevice.m43BuildIdentity();
+        }
+
+        dst[0] = dst[4] = dst[8] = 1;
+        dst[1] = dst[2] = dst[3] = dst[5] = dst[6] = dst[7] = 0;
+        dst[9] = additiveRGB[0];
+        dst[10] = additiveRGB[1];
+        dst[11] = additiveRGB[2];
+
+        return dst;
+    }
+
     contrastMatrix(contrastScale, dst)
     {
         if (dst === undefined)
