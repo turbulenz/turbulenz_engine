@@ -814,7 +814,7 @@ TurbulenzEngine.onload = function onloadFn()
                         strokeWidthStyle);
         if (hasState)
         {
-            node.hasState = hasState;
+            node.hasState = true;
             node.transform = transformArray;
             node.fill = fillStyle;
             node.stroke = strokeStyle;
