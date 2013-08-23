@@ -421,6 +421,36 @@ This transformation preserves color hue.
 
 
 .. index::
+    pair: TextureEffects; additiveMatrix
+
+`additiveMatrix`
+----------------
+
+**Summary**
+
+Create a color matrix to transform colors by offsetting their red, green or blue values.
+
+**Syntax** ::
+
+    var colorMatrix = effects.additiveMatrix(colorOffset);
+    // or
+    effects.additiveMatrix(colorOffset, colorMatrix);
+
+``colorOffset``
+    A JavaScript array of length 3. With red, green and blue elements as offsets:
+
+    An offset of `-1` will completely remove the color.
+
+    An offset of `0` will create an identity mapping.
+
+    An offset of `1` will map the color to its full value.
+    For example, a ``colorOffset`` value of `[-1, 1, -1]` will result in a matrix which always outputs a green color `[0, 1, 0]` (after clamping to the range `[0, 1]`).
+
+``colorMatrix`` (optional)
+    Specify a :ref:`Matrix43 <m43object>` object in which to store the color matrix. If unspecified a new matrix will be created.
+
+
+.. index::
     pair: TextureEffects; contrastMatrix
 
 `contrastMatrix`

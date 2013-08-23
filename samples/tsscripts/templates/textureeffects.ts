@@ -45,6 +45,7 @@ TurbulenzEngine.onload = function onloadFn()
     var hue = 0; //radian
     var brightness = 0; // normalised offset.
     var contrast = 1; // factor
+    var additiveRGB = [0, 0, 0];
     var grayscale = false;
     var sepia = false;
     var negative = false;
@@ -216,6 +217,13 @@ TurbulenzEngine.onload = function onloadFn()
         if (brightness !== 0)
         {
             effects.brightnessMatrix(brightness, tmp);
+            mathDevice.m43Mul(xform, tmp, xform);
+        }
+        if (additiveRGB[0] !== 0 ||
+            additiveRGB[1] !== 0 ||
+            additiveRGB[2] !== 0)
+        {
+            effects.additiveMatrix(additiveRGB, tmp);
             mathDevice.m43Mul(xform, tmp, xform);
         }
         if (grayscale)
@@ -554,6 +562,42 @@ TurbulenzEngine.onload = function onloadFn()
             {
                 brightness = this.value;
                 htmlControls.updateSlider("brightnessSlider", brightness);
+            }
+        });
+        htmlControls.addSliderControl({
+            id: "additiveRedSlider",
+            value: additiveRGB[0],
+            max: 1,
+            min: -1,
+            step: 0.01,
+            fn: function ()
+            {
+                additiveRGB[0] = this.value;
+                htmlControls.updateSlider("additiveRedSlider", additiveRGB[0]);
+            }
+        });
+        htmlControls.addSliderControl({
+            id: "additiveGreenSlider",
+            value: additiveRGB[1],
+            max: 1,
+            min: -1,
+            step: 0.01,
+            fn: function ()
+            {
+                additiveRGB[1] = this.value;
+                htmlControls.updateSlider("additiveGreenSlider", additiveRGB[1]);
+            }
+        });
+        htmlControls.addSliderControl({
+            id: "additiveBlueSlider",
+            value: additiveRGB[1],
+            max: 1,
+            min: -1,
+            step: 0.01,
+            fn: function ()
+            {
+                additiveRGB[2] = this.value;
+                htmlControls.updateSlider("additiveBlueSlider", additiveRGB[2]);
             }
         });
         htmlControls.addSliderControl({
