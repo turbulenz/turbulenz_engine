@@ -423,6 +423,8 @@ This transformation preserves color hue.
 .. index::
     pair: TextureEffects; additiveMatrix
 
+.. _textureeffects_additivematrix:
+
 `additiveMatrix`
 ----------------
 

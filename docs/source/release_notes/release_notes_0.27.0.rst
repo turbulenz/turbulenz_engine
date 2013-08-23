@@ -27,6 +27,9 @@ New Features
 
 * - Added a :ref:`setProgress <loadingscreen_setprogress>` method to the LoadingScreen object.
 
+* - Added a :ref:`additiveMatrix <textureeffects_additivematrix>` method to the TextureEffects object which allows transforming of the red, green and blue color channels.
+    The ``additiveMatrix`` function is used in the textureeffects sample with new red, green and blue additive sliders.
+
 
 Changes
 -------
