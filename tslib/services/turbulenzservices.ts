@@ -970,13 +970,38 @@ class TurbulenzServices
             }
         };
 
+        var params = <any>{
+            url: serviceUrl,
+            method: 'GET',
+            callback: servicesStatusCB
+        };
+
+        var servicesDomain = TurbulenzServices.servicesDomain;
+        if (servicesDomain)
+        {
+            if (serviceUrl.indexOf('http') !== 0)
+            {
+                if (serviceUrl[0] === '/')
+                {
+                    params.url = servicesDomain + serviceUrl;
+                }
+                else
+                {
+                    params.url = servicesDomain + '/' + serviceUrl;
+                }
+            }
+            if (window.location)
+            {
+                if (servicesDomain !== ServiceRequester.locationOrigin)
+                {
+                    params.enableCORSCredentials = true;
+                }
+            }
+        }
+
         pollServiceStatus = function pollServiceStatusFn()
         {
-            Utilities.ajax({
-                url: serviceUrl,
-                method: 'GET',
-                callback: servicesStatusCB
-            });
+            Utilities.ajax(params);
         };
 
         pollServiceStatus();
