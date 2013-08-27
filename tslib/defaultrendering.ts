@@ -297,9 +297,10 @@ class DefaultRendering
             techniqueParameters.uvTransform = DefaultRendering.identityUVTransform;
         }
 
-        // TODO: remove this cast.  (Error is "no static 'technique'
-        // property").  this is ...
-        drawParameters.technique = (<any>this).technique;
+        // NOTE: the way this functions is called, 'this' is an
+        // EffectPrepareObject.
+
+        drawParameters.technique = (<EffectPrepareObject><any>this).technique;
 
         drawParameters.setTechniqueParameters(0, sharedMaterial.techniqueParameters);
         drawParameters.setTechniqueParameters(1, techniqueParameters);
@@ -338,9 +339,7 @@ class DefaultRendering
         techniqueParameters.worldViewProjection = rendererInfo.worldViewProjection;
         techniqueParameters.lightPosition = rendererInfo.lightPosition;
 
-        // TODO: remove <any> cast, or cast to correct type.  Also fix
-        // other instances of '<any>' below.
-        var techniqueName = (<any>this).technique.name;
+        var techniqueName = (<EffectPrepareObject><any>this).technique.name;
         if (techniqueName.indexOf("flat") === -1 &&
             techniqueName.indexOf("lambert") === -1)
         {
@@ -356,19 +355,20 @@ class DefaultRendering
                 skinController.index = DefaultRendering.nextSkinID;
                 DefaultRendering.nextSkinID += 1;
             }
-            drawParameters.sortKey = -renderingCommonSortKeyFn((<any>this).techniqueIndex,
-                                                               skinController.index,
-                                                               sharedMaterial.meta.materialIndex);
+            drawParameters.sortKey =
+                -renderingCommonSortKeyFn((<EffectPrepareObject><any>this).techniqueIndex,
+                                          skinController.index,
+                                          sharedMaterial.meta.materialIndex);
         }
         else
         {
-            drawParameters.sortKey = renderingCommonSortKeyFn((<any>this).techniqueIndex,
-                                                              sharedMaterial.meta.materialIndex,
-                                                              rendererInfo.id);
+            drawParameters.sortKey =
+                renderingCommonSortKeyFn((<EffectPrepareObject><any>this).techniqueIndex,
+                                         sharedMaterial.meta.materialIndex,
+                                         rendererInfo.id);
         }
 
-        // TODO:
-        geometryInstance.renderUpdate = (<any>this).update;
+        geometryInstance.renderUpdate = (<EffectPrepareObject><any>this).update;
     }
 
     //
