@@ -355,6 +355,7 @@ class TurbulenzServices
     static bridgeServices : boolean;
     static mode : string;
     static servicesDomain : string;
+    static offline : boolean;
     static syncing : boolean;
 
     static available() : boolean
@@ -400,6 +401,10 @@ class TurbulenzServices
             {
                 that.syncing = true;
             }
+            if (config.offline)
+            {
+                that.offline = true;
+            }
         };
 
         // This should go once we have fully moved to the new system
@@ -419,6 +424,8 @@ class TurbulenzServices
         TurbulenzBridge.on("bridgeservices.response", function (jsondata) { that.routeResponse(jsondata); });
         TurbulenzBridge.on("bridgeservices.sync.start", function () { that.syncing = true; });
         TurbulenzBridge.on("bridgeservices.sync.end", function () { that.syncing = false; });
+        TurbulenzBridge.on("bridgeservices.offline.start", function () { that.offline = true; });
+        TurbulenzBridge.on("bridgeservices.offline.end", function () { that.offline = false; });
     }
 
     static callOnBridge(event, data, callback) : boolean
