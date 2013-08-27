@@ -160,7 +160,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', default='v0.8.14')
     parser.add_argument('--typescript', action='store_true', help='Install TypeScript compiler package')
-    parser.add_argument('--typescript-version', default='0.8.3')
+    parser.add_argument('--typescript-version', default='0.9.1')
     parser.add_argument('-f', '--force', action='store_true')
     parser.add_argument('--allow-system-node', action='store_true',
                         help='Allow use of an existing node install')
