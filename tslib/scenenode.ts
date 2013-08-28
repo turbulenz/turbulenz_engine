@@ -499,6 +499,18 @@ class SceneNode
     {
         if (this.dirtyWorld)
         {
+            this.updateWorldTransform();
+        }
+        return this.world;
+    }
+
+    //
+    //updateWorldTransform
+    //
+    updateWorldTransform()
+    {
+        if (this.dirtyWorld)
+        {
             this.dirtyWorld = false;
             this.worldUpdate += 1;
             this.checkUpdateRequired();
@@ -522,7 +534,6 @@ class SceneNode
                 this.world =  this.mathDevice.m43Copy(local, this.world);
             }
         }
-        return this.world;
     }
 
     //
@@ -1026,6 +1037,11 @@ class SceneNode
     //
     updateWorldExtents()
     {
+        if (this.dirtyWorld)
+        {
+            this.updateWorldTransform();
+        }
+
         if (this.dirtyWorldExtents)
         {
             if (this.customWorldExtents)
