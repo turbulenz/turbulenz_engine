@@ -46,21 +46,19 @@ TurbulenzEngine.onload = function onloadFn()
     function drawSVGpath(ctx)
     {
         var d = this.d;
-        if (d)
+
+        ctx.beginPath();
+
+        ctx.path(d);
+
+        if (ctx.fillStyle !== 'none')
         {
-            ctx.beginPath();
+            ctx.fill();
+        }
 
-            ctx.path(d);
-
-            if (ctx.fillStyle !== 'none')
-            {
-                ctx.fill();
-            }
-
-            if (ctx.strokeStyle !== 'none')
-            {
-                ctx.stroke();
-            }
+        if (ctx.strokeStyle !== 'none')
+        {
+            ctx.stroke();
         }
     }
 
@@ -486,6 +484,118 @@ TurbulenzEngine.onload = function onloadFn()
         return value;
     }
 
+    function drawSVGStateNode(ctx)
+    {
+        ctx.save();
+
+        var transform = this.transform;
+        if (transform)
+        {
+            var numTransforms = transform.length;
+            for (var t = 0; t < numTransforms; t += 1)
+            {
+                var tr = transform[t];
+                var command = tr[0];
+                var arg = tr[1];
+                var ax, ay;
+                switch (command)
+                {
+                case 'translate':
+                    ax = arg[0];
+                    ay = arg[1];
+                    if (ax !== 0 || ay !== 0)
+                    {
+                        ctx.translate(ax, ay);
+                    }
+                    break;
+
+                case 'scale':
+                    ax = arg[0];
+                    ay = arg[1];
+                    if (ax !== 1 || ay !== 1)
+                    {
+                        ctx.scale(ax, ay);
+                    }
+                    break;
+
+                case 'rotate':
+                    var angle = arg[0];
+                    ax = arg[1];
+                    ay = arg[2];
+                    if (angle !== 0)
+                    {
+                        if (ax !== 0 || ay !== 0)
+                        {
+                            ctx.translate(ax, ay);
+                            ctx.rotate(angle);
+                            ctx.translate(-ax, -ay);
+                        }
+                        else
+                        {
+                            ctx.rotate(angle);
+                        }
+                    }
+                    break;
+
+                case 'transform':
+                    ctx.transform(arg[0], arg[1], arg[2],
+                                  arg[3], arg[4], arg[5]);
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+
+        var fill = this.fill;
+        if (fill)
+        {
+            ctx.fillStyle = fill;
+        }
+
+        var stroke = this.stroke;
+        if (stroke)
+        {
+            ctx.strokeStyle = stroke;
+        }
+
+        var lineWidth = this.lineWidth;
+        if (lineWidth)
+        {
+            ctx.lineWidth = lineWidth;
+        }
+
+        this._draw(ctx);
+
+        var children = this.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var n = 0; n < numChildren; n += 1)
+            {
+                children[n].draw(ctx);
+            }
+        }
+
+        ctx.restore();
+    }
+
+    function drawSVGNode(ctx)
+    {
+        this._draw(ctx);
+
+        var children = this.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var n = 0; n < numChildren; n += 1)
+            {
+                children[n].draw(ctx);
+            }
+        }
+    }
+
     function parseSVG(e, idMap)
     {
         var type = e.tagName;
@@ -702,12 +812,11 @@ TurbulenzEngine.onload = function onloadFn()
 
         if (type === "path")
         {
-            draw = drawSVGpath;
-
             var d = node.d;
             if (d)
             {
                 node.d = d.replace(',', ' ').replace(/\s+/g, ' ').replace(' -', '-').replace(/\s([AaCcHhLlMmQqSsTtVvZz])/g, "$1");
+                draw = drawSVGpath;
             }
         }
         else if (type === "polygon" ||
@@ -806,7 +915,7 @@ TurbulenzEngine.onload = function onloadFn()
         }
 
         node.type = type;
-        node.draw = draw;
+        node._draw = draw;
 
         var hasState = (transform ||
                         fillStyle ||
@@ -814,117 +923,22 @@ TurbulenzEngine.onload = function onloadFn()
                         strokeWidthStyle);
         if (hasState)
         {
-            node.hasState = true;
+            node.draw = drawSVGStateNode;
             node.transform = transformArray;
             node.fill = fillStyle;
             node.stroke = strokeStyle;
             node.lineWidth = lineWidth;
         }
+        else if (node.children)
+        {
+            node.draw = drawSVGNode;
+        }
+        else
+        {
+            node.draw = draw;
+        }
 
         return node;
-    }
-
-    function drawSVGnode(node, ctx)
-    {
-        if (node.hasState)
-        {
-            ctx.save();
-
-            var transform = node.transform;
-            if (transform)
-            {
-                var numTransforms = transform.length;
-                for (var t = 0; t < numTransforms; t += 1)
-                {
-                    var tr = transform[t];
-                    var command = tr[0];
-                    var arg = tr[1];
-                    var ax, ay;
-                    switch (command)
-                    {
-                    case 'translate':
-                        ax = arg[0];
-                        ay = arg[1];
-                        if (ax !== 0 || ay !== 0)
-                        {
-                            ctx.translate(ax, ay);
-                        }
-                        break;
-
-                    case 'scale':
-                        ax = arg[0];
-                        ay = arg[1];
-                        if (ax !== 1 || ay !== 1)
-                        {
-                            ctx.scale(ax, ay);
-                        }
-                        break;
-
-                    case 'rotate':
-                        var angle = arg[0];
-                        ax = arg[1];
-                        ay = arg[2];
-                        if (angle !== 0)
-                        {
-                            if (ax !== 0 || ay !== 0)
-                            {
-                                ctx.translate(ax, ay);
-                                ctx.rotate(angle);
-                                ctx.translate(-ax, -ay);
-                            }
-                            else
-                            {
-                                ctx.rotate(angle);
-                            }
-                        }
-                        break;
-
-                    case 'transform':
-                        ctx.transform(arg[0], arg[1], arg[2],
-                                      arg[3], arg[4], arg[5]);
-                        break;
-
-                    default:
-                        break;
-                    }
-                }
-            }
-
-            var fill = node.fill;
-            if (fill)
-            {
-                ctx.fillStyle = fill;
-            }
-
-            var stroke = node.stroke;
-            if (stroke)
-            {
-                ctx.strokeStyle = stroke;
-            }
-
-            var lineWidth = node.lineWidth;
-            if (lineWidth)
-            {
-                ctx.lineWidth = lineWidth;
-            }
-        }
-
-        node.draw(ctx);
-
-        var children = node.children;
-        if (children)
-        {
-            var numChildren = children.length;
-            for (var n = 0; n < numChildren; n += 1)
-            {
-                drawSVGnode(children[n], ctx);
-            }
-        }
-
-        if (node.hasState)
-        {
-            ctx.restore();
-        }
     }
 
     function loadSVGfile(url)
@@ -1109,7 +1123,7 @@ TurbulenzEngine.onload = function onloadFn()
                 ctx.strokeStyle = 'none';
                 try
                 {
-                    drawSVGnode(svg, ctx);
+                    svg.draw(ctx);
                 }
                 catch (exc)
                 {
