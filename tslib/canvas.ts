@@ -1261,7 +1261,11 @@ class CanvasContext
         {
             var s = Math.sin(angle);
             var c = Math.cos(angle);
-            this.transform(c, s, -s, c, 0, 0);
+            if (s < -0.005 || 0.005 < s ||
+                c < 0.995 || 1.005 < c)
+            {
+                this.transform(c, s, -s, c, 0, 0);
+            }
         }
     }
 
