@@ -3790,7 +3790,8 @@ class CanvasContext
 
     scaleIdentity(x, y)
     {
-        if (x !== 1 || y !== 1)
+        if (x < 0.999 || 1.001 < x ||
+            y < 0.999 || 1.001 < y)
         {
             var m = this.matrix;
             m[0] = x;
