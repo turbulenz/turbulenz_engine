@@ -722,14 +722,18 @@ class WebGLInputDevice implements InputDevice
         var pressedKeys = this.pressedKeys;
         var keyCodes = this.keyCodes;
 
-        event.stopPropagation();
-        event.preventDefault();
-
         var keyCode = event.keyCode;
         keyCode = this.keyMap[keyCode];
 
-        if (undefined !== keyCode &&
-           (keyCodes.ESCAPE !== keyCode))
+        if (undefined === keyCode)
+        {
+            return;
+        }
+
+        event.stopPropagation();
+        event.preventDefault();
+
+        if (keyCodes.ESCAPE !== keyCode)
         {
             // Handle left / right key locations
             //   DOM_KEY_LOCATION_STANDARD = 0x00;
@@ -761,11 +765,16 @@ class WebGLInputDevice implements InputDevice
         var pressedKeys = this.pressedKeys;
         var keyCodes = this.keyCodes;
 
-        event.stopPropagation();
-        event.preventDefault();
-
         var keyCode = event.keyCode;
         keyCode = this.keyMap[keyCode];
+
+        if (undefined === keyCode)
+        {
+            return;
+        }
+
+        event.stopPropagation();
+        event.preventDefault();
 
         if (keyCode === keyCodes.ESCAPE)
         {
@@ -801,7 +810,7 @@ class WebGLInputDevice implements InputDevice
             }
             /* tslint:enable:no-string-literal */
         }
-        else if (undefined !== keyCode)
+        else
         {
             // Handle LEFT / RIGHT.  (See OnKeyDown)
 
