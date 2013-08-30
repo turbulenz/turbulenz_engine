@@ -1746,7 +1746,7 @@ class CanvasContext
         }
     }
 
-    arc(x, y, radius, startAngle, endAngle, anticlockwise)
+    arc(x, y, radius, startAngle, endAngle, anticlockwise?)
     {
         if (radius < 0)
         {
