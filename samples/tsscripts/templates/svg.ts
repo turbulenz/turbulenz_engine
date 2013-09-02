@@ -9,6 +9,7 @@
 /*{# Import additional JS files here #}*/
 
 /*{{ javascript("jslib/canvas.js") }}*/
+/*{{ javascript("jslib/svg.js") }}*/
 
 /*global TurbulenzEngine: true */
 /*global Canvas: false */
@@ -30,7 +31,8 @@ TurbulenzEngine.onload = function onloadFn()
     // This sample only works on the local development server so we harcode the assets path
     var assetPrefix = '/play/samples/';
 
-    var canvas, ctx, svg;
+    var canvas, ctx;
+    var svg: SVGNode;
     var zoom = 1;
 
     var zoomElement = document.getElementById('zoom');
@@ -43,199 +45,10 @@ TurbulenzEngine.onload = function onloadFn()
         zoomElement.onchange = zoomChanged;
     }
 
-    function drawSVGpath(ctx)
-    {
-        var d = this.d;
-
-        ctx.beginPath();
-
-        ctx.path(d);
-
-        if (ctx.fillStyle !== 'none')
-        {
-            ctx.fill();
-        }
-
-        if (ctx.strokeStyle !== 'none')
-        {
-            ctx.stroke();
-        }
-    }
-
-    function drawSVGpolygon(ctx)
-    {
-        var values = this.points;
-        if (values)
-        {
-            var numValues = values.length;
-
-            ctx.beginPath();
-
-            ctx.moveTo(values[0], values[1]);
-
-            for (var n = 2; n < numValues; n += 2)
-            {
-                ctx.lineTo(values[n], values[n + 1]);
-            }
-
-            ctx.closePath();
-
-            if (ctx.fillStyle !== 'none')
-            {
-                ctx.fill();
-            }
-
-            if (ctx.strokeStyle !== 'none')
-            {
-                ctx.stroke();
-            }
-        }
-    }
-
-    function drawSVGpolyline(ctx)
-    {
-        var values = this.points;
-        if (values)
-        {
-            var numValues = values.length;
-
-            ctx.beginPath();
-
-            ctx.moveTo(values[0], values[1]);
-
-            for (var n = 2; n < numValues; n += 2)
-            {
-                ctx.lineTo(values[n], values[n + 1]);
-            }
-
-            if (ctx.fillStyle !== 'none')
-            {
-                ctx.fill();
-            }
-
-            if (ctx.strokeStyle !== 'none')
-            {
-                ctx.stroke();
-            }
-        }
-    }
-
-    function drawSVGrect(ctx)
-    {
-        var x = this.x;
-        var y = this.y;
-        var width = this.width;
-        var height = this.height;
-
-        if (ctx.fillStyle !== 'none')
-        {
-            ctx.fillRect(x, y, width, height);
-        }
-
-        if (ctx.strokeStyle !== 'none')
-        {
-            ctx.strokeRect(x, y, width, height);
-        }
-    }
-
-    function drawSVGcircle(ctx)
-    {
-        var cx = this.cx;
-        var cy = this.cy;
-        var radius = this.r;
-        if (radius > 0)
-        {
-            ctx.beginPath();
-
-            ctx.arc(cx, cy, radius, 0, (2 * Math.PI));
-
-            if (ctx.fillStyle !== 'none')
-            {
-                ctx.fill();
-            }
-
-            if (ctx.strokeStyle !== 'none')
-            {
-                ctx.stroke();
-            }
-        }
-    }
-
-    function drawSVGellipse(ctx)
-    {
-        var cx = this.cx;
-        var cy = this.cy;
-        var rx = this.rx;
-        var ry = this.ry;
-        if (rx > 0 && ry > 0)
-        {
-            ctx.beginPath();
-
-            if (rx !== ry)
-            {
-                var r, sx, sy;
-                if (rx > ry)
-                {
-                    r = rx;
-                    sx = 1;
-                    sy = ry / rx;
-                }
-                else //if (rx < ry)
-                {
-                    r = ry;
-                    sx = rx / ry;
-                    sy = 1;
-                }
-
-                ctx.translate(cx, cy);
-                ctx.scale(sx, sy);
-                ctx.arc(0, 0, r, 0, (2 * Math.PI));
-                ctx.scale(1 / sx, 1 / sy);
-                ctx.translate(-cx, -cy);
-            }
-            else
-            {
-                ctx.arc(cx, cy, rx, 0, (2 * Math.PI));
-            }
-
-            if (ctx.fillStyle !== 'none')
-            {
-                ctx.fill();
-            }
-
-            if (ctx.strokeStyle !== 'none')
-            {
-                ctx.stroke();
-            }
-        }
-    }
-
-    function drawSVGline(ctx)
-    {
-        var x1 = this.x1;
-        var y1 = this.y1;
-        var x2 = this.x2;
-        var y2 = this.y2;
-
-        ctx.beginPath();
-
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-
-        if (ctx.strokeStyle !== 'none')
-        {
-            ctx.stroke();
-        }
-    }
-
-    function drawSVGempty(ctx)
-    {
-    }
-
     // Don't set the flag if we're running on IE10
 
     var isIE = (!!window.ActiveXObject) &&
-        (-1 === window.navigator.userAgent.indexOf("MSIE 1"));
+                (-1 === window.navigator.userAgent.indexOf("MSIE 1"));
 
     function buildAttributesMap(attributes, attributesMap)
     {
@@ -484,115 +297,15 @@ TurbulenzEngine.onload = function onloadFn()
         return value;
     }
 
-    function drawSVGStateNode(ctx)
+    function parseOptionalFloat(value)
     {
-        ctx.save();
-
-        var transform = this.transform;
-        if (transform)
+        if (value !== undefined)
         {
-            var numTransforms = transform.length;
-            for (var t = 0; t < numTransforms; t += 1)
-            {
-                var tr = transform[t];
-                var command = tr[0];
-                var arg = tr[1];
-                var ax, ay;
-                switch (command)
-                {
-                case 'translate':
-                    ax = arg[0];
-                    ay = arg[1];
-                    if (ax !== 0 || ay !== 0)
-                    {
-                        ctx.translate(ax, ay);
-                    }
-                    break;
-
-                case 'scale':
-                    ax = arg[0];
-                    ay = arg[1];
-                    if (ax !== 1 || ay !== 1)
-                    {
-                        ctx.scale(ax, ay);
-                    }
-                    break;
-
-                case 'rotate':
-                    var angle = arg[0];
-                    ax = arg[1];
-                    ay = arg[2];
-                    if (angle !== 0)
-                    {
-                        if (ax !== 0 || ay !== 0)
-                        {
-                            ctx.translate(ax, ay);
-                            ctx.rotate(angle);
-                            ctx.translate(-ax, -ay);
-                        }
-                        else
-                        {
-                            ctx.rotate(angle);
-                        }
-                    }
-                    break;
-
-                case 'transform':
-                    ctx.transform(arg[0], arg[1], arg[2],
-                                  arg[3], arg[4], arg[5]);
-                    break;
-
-                default:
-                    break;
-                }
-            }
+            return parseFloat(value);
         }
-
-        var fill = this.fill;
-        if (fill)
+        else
         {
-            ctx.fillStyle = fill;
-        }
-
-        var stroke = this.stroke;
-        if (stroke)
-        {
-            ctx.strokeStyle = stroke;
-        }
-
-        var lineWidth = this.lineWidth;
-        if (lineWidth)
-        {
-            ctx.lineWidth = lineWidth;
-        }
-
-        this._draw(ctx);
-
-        var children = this.children;
-        if (children)
-        {
-            var numChildren = children.length;
-            for (var n = 0; n < numChildren; n += 1)
-            {
-                children[n].draw(ctx);
-            }
-        }
-
-        ctx.restore();
-    }
-
-    function drawSVGNode(ctx)
-    {
-        this._draw(ctx);
-
-        var children = this.children;
-        if (children)
-        {
-            var numChildren = children.length;
-            for (var n = 0; n < numChildren; n += 1)
-            {
-                children[n].draw(ctx);
-            }
+            return 0;
         }
     }
 
@@ -620,29 +333,94 @@ TurbulenzEngine.onload = function onloadFn()
         }
 
         // create node
-        var node : any = {};
+        var nodeParams: any = {};
         var n;
 
         var attributes = e.attributes;
         if (attributes)
         {
-            buildAttributesMap(attributes, node);
+            buildAttributesMap(attributes, nodeParams);
         }
 
-        var id = node.id;
+        // Convert shape parameters
+        var svgNode: SVGNode;
+        if (type === "path")
+        {
+            var d = nodeParams.d;
+            if (d)
+            {
+                d = d.replace(',', ' ').replace(/\s+/g, ' ').replace(' -', '-').replace(/\s([AaCcHhLlMmQqSsTtVvZz])/g, "$1");
+                svgNode = new SVGPathNode(d);
+            }
+        }
+        else if (type === "polygon" ||
+                 type === "polyline")
+        {
+            var points = nodeParams.points;
+            if (points)
+            {
+                points = points.replace(/\s+/g, ',').split(',');
+                var numPoints = points.length;
+                for (n = 0; n < numPoints; n += 1)
+                {
+                    points[n] = parseFloat(points[n]);
+                }
+
+                if (type === "polygon")
+                {
+                    svgNode = new SVGPolygonNode(points);
+                }
+                else
+                {
+                    svgNode = new SVGPolylineNode(points);
+                }
+            }
+        }
+        else if (type === "rect")
+        {
+            svgNode = new SVGRectNode(parseOptionalFloat(nodeParams.x),
+                                      parseOptionalFloat(nodeParams.y),
+                                      parseFloat(nodeParams.width),
+                                      parseFloat(nodeParams.height));
+        }
+        else if (type === "circle")
+        {
+            svgNode = new SVGCircleNode(parseOptionalFloat(nodeParams.cx),
+                                        parseOptionalFloat(nodeParams.cy),
+                                        parseFloat(nodeParams.r));
+        }
+        else if (type === "ellipse")
+        {
+            svgNode = new SVGEllipseNode(parseOptionalFloat(nodeParams.cx),
+                                         parseOptionalFloat(nodeParams.cy),
+                                         parseFloat(nodeParams.rx),
+                                         parseFloat(nodeParams.ry));
+        }
+        else if (type === "line")
+        {
+            svgNode = new SVGLineNode(parseOptionalFloat(nodeParams.x1),
+                                      parseOptionalFloat(nodeParams.y1),
+                                      parseOptionalFloat(nodeParams.x2),
+                                      parseOptionalFloat(nodeParams.y2));
+        }
+
+        if (!svgNode)
+        {
+            svgNode = new SVGEmptyNode();
+        }
+
+        var id = nodeParams.id;
         if (id)
         {
-            idMap[id] = node;
+            idMap[id] = nodeParams;
         }
 
         // Process style
         var fillStyle, strokeStyle, strokeWidthStyle;
 
-        var style = node.style;
+        var style = nodeParams.style;
         if (style)
         {
-            delete node.style;
-
             style = style.replace(/\s+/g, '');
 
             var fillIndex = style.indexOf('fill:');
@@ -682,49 +460,43 @@ TurbulenzEngine.onload = function onloadFn()
             }
         }
 
-        if (node.fill)
+        if (nodeParams.fill)
         {
-            fillStyle = node.fill.replace(/\s+/g, '');
-            delete node.fill;
+            fillStyle = nodeParams.fill.replace(/\s+/g, '');
         }
 
-        if (node.stroke)
+        if (nodeParams.stroke)
         {
-            strokeStyle = node.stroke;
-            delete node.stroke;
+            strokeStyle = nodeParams.stroke;
         }
 
-        if (node['stroke-width'])
+        if (nodeParams['stroke-width'])
         {
-            strokeWidthStyle = node['stroke-width'];
-            delete node['stroke-width'];
+            strokeWidthStyle = nodeParams['stroke-width'];
         }
 
         if (fillStyle)
         {
             fillStyle = checkStyle(fillStyle, idMap);
+            svgNode.setFillStyle(fillStyle);
         }
 
         if (strokeStyle)
         {
             strokeStyle = checkStyle(strokeStyle, idMap);
+            svgNode.setStrokeStyle(strokeStyle);
         }
 
-        var lineWidth;
         if (strokeWidthStyle)
         {
-            lineWidth = parseUnitValue(strokeWidthStyle);
+            strokeWidthStyle = parseUnitValue(strokeWidthStyle);
+            svgNode.setLineWidth(strokeWidthStyle);
         }
 
         // Convert transform
-        var transformArray;
-        var transform = node.transform;
+        var transform = nodeParams.transform;
         if (transform)
         {
-            delete node.transform;
-
-            transformArray = [];
-
             var parametersIndex = transform.indexOf('(');
             while (parametersIndex !== -1)
             {
@@ -745,23 +517,20 @@ TurbulenzEngine.onload = function onloadFn()
                 case 'translate':
                     var tx = parseFloat(parameters[0]);
                     var ty = (parameters.length > 1 ? parseFloat(parameters[1]) : 0);
-                    transformArray.push(['translate',
-                                         <string><any>[tx, ty]]);
+                    svgNode.translate(tx, ty);
                     break;
 
                 case 'scale':
                     var sx = parseFloat(parameters[0]);
                     var sy = (parameters.length > 1 ? parseFloat(parameters[1]) : sx);
-                    transformArray.push(['scale',
-                                         <string><any>[sx, sy]]);
+                    svgNode.scale(sx, sy);
                     break;
 
                 case 'rotate':
                     var angle = parseFloat(parameters[0]) * (Math.PI / 180);
                     var cx = (parameters.length > 1 ? parseFloat(parameters[1]) : 0);
                     var cy = (parameters.length > 2 ? parseFloat(parameters[2]) : cx);
-                    transformArray.push(['rotate',
-                                         <string><any>[angle, cx, cy]]);
+                    svgNode.rotate(angle, cx, cy);
                     break;
 
                 case 'matrix':
@@ -771,8 +540,7 @@ TurbulenzEngine.onload = function onloadFn()
                     var m3 = parseFloat(parameters[3]);
                     var m4 = parseFloat(parameters[4]);
                     var m5 = parseFloat(parameters[5]);
-                    transformArray.push(['transform',
-                                         <string><any>[m0, m1, m2, m3, m4, m5]]);
+                    svgNode.transform(m0, m1, m2, m3, m4, m5);
                     break;
 
                 default:
@@ -795,93 +563,9 @@ TurbulenzEngine.onload = function onloadFn()
             }
         }
 
-        // Convert shape parameters
-        var draw = drawSVGempty;
-
-        function parseOptionalFloat(value)
-        {
-            if (value !== undefined)
-            {
-                return parseFloat(value);
-            }
-            else
-            {
-                return 0;
-            }
-        }
-
-        if (type === "path")
-        {
-            var d = node.d;
-            if (d)
-            {
-                node.d = d.replace(',', ' ').replace(/\s+/g, ' ').replace(' -', '-').replace(/\s([AaCcHhLlMmQqSsTtVvZz])/g, "$1");
-                draw = drawSVGpath;
-            }
-        }
-        else if (type === "polygon" ||
-                 type === "polyline")
-        {
-            if (type === "polygon")
-            {
-                draw = drawSVGpolygon;
-            }
-            else
-            {
-                draw = drawSVGpolyline;
-            }
-
-            var points = node.points;
-            if (points)
-            {
-                points = points.replace(/\s+/g, ',').split(',');
-                var numPoints = points.length;
-                for (n = 0; n < numPoints; n += 1)
-                {
-                    points[n] = parseFloat(points[n]);
-                }
-                node.points = points;
-            }
-        }
-        else if (type === "rect")
-        {
-            draw = drawSVGrect;
-
-            node.x = parseOptionalFloat(node.x);
-            node.y = parseOptionalFloat(node.y);
-            node.width = parseFloat(node.width);
-            node.height = parseFloat(node.height);
-        }
-        else if (type === "circle")
-        {
-            draw = drawSVGcircle;
-
-            node.cx = parseOptionalFloat(node.cx);
-            node.cy = parseOptionalFloat(node.cy);
-            node.r = parseFloat(node.r);
-        }
-        else if (type === "ellipse")
-        {
-            draw = drawSVGellipse;
-
-            node.cx = parseOptionalFloat(node.cx);
-            node.cy = parseOptionalFloat(node.cy);
-            node.rx = parseFloat(node.rx);
-            node.ry = parseFloat(node.ry);
-        }
-        else if (type === "line")
-        {
-            draw = drawSVGline;
-
-            node.x1 = parseOptionalFloat(node.x1);
-            node.y1 = parseOptionalFloat(node.y1);
-            node.x2 = parseOptionalFloat(node.x2);
-            node.y2 = parseOptionalFloat(node.y2);
-        }
-
         // parse children
-        var children = [], child;
-
+        var addedChildren = 0;
+        var child;
         var childNodes = e.children;
         if (childNodes)
         {
@@ -891,7 +575,8 @@ TurbulenzEngine.onload = function onloadFn()
                 child = parseSVG(childNodes[n], idMap);
                 if (child)
                 {
-                    children[children.length] = child;
+                    svgNode.addChild(child);
+                    addedChildren += 1;
                 }
             }
         }
@@ -903,42 +588,29 @@ TurbulenzEngine.onload = function onloadFn()
                 child = parseSVG(childNode, idMap);
                 if (child)
                 {
-                    children[children.length] = child;
+                    svgNode.addChild(child);
+                    addedChildren += 1;
                 }
                 childNode = childNode.nextSibling;
             }
         }
 
-        if (children.length !== 0)
+        if (addedChildren === 0 &&
+            svgNode instanceof SVGEmptyNode)
         {
-            node.children = children;
+            return null;
         }
 
-        node.type = type;
-        node._draw = draw;
+        return svgNode;
+    }
 
-        var hasState = (transform ||
-                        fillStyle ||
-                        strokeStyle ||
-                        strokeWidthStyle);
-        if (hasState)
+    function parseBaseVal(baseVal)
+    {
+        if (baseVal.valueAsString.indexOf('%') !== -1)
         {
-            node.draw = drawSVGStateNode;
-            node.transform = transformArray;
-            node.fill = fillStyle;
-            node.stroke = strokeStyle;
-            node.lineWidth = lineWidth;
+            return 0;
         }
-        else if (node.children)
-        {
-            node.draw = drawSVGNode;
-        }
-        else
-        {
-            node.draw = draw;
-        }
-
-        return node;
+        return baseVal.value
     }
 
     function loadSVGfile(url)
@@ -995,29 +667,22 @@ TurbulenzEngine.onload = function onloadFn()
 
                             svg = parseSVG(loadedSVG, idMap);
 
-                            svg.idMap = idMap;
+                            var width = 0, height = 0;
 
-                            svg.findById = function findByIdFn(id)
+                            if (loadedSVG.width && loadedSVG.width.baseVal &&
+                                loadedSVG.height && loadedSVG.height.baseVal)
                             {
-                                return this.idMap[id];
-                            };
-
-                            var width, height;
-
-                            if (svg.width && svg.height)
-                            {
-                                width = parseUnitValue(svg.width);
-                                height = parseUnitValue(svg.height);
+                                width = parseBaseVal(loadedSVG.width.baseVal);
+                                height = parseBaseVal(loadedSVG.height.baseVal);
                             }
                             else if (loadedSVG.viewBox &&
-                                     loadedSVG.viewBox.baseVal &&
-                                     loadedSVG.viewBox.baseVal.width &&
-                                     loadedSVG.viewBox.baseVal.height)
+                                     loadedSVG.viewBox.baseVal)
                             {
                                 width = loadedSVG.viewBox.baseVal.width;
                                 height = loadedSVG.viewBox.baseVal.height;
                             }
-                            else
+
+                            if (!width || !height)
                             {
                                 width = graphicsDevice.width;
                                 height = graphicsDevice.height;
