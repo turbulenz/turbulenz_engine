@@ -175,7 +175,16 @@ class SVGBaseNode implements SVGNode
             }
             else if (lastType === SVGNodeTransform.Rotate)
             {
-                doAdd = true;
+                if (type === SVGNodeTransform.Rotate &&
+                    lastValues[1] === values[1] &&
+                    lastValues[2] === values[2])
+                {
+                    lastValues[0] += values[0];
+                }
+                else
+                {
+                    doAdd = true;
+                }
             }
             else if (lastType === SVGNodeTransform.Matrix)
             {
