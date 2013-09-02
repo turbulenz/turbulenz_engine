@@ -517,20 +517,29 @@ TurbulenzEngine.onload = function onloadFn()
                 case 'translate':
                     var tx = parseFloat(parameters[0]);
                     var ty = (parameters.length > 1 ? parseFloat(parameters[1]) : 0);
-                    svgNode.translate(tx, ty);
+                    if (tx !== 0 || ty !== 0)
+                    {
+                        svgNode.translate(tx, ty);
+                    }
                     break;
 
                 case 'scale':
                     var sx = parseFloat(parameters[0]);
                     var sy = (parameters.length > 1 ? parseFloat(parameters[1]) : sx);
-                    svgNode.scale(sx, sy);
+                    if (sx !== 1 || sy !== 1)
+                    {
+                        svgNode.scale(sx, sy);
+                    }
                     break;
 
                 case 'rotate':
                     var angle = parseFloat(parameters[0]) * (Math.PI / 180);
-                    var cx = (parameters.length > 1 ? parseFloat(parameters[1]) : 0);
-                    var cy = (parameters.length > 2 ? parseFloat(parameters[2]) : cx);
-                    svgNode.rotate(angle, cx, cy);
+                    if (angle !== 0)
+                    {
+                        var cx = (parameters.length > 1 ? parseFloat(parameters[1]) : 0);
+                        var cy = (parameters.length > 2 ? parseFloat(parameters[2]) : cx);
+                        svgNode.rotate(angle, cx, cy);
+                    }
                     break;
 
                 case 'matrix':
