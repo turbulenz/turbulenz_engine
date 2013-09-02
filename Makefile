@@ -93,6 +93,10 @@ fontmanager_deps := platform utilities debug
 canvas_src := $(TS_SRC_DIR)/canvas.ts
 canvas_deps := platform fontmanager
 
+# svg
+svg_src := $(TS_SRC_DIR)/svg.ts
+svg_deps := canvas
+
 # jsengine_base
 jsengine_base_src := $(addprefix $(TS_SRC_DIR)/, \
   assetcache.ts assettracker.ts camera.ts charactercontroller.ts \
@@ -135,7 +139,7 @@ capturedevices_deps := platform debug
 TSLIBS += platform debug vmath aabbtree physics_canvas platform_canvas   \
   utilities services tzdraw2d physics2d fontmanager canvas jsengine_base \
   jsengine jsengine_simplerendering jsengine_deferredrendering           \
-  jsengine_forwardrendering jsengine_debug capturedevices
+  jsengine_forwardrendering jsengine_debug capturedevices svg
 
 # Check we haven't forgotten any tslib files
 ifeq (macosx,$(TARGET))
