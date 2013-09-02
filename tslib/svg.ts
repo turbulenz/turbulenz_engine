@@ -7,10 +7,15 @@ interface SVGNode
 {
     addChild: (child: SVGNode) => void;
     removeChild: (child: SVGNode) => void;
+    getNumChildren: () => number;
+    getChild: (i: number) => SVGNode;
 
     setFillStyle: (style: any) => void;
+    getFillStyle: () => any;
     setStrokeStyle: (style: any) => void;
+    getStrokeStyle: () => any;
     setLineWidth: (lineWidth: number) => void;
+    getLineWidth: () => number;
 
     translate: (x: number, y: number) => void;
     scale: (x: number, y: number) => void;
@@ -98,10 +103,25 @@ class SVGBaseNode implements SVGNode
         }
     }
 
+    getNumChildren(): number
+    {
+        return (this._children ? this._children.length : 0);
+    }
+
+    getChild(i: number): SVGNode
+    {
+        return (this._children ? this._children[i] : null);
+    }
+
     setFillStyle(style: any): void
     {
         this._fill = style;
         this._checkState();
+    }
+
+    getFillStyle(): any
+    {
+        return this._fill;
     }
 
     setStrokeStyle(style: any): void
@@ -110,10 +130,20 @@ class SVGBaseNode implements SVGNode
         this._checkState();
     }
 
+    getStrokeStyle(): any
+    {
+        return this._stroke;
+    }
+
     setLineWidth(lineWidth: number): void
     {
         this._lineWidth = lineWidth;
         this._checkState();
+    }
+
+    getLineWidth(): number
+    {
+        return this._lineWidth;
     }
 
     translate(x: number, y: number): void
