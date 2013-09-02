@@ -475,22 +475,28 @@ TurbulenzEngine.onload = function onloadFn()
             strokeWidthStyle = nodeParams['stroke-width'];
         }
 
+        var hasStyle = false;
+        var hasTransforms = false;
+
         if (fillStyle)
         {
             fillStyle = checkStyle(fillStyle, idMap);
             svgNode.setFillStyle(fillStyle);
+            hasStyle = true;
         }
 
         if (strokeStyle)
         {
             strokeStyle = checkStyle(strokeStyle, idMap);
             svgNode.setStrokeStyle(strokeStyle);
+            hasStyle = true;
         }
 
         if (strokeWidthStyle)
         {
             strokeWidthStyle = parseUnitValue(strokeWidthStyle);
             svgNode.setLineWidth(strokeWidthStyle);
+            hasStyle = true;
         }
 
         // Convert transform
@@ -520,6 +526,7 @@ TurbulenzEngine.onload = function onloadFn()
                     if (tx !== 0 || ty !== 0)
                     {
                         svgNode.translate(tx, ty);
+                        hasTransforms = true;
                     }
                     break;
 
@@ -529,6 +536,7 @@ TurbulenzEngine.onload = function onloadFn()
                     if (sx !== 1 || sy !== 1)
                     {
                         svgNode.scale(sx, sy);
+                        hasTransforms = true;
                     }
                     break;
 
@@ -539,6 +547,7 @@ TurbulenzEngine.onload = function onloadFn()
                         var cx = (parameters.length > 1 ? parseFloat(parameters[1]) : 0);
                         var cy = (parameters.length > 2 ? parseFloat(parameters[2]) : cx);
                         svgNode.rotate(angle, cx, cy);
+                        hasTransforms = true;
                     }
                     break;
 
@@ -550,6 +559,7 @@ TurbulenzEngine.onload = function onloadFn()
                     var m4 = parseFloat(parameters[4]);
                     var m5 = parseFloat(parameters[5]);
                     svgNode.transform(m0, m1, m2, m3, m4, m5);
+                    hasTransforms = true;
                     break;
 
                 default:
@@ -604,10 +614,35 @@ TurbulenzEngine.onload = function onloadFn()
             }
         }
 
-        if (addedChildren === 0 &&
-            svgNode instanceof SVGEmptyNode)
+        if (svgNode instanceof SVGEmptyNode)
         {
-            return null;
+            if (addedChildren === 0)
+            {
+                return null;
+            }
+            else if (addedChildren === 1)
+            {
+                if (!hasTransforms)
+                {
+                    var onlyChild = svgNode.getChild(0);
+                    if (hasStyle)
+                    {
+                        if (fillStyle)
+                        {
+                            onlyChild.setFillStyle(fillStyle);
+                        }
+                        if (strokeStyle)
+                        {
+                            onlyChild.setStrokeStyle(strokeStyle);
+                        }
+                        if (strokeWidthStyle)
+                        {
+                            onlyChild.setLineWidth(strokeWidthStyle);
+                        }
+                    }
+                    return onlyChild;
+                }
+            }
         }
 
         return svgNode;
