@@ -288,15 +288,17 @@ class SVGBaseNode implements SVGNode
                     {
                         var ax = arg[1];
                         var ay = arg[2];
+
+                        m0 = matrix[0];
+                        m1 = matrix[1];
+                        m2 = matrix[2];
+                        m3 = matrix[3];
+
                         if (ax !== 0 || ay !== 0)
                         {
-                            matrix[4] += (matrix[0] * ax + matrix[2] * ay);
-                            matrix[5] += (matrix[1] * ax + matrix[3] * ay);
+                            matrix[4] += (m0 * ax + m2 * ay);
+                            matrix[5] += (m1 * ax + m3 * ay);
 
-                            m0 = matrix[0];
-                            m1 = matrix[1];
-                            m2 = matrix[2];
-                            m3 = matrix[3];
                             matrix[0] = (m0 *  c + m2 * s);
                             matrix[1] = (m1 *  c + m3 * s);
                             matrix[2] = (m0 * -s + m2 * c);
@@ -307,10 +309,6 @@ class SVGBaseNode implements SVGNode
                         }
                         else
                         {
-                            m0 = matrix[0];
-                            m1 = matrix[1];
-                            m2 = matrix[2];
-                            m3 = matrix[3];
                             matrix[0] = (m0 *  c + m2 * s);
                             matrix[1] = (m1 *  c + m3 * s);
                             matrix[2] = (m0 * -s + m2 * c);
