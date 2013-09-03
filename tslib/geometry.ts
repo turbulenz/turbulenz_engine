@@ -94,7 +94,7 @@ class Geometry
 class GeometryInstance implements Renderable
 {
     static version = 1;
-    maxUpdateValue = Number.MAX_VALUE;
+    static maxUpdateValue = Number.MAX_VALUE;
 
     // Renderable
     geometry            : Geometry;
@@ -281,8 +281,8 @@ class GeometryInstance implements Renderable
         worldExtents[3] = customWorldExtents[3];
         worldExtents[4] = customWorldExtents[4];
         worldExtents[5] = customWorldExtents[5];
-        var alreadyHadCustomExtents = (this.worldExtentsUpdate === this.maxUpdateValue);
-        this.worldExtentsUpdate = this.maxUpdateValue;
+        var alreadyHadCustomExtents = (this.worldExtentsUpdate === GeometryInstance.maxUpdateValue);
+        this.worldExtentsUpdate = GeometryInstance.maxUpdateValue;
         this.node.renderableWorldExtentsUpdated(alreadyHadCustomExtents);
     }
 
@@ -300,7 +300,7 @@ class GeometryInstance implements Renderable
     //
     getCustomWorldExtents()
     {
-        if (this.worldExtentsUpdate === this.maxUpdateValue)
+        if (this.worldExtentsUpdate === GeometryInstance.maxUpdateValue)
         {
             return this.worldExtents;
         }
@@ -312,7 +312,7 @@ class GeometryInstance implements Renderable
     //
     hasCustomWorldExtents() : boolean
     {
-        return this.worldExtentsUpdate === this.maxUpdateValue;
+        return this.worldExtentsUpdate === GeometryInstance.maxUpdateValue;
     }
 
     //
