@@ -331,6 +331,11 @@ TurbulenzEngine.onload = function onloadFn()
             // TODO
             return null;
         }
+        else if (type === "style")
+        {
+            // TODO
+            return null;
+        }
 
         // create node
         var nodeParams: any = {};
