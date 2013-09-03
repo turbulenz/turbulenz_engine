@@ -46,6 +46,8 @@ Fixed
 
 * Fixed background sound source bug in Protolib.
 
+* Fixed a bug in the ForwardRendering skinned Blinn and flat techniques.
+
 
 Known Issues
 ============

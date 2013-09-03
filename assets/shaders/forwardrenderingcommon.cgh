@@ -650,7 +650,7 @@ VP_FLAT_OUT vp_flat_skinned(VP_FLAT_SKINNED_IN IN)
 
     Normal.xyz = normalize(Normal.xyz);
 
-    float3 position = TransformPoint(IN.Position, worldView);
+    float3 position = TransformPoint(Position, worldView);
     OUT.Position = PointToDevice(position, projection);
     OUT.Color = materialColor;
     OUT.ViewNormal = TransformNormal(Normal, worldViewInverseTranspose);
@@ -688,7 +688,7 @@ VP_BLINN_OUT vp_blinn_skinned(VP_BLINN_SKINNED_IN IN)
 
     Normal.xyz = normalize(Normal.xyz);
 
-    float3 position = TransformPoint(IN.Position, worldView);
+    float3 position = TransformPoint(Position, worldView);
     OUT.Position = PointToDevice(position, projection);
     OUT.Color = materialColor;
     OUT.UV = TransformUV(IN.UV);
