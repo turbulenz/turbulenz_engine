@@ -594,8 +594,12 @@ class InterpolatorController implements ControllerBaseClass
             return;
         }
 
+        this.dirtyBounds = false;
+
         var currentTime = this.currentTime;
         var anim = this.currentAnim;
+        var mathDevice = this.mathDevice;
+        var ibounds = this.bounds;
 
         // work out the offset in the frame list and the delta between frame pairs
         var bounds = anim.bounds;
@@ -604,8 +608,8 @@ class InterpolatorController implements ControllerBaseClass
         {
             // copy the end bounds
             var endBounds = bounds[numFrames - 1];
-            this.bounds.center = endBounds.center;
-            this.bounds.halfExtent = endBounds.halfExtent;
+            ibounds.center = mathDevice.v3Copy(endBounds.center, ibounds.center);
+            ibounds.halfExtent = mathDevice.v3Copy(endBounds.halfExtent, ibounds.halfExtent);
             return;
         }
 
@@ -613,8 +617,8 @@ class InterpolatorController implements ControllerBaseClass
         {
             // copy the start bounds
             var startBounds = bounds[0];
-            this.bounds.center = startBounds.center;
-            this.bounds.halfExtent = startBounds.halfExtent;
+            ibounds.center = mathDevice.v3Copy(startBounds.center, ibounds.center);
+            ibounds.halfExtent = mathDevice.v3Copy(startBounds.halfExtent, ibounds.halfExtent);
             return;
         }
 
@@ -630,9 +634,6 @@ class InterpolatorController implements ControllerBaseClass
         var startTime = boundsStart.time;
         var endTime = boundsEnd.time;
         var delta = (currentTime - startTime) / (endTime - startTime);
-
-        var mathDevice = this.mathDevice;
-        var ibounds = this.bounds;
 
         // If delta is close to the limits we just copy the bounds
         var minKeyframeDelta = Animation.minKeyframeDelta;
@@ -661,8 +662,6 @@ class InterpolatorController implements ControllerBaseClass
             centerOffset = mathDevice.v3Abs(centerOffset, centerOffset);
             ibounds.halfExtent = mathDevice.v3Add(newExtent, centerOffset, newExtent);
         }
-
-        this.dirtyBounds = false;
     }
 
     // Note this is purely a transform for the given joint and doesn't include parent transforms
