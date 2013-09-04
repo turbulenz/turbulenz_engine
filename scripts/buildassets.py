@@ -4,8 +4,8 @@
 from sys import argv, stdout
 from json import loads as load_json, dumps as dump_json
 from yaml import load as load_yaml
-from os.path import join as path_join, exists as path_exists, splitext, basename, normpath, getmtime
-from os import makedirs, listdir, environ, unlink as remove_file, getenv as os_getenv
+from os.path import join as path_join, exists as path_exists, splitext, basename, normpath, getmtime, dirname
+from os import makedirs, listdir, environ, unlink as remove_file, getenv as os_getenv, walk as os_walk, rmdir
 from shutil import copy2 as copy_file
 from hashlib import md5
 from base64 import urlsafe_b64encode
@@ -429,6 +429,8 @@ def build_asset(asset_info, source_list, tools, build_path, verbose):
     dst_path = path_join(build_path, tools.get_asset_destination(src))
     asset_info.build_path = dst_path
 
+    create_dir(dirname(dst_path))
+
     source = source_list.get_source(src)
     deps = [ source_list.get_source(path) for path in asset_info.deps ]
     if any([dep.has_changed() for dep in deps]) or asset_tool.has_changed() or not path_exists(dst_path) \
@@ -473,10 +475,21 @@ def install(install_asset_info, install_path):
 
     return mapping
 
-def remove_old_build_files(build_asset_info, build_paths):
+def remove_old_build_files(build_asset_info, build_path):
     old_build_files = []
-    for path in build_paths:
-        old_build_files.extend(path_join(path, filename) for filename in listdir(path))
+    exludes = [
+        path_join(build_path, 'sourcehashes.json'),
+        path_join(build_path, 'cgfx2json.version'),
+        path_join(build_path, 'json2json.version'),
+        path_join(build_path, 'obj2json.version'),
+        path_join(build_path, 'tga2png.version'),
+        path_join(build_path, 'bmfont2json.version'),
+        path_join(build_path, 'dae2json.version'),
+        path_join(build_path, 'material2json.version')
+    ]
+    for base, _, files in os_walk(build_path):
+        dir_files = [path_join(base, filename) for filename in files]
+        old_build_files.extend(f for f in dir_files if f not in exludes)
 
     for asset_info in build_asset_info:
         try:
@@ -487,6 +500,14 @@ def remove_old_build_files(build_asset_info, build_paths):
     for path in old_build_files:
         print 'Removing old build file ' + path
         remove_file(path)
+
+    for base, _, _ in os_walk(build_path, topdown=False):
+        try:
+            rmdir(base)
+        except OSError:
+            pass
+        else:
+            print 'Removed old build directory ' + base
 
 def create_dir(path):
     if path_exists(path) is False:
@@ -516,19 +537,7 @@ def main():
 
     assets_paths = [ normpath(p) for p in args.assets_path ]
     base_build_path = normpath(args.build_path)
-    build_paths = [
-        path_join(base_build_path, 'textures'),
-        path_join(base_build_path, 'models'),
-        path_join(base_build_path, 'sounds'),
-        path_join(base_build_path, 'materials'),
-        path_join(base_build_path, 'shaders'),
-        path_join(base_build_path, 'fonts'),
-        path_join(base_build_path, 'videos'),
-    ]
     create_dir(base_build_path)
-    for path in build_paths:
-        create_dir(path)
-
     create_dir(args.install_path)
 
     tools = Tools(args, base_build_path)
@@ -655,7 +664,7 @@ def main():
             }))
 
     # Cleanup any built files no longer referenced by the new mapping table
-    remove_old_build_files(asset_build_info, build_paths)
+    remove_old_build_files(asset_build_info, base_build_path)
 
     print '%d assets rebuilt' % assets_rebuilt
     print 'Assets build complete'
