@@ -664,6 +664,11 @@ class InterpolatorController implements ControllerBaseClass
         }
     }
 
+    _updateBoundsNoop()
+    {
+        this.dirtyBounds = false;
+    }
+
     // Note this is purely a transform for the given joint and doesn't include parent transforms
     getJointTransform(jointId: number)
     {
@@ -833,6 +838,42 @@ class InterpolatorController implements ControllerBaseClass
         }
 
         this.outputChannels = AnimationChannels.copy(animation.channels);
+
+        // Check if we need to update bounds
+        var bounds = animation.bounds;
+        var numFrames = bounds.length;
+        debug.assert(0 < numFrames);
+        var centerStart = bounds[0].center;
+        var halfExtentStart = bounds[0].halfExtent;
+        var n;
+        for (n = 1; n < numFrames; n += 1)
+        {
+            var frame = bounds[n];
+            var center = frame.center;
+            var halfExtent = frame.halfExtent;
+            if (centerStart[0] !== center[0] ||
+                centerStart[1] !== center[1] ||
+                centerStart[2] !== center[2] ||
+                halfExtentStart[0] !== halfExtent[0] ||
+                halfExtentStart[1] !== halfExtent[1] ||
+                halfExtentStart[2] !== halfExtent[2])
+            {
+                break;
+            }
+        }
+        if (n < numFrames)
+        {
+            this.updateBounds = InterpolatorController.prototype.updateBounds;
+        }
+        else
+        {
+            this.updateBounds = InterpolatorController.prototype._updateBoundsNoop;
+
+            var ibounds = this.bounds;
+            var mathDevice = this.mathDevice;
+            ibounds.center = mathDevice.v3Copy(centerStart, ibounds.center);
+            ibounds.halfExtent = mathDevice.v3Copy(halfExtentStart, ibounds.halfExtent);
+        }
     }
 
     setTime(time)
