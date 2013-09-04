@@ -233,28 +233,6 @@ class PythonTool(Tool):
             cmd.extend(args)
         return self.run_sh(cmd, verbose=verbose)
 
-class Json2Json(PythonTool):
-    def __init__(self, name, path=None, module_name=None, nvtristrip=None):
-        super(Json2Json, self).__init__(name, path, module_name)
-        self.disabled = False
-
-    def get_version(self, version_file_path):
-        cmd = self.base_args[:]
-        cmd.extend(['--version', version_file_path])
-        try:
-            return sh(cmd, verbose=False)
-        except CalledProcessError:
-            self.disabled = True
-
-    def run(self, src, dst, verbose=False, args=None):
-        if self.disabled:
-            raise Exception('Unable to process json2json version number. Please update the tools.')
-        cmd = self.base_args[:]
-        if args:
-            cmd.extend(args)
-        cmd.extend([src, dst])
-        return self.run_sh(cmd, verbose=verbose)
-
 class Dae2Json(PythonTool):
     def __init__(self, name, path=None, module_name=None, nvtristrip=None):
         super(Dae2Json, self).__init__(name, path, module_name)
@@ -345,7 +323,6 @@ class Tools(object):
         obj2json = PythonTool('obj2json', module_name='turbulenz_tools.tools.obj2json')
         material2json = PythonTool('material2json', module_name='turbulenz_tools.tools.material2json')
         bmfont2json = PythonTool('bmfont2json', module_name='turbulenz_tools.tools.bmfont2json')
-        json2json = Json2Json('json2json', module_name='turbulenz_tools.tools.json2json')
         cgfx2json = Cgfx2JsonTool('cgfx2json', path_join(root, 'tools', 'bin', turbulenz_os, 'cgfx2json' + exe))
 
         copy.check_version(build_path, verbose)
@@ -354,7 +331,6 @@ class Tools(object):
         obj2json.check_version(build_path, verbose)
         material2json.check_version(build_path, verbose)
         bmfont2json.check_version(build_path, verbose)
-        json2json.check_version(build_path, verbose)
         cgfx2json.check_version(build_path, verbose)
 
         self.asset_tool_map = {
@@ -366,7 +342,7 @@ class Tools(object):
             '.mp3': copy,
             '.mp4': copy,
             '.webm': copy,
-            '.json': json2json,
+            '.json': copy,
             '.tga': tga2png,
             '.dae': dae2json,
             '.obj': obj2json,
