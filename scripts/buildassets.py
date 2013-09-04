@@ -15,6 +15,7 @@ from threading import Thread, Lock
 from time import sleep
 import multiprocessing
 import argparse
+import errno
 
 import platform
 COLORED_OUTPUT = stdout.isatty() and (platform.system() != 'Windows' or 'ANSICON' in environ)
@@ -486,13 +487,11 @@ def remove_old_build_files(build_asset_info, build_path):
             print 'Removed old build directory ' + base
 
 def create_dir(path):
-    if path_exists(path) is False:
-        try:
-            makedirs(path)
-        except IOError as e:
-            print("Failed creating: %s" % str(e))
-        else:
-            print("Created: %s" % path)
+    try:
+        makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 def main():
     parser = argparse.ArgumentParser()
