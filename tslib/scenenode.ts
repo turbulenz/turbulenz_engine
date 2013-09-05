@@ -1233,19 +1233,19 @@ class SceneNode
     //
     addCustomLocalExtents(localExtents)
     {
-        var customWorldExtents = this.customWorldExtents;
-        if (!customWorldExtents)
+        var customLocalExtents = this.customLocalExtents;
+        if (!customLocalExtents)
         {
-            this.customWorldExtents = localExtents.slice();
+            this.customLocalExtents = localExtents.slice();
         }
         else
         {
-            customWorldExtents[0] = localExtents[0];
-            customWorldExtents[1] = localExtents[1];
-            customWorldExtents[2] = localExtents[2];
-            customWorldExtents[3] = localExtents[3];
-            customWorldExtents[4] = localExtents[4];
-            customWorldExtents[5] = localExtents[5];
+            customLocalExtents[0] = localExtents[0];
+            customLocalExtents[1] = localExtents[1];
+            customLocalExtents[2] = localExtents[2];
+            customLocalExtents[3] = localExtents[3];
+            customLocalExtents[4] = localExtents[4];
+            customLocalExtents[5] = localExtents[5];
         }
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
