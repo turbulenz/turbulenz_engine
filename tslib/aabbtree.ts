@@ -1585,6 +1585,7 @@ AABBTree.prototype.clear = function clearFn()
     this.numExternalNodes = 0;
     this.startUpdate = 0x7FFFFFFF;
     this.endUpdate = -0x7FFFFFFF;
+    this.ignoreY = false;
 };
 
 AABBTree.rayTest = function aabbtreeRayTestFn(trees, ray, callback)
