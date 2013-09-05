@@ -701,7 +701,7 @@ class Scene
     {
         var numVisibleNodes = visibleNodes.length;
         var frustumPlanes = this.frustumPlanes;
-        var useAABBTrees = true;
+        var useSpatialMaps = true;
         var areas = this.areas;
         if (areas)
         {
@@ -823,7 +823,7 @@ class Scene
                     }
                 }
 
-                useAABBTrees = false;
+                useSpatialMaps = false;
             } /*
             else
             {
@@ -831,7 +831,7 @@ class Scene
             }*/
         }
 
-        if (useAABBTrees)
+        if (useSpatialMaps)
         {
             numVisibleNodes += this.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
             this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
@@ -845,7 +845,7 @@ class Scene
     {
         var numVisibleNodes = visibleNodes.length;
         var frustumPlanes = this.frustumPlanes;
-        var useAABBTree = true;
+        var useSpatialMap = true;
         var areas = this.areas;
         if (areas)
         {
@@ -1072,11 +1072,11 @@ class Scene
                     }
                 }
 
-                useAABBTree = false;
+                useSpatialMap = false;
             }
         }
 
-        if (useAABBTree)
+        if (useSpatialMap)
         {
             tree.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
         }
@@ -1278,14 +1278,14 @@ class Scene
     //
     findOverlappingNodes(tree, origin, extents, overlappingNodes)
     {
-        var useAABBTree = true;
+        var useSpatialMap = true;
 
         if (this.areas)
         {
-            useAABBTree = !this._findOverlappingNodesAreas(tree, origin, extents, overlappingNodes);
+            useSpatialMap = !this._findOverlappingNodesAreas(tree, origin, extents, overlappingNodes);
         }
 
-        if (useAABBTree)
+        if (useSpatialMap)
         {
             tree.getOverlappingNodes(extents, overlappingNodes);
         }
@@ -1454,14 +1454,14 @@ class Scene
     //
     findOverlappingRenderables(tree, origin, extents, overlappingRenderables)
     {
-        var useAABBTree = true;
+        var useSpatialMap = true;
 
         if (this.areas)
         {
-            useAABBTree = !this._findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables);
+            useSpatialMap = !this._findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables);
         }
 
-        if (useAABBTree)
+        if (useSpatialMap)
         {
             this._findOverlappingRenderablesNoAreas(tree, extents, overlappingRenderables)
         }
@@ -1900,14 +1900,14 @@ class Scene
     //
     updateVisibleNodes(camera)
     {
-        var useAABBTree = true;
+        var useSpatialMap = true;
 
         if (this.areas)
         {
-            useAABBTree = !this._updateVisibleNodesAreas(camera);
+            useSpatialMap = !this._updateVisibleNodesAreas(camera);
         }
 
-        if (useAABBTree)
+        if (useSpatialMap)
         {
             this._updateVisibleNodesNoAreas(camera);
         }
