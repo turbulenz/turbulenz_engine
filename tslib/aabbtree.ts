@@ -150,7 +150,7 @@ class AABBTree
 AABBTree.prototype.add = function addFn(externalNode, extents)
 {
     var endNode = this.endNode;
-    externalNode.aabbTreeIndex = endNode;
+    externalNode.spatialIndex = endNode;
     var copyExtents = new this.arrayConstructor(6);
     copyExtents[0] = extents[0];
     copyExtents[1] = extents[1];
@@ -167,7 +167,7 @@ AABBTree.prototype.add = function addFn(externalNode, extents)
 
 AABBTree.prototype.remove = function removeFn(externalNode)
 {
-    var index = externalNode.aabbTreeIndex;
+    var index = externalNode.spatialIndex;
     if (index !== undefined)
     {
         if (this.numExternalNodes > 1)
@@ -196,7 +196,7 @@ AABBTree.prototype.remove = function removeFn(externalNode)
             this.clear();
         }
 
-        delete externalNode.aabbTreeIndex;
+        delete externalNode.spatialIndex;
     }
 };
 
@@ -218,7 +218,7 @@ AABBTree.prototype.findParent = function findParentFn(nodeIndex)
 
 AABBTree.prototype.update = function aabbTreeUpdateFn(externalNode, extents)
 {
-    var index = externalNode.aabbTreeIndex;
+    var index = externalNode.spatialIndex;
     if (index !== undefined)
     {
         var min0 = extents[0];
@@ -501,7 +501,7 @@ AABBTree.prototype.rebuild = function rebuildFn()
         else
         {
             rootNode = buildNodes[0];
-            rootNode.externalNode.aabbTreeIndex = 0;
+            rootNode.externalNode.spatialIndex = 0;
             nodes.length = 1;
             nodes[0] = rootNode;
             this.endNode = 1;
@@ -1043,7 +1043,7 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
         maxY = extents[4];
         maxZ = extents[5];
 
-        buildNode.externalNode.aabbTreeIndex = lastNodeIndex;
+        buildNode.externalNode.spatialIndex = lastNodeIndex;
         this.replaceNode(nodes, lastNodeIndex, buildNode);
 
         for (var n = (startIndex + 1); n < endIndex; n += 1)
@@ -1059,7 +1059,7 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
             if (maxZ < extents[5]) { maxZ = extents[5]; }
             /*jshint white: true*/
             lastNodeIndex += 1;
-            buildNode.externalNode.aabbTreeIndex = lastNodeIndex;
+            buildNode.externalNode.spatialIndex = lastNodeIndex;
             this.replaceNode(nodes, lastNodeIndex, buildNode);
         }
 
@@ -1074,7 +1074,7 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
         if ((startIndex + 1) >= splitPosIndex)
         {
             buildNode = buildNodes[startIndex];
-            buildNode.externalNode.aabbTreeIndex = lastNodeIndex;
+            buildNode.externalNode.spatialIndex = lastNodeIndex;
             this.replaceNode(nodes, lastNodeIndex, buildNode);
         }
         else
@@ -1096,7 +1096,7 @@ AABBTree.prototype.recursiveBuild = function recursiveBuildFn(buildNodes, startI
         if ((splitPosIndex + 1) >= endIndex)
         {
             buildNode = buildNodes[splitPosIndex];
-            buildNode.externalNode.aabbTreeIndex = lastNodeIndex;
+            buildNode.externalNode.spatialIndex = lastNodeIndex;
             this.replaceNode(nodes, lastNodeIndex, buildNode);
         }
         else

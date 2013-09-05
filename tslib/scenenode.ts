@@ -68,7 +68,7 @@ class SceneNode
     customWorldExtents              : any; //
     numCustomRenderableWorldExtents : number;
 
-    aabbTreeIndex                   : number;
+    spatialIndex                   : number;
 
     camera                          : Camera;
 
@@ -358,7 +358,7 @@ class SceneNode
     {
         //private function
 
-        if (this.aabbTreeIndex !== undefined)
+        if (this.spatialIndex !== undefined)
         {
             if (this.dynamic)
             {
@@ -543,16 +543,16 @@ class SceneNode
     {
         if (!this.dynamic)
         {
-            if (this.aabbTreeIndex !== undefined)
+            if (this.spatialIndex !== undefined)
             {
                 var scene = this.getRoot().scene;
                 scene.staticSpatialMap.remove(this);
                 scene.staticNodesChangeCounter += 1;
-                delete this.aabbTreeIndex;
+                delete this.spatialIndex;
             }
             delete this.setLocalTransform; //Allowed to move again.
 
-            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an aabbTreeIndex it may no longer.
+            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
             if (worldExtents)
             {
                 this.getRoot().scene.dynamicSpatialMap.update(this, worldExtents);
@@ -578,15 +578,15 @@ class SceneNode
     {
         if (this.dynamic)
         {
-            if (this.aabbTreeIndex !== undefined)
+            if (this.spatialIndex !== undefined)
             {
                 this.getRoot().scene.dynamicSpatialMap.remove(this);
-                delete this.aabbTreeIndex;
+                delete this.spatialIndex;
             }
 
             this.setLocalTransform = SceneNode.invalidSetLocalTransform;
 
-            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an aabbTreeIndex it may no longer.
+            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
             if (worldExtents)
             {
                 var scene = this.getRoot().scene;
@@ -826,7 +826,7 @@ class SceneNode
                         delete node.notifiedParent;
                     }
                 }
-                else if (node.aabbTreeIndex !== undefined)
+                else if (node.spatialIndex !== undefined)
                 {
                     if (node.dynamic)
                     {
