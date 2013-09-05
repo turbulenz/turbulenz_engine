@@ -1237,19 +1237,31 @@ class SceneNode
         if (!customLocalExtents)
         {
             this.customLocalExtents = localExtents.slice();
+            this.dirtyLocalExtents = true;
         }
         else
         {
-            customLocalExtents[0] = localExtents[0];
-            customLocalExtents[1] = localExtents[1];
-            customLocalExtents[2] = localExtents[2];
-            customLocalExtents[3] = localExtents[3];
-            customLocalExtents[4] = localExtents[4];
-            customLocalExtents[5] = localExtents[5];
+            if (customLocalExtents[0] !== localExtents[0] ||
+                customLocalExtents[1] !== localExtents[1] ||
+                customLocalExtents[2] !== localExtents[2] ||
+                customLocalExtents[3] !== localExtents[3] ||
+                customLocalExtents[4] !== localExtents[4] ||
+                customLocalExtents[5] !== localExtents[5])
+            {
+                customLocalExtents[0] = localExtents[0];
+                customLocalExtents[1] = localExtents[1];
+                customLocalExtents[2] = localExtents[2];
+                customLocalExtents[3] = localExtents[3];
+                customLocalExtents[4] = localExtents[4];
+                customLocalExtents[5] = localExtents[5];
+                this.dirtyLocalExtents = true;
+            }
         }
-        this.dirtyWorldExtents = true;
-        this.dirtyLocalExtents = true;
-        this.updateRequired();
+        if (this.dirtyLocalExtents)
+        {
+            this.dirtyWorldExtents = true;
+            this.updateRequired();
+        }
     }
 
     //
@@ -1280,18 +1292,30 @@ class SceneNode
         if (!customWorldExtents)
         {
             this.customWorldExtents = worldExtents.slice();
+            this.dirtyWorldExtents = true;
         }
         else
         {
-            customWorldExtents[0] = worldExtents[0];
-            customWorldExtents[1] = worldExtents[1];
-            customWorldExtents[2] = worldExtents[2];
-            customWorldExtents[3] = worldExtents[3];
-            customWorldExtents[4] = worldExtents[4];
-            customWorldExtents[5] = worldExtents[5];
+            if (customWorldExtents[0] !== worldExtents[0] ||
+                customWorldExtents[1] !== worldExtents[1] ||
+                customWorldExtents[2] !== worldExtents[2] ||
+                customWorldExtents[3] !== worldExtents[3] ||
+                customWorldExtents[4] !== worldExtents[4] ||
+                customWorldExtents[5] !== worldExtents[5])
+            {
+                customWorldExtents[0] = worldExtents[0];
+                customWorldExtents[1] = worldExtents[1];
+                customWorldExtents[2] = worldExtents[2];
+                customWorldExtents[3] = worldExtents[3];
+                customWorldExtents[4] = worldExtents[4];
+                customWorldExtents[5] = worldExtents[5];
+                this.dirtyWorldExtents = true;
+            }
         }
-        this.dirtyWorldExtents = true;
-        this.updateRequired();
+        if (this.dirtyWorldExtents)
+        {
+            this.updateRequired();
+        }
     }
 
     //

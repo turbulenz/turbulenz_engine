@@ -274,16 +274,25 @@ class GeometryInstance implements Renderable
     //
     addCustomWorldExtents(customWorldExtents)
     {
-        var worldExtents = this.worldExtents;
-        worldExtents[0] = customWorldExtents[0];
-        worldExtents[1] = customWorldExtents[1];
-        worldExtents[2] = customWorldExtents[2];
-        worldExtents[3] = customWorldExtents[3];
-        worldExtents[4] = customWorldExtents[4];
-        worldExtents[5] = customWorldExtents[5];
         var alreadyHadCustomExtents = (this.worldExtentsUpdate === GeometryInstance.maxUpdateValue);
-        this.worldExtentsUpdate = GeometryInstance.maxUpdateValue;
-        this.node.renderableWorldExtentsUpdated(alreadyHadCustomExtents);
+        var worldExtents = this.worldExtents;
+        if (!alreadyHadCustomExtents ||
+            customWorldExtents[0] !== worldExtents[0] ||
+            customWorldExtents[1] !== worldExtents[1] ||
+            customWorldExtents[2] !== worldExtents[2] ||
+            customWorldExtents[3] !== worldExtents[3] ||
+            customWorldExtents[4] !== worldExtents[4] ||
+            customWorldExtents[5] !== worldExtents[5])
+        {
+            this.worldExtentsUpdate = GeometryInstance.maxUpdateValue;
+            worldExtents[0] = customWorldExtents[0];
+            worldExtents[1] = customWorldExtents[1];
+            worldExtents[2] = customWorldExtents[2];
+            worldExtents[3] = customWorldExtents[3];
+            worldExtents[4] = customWorldExtents[4];
+            worldExtents[5] = customWorldExtents[5];
+            this.node.renderableWorldExtentsUpdated(alreadyHadCustomExtents);
+        }
     }
 
     //
