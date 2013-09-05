@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2013 Turbulenz Limited
 /*global Float32Array: false*/
 
 interface AABBTreeRayTestResult extends RayHit
@@ -135,6 +135,7 @@ class AABBTree
     getOverlappingNodes: (queryExtents, overlappingNodes, startIndex?) => number;
     getSphereOverlappingNodes: (center, radius, overlappingNodes) => void;
     getOverlappingPairs: (overlappingPairs, startIndex) => number;
+    getExtents: () => any;
     getRootNode: () => AABBTreeNode;
     getNodes: () => void;
     getEndNodeIndex: () => void;
@@ -1551,6 +1552,11 @@ AABBTree.prototype.getOverlappingPairs = function getOverlappingPairsFn(overlapp
     {
         return 0;
     }
+};
+
+AABBTree.prototype.getExtents = function getExtentsFn()
+{
+    return (0 < this.nodes.length ? this.nodes[0].extents : null);
 };
 
 AABBTree.prototype.getRootNode = function getRootNodeFn()
