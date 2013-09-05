@@ -26,7 +26,7 @@ class AABBTreeNode
     extents          : any;
 
     constructor(extents: any, escapeNodeOffset: number,
-                externalNode?: AABBTreeNode)
+                externalNode?: {})
     {
         this.escapeNodeOffset = escapeNodeOffset;
         this.externalNode = externalNode;
@@ -70,7 +70,7 @@ class AABBTreeNode
 
     // Constructor function
     static create(extents: any, escapeNodeOffset: number,
-                  externalNode?: AABBTreeNode): AABBTreeNode
+                  externalNode?: {}): AABBTreeNode
     {
         return new AABBTreeNode(extents, escapeNodeOffset, externalNode);
     }
