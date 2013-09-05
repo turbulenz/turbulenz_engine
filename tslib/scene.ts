@@ -39,6 +39,20 @@ interface SceneBSPNode
     neg: any; // TODO:
 };
 
+interface SpatialMap
+{
+    add: (externalNode, extents: any) => void;
+    update: (externalNode, extents) => void;
+    remove: (externalNode) => void;
+    finalize: () => void;
+    getVisibleNodes: (planes, visibleNodes, startIndex?) => number;
+    getOverlappingNodes: (queryExtents, overlappingNodes, startIndex?) => number;
+    getSphereOverlappingNodes: (center, radius, overlappingNodes) => void;
+    getOverlappingPairs: (overlappingPairs, startIndex) => number;
+    getExtents: () => any;
+    clear: () => void;
+};
+
 //
 // Scene
 //
@@ -66,8 +80,8 @@ class Scene
     materials: { [name: string]: Material; };
     shapes: any; // TODO:
 
-    staticSpatialMap: AABBTree;
-    dynamicSpatialMap: AABBTree;
+    staticSpatialMap: SpatialMap;
+    dynamicSpatialMap: SpatialMap;
     frustumPlanes: any[]; // v4[]?
     animations: any; // TODO:
     skeletons: any; // TODO:
@@ -100,9 +114,12 @@ class Scene
     uint32ArrayConstructor: any; // on prototype
 
     // Scene
-    constructor(mathDevice: MathDevice)
+    constructor(mathDevice: MathDevice, staticSpatialMap?:SpatialMap, dynamicSpatialMap?:SpatialMap)
     {
         this.md = mathDevice;
+        this.staticSpatialMap = (staticSpatialMap || AABBTree.create(true));
+        this.dynamicSpatialMap = (dynamicSpatialMap || AABBTree.create());
+
         this.clear();
 
         var scene = this;
@@ -2634,34 +2651,30 @@ class Scene
     //
     updateExtents()
     {
-        var rootStaticNode = this.staticSpatialMap.getRootNode();
-        var rootDynamicNode = this.dynamicSpatialMap.getRootNode();
+        var rootStaticExtents = this.staticSpatialMap.getExtents();
+        var rootDynamicExtents = this.dynamicSpatialMap.getExtents();
         var sceneExtents = this.extents;
 
-        var extents;
-        if (rootStaticNode)
+        if (rootStaticExtents)
         {
-            extents = rootStaticNode.extents;
-
-            if (rootDynamicNode)
+            if (rootDynamicExtents)
             {
                 var minStaticX, minStaticY, minStaticZ, maxStaticX, maxStaticY, maxStaticZ;
                 var minDynamicX, minDynamicY, minDynamicZ, maxDynamicX, maxDynamicY, maxDynamicZ;
 
-                minStaticX = extents[0];
-                minStaticY = extents[1];
-                minStaticZ = extents[2];
-                maxStaticX = extents[3];
-                maxStaticY = extents[4];
-                maxStaticZ = extents[5];
+                minStaticX = rootStaticExtents[0];
+                minStaticY = rootStaticExtents[1];
+                minStaticZ = rootStaticExtents[2];
+                maxStaticX = rootStaticExtents[3];
+                maxStaticY = rootStaticExtents[4];
+                maxStaticZ = rootStaticExtents[5];
 
-                extents = rootDynamicNode.extents;
-                minDynamicX = extents[0];
-                minDynamicY = extents[1];
-                minDynamicZ = extents[2];
-                maxDynamicX = extents[3];
-                maxDynamicY = extents[4];
-                maxDynamicZ = extents[5];
+                minDynamicX = rootDynamicExtents[0];
+                minDynamicY = rootDynamicExtents[1];
+                minDynamicZ = rootDynamicExtents[2];
+                maxDynamicX = rootDynamicExtents[3];
+                maxDynamicY = rootDynamicExtents[4];
+                maxDynamicZ = rootDynamicExtents[5];
 
                 sceneExtents[0] = (minStaticX < minDynamicX ? minStaticX : minDynamicX);
                 sceneExtents[1] = (minStaticY < minDynamicY ? minStaticY : minDynamicY);
@@ -2672,26 +2685,24 @@ class Scene
             }
             else
             {
-                sceneExtents[0] = extents[0];
-                sceneExtents[1] = extents[1];
-                sceneExtents[2] = extents[2];
-                sceneExtents[3] = extents[3];
-                sceneExtents[4] = extents[4];
-                sceneExtents[5] = extents[5];
+                sceneExtents[0] = rootStaticExtents[0];
+                sceneExtents[1] = rootStaticExtents[1];
+                sceneExtents[2] = rootStaticExtents[2];
+                sceneExtents[3] = rootStaticExtents[3];
+                sceneExtents[4] = rootStaticExtents[4];
+                sceneExtents[5] = rootStaticExtents[5];
             }
         }
         else
         {
-            if (rootDynamicNode)
+            if (rootDynamicExtents)
             {
-                extents = rootDynamicNode.extents;
-
-                sceneExtents[0] = extents[0];
-                sceneExtents[1] = extents[1];
-                sceneExtents[2] = extents[2];
-                sceneExtents[3] = extents[3];
-                sceneExtents[4] = extents[4];
-                sceneExtents[5] = extents[5];
+                sceneExtents[0] = rootDynamicExtents[0];
+                sceneExtents[1] = rootDynamicExtents[1];
+                sceneExtents[2] = rootDynamicExtents[2];
+                sceneExtents[3] = rootDynamicExtents[3];
+                sceneExtents[4] = rootDynamicExtents[4];
+                sceneExtents[5] = rootDynamicExtents[5];
             }
             else
             {
@@ -2961,8 +2972,8 @@ class Scene
         this.clearRootNodes();
         this.clearMaterials();
         this.clearShapes();
-        this.staticSpatialMap = AABBTree.create(true);
-        this.dynamicSpatialMap = AABBTree.create();
+        this.staticSpatialMap.clear();
+        this.dynamicSpatialMap.clear();
         this.frustumPlanes = [];
         this.animations = {};
         this.skeletons = {};
@@ -4537,8 +4548,8 @@ class Scene
         if (!loadParams.append)
         {
             this.clearRootNodes();
-            this.staticSpatialMap = AABBTree.create(true);
-            this.dynamicSpatialMap = AABBTree.create();
+            this.staticSpatialMap.clear();
+            this.dynamicSpatialMap.clear();
         }
 
         var loadCustomGeometryInstanceFn = loadParams.loadCustomGeometryInstanceFn;
