@@ -1236,7 +1236,13 @@ class SceneNode
         var customLocalExtents = this.customLocalExtents;
         if (!customLocalExtents)
         {
-            this.customLocalExtents = localExtents.slice();
+            this.customLocalExtents = customLocalExtents = new this.arrayConstructor(6);
+            customLocalExtents[0] = localExtents[0];
+            customLocalExtents[1] = localExtents[1];
+            customLocalExtents[2] = localExtents[2];
+            customLocalExtents[3] = localExtents[3];
+            customLocalExtents[4] = localExtents[4];
+            customLocalExtents[5] = localExtents[5];
             this.dirtyLocalExtents = true;
         }
         else
@@ -1291,7 +1297,13 @@ class SceneNode
         var customWorldExtents = this.customWorldExtents;
         if (!customWorldExtents)
         {
-            this.customWorldExtents = worldExtents.slice();
+            this.customWorldExtents = customWorldExtents = new this.arrayConstructor(6);
+            customWorldExtents[0] = worldExtents[0];
+            customWorldExtents[1] = worldExtents[1];
+            customWorldExtents[2] = worldExtents[2];
+            customWorldExtents[3] = worldExtents[3];
+            customWorldExtents[4] = worldExtents[4];
+            customWorldExtents[5] = worldExtents[5];
             this.dirtyWorldExtents = true;
         }
         else
