@@ -114,7 +114,7 @@ class Scene
     uint32ArrayConstructor: any; // on prototype
 
     // Scene
-    constructor(mathDevice: MathDevice, staticSpatialMap?:SpatialMap, dynamicSpatialMap?:SpatialMap)
+    constructor(mathDevice: MathDevice, staticSpatialMap?: SpatialMap, dynamicSpatialMap?: SpatialMap)
     {
         this.md = mathDevice;
         this.staticSpatialMap = (staticSpatialMap || AABBTree.create(true));
@@ -5565,9 +5565,9 @@ class Scene
     }
 
     // Constructor function
-    static create(mathDevice: MathDevice) : Scene
+    static create(mathDevice: MathDevice, staticSpatialMap?: SpatialMap, dynamicSpatialMap?: SpatialMap) : Scene
     {
-        return new Scene(mathDevice);
+        return new Scene(mathDevice, staticSpatialMap, dynamicSpatialMap);
     }
 
 }
