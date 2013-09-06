@@ -527,6 +527,8 @@ events are not skipped.
 .. index::
     pair: TurbulenzEngine; clearTimeout
 
+.. _tz_cleartimeout:
+
 `clearTimeout`
 --------------
 
@@ -544,6 +546,7 @@ Clears a delay set by :ref:`tz_settimeout`.
 .. index::
     pair: TurbulenzEngine; clearInterval
 
+.. _tz_clearinterval:
 
 `clearInterval`
 ---------------

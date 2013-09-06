@@ -791,6 +791,8 @@ documentation for more details::
 
     TurbulenzEngine.flush();
 
+.. _javascript_development_initializing_and_destroying:
+
 **Initializing and Destroying**
 
 The following code demonstrates the recommended method for
