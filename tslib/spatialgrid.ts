@@ -58,7 +58,8 @@ class SpatialGrid
     nodes:  SpatialGridNode[];
     numNodes: number;
     queryIndex: number;
-    queryPlanes: any[];
+    queryRowPlanes: any[];
+    queryCellPlanes: any[];
 
     floatArrayConstructor: any;
     intArrayConstructor: any;
@@ -85,7 +86,8 @@ class SpatialGrid
         this.numNodes = 0;
 
         this.queryIndex = -1;
-        this.queryPlanes = [];
+        this.queryRowPlanes = [];
+        this.queryCellPlanes = [];
     }
 
     add(externalNode: {}, extents: any): void
@@ -705,8 +707,10 @@ class SpatialGrid
             var queryIndex = (this.queryIndex + 1);
             this.queryIndex = queryIndex;
 
-            var queryPlanes = this.queryPlanes;
-            var numQueryPlanes = 0;
+            var queryRowPlanes = this.queryRowPlanes;
+            var queryCellPlanes = this.queryCellPlanes;
+            var numQueryRowPlanes = 0;
+            var numQueryCellPlanes = 0;
 
             var isInside, n, plane, d0, d1, d2;
             var i, j, k;
@@ -736,6 +740,26 @@ class SpatialGrid
 
                 if (isInside)
                 {
+                    // Remove those planes on which the row is fully inside
+                    numQueryRowPlanes = 0;
+                    n = 0;
+                    do
+                    {
+                        plane = planes[n];
+                        d0 = plane[0];
+                        d1 = plane[1];
+                        d2 = plane[2];
+                        if ((d0 * (d0 > 0 ? minGridX : maxGridX) +
+                             d1 * (d1 > 0 ? minGridY : maxGridY) +
+                             d2 * (d2 > 0 ? minRowZ : maxRowZ)) < plane[3])
+                        {
+                            queryRowPlanes[numQueryRowPlanes] = plane;
+                            numQueryRowPlanes += 1;
+                        }
+                        n += 1;
+                    }
+                    while (n < numPlanes);
+
                     var minCellX = minGridX;
                     var maxCellX = (minGridX + cellSize);
                     var cellIndex = (j * numCellsX);
@@ -746,10 +770,9 @@ class SpatialGrid
                         {
                             // check if cell is visible
                             isInside = true;
-                            n = 0;
-                            do
+                            for (n = 0; n < numQueryRowPlanes; n += 1)
                             {
-                                plane = planes[n];
+                                plane = queryRowPlanes[n];
                                 d0 = plane[0];
                                 d1 = plane[1];
                                 d2 = plane[2];
@@ -760,20 +783,17 @@ class SpatialGrid
                                     isInside = false;
                                     break;
                                 }
-                                n += 1;
                             }
-                            while (n < numPlanes);
 
                             if (isInside)
                             {
                                 var numNodes = cell.length;
 
-                                // check if cell is fully inside
-                                numQueryPlanes = 0;
-                                n = 0;
-                                do
+                                // Remove those planes on which the cell is fully inside
+                                numQueryCellPlanes = 0;
+                                for (n = 0; n < numQueryRowPlanes; n += 1)
                                 {
-                                    plane = planes[n];
+                                    plane = queryRowPlanes[n];
                                     d0 = plane[0];
                                     d1 = plane[1];
                                     d2 = plane[2];
@@ -781,14 +801,12 @@ class SpatialGrid
                                          d1 * (d1 > 0 ? minGridY : maxGridY) +
                                          d2 * (d2 > 0 ? minRowZ : maxRowZ)) < plane[3])
                                     {
-                                        queryPlanes[numQueryPlanes] = plane;
-                                        numQueryPlanes += 1;
+                                        queryCellPlanes[numQueryCellPlanes] = plane;
+                                        numQueryCellPlanes += 1;
                                     }
-                                    n += 1;
                                 }
-                                while (n < numPlanes);
 
-                                if (numQueryPlanes === 0)
+                                if (numQueryCellPlanes === 0)
                                 {
                                     for (k = 0; k < numNodes; k += 1)
                                     {
@@ -825,7 +843,7 @@ class SpatialGrid
                                             n = 0;
                                             do
                                             {
-                                                plane = queryPlanes[n];
+                                                plane = queryCellPlanes[n];
                                                 d0 = plane[0];
                                                 d1 = plane[1];
                                                 d2 = plane[2];
@@ -838,7 +856,7 @@ class SpatialGrid
                                                 }
                                                 n += 1;
                                             }
-                                            while (n < numQueryPlanes);
+                                            while (n < numQueryCellPlanes);
 
                                             if (isInside)
                                             {
