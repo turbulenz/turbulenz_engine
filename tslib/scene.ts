@@ -157,6 +157,7 @@ class Scene
     updateNormals: (gd, scale, drawNormals, normalMaterial, drawTangents,
                     tangentMaterial, drawBinormals, binormalMaterial) => void;
     drawNodesTree: (tree, gd, sm, camera, drawLevel) => void;
+    drawCellsGrid: (grid, gd, sm, camera) => void;
     drawDynamicNodesTree: (gd, sm, camera, drawLevel) => void;
     drawStaticNodesTree: (gd, sm, camera, drawLevel) => void;
     drawTransparentNodesExtents: (gd, sm, camera) => void;
