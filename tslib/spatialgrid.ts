@@ -204,17 +204,20 @@ class SpatialGrid
                 {
                     var ci = (minX + minRow);
                     var ce = (maxX + minRow);
-                    var validRow = (newMinRow <= minRow && minRow <= newMaxRow);
+                    var newRow = (newMinRow <= minRow && minRow <= newMaxRow);
+                    var oldRow = (oldMinRow <= minRow && minRow <= oldMaxRow);
                     var x = minX;
                     do
                     {
-                        var doAdd = (validRow && newMinX <= x && x <= newMaxX);
+                        var newCell = (newRow && newMinX <= x && x <= newMaxX);
+                        var oldCell = (oldRow && oldMinX <= x && x <= oldMaxX);
                         var cell = cells[ci];
                         if (cell)
                         {
                             var numNodes = cell.length;
                             var n;
-                            if (doAdd)
+
+                            if (debug)
                             {
                                 for (n = 0; n < numNodes; n += 1)
                                 {
@@ -223,12 +226,26 @@ class SpatialGrid
                                         break;
                                     }
                                 }
-                                if (n >= numNodes)
+                                if (oldCell)
+                                {
+                                    // The node should already be on this cell
+                                    debug.assert(n < numNodes, "Node missing from cell.");
+                                }
+                                else
+                                {
+                                    // The node should not already be on this cell
+                                    debug.assert(n >= numNodes, "Node found in wrong cell.");
+                                }
+                            }
+
+                            if (newCell)
+                            {
+                                if (!oldCell)
                                 {
                                     cell.push(node);
                                 }
                             }
-                            else
+                            else if(oldCell)
                             {
                                 for (n = 0; n < numNodes; n += 1)
                                 {
@@ -251,11 +268,14 @@ class SpatialGrid
                         }
                         else
                         {
-                            if (doAdd)
+                            debug.assert(!oldCell, "Node missing from cell.");
+
+                            if (newCell)
                             {
                                 cells[ci] = [node];
                             }
                         }
+
                         ci += 1;
                         x += 1;
                     }
