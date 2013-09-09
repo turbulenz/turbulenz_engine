@@ -887,6 +887,11 @@ class SpatialGrid
         return this.extents;
     }
 
+    getCellSize(): number
+    {
+        return this.cellSize;
+    }
+
     clear(): void
     {
         var cells = this.cells;
