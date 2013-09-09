@@ -3587,6 +3587,12 @@ class Scene
                     invLTMs[b] = m43Build.apply(md, invLTM);
                     bindPoses[b] = m43Build.apply(md, bindPose);
                 }
+
+                if (loadParams.skeletonNamePrefix)
+                {
+                    s = loadParams.skeletonNamePrefix + s;
+                }
+
                 this.skeletons[s] = skeleton;
             }
         }
@@ -3610,7 +3616,7 @@ class Scene
             var fileShape = fileShapes[fileShapeName];
             var sources = fileShape.sources;
             var inputs = fileShape.inputs;
-            var skeletonName = fileShape.skeleton;
+            var skeletonName = loadParams.skeletonNamePrefix ? loadParams.skeletonNamePrefix + fileShape.skeleton : fileShape.skeleton;
 
             shape = Geometry.create();
 
