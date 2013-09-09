@@ -137,6 +137,10 @@ class SpatialGrid
         var maxX = Math.floor((max0 - minGridX) / cellSize);
         var maxRow = (Math.floor((max2 - minGridZ) / cellSize) * numCellsX);
 
+        debug.assert(0 <= minX && maxX < numCellsX &&
+                     0 <= minRow && maxRow < this.cells.length,
+                     "Node is out of bounds.");
+
         cellExtents[0] = minX;
         cellExtents[1] = minRow;
         cellExtents[2] = maxX;
@@ -180,6 +184,10 @@ class SpatialGrid
             var newMinRow = (Math.floor((min2 - minGridZ) / cellSize) * numCellsX);
             var newMaxX = Math.floor((max0 - minGridX) / cellSize);
             var newMaxRow = (Math.floor((max2 - minGridZ) / cellSize) * numCellsX);
+
+            debug.assert(0 <= newMinX && newMaxX < numCellsX &&
+                         0 <= newMinRow && newMaxRow < this.cells.length,
+                         "Node is out of bounds.");
 
             var oldMinX = cellExtents[0];
             var oldMinRow = cellExtents[1];
