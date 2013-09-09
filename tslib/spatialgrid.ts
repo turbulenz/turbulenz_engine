@@ -58,6 +58,7 @@ class SpatialGrid
     nodes:  SpatialGridNode[];
     numNodes: number;
     queryIndex: number;
+    queryPlanes: any[];
 
     floatArrayConstructor: any;
     intArrayConstructor: any;
@@ -84,6 +85,7 @@ class SpatialGrid
         this.numNodes = 0;
 
         this.queryIndex = -1;
+        this.queryPlanes = [];
     }
 
     add(externalNode: {}, extents: any): void
@@ -695,6 +697,9 @@ class SpatialGrid
             var queryIndex = (this.queryIndex + 1);
             this.queryIndex = queryIndex;
 
+            var queryPlanes = this.queryPlanes;
+            var numQueryPlanes = 0;
+
             var isInside, n, plane, d0, d1, d2;
             var i, j, k;
             var minRowZ = minGridZ;
@@ -756,7 +761,7 @@ class SpatialGrid
                                 var numNodes = cell.length;
 
                                 // check if cell is fully inside
-                                isInside = true;
+                                numQueryPlanes = 0;
                                 n = 0;
                                 do
                                 {
@@ -768,14 +773,14 @@ class SpatialGrid
                                          d1 * (d1 > 0 ? minGridY : maxGridY) +
                                          d2 * (d2 > 0 ? minRowZ : maxRowZ)) < plane[3])
                                     {
-                                        isInside = false;
-                                        break;
+                                        queryPlanes[numQueryPlanes] = plane;
+                                        numQueryPlanes += 1;
                                     }
                                     n += 1;
                                 }
                                 while (n < numPlanes);
 
-                                if (isInside)
+                                if (numQueryPlanes === 0)
                                 {
                                     for (k = 0; k < numNodes; k += 1)
                                     {
@@ -812,7 +817,7 @@ class SpatialGrid
                                             n = 0;
                                             do
                                             {
-                                                plane = planes[n];
+                                                plane = queryPlanes[n];
                                                 d0 = plane[0];
                                                 d1 = plane[1];
                                                 d2 = plane[2];
@@ -825,7 +830,7 @@ class SpatialGrid
                                                 }
                                                 n += 1;
                                             }
-                                            while (n < numPlanes);
+                                            while (n < numQueryPlanes);
 
                                             if (isInside)
                                             {
