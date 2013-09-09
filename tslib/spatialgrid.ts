@@ -297,7 +297,7 @@ class SpatialGrid
         var index = externalNode['spatialIndex'];
         if (index !== undefined)
         {
-            delete externalNode['spatialIndex'];
+            externalNode['spatialIndex'] = undefined;
 
             var numNodes = this.numNodes;
             if (1 < numNodes)
