@@ -415,45 +415,77 @@ class SpatialGrid
             var minGridX = gridExtents[0];
             var minGridZ = gridExtents[2];
             var minX = Math.floor((queryMinX - minGridX) / cellSize);
-            var minRow = (Math.floor((queryMinZ - minGridZ) / cellSize) * numCellsX);
+            var firstRow = (Math.floor((queryMinZ - minGridZ) / cellSize) * numCellsX);
             var maxX = Math.floor((queryMaxX - minGridX) / cellSize);
-            var maxRow = (Math.floor((queryMaxZ - minGridZ) / cellSize) * numCellsX);
+            var lastRow = (Math.floor((queryMaxZ - minGridZ) / cellSize) * numCellsX);
+            var minRow = firstRow;
 
             var queryIndex = (this.queryIndex + 1);
             this.queryIndex = queryIndex;
 
             var storageIndex = (startIndex === undefined ? overlappingNodes.length : startIndex);
-            var cell, numCellNodes, n, node;
+            var cell, numCellNodes, n, node, nodeExtents;
             do
             {
-                var ci = (minX + minRow);
+                var internalRow = (firstRow < minRow && minRow < lastRow)
+                var cs = (minX + minRow);
                 var ce = (maxX + minRow);
+                var ci = cs;
                 do
                 {
                     cell = cells[ci];
                     if (cell)
                     {
                         numCellNodes = cell.length;
-                        for (n = 0; n < numCellNodes; n += 1)
+                        n = 0;
+                        if (internalRow && cs < ci && ci < ce)
                         {
-                            node = cell[n];
-                            if (node.queryIndex !== queryIndex)
+                            // internal cells only need checks on Y
+                            do
                             {
-                                node.queryIndex = queryIndex;
-
-                                var nodeExtents = node.extents;
-                                if (queryMinX <= nodeExtents[3] &&
-                                    queryMinY <= nodeExtents[4] &&
-                                    queryMinZ <= nodeExtents[5] &&
-                                    queryMaxX >= nodeExtents[0] &&
-                                    queryMaxY >= nodeExtents[1] &&
-                                    queryMaxZ >= nodeExtents[2])
+                                node = cell[n];
+                                if (node.queryIndex !== queryIndex)
                                 {
-                                    overlappingNodes[storageIndex] = node.externalNode;
-                                    storageIndex += 1;
-                                    numOverlappingNodes += 1;
+                                    node.queryIndex = queryIndex;
+
+                                    nodeExtents = node.extents;
+                                    if (queryMinY <= nodeExtents[4] &&
+                                        queryMaxY >= nodeExtents[1])
+                                    {
+                                        overlappingNodes[storageIndex] = node.externalNode;
+                                        storageIndex += 1;
+                                        numOverlappingNodes += 1;
+                                    }
                                 }
+                                n += 1;
                             }
+                            while (n < numCellNodes);
+                        }
+                        else
+                        {
+                            do
+                            {
+                                node = cell[n];
+                                if (node.queryIndex !== queryIndex)
+                                {
+                                    node.queryIndex = queryIndex;
+
+                                    nodeExtents = node.extents;
+                                    if (queryMinX <= nodeExtents[3] &&
+                                        queryMinY <= nodeExtents[4] &&
+                                        queryMinZ <= nodeExtents[5] &&
+                                        queryMaxX >= nodeExtents[0] &&
+                                        queryMaxY >= nodeExtents[1] &&
+                                        queryMaxZ >= nodeExtents[2])
+                                    {
+                                        overlappingNodes[storageIndex] = node.externalNode;
+                                        storageIndex += 1;
+                                        numOverlappingNodes += 1;
+                                    }
+                                }
+                                n += 1;
+                            }
+                            while (n < numCellNodes);
                         }
                     }
                     ci += 1;
@@ -462,7 +494,7 @@ class SpatialGrid
 
                 minRow += numCellsX;
             }
-            while (minRow <= maxRow);
+            while (minRow <= lastRow);
         }
         return numOverlappingNodes;
     }
