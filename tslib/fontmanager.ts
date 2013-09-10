@@ -305,9 +305,9 @@ class Font
 
         if (4 < numVertices)
         {
-            var numIndicies = (numGlyphs * 6);
+            var numIndices = (numGlyphs * 6);
             var sharedIndexBuffer = fm.sharedIndexBuffer;
-            if (!sharedIndexBuffer || numIndicies > sharedIndexBuffer.numIndices)
+            if (!sharedIndexBuffer || numIndices > sharedIndexBuffer.numIndices)
             {
                 if (sharedIndexBuffer)
                 {
@@ -318,7 +318,7 @@ class Font
             }
 
             gd.setIndexBuffer(sharedIndexBuffer);
-            gd.drawIndexed(fm.primitive, numIndicies, 0);
+            gd.drawIndexed(fm.primitive, numIndices, 0);
         }
         else
         {
@@ -811,6 +811,10 @@ class FontManager
                             delete loadingPages[path];
                             delete loadingFont[path];
                             numLoadingFonts -= 1;
+                            if (status === 404)
+                            {
+                                fonts[path] = defaultFont;
+                            }
                             return;
                         }
 
