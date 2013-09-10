@@ -66,9 +66,8 @@ def command_env():
     _easy_install('simplejson>=2.1.5')
     _easy_install('PyYAML>=3.10')
 
-    _easy_install('logilab-common==0.57.1')
-    _easy_install('logilab-astng==0.23.1')
-    _easy_install('pylint==0.25.1')
+    _easy_install('logilab-common==0.60.0')
+    _easy_install('pylint==1.0.0')
 
     _easy_install('roman>=1.4.0')
     _easy_install('docutils>=0.9.1')
@@ -520,8 +519,7 @@ def command_help(commands):
                 padding = ' ' * (24 - len(command))
 
             echo('  %s%s%s' % (command, padding, help_txt))
-        else:
-            echo()
+        echo()
     return 1
 
 def main():
