@@ -317,6 +317,22 @@ TurbulenzEngine.onload = function onloadFn()
         }
     }
 
+    function parseStyle(style, value)
+    {
+        var valueIndex = style.indexOf(value + ':');
+        if (valueIndex !== -1)
+        {
+            var endValue = style.indexOf(';', valueIndex);
+            if (endValue === -1)
+            {
+                endValue = style.length;
+            }
+
+            return style.slice(valueIndex + value.length + 1, endValue);
+        }
+        return null;
+    }
+
     function parseSVG(e, idMap)
     {
         var type = e.tagName;
@@ -348,6 +364,12 @@ TurbulenzEngine.onload = function onloadFn()
         if (attributes)
         {
             buildAttributesMap(attributes, nodeParams);
+        }
+
+        var style = nodeParams.style;
+        if (style)
+        {
+            style = style.replace(/\s+/g, '');
         }
 
         // Convert shape parameters
@@ -413,7 +435,9 @@ TurbulenzEngine.onload = function onloadFn()
         }
         else if (type === "text")
         {
-            var font = nodeParams['font-size'] + "px " + nodeParams['font-family'].toLowerCase();
+            var fontSize = parseUnitValue(nodeParams['font-size'] || parseStyle(style, 'font-size') || '10');
+            var fontFamily = (nodeParams['font-family'] || parseStyle(style, 'font-family') || 'sans-serif');
+            var font = fontSize + "px " + fontFamily.toLowerCase();
             var text = e.textContent;
             text = text.replace(/\n/g, '').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
             svgNode = new SVGTextNode(font,
@@ -436,11 +460,8 @@ TurbulenzEngine.onload = function onloadFn()
         // Process style
         var fillStyle, strokeStyle, strokeWidthStyle;
 
-        var style = nodeParams.style;
         if (style)
         {
-            style = style.replace(/\s+/g, '');
-
             var fillIndex = style.indexOf('fill:');
             if (fillIndex !== -1)
             {
