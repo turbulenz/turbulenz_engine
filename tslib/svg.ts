@@ -866,3 +866,30 @@ class SVGLineNode extends SVGBaseNode
         }
     }
 };
+
+//
+// SVGTextNode
+//
+class SVGTextNode extends SVGBaseNode
+{
+    font: string;
+    text: string;
+    x: number;
+    y: number;
+
+    constructor(font: string, text: string, x: number, y: number)
+    {
+        super();
+
+        this.font = font;
+        this.text = text;
+        this.x = x;
+        this.y = y;
+    }
+
+    _drawShape(ctx: CanvasContext): void
+    {
+        ctx.font = this.font;
+        ctx.fillText(this.text, this.x, this.y);
+    }
+};
