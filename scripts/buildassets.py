@@ -79,7 +79,7 @@ def get_file_hash(path):
     digest = m.digest()
     return urlsafe_b64encode(digest).rstrip('=')
 
-class Source():
+class Source(object):
     def __init__(self, path, assets_paths, old_hash=None):
         self.path = path
         for p in assets_paths:
@@ -111,7 +111,7 @@ class Source():
     def calculate_hash(self):
         return get_file_hash(self.asset_path)
 
-class SourceList():
+class SourceList(object):
     def __init__(self, source_hashes, assets_paths):
         self.assets_paths = assets_paths
         source_list = {}
@@ -139,7 +139,7 @@ class Tool(object):
     def check_version(self, build_path, verbose=False):
         version_file_path = path_join(build_path, self.name + '.version')
         try:
-            with open(version_file_path, 'rt') as f:
+            with open(version_file_path, 'r') as f:
                 old_version = f.read()
         except IOError:
             old_version = None
@@ -204,7 +204,7 @@ class Tga2Json(Tool):
             warning('could not launch ImageMagick, TGA support will not be available')
             return None
         version = version_string.splitlines()[0]
-        with open(version_file_path, 'wt') as f:
+        with open(version_file_path, 'w') as f:
             f.write(version)
         return version
 
@@ -260,7 +260,7 @@ class Cgfx2JsonTool(Tool):
         except CalledProcessError:
             error('could not launch cgfx2json, CGFX support will be unavailable.')
             return None
-        with open(version_file_path, 'wt') as f:
+        with open(version_file_path, 'w') as f:
             f.write(version)
         return version
 
@@ -517,7 +517,7 @@ def main():
 
     tools = Tools(args, base_build_path)
 
-    with open('deps.yaml', 'rt') as f:
+    with open('deps.yaml', 'r') as f:
         asset_build_info = load_yaml(f.read())
         if asset_build_info:
             asset_build_info = [AssetInfo(asset_info) for asset_info in asset_build_info]
@@ -525,7 +525,7 @@ def main():
             asset_build_info = []
 
     try:
-        with open(path_join(base_build_path, 'sourcehashes.json'), 'rt') as f:
+        with open(path_join(base_build_path, 'sourcehashes.json'), 'r') as f:
             source_list = SourceList(load_json(f.read()), assets_paths)
     except IOError:
         if args.verbose:
@@ -621,7 +621,7 @@ def main():
         assets_rebuilt += asset_threads[t].assets_rebuilt
 
     # Dump the state of the build for partial rebuilds
-    with open(path_join(base_build_path, 'sourcehashes.json'), 'wt') as f:
+    with open(path_join(base_build_path, 'sourcehashes.json'), 'w') as f:
         f.write(dump_json(source_list.get_hashes()))
 
     # Check if any build threads failed and if so exit with an error
@@ -633,7 +633,7 @@ def main():
     # Dump the mapping table for the built assets
     print 'Installing assets and building mapping table...'
     mapping = install(asset_build_info, args.install_path)
-    with open('mapping_table.json', 'wt') as f:
+    with open('mapping_table.json', 'w') as f:
         f.write(dump_json({
                 'urnmapping': mapping
             }))

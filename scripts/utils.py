@@ -195,7 +195,7 @@ def check_documentation_links(build_path):
         for f in filenames:
             if os.path.splitext(f)[1] == '.html':
                 file_path = os.path.join(dirpath, f)
-                html_file = open(file_path, 'rt')
+                html_file = open(file_path, 'r')
                 html = html_file.read()
 
                 for regex in bad_link_regex:
