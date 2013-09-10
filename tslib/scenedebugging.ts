@@ -2451,41 +2451,48 @@ Scene.prototype.drawVisibleRenderablesExtents = function sceneDrawVisibleRendera
     var numRenderables = renderables.length;
     if (numRenderables)
     {
-        var n, renderable, meta, numVertices = 0;
+        var n, renderable, meta;
+        var renderablesExtents = [];
+        var extents;
         for (n = 0; n < numRenderables; n += 1)
         {
             renderable = renderables[n];
-            meta = renderable.sharedMaterial.meta;
-            if (meta.decal)
+            extents = renderable.getWorldExtents();
+            if (extents)
             {
-                if (drawDecals)
+                meta = renderable.sharedMaterial.meta;
+                if (meta.decal)
                 {
-                    numVertices += 24;
+                    if (drawDecals)
+                    {
+                        renderablesExtents.push(extents);
+                    }
                 }
-            }
-            else if (meta.transparent)
-            {
-                if (drawTransparents)
+                else if (meta.transparent)
                 {
-                    numVertices += 24;
+                    if (drawTransparents)
+                    {
+                        renderablesExtents.push(extents);
+                    }
                 }
-            }
-            else
-            {
-                if (!drawDecals && !drawTransparents)
+                else
                 {
-                    numVertices += 24;
+                    if (!drawDecals && !drawTransparents)
+                    {
+                        renderablesExtents.push(extents);
+                    }
                 }
             }
         }
 
-        if (!numVertices)
+        var numExtents = renderablesExtents.length;
+        if (!numExtents)
         {
             return;
         }
 
         var shader = sm.load("shaders/debug.cgfx");
-        var technique = shader.getTechnique("debug_lines");
+        var technique = shader.getTechnique("debug_lines_constant");
         if (!technique)
         {
             return;
@@ -2513,60 +2520,76 @@ Scene.prototype.drawVisibleRenderablesExtents = function sceneDrawVisibleRendera
 
         gd.setTechnique(technique);
 
-        var techniqueParameters = this.debugLinesTechniqueParameters;
+        var md = this.md;
+        var techniqueParameters = this.debugLinesConstantTechniqueParameters;
         if (!techniqueParameters)
         {
             techniqueParameters = gd.createTechniqueParameters({
-                worldViewProjection: camera.viewProjectionMatrix
+                worldViewProjection: camera.viewProjectionMatrix,
+                constantColor: md.v4Build(r, g, b, 1.0)
             });
-            this.debugLinesTechniqueParameters = techniqueParameters;
+            this.debugLinesConstantTechniqueParameters = techniqueParameters;
         }
         else
         {
             techniqueParameters.worldViewProjection = camera.viewProjectionMatrix;
+            techniqueParameters.constantColor = md.v4Build(r, g, b, 1.0, techniqueParameters.constantColor);
         }
 
         gd.setTechniqueParameters(techniqueParameters);
 
-        var sem = this.getDebugSemanticsPosCol();
+        var sem = this.getDebugSemanticsPos();
         var writer = gd.beginDraw(gd.PRIMITIVE_LINES,
-                                  numVertices,
-                                  [gd.VERTEXFORMAT_FLOAT3, gd.VERTEXFORMAT_FLOAT3],
+                                  (24 * numExtents),
+                                  [gd.VERTEXFORMAT_FLOAT3],
                                   sem);
         if (writer)
         {
-            var writeBox = this.writeBox;
-            for (n = 0; n < numRenderables; n += 1)
+            for (n = 0; n < numExtents; n += 1)
             {
-                renderable = renderables[n];
-                meta = renderable.sharedMaterial.meta;
-                if (meta.decal)
-                {
-                    if (!drawDecals)
-                    {
-                        continue;
-                    }
-                }
-                else if (meta.transparent)
-                {
-                    if (!drawTransparents)
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (drawDecals || drawTransparents)
-                    {
-                        continue;
-                    }
-                }
+                extents = renderablesExtents[n];
+                var p0 = extents[0];
+                var p1 = extents[1];
+                var p2 = extents[2];
+                var n0 = extents[3];
+                var n1 = extents[4];
+                var n2 = extents[5];
 
-                var extents = renderable.getWorldExtents();
-                if (extents)
-                {
-                    writeBox(writer, extents, r, g, b);
-                }
+                writer(p0, p1, p2);
+                writer(p0, p1, n2);
+
+                writer(p0, p1, p2);
+                writer(p0, n1, p2);
+
+                writer(p0, p1, p2);
+                writer(n0, p1, p2);
+
+                writer(n0, n1, n2);
+                writer(n0, n1, p2);
+
+                writer(n0, n1, n2);
+                writer(n0, p1, n2);
+
+                writer(n0, n1, n2);
+                writer(p0, n1, n2);
+
+                writer(p0, n1, n2);
+                writer(p0, n1, p2);
+
+                writer(p0, n1, n2);
+                writer(p0, p1, n2);
+
+                writer(n0, n1, p2);
+                writer(p0, n1, p2);
+
+                writer(n0, n1, p2);
+                writer(n0, p1, p2);
+
+                writer(n0, p1, n2);
+                writer(p0, p1, n2);
+
+                writer(n0, p1, n2);
+                writer(n0, p1, p2);
             }
 
             gd.endDraw(writer);
