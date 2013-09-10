@@ -3024,12 +3024,6 @@ class CanvasContext
 
         this.setTechniqueWithColor(technique, this.screen, color);
 
-        var rect = this.transformRect(x, y, maxWidth, maxWidth, this.tempRect);
-        x = rect[4];
-        y = rect[5];
-        var w = (rect[2] - x);
-        var h = (rect[3] - y);
-
         var scale = this.calculateFontScale(font);
 
         if (this.textBaseline === 'alphabetic')
@@ -3046,29 +3040,64 @@ class CanvasContext
             y -= (font.lineHeight * scale);
         }
 
-        var params = {
-            rect : [x, y, w, h],
-            scale : scale,
-            spacing : 0,
-            alignment: undefined
-        };
-
+        var alignment;
         if (this.textAlign === "left" ||
             this.textAlign === "start")
         {
-            params.alignment = 0;
+            alignment = 0;
         }
         else if (this.textAlign === "right" ||
                  this.textAlign === "end")
         {
-            params.alignment = 2;
+            alignment = 2;
         }
         else
         {
-            params.alignment = 1;
+            alignment = 1;
         }
 
-        font.drawTextRect(text, params);
+        var params;
+        if (this.transformRect === CanvasContext.prototype.transformRect)
+        {
+            params = {
+                rect : [x, y, maxWidth, maxWidth],
+                scale : scale,
+                spacing : 0,
+                alignment: alignment
+            };
+
+            var textVertices = font.generateTextVertices(text, params);
+            if (textVertices)
+            {
+                var numValues = textVertices.length;
+                var n;
+                for (n = 0; n < numValues; n += 4)
+                {
+                    var p = this.transformPoint(textVertices[n], textVertices[n + 1]);
+                    textVertices[n] = p[0];
+                    textVertices[n + 1] = p[1];
+                }
+
+                font.drawTextVertices(textVertices, true);
+            }
+        }
+        else
+        {
+            var rect = this.transformRect(x, y, maxWidth, maxWidth, this.tempRect);
+            x = rect[4];
+            y = rect[5];
+            var w = (rect[2] - x);
+            var h = (rect[3] - y);
+
+            params = {
+                rect : [x, y, w, h],
+                scale : scale,
+                spacing : 0,
+                alignment: alignment
+            };
+
+            font.drawTextRect(text, params);
+        }
 
         // Clear stream cache because drawTextRect sets its own
         this.activeVertexBuffer = null;
