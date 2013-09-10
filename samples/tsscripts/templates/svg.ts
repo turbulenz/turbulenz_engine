@@ -389,7 +389,7 @@ TurbulenzEngine.onload = function onloadFn()
             var points = nodeParams.points;
             if (points)
             {
-                points = points.replace(/\s+/g, ',').split(',');
+                points = points.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ',').split(',');
                 var numPoints = points.length;
                 for (n = 0; n < numPoints; n += 1)
                 {
