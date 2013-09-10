@@ -157,6 +157,7 @@ class Scene
     updateNormals: (gd, scale, drawNormals, normalMaterial, drawTangents,
                     tangentMaterial, drawBinormals, binormalMaterial) => void;
     drawNodesTree: (tree, gd, sm, camera, drawLevel) => void;
+    drawCellsGrid: (grid, gd, sm, camera) => void;
     drawDynamicNodesTree: (gd, sm, camera, drawLevel) => void;
     drawStaticNodesTree: (gd, sm, camera, drawLevel) => void;
     drawTransparentNodesExtents: (gd, sm, camera) => void;
@@ -3587,6 +3588,12 @@ class Scene
                     invLTMs[b] = m43Build.apply(md, invLTM);
                     bindPoses[b] = m43Build.apply(md, bindPose);
                 }
+
+                if (loadParams.skeletonNamePrefix)
+                {
+                    s = loadParams.skeletonNamePrefix + s;
+                }
+
                 this.skeletons[s] = skeleton;
             }
         }
@@ -3610,7 +3617,7 @@ class Scene
             var fileShape = fileShapes[fileShapeName];
             var sources = fileShape.sources;
             var inputs = fileShape.inputs;
-            var skeletonName = fileShape.skeleton;
+            var skeletonName = loadParams.skeletonNamePrefix ? loadParams.skeletonNamePrefix + fileShape.skeleton : fileShape.skeleton;
 
             shape = Geometry.create();
 

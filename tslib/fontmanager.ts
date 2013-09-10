@@ -267,11 +267,14 @@ class Font
     drawTextRect(text, params)
     {
         var vertices = this.generateTextVertices(text, params);
-        if (!vertices)
+        if (vertices)
         {
-            return;
+            this.drawTextVertices(vertices, true);
         }
+    }
 
+    drawTextVertices(vertices, reuseVertices?)
+    {
         /*jshint bitwise: false*/
         var numGlyphs = (vertices.length >> 4);
         /*jshint bitwise: true*/
@@ -279,7 +282,10 @@ class Font
         var gd = this.gd;
         var fm = this.fm;
 
-        fm.reusableArrays[numGlyphs] = vertices;
+        if (reuseVertices)
+        {
+            fm.reusableArrays[numGlyphs] = vertices;
+        }
 
         var numVertices = (numGlyphs * 4);
         var sharedVertexBuffer = fm.sharedVertexBuffer;
@@ -305,9 +311,9 @@ class Font
 
         if (4 < numVertices)
         {
-            var numIndicies = (numGlyphs * 6);
+            var numIndices = (numGlyphs * 6);
             var sharedIndexBuffer = fm.sharedIndexBuffer;
-            if (!sharedIndexBuffer || numIndicies > sharedIndexBuffer.numIndices)
+            if (!sharedIndexBuffer || numIndices > sharedIndexBuffer.numIndices)
             {
                 if (sharedIndexBuffer)
                 {
@@ -318,7 +324,7 @@ class Font
             }
 
             gd.setIndexBuffer(sharedIndexBuffer);
-            gd.drawIndexed(fm.primitive, numIndicies, 0);
+            gd.drawIndexed(fm.primitive, numIndices, 0);
         }
         else
         {
@@ -811,6 +817,10 @@ class FontManager
                             delete loadingPages[path];
                             delete loadingFont[path];
                             numLoadingFonts -= 1;
+                            if (status === 404)
+                            {
+                                fonts[path] = defaultFont;
+                            }
                             return;
                         }
 

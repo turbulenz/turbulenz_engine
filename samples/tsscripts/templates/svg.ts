@@ -8,10 +8,15 @@
 
 /*{# Import additional JS files here #}*/
 
+/*{{ javascript("jslib/observer.js") }}*/
+/*{{ javascript("jslib/requesthandler.js") }}*/
+/*{{ javascript("jslib/fontmanager.js") }}*/
 /*{{ javascript("jslib/canvas.js") }}*/
 /*{{ javascript("jslib/svg.js") }}*/
 
 /*global TurbulenzEngine: true */
+/*global RequestHandler: false */
+/*global FontManager: false */
 /*global Canvas: false */
 /*global window: false */
 /*global console: false */
@@ -27,6 +32,9 @@ TurbulenzEngine.onload = function onloadFn()
     // Create each of the native engine API devices to be used
     var graphicsDeviceParameters = { };
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
+
+    var requestHandler = RequestHandler.create({});
+    var fontManager = FontManager.create(graphicsDevice, requestHandler, null, errorCallback);
 
     // This sample only works on the local development server so we harcode the assets path
     var assetPrefix = '/play/samples/';
@@ -326,11 +334,6 @@ TurbulenzEngine.onload = function onloadFn()
             parseDefinitions(e, idMap);
             return null;
         }
-        else if (type === "text")
-        {
-            // TODO
-            return null;
-        }
         else if (type === "style")
         {
             // TODO
@@ -407,6 +410,16 @@ TurbulenzEngine.onload = function onloadFn()
                                       parseOptionalFloat(nodeParams.y1),
                                       parseOptionalFloat(nodeParams.x2),
                                       parseOptionalFloat(nodeParams.y2));
+        }
+        else if (type === "text")
+        {
+            var font = nodeParams['font-size'] + "px " + nodeParams['font-family'].toLowerCase();
+            var text = e.textContent;
+            text = text.replace(/\n/g, '').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+            svgNode = new SVGTextNode(font,
+                                      text,
+                                      parseOptionalFloat(nodeParams.x),
+                                      parseOptionalFloat(nodeParams.y));
         }
 
         if (!svgNode)
@@ -765,6 +778,7 @@ TurbulenzEngine.onload = function onloadFn()
     canvas = Canvas.create(graphicsDevice);
 
     ctx = canvas.getContext('2d');
+    ctx.setFontManager(fontManager);
 
     // Load new SVG file
     var fileInputElement = <HTMLInputElement>

@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-09-10
+
+- Fixed CanvasContext.fillText to support scale and rotation transforms.
+
 2013-08-08
 
 - Added alpha channel support when creating the GraphicsDevice.
