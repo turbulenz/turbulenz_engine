@@ -34,7 +34,7 @@ TurbulenzEngine.onload = function onloadFn()
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
 
     var requestHandler = RequestHandler.create({});
-    var fontManager = FontManager.create(graphicsDevice, requestHandler);
+    var fontManager = FontManager.create(graphicsDevice, requestHandler, null, errorCallback);
 
     // This sample only works on the local development server so we harcode the assets path
     var assetPrefix = '/play/samples/';
