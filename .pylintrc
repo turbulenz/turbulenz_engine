@@ -47,7 +47,7 @@ load-plugins=
 # R0903: Too few public methods (%r/%r)
 # C0111: Missing docstring
 # W0142: Used * or ** magic
-disable=C0111,I0011,W0613,E0611,R0903,W0142,R0801
+disable=C0111,I0011,W0613,E0611,R0903,W0142,R0801,W1401,C0303
 
 
 [REPORTS]
@@ -77,6 +77,24 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 # Add a comment according to your evaluation note. This is used by the global
 # evaluation report (R0004).
 comment=no
+
+# Template used to display messages. This is a python new-style format string
+# used to format the massage information. See doc for all details
+msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+
+
+[VARIABLES]
+
+# Tells whether we should check for unused import in __init__ files.
+init-import=no
+
+# A regular expression matching the beginning of the name of dummy variables
+# (i.e. not used).
+dummy-variables-rgx=_$|dummy
+
+# List of additional names supposed to be defined in builtins. Remember that
+# you should avoid to define new builtins when possible.
+additional-builtins=
 
 
 [BASIC]
@@ -113,6 +131,10 @@ argument-rgx=[a-z_][a-z0-9_]{2,30}|[a-z]|[a-z][0-9]$
 # We allow numbered single variable names "a1, a2, a3, ..."
 variable-rgx=[a-z_][a-z0-9_]{2,30}|[a-z]|[a-z][0-9]$
 
+# Regular expression which should only match correct attribute names in class
+# bodies
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+
 # Regular expression which should only match correct list comprehension /
 # generator expression variable names
 inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
@@ -129,14 +151,21 @@ bad-names=foo,bar,baz,toto,tutu,tata
 # not require a docstring
 no-docstring-rgx=__.*__
 
+# Minimum line length for functions/classes that require docstrings, shorter
+# ones are exempt.
+docstring-min-length=-1
+
 
 [FORMAT]
 
 # Maximum number of characters on a single line.
 max-line-length=120
 
+# Regexp for a line that is allowed to be longer than the limit.
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+
 # Maximum number of lines in a module
-max-module-lines=2000
+max-module-lines=5000
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).
@@ -159,6 +188,9 @@ ignore-comments=yes
 
 # Ignore docstrings when computing similarities.
 ignore-docstrings=yes
+
+# Ignore imports when computing similarities.
+ignore-imports=no
 
 
 [TYPECHECK]
@@ -203,6 +235,12 @@ ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions
 # List of method names used to declare (i.e. assign) instance attributes.
 defining-attr-methods=__init__,__new__,setUp
 
+# List of valid names for the first argument in a class method.
+valid-classmethod-first-arg=cls
+
+# List of valid names for the first argument in a metaclass class method.
+valid-metaclass-classmethod-first-arg=mcs
+
 
 [DESIGN]
 
@@ -221,8 +259,8 @@ max-locals=40
 max-returns=10
 
 # Maximum number of branch for function / method body
-#max-branchs=50
 max-branchs=100
+max-branches=100
 
 # Maximum number of statements in function / method body
 #max-statements=100
@@ -257,3 +295,10 @@ ext-import-graph=
 # Create a graph of internal dependencies in the given file (report RP0402 must
 # not be disabled)
 int-import-graph=
+
+
+[EXCEPTIONS]
+
+# Exceptions that will emit a warning when being caught. Defaults to
+# "Exception"
+overgeneral-exceptions=Exception
