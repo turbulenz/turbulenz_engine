@@ -267,11 +267,14 @@ class Font
     drawTextRect(text, params)
     {
         var vertices = this.generateTextVertices(text, params);
-        if (!vertices)
+        if (vertices)
         {
-            return;
+            this.drawTextVertices(vertices, true);
         }
+    }
 
+    drawTextVertices(vertices, reuseVertices?)
+    {
         /*jshint bitwise: false*/
         var numGlyphs = (vertices.length >> 4);
         /*jshint bitwise: true*/
@@ -279,7 +282,10 @@ class Font
         var gd = this.gd;
         var fm = this.fm;
 
-        fm.reusableArrays[numGlyphs] = vertices;
+        if (reuseVertices)
+        {
+            fm.reusableArrays[numGlyphs] = vertices;
+        }
 
         var numVertices = (numGlyphs * 4);
         var sharedVertexBuffer = fm.sharedVertexBuffer;
