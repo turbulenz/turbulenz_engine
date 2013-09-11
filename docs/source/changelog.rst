@@ -14,10 +14,21 @@ Version 1.x-dev
 
 - Fixed CanvasContext.fillText to support scale and rotation transforms.
 
+2013-08-16
+
+- Upgraded to TypeScript 0.9.1 compiler for all engine, sample and
+  application builds.  See http://www.typescriptlang.org/ for
+  information about breaking changes from 0.8.x.
+
 2013-08-08
 
 - Added alpha channel support when creating the GraphicsDevice.
 - Added TEXTURE_UNITS and VERTEX_TEXTURE_UNITS to GraphicsDevice.maxSupported.
+
+2013-08-02
+
+- Added experimental header and footer code required to run .canvas.js
+  builds under ejecta.js.  See scripts directory.
 
 2013-07-31
 
