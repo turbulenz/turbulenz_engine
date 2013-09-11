@@ -43,7 +43,6 @@ class SceneNode
     static version = 1;
 
     name                            : string;
-    mathDevice                      : MathDevice;
     dynamic                         : boolean;
     disabled                        : boolean;
 
@@ -99,9 +98,11 @@ class SceneNode
     // reference: string;
     // inplace: boolean;
 
-    arrayConstructor: any; // on prototype
-
     renderables: Renderable[];
+
+    // On prototype
+    mathDevice: MathDevice;
+    arrayConstructor: any;
 
     //
     //SceneNode.makePath
@@ -126,8 +127,12 @@ class SceneNode
     {
         this.name = params.name;
 
-        var md = TurbulenzEngine.getMathDevice();
-        this.mathDevice = md;
+        var md = this.mathDevice;
+        if (!md)
+        {
+            md = TurbulenzEngine.getMathDevice();
+            SceneNode.prototype.mathDevice = md;
+        }
 
         this.dynamic = params.dynamic || false;
         this.disabled = params.disabled || false;
@@ -1666,6 +1671,8 @@ class SceneNode
         return new SceneNode(params);
     }
 }
+
+SceneNode.prototype.mathDevice = null;
 
 // Detect correct typed arrays
 (function () {
