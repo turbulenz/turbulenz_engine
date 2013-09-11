@@ -1,4 +1,4 @@
-/*{# Copyright (c) 2010-2012 Turbulenz Limited #}*/
+/*{# Copyright (c) 2010-2013 Turbulenz Limited #}*/
 
 /*{{ javascript("jslib/aabbtree.js") }}*/
 /*{{ javascript("jslib/camera.js") }}*/
@@ -17,7 +17,6 @@
 /*{{ javascript("jslib/animationmanager.js") }}*/
 /*{{ javascript("jslib/animation.js") }}*/
 /*{{ javascript("jslib/observer.js") }}*/
-/*{{ javascript("jslib/scenedebugging.js") }}*/
 /*{{ javascript("jslib/utilities.js") }}*/
 /*{{ javascript("jslib/requesthandler.js") }}*/
 /*{{ javascript("jslib/vertexbuffermanager.js") }}*/
