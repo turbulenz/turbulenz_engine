@@ -703,6 +703,10 @@ class ForwardRendering
         {
             scene.updateVisibleNodes(camera);
         }
+        else
+        {
+            this.forceRenderInfoUpdate(scene);
+        }
 
         this.sceneExtents = scene.extents;
 
@@ -986,6 +990,21 @@ class ForwardRendering
                 l += 1;
             }
             while (l < numSpotInstances);
+        }
+    }
+
+    forceRenderInfoUpdate(scene)
+    {
+        var visibleNodes = scene.visibleNodes;
+        var numVisibleNodes = visibleNodes.length;
+        var n;
+        for (n = 0; n < numVisibleNodes; n += 1)
+        {
+            var rendererInfo = visibleNodes[n].rendererInfo;
+            if (rendererInfo)
+            {
+                rendererInfo.frameVisible = -1;
+            }
         }
     }
 
