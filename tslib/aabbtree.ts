@@ -197,7 +197,7 @@ AABBTree.prototype.remove = function removeFn(externalNode)
             this.clear();
         }
 
-        delete externalNode.spatialIndex;
+        externalNode.spatialIndex = undefined;
     }
 };
 
