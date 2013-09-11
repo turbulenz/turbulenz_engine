@@ -39,6 +39,65 @@ class PhysicsManager
     sceneNodeDestroyed: { (data): void; };
 
     //
+    // addNode
+    //
+    addNode(sceneNode: SceneNode,
+            physicsObject: PhysicsCollisionObject,
+            origin?: any,
+            triangleArray?: any): void
+    {
+        var physicsNode: PhysicsNode = {
+            body: physicsObject,
+            target: sceneNode
+        };
+
+        physicsObject.userData = sceneNode;
+
+        if (origin)
+        {
+            physicsNode.origin = origin;
+        }
+
+        if (triangleArray)
+        {
+            physicsNode.triangleArray = triangleArray;
+        }
+
+        if (physicsObject.kinematic)
+        {
+            physicsNode.kinematic = true;
+
+            sceneNode.setDynamic();
+            sceneNode.kinematic = true;
+
+            this.kinematicPhysicsNodes.push(physicsNode);
+        }
+        else if ("mass" in physicsObject)
+        {
+            physicsNode.dynamic = true;
+
+            sceneNode.setDynamic();
+
+            this.dynamicPhysicsNodes.push(physicsNode);
+        }
+
+        var targetPhysicsNodes = sceneNode.physicsNodes;
+        if (targetPhysicsNodes)
+        {
+            targetPhysicsNodes.push(physicsNode);
+        }
+        else
+        {
+            sceneNode.physicsNodes = [physicsNode];
+            this.subscribeSceneNode(sceneNode);
+        }
+
+        this.physicsNodes.push(physicsNode);
+
+        this.enableHierarchy(sceneNode, true);
+    }
+
+    //
     // update
     //
     update()
