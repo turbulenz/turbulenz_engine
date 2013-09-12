@@ -44,6 +44,12 @@ interface WebGLActiveInfo {
 	name : string;
 }
 
+interface WebGLShaderPrecisionFormat {
+    rangeMin : number;
+    rangeMax : number;
+    precision : number;
+}
+
 interface WebGLRenderingContext {
 	DEPTH_BUFFER_BIT : number;
 	STENCIL_BUFFER_BIT : number;
@@ -417,6 +423,7 @@ interface WebGLRenderingContext {
 	getProgramInfoLog(program : WebGLProgram) : string;
 	getRenderbufferParameter(target : number, pname : number) : any;
 	getShaderParameter(shader : WebGLShader, pname : number) : any;
+	getShaderPrecisionFormat(shadertype : number, precisiontype : number) : WebGLShaderPrecisionFormat
 	getShaderInfoLog(shader : WebGLShader) : string;
 	getShaderSource(shader : WebGLShader) : string;
 	getTexParameter(target : number, pname : number) : any;
