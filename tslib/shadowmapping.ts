@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2012 Turbulenz Limited
+// Copyright (c) 2010-2013 Turbulenz Limited
 
 //
 // ShadowMapping
@@ -21,6 +21,7 @@ class ShadowMapping
 
     defaultSizeLow = 512;
     defaultSizeHigh = 1024;
+    blurEnabled = true;
 
     gd                  : GraphicsDevice;
     md                  : MathDevice;
@@ -766,14 +767,14 @@ class ShadowMapping
                 shadowMap.lightNode = node;
                 shadowMap.frameUpdated = frameUpdated;
                 shadowMap.frameVisible = frameUpdated;
-                shadowMap.needsBlur = true;
+                shadowMap.needsBlur = this.blurEnabled;
             }
         }
         else
         {
             shadowMap.numRenderables = numOccluders;
             shadowMap.frameVisible = frameUpdated;
-            shadowMap.needsBlur = true;
+            shadowMap.needsBlur = this.blurEnabled;
         }
 
         if (!gd.beginRenderTarget(shadowMapRenderTarget))
@@ -1160,6 +1161,13 @@ class ShadowMapping
         shadowMapping.updateBuffers(sizeLow, sizeHigh);
 
         shadowMapping.occludersExtents = [];
+
+        var precision = gd.maxSupported("FRAGMENT_SHADER_PRECISION");
+        if (precision && // Just in case the query is not supported
+            precision < 16)
+        {
+            shadowMapping.blurEnabled = false;
+        }
 
         return shadowMapping;
     }
