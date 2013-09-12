@@ -1156,6 +1156,8 @@ See also :ref:`isSupported <graphicsdevice_issupported>`.
 * "RENDERBUFFER_SIZE" : in pixels.
 * "TEXTURE_UNITS" : maximum number of textures that can be accessed simultaneously from the pixel shader.
 * "VERTEX_TEXTURE_UNITS" : maximum number of textures that can be accessed simultaneously from the vertex shader.
+* "VERTEX_SHADER_PRECISION" : maximum number of bits for mantissa resolution on floating-point numbers on the vertex shader.
+* "FRAGMENT_SHADER_PRECISION" : maximum number of bits for mantissa resolution on floating-point numbers on the fragment shader.
 
 Returns an integer.
 

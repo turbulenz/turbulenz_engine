@@ -6341,6 +6341,35 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             return gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
         }
+        else if ("VERTEX_SHADER_PRECISION" === name ||
+                 "FRAGMENT_SHADER_PRECISION" === name)
+        {
+            var shaderType;
+            if ("VERTEX_SHADER_PRECISION" === name)
+            {
+                shaderType = gl.VERTEX_SHADER;
+
+            }
+            else
+            {
+                shaderType = gl.FRAGMENT_SHADER;
+            }
+
+            var sp = gl.getShaderPrecisionFormat(shaderType, gl.HIGH_FLOAT);
+            if (!sp || !sp.precision)
+            {
+                sp = gl.getShaderPrecisionFormat(shaderType, gl.MEDIUM_FLOAT);
+                if (!sp || !sp.precision)
+                {
+                    sp = gl.getShaderPrecisionFormat(shaderType, gl.LOW_FLOAT);
+                    if (!sp || !sp.precision)
+                    {
+                        return 0;
+                    }
+                }
+            }
+            return sp.precision;
+        }
         return 0;
     }
 

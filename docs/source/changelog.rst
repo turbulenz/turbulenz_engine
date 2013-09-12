@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-09-12
+
+- Added VERTEX_SHADER_PRECISION and FRAGMENT_SHADER_PRECISION to GraphicsDevice.maxSupported.
+
 2013-09-11
 
 - Added utility function PhysicsManager.addNode.
