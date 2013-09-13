@@ -48,6 +48,10 @@ Fixed
 
 * Fixed a bug in the ForwardRendering skinned Blinn and flat techniques.
 
+* Fixed a bug in Physics2D rayCast method.
+
+* Added missing documentation from Physics2D Arbiter object.
+
 
 Known Issues
 ============
