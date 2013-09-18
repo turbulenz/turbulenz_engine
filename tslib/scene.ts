@@ -219,6 +219,11 @@ class Scene
         debug.assert(!this.rootNodesMap[name], "Root node with the same name exits in the scene");
 
         rootNode.scene = this;
+
+        // Ensure node will be added to spatial map on update
+        // In the event that there are no dirty flags set.
+        rootNode.worldExtentsUpdate = true;
+
         this.rootNodes.push(rootNode);
         this.rootNodesMap[name] = rootNode;
         this.addRootNodeToUpdate(rootNode, name);

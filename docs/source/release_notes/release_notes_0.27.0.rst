@@ -52,6 +52,8 @@ Fixed
 
 * Added missing documentation from Physics2D Arbiter object.
 
+* Fixed a bug in Scene when re-adding an un-modified root node.
+
 
 Known Issues
 ============
