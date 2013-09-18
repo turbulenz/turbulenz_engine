@@ -581,9 +581,10 @@ class PhysicsManager
                             var inputPosition = inputs.POSITION;
                             var positions = geometry.sources[inputPosition.source];
                             var positionsData = positions.data;
+                            var numPositionsValues = positionsData.length;
                             var posMin = positions.min;
                             var posMax = positions.max;
-                            var numPositionsValues, np, pos0, pos1, pos2;
+                            var np, pos0, pos1, pos2;
                             var min0, min1, min2, max0, max1, max2;
                             if (posMin && posMax)
                             {
@@ -603,7 +604,6 @@ class PhysicsManager
                                     max0 = halfPos0;
                                     max1 = halfPos1;
                                     max2 = halfPos2;
-                                    numPositionsValues = positionsData.length;
                                     var newPositionsData = [];
                                     newPositionsData.length = numPositionsValues;
                                     for (np = 0; np < numPositionsValues; np += 3)
