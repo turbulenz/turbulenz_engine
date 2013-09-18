@@ -496,7 +496,7 @@ Viewer.create = function viewerCreateFn()
 
             var floorObject = pd.createCollisionObject({
                     shape : floorShape,
-                    transform : md.m43BuildTranslation(extents[0], extents[1], extents[2]),
+                    transform : md.m43BuildTranslation(extents[0], Math.min(extents[1], 0), extents[2]),
                     friction : 0.5,
                     restitution : 0.3,
                     group: pd.FILTER_STATIC,
