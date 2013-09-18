@@ -26,29 +26,15 @@ sampler2D colorTextureFiltered = sampler_state
 };
 
 //
-// Variant inputs
-//
-struct VS_IN
-{
-    float4 Position: POSITION;
-    float2 UV: TEXCOORD0;
-};
-
-struct VS_OUT
-{
-    float4 Position: POSITION;
-    float2 UV: TEXCOORD0;
-};
-
-//
 // Vertex programs
 //
-VS_OUT vp(VS_IN In)
+void vp(in float4 INPosition : POSITION,
+        in float2 INUV       : TEXCOORD0,
+        out float4 OUTPosition : POSITION,
+        out float2 OUTUV       : TEXCOORD0)
 {
-    VS_OUT Out;
-    Out.Position = In.Position;
-    Out.UV = In.UV;
-    return Out;
+    OUTPosition = INPosition;
+    OUTUV = INUV;
 }
 
 //
