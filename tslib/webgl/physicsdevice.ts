@@ -10709,6 +10709,9 @@ class WebGLPrivatePhysicsWorld
 //
 class WebGLPhysicsDevice implements PhysicsDevice
 {
+    static version     = 1;
+
+    vendor             = "Turbulenz";
     FILTER_DYNAMIC     : number; // 1 (on prototype)
     FILTER_STATIC      : number; // 2 (on prototype)
     FILTER_KINEMATIC   : number; // 4 (on prototype)
@@ -10719,9 +10722,6 @@ class WebGLPhysicsDevice implements PhysicsDevice
     FILTER_USER_MIN    : number; // 128 (on prototype)
     FILTER_USER_MAX    : number; // 0x8000 (on prototype)
     FILTER_ALL         : number; // 0xffff (on prototype)
-
-    static version     = 1;
-    static vendor      = "Turbulenz";
 
     constructor()
     {
