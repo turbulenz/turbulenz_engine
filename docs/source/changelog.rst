@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-09-19
+
+- Added method Material.clone.
+
 2013-09-12
 
 - Added VERTEX_SHADER_PRECISION and FRAGMENT_SHADER_PRECISION to GraphicsDevice.maxSupported.
