@@ -33,6 +33,7 @@ class SimpleRendering
 
     simplePrepare             : { (geometryInstance: GeometryInstance): void; };
     simpleUpdate              : { (camera: Camera): void; };
+    simpleSkinnedUpdate       : { (camera: Camera): void; };
 
     // Methods
 
@@ -576,6 +577,7 @@ class SimpleRendering
 
         dr.simplePrepare = simplePrepare;
         dr.simpleUpdate = simpleUpdate;
+        dr.simpleSkinnedUpdate = simpleSkinnedUpdate;
 
         var effect;
         var effectTypeData;
