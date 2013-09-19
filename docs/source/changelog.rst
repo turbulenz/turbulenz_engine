@@ -13,6 +13,13 @@ Version 1.x-dev
 2013-09-19
 
 - Added method Material.clone.
+- Added default effect callbacks for all the renderers:
+    * defaultPrepareFn
+    * defaultUpdateFn
+    * defaultSkinnedUpdateFn
+    * defaultShadowMappingUpdateFn
+    * defaultShadowMappingSkinnedUpdateFn
+    * loadTechniquesFn
 
 2013-09-12
 
