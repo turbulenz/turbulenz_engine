@@ -113,6 +113,14 @@ class DeferredRendering
     ft: number; // TODO: Where is this set?  Not mentioned in the docs.
     sm: number; // TODO: Where is this set?  Not mentioned in the docs.
 
+    defaultUpdateFn: { (camera: Camera): void; };
+    defaultSkinnedUpdateFn: { (camera: Camera): void; };
+    defaultPrepareFn: { (geometryInstance: GeometryInstance): void; };
+    defaultShadowMappingUpdateFn: { (camera: Camera): void; };
+    defaultShadowMappingSkinnedUpdateFn: { (camera: Camera): void; };
+
+    loadTechniquesFn: { (shaderManager: ShaderManager): void; };
+
     updateShader(sm)
     {
         var shader = sm.get("shaders/deferredlights.cgfx");
@@ -1742,6 +1750,8 @@ class DeferredRendering
             dr.shadowMaps = shadowMaps;
             shadowMappingUpdateFn = shadowMaps.update;
             shadowMappingSkinnedUpdateFn = shadowMaps.skinnedUpdate;
+            dr.defaultShadowMappingUpdateFn = shadowMappingUpdateFn;
+            dr.defaultShadowMappingSkinnedUpdateFn = shadowMappingSkinnedUpdateFn;
         }
 
         var identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
@@ -2302,7 +2312,7 @@ class DeferredRendering
             }
         }
 
-        var loadTechniques = function loadTechniquesFn(shaderManager)
+        var loadTechniques = function loadTechniquesFn(shaderManager: ShaderManager): void
         {
             var that = this;
 
@@ -2325,6 +2335,11 @@ class DeferredRendering
                 shaderManager.load(this.shadowMappingShaderName, shadowCallback);
             }
         }
+
+        dr.defaultUpdateFn = deferredUpdate;
+        dr.defaultSkinnedUpdateFn = deferredSkinnedUpdate;
+        dr.defaultPrepareFn = deferredPrepare;
+        dr.loadTechniquesFn = loadTechniques;
 
         var effect;
         var effectTypeData : DeferredEffectTypeData;
