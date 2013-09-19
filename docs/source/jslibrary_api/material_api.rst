@@ -44,6 +44,29 @@ Methods
 =======
 
 .. index::
+    pair: Material; clone
+
+.. _material_clone:
+
+`clone`
+-------
+
+**Summary**
+
+Create a clone of the material.
+
+**Syntax** ::
+
+    var clonedMaterial = originalMaterial.clone(graphicsDevice);
+    clonedMaterial.techniqueParameters.materialColor = mathDevice.v4Build(1.0, 0.0, 0.0. 1.0);
+
+``graphicsDevice``
+    The GraphicsDevice object to be used.
+
+Returns a :ref:`Material <material>` object.
+
+
+.. index::
     pair: Material; getName
 
 `getName`
