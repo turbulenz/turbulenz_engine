@@ -223,3 +223,23 @@ Free the resources attached to the object. GeometryInstance attached to a :ref:`
 **Syntax** ::
 
     geometryInstance.destroy();
+
+
+Properties
+==========
+
+.. index::
+    pair: GeometryInstance; techniqueParameters
+
+.. _geometryinstance_techniqueParameters:
+
+`techniqueParameters`
+---------------------
+
+**Summary**
+
+The :ref:`TechniqueParameters <techniqueparameters>` object for this particular instance.
+
+**Syntax** ::
+
+    geometryInstance.techniqueParameters.materialColor = color;
