@@ -63,6 +63,9 @@ class DefaultRendering
 
     defaultPrepareFn          : { (geometryInstance: Geometry): void; };
     defaultUpdateFn           : { (camera: Camera): void; };
+    defaultSkinnedUpdateFn    : { (camera: Camera): void; };
+
+    loadTechniquesFn          : { (shaderManager: ShaderManager): void; };
 
     updateShader(/* sm */)
     {
@@ -584,7 +587,7 @@ class DefaultRendering
             }
         };
 
-        var loadTechniques = function loadTechniquesFn(shaderManager)
+        var loadTechniques = function loadTechniquesFn(shaderManager: ShaderManager): void
         {
             var that = this;
 
@@ -599,6 +602,8 @@ class DefaultRendering
 
         dr.defaultPrepareFn = defaultPrepare;
         dr.defaultUpdateFn = defaultUpdate;
+        dr.defaultSkinnedUpdateFn = defaultSkinnedUpdate;
+        dr.loadTechniquesFn = loadTechniques;
 
         var effect;
         var effectTypeData;
