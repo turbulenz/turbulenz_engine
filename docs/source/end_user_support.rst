@@ -44,5 +44,5 @@ Developers
 ----------
 
 The Turbulenz Development Client for Android is available to
-developers.  Please see the :ref:`Android Client Section
-<android_readme>` for details.
+developers.  Please see the :ref:`Developer Client section
+<developer_client_readme>` for details.
