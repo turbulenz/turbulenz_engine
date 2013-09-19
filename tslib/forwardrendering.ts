@@ -68,6 +68,8 @@ class ForwardRendering
     defaultShadowMappingUpdateFn: { (camera: Camera): void; };
     defaultShadowMappingSkinnedUpdateFn: { (camera: Camera): void; };
 
+    loadTechniquesFn: { (shaderManager: ShaderManager): void; };
+
     zonlyShader: Shader;
     zonlyRigidTechnique: Technique;
     zonlySkinnedTechnique: Technique;
@@ -2286,7 +2288,7 @@ class ForwardRendering
             }
         };
 
-        var loadTechniques = function loadTechniquesFn(shaderManager)
+        var loadTechniques = function loadTechniquesFn(shaderManager: ShaderManager): void
         {
             var that = this;
 
@@ -2323,6 +2325,8 @@ class ForwardRendering
                 }
             }
         };
+
+        fr.loadTechniquesFn = loadTechniques;
 
         var effect;
         var effectTypeData;
