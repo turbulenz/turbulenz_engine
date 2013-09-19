@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2012 Turbulenz Limited
+// Copyright (c) 2010-2013 Turbulenz Limited
 
 #define MAX_MORPH_WEIGHTS 3
 
@@ -33,18 +33,6 @@ sampler2D diffuse : register(s0) = sampler_state
 //
 // Variant inputs
 //
-struct VP_FLAT_IN
-{
-    float3 Position : POSITION;
-    float3 Normal	: NORMAL;
-};
-
-struct VP_FLAT_OUT
-{
-    float4 Position : POSITION;
-    float4 Color    : COLOR;
-};
-
 struct VP_MORPH_IN
 {
     float3 Position0 : ATTR0;
