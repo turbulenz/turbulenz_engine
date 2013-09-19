@@ -21,6 +21,7 @@ Version 1.x-dev
 2013-09-10
 
 - Fixed CanvasContext.fillText to support scale and rotation transforms.
+- Updated all Python code to comply with a Pylint 1.0.0 based on updated .pylintrc file.
 
 2013-08-16
 
