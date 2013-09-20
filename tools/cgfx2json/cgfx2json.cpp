@@ -23,7 +23,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.21"
+#define VERSION_STRING "cgfx2json 0.22"
 
 //
 // Utils
@@ -744,8 +744,8 @@ static std::string FixShaderCode(char *text, int textLength, const UniformRules 
         ReplacePair("(\\d+)\\.([1-9])0*E\\+0+1\\b", "$1$2.0"),
         ReplacePair("(\\d+)\\.0+E\\-0+1\\b", "0.$1"),
         ReplacePair("(\\d+)\\.00+E(\\+\\d+)\\b", "$1.0E$2"),
-        ReplacePair("ATI_draw_buffers", "ARB_draw_buffers"),
-        ReplacePair("\\:require\\n", ":enable\n"),
+        ReplacePair("ATI_draw_buffers", "EXT_draw_buffers"),
+        ReplacePair("ARB_draw_buffers:enable", "EXT_draw_buffers:require"),
         ReplacePair("#version \\d+", ""),
     };
 
