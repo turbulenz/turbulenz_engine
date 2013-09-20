@@ -1447,7 +1447,7 @@ class ForwardRendering
             fr.defaultShadowMappingSkinnedUpdateFn = shadowMappingSkinnedUpdateFn;
         }
 
-        var flareIndexBuffer, flareSemantics, flareVertexData;
+        var flareIndexBuffer, flareSemantics, flareVertexData, flareMatrix;
 
         var lightProjectionRight = md.v3Build(0.5, 0.0, 0.0);
         var lightProjectionUp    = md.v3Build(0.0, 0.5, 0.0);
@@ -2000,6 +2000,8 @@ class ForwardRendering
                     flareSemantics = gd.createSemantics(['POSITION', 'TEXCOORD']);
 
                     flareVertexData = new VMathArrayConstructor(6 * (3 + 2));
+
+                    flareMatrix = md.m43BuildIdentity();
                 }
 
                 var oldGeometry = geometryInstance.geometry;
@@ -2135,7 +2137,7 @@ class ForwardRendering
             {
                 this.techniqueParametersUpdated = worldUpdate;
                 var matrix = node.world;
-                this.techniqueParameters.world = md.m43BuildIdentity();
+                this.techniqueParameters.world = flareMatrix;
                 var sourceVertices = geometry.sourceVertices;
                 top    = md.m43TransformPoint(matrix, sourceVertices[0], geometry.top);
                 bottom = md.m43TransformPoint(matrix, sourceVertices[1], geometry.bottom);
@@ -2170,7 +2172,7 @@ class ForwardRendering
                     geometry.bottom = [bottom0, bottom1, bottom2];
                     geometry.normal = [normal0, normal1, normal2];
                 }
-                geometry.tb     = [tb0, tb1, tb2];
+                geometry.tb = [tb0, tb1, tb2];
             }
             else
             {
@@ -2233,43 +2235,38 @@ class ForwardRendering
                 var flareAt1 = (cameraToBottom1 * atScale);
                 var flareAt2 = (cameraToBottom2 * atScale);
 
-                flareVertexData[0] = (top0    - flareRight0 + flareUp0 + flareAt0);
-                flareVertexData[1] = (top1    - flareRight1 + flareUp1 + flareAt1);
-                flareVertexData[2] = (top2    - flareRight2 + flareUp2 + flareAt2);
-                flareVertexData[3] = 1.0;
-                flareVertexData[4] = 0.0;
-
-                flareVertexData[5] = (top0    + flareRight0 + flareUp0 + flareAt0);
-                flareVertexData[6] = (top1    + flareRight1 + flareUp1 + flareAt1);
-                flareVertexData[7] = (top2    + flareRight2 + flareUp2 + flareAt2);
-                flareVertexData[8] = 1.0;
-                flareVertexData[9] = 1.0;
-
-                flareVertexData[10] = top0;
-                flareVertexData[11] = top1;
-                flareVertexData[12] = top2;
-                flareVertexData[13] = 0.5;
-                flareVertexData[14] = 0.0;
-
-                flareVertexData[15] = (bottom0 + flareRight0 - flareUp0 + flareAt0);
-                flareVertexData[16] = (bottom1 + flareRight1 - flareUp1 + flareAt1);
-                flareVertexData[17] = (bottom2 + flareRight2 - flareUp2 + flareAt2);
-                flareVertexData[18] = 1.0;
-                flareVertexData[19] = 0.0;
-
-                flareVertexData[20] = bottom0;
-                flareVertexData[21] = bottom1;
-                flareVertexData[22] = bottom2;
-                flareVertexData[23] = 0.5;
-                flareVertexData[24] = 1.0;
-
-                flareVertexData[25] = (bottom0 - flareRight0 - flareUp0 + flareAt0);
-                flareVertexData[26] = (bottom1 - flareRight1 - flareUp1 + flareAt1);
-                flareVertexData[27] = (bottom2 - flareRight2 - flareUp2 + flareAt2);
-                flareVertexData[28] = 1.0;
-                flareVertexData[29] = 1.0;
-
-                vertexBuffer.setData(flareVertexData, 0, 6);
+                var data = flareVertexData;
+                data[0] = (top0    - flareRight0 + flareUp0 + flareAt0);
+                data[1] = (top1    - flareRight1 + flareUp1 + flareAt1);
+                data[2] = (top2    - flareRight2 + flareUp2 + flareAt2);
+                data[3] = 1.0;
+                data[4] = 0.0;
+                data[5] = (top0    + flareRight0 + flareUp0 + flareAt0);
+                data[6] = (top1    + flareRight1 + flareUp1 + flareAt1);
+                data[7] = (top2    + flareRight2 + flareUp2 + flareAt2);
+                data[8] = 1.0;
+                data[9] = 1.0;
+                data[10] = top0;
+                data[11] = top1;
+                data[12] = top2;
+                data[13] = 0.5;
+                data[14] = 0.0;
+                data[15] = (bottom0 + flareRight0 - flareUp0 + flareAt0);
+                data[16] = (bottom1 + flareRight1 - flareUp1 + flareAt1);
+                data[17] = (bottom2 + flareRight2 - flareUp2 + flareAt2);
+                data[18] = 1.0;
+                data[19] = 0.0;
+                data[20] = bottom0;
+                data[21] = bottom1;
+                data[22] = bottom2;
+                data[23] = 0.5;
+                data[24] = 1.0;
+                data[25] = (bottom0 - flareRight0 - flareUp0 + flareAt0);
+                data[26] = (bottom1 - flareRight1 - flareUp1 + flareAt1);
+                data[27] = (bottom2 - flareRight2 - flareUp2 + flareAt2);
+                data[28] = 1.0;
+                data[29] = 1.0;
+                vertexBuffer.setData(data, 0, 6);
             }
             else
             {
