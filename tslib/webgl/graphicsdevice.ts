@@ -4198,7 +4198,7 @@ class TZWebGLShader implements Shader
                 var parameterType = parameter.type;
                 if (parameterType === "float" ||
                     parameterType === "int" ||
-                    parameterType === "boolean")
+                    parameterType === "bool")
                 {
                     var parameterValues = parameter.values;
                     if (parameterValues)
