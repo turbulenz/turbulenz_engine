@@ -2046,6 +2046,25 @@ class DDSLoader
 
         return loader;
     }
+
+    static destroy(): void
+    {
+        var maxNumWorkers = this.maxNumWorkers;
+        if (maxNumWorkers)
+        {
+            this.workerQueues = null;
+            var workers = this.workers;
+            if (workers)
+            {
+                this.workers = null;
+                var n;
+                for (n = 0; n < maxNumWorkers; n += 1)
+                {
+                    workers[n].terminate();
+                }
+            }
+        }
+    }
 }
 
 // surface description flags

@@ -6974,6 +6974,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
 
         delete this.gl;
+
+        if (typeof DDSLoader !== 'undefined')
+        {
+            DDSLoader.destroy();
+        }
     }
 
     static create(canvas, params) : WebGLGraphicsDevice
