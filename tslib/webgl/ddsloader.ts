@@ -501,6 +501,9 @@ class DDSLoader
             worker.onmessage = function (event)
             {
                 var loader = workerQueue.shift();
+
+                worker['load'] -= ((((loader.width + 3) * (loader.height + 3)) >> 4) * loader.numLevels * loader.numFaces);
+
                 var data = event.data;
                 if (data)
                 {
@@ -513,6 +516,7 @@ class DDSLoader
                     loader.onerror(200);
                 }
             };
+            worker['load'] = 0;
         }
 
         url.revokeObjectURL(objectURL);
@@ -548,13 +552,13 @@ class DDSLoader
             else
             {
                 workerIndex = 0;
-                var minQueueLength = workerQueues[0].length;
+                var minLoad = workers[0]['load'];
                 for (n = 1; n < maxNumWorkers; n += 1)
                 {
-                    var queueLength = workerQueues[n].length;
-                    if (minQueueLength > queueLength)
+                    var load = workers[n]['load'];
+                    if (minLoad > load)
                     {
-                        minQueueLength = queueLength;
+                        minLoad = load;
                         workerIndex = n;
                     }
                 }
@@ -563,6 +567,10 @@ class DDSLoader
             if (workerIndex !== -1)
             {
                 var worker = workers[workerIndex];
+
+                worker['load'] += ((((loader.width + 3) * (loader.height + 3)) >> 4) * loader.numLevels * loader.numFaces);
+
+                //console.log(workerQueues[0].length, workerQueues[1].length, workerQueues[2].length, workerQueues[3].length);
 
                 workerQueues[workerIndex].push(loader);
 
