@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2012 Turbulenz Limited
+// Copyright (c) 2011-2013 Turbulenz Limited
 
 /*global TurbulenzEngine*/
 /*global Uint8Array*/
@@ -14,11 +14,22 @@ class DDSLoader
 {
     static version = 1;
 
+    static maxNumWorkers = (typeof Worker !== "undefined" &&
+                            typeof Blob !== "undefined" &&
+                            (typeof URL !== "undefined" || typeof window['webkitURL'] !== "undefined") ? 4 : 0);
+    static WorkerCommand = {
+        DXT1: 0,
+        DXT1A: 1,
+        DXT3: 2,
+        DXT5: 3
+    };
+    static workerQueues: DDSLoader[][] = null;
+    static workers: Worker[] = null;
+
     gd                      : any;
     onload                  : any;
     onerror                 : any;
     src                     : any;
-    data                    : any;
 
     width                   : number;
     height                  : number;
@@ -29,6 +40,7 @@ class DDSLoader
     numFaces                : number;
 
     private bytesPerPixel   : number;
+    private externalBuffer  : boolean;
 
     // On the prototype
 
@@ -102,13 +114,14 @@ class DDSLoader
     BGRPIXELFORMAT_B8G8R8A8 : number;
     BGRPIXELFORMAT_B8G8R8   : number;
 
-    processBytes(bytes: any[]): void;
-    processBytes(bytes: ArrayBufferView): void;
+    processBytes(bytes: any[], status: number): void;
+    processBytes(bytes: ArrayBufferView, status: number): void;
 
-    processBytes(bytes)
+    processBytes(bytes, status: number)
     {
         if (!this.isValidHeader(bytes))
         {
+            this.onerror(status);
             return;
         }
 
@@ -152,6 +165,7 @@ class DDSLoader
 
             if (numFaces !== 6 || this.width !== this.height)
             {
+                this.onerror(status);
                 return;
             }
 
@@ -259,6 +273,7 @@ class DDSLoader
                 break;
 
             default:
+                this.onerror(status);
                 return;
             }
         }
@@ -326,6 +341,7 @@ class DDSLoader
         }
         else
         {
+            this.onerror(status);
             return;
         }
 
@@ -348,6 +364,7 @@ class DDSLoader
 
         if (bytes.length < (offset + size))
         {
+            this.onerror(status);
             return;
         }
 
@@ -384,25 +401,252 @@ class DDSLoader
         {
             if (!gd.isSupported('TEXTURE_DXT1'))
             {
-                data = this.convertDXT1ToRGBA(data);
+                if (this.hasDXT1Alpha(data))
+                {
+                    this.format = gd.PIXELFORMAT_R5G5B5A1;
+                    DDSLoader.decodeInWorker(DDSLoader.WorkerCommand.DXT1A, data, this);
+                    return;
+                }
+                else
+                {
+                    this.format = gd.PIXELFORMAT_R5G6B5;
+                    DDSLoader.decodeInWorker(DDSLoader.WorkerCommand.DXT1, data, this);
+                    return;
+                }
             }
         }
         else if (this.format === gd.PIXELFORMAT_DXT3)
         {
             if (!gd.isSupported('TEXTURE_DXT3'))
             {
-                data = this.convertDXT3ToRGBA(data);
+                this.format = gd.PIXELFORMAT_R4G4B4A4;
+                DDSLoader.decodeInWorker(DDSLoader.WorkerCommand.DXT3, data, this);
+                return;
             }
         }
         else if (this.format === gd.PIXELFORMAT_DXT5)
         {
             if (!gd.isSupported('TEXTURE_DXT5'))
             {
-                data = this.convertDXT5ToRGBA(data);
+                this.format = gd.PIXELFORMAT_R4G4B4A4;
+                DDSLoader.decodeInWorker(DDSLoader.WorkerCommand.DXT5, data, this);
+                return;
             }
         }
 
-        this.data = data;
+        this.onload(data, this.width, this.height, this.format,
+                    this.numLevels, (this.numFaces > 1), this.depth,
+                    status);
+    }
+
+    static createWorker(index: number): Worker
+    {
+        var code = "var convertDXT1To565 = " + this.convertDXT1To565.toString() + ";\n" +
+           "var convertDXT1To5551 = " + this.convertDXT1To5551.toString() + ";\n" +
+           "var convertDXT3To4444 = " + this.convertDXT3To4444.toString() + ";\n" +
+           "var convertDXT5To4444 = " + this.convertDXT5To4444.toString() + ";\n" +
+           "var command, srcWidth, srcHeight, srcNumLevels, srcNumFaces, srcOffset;\n" +
+           "onmessage = function decoderOnMessage(event)\n" +
+           "{\n" +
+           "    var edata = event.data;\n" +
+           "    if (edata instanceof ArrayBuffer)\n" +
+           "    {\n" +
+           "        var data = new Uint8Array(edata, srcOffset);\n" +
+           "        switch (command)\n" +
+           "        {\n" +
+           "            case 0: // DXT1\n" +
+           "                data = convertDXT1To565(data, srcWidth, srcHeight, srcNumLevels, srcNumFaces);\n" +
+           "                break;\n" +
+           "            case 1: // DXT1A\n" +
+           "                data = convertDXT1To5551(data, srcWidth, srcHeight, srcNumLevels, srcNumFaces);\n" +
+           "                break;\n" +
+           "            case 2: // DXT3\n" +
+           "                data = convertDXT3To4444(data, srcWidth, srcHeight, srcNumLevels, srcNumFaces);\n" +
+           "                break;\n" +
+           "            case 3: // DXT4\n" +
+           "                data = convertDXT5To4444(data, srcWidth, srcHeight, srcNumLevels, srcNumFaces);\n" +
+           "                break;\n" +
+           "            default:\n" +
+           "                data = null;\n" +
+           "                break;\n" +
+           "        };\n" +
+           "        if (data)\n" +
+           "        {\n" +
+           "            postMessage(data.buffer, [data.buffer]);\n" +
+           "        }\n" +
+           "        else\n" +
+           "        {\n" +
+           "            postMessage(null);\n" +
+           "        }\n" +
+           "    }\n" +
+           "    else\n" +
+           "    {\n" +
+           "        command = edata.command;\n" +
+           "        srcWidth = edata.width;\n" +
+           "        srcHeight = edata.height;\n" +
+           "        srcNumLevels = edata.numLevels;\n" +
+           "        srcNumFaces = edata.numFaces;\n" +
+           "        srcOffset = edata.byteOffset;\n" +
+           "    }\n" +
+           "};";
+        var blob = new Blob([code], { type: "text/javascript" });
+
+        var url = (typeof URL !== "undefined" ? URL : window['webkitURL']);
+        var objectURL = url.createObjectURL(blob);
+
+        var worker = new Worker(objectURL);
+        if (worker)
+        {
+            var workerQueue = DDSLoader.workerQueues[index];
+            worker.onmessage = function (event)
+            {
+                var loader = workerQueue.shift();
+                var data = event.data;
+                if (data)
+                {
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                }
+                else
+                {
+                    loader.onerror(200);
+                }
+            };
+        }
+
+        url.revokeObjectURL(objectURL);
+
+        return worker;
+    }
+
+    static decodeInWorker(command: number, data: ArrayBufferView, loader: DDSLoader): void
+    {
+        var maxNumWorkers = this.maxNumWorkers;
+        if (maxNumWorkers)
+        {
+            var workerQueues = this.workerQueues;
+            var workers = this.workers;
+            var workerIndex = -1;
+            var n;
+            if (!workers)
+            {
+                this.workerQueues = workerQueues = [];
+                this.workers = workers = [];
+                workerIndex = 0;
+                for (n = 0; n < maxNumWorkers; n += 1)
+                {
+                    workerQueues[n] = [];
+                    workers[n] = this.createWorker(n);
+                    if (!workers[n])
+                    {
+                        workerIndex = -1;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                workerIndex = 0;
+                var minQueueLength = workerQueues[0].length;
+                for (n = 1; n < maxNumWorkers; n += 1)
+                {
+                    var queueLength = workerQueues[n].length;
+                    if (minQueueLength > queueLength)
+                    {
+                        minQueueLength = queueLength;
+                        workerIndex = n;
+                    }
+                }
+            }
+
+            if (workerIndex !== -1)
+            {
+                var worker = workers[workerIndex];
+
+                workerQueues[workerIndex].push(loader);
+
+                var byteOffset = data.byteOffset;
+                var buffer;
+                if (loader.externalBuffer)
+                {
+                    buffer = data.buffer.slice(byteOffset, (byteOffset + data.byteLength));
+                    byteOffset = 0;
+                }
+                else
+                {
+                    buffer = data.buffer;
+                }
+
+                // First post the command (structural copy)
+                worker.postMessage({
+                    command: command,
+                    width: loader.width,
+                    height: loader.height,
+                    numLevels: loader.numLevels,
+                    numFaces: loader.numFaces,
+                    byteOffset: byteOffset
+                });
+
+                // Then post the data (ownership transfer)
+                worker.postMessage(buffer, [buffer]);
+
+                return;
+            }
+            else
+            {
+                this.maxNumWorkers = 0;
+            }
+        }
+
+        // Workers not available, use timeout
+        var decoder;
+        switch (command)
+        {
+            case DDSLoader.WorkerCommand.DXT1:
+                decoder = function() {
+                    data = DDSLoader.convertDXT1To565(data, loader.width, loader.height, loader.numLevels, loader.numFaces);
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                };
+                break;
+            case DDSLoader.WorkerCommand.DXT1A:
+                decoder = function() {
+                    data = DDSLoader.convertDXT1To5551(data, loader.width, loader.height, loader.numLevels, loader.numFaces);
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                };
+                break;
+            case DDSLoader.WorkerCommand.DXT3:
+                decoder = function() {
+                    data = DDSLoader.convertDXT3To4444(data, loader.width, loader.height, loader.numLevels, loader.numFaces);
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                };
+                break;
+            case DDSLoader.WorkerCommand.DXT5:
+                decoder = function() {
+                    data = DDSLoader.convertDXT5To4444(data, loader.width, loader.height, loader.numLevels, loader.numFaces);
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                };
+                break;
+            default:
+                decoder = null;
+                break;
+        };
+        if (decoder)
+        {
+            TurbulenzEngine.setTimeout(decoder, 0);
+        }
+        else
+        {
+            loader.onerror(200);
+        }
     }
 
     parseHeader(bytes, offset)
@@ -722,32 +966,6 @@ class DDSLoader
             dest[3][3] = a[(value >> 21) & 7];
         }
         /*jshint bitwise: true*/
-    }
-
-    convertDXT1ToRGBA(data)
-    {
-        if (this.hasDXT1Alpha(data))
-        {
-            this.format = this.gd.PIXELFORMAT_R5G5B5A1;
-            return DDSLoader.convertDXT1To5551(data, this.width, this.height, this.numLevels, this.numFaces);
-        }
-        else
-        {
-            this.format = this.gd.PIXELFORMAT_R5G6B5;
-            return DDSLoader.convertDXT1To565(data, this.width, this.height, this.numLevels, this.numFaces);
-        }
-    }
-
-    convertDXT3ToRGBA(data)
-    {
-        this.format = this.gd.PIXELFORMAT_R4G4B4A4;
-        return DDSLoader.convertDXT3To4444(data, this.width, this.height, this.numLevels, this.numFaces);
-    }
-
-    convertDXT5ToRGBA(data)
-    {
-        this.format = this.gd.PIXELFORMAT_R4G4B4A4;
-        return DDSLoader.convertDXT5To4444(data, this.width, this.height, this.numLevels, this.numFaces);
     }
 
     convertToRGBA32(data, decode, srcStride)
@@ -1781,23 +1999,8 @@ class DDSLoader
                                 /*jshint bitwise: true*/
                             }
 
-                            loader.processBytes(new Uint8Array(buffer));
-                            if (loader.data)
-                            {
-                                if (loader.onload)
-                                {
-                                    loader.onload(loader.data, loader.width, loader.height, loader.format,
-                                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
-                                                  xhrStatus);
-                                }
-                            }
-                            else
-                            {
-                                if (loader.onerror)
-                                {
-                                    loader.onerror(xhrStatus);
-                                }
-                            }
+                            loader.externalBuffer = false;
+                            loader.processBytes(new Uint8Array(buffer), xhrStatus);
                         }
                         else
                         {
@@ -1829,22 +2032,8 @@ class DDSLoader
         }
         else
         {
-            loader.processBytes(<any[]>(params.data));
-            if (loader.data)
-            {
-                if (loader.onload)
-                {
-                    loader.onload(loader.data, loader.width, loader.height, loader.format,
-                                  loader.numLevels, (loader.numFaces > 1), loader.depth);
-                }
-            }
-            else
-            {
-                if (loader.onerror)
-                {
-                    loader.onerror(0);
-                }
-            }
+            loader.externalBuffer = true;
+            loader.processBytes(<any[]>(params.data), 0);
         }
 
         return loader;
