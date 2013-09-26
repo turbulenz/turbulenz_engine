@@ -369,12 +369,72 @@ class MinHeap<K,T>
 }
 
 //
+// TimeoutQueue
+//
+// Interface ontop of MinHeap to implement a 'TimeoutQueue'
+// a type allowing an efficient way of implementing a large number
+// of setTimeout behaviours.
+//
+class TimeoutQueue<T>
+{
+    private heap: MinHeap<number, T>;
+    // Time since queue was created
+    private time: number;
+
+    constructor()
+    {
+        this.heap = new MinHeap(function (x, y) { return x < y; });
+        this.time = 0.0;
+    }
+
+    clear(): void
+    {
+        this.heap.clear();
+        this.time = 0.0;
+    }
+
+    remove(data: T): boolean
+    {
+        return this.heap.remove(data);
+    }
+
+    insert(data: T, timeout: number): void
+    {
+        this.heap.insert(data, this.time + timeout);
+    }
+
+    update(deltaTime: number): void
+    {
+        this.time += deltaTime;
+    }
+
+    hasNext(): boolean
+    {
+        var key = this.heap.headKey();
+        return key !== null && key <= this.time;
+    }
+
+    next(): T
+    {
+        return this.heap.pop();
+    }
+
+    iter(lambda: (data: T): void): void
+    {
+        while (this.hasNext())
+        {
+            lambda(this.next());
+        }
+    }
+}
+
+//
 // ParticleQueue (private type)
 //
 // Represents the available particles in a system efficiently using a min-binary heap
 // whose key is the absolute time at which a particle will die.
 //
-// Uses a specialised version of MinHeap with compressed storage for better performance
+// Uses a specialised version of TimeoutQueue/Minheap with compressed storage for better performance
 // in this specific use case.
 //
 class ParticleQueue
