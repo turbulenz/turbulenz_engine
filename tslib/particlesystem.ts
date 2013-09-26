@@ -198,10 +198,184 @@ class TextureEncode
 }
 
 //
+// MinHeap
+//
+// Min binary heap using pairs of key/value and a given comparison function return true if key1 < key2
+//
+interface MinHeapNode<K,T> {
+    key: K;
+    data: T;
+}
+interface MinHeapComparator<K> {
+    (key1: K, key2: K): boolean
+}
+class MinHeap<K,T>
+{
+    private heap: Array<MinHeapNode<K,T>>;
+    private compare: MinHeapComparator<K>;
+
+    private swap(i1, i2)
+    {
+        var heap = this.heap;
+        var tmp = heap[i1];
+        heap[i1] = heap[i2];
+        heap[i2] = tmp;
+    }
+
+    constructor(compare: MinHeapComparator<K>)
+    {
+        this.compare = compare;
+        this.heap = [];
+    }
+
+    clear(): void
+    {
+        this.heap = [];
+    }
+
+    // Remove element from binary heap at some location 'i'
+    private removeNode(i: number)
+    {
+        // Swap element with last in heap.
+        //   Filter element either up or down to re-heapify.
+        //   This 'removes' the element from the heap
+        var heap = this.heap;
+        var h2 = heap.length - 1;
+        if (i !== h2)
+        {
+            heap[i] = heap[h2];
+            // Check if we must filter up or down.
+            var parent = (i - 1) >>> 1;
+            if (i === 0 || this.compare(heap[parent].key, heap[i].key))
+            {
+                // Filter down
+                while (true)
+                {
+                    var left  = (i << 1) + 1;
+                    var right = (i << 1) + 2;
+                    var small = i;
+                    if (left  < h2 && this.compare(heap[left].key, heap[small].key))
+                    {
+                        small = left;
+                    }
+                    if (right < h2 && this.compare(heap[right].key, heap[small].key))
+                    {
+                        small = right;
+                    }
+                    if (i === small)
+                    {
+                        break;
+                    }
+                    this.swap(i, small);
+                    i = small;
+                }
+            }
+            else
+            {
+                // Filter up
+                while (parent !== i && this.compare(heap[i].key, heap[parent].key))
+                {
+                    this.swap(i, parent);
+                    i = parent;
+                    if (parent === 0)
+                    {
+                        break;
+                    }
+                    parent = ((parent - 2) >>> 2) << 1;
+                }
+            }
+        }
+        heap.pop();
+    }
+
+    // Insert element into heap
+    private insertNode(node: MinHeapNode<K,T>): void
+    {
+        var heap = this.heap;
+        var i = heap.length;
+        heap.push(node);
+        if (i !== 0)
+        {
+            var parent = (i - 1) >>> 1;
+            while (parent !== i && this.compare(heap[i].key, heap[parent].key))
+            {
+                this.swap(i, parent);
+                i = parent;
+                if (parent === 0)
+                {
+                    break;
+                }
+                parent = (parent - 1) >>> 1;
+            }
+        }
+    }
+
+    // Find element id based on value
+    private findNode(data: T): number
+    {
+        var i = 0;
+        var heap = this.heap;
+        var count = heap.length;
+        while (i < count)
+        {
+            if (heap[i].data === data)
+            {
+                break;
+            }
+            i += 1;
+        }
+        return i;
+    }
+
+    // remove data from heap, returns true if removed.
+    remove(data: T): boolean
+    {
+        var ind = this.findNode(data);
+        if (ind === this.heap.length)
+        {
+            return false;
+        }
+        this.removeNode(ind);
+        return true;
+    }
+
+    insert(data: T, key: K): void
+    {
+        this.insertNode({
+            data: data,
+            key: key
+        });
+    }
+
+    headData(): T
+    {
+        return (this.heap.length == 0 ? null : this.heap[0].data);
+    }
+    headKey(): K
+    {
+        return (this.heap.length == 0 ? null : this.heap[0].key);
+    }
+
+    pop(): T
+    {
+        if (this.heap.length == 0)
+        {
+            return null;
+        }
+        var ret = this.heap[0].data;
+        this.removeNode(0);
+        return ret;
+    }
+}
+
+//
 // ParticleQueue (private type)
 //
 // Represents the available particles in a system efficiently using a min-binary heap
 // whose key is the absolute time at which a particle will die.
+//
+// Uses a specialised version of MinHeap with compressed storage for better performance
+// in this specific use case.
 //
 class ParticleQueue
 {
