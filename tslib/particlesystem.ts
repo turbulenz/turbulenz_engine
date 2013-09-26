@@ -18,6 +18,9 @@ interface FloatArray {
 //
 // TextureEncode
 //
+// Used to encode/decode floats/vectors into pixel values for texture storage.
+// Analogous to methods of particles-commmon.cgh
+//
 class TextureEncode
 {
     static version = 1;
@@ -193,3 +196,211 @@ class TextureEncode
         return dst;
     }
 }
+
+//
+// ParticleQueue (private type)
+//
+// Represents the available particles in a system efficiently using a min-binary heap
+// whose key is the absolute time at which a particle will die.
+//
+class ParticleQueue
+{
+    // (time, index) pair list
+    private heap: Float32Array;
+    private heapSize: number;
+
+    // Time since queue was created
+    private time: number;
+    // Current time of last particle death in system.
+    private lastDeath: number;
+
+    // Whether the last creation was forced.
+    wasForced: boolean;
+
+    private swap(i1, i2)
+    {
+        var heap = this.heap;
+        var tmp = heap[i1];
+        heap[i1] = heap[i2];
+        heap[i2] = tmp;
+
+        tmp = heap[i1 + 1];
+        heap[i1 + 1] = heap[i2 + 1];
+        heap[i2 + 1] = tmp;
+    }
+
+    // pre: maxParticles >= 0
+    constructor(maxParticles: number)
+    {
+        this.heapSize = maxParticles << 1;
+        this.heap = new Float32Array(this.heapSize);
+        this.time = 0.0;
+        this.wasForced = false;
+        this.lastDeath = 0.0;
+
+        // Set up indices
+        var i;
+        for (i = 0; i < maxParticles; i += 1)
+        {
+            this.heap[(i << 1) + 1] = i;
+        }
+    }
+
+    clear(): void
+    {
+        var i;
+        var count = (this.heapSize >>> 1);
+        // reset times.
+        for (i = 0; i < count; i += 1)
+        {
+            this.heap[i << 1] = 0.0;
+        }
+        this.time = 0.0;
+        this.wasForced = false;
+        this.lastDeath = 0.0;
+    }
+
+    // Remove element from binary heap at some location 'i'
+    //   and re-insert it again with new time value.
+    replace(i: number, time: number)
+    {
+        // Swap element with last in heap.
+        //   Filter element either up or down to re-heapify.
+        //   This 'removes' the element from the heap
+        var heap = this.heap;
+        var h2 = this.heapSize - 2;
+        if (i !== h2)
+        {
+            this.swap(i, h2);
+            // Check if we must filter up or down.
+            var parent = ((i - 2) >>> 2) << 1;
+            if (i === 0 || heap[i] >= heap[parent])
+            {
+                // Filter down
+                while (true)
+                {
+                    var left  = (i << 1) + 2;
+                    var right = (i << 1) + 4;
+                    var small = i;
+                    if (left  < h2 && heap[left]  < heap[small])
+                    {
+                        small = left;
+                    }
+                    if (right < h2 && heap[right] < heap[small])
+                    {
+                        small = right;
+                    }
+                    if (i === small)
+                    {
+                        break;
+                    }
+                    this.swap(i, small);
+                    i = small;
+                }
+            }
+            else
+            {
+                // Filter up
+                while (parent !== i && heap[i] < heap[parent])
+                {
+                    this.swap(i, parent);
+                    i = parent;
+                    if (parent === 0)
+                    {
+                        break;
+                    }
+                    parent = ((parent - 2) >>> 2) << 1;
+                }
+            }
+        }
+
+        // set new time for last element in heap.
+        // and filter up to correct position.
+        i = h2;
+        heap[i] = time;
+        if (i !== 0)
+        {
+            var parent = ((i - 2) >>> 2) << 1;
+            while (parent !== i && heap[i] < heap[parent])
+            {
+                this.swap(i, parent);
+                i = parent;
+                if (parent === 0)
+                {
+                    break;
+                }
+                parent = ((parent - 2) >>> 2) << 1;
+            }
+        }
+
+        return heap[i + 1];
+    }
+
+    private find(particleID: number): number
+    {
+        var i = 0;
+        var heap = this.heap;
+        var count = this.heapSize;
+        while (i < count)
+        {
+            if (heap[i + 1] === particleID)
+            {
+                break;
+            }
+            i += 2;
+        }
+        return i;
+    }
+
+    removeParticle(particleID: number): void
+    {
+        // insert with time = 0 so that particle is moved to
+        // root of heap (most efficent removal method).
+        this.replace(this.find(particleID), 0);
+    }
+
+    updateParticle(particleID: number, lifeDelta: number): void
+    {
+        var i = this.find(particleID);
+        var deathTime = this.heap[i] + lifeDelta;
+        // Prevent updates on dead particles making them
+        // even more dead (violates heap property in general).
+        if (deathTime < this.time)
+        {
+            deathTime = this.time;
+        }
+        if (deathTime > this.lastDeath)
+        {
+            this.lastDeath = deathTime;
+        }
+        this.replace(i, deathTime);
+    }
+
+    create(timeTillDeath: number, forceCreation:boolean = false): number
+    {
+        if (forceCreation || (this.heap[0] <= this.time))
+        {
+            this.wasForced = (this.heap[0] > this.time);
+            var id = this.heap[1];
+            var deathTime = timeTillDeath + this.time;
+            if (deathTime > this.lastDeath)
+            {
+                this.lastDeath = deathTime;
+            }
+            this.replace(0, deathTime);
+            return id;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    // Returns if - after system updater - there will be any potentially live particles remaining.
+    update(timeUpdate: number): boolean
+    {
+        this.time += timeUpdate;
+        return (this.time < this.lastDeath);
+    }
+}
+
