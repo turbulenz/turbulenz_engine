@@ -202,17 +202,10 @@ class TextureEncode
 //
 // Min binary heap using pairs of key/value and a given comparison function return true if key1 < key2
 //
-interface MinHeapNode<K,T> {
-    key: K;
-    data: T;
-}
-interface MinHeapComparator<K> {
-    (key1: K, key2: K): boolean
-}
 class MinHeap<K,T>
 {
-    private heap: Array<MinHeapNode<K,T>>;
-    private compare: MinHeapComparator<K>;
+    private heap: Array<{ key: K; data: T; }>;
+    private compare: (key1: K, key2: K) => boolean;
 
     private swap(i1, i2)
     {
@@ -222,7 +215,7 @@ class MinHeap<K,T>
         heap[i2] = tmp;
     }
 
-    constructor(compare: MinHeapComparator<K>)
+    constructor(compare: (key1: K, key2: K) => boolean)
     {
         this.compare = compare;
         this.heap = [];
@@ -289,7 +282,7 @@ class MinHeap<K,T>
     }
 
     // Insert element into heap
-    private insertNode(node: MinHeapNode<K,T>): void
+    private insertNode(node): void
     {
         var heap = this.heap;
         var i = heap.length;
@@ -419,7 +412,7 @@ class TimeoutQueue<T>
         return this.heap.pop();
     }
 
-    iter(lambda: (data: T): void): void
+    iter(lambda: (data: T) => void): void
     {
         while (this.hasNext())
         {
