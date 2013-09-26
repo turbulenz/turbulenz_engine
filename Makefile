@@ -140,10 +140,15 @@ jsengine_debug_deps := jsengine
 capturedevices_src := tslib/capturegraphicsdevice.ts
 capturedevices_deps := platform debug
 
+# particlesystem
+particlesystem_src := tslib/particlesystem.ts
+particlesystem_deps := platform debug vmath
+
 TSLIBS += platform debug vmath aabbtree physics_canvas platform_canvas   \
   utilities services tzdraw2d physics2d fontmanager canvas jsengine_base \
   jsengine jsengine_simplerendering jsengine_deferredrendering           \
-  jsengine_forwardrendering jsengine_debug capturedevices svg spatialgrid
+  jsengine_forwardrendering jsengine_debug capturedevices svg spatialgrid \
+  particlesystem
 
 # Check we haven't forgotten any tslib files
 ifeq (macosx,$(TARGET))
