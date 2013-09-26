@@ -197,6 +197,332 @@ class TextureEncode
     }
 }
 
+
+//
+// SizeTree (private type)
+//
+// A 2D AABB Tree working only with the 'sizes' of boxes rather than extents
+// Implemented differently from BoxTree/AABBTree as this tree does not need
+// to support overlapping queries, but only a search whose main characteristic
+// is to discard AABB's that are too small.
+//
+interface SizeTreeNode<T>
+{
+    // Size and associated data
+    w: number;
+    h: number;
+
+    // leaf only
+    data: T;
+
+    // Tree links and sub-tree height
+    parent: SizeTreeNode<T>;
+    height: number;
+
+    // non-leaf only
+    child : Array<SizeTreeNode<T>>; // Pair
+
+    // Tree constraints:
+    //
+    // data === null <> child !== null
+    // child !== null => child.length = 2 and they're valid
+    // data.height = 1 + max(childs height's)
+    // (w,h) >= childs heights (each component separate)
+    // (w,h) is minimal.
+    // abs(child1.height - child2.height) in {-1,0,1}
+}
+class SizeTree<T>
+{
+    private root: SizeTreeNode<T>;
+
+    constructor()
+    {
+        this.root = null;
+    }
+
+    private static gen<T>(data: T, w: number, h: number): SizeTreeNode<T>
+    {
+        return {
+            w: w,
+            h: h,
+            data: data,
+            parent: null,
+            child: null,
+            height: 0
+        };
+    }
+
+    insert (data: T, w: number, h: number): SizeTreeNode<T>
+    {
+        var leaf = SizeTree.gen(data, w, h);
+        if (!this.root)
+        {
+            this.root = leaf;
+        }
+        else
+        {
+            var node = this.root;
+            while (node.child)
+            {
+                var child0 = node.child[0];
+                var child1 = node.child[1];
+
+                // cost of creating a new parent for this node and leaf.
+                var ncost = (node.w > leaf.w ? node.w : leaf.w) +
+                            (node.h > leaf.h ? node.h : leaf.h);
+                // cost of pushing leaf further down the tree.
+                var icost = ncost - (node.w + node.h);
+                // cost of descending into a particular child.
+                var cost0 = (child0.w > leaf.w ? child0.w : leaf.w) +
+                            (child0.h > leaf.h ? child0.h : leaf.h) + icost;
+                var cost1 = (child1.w > leaf.w ? child1.w : leaf.w) +
+                            (child1.h > leaf.h ? child1.h : leaf.h) + icost;
+                if (child0.child)
+                {
+                    cost0 -= (child0.w + child0.h);
+                }
+                if (child1.child)
+                {
+                    cost1 -= (child1.w + child1.h);
+                }
+
+                if (ncost < cost0 && ncost < cost1)
+                {
+                    break;
+                }
+                else
+                {
+                    // Descend into cheaper child.
+                    node = (cost0 < cost1) ? child0 : child1;
+                }
+            }
+
+            var sibling = node;
+
+            // Create a new parent for sibling and leaf
+            var oparent = sibling.parent;
+            var nparent = SizeTree.gen(null, (leaf.w > sibling.w ? leaf.w : sibling.w),
+                                             (leaf.h > sibling.h ? leaf.h : sibling.h));
+            nparent.parent = oparent;
+            nparent.height = sibling.height + 1;
+            sibling.parent = nparent;
+            leaf.parent    = nparent;
+            nparent.child  = [sibling, leaf];
+
+            if (oparent)
+            {
+                // sibling is not the root of tree, set its parent's child ref.
+                oparent.child[oparent.child[0] === sibling ? 0 : 1] = nparent;
+            }
+            else
+            {
+                // sibiling is the root of tree, set new root.
+                this.root = nparent;
+            }
+
+            // Adjust ancestor bounds and balance tree
+            this.filterUp(nparent);
+        }
+        return leaf;
+    }
+
+    remove(leaf: SizeTreeNode<T>): void
+    {
+        if (leaf === this.root)
+        {
+            this.root = null;
+        }
+        else
+        {
+            var parent  = leaf.parent;
+            var gparent = parent.parent;
+            var sibling = parent.child[parent.child[0] === leaf ? 1 : 0];
+
+            if (gparent)
+            {
+                // destroy parent and connect sibling and gparent.
+                gparent.child[gparent.child[0] === parent ? 0 : 1] = sibling;
+                sibling.parent = gparent;
+
+                // Adjust ancestor bounds and balance tree
+                this.filterUp(gparent);
+            }
+            else
+            {
+                this.root = sibling;
+                sibling.parent = null;
+            }
+        }
+    }
+
+    private filterUp(node: SizeTreeNode<T>)
+    {
+        while (node)
+        {
+            node = this.balance(node);
+
+            var child0 = node.child[0];
+            var child1 = node.child[1];
+            node.height = 1 + (child0.height > child1.height ? child0.height : child1.height);
+            node.w      = (child0.w > child1.w ? child0.w : child1.w);
+            node.h      = (child0.h > child1.h ? child0.h : child1.h);
+
+            node = node.parent;
+        }
+    }
+
+    private balance(node: SizeTreeNode<T>)
+    {
+        if (!node.child || node.height < 2)
+        {
+            // sub tree is already balanced.
+            return node;
+        }
+        else
+        {
+            var child0 = node.child[0];
+            var child1 = node.child[1];
+
+            var balance = child1.height - child0.height;
+            if (balance >= -1 && balance <= 1)
+            {
+                // sub tree is already balanced.
+                return node;
+            }
+
+            // Decide which direction to rotate sub-tree.
+            var rotate, other, childN;
+            if (balance > 0)
+            {
+                rotate = child1;
+                other  = child0;
+                childN = 1;
+            }
+            else
+            {
+                rotate = child0;
+                other  = child1;
+                childN = 0;
+            }
+
+            // Rotate sub-tree.
+            var gchild0 = rotate.child[0];
+            var gchild1 = rotate.child[1];
+
+            // swap node with rotate
+            rotate.child[1 - childN] = node;
+            rotate.parent = node.parent;
+            node.parent = rotate;
+
+            // make node's old parent point down to rotate
+            // or set new root if appropriate.
+            if (rotate.parent)
+            {
+                rotate.parent.child[rotate.parent.child[0] === node ? 0 : 1] = rotate;
+            }
+            else
+            {
+                this.root = rotate;
+            }
+
+            // Decide which grandchild to swing.
+            var pivot, swing;
+            if (gchild0.height > gchild1.height)
+            {
+                pivot = gchild0;
+                swing = gchild1;
+            }
+            else
+            {
+                pivot = gchild1;
+                swing = gchild0;
+            }
+
+            // Swing
+            rotate.child[childN] = pivot;
+            node.child[childN] = swing;
+            swing.parent = node;
+
+            // Recompute bounds and heights
+            node.w   = (other.w > swing.w ? other.w : swing.w);
+            node.h   = (other.h > swing.h ? other.h : swing.h);
+            rotate.w = (node.w  > pivot.w ? node.w  : pivot.w);
+            rotate.h = (node.h  > pivot.h ? node.h  : pivot.h);
+            node.height   = 1 + (other.height > swing.height ? other.height : swing.height);
+            rotate.height = 1 + (node.height  > pivot.height ? node.height  : pivot.height);
+
+            return rotate;
+        }
+    }
+
+    // Depth first traversal of tree executing lambda for every node
+    traverse(lambda: (node: SizeTreeNode<T>) => boolean): void
+    {
+        // TODO, don't use a temporary for stack
+        var stack = [];
+        if (this.root)
+        {
+            stack.push(this.root);
+        }
+        while (stack.length !== 0)
+        {
+            var node = stack.pop();
+            if (lambda(node) && node.child)
+            {
+                stack.push(node.child[0]);
+                stack.push(node.child[1]);
+            }
+        }
+    }
+
+    // Depth first traversal of tree, searching for a minimum
+    // cost leaf of the tree, discarding subtrees that are not
+    // at least as wide, and as tall as the given (w,h).
+    //
+    // Cost function should return null for zero-cost leaf (upon
+    // which search will terminate), or any real number.
+    searchBestFit(w: number, h: number, getCost: (w: number, h: number, data: T) => number): SizeTreeNode<T>
+    {
+        // TODO, don't use a temporary for stack
+        var stack = [];
+        if (this.root)
+        {
+            stack.push(this.root);
+        }
+
+        var minCost = Number.POSITIVE_INFINITY;
+        var minLeaf = null;
+        while (stack.length !== 0)
+        {
+            var node = stack.pop();
+            if (node.w >= w && node.h >= h)
+            {
+                if (node.child)
+                {
+                    stack.push(node.child[0]);
+                    stack.push(node.child[1]);
+                }
+                else
+                {
+                    var cost = getCost(w, h, node.data);
+                    if (cost === null)
+                    {
+                        // Early exit, got a best fit
+                        minLeaf = node;
+                        break;
+                    }
+                    else if (cost < minCost)
+                    {
+                        minCost = cost;
+                        minLeaf = node;
+                    }
+                }
+            }
+        }
+        return minLeaf;
+    }
+}
+
 //
 // MinHeap
 //
@@ -342,16 +668,16 @@ class MinHeap<K,T>
 
     headData(): T
     {
-        return (this.heap.length == 0 ? null : this.heap[0].data);
+        return (this.heap.length === 0 ? null : this.heap[0].data);
     }
     headKey(): K
     {
-        return (this.heap.length == 0 ? null : this.heap[0].key);
+        return (this.heap.length === 0 ? null : this.heap[0].key);
     }
 
     pop(): T
     {
-        if (this.heap.length == 0)
+        if (this.heap.length === 0)
         {
             return null;
         }
@@ -404,7 +730,7 @@ class TimeoutQueue<T>
     hasNext(): boolean
     {
         var key = this.heap.headKey();
-        return key !== null && key <= this.time;
+        return (key !== null) && key <= this.time;
     }
 
     next(): T
