@@ -1404,7 +1404,7 @@ class Parser {
     };
 
     // Check for any extra fields that should not be present
-    static extraFields(error: BuildError, obj: string, x: any, excludes: Array<string>): void
+    static extraFields(error: BuildError, obj: string, x: Object, excludes: Array<string>): void
     {
         for (var f in x)
         {
@@ -1416,7 +1416,7 @@ class Parser {
     }
 
     // Return object field if it exists, otherwise error and return null
-    static field(error: BuildError, obj: string, x: any, n: string): any
+    static field(error: BuildError, obj: string, x: Object, n: string): any
     {
         if (!x.hasOwnProperty(n))
         {
@@ -1430,7 +1430,7 @@ class Parser {
     }
 
     // Return object field as a string, if it does not exist (or not a string), error.
-    static stringField(error: BuildError, obj: string, x: any, n: string): string
+    static stringField(error: BuildError, obj: string, x: Object, n: string): string
     {
         var ret: any = Parser.field(error, obj, x, n);
         if (x.hasOwnProperty(n) && !Types.isString(ret))
@@ -1445,7 +1445,7 @@ class Parser {
     }
 
     // Return object field as a number, if it does not exist (or not a number), error.
-    static numberField(error: BuildError, obj: string, x: any, n: string): number
+    static numberField(error: BuildError, obj: string, x: Object, n: string): number
     {
         var ret: any = Parser.field(error, obj, x, n);
         if (x.hasOwnProperty(n) && !Types.isNumber(ret))
@@ -1462,7 +1462,7 @@ class Parser {
     // Check value is a number, and error otherwise.
     static checkNumber(error: BuildError, obj: string, n: string, ret: any): number
     {
-        if (ret !== null && !Types.isNumber(ret))
+        if (!Types.isNumber(ret))
         {
             error.error("Field '" + n + "' of " + obj + " is not a number (" + BuildError.wrap(ret) + ")");
             return null;
@@ -1474,7 +1474,7 @@ class Parser {
     }
 
     // Map object field via run function if it exists, otherwise return default result.
-    static maybeField<R>(x: any, n: string, run: (field: any) => R, def: () => R): R
+    static maybeField<R>(x: Object, n: string, run: (field: any) => R, def: () => R): R
     {
         return (x.hasOwnProperty(n)) ? run(x[n]) : def();
     }
@@ -1500,6 +1500,7 @@ class Parser {
                 error.error("Value '" + BuildError.wrap(val) + "' should be a float" + n + " for " + obj);
                 return null;
             }
+
             var arr = <Array<number>>val;
             var count = arr.length;
             if (count !== n)
@@ -1507,18 +1508,21 @@ class Parser {
                 error.error("Value '" + BuildError.wrap(val) + "' should have " + n + " elements for float " + n + obj);
                 val = null;
             }
+
             var i;
             for (i = 0; i < count; i += 1)
             {
                 if (!isNumber(arr[i]))
                 {
-                    error.error("Element " + i + " of value '" + BuildError.wrap(val) + "' should be a number (" + BuildError.wrap(arr[i]) + ") for " + obj);
+                    error.error("Element " + i + " of value '" + BuildError.wrap(val) +
+                        "' should be a number (" + BuildError.wrap(arr[i]) + ") for " + obj);
                     val = null;
                 }
             }
             return <Array<number>>val;
         };
-        switch (type) {
+        switch (type)
+        {
             case "tFloat2":
                 return checkArray(val, 2);
             case "tFloat4":
@@ -1543,7 +1547,8 @@ class Parser {
             return null;
         }
 
-        switch (type) {
+        switch (type)
+        {
             case "tFloat2":
                 return [val, val];
             case "tFloat4":
@@ -1582,7 +1587,8 @@ class Parser {
                 {
                     if (attrs[i].name === attrs[j].name)
                     {
-                        error.error("System definition has conflicting attribute declarations for '" + attrs[i].name + "'");
+                        error.error("System definition has conflicting attribute declarations for '" +
+                            attrs[i].name + "'");
                     }
                 }
             }
@@ -1611,8 +1617,8 @@ class Parser {
         var printNames = (name === null) ? "'s" : " '"+name+"'s";
 
         var stringField = Parser.stringField.bind(null, error, "system attribute" + printName);
-        var parseInterpolator = Parser.parseInterpolator.bind(null, error,
-                "system attribute" + printNames + " default-interpolation field");
+        var parseInterpolator =
+            Parser.parseInterpolator.bind(null, error, "system attribute" + printNames + " default-interpolation field");
 
         var typeName = stringField(defn, "type");
         var type = null;
@@ -1645,9 +1651,9 @@ class Parser {
             };
 
         var defv = Parser.maybeField(defn, "default", typeAttr("default").bind(null, false),
-                Parser.defaultAttr.bind(null, type, 0));
+                                     Parser.defaultAttr.bind(null, type, 0));
         var defi = Parser.maybeField(defn, "default-interpolation", parseInterpolator,
-                Parser.interpolators["linear"].bind(null));
+                                     Parser.interpolators["linear"].bind(null));
 
         var parseMinMax = function (n)
             {
@@ -1663,7 +1669,7 @@ class Parser {
                     case "tFloat2":
                     case "tFloat4":
                         return Parser.maybeField(defn, n, typeAttr(n).bind(null, true),
-                                Parser.defaultAttr.bind(null, type, null));
+                                                 Parser.defaultAttr.bind(null, type, null));
                     default:
                         if (defn.hasOwnProperty(n))
                         {
@@ -1685,23 +1691,23 @@ class Parser {
                 case "tFloat2":
                 case "tFloat4":
                     storage = Parser.maybeField(defn, "storage",
-                            function (val)
+                        function (val)
+                        {
+                            switch (val)
                             {
-                                switch (val)
-                                {
-                                    case "direct":
-                                        return "sDirect";
-                                    case "normalized":
-                                        return "sNormalized";
-                                    default:
-                                        error.error("Unknown storage type '" + val + "' for system attribute" + printName);
-                                        return null;
-                                }
-                            },
-                            function ()
-                            {
-                                return "sNormalized";
-                            });
+                                case "direct":
+                                    return "sDirect";
+                                case "normalized":
+                                    return "sNormalized";
+                                default:
+                                    error.error("Unknown storage type '" + val + "' for system attribute" + printName);
+                                    return null;
+                            }
+                        },
+                        function ()
+                        {
+                            return "sNormalized";
+                        });
                     break;
                 default:
                     if (defn.hasOwnProperty("storage"))
@@ -1758,7 +1764,8 @@ class Parser {
                 error.error("complex interpolator type cannot be null for " + obj);
                 return null;
             }
-            switch (type) {
+            switch (type)
+            {
                 case "none":
                     Parser.extraFields(error, obj, defnObj, ["type"]);
                     return Parser.interpolators["none"](null);
@@ -1779,9 +1786,255 @@ class Parser {
         }
         else
         {
-            error.error("Invalid interpolator for " + obj + ". Should be an interpolator name, or complex interpolator definition, not " + BuildError.wrap(defn));
+            error.error("Invalid interpolator for " + obj +
+                        ". Should be an interpolator name, or complex interpolator definition, not " +
+                        BuildError.wrap(defn));
             return null;
         }
+    }
+
+    // avoid creating in loops.
+    private static zero(): number
+    {
+        return 0;
+    }
+    private static one_sixty(): number
+    {
+        return 1.0 / 60.0;
+    }
+
+    static parseParticle(error: BuildError, defn: any): Particle
+    {
+        if (defn === null)
+        {
+            error.error("particle definition cannot be null");
+            error.checkErrorState("Particle parse failed!");
+            return null;
+        }
+
+        var name = Parser.stringField(error, "particle", defn, "name");
+        var printName  = (name === null) ? "" : " '"+name+"'";
+        var printNames = (name === null) ? "'s" : " '"+name+"'s";
+
+        var stringField = Parser.stringField.bind(null, error, "particle" + printName);
+        var numberField = Parser.numberField.bind(null, error, "particle" + printName);
+
+        var granularity =
+            Parser.maybeField(defn, "granularity",
+                              Parser.checkNumber.bind(null, error, "particle" + printName, "granularity"),
+                              Parser.one_sixty);
+        if (granularity !== null && granularity <= 0.0)
+        {
+            error.error("particle" + printNames + " granularity (" + granularity + ") must be > 0");
+            granularity = null;
+        }
+
+        var textures = [];
+        for (var f in defn)
+        {
+            if (!defn.hasOwnProperty(f))
+            {
+                continue;
+            }
+
+            if (f.substr(0, 7) === "texture")
+            {
+                if (f.substr(f.length - 5) === "-size")
+                {
+                    textures.push(f.substr(0, f.length - 5));
+                }
+                else
+                {
+                    textures.push(f);
+                }
+            }
+        }
+        var texuvs   = {};
+        var texsizes = {};
+        var count = textures.length;
+        var i, j;
+        for (i = 0; i < count; i += 1)
+        {
+            var tex = textures[i];
+            if (defn.hasOwnProperty(tex) && !Types.isArray(defn[tex]))
+            {
+                error.error("particle" + printNames + " " + f + " should be an Array");
+            }
+            else if (defn.hasOwnProperty(tex))
+            {
+                var uvs = <Array<any>>defn[tex];
+                var fcount = uvs.length;
+                var outUVs = [];
+                for (j = 0; j < fcount; j += 1)
+                {
+                    outUVs.push(Parser.typeAttr(error, "element of particle" + printNames + " " + f,
+                                                "tFloat4", false, uvs[j]));
+                }
+                texuvs[tex] = outUVs;
+            }
+            if (defn.hasOwnProperty(tex + "-size"))
+            {
+                texsizes[tex] = Parser.typeAttr(error, "particle" + printNames + " " + f + "-size",
+                                                "tFloat2", false, defn[tex + "-size"]);
+            }
+        }
+
+        var animation = Parser.field(error, "particle" + printName, defn, "animation");
+        if (defn.hasOwnProperty("animation") && !Types.isArray(animation))
+        {
+            error.error("particle" + printNames + " animation must be an array");
+            animation = null;
+        }
+        var animationOut = null;
+        if (animation !== null)
+        {
+            var animationArr = <Array<any>>animation;
+            animationOut = [];
+            count = animationArr.length;
+            for (i = 0; i < count; i += 1)
+            {
+                var seq = animationArr[i];
+                if (!Types.isArray(seq))
+                {
+                    error.error("particle" + printNames + "animation sequence must be an array");
+                    animationOut[i] = null;
+                    continue;
+                }
+
+                var seqArr = <Array<any>>seq;
+                var seqOut = [];
+                var scount = seqArr.length;
+                for (j = 0; j < scount; j += 1)
+                {
+                    var snap = seqArr[j];
+                    var obj = "particle" + printNames + "animation sequence snapshot";
+                    if (!Types.isObject(snap))
+                    {
+                        error.error(obj + " should be an object");
+                        seqOut[j] = null;
+                        continue;
+                    }
+
+                    var snapObj = <Object>snap;
+                    var time;
+                    if (j === 0)
+                    {
+                        time = Parser.maybeField(snapObj, "time",
+                                                 Parser.checkNumber.bind(null, error, obj, "time"),
+                                                 Parser.zero);
+                        if (time !== 0)
+                        {
+                            error.error("first " + obj + " time must be 0");
+                            time = null;
+                        }
+                    }
+                    else
+                    {
+                        time = Parser.numberField(error, obj, snapObj, "time");
+                        if (time != null && time <= 0)
+                        {
+                            error.error(obj + " time must be positive");
+                            time = null;
+                        }
+                    }
+
+                    var attributes = {};
+                    var interpolators = {};
+                    for (var f in snapObj)
+                    {
+                        if (!snapObj.hasOwnProperty(f) || f === "time")
+                        {
+                            continue;
+                        }
+                        if (f.length > 14 && f.substr(f.length - 14) === "-interpolation")
+                        {
+                            var attr = f.substr(0, f.length - 14);
+                            interpolators[attr] =
+                                Parser.parseInterpolator(error, obj + " attribute '" + attr + "'", snapObj[f]);
+                        }
+                        else
+                        {
+                            attributes[attr] =
+                                Parser.parseAttributeValue(error, obj + " attribute '" + f + "'", snapObj[f]);
+                        }
+                    }
+
+                    seqOut[j] = {
+                        time         : time,
+                        attributes   : attributes,
+                        interpolators: interpolators
+                    };
+                }
+
+                animationOut[i] = seqOut;
+            }
+        }
+
+        var sizes = [];
+        count = textures.length;
+        for (i = 0; i < count; i += 1)
+        {
+            sizes.push(textures[i] + "-size");
+        }
+        Parser.extraFields(error, "particle" + printName, defn,
+                           textures.concat(sizes).concat(["name", "granularity", "animation"]));
+
+        if (error.checkErrorState("Particle" + printName + " parse failed!"))
+        {
+            return null;
+        }
+        else
+        {
+            return {
+                name       : name,
+                granularity: granularity,
+                animation  : animation,
+                texuvs     : texuvs,
+                texsizes   : texsizes
+            };
+        }
+    }
+
+    static parseAttributeValue(error: BuildError, obj: string, def: any): Array<number>
+    {
+        if (def === null)
+        {
+            error.error(obj + " cannot be null");
+            return null;
+        }
+
+        if (Types.isNumber(def))
+        {
+            return [<number>def];
+        }
+
+        if (Types.isArray(def))
+        {
+            // At this point, can assume we have tFloat2 or tFloat4 only as no
+            // interpolator uses an array definition.
+            var defArr = <Array<any>>def;
+            var count = defArr.length;
+            var i;
+            for (i = 0; i < count; i += 1)
+            {
+                var val = defArr[i];
+                if (!Types.isNumber(val))
+                {
+                    error.error("Element of " + obj + " has none number value (" + val + ")");
+                    return null;
+                }
+
+            }
+            if (defArr.length !== 2 && defArr.length !== 4)
+            {
+                error.error(obj + " should have either 2 or 4 elements for float2/float4 value");
+                return null;
+            }
+            return defArr;
+        }
+
+        error.error(obj + " has unrecognised value type");
+        return null;
     }
 }
 
