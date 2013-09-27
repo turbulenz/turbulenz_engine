@@ -524,6 +524,213 @@ class SizeTree<T>
 }
 
 //
+// OnlineTexturePacker
+//
+// Uses SizeTree to implement a reasonably performant (in terms of packing density) online packing
+// algorithm designed for texture packing into shared storage where 'free-ing' allocated regions of
+// shared textures is not required and fragmentation as a result can be ignored allowing high performance.
+//
+// Although intended for use with integer w/h (in which case x/y would also be integer in results)
+// There is no reason for this not to be used with any finite strictly positive w/h
+//
+// The type actually returned from public API:
+interface PackedRect
+{
+    // x,y,w,h of rectangle relative to bin.
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    // bin index [0,N) for which texture is used.
+    bin: number;
+}
+class OnlineTexturePacker
+{
+    // Store for optimised search of available free-space in bins
+    private free: SizeTree<PackedRect>;
+    // Set of bins (shared textures) 'allocated' for storage by packer
+    // (readonly from public api side)
+    bins: Array<PackedRect>;
+
+    // Maximum dimensions of a bin.
+    private maxWidth: number;
+    private maxHeight: number;
+
+    constructor(maxWidth: number, maxHeight: number)
+    {
+        this.free = new SizeTree<PackedRect>();
+        this.bins = [];
+        this.maxWidth = maxWidth;
+        this.maxHeight = maxHeight;
+    }
+
+    private release(bin, x, y, w, h)
+    {
+        if (w !== 0 && h !== 0)
+        {
+            var rect = {
+                x: x,
+                y: y,
+                w: w,
+                h: h,
+                bin: bin
+            };
+            this.free.insert(rect, w, h);
+        }
+    }
+
+    // Cost of assigning (w,h) into given rectangle.
+    //
+    // Assign costs that primarily aims to assign exactly to a given empt space.
+    // Failing that, we assign a low cost for stores that waste only a very small
+    // amount of space, and a low cost for stores into much larger rectangles with
+    // high costs inbetween.
+    private static costFit(w, h, rect)
+    {
+        // Impossible fit.
+        if (rect.w < w || rect.h < h)
+        {
+            return Number.POSITIVE_INFINITY;
+        }
+        // Exact fit (terminate early)
+        else if (rect.w === w && rect.h === h)
+        {
+            return null;
+        }
+        else
+        {
+            var fw = rect.w / w;
+            var fh = rect.h / h;
+            var cw = Math.sin((1 - fw*fw) * Math.PI);
+            var ch = Math.sin((1 - fh*fh) * Math.PI);
+            return (cw * ch) + (cw + ch);
+        }
+    }
+
+    // Pack (w,h) into texture store, possibly 'resizing' the virtual size of
+    // a bin up to (maxWidth,maxHeight), and possibly 'creating' a new virtual texture (bin)
+    pack(w: number, h: number): PackedRect
+    {
+        if (w > this.maxWidth || h > this.maxHeight)
+        {
+            return null;
+        }
+
+        var bin = 0;
+        var node = this.free.searchBestFit(w, h, OnlineTexturePacker.costFit);
+        if (node)
+        {
+            this.free.remove(node);
+            return this.split(node.data, w, h);
+        }
+        else
+        {
+            return this.grow(w, h);
+        }
+    }
+
+    private split(rect: PackedRect, w: number, h: number): PackedRect
+    {
+        // I have no idea why this choice of branch condition works as well as it does...
+        if ((rect.w - w) < (rect.h - h))
+        {
+            this.release(rect.bin, rect.x, rect.y + h, rect.w, rect.h - h);
+            this.release(rect.bin, rect.x + w, rect.y, rect.w - w, h);
+        }
+        else
+        {
+            this.release(rect.bin, rect.x, rect.y + h, w, rect.h - h);
+            this.release(rect.bin, rect.x + w, rect.y, rect.w - w, rect.h);
+        }
+        return {
+            x: rect.x,
+            y: rect.y,
+            w: w,
+            h: h,
+            bin: rect.bin
+        };
+    }
+
+    private grow(w, h, bin = 0): PackedRect
+    {
+        if (bin >= this.bins.length)
+        {
+            this.bins.push({
+                x: 0,
+                y: 0,
+                w: 0,
+                h: 0,
+                bin: bin
+            });
+        }
+
+        var rect = this.bins[bin];
+        var canGrowRight = (rect.x + rect.w + w) <= this.maxWidth;
+        var canGrowDown  = (rect.y + rect.h + h) <= this.maxHeight;
+
+        // We decide which direction to grow, trying to avoid narrow regions being created.
+        var shouldGrowRight = (Math.abs(rect.h - h) > Math.abs(rect.w - w));
+
+        if (canGrowRight && shouldGrowRight)
+        {
+            return this.growRight(rect, w, h);
+        }
+        else if (canGrowDown)
+        {
+            return this.growDown(rect, w, h);
+        }
+        else
+        {
+            return this.grow(w, h, bin + 1);
+        }
+    }
+
+    private growRight(rect: PackedRect, w, h): PackedRect
+    {
+        var fit = {
+            x: rect.x + rect.w,
+            y: rect.y,
+            w: w,
+            h: h,
+            bin : rect.bin
+        };
+        if (h < rect.h)
+        {
+            this.release(rect.bin, rect.x + rect.w, rect.y + h, w, rect.h - h);
+        }
+        else
+        {
+            this.release(rect.bin, rect.x, rect.y + rect.h, rect.w, h - rect.h);
+            rect.h = h;
+        }
+        rect.w += w;
+        return fit;
+    }
+    private growDown(rect: PackedRect, w, h): PackedRect
+    {
+        var fit = {
+            x: rect.x,
+            y: rect.y + rect.h,
+            w: w,
+            h: h,
+            bin: rect.bin
+        };
+        if (w < rect.w)
+        {
+            this.release(rect.bin, rect.x + w, rect.y + rect.h, rect.w - w, h);
+        }
+        else
+        {
+            this.release(rect.bin, rect.x + rect.w, rect.y, w - rect.w, rect.h);
+            rect.w = w;
+        }
+        rect.h += h;
+        return fit;
+    }
+}
+
+
+//
 // MinHeap
 //
 // Min binary heap using pairs of key/value and a given comparison function return true if key1 < key2
