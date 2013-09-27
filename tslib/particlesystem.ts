@@ -1249,34 +1249,38 @@ class BuildError
         }
     }
 
-    uncheckedErrorCount: number; // not the same as errors.length
-    errors: Array<string>;
-    warnings: Array<string>;
+    private uncheckedErrorCount: number;
+    private uncheckedWarningCount: number;
+    private log: Array<{ error: boolean; log: string; }>;
+
     error(x: string): void
     {
-        this.errors.push(x);
         this.uncheckedErrorCount += 1;
+        this.log.push({ error: true, log: BuildError.ERROR + "::" + x });
     }
     warning(x: string): void
     {
-        this.warnings.push(x);
-    }
-    getWarnings(): string
-    {
-        var ret = this.warnings.join("\n");
-        this.warnings = [];
-        return ret;
+        this.uncheckedWarningCount += 1;
+        this.log.push({ error: false, log: BuildError.WARNING + "::" + x });
     }
 
-    static ERROR = "ERROR";
-    static WARNING = "WARNING";
+    private static ERROR = "ERROR";
+    private static WARNING = "WARNING";
 
     checkErrorState(msg: string): boolean
     {
+        if (this.uncheckedWarningCount !== 0)
+        {
+            this.log.push({ error: false, log: "Warnings (" + this.uncheckedWarningCount + ")" });
+            this.uncheckedWarningCount = 0;
+        }
         if (this.uncheckedErrorCount !== 0)
         {
-            var ret = 'Errors (' + this.uncheckedErrorCount + ') ' + msg;
-            this.error(ret);
+            this.log.push({ error: true, log: "Errors (" + this.uncheckedErrorCount + ")" });
+            if (msg)
+            {
+                this.log.push({ error: true, log: msg });
+            }
             this.uncheckedErrorCount = 0;
             return true;
         }
@@ -1286,11 +1290,52 @@ class BuildError
         }
     }
 
+    fail(msg: string, warn: boolean): string
+    {
+        var log = this.log;
+        if (!this.checkErrorState(msg))
+        {
+            log.push({ error: true, log: msg });
+        }
+
+        var count = log.length;
+        var i;
+
+        // strip warnings from log
+        if (!warn)
+        {
+            i = count - 1;
+            while (i >= 0)
+            {
+                if (!log[i].error)
+                {
+                    log.splice(i, 1);
+                    count -= 1;
+                }
+                i -= 1;
+            }
+        }
+
+        // compile log
+        var ret = "";
+        for (i = 0; i < count; i += 1)
+        {
+            if (i !== 0)
+            {
+                ret += "\n";
+            }
+            ret += log[i].log;
+        }
+
+        this.log = [];
+        return ret;
+    }
+
     constructor()
     {
-        this.errors = [];
-        this.warnings = [];
+        this.log = [];
         this.uncheckedErrorCount = 0;
+        this.uncheckedWarningCount = 0;
     }
 }
 
@@ -2038,5 +2083,58 @@ class Parser {
     }
 }
 
-class ParticleBuilder {
+class ParticleBuilder
+{
+    static compile(
+        particles: Array<any>,
+        system?: any,
+        mapping?: Array<Array<number>>,
+        tweaks?: Array<{ [name: string]: Array<number> }>
+    ): void
+    {
+        if (!system)
+        {
+            system = [
+                {
+                    name: "color",
+                    type: "float4",
+                    "default": [1.0, 1.0, 1.0, 1.0],
+                    min: [0.0, 0.0, 0.0, 0.0],
+                    max: [1.0, 1.0, 1.0, 1.0],
+                    storage: "direct"
+                },
+                {
+                    name: "scale",
+                    type: "float2",
+                    "default": [1.0, 1.0]
+                },
+                {
+                    name: "rotation",
+                    type: "float",
+                    "default": 0.0
+                },
+                {
+                    name: "frame",
+                    type: "texture0",
+                    "default": 0
+                }
+            ];
+        }
+
+        var error = new BuildError();
+        var sys = Parser.parseSystem(error, system);
+        var parts = [];
+        var count = particles.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            parts.push(Parser.parseParticle(error, particles[i]));
+        }
+
+        // Can't go any further in the compile to gather more errors.
+        if (sys === null)
+        {
+            throw error.fail("Build failed!", true);
+        }
+    }
 }
