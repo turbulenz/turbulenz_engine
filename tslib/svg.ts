@@ -360,7 +360,6 @@ class SVGBaseNode implements SVGNode
             }
             else if ((this.draw === this._drawStateChildren))
             {
-                debug.assert;
                 this.draw = this._drawChildren;
             }
             else
