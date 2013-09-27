@@ -10,6 +10,7 @@ VMath: false
 
 "use strict";
 
+// Array<number> | Float32Array
 interface FloatArray {
     [index: number]: number;
     length: number;
@@ -1164,3 +1165,625 @@ class ParticleQueue
     }
 }
 
+//
+// ParticleBuilder
+//
+// Used to transform animation descriptions into texture data for particle system.
+// Also performs texture packing on gpu for particle textures.
+//
+
+// Interface for result of build step encoding system animation information.
+interface ParticleSystemDefn
+{
+    maxLifeTime: number;
+    animation  : { width: number; height: number; data: Uint8Array };
+    particle   : { [name: string]: ParticleDefn };
+    attribute  : { [name: string]: AttributeRange };
+}
+interface AttributeRange
+{
+    min  : Array<number>;
+    delta: Array<number>;
+}
+// Interface for result of build step encoding particle animation information in system.
+interface ParticleDefn
+{
+    lifeTime      : number;
+    animationRange: Array<number>;
+}
+
+// Interface for intermediate parse result of a system defined attribute.
+interface Attribute
+{
+    name   : string;
+    type   : any; // tFloat, tFloat2, tFloat4 or tTexture(n) as number
+    defv   : Array<number>;
+    defi   : Interpolator;
+    min    : Array<number>;
+    max    : Array<number>;
+    storage: string; // sDirect or sNormalized
+}
+
+// Interface for intermediate parse result of a particle defined animation.
+interface Particle
+{
+    name       : string;
+    granularity: number;
+    animation  : Array<Array<Snapshot>>;
+    texuvs     : { [name: string]: Array<Array<number>> };
+    texsizes   : { [name: string]: Array<number> };
+}
+interface Snapshot
+{
+    time         : number;
+    attributes   : { [name: string]: Array<number> };
+    interpolators: { [name: string]: Interpolator };
+}
+
+// Interface for defined interpolators supported by build step.
+interface InterpolatorFun
+{
+    (vs: Array<Array<number>>, ts: Array<number>, t: number): Array<number>;
+}
+interface Interpolator
+{
+    fun    : InterpolatorFun;
+    offsets: Array<number>;
+    type   : string;
+}
+
+// Collects errors accumulated during parse/analysis of the input objects.
+// TODO, make private to this module somehow?
+class BuildError
+{
+    // print strings surrounded by "" to avoid confusing "10" with 10
+    static wrap(x: any): string
+    {
+        if (Types.isString(x))
+        {
+            return '"' + x + '"';
+        }
+        else
+        {
+            return "" + x;
+        }
+    }
+
+    uncheckedErrorCount: number; // not the same as errors.length
+    errors: Array<string>;
+    warnings: Array<string>;
+    error(x: string): void
+    {
+        this.errors.push(x);
+        this.uncheckedErrorCount += 1;
+    }
+    warning(x: string): void
+    {
+        this.warnings.push(x);
+    }
+    getWarnings(): string
+    {
+        var ret = this.warnings.join("\n");
+        this.warnings = [];
+        return ret;
+    }
+
+    static ERROR = "ERROR";
+    static WARNING = "WARNING";
+
+    checkErrorState(msg: string): boolean
+    {
+        if (this.uncheckedErrorCount !== 0)
+        {
+            var ret = 'Errors (' + this.uncheckedErrorCount + ') ' + msg;
+            this.error(ret);
+            this.uncheckedErrorCount = 0;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    constructor()
+    {
+        this.errors = [];
+        this.warnings = [];
+        this.uncheckedErrorCount = 0;
+    }
+}
+
+// Type checking for ParticleBuilder
+// TODO, make private to this moduole somewhoe?
+class Types {
+    static isArray(x: any): boolean
+    {
+        return Object.prototype.toString.call(x) === "[object Array]";
+    }
+    static isNumber(x: any): boolean
+    {
+        return Object.prototype.toString.call(x) === "[object Number]";
+    }
+    static isString(x: any): boolean
+    {
+        return Object.prototype.toString.call(x) === "[object String]";
+    }
+    static isBoolean(x: any): boolean
+    {
+        return Object.prototype.toString.call(x) === "[object Boolean]";
+    }
+    static isObject(x: any): boolean
+    {
+        return Object.prototype.toString.call(x) === "[object Object]";
+    }
+    static isNullUndefined(x: any): boolean
+    {
+        // x == null also works.
+        return x === null || x === undefined;
+    }
+}
+
+// Parser for ParticleBuilder
+// TODO, make private to this module somehow?
+class Parser {
+    static interpolators: { [name: string]: (params: any) => Interpolator } = {
+        "none": function (_): Interpolator
+        {
+            return {
+                type: "none",
+                offsets: [0, 1],
+                fun: function (vs, _1, _2)
+                {
+                    return vs[0];
+                }
+            };
+        },
+        "linear": function (_): Interpolator
+        {
+            return {
+                type: "linear",
+                offsets: [0, 1],
+                fun: function (vs, _, t)
+                {
+                    var ret = [];
+                    var count = vs[0].length;
+                    var i;
+                    for (i = 0; i < count; i += 1)
+                    {
+                        ret[i] = (vs[0][i] * (1 - t)) + (vs[1][i] * t);
+                    }
+                    return ret;
+                }
+            };
+        },
+        "cardinal": function (def: { tension: number; }): Interpolator
+        {
+            return {
+                type: "cardinal",
+                offsets: [-1, 0, 1, 2],
+                fun: function (vs, ts, t)
+                {
+                    var n = vs[1].length;
+                    var v1 = vs[1];
+                    var v2 = vs[2];
+                    var t1 = ts[1];
+                    var t2 = ts[2];
+                    // Zero gradients at start/end points of animation
+                    var v0 = vs[0] || vs[1];
+                    var v3 = vs[3] || vs[2];
+                    var t0 = ts[0] || ts[1];
+                    var t3 = ts[3] || ts[2];
+
+                    // Hermite weights
+                    var tsqrd = t * t;
+                    var tcube = tsqrd * t;
+                    var wv1 = 2 * tcube - 3 * tsqrd + 1;
+                    var wv2 = - 2 * tcube + 3 * tsqrd;
+                    var wm1 = tcube - 2 * tsqrd + t;
+                    var wm2 = tcube - tsqrd;
+
+                    var ret = [];
+                    var i;
+                    for (i = 0; i < n; i += 1)
+                    {
+                        var m1 = (1 - def.tension) * (v2[i] - v0[i]) / (t2 - t0);
+                        var m2 = (1 - def.tension) * (v3[i] - v1[i]) / (t3 - t1);
+                        ret[i] = (v1[i] * wv1) + (m1 * wm1) + (m2 * wm2) + (v2[i] * wv2);
+                    }
+                    return ret;
+                }
+            };
+        },
+        "catmull": function (_): Interpolator
+        {
+            var ret = Parser.interpolators["cardinal"]({ tension: 0.0 });
+            ret.type = "catmull";
+            return ret;
+        }
+    };
+
+    // Check for any extra fields that should not be present
+    static extraFields(error: BuildError, obj: string, x: any, excludes: Array<string>): void
+    {
+        for (var f in x)
+        {
+            if (x.hasOwnProperty(f) && excludes.indexOf(f) === -1)
+            {
+                error.warning(obj + " has extra field '" + f + "'");
+            }
+        }
+    }
+
+    // Return object field if it exists, otherwise error and return null
+    static field(error: BuildError, obj: string, x: any, n: string): any
+    {
+        if (!x.hasOwnProperty(n))
+        {
+            error.error("No field '" + n + "' found on " + obj);
+            return null;
+        }
+        else
+        {
+            return x[n];
+        }
+    }
+
+    // Return object field as a string, if it does not exist (or not a string), error.
+    static stringField(error: BuildError, obj: string, x: any, n: string): string
+    {
+        var ret: any = Parser.field(error, obj, x, n);
+        if (x.hasOwnProperty(n) && !Types.isString(ret))
+        {
+            error.error("Field '" + n + "' of " + obj + " is not a string (" + BuildError.wrap(ret) + ")");
+            return null;
+        }
+        else
+        {
+            return (<string>ret);
+        }
+    }
+
+    // Return object field as a number, if it does not exist (or not a number), error.
+    static numberField(error: BuildError, obj: string, x: any, n: string): number
+    {
+        var ret: any = Parser.field(error, obj, x, n);
+        if (x.hasOwnProperty(n) && !Types.isNumber(ret))
+        {
+            error.error("Field '" + n + "' of " + obj + " is not a number (" + BuildError.wrap(ret) + ")");
+            return null;
+        }
+        else
+        {
+            return (<number>ret);
+        }
+    }
+
+    // Check value is a number, and error otherwise.
+    static checkNumber(error: BuildError, obj: string, n: string, ret: any): number
+    {
+        if (ret !== null && !Types.isNumber(ret))
+        {
+            error.error("Field '" + n + "' of " + obj + " is not a number (" + BuildError.wrap(ret) + ")");
+            return null;
+        }
+        else
+        {
+            return (<number>ret);
+        }
+    }
+
+    // Map object field via run function if it exists, otherwise return default result.
+    static maybeField<R>(x: any, n: string, run: (field: any) => R, def: () => R): R
+    {
+        return (x.hasOwnProperty(n)) ? run(x[n]) : def();
+    }
+
+    // Check attribute value agaisnt type, and error if not compatible.
+    // If acceptNull is true, then attribute (sub) values are permitted to be null.
+    static typeAttr(error: BuildError, obj: string, type: any, acceptNull: boolean, val: any): Array<number>
+    {
+        if (type === null)
+        {
+            // Cannot perform type check.
+            return <Array<number>>null;
+        }
+
+        var isNumber = function(val: any): boolean
+        {
+            return (val === null && acceptNull) || Types.isNumber(val);
+        };
+        var checkArray = function (val: any, n: number): Array<number>
+        {
+            if (!Types.isArray(val))
+            {
+                error.error("Value '" + BuildError.wrap(val) + "' should be a float" + n + " for " + obj);
+                return null;
+            }
+            var arr = <Array<number>>val;
+            var count = arr.length;
+            if (count !== n)
+            {
+                error.error("Value '" + BuildError.wrap(val) + "' should have " + n + " elements for float " + n + obj);
+                val = null;
+            }
+            var i;
+            for (i = 0; i < count; i += 1)
+            {
+                if (!isNumber(arr[i]))
+                {
+                    error.error("Element " + i + " of value '" + BuildError.wrap(val) + "' should be a number (" + BuildError.wrap(arr[i]) + ") for " + obj);
+                    val = null;
+                }
+            }
+            return <Array<number>>val;
+        };
+        switch (type) {
+            case "tFloat2":
+                return checkArray(val, 2);
+            case "tFloat4":
+                return checkArray(val, 4);
+            case "tFloat":
+            default: // tTexture(n)
+                if (!isNumber(val))
+                {
+                    error.error("Value '" + BuildError.wrap(val) + "' should be a number for " + obj);
+                    return null;
+                }
+                return [<number>val];
+        }
+    }
+
+    // return default attribute value for a type.
+    static defaultAttr(type: any, val: number = null): Array<number>
+    {
+        if (type === null)
+        {
+            // Can't type check.
+            return null;
+        }
+
+        switch (type) {
+            case "tFloat2":
+                return [val, val];
+            case "tFloat4":
+                return [val, val, val, val];
+            case "tFloat":
+            default: // tTexture(n)
+                return [val];
+        }
+    }
+
+    // Parse a system definition object.
+    static parseSystem(error: BuildError, defn: any): Array<Attribute>
+    {
+        var attrs:Array<Attribute>;
+        if (!Types.isArray(defn))
+        {
+            error.error("System definition must be an array of attribute defintions");
+            attrs = null;
+        }
+        else
+        {
+            attrs = [];
+            var defnArray = <Array<any>>(defn);
+            var count = defnArray.length;
+            var i;
+            for (i = 0; i < count; i += 1)
+            {
+                attrs[i] = Parser.parseSystemAttribute(error, defnArray[i]);
+            }
+
+            // Check for duplicates
+            for (i = 0; i < count; i += 1)
+            {
+                var j;
+                for (j = (i + 1); j < count; j += 1)
+                {
+                    if (attrs[i].name === attrs[j].name)
+                    {
+                        error.error("System definition has conflicting attribute declarations for '" + attrs[i].name + "'");
+                    }
+                }
+            }
+        }
+
+        if (error.checkErrorState("System parse failed!"))
+        {
+            return null;
+        }
+        else
+        {
+            return attrs;
+        }
+    }
+
+    // Parse a system attribute definition.
+    static parseSystemAttribute(error: BuildError, defn: any): Attribute
+    {
+        var name = Parser.stringField(error, "system attribute", defn, "name");
+        if (name !== null && name.length > 14 && name.substr(name.length - 14) === "-interpolation")
+        {
+            error.error("System attribute cannot have '-interpolation' as a suffix (" + name + ")");
+            name = null;
+        }
+        var printName  = (name === null) ? "" : " '"+name+"'";
+        var printNames = (name === null) ? "'s" : " '"+name+"'s";
+
+        var stringField = Parser.stringField.bind(null, error, "system attribute" + printName);
+        var parseInterpolator = Parser.parseInterpolator.bind(null, error,
+                "system attribute" + printNames + " default-interpolation field");
+
+        var typeName = stringField(defn, "type");
+        var type = null;
+        if (typeName !== null)
+        {
+            switch (typeName) {
+                case "float":
+                    type = "tFloat";
+                    break;
+                case "float2":
+                    type = "tFloat2";
+                    break;
+                case "float4":
+                    type = "tFloat4";
+                    break;
+                default:
+                    if (typeName.substr(0, 7) === "texture")
+                    {
+                        type = parseFloat(typeName.substr(7));
+                    }
+                    else
+                    {
+                        error.error("Unknown attribute type '" + typeName + "' for system attribute" + printName);
+                    }
+            }
+        }
+        var typeAttr = function (n)
+            {
+                return Parser.typeAttr.bind(null, error, "system attribute" + printNames + " " + n + " field", type);
+            };
+
+        var defv = Parser.maybeField(defn, "default", typeAttr("default").bind(null, false),
+                Parser.defaultAttr.bind(null, type, 0));
+        var defi = Parser.maybeField(defn, "default-interpolation", parseInterpolator,
+                Parser.interpolators["linear"].bind(null));
+
+        var parseMinMax = function (n)
+            {
+                // Can't type check for null type.
+                if (type === null)
+                {
+                    return null;
+                }
+
+                switch (type)
+                {
+                    case "tFloat":
+                    case "tFloat2":
+                    case "tFloat4":
+                        return Parser.maybeField(defn, n, typeAttr(n).bind(null, true),
+                                Parser.defaultAttr.bind(null, type, null));
+                    default:
+                        if (defn.hasOwnProperty(n))
+                        {
+                            error.error(n + " is not accepted for system texture attribute" + printName);
+                            return null;
+                        }
+                }
+            };
+        var min = parseMinMax("min");
+        var max = parseMinMax("max");
+
+        // can't check for null type
+        var storage = null;
+        if (type !== null)
+        {
+            switch (type)
+            {
+                case "tFloat":
+                case "tFloat2":
+                case "tFloat4":
+                    storage = Parser.maybeField(defn, "storage",
+                            function (val)
+                            {
+                                switch (val)
+                                {
+                                    case "direct":
+                                        return "sDirect";
+                                    case "normalized":
+                                        return "sNormalized";
+                                    default:
+                                        error.error("Unknown storage type '" + val + "' for system attribute" + printName);
+                                        return null;
+                                }
+                            },
+                            function ()
+                            {
+                                return "sNormalized";
+                            });
+                    break;
+                default:
+                    if (defn.hasOwnProperty("storage"))
+                    {
+                        error.error("Storage type is not accepted for system texture attribute" + printName);
+                    }
+            }
+        }
+
+        Parser.extraFields(error, "system attribute" + printName, defn,
+            ["name", "type", "default", "default-interpolation", "min", "max", "storage"]);
+
+        return {
+            name: name,
+            type: type,
+            defv: defv,
+            defi: defi,
+            min: min,
+            max: max,
+            storage: storage
+        };
+    }
+
+    // Parse attribute interpolator definition
+    static parseInterpolator(error: BuildError, obj: string, defn: any): Interpolator
+    {
+        if (Types.isString(defn))
+        {
+            var defnString = <string>defn;
+            switch (defnString)
+            {
+                case "none":
+                    return Parser.interpolators["none"](null);
+                case "linear":
+                    return Parser.interpolators["linear"](null);
+                case "catmull":
+                    return Parser.interpolators["catmull"](null);
+                default:
+                    error.error("Unknown interpolator type '" + defnString + "' for " + obj);
+                    return null;
+            }
+        }
+        else if (defn === null)
+        {
+            error.error("Interpolator cannot be null for " + obj);
+            return null;
+        }
+        else if (Types.isObject(defn))
+        {
+            var defnObj = <Object>(defn);
+            var type = Parser.stringField(error, obj, defnObj, "type");
+            if (type === null)
+            {
+                error.error("complex interpolator type cannot be null for " + obj);
+                return null;
+            }
+            switch (type) {
+                case "none":
+                    Parser.extraFields(error, obj, defnObj, ["type"]);
+                    return Parser.interpolators["none"](null);
+                case "linear":
+                    Parser.extraFields(error, obj, defnObj, ["type"]);
+                    return Parser.interpolators["linear"](null);
+                case "catmull":
+                    Parser.extraFields(error, obj, defnObj, ["type"]);
+                    return Parser.interpolators["catmull"](null);
+                case "cardinal":
+                    Parser.extraFields(error, obj, defnObj, ["type", "tension"]);
+                    var tension = Parser.numberField(error, obj, defnObj, "tension");
+                    return Parser.interpolators["cardinal"]({ tension: tension });
+                default:
+                    error.error("Unknown complex interpolator type '" + type + "' for " + obj);
+                    return null;
+            }
+        }
+        else
+        {
+            error.error("Invalid interpolator for " + obj + ". Should be an interpolator name, or complex interpolator definition, not " + BuildError.wrap(defn));
+            return null;
+        }
+    }
+}
+
+class ParticleBuilder {
+}
