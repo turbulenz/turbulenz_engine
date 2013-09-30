@@ -11,7 +11,8 @@ VMath: false
 "use strict";
 
 // Array<number> | Float32Array
-interface FloatArray {
+interface FloatArray
+{
     [index: number]: number;
     length: number;
 }
@@ -407,8 +408,8 @@ class SizeTree<T>
             }
 
             // Rotate sub-tree.
-            var gchild0 = rotate.child[0];
-            var gchild1 = rotate.child[1];
+            var grandchild0 = rotate.child[0];
+            var grandchild1 = rotate.child[1];
 
             // swap node with rotate
             rotate.child[1 - childN] = node;
@@ -428,15 +429,15 @@ class SizeTree<T>
 
             // Decide which grandchild to swing.
             var pivot, swing;
-            if (gchild0.height > gchild1.height)
+            if (grandchild0.height > grandchild1.height)
             {
-                pivot = gchild0;
-                swing = gchild1;
+                pivot = grandchild0;
+                swing = grandchild1;
             }
             else
             {
-                pivot = gchild1;
-                swing = gchild0;
+                pivot = grandchild1;
+                swing = grandchild0;
             }
 
             // Swing
@@ -1193,15 +1194,31 @@ interface ParticleDefn
 }
 
 // Interface for intermediate parse result of a system defined attribute.
+// TODO make private to this module somehow
+enum AttributeCompress
+{
+    cNone,
+    cHalf,
+    cFull
+}
+// TODO make private to this module somehow
+enum AttributeStorage
+{
+    sDirect,
+    sNormalized
+}
 interface Attribute
 {
-    name   : string;
-    type   : any; // tFloat, tFloat2, tFloat4 or tTexture(n) as number
-    defv   : Array<number>;
-    defi   : Interpolator;
-    min    : Array<number>;
-    max    : Array<number>;
-    storage: string; // sDirect or sNormalized
+    name               : string;
+    // tFloat, tFloat2, tFloat4 or tTexture(n) as number
+    // TypeScript has no algebraic data types to represent this 'nicely'.
+    type               : any;
+    defaultValue       : Array<number>;
+    defaultInterpolator: Interpolator;
+    minValue           : Array<number>;
+    maxValue           : Array<number>;
+    compress           : AttributeCompress;
+    storage            : AttributeStorage;
 }
 
 // Interface for intermediate parse result of a particle defined animation.
@@ -1740,9 +1757,9 @@ class Parser {
                 return Parser.typeAttr.bind(null, error, "system attribute" + printNames + " " + n + " field", type);
             };
 
-        var defv = Parser.maybeField(defn, "default", typeAttr("default").bind(null, false),
+        var defaultValue = Parser.maybeField(defn, "default", typeAttr("default").bind(null, false),
                                      Parser.defaultAttr.bind(null, type, 0));
-        var defi = Parser.maybeField(defn, "default-interpolation", parseInterpolator,
+        var defaultInterpolator = Parser.maybeField(defn, "default-interpolation", parseInterpolator,
                                      Parser.interpolators["linear"].bind(null));
 
         var parseMinMax = function (n)
@@ -1768,8 +1785,29 @@ class Parser {
                         }
                 }
             };
-        var min = parseMinMax("min");
-        var max = parseMinMax("max");
+        var minValue = parseMinMax("min");
+        var maxValue = parseMinMax("max");
+
+        var compress = Parser.maybeField(defn, "compress",
+            function (val)
+            {
+                switch (val)
+                {
+                    case "none":
+                        return AttributeCompress.cNone;
+                    case "half":
+                        return AttributeCompress.cHalf;
+                    case "full":
+                        return AttributeCompress.cFull;
+                    default:
+                        error.error("Unknown compression type '" + val + "' for system attribute " + printName);
+                        return null;
+                }
+            },
+            function ()
+            {
+                return AttributeCompress.cFull;
+            });
 
         // can't check for null type
         var storage = null;
@@ -1786,20 +1824,20 @@ class Parser {
                             switch (val)
                             {
                                 case "direct":
-                                    return "sDirect";
+                                    return AttributeStorage.sDirect;
                                 case "normalized":
-                                    return "sNormalized";
+                                    return AttributeStorage.sNormalized;
                                 default:
-                                    error.error("Unknown storage type '" + val + "' for system attribute" + printName);
+                                    error.error("Unknown storage type '" + val + "' for system attribute " + printName);
                                     return null;
                             }
                         },
                         function ()
                         {
-                            return "sNormalized";
+                            return AttributeStorage.sNormalized;
                         });
                     break;
-                default:
+                default: // tTexture(n)
                     if (defn.hasOwnProperty("storage"))
                     {
                         error.error("Storage type is not accepted for system texture attribute" + printName);
@@ -1808,16 +1846,17 @@ class Parser {
         }
 
         Parser.extraFields(error, "system attribute" + printName, defn,
-            ["name", "type", "default", "default-interpolation", "min", "max", "storage"]);
+            ["name", "type", "default", "default-interpolation", "min", "max", "storage", "compress"]);
 
         return {
-            name: name,
-            type: type,
-            defv: defv,
-            defi: defi,
-            min: min,
-            max: max,
-            storage: storage
+            name               : name,
+            type               : type,
+            defaultValue       : defaultValue,
+            defaultInterpolator: defaultInterpolator,
+            minValue           : minValue,
+            maxValue           : maxValue,
+            compress           : compress,
+            storage            : storage
         };
     }
 
@@ -2021,7 +2060,7 @@ class Parser {
                     else
                     {
                         time = Parser.numberField(error, obj, snapObj, "time");
-                        if (time != null && time <= 0)
+                        if (time !== null && time <= 0)
                         {
                             error.error(obj + " time must be positive");
                             time = null;
@@ -2130,6 +2169,186 @@ class Parser {
 
 class ParticleBuilder
 {
+    static buildAnimationTexture(
+        graphicsDevice: GraphicsDevice,
+        animation: { width: number; height: number; data: Uint8Array }
+    ): Texture
+    {
+        return graphicsDevice.createTexture({
+            name      : "ParticleBuilder AnimationTexture",
+            width     : animation.width,
+            height    : animation.height,
+            depth     : 1,
+            format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
+            mipmaps   : false,
+            cubemap   : false,
+            renderable: false,
+            dynamic   : false,
+            data      : animation.data
+        });
+    }
+
+    static packedTextureVertices : VertexBuffer;
+    static packedTextureSemantics: Semantics;
+    static packedCopyParameters  : TechniqueParameters;
+    static packedCopyTechnique   : Technique;
+    static packTextures(
+        graphicsDevice: GraphicsDevice,
+        textures      : Array<Texture>,
+        borderShrink  : number = 2
+    ): { texture: Texture; uvMap : Array<Array<number>> }
+    {
+        // Init vertexBuffer/semantics/shader technique if required.
+        var vertices, semantics, parameters, technique;
+        if (!ParticleBuilder.packedTextureVertices)
+        {
+            vertices = ParticleBuilder.packedTextureVertices =
+                graphicsDevice.createVertexBuffer({
+                    numVertices: 4,
+                    attributes : [graphicsDevice.VERTEXFORMAT_FLOAT2],
+                    dynamic    : false,
+                    data       : [0,0, 1,0, 0,1, 1,1]
+                });
+            semantics = ParticleBuilder.packedTextureSemantics =
+                graphicsDevice.createSemantics([
+                    graphicsDevice.SEMANTIC_POSITION
+                ]);
+            parameters = ParticleBuilder.packedCopyParameters =
+                graphicsDevice.createTechniqueParameters({
+                    dim: [0, 0],
+                    dst: [0, 0, 0, 0]
+                });
+
+            // Shader embedded from assets/shaders/particles-packer.cgfx
+            var shader = graphicsDevice.createShader(
+{"version":1,"name":"particles-packer.cgfx","samplers":{"src":{"MinFilter":9987,"MagFilter":9729,"WrapS":33071,"WrapT":33071}},"parameters":{"src":{"type":"sampler2D"},"dim":{"type":"float","columns":2},"dst":{"type":"float","columns":4},"border":{"type":"float"}},"techniques":{"pack":[{"parameters":["dim","dst","border","src"],"semantics":["POSITION"],"states":{"DepthTestEnable":false,"DepthMask":false,"CullFaceEnable":false,"BlendEnable":false},"programs":["vp_pack","fp_pack"]}]},"programs":{"fp_pack":{"type":"fragment","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;uniform sampler2D src;void main()\n{_ret_0=texture2D(src,tz_TexCoord[0].xy);gl_FragColor=_ret_0;}"},"vp_pack":{"type":"vertex","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outUV1;uniform vec2 dim;uniform vec4 dst;uniform float border;void main()\n{vec2 _xy;vec2 _wh;vec2 _TMP4;_xy=dst.xy*2.0-1.0;_wh=(dst.zw*2.0-1.0)-_xy;_TMP4=_xy+_wh*ATTR0.xy;_outPosition1=vec4(_TMP4.x,_TMP4.y,0.0,1.0);_outUV1=ATTR0.xy+((ATTR0.xy*2.0-1.0)*border)/dim;tz_TexCoord[0].xy=_outUV1;gl_Position=_outPosition1;}"}}});
+            technique = ParticleBuilder.packedCopyTechnique = shader.getTechnique("pack");
+        }
+        else
+        {
+            vertices   = ParticleBuilder.packedTextureVertices;
+            semantics  = ParticleBuilder.packedTextureSemantics;
+            parameters = ParticleBuilder.packedCopyParameters;
+            technique  = ParticleBuilder.packedCopyTechnique;
+        }
+
+        // Determine the unique textures in those supplied
+        // keeping track of input indices from unique index.
+        var unique  = [];
+        var count = textures.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var tex = textures[i];
+            var index = unique.indexOf(tex);
+            if (index !== -1)
+            {
+                unique[index].mapping.push(i);
+            }
+            else
+            {
+                unique.push({
+                    texture: tex,
+                    mapping: [i],
+                    store: null
+                });
+            }
+        }
+
+        // Sort textures decreasing to improve packing quality.
+        unique.sort(function (x, y)
+            {
+                return (y.texture.width + y.texture.height) - (x.texture.width + x.texture.height);
+            });
+
+        // Pack textures.
+        var max = graphicsDevice.maxSupported("TEXTURE_SIZE");
+        var packer = new OnlineTexturePacker(max, max);
+        var ref;
+        var refCount = unique.length;
+        for (i = 0; i < refCount; i += 1)
+        {
+            ref = unique[i];
+            ref.store = packer.pack(ref.texture.width, ref.texture.height);
+            if (ref.store.bin !== 0)
+            {
+                throw "Packing textures would require more than the maximum size possible";
+            }
+        }
+
+        graphicsDevice.setStream(vertices, semantics);
+        graphicsDevice.setTechnique(technique);
+        parameters.border = borderShrink;
+
+        // Create texture required with size as the next >= powers of 2 for mip-mapping.
+        function nearPow2Geq(x)
+        {
+            return (1 << Math.ceil(Math.log(x) / Math.log(2)));
+        }
+
+        var bin = packer.bins[0];
+        var w = nearPow2Geq(bin.w);
+        var h = nearPow2Geq(bin.h);
+
+        var tex = graphicsDevice.createTexture({
+            name      : "ParticleBuilder Packed-Texture",
+            width     : bin.w,
+            height    : bin.h,
+            depth     : 1,
+            format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
+            mipmaps   : true,
+            cubemap   : false,
+            renderable: true,
+            dynamic   : false
+        });
+        var target = graphicsDevice.createRenderTarget({
+            colorTexture0: tex
+        });
+        graphicsDevice.beginRenderTarget(target);
+
+        var j;
+        var maps = [];
+        for (j = 0; j < refCount; j += 1)
+        {
+            ref = unique[j];
+
+            var mx = (ref.store.x / bin.w);
+            var my = (ref.store.y / bin.h);
+            var mw = (ref.store.w / bin.w);
+            var mh = (ref.store.h / bin.h);
+            var map = [
+                mx + (borderShrink / w),
+                my + (borderShrink / h),
+                mx + mw - (borderShrink / w),
+                my + mh - (borderShrink / h)
+            ];
+            var mapCount = ref.mapping.length;
+            var k;
+            for (k = 0; k < mapCount; k += 1)
+            {
+                maps[ref.mapping[k]] = map;
+            }
+
+            parameters.src    = ref.texture;
+            parameters.dim[0] = ref.texture.width;
+            parameters.dim[1] = ref.texture.height;
+            parameters.dst[0] = mx;
+            parameters.dst[1] = my;
+            parameters.dst[2] = mx + mw;
+            parameters.dst[3] = my + mh;
+            graphicsDevice.setTechniqueParameters(parameters);
+            graphicsDevice.draw(graphicsDevice.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
+        }
+
+        graphicsDevice.endRenderTarget();
+        target.destroy();
+
+        return {
+            texture: tex,
+            uvMap  : maps
+        };
+    }
+
     static compile(
         particles: Array<any>,
         system?: any,
@@ -2377,13 +2596,34 @@ class ParticleBuilder
 
     static compileData(system: Array<Attribute>, width: number, particles: Array<Particle>): Uint8Array
     {
-        var count = system.length * width;
+        var height = 0;
+        var sysCount = system.length;
+        var i;
+        for (i = 0; i < sysCount; i += 1)
+        {
+            var attr = system[i];
+            var dim = (Types.isNumber(attr.type) ? 4 : attr.defaultValue.length);
+            switch (attr.compress)
+            {
+                case AttributeCompress.cHalf:
+                    // 1 -> 1, 2 -> 1, 4 -> 2
+                    dim = Math.ceil(dim / 2);
+                    break;
+                case AttributeCompress.cFull:
+                    // _ -> 1
+                    dim = Math.ceil(dim / 4);
+                    break;
+                default:
+                    // _ -> _
+            }
+            height += dim;
+        }
+
+        var count = width * height;
         var data = new Uint32Array(count);
         var store = 0;
 
-        var sysCount = system.length;
         var partCount = particles.length;
-        var i;
         for (i = 0; i < sysCount; i += 1)
         {
             var attr = system[i];
@@ -2403,15 +2643,39 @@ class ParticleBuilder
                             data[store] = TextureEncode.encodeUnsignedFloat(value[0]);
                             break;
                         case "tFloat2":
-                            data[store] = TextureEncode.encodeUnsignedFloat2(value);
-                            break;
-                        case "tFloat4":
-                            data[store] = TextureEncode.encodeUnsignedFloat4(value);
+                            if (attr.compress !== AttributeCompress.cNone)
+                            {
+                                data[store] = TextureEncode.encodeUnsignedFloat2(value);
+                            }
+                            else
+                            {
+                                data[store + (width * 0)] = TextureEncode.encodeUnsignedFloat(value[0]);
+                                data[store + (width * 1)] = TextureEncode.encodeUnsignedFloat(value[1]);
+                            }
                             break;
                         default:
-                            var uvs = particle.texuvs["texture" + <number>attr.type];
-                            var ind = (value[0] | 0);
-                            data[store] = TextureEncode.encodeUnsignedFloat4(uvs[ind]);
+                            if (attr.type !== "tFloat4")
+                            {
+                                var uvs = particle.texuvs["texture" + <number>attr.type];
+                                var ind = (value[0] | 0);
+                                value = uvs[ind];
+                            }
+                            if (attr.compress === AttributeCompress.cFull)
+                            {
+                                data[store] = TextureEncode.encodeUnsignedFloat4(value);
+                            }
+                            else if (attr.compress === AttributeCompress.cNone)
+                            {
+                                data[store + (width * 0)] = TextureEncode.encodeUnsignedFloat(value[0]);
+                                data[store + (width * 1)] = TextureEncode.encodeUnsignedFloat(value[1]);
+                                data[store + (width * 2)] = TextureEncode.encodeUnsignedFloat(value[2]);
+                                data[store + (width * 3)] = TextureEncode.encodeUnsignedFloat(value[3]);
+                            }
+                            else
+                            {
+                                data[store + (width * 0)] = TextureEncode.encodeUnsignedFloat2(value.slice(0, 2));
+                                data[store + (width * 1)] = TextureEncode.encodeUnsignedFloat2(value.slice(2, 4));
+                            }
                     }
                     store += 1;
                 }
@@ -2432,7 +2696,7 @@ class ParticleBuilder
         for (i = 0; i < sysCount; i += 1)
         {
             var attr = system[i];
-            if (attr.storage !== "sNormalized")
+            if (attr.storage !== AttributeStorage.sNormalized)
             {
                 continue;
             }
@@ -2465,7 +2729,7 @@ class ParticleBuilder
         for (i = 0; i < sysCount; i += 1)
         {
             var attr = system[i];
-            if (attr.storage !== "sNormalized")
+            if (attr.storage !== AttributeStorage.sNormalized)
             {
                 continue;
             }
@@ -2544,8 +2808,8 @@ class ParticleBuilder
         for (i = 0; i < sysCount; i += 1)
         {
             var attr = system[i];
-            var min = attr.min;
-            var max = attr.max;
+            var min = attr.minValue;
+            var max = attr.maxValue;
             if (Types.isNumber(attr.type))
             {
                 // tTexture(n)
@@ -2834,7 +3098,7 @@ class ParticleBuilder
             for (i = 0; i < count; i += 1)
             {
                 attr = system[i];
-                chunk.attributes[attr.name] = attr.defv.concat();
+                chunk.attributes[attr.name] = attr.defaultValue.concat();
             }
 
             disc = [chunk];
@@ -2939,11 +3203,11 @@ class ParticleBuilder
             }
             if (value || snaps[0].time === 0)
             {
-                merged.attributes[attr.name] = value || attr.defv;
+                merged.attributes[attr.name] = value || attr.defaultValue;
             }
             if (interpolator || snaps[0].time === 0)
             {
-                merged.interpolators[attr.name] = interpolator || attr.defi;
+                merged.interpolators[attr.name] = interpolator || attr.defaultInterpolator;
             }
         }
         return merged;
