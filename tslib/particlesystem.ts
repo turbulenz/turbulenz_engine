@@ -1224,11 +1224,11 @@ interface Attribute
 // Interface for intermediate parse result of a particle defined animation.
 interface Particle
 {
-    name       : string;
-    granularity: number;
-    animation  : Array<Array<Snapshot>>;
-    texuvs     : { [name: string]: Array<Array<number>> };
-    texsizes   : { [name: string]: Array<number> };
+    name        : string;
+    granularity : number;
+    animation   : Array<Array<Snapshot>>;
+    textureUVs  : { [name: string]: Array<Array<number>> };
+    textureSizes: { [name: string]: Array<number> };
 }
 interface Snapshot
 {
@@ -1725,7 +1725,8 @@ class Parser {
 
         var stringField = Parser.stringField.bind(null, error, "system attribute" + printName);
         var parseInterpolator =
-            Parser.parseInterpolator.bind(null, error, "system attribute" + printNames + " default-interpolation field");
+            Parser.parseInterpolator.bind(null, error, "system attribute" + printNames +
+                                                       " default-interpolation field");
 
         var typeName = stringField(defn, "type");
         var type = null;
@@ -1978,8 +1979,8 @@ class Parser {
                 }
             }
         }
-        var texuvs   = {};
-        var texsizes = {};
+        var textureUVs = {};
+        var textureSizes = {};
         var count = textures.length;
         var i, j;
         for (i = 0; i < count; i += 1)
@@ -1999,11 +2000,11 @@ class Parser {
                     outUVs.push(Parser.typeAttr(error, "element of particle" + printNames + " " + f,
                                                 "tFloat4", false, uvs[j]));
                 }
-                texuvs[tex] = outUVs.concat();
+                textureUVs[tex] = outUVs.concat();
             }
             if (defn.hasOwnProperty(tex + "-size"))
             {
-                texsizes[tex] = Parser.typeAttr(error, "particle" + printNames + " " + f + "-size",
+                textureSizes[tex] = Parser.typeAttr(error, "particle" + printNames + " " + f + "-size",
                                                 "tFloat2", false, defn[tex + "-size"]);
             }
         }
@@ -2115,11 +2116,11 @@ class Parser {
         else
         {
             return {
-                name       : name,
-                granularity: granularity,
-                animation  : animationOut,
-                texuvs     : texuvs,
-                texsizes   : texsizes
+                name        : name,
+                granularity : granularity,
+                animation   : animationOut,
+                textureUVs  : textureUVs,
+                textureSizes: textureSizes
             };
         }
     }
@@ -2656,7 +2657,7 @@ class ParticleBuilder
                         default:
                             if (attr.type !== "tFloat4")
                             {
-                                var uvs = particle.texuvs["texture" + <number>attr.type];
+                                var uvs = particle.textureUVs["texture" + <number>attr.type];
                                 var ind = (value[0] | 0);
                                 value = uvs[ind];
                             }
@@ -2814,7 +2815,7 @@ class ParticleBuilder
             {
                 // tTexture(n)
                 min = [0];
-                max = [particle.texuvs["texture"+(<number>attr.type)].length - 1];
+                max = [particle.textureUVs["texture"+(<number>attr.type)].length - 1];
             }
 
             var dim = seq[0].attributes[attr.name].length;
@@ -2888,11 +2889,11 @@ class ParticleBuilder
 
     static remapUVs(particle: Particle, uvMap: { [name: string]: Array<Array<number>> }, index: number): void
     {
-        for (var f in particle.texuvs)
+        for (var f in particle.textureUVs)
         {
-            if (particle.texuvs.hasOwnProperty(f) && uvMap.hasOwnProperty(f))
+            if (particle.textureUVs.hasOwnProperty(f) && uvMap.hasOwnProperty(f))
             {
-                var uvs = particle.texuvs[f];
+                var uvs = particle.textureUVs[f];
                 var count = uvs.length;
                 var maps = uvMap[f];
                 if (maps.length <= index)
@@ -3266,9 +3267,9 @@ class ParticleBuilder
             {
                 case "tFloat": case "tFloat2": case "tFloat4": break;
                 default: // tTexture(n)
-                    if (!particle.texuvs.hasOwnProperty("texture" + (<number>sysAttr.type)))
+                    if (!particle.textureUVs.hasOwnProperty("texture" + (<number>sysAttr.type)))
                     {
-                        particle.texuvs["texture" + (<number>sysAttr.type)] = [[0.0, 0.0, 1.0, 1.0]];
+                        particle.textureUVs["texture" + (<number>sysAttr.type)] = [[0.0, 0.0, 1.0, 1.0]];
                     }
             }
         }
@@ -3293,16 +3294,16 @@ class ParticleBuilder
 
     static normalizeParticleUVs(particle: Particle): void
     {
-        for (var f in particle.texuvs)
+        for (var f in particle.textureUVs)
         {
-            if (!particle.texuvs.hasOwnProperty(f) || !particle.texsizes.hasOwnProperty(f))
+            if (!particle.textureUVs.hasOwnProperty(f) || !particle.textureSizes.hasOwnProperty(f))
             {
                 continue;
             }
 
             // normalize
-            var uvs = particle.texuvs[f];
-            var size = particle.texsizes[f];
+            var uvs = particle.textureUVs[f];
+            var size = particle.textureSizes[f];
             var invSizeX = 1 / size[0];
             var invSizeY = 1 / size[1];
             var uvCount = uvs.length;
