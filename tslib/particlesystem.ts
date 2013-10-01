@@ -671,7 +671,10 @@ class OnlineTexturePacker
         var canGrowDown  = (rect.y + rect.h + h) <= this.maxHeight;
 
         // We decide which direction to grow, trying to avoid narrow regions being created.
-        var shouldGrowRight = (Math.abs(rect.h - h) > Math.abs(rect.w - w));
+        // But avoid going over a power of 2 boundary if we can avoid it.
+        var wExpand = ParticleBuilder.nearPow2Geq(rect.w) !== ParticleBuilder.nearPow2Geq(rect.w + w);
+        var hExpand = ParticleBuilder.nearPow2Geq(rect.h) !== ParticleBuilder.nearPow2Geq(rect.h + h);
+        var shouldGrowRight = (wExpand === hExpand) ? (Math.abs(rect.h - h) > Math.abs(rect.w - w)) : (!wExpand);
 
         if (canGrowRight && shouldGrowRight)
         {
@@ -1434,7 +1437,7 @@ class Types {
 // Parser for ParticleBuilder
 // TODO, make private to this module somehow?
 class Parser {
-    static interpolators: { [name: string]: (params: any) => Interpolator } = {
+    private static interpolators: { [name: string]: (params: any) => Interpolator } = {
         "none": function (_): Interpolator
         {
             return {
@@ -2189,10 +2192,15 @@ class ParticleBuilder
         });
     }
 
-    static packedTextureVertices : VertexBuffer;
-    static packedTextureSemantics: Semantics;
-    static packedCopyParameters  : TechniqueParameters;
-    static packedCopyTechnique   : Technique;
+    private static function nearPow2Geq(x)
+    {
+        return (1 << Math.ceil(Math.log(x) / Math.log(2)));
+    }
+
+    private static packedTextureVertices : VertexBuffer;
+    private static packedTextureSemantics: Semantics;
+    private static packedCopyParameters  : TechniqueParameters;
+    private static packedCopyTechnique   : Technique;
     static packTextures(
         graphicsDevice: GraphicsDevice,
         textures      : Array<Texture>,
@@ -2282,11 +2290,6 @@ class ParticleBuilder
         parameters.border = borderShrink;
 
         // Create texture required with size as the next >= powers of 2 for mip-mapping.
-        function nearPow2Geq(x)
-        {
-            return (1 << Math.ceil(Math.log(x) / Math.log(2)));
-        }
-
         var bin = packer.bins[0];
         var w = nearPow2Geq(bin.w);
         var h = nearPow2Geq(bin.h);
@@ -2595,7 +2598,7 @@ class ParticleBuilder
         };
     }
 
-    static compileData(system: Array<Attribute>, width: number, particles: Array<Particle>): Uint8Array
+    private static compileData(system: Array<Attribute>, width: number, particles: Array<Particle>): Uint8Array
     {
         var height = 0;
         var sysCount = system.length;
@@ -2686,7 +2689,7 @@ class ParticleBuilder
     }
 
     // Pre: animation has been flattened.
-    static normalizeAttributes(
+    private static normalizeAttributes(
         system: Array<Attribute>, particle: Particle, minDelta: { [name: string]: AttributeRange }): void
     {
         var res: { [name: string]: AttributeRange } = {};
@@ -2720,7 +2723,7 @@ class ParticleBuilder
     }
 
     // Pre: animation has been flattened.
-    static attributesMapping(system: Array<Attribute>, particles: Array<Particle>)
+    private static attributesMapping(system: Array<Attribute>, particles: Array<Particle>)
     {
         var res: { [name: string]: AttributeRange } = {};
         var inf = Number.POSITIVE_INFINITY;
@@ -2795,7 +2798,7 @@ class ParticleBuilder
     }
 
     // Pre: animation has been flattened.
-    static clampAttributes(system: Array<Attribute>, particle: Particle): void
+    private static clampAttributes(system: Array<Attribute>, particle: Particle): void
     {
         var seq = particle.animation[0];
         var seqCount = seq.length;
@@ -2840,7 +2843,7 @@ class ParticleBuilder
     }
 
     // Pre: animation has been flattened.
-    static applyTweak(system: Array<Attribute>, particle: Particle, tweak: { [name: string]: Array<number> }): void
+    private static applyTweak(system: Array<Attribute>, particle: Particle, tweak: { [name: string]: Array<number> }): void
     {
         var sysCount = system.length;
         var i;
@@ -2887,7 +2890,7 @@ class ParticleBuilder
         }
     }
 
-    static remapUVs(particle: Particle, uvMap: { [name: string]: Array<Array<number>> }, index: number): void
+    private static remapUVs(particle: Particle, uvMap: { [name: string]: Array<Array<number>> }, index: number): void
     {
         for (var f in particle.textureUVs)
         {
@@ -2921,7 +2924,7 @@ class ParticleBuilder
     // eg:
     // x:1    y:2    x:3  goes to  (x:1,y:1) (x:interpolated,y:2) (x:3,y:5) etc.
     // y:1    ___    y:5
-    static flatten(error: BuildError, system: Array<Attribute>, particle: Particle): void
+    private static flatten(error: BuildError, system: Array<Attribute>, particle: Particle): void
     {
         // exchange snapshot relative times for absolute times
         // and collate into a complete snapshots list.
@@ -3051,7 +3054,7 @@ class ParticleBuilder
     // Interpolate for value of attribute 'attr' at fractional point
     // 't' between snaps[i-1] and snaps[i], making use of the given interpolator
     // and any extra snaps present at higher and lower indices.
-    static interpolate(
+    private static interpolate(
         intp: Interpolator,
         snaps: Array<Snapshot>,
         i: number,
@@ -3079,7 +3082,7 @@ class ParticleBuilder
     // based on granularity.
     //
     // pre: animation has been flattened
-    static discretize(system: Array<Attribute>, particle: Particle): void
+    private static discretize(system: Array<Attribute>, particle: Particle): void
     {
         var disc = [];
         var snaps = particle.animation[0];
@@ -3158,7 +3161,7 @@ class ParticleBuilder
     // Merge equal (absolute) time snapshots.
     // System provides default values for missing attributes when merging intitial (t=0) snapshots.
     // Otherwise are left blank for later interpolation.
-    static merge(
+    private static merge(
         error: BuildError,
         system: Array<Attribute>,
         snaps: Array<Snapshot>): Snapshot
@@ -3214,7 +3217,7 @@ class ParticleBuilder
         return merged;
     }
 
-    static checkAttributes(error: BuildError, particle: Particle, system: Array<Attribute>): void
+    private static checkAttributes(error: BuildError, particle: Particle, system: Array<Attribute>): void
     {
         var animation = particle.animation;
         var count = animation.length;
@@ -3275,7 +3278,7 @@ class ParticleBuilder
         }
     }
 
-    static getAttribute(system: Array<Attribute>, name: string): Attribute
+    private static getAttribute(system: Array<Attribute>, name: string): Attribute
     {
         var ret = null;
         var count = system.length;
@@ -3292,7 +3295,7 @@ class ParticleBuilder
         return ret;
     }
 
-    static normalizeParticleUVs(particle: Particle): void
+    private static normalizeParticleUVs(particle: Particle): void
     {
         for (var f in particle.textureUVs)
         {
