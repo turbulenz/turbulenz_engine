@@ -556,8 +556,9 @@ class OnlineTexturePacker
     bins: Array<PackedRect>;
 
     // Maximum dimensions of a bin.
-    private maxWidth: number;
-    private maxHeight: number;
+    // READONLY!!
+    maxWidth: number;
+    maxHeight: number;
 
     constructor(maxWidth: number, maxHeight: number)
     {
@@ -2269,8 +2270,7 @@ class ParticleBuilder
                 });
 
             // Shader embedded from assets/shaders/particles-packer.cgfx
-            var shader = graphicsDevice.createShader(
-{"version":1,"name":"particles-packer.cgfx","samplers":{"src":{"MinFilter":9987,"MagFilter":9729,"WrapS":33071,"WrapT":33071}},"parameters":{"src":{"type":"sampler2D"},"dim":{"type":"float","columns":2},"dst":{"type":"float","columns":4},"border":{"type":"float"}},"techniques":{"pack":[{"parameters":["dim","dst","border","src"],"semantics":["POSITION"],"states":{"DepthTestEnable":false,"DepthMask":false,"CullFaceEnable":false,"BlendEnable":false},"programs":["vp_pack","fp_pack"]}]},"programs":{"fp_pack":{"type":"fragment","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;uniform sampler2D src;void main()\n{_ret_0=texture2D(src,tz_TexCoord[0].xy);gl_FragColor=_ret_0;}"},"vp_pack":{"type":"vertex","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outUV1;uniform vec2 dim;uniform vec4 dst;uniform float border;void main()\n{vec2 _xy;vec2 _wh;vec2 _TMP4;_xy=dst.xy*2.0-1.0;_wh=(dst.zw*2.0-1.0)-_xy;_TMP4=_xy+_wh*ATTR0.xy;_outPosition1=vec4(_TMP4.x,_TMP4.y,0.0,1.0);_outUV1=ATTR0.xy+((ATTR0.xy*2.0-1.0)*border)/dim;tz_TexCoord[0].xy=_outUV1;gl_Position=_outPosition1;}"}}});
+            var shader = graphicsDevice.createShader({"version":1,"name":"particles-packer.cgfx","samplers":{"src":{"MinFilter":9987,"MagFilter":9729,"WrapS":33071,"WrapT":33071}},"parameters":{"src":{"type":"sampler2D"},"dim":{"type":"float","columns":2},"dst":{"type":"float","columns":4},"border":{"type":"float"}},"techniques":{"pack":[{"parameters":["dim","dst","border","src"],"semantics":["POSITION"],"states":{"DepthTestEnable":false,"DepthMask":false,"CullFaceEnable":false,"BlendEnable":false},"programs":["vp_pack","fp_pack"]}]},"programs":{"fp_pack":{"type":"fragment","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;uniform sampler2D src;void main()\n{_ret_0=texture2D(src,tz_TexCoord[0].xy);gl_FragColor=_ret_0;}"},"vp_pack":{"type":"vertex","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outUV1;uniform vec2 dim;uniform vec4 dst;uniform float border;void main()\n{vec2 _xy;vec2 _wh;vec2 _TMP4;_xy=dst.xy*2.0-1.0;_wh=(dst.zw*2.0-1.0)-_xy;_TMP4=_xy+_wh*ATTR0.xy;_outPosition1=vec4(_TMP4.x,_TMP4.y,0.0,1.0);_outUV1=ATTR0.xy+((ATTR0.xy*2.0-1.0)*border)/dim;tz_TexCoord[0].xy=_outUV1;gl_Position=_outPosition1;}"}}});
             technique = ParticleBuilder.packedCopyTechnique = shader.getTechnique("pack");
         }
         else
@@ -2327,7 +2327,7 @@ class ParticleBuilder
 
         graphicsDevice.setStream(vertices, semantics);
         graphicsDevice.setTechnique(technique);
-        parameters.border = borderShrink;
+        parameters["border"] = borderShrink;
 
         // Create texture required with size as the next >= powers of 2 for mip-mapping.
         var bin = packer.bins[0];
@@ -2373,13 +2373,13 @@ class ParticleBuilder
                 maps[ref.mapping[k]] = map;
             }
 
-            parameters.src    = ref.texture;
-            parameters.dim[0] = ref.texture.width;
-            parameters.dim[1] = ref.texture.height;
-            parameters.dst[0] = mx;
-            parameters.dst[1] = my;
-            parameters.dst[2] = mx + mw;
-            parameters.dst[3] = my + mh;
+            parameters["src"]    = ref.texture;
+            parameters["dim"][0] = ref.texture.width;
+            parameters["dim"][1] = ref.texture.height;
+            parameters["dst"][0] = mx;
+            parameters["dst"][1] = my;
+            parameters["dst"][2] = mx + mw;
+            parameters["dst"][3] = my + mh;
             graphicsDevice.setTechniqueParameters(parameters);
             graphicsDevice.draw(graphicsDevice.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
         }
@@ -3258,6 +3258,233 @@ class ParticleBuilder
         }
     }
 }
+
+
+
+//
+// SharedRenderContext
+//
+// Deals with allocating texture stores for particle states/mapping tables
+// and invalidating systems/views when stores are resized.
+//
+interface Context
+{
+    width: number;
+    height: number;
+    renderTargets: Array<RenderTarget>;
+    store: Array<{
+        fit : PackedRect;
+        set : (ctx: AllocatedContext) => void;
+    }>
+}
+interface AllocatedContext
+{
+    renderTargets: Array<RenderTarget>;
+    uvRectangle: Array<number>;
+}
+class SharedRenderContext
+{
+    private graphicsDevice: GraphicsDevice;
+    private contexts: Array<Context>;
+    private packer: OnlineTexturePacker;
+
+    private static textureVertices : VertexBuffer;
+    private static textureSemantics: Semantics;
+    private static copyParameters  : TechniqueParameters;
+    private static copyTechnique   : Technique;
+    private static init(graphicsDevice: GraphicsDevice): void
+    {
+        if (!SharedRenderContext.textureVertices)
+        {
+            SharedRenderContext.textureVertices =
+                graphicsDevice.createVertexBuffer({
+                    numVertices: 4,
+                    attributes : [graphicsDevice.VERTEXFORMAT_FLOAT2],
+                    dynamic    : false,
+                    data       : [0,0, 1,0, 0,1, 1,1]
+                });
+            SharedRenderContext.textureSemantics =
+                graphicsDevice.createSemantics([
+                    graphicsDevice.SEMANTIC_POSITION
+                ]);
+            SharedRenderContext.copyParameters =
+                graphicsDevice.createTechniqueParameters({
+                    dim: [0, 0],
+                    dst: [0, 0, 0, 0]
+                });
+
+            // Shader embedded from assets/shaders/particles-copy.cgfx
+            var shader = graphicsDevice.createShader({"version": 1,"name": "particles-copy.cgfx","samplers":{"src":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071}},"parameters":{"src":{"type": "sampler2D"},"dim":{"type": "float","columns": 2},"dst":{"type": "float","columns": 4}},"techniques":{"copy":[{"parameters": ["dst","src"],"semantics": ["POSITION"],"states":{"DepthTestEnable": false,"DepthMask": false,"CullFaceEnable": false,"BlendEnable": false},"programs": ["vp_copy","fp_copy"]}]},"programs":{"fp_copy":{"type": "fragment","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;uniform sampler2D src;void main()\n{_ret_0=texture2D(src,tz_TexCoord[0].xy);gl_FragColor=_ret_0;}"},"vp_copy":{"type": "vertex","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outUV1;uniform vec4 dst;void main()\n{vec2 _xy;vec2 _wh;vec2 _TMP3;_xy=dst.xy*2.0-1.0;_wh=(dst.zw*2.0-1.0)-_xy;_TMP3=_xy+_wh*ATTR0.xy;_outPosition1=vec4(_TMP3.x,_TMP3.y,0.0,1.0);_outUV1=ATTR0.xy;tz_TexCoord[0].xy=ATTR0.xy;gl_Position=_outPosition1;}"}}});
+            SharedRenderContext.copyTechnique = shader.getTechnique("copy");
+        }
+    }
+
+    static create(params: {
+        graphicsDevice: GraphicsDevice
+    }): SharedRenderContext
+    {
+        return new SharedRenderContext(params);
+    }
+
+    constructor(params: {
+        graphicsDevice: GraphicsDevice
+    })
+    {
+        this.graphicsDevice = params.graphicsDevice;
+        SharedRenderContext.init(this.graphicsDevice);
+        var max = this.graphicsDevice.maxSupported("TEXTURE_SIZE");
+        this.packer = new OnlineTexturePacker(max, max);
+        this.contexts = [];
+    }
+
+    allocate(params: {
+        set: (ctx: AllocatedContext) => void;
+        width: number;
+        height: number;
+    }): AllocatedContext
+    {
+        var fit = this.packer.pack(params.width, params.height);
+
+        var bin = fit.bin;
+        var ctxW = this.packer.bins[bin].w;
+        var ctxH = this.packer.bins[bin].h;
+        if (bin >= this.contexts.length)
+        {
+            this.allocateContext(ctxW, ctxH);
+        }
+
+        var ctx = this.contexts[bin];
+        if (ctxW > ctx.width || ctxH > ctx.height)
+        {
+            ctx = this.contexts[bin] = this.resizeContext(ctx, ctxW, ctxH);
+        }
+
+        ctx.store.push({
+            set: params.set,
+            fit: fit
+        });
+
+        return {
+            renderTargets: ctx.renderTargets,
+            uvRectangle: [fit.x, fit.y, fit.x + fit.w, fit.y + fit.h]
+        };
+    }
+
+    private allocateContext(w, h)
+    {
+        this.contexts.push(SharedRenderContext.createContext(this.graphicsDevice, w, h));
+    }
+
+    private resizeContext(ctx: Context, w, h)
+    {
+        // don't resize to exactly the required size.
+        // instead scale up to a larger size to reduce
+        // the number of times we need to resize.
+        //
+        // whilst multiplication by 2 is optimal in terms of resize counts
+        // we don't want to waste too much texture space.
+        var newW = ctx.width;
+        var newH = ctx.height;
+        while (newW < w)
+        {
+            newW = (newW * 1.25) | 0;
+        }
+        while (newH < h)
+        {
+            newH = (newH * 1.25) | 0;
+        }
+        if (newW > this.packer.maxWidth)
+        {
+            newW = this.packer.maxWidth;
+        }
+        if (newH > this.packer.maxHeight)
+        {
+            newH = this.packer.maxHeight;
+        }
+        w = newW;
+        h = newH;
+
+        var gd = this.graphicsDevice;
+        var newCtx = SharedRenderContext.createContext(gd, w, h);
+        SharedRenderContext.copyTexture(gd, ctx.renderTargets[0], newCtx.renderTargets[0]);
+        SharedRenderContext.copyTexture(gd, ctx.renderTargets[1], newCtx.renderTargets[1]);
+        ctx.renderTargets[0].colorTexture0.destroy();
+        ctx.renderTargets[1].colorTexture0.destroy();
+        ctx.renderTargets[0].destroy();
+        ctx.renderTargets[1].destroy();
+
+        var invW = 1 / w;
+        var invH = 1 / h;
+
+        var store = ctx.store;
+        var newStore = newCtx.store;
+        var count = store.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var elt = store[i];
+            var fit = elt.fit;
+            newStore.push(elt);
+            elt.set({
+                renderTargets: newCtx.renderTargets,
+                uvRectangle: [fit.x * invW, fit.y * invH, (fit.x + fit.w) * invW, (fit.y + fit.h) * invH]
+            });
+        }
+        return newCtx;
+    }
+
+    private static copyTexture(gd: GraphicsDevice, from: RenderTarget, to: RenderTarget): void
+    {
+        var parameters = SharedRenderContext.copyParameters;
+        var technique = SharedRenderContext.copyTechnique;
+        var vertices = SharedRenderContext.textureVertices;
+        var semantics = SharedRenderContext.textureSemantics;
+
+        parameters["src"] = from.colorTexture0;
+        parameters["dst"] = [
+            0, 0,
+            from.width / to.colorTexture0.width,
+            from.height / to.colorTexture0.height
+        ];
+
+        gd.beginRenderTarget(to);
+        gd.setStream(vertices, semantics);
+        gd.setTechnique(technique);
+        gd.setTechniqueParameters(parameters);
+        gd.draw(gd.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
+        gd.endRenderTarget();
+    }
+
+    private static createContext(gd: GraphicsDevice, w, h)
+    {
+        var targets = [];
+        var i;
+        for (i = 0; i < 2; i += 1)
+        {
+            var tex = gd.createTexture({
+                name: "SharedRenderContext Context Texture " + i,
+                depth: 1,
+                width: w,
+                height: h,
+                format: gd.PIXELFORMAT_R8G8B8A8,
+                mipmaps: false,
+                cubemap: false,
+                dynamic: true,
+                renderable: true
+            });
+            targets.push(gd.createRenderTarget({ colorTexture0: tex }));
+        }
+
+        return {
+            width: w,
+            height: h,
+            store: [],
+            renderTargets: targets,
+        };
+    }
+}
+
+
 
 //
 // ParticleSystem
