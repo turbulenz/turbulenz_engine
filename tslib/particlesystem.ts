@@ -2270,7 +2270,7 @@ class ParticleBuilder
                 });
 
             // Shader embedded from assets/shaders/particles-packer.cgfx
-            var shader = graphicsDevice.createShader({"version":1,"name":"particles-packer.cgfx","samplers":{"src":{"MinFilter":9987,"MagFilter":9729,"WrapS":33071,"WrapT":33071}},"parameters":{"src":{"type":"sampler2D"},"dim":{"type":"float","columns":2},"dst":{"type":"float","columns":4},"border":{"type":"float"}},"techniques":{"pack":[{"parameters":["dim","dst","border","src"],"semantics":["POSITION"],"states":{"DepthTestEnable":false,"DepthMask":false,"CullFaceEnable":false,"BlendEnable":false},"programs":["vp_pack","fp_pack"]}]},"programs":{"fp_pack":{"type":"fragment","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;uniform sampler2D src;void main()\n{_ret_0=texture2D(src,tz_TexCoord[0].xy);gl_FragColor=_ret_0;}"},"vp_pack":{"type":"vertex","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outUV1;uniform vec2 dim;uniform vec4 dst;uniform float border;void main()\n{vec2 _xy;vec2 _wh;vec2 _TMP4;_xy=dst.xy*2.0-1.0;_wh=(dst.zw*2.0-1.0)-_xy;_TMP4=_xy+_wh*ATTR0.xy;_outPosition1=vec4(_TMP4.x,_TMP4.y,0.0,1.0);_outUV1=ATTR0.xy+((ATTR0.xy*2.0-1.0)*border)/dim;tz_TexCoord[0].xy=_outUV1;gl_Position=_outPosition1;}"}}});
+            var shader = graphicsDevice.createShader({"version":1,"name":"particles-packer.cgfx","samplers":{"src":{"MinFilter":9728,"MagFilter":9728,"WrapS":33071,"WrapT":33071}},"parameters":{"src":{"type":"sampler2D"},"dim":{"type":"float","columns":2},"dst":{"type":"float","columns":4},"border":{"type":"float"}},"techniques":{"pack":[{"parameters":["dim","dst","border","src"],"semantics":["POSITION"],"states":{"DepthTestEnable":false,"DepthMask":false,"CullFaceEnable":false,"BlendEnable":false},"programs":["vp_pack","fp_pack"]}]},"programs":{"fp_pack":{"type":"fragment","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;uniform sampler2D src;void main()\n{_ret_0=texture2D(src,tz_TexCoord[0].xy);gl_FragColor=_ret_0;}"},"vp_pack":{"type":"vertex","code":"#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outUV1;uniform vec2 dim;uniform vec4 dst;uniform float border;void main()\n{vec2 _xy;vec2 _wh;vec2 _TMP4;_xy=dst.xy*2.0-1.0;_wh=(dst.zw*2.0-1.0)-_xy;_TMP4=_xy+_wh*ATTR0.xy;_outPosition1=vec4(_TMP4.x,_TMP4.y,0.0,1.0);_outUV1=ATTR0.xy+((ATTR0.xy*2.0-1.0)*border)/dim;tz_TexCoord[0].xy=_outUV1;gl_Position=_outPosition1;}"}}});
             technique = ParticleBuilder.packedCopyTechnique = shader.getTechnique("pack");
         }
         else
@@ -2336,14 +2336,14 @@ class ParticleBuilder
 
         var tex = graphicsDevice.createTexture({
             name      : "ParticleBuilder Packed-Texture",
-            width     : bin.w,
-            height    : bin.h,
+            width     : w,
+            height    : h,
             depth     : 1,
             format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
             mipmaps   : true,
             cubemap   : false,
             renderable: true,
-            dynamic   : false
+            dynamic   : true
         });
         var target = graphicsDevice.createRenderTarget({
             colorTexture0: tex
@@ -2356,10 +2356,10 @@ class ParticleBuilder
         {
             ref = unique[j];
 
-            var mx = (ref.store.x / bin.w);
-            var my = (ref.store.y / bin.h);
-            var mw = (ref.store.w / bin.w);
-            var mh = (ref.store.h / bin.h);
+            var mx = (ref.store.x / w);
+            var my = (ref.store.y / h);
+            var mw = (ref.store.w / w);
+            var mh = (ref.store.h / h);
             var map = [
                 mx + (borderShrink / w),
                 my + (borderShrink / h),

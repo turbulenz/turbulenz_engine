@@ -283,7 +283,7 @@ Restrictions on how textures can be packed means that if possible, you should in
     A `GraphicsDevice` object used to create the newly packed texture and to perform required draw calls to render input textures into the packed texture on the GPU.
 
 ``texturesArray``
-    An Array of `Texture` objects to be packed on the GPU. These textures should be mip-mapped, but need not be unique (repetitions are allowed and handled to avoid redundant duplication in the packed textures).
+    An Array of `Texture` objects to be packed on the GPU. These textures need not be mipmapped, and repetitions are permitted.
 
 ``borderShrink`` (Optional)
     Default value 4. This parameter controls how much input textures are shrunk so as to retain a border around regions of the packed textures without requiring the total size of the packed texture to be increased.

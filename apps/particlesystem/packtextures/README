@@ -1,0 +1,4 @@
+Application serves as a test bed for the packTextures method of ParticleBuilder.
+
+A set of simple textures are created, and packed together with output uv-maps rendered to demonstrate results
+of the border-shrink.

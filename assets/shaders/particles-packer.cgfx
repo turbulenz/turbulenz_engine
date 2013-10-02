@@ -1,7 +1,7 @@
 sampler2D src = sampler_state
 {
-    MinFilter = LinearMipMapLinear;
-    MagFilter = Linear;
+    MinFilter = Nearest;
+    MagFilter = Nearest;
     WrapS = ClampToEdge;
     WrapT = ClampToEdge;
 };
