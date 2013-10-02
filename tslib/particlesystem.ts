@@ -1586,13 +1586,17 @@ class Parser {
     }
 
     // Return object field as a number, if it does not exist (or not a number), error.
-    // TODO check -inf/inf/nan
     static numberField(error: BuildError, obj: string, x: Object, n: string): number
     {
         var ret: any = Parser.field(error, obj, x, n);
         if (x.hasOwnProperty(n) && !Types.isNumber(ret))
         {
             error.error("Field '" + n + "' of " + obj + " is not a number (" + BuildError.wrap(ret) + ")");
+            return null;
+        }
+        else if (!isFinite(ret))
+        {
+            error.error("Field '" + n + "' of " + obj + " is nan or infinite (" + BuildError.wrap(ret) + ")");
             return null;
         }
         else
@@ -1607,6 +1611,11 @@ class Parser {
         if (!Types.isNumber(ret))
         {
             error.error("Field '" + n + "' of " + obj + " is not a number (" + BuildError.wrap(ret) + ")");
+            return null;
+        }
+        else if (!isFinite(ret))
+        {
+            error.error("Field '" + n + "' of " + obj + " is nan or infinite (" + BuildError.wrap(ret) + ")");
             return null;
         }
         else
@@ -3027,62 +3036,6 @@ class ParticleBuilder
                 }
             }
         }
-
-//        // Fill in any attribute values that don't need interpolation
-//        // eg: (x -> y -> _ -> _ -> z -> _ -> _ -> _)
-//        //     regardless of interpolators, everything after 'z' can only ever have
-//        //     the same value as z and can skip interpolation.
-//        for (j = 0; j < count; j += 1)
-//        {
-//            var max = 0;
-//            attr = system[j];
-//            for (i = 1; i < seqCount; i += 1)
-//            {
-//                if (merged[i].attributes.hasOwnProperty(attr.name))
-//                {
-//                    max = i;
-//                }
-//            }
-//            for (i = (max + 1); i < seqCount; i += 1)
-//            {
-//                merged[i].attributes[attr.name] = merged[max].attributes[attr.name];
-//            }
-//        }
-//
-//        // Interpolate any missing attribute values.
-//        for (i = 1; i < seqCount; i += 1)
-//        {
-//            curr = merged[i];
-//            prev = merged[i - 1];
-//            for (j = 0; j < count; j += 1)
-//            {
-//                attr = system[j];
-//                if (curr.attributes.hasOwnProperty(attr.name))
-//                {
-//                    continue;
-//                }
-//                // Search for snapshots backwards/forwards in time defining attribute we need.
-//                // Back is all merged sequences < i (atleast one)
-//                // Forth is not as well defined as interpolation has not yet occured.
-//                //   but due to filling in attributes that don't need interpolation above
-//                //   we can guarantee there is 'atleast 1' forth snapshot.
-//                var forth = [];
-//                var k;
-//                for (k = (i + 1); k < seqCount; k += 1)
-//                {
-//                    if (merged[k].attributes.hasOwnProperty(attr.name))
-//                    {
-//                        forth.push(merged[k]);
-//                    }
-//                }
-//
-//                curr.attributes[attr.name] =
-//                    ParticleBuilder.interpolate(prev.interpolators[attr.name],
-//                                                merged.slice(0,i).concat(forth),
-//                                                i, attr,
-//                                                (curr.time - prev.time) / (forth[0].time - prev.time));
-//            }
-//        }
 
         particle.animation = [merged];
     }
