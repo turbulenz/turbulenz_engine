@@ -2397,14 +2397,24 @@ class ParticleBuilder
         };
     }
 
-    static compile(
-        particles: Array<any>,
-        system?: any,
-        uvMap?: { [name: string]: Array<Array<number>> },
-        tweaks?: Array<{ [name: string]: any }>, // any = number | Array<number>
-        failOnWarnings: boolean = true
-    ): ParticleSystemDefn
+    static compile(params: {
+        particles: Array<any>;
+        system?: any;
+        uvMap?: { [name: string]: Array<Array<number>> };
+        tweaks?: Array<{ [name: string]: any }>; // any = number | Array<number>
+        failOnWarnings: boolean;
+    }): ParticleSystemDefn
     {
+        var particles = params.particles;
+        var system = params.system;
+        var uvMap = params.uvMap;
+        var tweaks = params.tweaks;
+        var failOnWarnings = params.failOnWarnings;
+        if (failOnWarnings === undefined)
+        {
+            failOnWarnings = true;
+        }
+
         if (!system)
         {
             system = [
