@@ -2245,12 +2245,19 @@ class ParticleBuilder
     private static packedTextureSemantics: Semantics;
     private static packedCopyParameters  : TechniqueParameters;
     private static packedCopyTechnique   : Technique;
-    static packTextures(
-        graphicsDevice: GraphicsDevice,
-        textures      : Array<Texture>,
-        borderShrink  : number = 2
-    ): { texture: Texture; uvMap : Array<Array<number>> }
+    static packTextures(params: {
+        graphicsDevice: GraphicsDevice;
+        textures      : Array<Texture>;
+        borderShrink? : number;
+    }): { texture: Texture; uvMap : Array<Array<number>> }
     {
+        var graphicsDevice = params.graphicsDevice;
+        var textures = params.textures;
+        var borderShrink = params.borderShrink;
+        if (borderShrink === undefined)
+        {
+            borderShrink = 4;
+        }
         // Init vertexBuffer/semantics/shader technique if required.
         var vertices, semantics, parameters, technique;
         if (!ParticleBuilder.packedTextureVertices)
