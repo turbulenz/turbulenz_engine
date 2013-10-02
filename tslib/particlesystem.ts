@@ -226,12 +226,12 @@ interface SizeTreeNode<T>
 
     // Tree constraints:
     //
-    // data === null <> child !== null
-    // child !== null => child.length = 2 and they're valid
-    // data.height = 1 + max(childs height's)
-    // (w,h) >= childs heights (each component separate)
-    // (w,h) is minimal.
-    // abs(child1.height - child2.height) in {-1,0,1}
+    // data === null <=> child !== null                        (only leaves have data)
+    // child !== null => child.length = 2 and they're non-null (every non-leaf has exactly 2 children)
+    // height = 1 + max(childs height's)                       (height is valid)
+    // (w,h) >= childs (w,h) (considered seperately)           (nodes encompass their children)
+    // (w,h) is minimal                                        (nodes are as small as possible to encompass children)
+    // abs(child1.height - child2.height) in {-1,0,1}          (tree is balanced)
 }
 class SizeTree<T>
 {
@@ -270,6 +270,7 @@ class SizeTree<T>
                 var child1 = node.child[1];
 
                 // cost of creating a new parent for this node and leaf.
+                // cost hueristic defined by sum of node dimensions.
                 var ncost = (node.w > leaf.w ? node.w : leaf.w) +
                             (node.h > leaf.h ? node.h : leaf.h);
                 // cost of pushing leaf further down the tree.
@@ -566,7 +567,7 @@ class OnlineTexturePacker
         this.maxHeight = maxHeight;
     }
 
-    private release(bin, x, y, w, h)
+    private releaseSpace(bin, x, y, w, h)
     {
         if (w !== 0 && h !== 0)
         {
@@ -589,13 +590,8 @@ class OnlineTexturePacker
     // high costs inbetween.
     private static costFit(w, h, rect)
     {
-        // Impossible fit.
-        if (rect.w < w || rect.h < h)
-        {
-            return Number.POSITIVE_INFINITY;
-        }
         // Exact fit (terminate early)
-        else if (rect.w === w && rect.h === h)
+        if (rect.w === w && rect.h === h)
         {
             return null;
         }
@@ -636,13 +632,13 @@ class OnlineTexturePacker
         // I have no idea why this choice of branch condition works as well as it does...
         if ((rect.w - w) < (rect.h - h))
         {
-            this.release(rect.bin, rect.x, rect.y + h, rect.w, rect.h - h);
-            this.release(rect.bin, rect.x + w, rect.y, rect.w - w, h);
+            this.releaseSpace(rect.bin, rect.x, rect.y + h, rect.w, rect.h - h);
+            this.releaseSpace(rect.bin, rect.x + w, rect.y, rect.w - w, h);
         }
         else
         {
-            this.release(rect.bin, rect.x, rect.y + h, w, rect.h - h);
-            this.release(rect.bin, rect.x + w, rect.y, rect.w - w, rect.h);
+            this.releaseSpace(rect.bin, rect.x, rect.y + h, w, rect.h - h);
+            this.releaseSpace(rect.bin, rect.x + w, rect.y, rect.w - w, rect.h);
         }
         return {
             x: rect.x,
@@ -651,6 +647,11 @@ class OnlineTexturePacker
             h: h,
             bin: rect.bin
         };
+    }
+
+    private static nearPow2Geq(x)
+    {
+        return (1 << Math.ceil(Math.log(x) / Math.log(2)));
     }
 
     private grow(w, h, bin = 0): PackedRect
@@ -672,8 +673,8 @@ class OnlineTexturePacker
 
         // We decide which direction to grow, trying to avoid narrow regions being created.
         // But avoid going over a power of 2 boundary if we can avoid it.
-        var wExpand = ParticleBuilder.nearPow2Geq(rect.w) !== ParticleBuilder.nearPow2Geq(rect.w + w);
-        var hExpand = ParticleBuilder.nearPow2Geq(rect.h) !== ParticleBuilder.nearPow2Geq(rect.h + h);
+        var wExpand = OnlineTexturePacker.nearPow2Geq(rect.w) !== OnlineTexturePacker.nearPow2Geq(rect.w + w);
+        var hExpand = OnlineTexturePacker.nearPow2Geq(rect.h) !== OnlineTexturePacker.nearPow2Geq(rect.h + h);
         var shouldGrowRight = (wExpand === hExpand) ? (Math.abs(rect.h - h) > Math.abs(rect.w - w)) : (!wExpand);
 
         if (canGrowRight && shouldGrowRight)
@@ -701,11 +702,11 @@ class OnlineTexturePacker
         };
         if (h < rect.h)
         {
-            this.release(rect.bin, rect.x + rect.w, rect.y + h, w, rect.h - h);
+            this.releaseSpace(rect.bin, rect.x + rect.w, rect.y + h, w, rect.h - h);
         }
         else
         {
-            this.release(rect.bin, rect.x, rect.y + rect.h, rect.w, h - rect.h);
+            this.releaseSpace(rect.bin, rect.x, rect.y + rect.h, rect.w, h - rect.h);
             rect.h = h;
         }
         rect.w += w;
@@ -722,11 +723,11 @@ class OnlineTexturePacker
         };
         if (w < rect.w)
         {
-            this.release(rect.bin, rect.x + w, rect.y + rect.h, rect.w - w, h);
+            this.releaseSpace(rect.bin, rect.x + w, rect.y + rect.h, rect.w - w, h);
         }
         else
         {
-            this.release(rect.bin, rect.x + rect.w, rect.y, w - rect.w, rect.h);
+            this.releaseSpace(rect.bin, rect.x + rect.w, rect.y, w - rect.w, rect.h);
             rect.w = w;
         }
         rect.h += h;
@@ -812,33 +813,11 @@ class MinHeap<K,T>
                     {
                         break;
                     }
-                    parent = ((parent - 2) >>> 2) << 1;
+                    parent = (parent - 1) >>> 1;
                 }
             }
         }
         heap.pop();
-    }
-
-    // Insert element into heap
-    private insertNode(node): void
-    {
-        var heap = this.heap;
-        var i = heap.length;
-        heap.push(node);
-        if (i !== 0)
-        {
-            var parent = (i - 1) >>> 1;
-            while (parent !== i && this.compare(heap[i].key, heap[parent].key))
-            {
-                this.swap(i, parent);
-                i = parent;
-                if (parent === 0)
-                {
-                    break;
-                }
-                parent = (parent - 1) >>> 1;
-            }
-        }
     }
 
     // Find element id based on value
@@ -872,10 +851,26 @@ class MinHeap<K,T>
 
     insert(data: T, key: K): void
     {
-        this.insertNode({
+        var heap = this.heap;
+        var i = heap.length;
+        heap.push({
             data: data,
             key: key
         });
+        if (i !== 0)
+        {
+            var parent = (i - 1) >>> 1;
+            while (parent !== i && this.compare(heap[i].key, heap[parent].key))
+            {
+                this.swap(i, parent);
+                i = parent;
+                if (parent === 0)
+                {
+                    break;
+                }
+                parent = (parent - 1) >>> 1;
+            }
+        }
     }
 
     headData(): T
@@ -1170,13 +1165,17 @@ class ParticleQueue
 }
 
 //
-// ParticleBuilder
+// ParticleBuilder and helpers
+// ---------------------------
 //
 // Used to transform animation descriptions into texture data for particle system.
 // Also performs texture packing on gpu for particle textures.
 //
 
-// Interface for result of build step encoding system animation information.
+//
+// Interface for result of build step encoding system and particle animation information.
+// These interfaces are returned to the user.
+//
 interface ParticleSystemDefn
 {
     maxLifeTime: number;
@@ -1189,22 +1188,22 @@ interface AttributeRange
     min  : Array<number>;
     delta: Array<number>;
 }
-// Interface for result of build step encoding particle animation information in system.
 interface ParticleDefn
 {
     lifeTime      : number;
     animationRange: Array<number>;
 }
 
+//
 // Interface for intermediate parse result of a system defined attribute.
-// TODO make private to this module somehow
+// (Internal to ParticleBuilder)
+//
 enum AttributeCompress
 {
     cNone,
     cHalf,
     cFull
 }
-// TODO make private to this module somehow
 enum AttributeStorage
 {
     sDirect,
@@ -1224,7 +1223,10 @@ interface Attribute
     storage            : AttributeStorage;
 }
 
+//
 // Interface for intermediate parse result of a particle defined animation.
+// (Internal to ParticleBuilder)
+//
 interface Particle
 {
     name        : string;
@@ -1240,7 +1242,10 @@ interface Snapshot
     interpolators: { [name: string]: Interpolator };
 }
 
+//
 // Interface for defined interpolators supported by build step.
+// (Internal to ParticleBuilder)
+//
 interface InterpolatorFun
 {
     (vs: Array<Array<number>>, ts: Array<number>, t: number): Array<number>;
@@ -1252,7 +1257,10 @@ interface Interpolator
     type   : string;
 }
 
+//
 // Collects errors accumulated during parse/analysis of the input objects.
+// (private helper of ParticleBuilder)
+//
 // TODO, make private to this module somehow?
 class BuildError
 {
@@ -1366,7 +1374,9 @@ class BuildError
     }
 }
 
-// Type checking for ParticleBuilder
+//
+// Type checking (private helper of ParticleBuilder)
+//
 // TODO, make private to this moduole somewhoe?
 class Types {
     static isArray(x: any): boolean
@@ -1434,7 +1444,9 @@ class Types {
     }
 }
 
-// Parser for ParticleBuilder
+//
+// Parser (private helper of ParticleBuilder)
+//
 // TODO, make private to this module somehow?
 class Parser {
     private static interpolators: { [name: string]: (params: any) => Interpolator } = {
@@ -1442,7 +1454,7 @@ class Parser {
         {
             return {
                 type: "none",
-                offsets: [0, 1],
+                offsets: [-1],
                 fun: function (vs, _1, _2)
                 {
                     return vs[0];
@@ -1453,17 +1465,24 @@ class Parser {
         {
             return {
                 type: "linear",
-                offsets: [0, 1],
+                offsets: [-1, 1],
                 fun: function (vs, _, t)
                 {
-                    var ret = [];
-                    var count = vs[0].length;
-                    var i;
-                    for (i = 0; i < count; i += 1)
+                    if (!vs[1])
                     {
-                        ret[i] = (vs[0][i] * (1 - t)) + (vs[1][i] * t);
+                        return vs[0];
                     }
-                    return ret;
+                    else
+                    {
+                        var ret = [];
+                        var count = vs[0].length;
+                        var i;
+                        for (i = 0; i < count; i += 1)
+                        {
+                            ret[i] = (vs[0][i] * (1 - t)) + (vs[1][i] * t);
+                        }
+                        return ret;
+                    }
                 }
             };
         },
@@ -1471,19 +1490,21 @@ class Parser {
         {
             return {
                 type: "cardinal",
-                offsets: [-1, 0, 1, 2],
+                offsets: [-2, -1, 1, 2],
                 fun: function (vs, ts, t)
                 {
                     var n = vs[1].length;
-                    var v1 = vs[1];
-                    var v2 = vs[2];
-                    var t1 = ts[1];
-                    var t2 = ts[2];
                     // Zero gradients at start/end points of animation
-                    var v0 = vs[0] || vs[1];
-                    var v3 = vs[3] || vs[2];
-                    var t0 = ts[0] || ts[1];
-                    var t3 = ts[3] || ts[2];
+                    // only offset -1 is guaranteed.
+                    // we want to gracefully degenerate in even worse situations.
+                    var v1 = vs[1];
+                    var t1 = ts[1];
+                    var v0 = vs[0] || v1;
+                    var t0 = ts[0] || t1;
+                    var v2 = vs[2] || v1;
+                    var t2 = ts[2] || t1;
+                    var v3 = vs[3] || v2;
+                    var t3 = ts[3] || t2;
 
                     // Hermite weights
                     var tsqrd = t * t;
@@ -1499,6 +1520,16 @@ class Parser {
                     {
                         var m1 = (1 - def.tension) * (v2[i] - v0[i]) / (t2 - t0);
                         var m2 = (1 - def.tension) * (v3[i] - v1[i]) / (t3 - t1);
+                        if (isNaN(m1))
+                        {
+                            // occurs when (after degeneralisation), v2=v0 & t2=t0
+                            m1 = 0;
+                        }
+                        if (isNaN(m2))
+                        {
+                            // occurs when (after degeneralisation), v3=v1 & t3=t1
+                            m2 = 0;
+                        }
                         ret[i] = (v1[i] * wv1) + (m1 * wm1) + (m2 * wm2) + (v2[i] * wv2);
                     }
                     return ret;
@@ -1555,6 +1586,7 @@ class Parser {
     }
 
     // Return object field as a number, if it does not exist (or not a number), error.
+    // TODO check -inf/inf/nan
     static numberField(error: BuildError, obj: string, x: Object, n: string): number
     {
         var ret: any = Parser.field(error, obj, x, n);
@@ -2171,6 +2203,9 @@ class Parser {
     }
 }
 
+//
+// ParticleBuilder
+//
 class ParticleBuilder
 {
     static buildAnimationTexture(
@@ -2192,7 +2227,7 @@ class ParticleBuilder
         });
     }
 
-    private static function nearPow2Geq(x)
+    private static nearPow2Geq(x)
     {
         return (1 << Math.ceil(Math.log(x) / Math.log(2)));
     }
@@ -2291,8 +2326,8 @@ class ParticleBuilder
 
         // Create texture required with size as the next >= powers of 2 for mip-mapping.
         var bin = packer.bins[0];
-        var w = nearPow2Geq(bin.w);
-        var h = nearPow2Geq(bin.h);
+        var w = ParticleBuilder.nearPow2Geq(bin.w);
+        var h = ParticleBuilder.nearPow2Geq(bin.h);
 
         var tex = graphicsDevice.createTexture({
             name      : "ParticleBuilder Packed-Texture",
@@ -2919,10 +2954,11 @@ class ParticleBuilder
     }
 
     // flatten animation sequences into a single sequence
-    // filling in any gaps with interpolated values.
+    // intermediate values unspecified are left unspecified
+    // to avoid changing semantics of the interpolation.
     //
     // eg:
-    // x:1    y:2    x:3  goes to  (x:1,y:1) (x:interpolated,y:2) (x:3,y:5) etc.
+    // x:1    y:2    x:3  goes to  (x:1,y:1) (x:_,y:2) (x:3,y:5) etc.
     // y:1    ___    y:5
     private static flatten(error: BuildError, system: Array<Attribute>, particle: Particle): void
     {
@@ -2992,87 +3028,154 @@ class ParticleBuilder
             }
         }
 
-        // Fill in any attribute values that don't need interpolation
-        // eg: (x -> y -> _ -> _ -> z -> _ -> _ -> _)
-        //     regardless of interpolators, everything after 'z' can only ever have
-        //     the same value as z and can skip interpolation.
-        for (j = 0; j < count; j += 1)
-        {
-            var max = 0;
-            attr = system[j];
-            for (i = 1; i < seqCount; i += 1)
-            {
-                if (merged[i].attributes.hasOwnProperty(attr.name))
-                {
-                    max = i;
-                }
-            }
-            for (i = (max + 1); i < seqCount; i += 1)
-            {
-                merged[i].attributes[attr.name] = merged[max].attributes[attr.name];
-            }
-        }
-
-        // Interpolate any missing attribute values.
-        for (i = 1; i < seqCount; i += 1)
-        {
-            curr = merged[i];
-            prev = merged[i - 1];
-            for (j = 0; j < count; j += 1)
-            {
-                attr = system[j];
-                if (curr.attributes.hasOwnProperty(attr.name))
-                {
-                    continue;
-                }
-                // Search for snapshots backwards/forwards in time defining attribute we need.
-                // Back is all merged sequences < i (atleast one)
-                // Forth is not as well defined as interpolation has not yet occured.
-                //   but due to filling in attributes that don't need interpolation above
-                //   we can guarantee there is 'atleast 1' forth snapshot.
-                var forth = [];
-                var k;
-                for (k = (i + 1); k < seqCount; k += 1)
-                {
-                    if (merged[k].attributes.hasOwnProperty(attr.name))
-                    {
-                        forth.push(merged[k]);
-                    }
-                }
-
-                curr.attributes[attr.name] =
-                    ParticleBuilder.interpolate(prev.interpolators[attr.name],
-                                                merged.slice(0,i).concat(forth),
-                                                i, attr,
-                                                (curr.time - prev.time) / (forth[0].time - prev.time));
-            }
-        }
+//        // Fill in any attribute values that don't need interpolation
+//        // eg: (x -> y -> _ -> _ -> z -> _ -> _ -> _)
+//        //     regardless of interpolators, everything after 'z' can only ever have
+//        //     the same value as z and can skip interpolation.
+//        for (j = 0; j < count; j += 1)
+//        {
+//            var max = 0;
+//            attr = system[j];
+//            for (i = 1; i < seqCount; i += 1)
+//            {
+//                if (merged[i].attributes.hasOwnProperty(attr.name))
+//                {
+//                    max = i;
+//                }
+//            }
+//            for (i = (max + 1); i < seqCount; i += 1)
+//            {
+//                merged[i].attributes[attr.name] = merged[max].attributes[attr.name];
+//            }
+//        }
+//
+//        // Interpolate any missing attribute values.
+//        for (i = 1; i < seqCount; i += 1)
+//        {
+//            curr = merged[i];
+//            prev = merged[i - 1];
+//            for (j = 0; j < count; j += 1)
+//            {
+//                attr = system[j];
+//                if (curr.attributes.hasOwnProperty(attr.name))
+//                {
+//                    continue;
+//                }
+//                // Search for snapshots backwards/forwards in time defining attribute we need.
+//                // Back is all merged sequences < i (atleast one)
+//                // Forth is not as well defined as interpolation has not yet occured.
+//                //   but due to filling in attributes that don't need interpolation above
+//                //   we can guarantee there is 'atleast 1' forth snapshot.
+//                var forth = [];
+//                var k;
+//                for (k = (i + 1); k < seqCount; k += 1)
+//                {
+//                    if (merged[k].attributes.hasOwnProperty(attr.name))
+//                    {
+//                        forth.push(merged[k]);
+//                    }
+//                }
+//
+//                curr.attributes[attr.name] =
+//                    ParticleBuilder.interpolate(prev.interpolators[attr.name],
+//                                                merged.slice(0,i).concat(forth),
+//                                                i, attr,
+//                                                (curr.time - prev.time) / (forth[0].time - prev.time));
+//            }
+//        }
 
         particle.animation = [merged];
     }
 
-    // Interpolate for value of attribute 'attr' at fractional point
-    // 't' between snaps[i-1] and snaps[i], making use of the given interpolator
-    // and any extra snaps present at higher and lower indices.
+    // Interpolate for value of attribute 'attr' at time 'time'
+    // using whatever snapshots are defined before and after the given time and
+    // define the attribute, using the interpolator defined on the preceeding
+    // snapshot defining an interpolator.
+    //
+    // Assume there is at least 1 snapshot <= time defining the attribute
+    // and atleast 1 snapshot <= time defining an interpolator.
     private static interpolate(
-        intp: Interpolator,
         snaps: Array<Snapshot>,
-        i: number,
         attr: Attribute,
-        t: number): Array<number>
+        time: number): Array<number>
     {
-        i -= 1;
+        var intp = null;
+        var back = [];
+        var forth = [];
+
+        var count = snaps.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var snap = snaps[i];
+            if (snap.time <= time)
+            {
+                if (snap.attributes.hasOwnProperty(attr.name))
+                {
+                    back.push(snap);
+                }
+                if (snap.interpolators.hasOwnProperty(attr.name))
+                {
+                    intp = snap.interpolators[attr.name];
+                }
+            }
+            else
+            {
+                if (snap.attributes.hasOwnProperty(attr.name))
+                {
+                    forth.push(snap);
+                }
+            }
+        }
+
         var ts = [];
         var vs = [];
-
         var offsets = intp.offsets;
-        var count = offsets.length;
-        var j;
-        for (j = 0; j < count; j += 1)
+        count = offsets.length;
+        for (i = 0; i < count; i += 1)
         {
-            var index = i + offsets[j];
-            ts.push((index < 0 || index >= snaps.length) ? null : snaps[index].time);
-            vs.push((index < 0 || index >= snaps.length) ? null : snaps[index].attributes[attr.name]);
+            var offset = offsets[i];
+            // assume offset <> 0
+            if (offset > 0)
+            {
+                offset -= 1;
+                if (offset < forth.length)
+                {
+                    ts.push(forth[offset].time);
+                    vs.push(forth[offset].attributes[attr.name]);
+                }
+                else
+                {
+                    ts.push(null);
+                    vs.push(null);
+                }
+            }
+            else
+            {
+                offset += back.length;
+                if (offset >= 0)
+                {
+                    ts.push(back[offset].time);
+                    vs.push(back[offset].attributes[attr.name]);
+                }
+                else
+                {
+                    ts.push(null);
+                    vs.push(null);
+                }
+            }
+        }
+
+        var t;
+        if (forth.length === 0)
+        {
+            t = 0;
+        }
+        else
+        {
+            var prev = back[back.length - 1];
+            var next = forth[0];
+            t = (time - prev.time) / (next.time - prev.time);
         }
 
         return intp.fun(vs, ts, t);
@@ -3114,12 +3217,9 @@ class ParticleBuilder
         else
         {
             var time = 0.0;
-            var prev = snaps[0];
-            var curr = snaps[1];
-            var curi = 1;
-            while (true)
+            var lastTime = snaps[snaps.length-1].time;
+            while (time <= lastTime)
             {
-                var t = (time - prev.time) / (curr.time - prev.time);
                 // No longer care about interpolators being defined.
                 chunk = {
                     time: time,
@@ -3132,21 +3232,11 @@ class ParticleBuilder
                 {
                     attr = system[i];
                     chunk.attributes[attr.name] =
-                        ParticleBuilder.interpolate(prev.interpolators[attr.name], snaps, curi, attr, t);
+                        ParticleBuilder.interpolate(snaps, attr, time);
                 }
 
                 disc.push(chunk);
                 time += particle.granularity;
-                if (time >= curr.time)
-                {
-                    prev = curr;
-                    curi += 1;
-                    if (curi >= seqLength)
-                    {
-                        break;
-                    }
-                    curr = snaps[curi];
-                }
             }
 
             // Depending on granularity, may have missed last snapshot.
@@ -3321,3 +3411,11 @@ class ParticleBuilder
         }
     }
 }
+
+//
+// ParticleSystem
+//
+class ParticleSystem
+{
+}
+
