@@ -1230,8 +1230,8 @@ interface Attribute
 interface Particle
 {
     name        : string;
-    granularity : number;
-    animation   : Array<Array<Snapshot>>;
+    fps         : number;
+    animation   : Array<Snapshot>;
     textureUVs  : { [name: string]: Array<Array<number>> };
     textureSizes: { [name: string]: Array<number> };
 }
@@ -1972,11 +1972,6 @@ class Parser {
     {
         return 0;
     }
-    private static one_sixty(): number
-    {
-        return 1.0 / 60.0;
-    }
-
     static parseParticle(error: BuildError, defn: any): Particle
     {
         if (defn === null)
@@ -1993,14 +1988,14 @@ class Parser {
         var stringField = Parser.stringField.bind(null, error, "particle" + printName);
         var numberField = Parser.numberField.bind(null, error, "particle" + printName);
 
-        var granularity =
-            Parser.maybeField(defn, "granularity",
-                              Parser.checkNumber.bind(null, error, "particle" + printName, "granularity"),
-                              Parser.one_sixty);
-        if (granularity !== null && granularity <= 0.0)
+        var fps =
+            Parser.maybeField(defn, "fps",
+                              Parser.checkNumber.bind(null, error, "particle" + printName, "fps"),
+                              function () { return 30; });
+        if (fps !== null && fps <= 0.0)
         {
-            error.error("particle" + printNames + " granularity (" + granularity + ") must be > 0");
-            granularity = null;
+            error.error("particle" + printNames + " fps (" + fps + ") must be > 0");
+            fps = null;
         }
 
         var textures = [];
@@ -2063,35 +2058,29 @@ class Parser {
         if (animation !== null)
         {
             var animationArr = <Array<any>>animation;
-            animationOut = [];
-            count = animationArr.length;
-            for (i = 0; i < count; i += 1)
+            if (animationArr.length === 0)
             {
-                var seq = animationArr[i];
-                if (!Types.isArray(seq))
+                error.error("particle" + printNames + " animation is empty");
+                animationOut = null;
+            }
+            else
+            {
+                animationOut = [];
+                count = animationArr.length;
+                for (i = 0; i < count; i += 1)
                 {
-                    error.error("particle" + printNames + " animation sequence must be an array");
-                    animationOut[i] = null;
-                    continue;
-                }
-
-                var seqArr = <Array<any>>seq;
-                var seqOut = [];
-                var scount = seqArr.length;
-                for (j = 0; j < scount; j += 1)
-                {
-                    var snap = seqArr[j];
-                    var obj = "particle" + printNames + " animation sequence snapshot";
+                    var snap = animationArr[i];
+                    var obj = "particle" + printNames + " animation snapshot";
                     if (!Types.isObject(snap))
                     {
                         error.error(obj + " should be an object");
-                        seqOut[j] = null;
+                        animationOut[i] = null;
                         continue;
                     }
 
                     var snapObj = <Object>snap;
                     var time;
-                    if (j === 0)
+                    if (i === 0)
                     {
                         time = Parser.maybeField(snapObj, "time",
                                                  Parser.checkNumber.bind(null, error, obj, "time"),
@@ -2133,14 +2122,12 @@ class Parser {
                         }
                     }
 
-                    seqOut[j] = {
+                    animationOut[i] = {
                         time         : time,
                         attributes   : attributes,
                         interpolators: interpolators
                     };
                 }
-
-                animationOut[i] = seqOut;
             }
         }
 
@@ -2151,7 +2138,7 @@ class Parser {
             sizes.push(textures[i] + "-size");
         }
         Parser.extraFields(error, "particle" + printName, defn,
-                           textures.concat(sizes).concat(["name", "granularity", "animation"]));
+                           textures.concat(sizes).concat(["name", "fps", "animation"]));
 
         if (error.checkErrorState("Particle" + printName + " parse failed!"))
         {
@@ -2161,7 +2148,7 @@ class Parser {
         {
             return {
                 name        : name,
-                granularity : granularity,
+                fps         : fps,
                 animation   : animationOut,
                 textureUVs  : textureUVs,
                 textureSizes: textureSizes
@@ -2528,15 +2515,13 @@ class ParticleBuilder
             throw error.fail("Build failed!");
         }
 
-        // Flatten particle animation sequences (Merge to single sequence)
+        // Set default attributes and interpolators for first snapshot when not defined.
         for (i = 0; i < count; i += 1)
         {
-            ParticleBuilder.flatten(error, sys, parts[i]);
+            ParticleBuilder.setDefaults(parts[i], sys);
         }
 
         // Perform linear remaps of attributes.
-        // this is done after flattening so that if any attributes were undefined on snapshots
-        // they will have been filled in via interpolation/defaults due to flattening.
         if (tweaks)
         {
             var exclude = [];
@@ -2623,7 +2608,7 @@ class ParticleBuilder
         var width = 0;
         for (i = 0; i < count; i += 1)
         {
-            width += parts[i].animation[0].length;
+            width += parts[i].animation.length;
         }
         var data = ParticleBuilder.compileData(sys, width, parts);
 
@@ -2634,7 +2619,7 @@ class ParticleBuilder
         for (i = 0; i < count; i += 1)
         {
             var particle = parts[i];
-            var seq = particle.animation[0];
+            var seq = particle.animation;
             var lifeTime = seq[seq.length - 1].time;
             if (lifeTime > maxLifeTime)
             {
@@ -2696,7 +2681,7 @@ class ParticleBuilder
             for (j = 0; j < partCount; j += 1)
             {
                 var particle = particles[j];
-                var seq = particle.animation[0];
+                var seq = particle.animation;
                 var seqCount = seq.length;
                 var k;
                 for (k = 0; k < seqCount; k += 1)
@@ -2749,7 +2734,6 @@ class ParticleBuilder
         return new Uint8Array(data.buffer);
     }
 
-    // Pre: animation has been flattened.
     private static normalizeAttributes(
         system: Array<Attribute>, particle: Particle, minDelta: { [name: string]: AttributeRange }): void
     {
@@ -2768,7 +2752,7 @@ class ParticleBuilder
 
             var md = minDelta[attr.name];
             var dim = md.min.length;
-            var seq = particle.animation[0];
+            var seq = particle.animation;
             var seqCount = seq.length;
             var j;
             for (j = 0; j < seqCount; j += 1)
@@ -2783,7 +2767,6 @@ class ParticleBuilder
         }
     }
 
-    // Pre: animation has been flattened.
     private static attributesMapping(system: Array<Attribute>, particles: Array<Particle>)
     {
         var res: { [name: string]: AttributeRange } = {};
@@ -2823,7 +2806,7 @@ class ParticleBuilder
             for (j = 0; j < count; j += 1)
             {
                 var particle = particles[j];
-                var seq = particle.animation[0];
+                var seq = particle.animation;
                 var seqCount = seq.length;
                 var k;
                 for (k = 0; k < seqCount; k += 1)
@@ -2858,10 +2841,9 @@ class ParticleBuilder
         return res;
     }
 
-    // Pre: animation has been flattened.
     private static clampAttributes(system: Array<Attribute>, particle: Particle): void
     {
-        var seq = particle.animation[0];
+        var seq = particle.animation;
         var seqCount = seq.length;
         if (seqCount === 0)
         {
@@ -2903,7 +2885,30 @@ class ParticleBuilder
         }
     }
 
-    // Pre: animation has been flattened.
+    private static setDefaults(particle: Particle, system: Array<Attribute>): void
+    {
+        if (particle.animation.length === 0)
+        {
+            return;
+        }
+
+        var snap = particle.animation[0];
+        var count = system.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var attr = system[i];
+            if (!snap.attributes.hasOwnProperty(attr.name))
+            {
+                snap.attributes[attr.name] = attr.defaultValue;
+            }
+            if (!snap.interpolators.hasOwnProperty(attr.name))
+            {
+                snap.interpolators[attr.name] = attr.defaultInterpolator;
+            }
+        }
+    }
+
     private static applyTweak(system: Array<Attribute>, particle: Particle, tweak: { [name: string]: Array<number> }): void
     {
         var sysCount = system.length;
@@ -2928,7 +2933,7 @@ class ParticleBuilder
                 continue;
             }
 
-            var seq = particle.animation[0];
+            var seq = particle.animation;
             var seqCount = seq.length;
             var dim = scale ? scale.length : offset.length;
             var j;
@@ -2977,84 +2982,6 @@ class ParticleBuilder
                 }
             }
         }
-    }
-
-    // flatten animation sequences into a single sequence
-    // intermediate values unspecified are left unspecified
-    // to avoid changing semantics of the interpolation.
-    //
-    // eg:
-    // x:1    y:2    x:3  goes to  (x:1,y:1) (x:_,y:2) (x:3,y:5) etc.
-    // y:1    ___    y:5
-    private static flatten(error: BuildError, system: Array<Attribute>, particle: Particle): void
-    {
-        // exchange snapshot relative times for absolute times
-        // and collate into a complete snapshots list.
-        var animation = particle.animation;
-        var count = animation.length;
-        var i;
-        var snaps = [];
-        for (i = 0; i < count; i += 1)
-        {
-            var seq = animation[i];
-            var seqCount = seq.length;
-            var j, pre = 0.0;
-            for (j = 0; j < seqCount; j += 1)
-            {
-                seq[j].time += pre;
-                pre = seq[j].time;
-                snaps.push(seq[j]);
-            }
-        }
-
-        // Order snap-shots collectively by time (descending)
-        snaps.sort(function (x, y)
-            {
-                return y.time - x.time;
-            });
-
-        // Merge equal time snapshots (ascending)
-        var merged = [];
-        count = snaps.length;
-        while (count > 0)
-        {
-            var mergeSnap = [snaps.pop()];
-            count -= 1;
-            while (count > 0)
-            {
-                var snap = snaps[count - 1];
-                if (snap.time === mergeSnap[0].time)
-                {
-                    mergeSnap.push(snaps.pop());
-                    count -= 1;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            merged.push(ParticleBuilder.merge(error, system, mergeSnap));
-        }
-
-        // Copy forwards any missing interpolators.
-        seqCount = merged.length;
-        count = system.length;
-        var attr, curr, prev;
-        for (i = 1; i < seqCount; i += 1)
-        {
-            curr = merged[i];
-            prev = merged[i - 1];
-            for (j = 0; j < count; j += 1)
-            {
-                attr = system[j];
-                if (!curr.interpolators.hasOwnProperty(attr.name))
-                {
-                    curr.interpolators[attr.name] = prev.interpolators[attr.name];
-                }
-            }
-        }
-
-        particle.animation = [merged];
     }
 
     // Interpolate for value of attribute 'attr' at time 'time'
@@ -3152,13 +3079,13 @@ class ParticleBuilder
     }
 
     // Discretise particle animation to have exact (interpolated) snapshots in its single sequence
-    // based on granularity.
+    // based on fps.
     //
     // pre: animation has been flattened
     private static discretize(system: Array<Attribute>, particle: Particle): void
     {
         var disc = [];
-        var snaps = particle.animation[0];
+        var snaps = particle.animation;
         var seqLength = snaps.length;
         var count = system.length;
         var attr, i, chunk;
@@ -3187,7 +3114,16 @@ class ParticleBuilder
         else
         {
             var time = 0.0;
-            var lastTime = snaps[snaps.length-1].time;
+            // convert relative times to absolute times for snapshots.
+            for (i = 0; i < seqLength; i += 1)
+            {
+                snaps[i].time += time;
+                time = snaps[i].time;
+            }
+            var lastTime = time;
+
+            time = 0.0;
+            var granularity = 1 / particle.fps;
             while (time <= lastTime)
             {
                 // No longer care about interpolators being defined.
@@ -3206,7 +3142,7 @@ class ParticleBuilder
                 }
 
                 disc.push(chunk);
-                time += particle.granularity;
+                time += granularity;
             }
 
             // Depending on granularity, may have missed last snapshot.
@@ -3215,110 +3151,51 @@ class ParticleBuilder
                 disc.push(snaps[seqLength - 1]);
             }
         }
-        particle.animation = [disc];
-    }
-
-    // Merge equal (absolute) time snapshots.
-    // System provides default values for missing attributes when merging intitial (t=0) snapshots.
-    // Otherwise are left blank for later interpolation.
-    private static merge(
-        error: BuildError,
-        system: Array<Attribute>,
-        snaps: Array<Snapshot>): Snapshot
-    {
-        if (snaps.length === 1 && snaps[0].time !== 0)
-        {
-            return snaps[0];
-        }
-        var merged = {
-            time: snaps[0].time,
-            attributes: {},
-            interpolators: {}
-        };
-        var count = system.length;
-        var snapCount = snaps.length;
-        var i;
-        for (i = 0; i < count; i += 1)
-        {
-            var attr = system[i];
-            var value = null, interpolator = null;
-            var j, snap;
-            for (j = 0; j < snapCount; j += 1)
-            {
-                snap = snaps[j];
-                if (snap.attributes.hasOwnProperty(attr.name))
-                {
-                    if (value)
-                    {
-                        error.warning("Merging snapshots at time=" + snap.time +
-                                      ", multiple values found for attribute '" + attr.name + "'");
-                    }
-                    value = snap.attributes[attr.name];
-                }
-                if (snap.interpolators.hasOwnProperty(attr.name))
-                {
-                    if (interpolator)
-                    {
-                        error.warning("Merging snapshots at time=" + snap.time +
-                                      ", multiple interpolators found for attribute '" + attr.name + "'");
-                    }
-                    interpolator = snap.interpolators[attr.name];
-                }
-            }
-            if (value || snaps[0].time === 0)
-            {
-                merged.attributes[attr.name] = value || attr.defaultValue;
-            }
-            if (interpolator || snaps[0].time === 0)
-            {
-                merged.interpolators[attr.name] = interpolator || attr.defaultInterpolator;
-            }
-        }
-        return merged;
+        particle.animation = disc;
     }
 
     private static checkAttributes(error: BuildError, particle: Particle, system: Array<Attribute>): void
     {
-        var animation = particle.animation;
-        var count = animation.length;
-        var i, sysAttr;
+        var sysAttr;
+        var seq = particle.animation;
+        if (!seq)
+        {
+            return;
+        }
+
+        var count = seq.length;
+        var i;
         for (i = 0; i < count; i += 1)
         {
-            var seq = animation[i];
-            var seqCount = seq.length;
-            var j;
-            for (j = 0; j < seqCount; j += 1)
+            var snap = seq[i];
+            var interpolators = snap.interpolators;
+            for (var attr in interpolators)
             {
-                var snap = seq[j];
-                var interpolators = snap.interpolators;
-                for (var attr in interpolators)
+                if (interpolators.hasOwnProperty(attr) &&
+                    !ParticleBuilder.getAttribute(system, attr))
                 {
-                    if (interpolators.hasOwnProperty(attr) &&
-                        !ParticleBuilder.getAttribute(system, attr))
-                    {
-                        error.warning("particle " + particle.name + " references attribute '" + attr +
-                                      "' not defined in system");
-                    }
+                    error.warning("particle " + particle.name + " references attribute '" + attr +
+                                  "' not defined in system");
                 }
-                var attributes = snap.attributes;
-                for (var attr in attributes)
+            }
+            var attributes = snap.attributes;
+            for (var attr in attributes)
+            {
+                if (!attributes.hasOwnProperty(attr))
                 {
-                    if (!attributes.hasOwnProperty(attr))
-                    {
-                        continue;
-                    }
-                    sysAttr = ParticleBuilder.getAttribute(system, attr);
-                    if (!sysAttr)
-                    {
-                        error.warning("particle " + particle.name + " references attribute '" + attr +
-                                      "' not defined in system");
-                    }
-                    else
-                    {
-                        var value = attributes[attr];
-                        Types.checkAssignment(error, "particle " + particle.name, "attribute '" + attr + "'",
-                                              value, sysAttr.type);
-                    }
+                    continue;
+                }
+                sysAttr = ParticleBuilder.getAttribute(system, attr);
+                if (!sysAttr)
+                {
+                    error.warning("particle " + particle.name + " references attribute '" + attr +
+                                  "' not defined in system");
+                }
+                else
+                {
+                    var value = attributes[attr];
+                    Types.checkAssignment(error, "particle " + particle.name, "attribute '" + attr + "'",
+                                          value, sysAttr.type);
                 }
             }
         }
