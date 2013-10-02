@@ -1176,10 +1176,10 @@ class ParticleQueue
 // Interface for result of build step encoding system and particle animation information.
 // These interfaces are returned to the user.
 //
-interface ParticleSystemDefn
+interface ParticleSystemAnimation
 {
     maxLifeTime: number;
-    animation  : { width: number; height: number; data: Uint8Array };
+    animation  : Texture;
     particle   : { [name: string]: ParticleDefn };
     attribute  : { [name: string]: AttributeRange };
 }
@@ -2204,22 +2204,24 @@ class Parser {
 //
 class ParticleBuilder
 {
-    static buildAnimationTexture(
+    private static buildAnimationTexture(
         graphicsDevice: GraphicsDevice,
-        animation: { width: number; height: number; data: Uint8Array }
+        width: number,
+        height: number,
+        data: Uint8Array
     ): Texture
     {
         return graphicsDevice.createTexture({
             name      : "ParticleBuilder AnimationTexture",
-            width     : animation.width,
-            height    : animation.height,
+            width     : width,
+            height    : height,
             depth     : 1,
             format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
             mipmaps   : false,
             cubemap   : false,
             renderable: false,
             dynamic   : false,
-            data      : animation.data
+            data      : data
         });
     }
 
@@ -2392,13 +2394,15 @@ class ParticleBuilder
     }
 
     static compile(params: {
+        graphicsDevice: GraphicsDevice;
         particles: Array<any>;
         system?: any;
         uvMap?: { [name: string]: Array<Array<number>> };
         tweaks?: Array<{ [name: string]: any }>; // any = number | Array<number>
         failOnWarnings: boolean;
-    }): ParticleSystemDefn
+    }): ParticleSystemAnimation
     {
+        var graphicsDevice = params.graphicsDevice;
         var particles = params.particles;
         var system = params.system;
         var uvMap = params.uvMap;
@@ -2634,11 +2638,7 @@ class ParticleBuilder
 
         return {
             maxLifeTime: maxLifeTime,
-            animation: {
-                width: width,
-                height: sys.length,
-                data: data
-            },
+            animation: ParticleBuilder.buildAnimationTexture(graphicsDevice, width, sys.length, data),
             particle: particleDefns,
             attribute: minDelta
         };
