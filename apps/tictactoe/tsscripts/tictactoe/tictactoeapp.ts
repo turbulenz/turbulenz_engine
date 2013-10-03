@@ -889,6 +889,11 @@ class Application
         {
             this.hasShutdown = true;
 
+            if (this.gameSession)
+            {
+                this.gameSession.destroy();
+            }
+
             TurbulenzEngine.clearInterval(this.intervalID);
 
             // Attempt to force clearing of the garbage collector
