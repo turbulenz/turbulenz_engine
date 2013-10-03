@@ -10,3 +10,4 @@ Low Level Particle Systems API
     textureencode_api
     particlebuilder_api
     sharedrendercontext_api
+    particlesystem_api

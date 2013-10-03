@@ -1,12 +1,14 @@
 // Copyright (c) 2012 Turbulenz Limited
 
-/*global
-Float32Array: false
-Uint8Array: false
-Uint16Array: false
-Uint32Array: false
-VMath: false
-*/
+/*global Float32Array: false*/
+/*global Uint8Array: false*/
+/*global Uint16Array: false*/
+/*global Uint32Array: false*/
+/*global VMath: false*/
+/*global GraphicsDevice: false*/
+/*global ShaderManager: false*/
+/*global Technique: false*/
+/*global TechniqueParameters: false*/
 
 "use strict";
 
@@ -20,7 +22,7 @@ interface FloatArray
 //
 // TextureEncode
 //
-// Used to encode/decode floats/vectors into pixel values for texture storage.
+// Used to encode/decode floats/vectors into pivel values for texture storage.
 // Analogous to methods of particles-commmon.cgh
 //
 class TextureEncode
@@ -44,7 +46,7 @@ class TextureEncode
     // Note: Can represent 0.0 exactly.
     static encodeByteSignedFloat(f: number): number
     {
-        return TextureEncode.encodeByteUnsignedFloat((f + 1.0) * 0.5);
+        return this.encodeByteUnsignedFloat((f + 1.0) * 0.5);
     }
     static decodeByteSignedFloat(v: number): number
     {
@@ -166,6 +168,12 @@ class TextureEncode
     {
         var x = TextureEncode.encodeHalfUnsignedFloat(v[0]);
         var y = TextureEncode.encodeHalfUnsignedFloat(v[1]);
+        return (x | (y << 16));
+    }
+    static encodeUnsignedFloat2xy(x: number, y: number): number
+    {
+        x = TextureEncode.encodeHalfUnsignedFloat(x);
+        y = TextureEncode.encodeHalfUnsignedFloat(y);
         return (x | (y << 16));
     }
     static decodeUnsignedFloat2(v: number, dst?: FloatArray): FloatArray
@@ -568,7 +576,7 @@ class OnlineTexturePacker
         this.maxHeight = maxHeight;
     }
 
-    private releaseSpace(bin, x, y, w, h)
+    releaseSpace(bin, x, y, w, h): void
     {
         if (w !== 0 && h !== 0)
         {
@@ -2207,9 +2215,9 @@ class ParticleBuilder
 {
     private static buildAnimationTexture(
         graphicsDevice: GraphicsDevice,
-        width: number,
-        height: number,
-        data: Uint8Array
+        width         : number,
+        height        : number,
+        data          : Uint8Array
     ): Texture
     {
         return graphicsDevice.createTexture({
@@ -2395,10 +2403,10 @@ class ParticleBuilder
 
     static compile(params: {
         graphicsDevice: GraphicsDevice;
-        particles: Array<any>;
-        system?: any;
-        uvMap?: { [name: string]: Array<Array<number>> };
-        tweaks?: Array<{ [name: string]: any }>; // any = number | Array<number>
+        particles     : Array<any>;
+        system?       : any;
+        uvMap?        : { [name: string]: Array<Array<number>> };
+        tweaks?       : Array<{ [name: string]: any }>; // any = number | Array<number>
         failOnWarnings: boolean;
     }): ParticleSystemAnimation
     {
@@ -2909,7 +2917,11 @@ class ParticleBuilder
         }
     }
 
-    private static applyTweak(system: Array<Attribute>, particle: Particle, tweak: { [name: string]: Array<number> }): void
+    private static applyTweak(
+        system  : Array<Attribute>,
+        particle: Particle,
+        tweak   : { [name: string]: Array<number> }
+    ): void
     {
         var sysCount = system.length;
         var i;
@@ -2993,8 +3005,9 @@ class ParticleBuilder
     // and atleast 1 snapshot <= time defining an interpolator.
     private static interpolate(
         snaps: Array<Snapshot>,
-        attr: Attribute,
-        time: number): Array<number>
+        attr : Attribute,
+        time : number
+    ): Array<number>
     {
         var intp = null;
         var back = [];
@@ -3269,10 +3282,10 @@ class ParticleBuilder
 //
 interface Context
 {
-    width: number;
-    height: number;
+    width        : number;
+    height       : number;
     renderTargets: Array<RenderTarget>;
-    store: Array<{
+    store        : Array<{
         fit : PackedRect;
         set : (ctx: AllocatedContext) => void;
     }>
@@ -3280,13 +3293,14 @@ interface Context
 interface AllocatedContext
 {
     renderTargets: Array<RenderTarget>;
-    uvRectangle: Array<number>;
+    uvRectangle  : Array<number>;
+    bin          : number;
 }
 class SharedRenderContext
 {
     private graphicsDevice: GraphicsDevice;
-    private contexts: Array<Context>;
-    private packer: OnlineTexturePacker;
+    private contexts      : Array<Context>;
+    private packer        : OnlineTexturePacker;
 
     private static textureVertices : VertexBuffer;
     private static textureSemantics: Semantics;
@@ -3337,6 +3351,41 @@ class SharedRenderContext
         this.contexts = [];
     }
 
+    destroy(): void
+    {
+        var contexts = this.contexts;
+        var count = contexts.length;
+        while (count > 0)
+        {
+            count -= 1;
+            var ctx = contexts[count];
+            ctx.renderTargets[0].colorTexture0.destroy();
+            ctx.renderTargets[1].colorTexture0.destroy();
+            ctx.renderTargets[0].destroy();
+            ctx.renderTargets[1].destroy();
+        }
+        this.graphicsDevice = null;
+        this.packer = null;
+        this.contexts = null;
+    }
+
+    release(ctx: AllocatedContext): void
+    {
+        var uv = ctx.uvRectangle;
+        var binRect = this.packer.bins[ctx.bin];
+        var ctxW = binRect.w;
+        var ctxH = binRect.h;
+        // Math.round is used, as we know the x/y/w/h of the region are integer
+        // but after normalisation numerical errors could creep in.
+        this.packer.releaseSpace(
+            ctx.bin,
+            Math.round(uv[0] * ctxW),
+            Math.round(uv[1] * ctxH),
+            Math.round((uv[2] - uv[0]) * ctxW),
+            Math.round((uv[3] - uv[1]) * ctxH)
+        );
+    }
+
     allocate(params: {
         set: (ctx: AllocatedContext) => void;
         width: number;
@@ -3346,8 +3395,9 @@ class SharedRenderContext
         var fit = this.packer.pack(params.width, params.height);
 
         var bin = fit.bin;
-        var ctxW = this.packer.bins[bin].w;
-        var ctxH = this.packer.bins[bin].h;
+        var binRect = this.packer.bins[bin];
+        var ctxW = binRect.w;
+        var ctxH = binRect.h;
         if (bin >= this.contexts.length)
         {
             this.allocateContext(ctxW, ctxH);
@@ -3359,6 +3409,9 @@ class SharedRenderContext
             ctx = this.contexts[bin] = this.resizeContext(ctx, ctxW, ctxH);
         }
 
+        var invW = (1 / ctxW);
+        var invH = (1 / ctxH);
+
         ctx.store.push({
             set: params.set,
             fit: fit
@@ -3366,7 +3419,13 @@ class SharedRenderContext
 
         return {
             renderTargets: ctx.renderTargets,
-            uvRectangle: [fit.x, fit.y, fit.x + fit.w, fit.y + fit.h]
+            uvRectangle: [
+                (fit.x * invW),
+                (fit.y * invH),
+                (fit.x + fit.w) * invW,
+                (fit.y + fit.h) * invH
+            ],
+            bin: fit.bin
         };
     }
 
@@ -3413,8 +3472,8 @@ class SharedRenderContext
         ctx.renderTargets[0].destroy();
         ctx.renderTargets[1].destroy();
 
-        var invW = 1 / w;
-        var invH = 1 / h;
+        var invW = (1 / w);
+        var invH = (1 / h);
 
         var store = ctx.store;
         var newStore = newCtx.store;
@@ -3427,7 +3486,13 @@ class SharedRenderContext
             newStore.push(elt);
             elt.set({
                 renderTargets: newCtx.renderTargets,
-                uvRectangle: [fit.x * invW, fit.y * invH, (fit.x + fit.w) * invW, (fit.y + fit.h) * invH]
+                uvRectangle: [
+                    (fit.x * invW),
+                    (fit.y * invH),
+                    (fit.x + fit.w) * invW,
+                    (fit.y + fit.h) * invH
+                ],
+                bin: fit.bin
             });
         }
         return newCtx;
@@ -3436,9 +3501,9 @@ class SharedRenderContext
     private static copyTexture(gd: GraphicsDevice, from: RenderTarget, to: RenderTarget): void
     {
         var parameters = SharedRenderContext.copyParameters;
-        var technique = SharedRenderContext.copyTechnique;
-        var vertices = SharedRenderContext.textureVertices;
-        var semantics = SharedRenderContext.textureSemantics;
+        var technique  = SharedRenderContext.copyTechnique;
+        var vertices   = SharedRenderContext.textureVertices;
+        var semantics  = SharedRenderContext.textureSemantics;
 
         parameters["src"] = from.colorTexture0;
         parameters["dst"] = [
@@ -3462,34 +3527,968 @@ class SharedRenderContext
         for (i = 0; i < 2; i += 1)
         {
             var tex = gd.createTexture({
-                name: "SharedRenderContext Context Texture " + i,
-                depth: 1,
-                width: w,
-                height: h,
-                format: gd.PIXELFORMAT_R8G8B8A8,
-                mipmaps: false,
-                cubemap: false,
-                dynamic: true,
+                name      : "SharedRenderContext Context Texture " + i,
+                width     : w,
+                height    : h,
+                depth     : 1,
+                format    : gd.PIXELFORMAT_R8G8B8A8,
+                mipmaps   : false,
+                cubemap   : false,
+                dynamic   : true,
                 renderable: true
             });
             targets.push(gd.createRenderTarget({ colorTexture0: tex }));
         }
 
         return {
-            width: w,
-            height: h,
-            store: [],
+            width        : w,
+            height       : h,
             renderTargets: targets,
+            store        : [],
         };
     }
 }
 
+//
+// ParticleGeometry
+//
+class ParticleGeometry
+{
+    vertexBuffer  : VertexBuffer;
+    particleStride: number;
+    semantics     : Semantics;
+    primitive     : any;
+    shared        : boolean;
 
+    constructor() {}
+
+    destroy(): void
+    {
+        this.vertexBuffer.destroy();
+    }
+}
+
+//
+// ParticleUpdater
+//
+interface ParticleUpdater
+{
+    technique : Technique;
+    parameters: TechniqueParameters;
+    update?   : (data      : Float32Array,
+                 dataI     : Uint32Array,
+                 tracked   : Uint16Array,
+                 numTracked: number) => number;
+    predict?  : (position  : FloatArray,
+                 velocity  : FloatArray,
+                 userData  : number,
+                 time      : number) => number;
+}
+class DefaultParticleUpdater
+{
+    technique: Technique;
+    parameters: TechniqueParameters;
+    constructor() {}
+
+    defaultUpdaterPredict(
+        pos     : FloatArray,
+        vel     : FloatArray,
+        userData: number,
+        time    : number
+    ): number
+    {
+        // A rough approximation only!
+        // Not possibly to determine analytically
+        // especcially since non-constant step sizes would just not be possible to analyse.
+
+        // To permit approximation, we assume a particles position/velocity
+        // does not reach maximum values at any point
+        // We assume that the randomised acceleration is uniformnly random
+        // and can be disregarded.
+        // We assume that the system is updated with a constant timestep of 'h'
+        // In this case, we can deduce analytically:
+        // v(t) = d^(t/h)v + ah(sum(t/h))
+        //     where d = 1 - min(1, drag.h)
+        //     and sum(n) = if (d <> 1) d(d^n-1)/(d-1) else nd
+
+        // if d = 1, we have uniform acceleration and
+        // p(t) ~= p(0) + v(0)*t + at^2/2
+        //
+        // if d <> 1, then by wolfram alpha
+        // p(t) ~= p(0) + h(d^(t/h) -1)/(log d)*v + (h(d^(t/h) -1) - log d)/((d-1)log d)adh
+        //
+        // we note that using integration to compute position estimate is not strictly
+        // correct due to euler integration used in actual simulation.
+
+        var params = this.parameters;
+        var h = 1/60; // a reasonable guess at time step I would say in ideal circumstances.
+        var acceleration: FloatArray = params["acceleration"];
+        var ax = acceleration[0];
+        var ay = acceleration[1];
+        var az = acceleration[2];
+        var drag = (1 - Math.min(1, params["drag"] * h));
+        if (drag === 1)
+        {
+            pos[0] += time * (vel[0] + (time * 0.5 * ax));
+            pos[1] += time * (vel[1] + (time * 0.5 * ay));
+            pos[2] += time * (vel[2] + (time * 0.5 * az));
+            vel[0] += time * ax;
+            vel[1] += time * ay;
+            vel[2] += time * az;
+        }
+        else
+        {
+            var pow = Math.pow(drag, time / h);
+            var log = Math.log(drag);
+            var coef = h * (pow - 1) / log;
+            var coef2 = ((h * (pow - 1)) - (time * log)) / ((drag - 1) * log) * drag * h;
+            var coef3 = h * drag * (pow - 1) / (drag - 1);
+            pos[0] += (coef * vel[0]) + (coef2 * ax);
+            pos[1] += (coef * vel[1]) + (coef2 * ay);
+            pos[2] += (coef * vel[2]) + (coef2 * az);
+            vel[0] =  (pow  * vel[0]) + (coef3 * ax);
+            vel[1] =  (pow  * vel[1]) + (coef3 * ay);
+            vel[2] =  (pow  * vel[2]) + (coef3 * az);
+        }
+
+        return userData;
+    }
+
+    defaultUpdaterUpdate(
+        dataF     : Float32Array,
+        dataI     : Uint32Array,
+        tracked   : Uint16Array,
+        numTracked: number
+    ) {
+        var params = this.parameters;
+        var timeStep    : number     = params["timeStep"];
+        var lifeStep    : number     = params["lifeStep"];
+        var acceleration: FloatArray = params["acceleration"];
+        var drag        : number     = params["drag"];
+        var center      : FloatArray = params["center"];
+        var halfExtents : FloatArray = params["halfExtents"];
+        var shift       : FloatArray = params["shift"];
+
+        drag = (1 - Math.min(1, timeStep * drag));
+
+        var ax = acceleration[0] / halfExtents[0];
+        var ay = acceleration[1] / halfExtents[1];
+        var az = acceleration[2] / halfExtents[2];
+
+        var sx = shift[0];
+        var sy = shift[1];
+        var sz = shift[2];
+
+        var SPAN = ParticleSystem.PARTICLE_SPAN;
+        var LIFE = ParticleSystem.PARTICLE_LIFE;
+        var VEL  = ParticleSystem.PARTICLE_VEL;
+        var POS  = ParticleSystem.PARTICLE_POS;
+
+        var decodeHalfUnsignedFloat = TextureEncode.decodeHalfUnsignedFloat;
+        var encodeHalfUnsignedFloat = TextureEncode.encodeHalfUnsignedFloat;
+
+        var store = 0;
+        var i;
+        for (i = 0; i < numTracked; i += 1)
+        {
+            var index = tracked[i] * SPAN;
+
+            // Compute next life, kill particle if expired.
+            var life = decodeHalfUnsignedFloat(dataI[index + LIFE] >>> 16) - lifeStep;
+            if (life <= 0.0)
+            {
+                continue;
+            }
+
+            tracked[store] = tracked[i];
+            store++;
+
+            var vx = dataF[index + VEL];
+            var vy = dataF[index + VEL + 1];
+            var vz = dataF[index + VEL + 2];
+
+            // Update position
+            var x = dataF[index + POS]     + (vx * timeStep) + sx;
+            var y = dataF[index + POS + 1] + (vy * timeStep) + sy;
+            var z = dataF[index + POS + 2] + (vz * timeStep) + sz;
+            dataF[index + POS]     = (x < -1 ? -1 : x > 1 ? 1 : x);
+            dataF[index + POS + 1] = (y < -1 ? -1 : y > 1 ? 1 : y);
+            dataF[index + POS + 2] = (z < -1 ? -1 : z > 1 ? 1 : z);
+
+            // Update velocity
+            x = drag * (vx + (ax * timeStep));
+            y = drag * (vy + (ay * timeStep));
+            z = drag * (vz + (az * timeStep));
+            dataF[index + VEL]     = (x < -1 ? -1 : x > 1 ? 1 : x);
+            dataF[index + VEL + 1] = (y < -1 ? -1 : y > 1 ? 1 : y);
+            dataF[index + VEL + 2] = (z < -1 ? -1 : z > 1 ? 1 : z);
+
+            // Update life
+            dataI[index + LIFE] = (encodeHalfUnsignedFloat(life) << 16) |
+                                  (0xffff & dataI[index + LIFE]);
+        }
+        return store;
+    }
+}
+
+//
+// ParticleRenderer
+//
+interface ParticleRenderer
+{
+    technique: Technique;
+    parameters: TechniqueParameters;
+}
 
 //
 // ParticleSystem
 //
 class ParticleSystem
 {
+    // dimension of particle in gpu memory.
+    static PARTICLE_DIMX = 3;
+    static PARTICLE_DIMY = 3;
+    // size of particle in cpu memory (linear, column by column opposed to gpu)
+    static PARTICLE_SPAN = 9;
+    // offset to access position (+1, +2) in cpu memory
+    static PARTICLE_POS = 0;
+    // offset to access velocity (+1, +2) in cpu memory
+    static PARTICLE_VEL = 3;
+    // offset to access encoded (life | maxLife) in cpu memory
+    static PARTICLE_LIFE = 6;
+    // offset to access encoded (c0, c1) animation range coefficients
+    static PARTICLE_ANIM = 7;
+    // offset to access userData in cpu memory
+    static PARTICLE_DATA = 8;
+
+    static createDefaultRenderer(params: {
+        graphicsDevice: GraphicsDevice;
+        shaderManager : ShaderManager;
+        blendMode?    : string;
+    }): ParticleRenderer
+    {
+        var shader = params.shaderManager.get("particles-default-render.cgfx");
+        var technique = shader.getTechnique(params.blendMode || "alpha");
+        var parameters = params.graphicsDevice.createTechniqueParameters({
+            animationScale       : VMath.v4BuildZero(),
+            animationRotation    : VMath.v2BuildZero(),
+            texture              : null,
+            noiseTexture         : null,
+            randomizedOrientation: VMath.v2BuildZero(),
+            randomizedScale      : VMath.v2BuildZero(),
+            randomizedRotation   : 0,
+            randomizedAlpha      : 0,
+            animatedOrientation  : false,
+            animatedScale        : false,
+            animatedRotation     : false,
+            animatedAlpha        : false
+        });
+
+        return {
+            technique : technique,
+            parameters: parameters
+        };
+    }
+
+    static createDefaultUpdater(params: {
+        graphicsDevice: GraphicsDevice;
+        shaderManager : ShaderManager;
+    }): ParticleUpdater
+    {
+        var shader = params.shaderManager.get("particles-default-updater.cgfx");
+        var technique = shader.getTechnique("update");
+        var parameters = params.graphicsDevice.createTechniqueParameters({
+            acceleration          : VMath.v3BuildZero(),
+            drag                  : 0,
+            noiseTexture          : null,
+            randomizedAcceleration: VMath.v3BuildZero()
+        });
+        var ret = new DefaultParticleUpdater();
+        ret.technique = technique;
+        ret.parameters = parameters;
+        return ret;
+    }
+
+    static createGeometry(params: {
+        graphicsDevice: GraphicsDevice;
+        maxParticles  : number;
+        template      : Array<number>;
+        attributes    : Array<any>; // VERTEXFORMAT
+        stride        : number;
+        semantics     : Semantics;
+        primitive?    : any; // PRIMITIVE
+        shared?       : boolean;
+    }): ParticleGeometry
+    {
+        var maxParticles   = params.maxParticles;
+        var template       = params.template;
+        var templateLength = template.length;
+        var particleData   = new Uint16Array(maxParticles * params.stride);
+
+        var i;
+        for (i = 0; i < maxParticles; i += 1)
+        {
+            var index = (i * templateLength);
+            var j;
+            for (j = 0; j < templateLength; j += 1)
+            {
+                particleData[index + j] = (template[j] === null ? i : template[j]);
+            }
+        }
+
+        var particleStride = (templateLength / params.stride) | 0;
+        var particleVertices = params.graphicsDevice.createVertexBuffer({
+            numVertices: maxParticles * particleStride,
+            attributes : params.attributes,
+            dynamic    : false,
+            data       : particleData
+        });
+        var primitive = params.primitive;
+        if (primitive === undefined)
+        {
+            primitive = params.graphicsDevice.PRIMITIVE_TRIANGLES;
+        }
+
+        var ret = new ParticleGeometry();
+        ret.vertexBuffer   =  particleVertices;
+        ret.particleStride =  particleStride;
+        ret.semantics      =  params.semantics;
+        ret.primitive      =  primitive;
+        ret.shared         =  (params.shared === undefined ? false : params.shared);
+        return ret;
+    }
+
+    private static computeMaxParticleDependents(maxParticles: number, zSorted: boolean)
+    {
+        var dimx, dimy;
+        if (zSorted)
+        {
+            if (maxParticles <= 8)
+            {
+                return {
+                    maxMergeStage: 2,
+                    textureSize  : [4, 2],
+                    capacity     : 8
+                };
+            }
+            else
+            {
+                // Find best textureSize (most square-like) just large enough for
+                // maxParticles, and with area as 8 * power of 2 for sorting.
+                var n = Math.ceil(Math.log(maxParticles) / Math.log(2));
+                if (n < 3)
+                {
+                    return {
+                        maxMergeStage: 2,
+                        textureSize  : [4, 2],
+                        capacity     : 8
+                    };
+                }
+                else if (n > 16)
+                {
+                    return {
+                        maxMergeStage: 15,
+                        textureSize  : [(1 << 8), (1 << 8)],
+                        capacity     : (1 << 16)
+                    };
+                }
+                else
+                {
+                    var dim = (n >>> 1);
+                    dimx = (1 << (n - dim));
+                    dimy = (1 << dim);
+                    return {
+                        maxMergeStage: (n - 1),
+                        textureSize  : [dimx, dimy],
+                        capacity     : (dimx * dimy)
+                    };
+                }
+            }
+        }
+        else
+        {
+            // No restrictions for sorting, can make optimise use of space.
+            // Find square like texture size fitting maxParticles
+            // to aid in shared packing of textures.
+            if (maxParticles > 66536)
+            {
+                maxParticles = 66536;
+            }
+            dimx = Math.ceil(Math.sqrt(maxParticles));
+            dimy = Math.ceil(maxParticles / dimx);
+            return {
+                maxMergeStage: null,
+                textureSize  : [dimx, dimy],
+                capacity     : (dimx * dimy)
+            };
+        }
+    }
+
+    private graphicsDevice: GraphicsDevice;
+
+    // center and half-extents of valid (local) particle positions
+    // and half-extents of valid (local) particle velocities.
+    center     : FloatArray;
+    halfExtents: FloatArray;
+    private invHalfExtents: FloatArray;
+
+    maxParticles: number;
+    zSorted     : boolean;
+    maxSortSteps: number;
+    private maxMergeStage: number;
+
+    // when sharedAnimation is false, destruction of particle system will destroy animation texture.
+    private animation: Texture;
+    private sharedAnimation: boolean;
+    maxLifeTime: number;
+
+    private queue: ParticleQueue;
+    private particleSize: FloatArray; // [x, y] in particle counts.
+
+    private geometry: ParticleGeometry;
+
+    private lastVisible: number;
+    private lastTime   : number;
+    private timer: () => number;
+    private synchronize: ParticleSystemSynchronizeFn;
+
+    // particle states
+    // renderContextShared is false, when no renderContext was supplied to particle system
+    // and so on destruction, the (un)shared render context will be destroyed, otherwise
+    // the stateContext will be released to the shared render context.
+    private renderContextShared: boolean;
+    private renderContext: SharedRenderContext;
+    private stateContext: AllocatedContext;
+    private currentState: number; // 0 | 1 index into stateContext for double buffering.
+
+    updater: ParticleUpdater;
+    renderer: ParticleRenderer;
+
+    // CPU particle states
+    trackingEnabled: boolean;
+    private numTracked: number;
+    private tracked: Uint16Array; // mapping table index storing tracked particles only.
+    // Linear storage of particle data on cpu side.
+    //   some data on cpu side is kept as floats to avoid encode/decode cycles where unnecessary.
+    private cpuF32: Float32Array;
+    private cpuU32: Uint32Array;
+    private addTracked(id: number): void
+    {
+        // Precondition: id is not already in trackedIndices.
+        var numTracked = this.numTracked;
+        var total = numTracked + 1;
+        var tracked = this.tracked;
+        if (total > tracked.length)
+        {
+            tracked = this.tracked =
+                ParticleSystem.resizeUInt16(tracked, total, numTracked);
+        }
+        tracked[numTracked] = id;
+        this.numTracked += 1;
+    }
+
+    private static fullTextureVertices: VertexBuffer;
+    private static fullTextureSemantics: Semantics;
+
+    // Shared between EVERY particle system.
+    //
+    // This can save a hella-lot of memory on the GPU and CPU, with the only restriction
+    // induced, being that when particles are created in a system, that system must be
+    // updated before any other system has particles created for it.
+    //
+    // number of particles created since last update
+    // createdIndices is at least as long as numCreated and stores the indices of created
+    // particles so that relevant data can be zero-ed following the update.
+    //
+    // particles are 'created' by storing new data in createdTexture via createdData with
+    // createdData32 being a view onto createdData.
+    private static numCreated       : number = 0;
+    private static createdIndices   : Uint16Array;
+    private static createdData      : Uint8Array;
+    private static createdData32    : Uint32Array;
+    private static createdTexture   : Texture;
+    private static createdForceFlush: boolean = false;
+    private static addCreated(id: number): void
+    {
+        // we don't care about corner cases like id's being duplicated, the amount of work
+        // done to clear the same particle more than once in stupidly rare circumstances
+        // is irrelevant.
+        var numCreated = ParticleSystem.numCreated;
+        var total = numCreated + 1;
+        var created = ParticleSystem.createdIndices;
+        if (total > created.length)
+        {
+            created = ParticleSystem.createdIndices =
+                ParticleSystem.resizeUInt16(created, total, numCreated);
+        }
+        created[numCreated] = id;
+        ParticleSystem.numCreated += 1;
+    }
+    private static resizeUInt16(arr: Uint16Array, total: number, used: number): Uint16Array
+    {
+        var size = arr.length;
+        // Resize list by doubling space to minimise resizes.
+        // there is not a whole lot of data involved, so we scale up by the optimal
+        // case of doubling as not much memory is wasted in worst-case anyways.
+        while (size < total)
+        {
+            size *= 2;
+        }
+
+        // Copy old data to new array.
+        var newArr = new Uint16Array(size);
+        var i;
+        for (i = 0; i < used; i += 1)
+        {
+            newArr[i] = arr[i];
+        }
+        return newArr;
+    }
+    private static sizeCreated(gd, particleSize): void
+    {
+        if (!ParticleSystem.createdIndices)
+        {
+            ParticleSystem.createdIndices = new Uint16Array(4);
+        }
+        // actual texture height is then (w, h) * PARTICLE_DIM
+        // Assumption:
+        //              this method is called before particles are created in a system
+        //              and so we do not need to copy old data into newly allocated
+        //              typed arrays / texture.
+        var dimx = ParticleSystem.PARTICLE_DIMX;
+        var dimy = ParticleSystem.PARTICLE_DIMY;
+        var w = particleSize[0] * dimx;
+        var h = particleSize[1] * dimy;
+        var tex = ParticleSystem.createdTexture;
+        if (!tex || (tex.width < w || tex.height < h))
+        {
+            // we scale up by 1.5 instead of allocating the exact new size needed
+            // to avoid in general case, too many resizes, but without wasting too
+            // much memory in worst-case.
+            var newW = tex ? tex.width : w;
+            var newH = tex ? tex.height : h;
+            while (newW < w)
+            {
+                newW = (newW * 1.5) | 0;
+            }
+            while (newH < h)
+            {
+                newH = (newH * 1.5) | 0;
+            }
+            // particle system is limited to 65536 particles
+            // => 256 * 256 particles
+            var maxW = 256 * dimx;
+            var maxH = 256 * dimy;
+            if (newW > maxW)
+            {
+                newW = maxW;
+            }
+            if (newH > maxH)
+            {
+                newH = maxH;
+            }
+            if (tex)
+            {
+                tex.destroy();
+            }
+            ParticleSystem.createdTexture = gd.createTexture({
+                name      : "ParticleSystem Shared Creation Texture",
+                width     : newW,
+                height    : newH,
+                depth     : 1,
+                format    : gd.PIXELFORMAT_R8G8B8A8,
+                mipmaps   : false,
+                cubemap   : false,
+                renderable: false,
+                dynamic   : true
+            });
+            ParticleSystem.createdData    = new Uint8Array(newW * newH * 4); // rgba
+            ParticleSystem.createdData32  = new Uint32Array(ParticleSystem.createdData.buffer);
+        }
+    }
+    private static dispatchCreated(particleSize: FloatArray)
+    {
+        var numCreated = ParticleSystem.numCreated;
+        if (numCreated !== 0 || ParticleSystem.createdForceFlush)
+        {
+            ParticleSystem.createdForceFlush = false;
+            ParticleSystem.createdTexture.setData(ParticleSystem.createdData);
+        }
+        if (numCreated === 0)
+        {
+            return;
+        }
+
+        var data = ParticleSystem.createdData32;
+        var indices = ParticleSystem.createdIndices;
+
+        var w = ParticleSystem.createdTexture.width;
+        var sizeX = particleSize[0];
+        var dimx = ParticleSystem.PARTICLE_DIMX;
+        var dimy = ParticleSystem.PARTICLE_DIMY;
+        var i;
+        for (i = 0; i < numCreated; i += 1)
+        {
+            var id = indices[i];
+
+            // Map Uint16 index back into a full index.
+            var u = (id % sizeX);
+            var v = ((id - u) / sizeX) | 0;
+            var index = (v * dimy * w) + (u * dimx);
+
+            data[index] = data[index + 1] = data[index + 2] =
+                data[index + w] = data[index + w + 1] = data[index + w + 2] =
+                data[index + (w * 2)] = data[index + (w * 2) + 1] = data[index + (w * 2) + 2] = 0;
+        }
+
+        ParticleSystem.createdForceFlush = true;
+        ParticleSystem.numCreated = 0;
+    }
+
+    static create(params: ParticleSystemConstructorParams)
+    {
+        return new ParticleSystem(params);
+    }
+    constructor(params: ParticleSystemConstructorParams)
+    {
+        this.graphicsDevice = params.graphicsDevice;
+
+        this.center = (params.center === undefined) ? VMath.v3BuildZero() : VMath.v3Copy(params.center);
+        this.halfExtents = VMath.v3Copy(params.halfExtents);
+        this.invHalfExtents = VMath.v3Reciprocal(this.halfExtents);
+
+        this.maxLifeTime = params.maxLifeTime;
+        this.animation = params.animation;
+        this.sharedAnimation = (params.sharedAnimation === undefined) ? false : params.sharedAnimation;
+
+        this.timer = params.timer;
+        if (this.timer === undefined)
+        {
+            this.timer = function ()
+                {
+                    return TurbulenzEngine.time;
+                };
+        }
+        this.synchronize = params.synchronize;
+        this.lastVisible = null;
+        this.lastTime = null;
+
+        this.zSorted = (params.zSorted === undefined) ? false : params.zSorted;
+        var deps = ParticleSystem.computeMaxParticleDependents(params.maxParticles, this.zSorted);
+        this.particleSize = deps.textureSize;
+        this.maxParticles = params.maxParticles;
+        this.maxMergeStage = deps.maxMergeStage;
+
+        this.geometry = params.geometry;
+
+        var sharedRenderContext = params.sharedRenderContext;
+        this.renderContextShared = <boolean><any>(sharedRenderContext);
+        if (!this.renderContextShared)
+        {
+            sharedRenderContext = new SharedRenderContext({ graphicsDevice: this.graphicsDevice });
+        }
+        this.renderContext = sharedRenderContext;
+        this.stateContext = sharedRenderContext.allocate({
+            width: this.particleSize[0] * ParticleSystem.PARTICLE_DIMX,
+            height: this.particleSize[1] * ParticleSystem.PARTICLE_DIMY,
+            set: this.setStateContext.bind(this)
+        });
+        this.currentState = 0;
+
+        ParticleSystem.sizeCreated(this.graphicsDevice, this.particleSize);
+        this.queue = new ParticleQueue(this.maxParticles);
+
+        this.renderer = params.renderer;
+        this.updater = params.updater;
+
+        var parameters = this.updater.parameters;
+        parameters["lifeStep"]      = 0.0;
+        parameters["timeStep"]      = 0.0;
+        parameters["shift"]         = VMath.v3BuildZero();
+        parameters["center"]        = this.center;
+        parameters["halfExtents"]   = this.halfExtents;
+        parameters["previousState"] = null;
+        parameters["creationState"] = null;
+
+        if (!ParticleSystem.fullTextureVertices)
+        {
+            ParticleSystem.fullTextureVertices = this.graphicsDevice.createVertexBuffer({
+                numVertices: 3,
+                attributes : [this.graphicsDevice.VERTEXFORMAT_FLOAT2],
+                dynamic    : false,
+                data       : [0,0, 2,0, 0,2]
+            });
+            ParticleSystem.fullTextureSemantics =
+                this.graphicsDevice.createSemantics([this.graphicsDevice.SEMANTIC_POSITION]);
+        }
+    }
+
+    destroy()
+    {
+        if (!this.renderContextShared)
+        {
+            this.renderContext.destroy();
+        }
+        else
+        {
+            this.renderContext.release(this.stateContext);
+        }
+        this.renderContext = null;
+        this.stateContext = null;
+        this.queue = null;
+        if (!this.geometry.shared)
+        {
+            this.geometry.destroy();
+        }
+        this.geometry = null;
+        this.timer = null;
+        this.synchronize = null;
+        if (!this.sharedAnimation)
+        {
+            this.animation.destroy();
+        }
+        this.animation = null;
+    }
+
+    private setStateContext(ctx: AllocatedContext)
+    {
+        this.stateContext = ctx;
+        // TODO fill in.
+    }
+
+    createParticle(params: {
+        position      : FloatArray;
+        velocity      : FloatArray;
+        lifeTime      : number;
+        animationRange: FloatArray;
+        userData      : number;
+        forceCreation?: boolean;
+        isTracked?    : boolean;
+    }): number
+    {
+        var lifeTime = params.lifeTime;
+        if (lifeTime <= 0)
+        {
+            return null;
+        }
+        if (lifeTime > this.maxLifeTime)
+        {
+            lifeTime = this.maxLifeTime;
+        }
+
+        var id = this.queue.create(lifeTime, params.forceCreation);
+        if (id === null)
+        {
+            return null;
+        }
+
+        var encodeSignedFloat      = TextureEncode.encodeSignedFloat;
+        var encodeUnsignedFloat2xy = TextureEncode.encodeUnsignedFloat2xy;
+        var index;
+
+        var position = params.position;
+        var velocity = params.velocity;
+        var userData = params.userData;
+
+        var center = this.center;
+        var invHalfExtents = this.invHalfExtents;
+
+        var normalizedLife = lifeTime / this.maxLifeTime;
+        var range = params.animationRange;
+
+        var posx = (position[0] - center[0]) * invHalfExtents[0];
+        var posy = (position[1] - center[1]) * invHalfExtents[1];
+        var posz = (position[2] - center[2]) * invHalfExtents[2];
+
+        var velx = velocity[0] * invHalfExtents[0];
+        var vely = velocity[1] * invHalfExtents[1];
+        var velz = velocity[2] * invHalfExtents[2];
+
+        var encodedLife  = encodeUnsignedFloat2xy(normalizedLife, normalizedLife);
+        var encodedRange = encodeUnsignedFloat2xy(range[1], range[1] - range[0]);
+
+        if (params.isTracked && this.trackingEnabled)
+        {
+            if (this.queue.wasForced)
+            {
+                // If particle creation was forced, then we may already track this particle id
+                // and we cannot allow duplicates in the tracked list.
+                //
+                // Best we can do is a linear search sadly, but this is a very rare occurence.
+                var found = false;
+                var i;
+                var numTracked = this.numTracked;
+                var tracked = this.tracked;
+                for (i = 0; i < numTracked; i += 1)
+                {
+                    if (tracked[i] === id)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    this.addTracked(id);
+                }
+            }
+            else
+            {
+                this.addTracked(id);
+            }
+
+            var x, y, z;
+            var cpuF = this.cpuF32;
+            var cpuU = this.cpuU32;
+            var pos = ParticleSystem.PARTICLE_POS;
+            var vel = ParticleSystem.PARTICLE_VEL;
+            index = id * ParticleSystem.PARTICLE_SPAN;
+
+            // position and velocity do not need to be encoded, but they do need to be
+            // normalised and clamped. We do not worry about the difference in representable
+            // values as introduced errors are very, very small.
+            cpuF[index + pos]     = (posx < -1 ? -1 : posx > 1 ? 1 : posx);
+            cpuF[index + pos + 1] = (posy < -1 ? -1 : posy > 1 ? 1 : posy);
+            cpuF[index + pos + 2] = (posz < -1 ? -1 : posz > 1 ? 1 : posz);
+
+            cpuF[index + vel]     = (velx < -1 ? -1 : velx > 1 ? 1 : velx);
+            cpuF[index + vel + 1] = (vely < -1 ? -1 : vely > 1 ? 1 : vely);
+            cpuF[index + vel + 2] = (velz < -1 ? -1 : velz > 1 ? 1 : velz);
+
+            // keeping code simple, we do use encoding for these values so that the exact same
+            // logic can be used and avoid wasting memory.
+            cpuU[index + ParticleSystem.PARTICLE_LIFE] = encodedLife;
+            cpuU[index + ParticleSystem.PARTICLE_ANIM] = encodedRange;
+            cpuU[index + ParticleSystem.PARTICLE_DATA] = userData;
+        }
+
+        ParticleSystem.addCreated(id);
+
+        // Determine index into creation texture
+        var particleSize = this.particleSize;
+        var u = (id % particleSize[0]);
+        var v = (((id - u) / particleSize[0]) | 0);
+
+        var dimx = ParticleSystem.PARTICLE_DIMX;
+        var dimy = ParticleSystem.PARTICLE_DIMY;
+        var w = ParticleSystem.createdTexture.width;
+        index = (v * dimy * w) + (u * dimx);
+
+        var data32 = ParticleSystem.createdData32;
+        data32[index]               = encodeSignedFloat(posx);
+        data32[index + w]           = encodeSignedFloat(posy);
+        data32[index + (w * 2)]     = encodeSignedFloat(posz);
+        data32[index + 1]           = encodeSignedFloat(velx);
+        data32[index + w + 1]       = encodeSignedFloat(vely);
+        data32[index + (w * 2) + 1] = encodeSignedFloat(velz);
+        data32[index + 2]           = encodedLife;
+        data32[index + w + 2]       = encodedRange;
+        data32[index + (w * 2) + 2] = userData;
+
+        return id;
+    }
+
+    sync(frameVisible: number)
+    {
+        if (this.lastVisible === null)
+        {
+            this.lastTime = this.timer();
+        }
+        else if (frameVisible !== this.lastVisible)
+        {
+            var currentTime = this.timer();
+            this.synchronize(this, frameVisible - this.lastVisible, currentTime - this.lastTime);
+            this.lastTime = currentTime;
+        }
+        this.lastVisible = frameVisible;
+    }
+
+    private shouldUpdate: boolean;
+    private hasLiveParticles: boolean;
+    prune(deltaTime: number)
+    {
+        this.shouldUpdate = this.hasLiveParticles;
+        this.hasLiveParticles = this.queue.update(deltaTime);
+    }
+    step(deltaTime: number, shift?: FloatArray)
+    {
+        this.hasLiveParticles = this.hasLiveParticles || (ParticleSystem.numCreated !== 0);
+        if (this.shouldUpdate || this.hasLiveParticles)
+        {
+            this.updateParticleState(deltaTime, shift);
+        }
+        return this.hasLiveParticles;
+    }
+
+    private updateParticleState(deltaTime: number, shift: FloatArray)
+    {
+        ParticleSystem.dispatchCreated(this.particleSize);
+
+        var updater = this.updater;
+        var parameters = updater.parameters;
+        var lifeStep = parameters["lifeStep"] = deltaTime / this.maxLifeTime;
+        var timeStep = parameters["timeStep"] = deltaTime;
+        parameters["creationState"] = ParticleSystem.createdTexture;
+
+        var uShift: FloatArray = parameters["shift"];
+        if (shift)
+        {
+            var invHalfExtents = this.invHalfExtents;
+            uShift[0] = shift[0] * invHalfExtents[0];
+            uShift[1] = shift[1] * invHalfExtents[1];
+            uShift[2] = shift[2] * invHalfExtents[2];
+        }
+        else
+        {
+            uShift[0] = uShift[1] = uShift[2] = 0;
+        }
+
+        var gd = this.graphicsDevice;
+        var targets = this.stateContext.renderTargets;
+        parameters["previousState"] = targets[this.currentState].colorTexture0;
+
+        gd.setStream(ParticleSystem.fullTextureVertices, ParticleSystem.fullTextureSemantics);
+        gd.beginRenderTarget(targets[1 - this.currentState]);
+        gd.setTechnique(updater.technique);
+        gd.setTechniqueParameters(parameters);
+        gd.draw(gd.PRIMITIVE_TRIANGLES, 3, 0);
+        gd.endRenderTarget();
+
+        this.currentState = 1 - this.currentState;
+        if (this.trackingEnabled)
+        {
+            this.numTracked = updater.update(this.cpuF32, this.cpuU32, this.tracked, this.numTracked);
+        }
+    }
+}
+
+interface ParticleSystemSynchronizeFn
+{
+    (system: ParticleSystem, numFramesElapsed: number, elapsedTime: number): void;
+}
+interface ParticleSystemConstructorParams
+{
+    graphicsDevice      : GraphicsDevice;
+
+    center?             : FloatArray;
+    halfExtents         : FloatArray;
+
+    maxParticles        : number;
+    zSorted?            : boolean;
+    maxSortSteps?       : number;
+    geometry            : ParticleGeometry;
+    sharedRenderContext?: SharedRenderContext;
+
+    maxLifeTime         : number;
+    animation           : Texture;
+    sharedAnimation?    : boolean;
+
+    timer?              : () => number;
+    synchronize         : ParticleSystemSynchronizeFn;
+
+    trackingEnabled?    : boolean;
+
+    updater             : ParticleUpdater;
+    renderer            : ParticleRenderer;
 }
 

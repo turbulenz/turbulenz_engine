@@ -24,10 +24,7 @@ Methods
 
 Encode an unsigned float value `[0,1)` into an 8-bit unsigned integer. Values less than `0` or greater-equal to `1` will be clamped.
 
-**Note**
-
-`1` cannot be encoded in this scheme, but `0.5` can be encoded exactly.
-The largest representable value is `0.99609375` with the absolute difference between any successive invertible input `0.00390625`. Non-invertible inputs will be rounded down to the nearest invertible representation.
+.. note :: `1` cannot be encoded in this scheme, but `0.5` can be encoded exactly. The largest representable value is `0.99609375` with the absolute difference between any successive invertible input `0.00390625`. Non-invertible inputs will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -43,10 +40,7 @@ The largest representable value is `0.99609375` with the absolute difference bet
 
 Encode a signed float value `[-1,1)` into an 8-bit unsigned integer. Values less than `-1` or greater-equal to `1` will be clamped.
 
-**Note**
-
-`1` cannot be encoded in this scheme, but `0` can be encoded exactly.
-The largest representable value is `0.9921875` with the absolute difference between any successive invertible input `0.0068125`. Non-invertible inputs will be rounded down to the nearest invertible representation.
+.. note :: `1` cannot be encoded in this scheme, but `0` can be encoded exactly. The largest representable value is `0.9921875` with the absolute difference between any successive invertible input `0.0068125`. Non-invertible inputs will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -62,10 +56,7 @@ The largest representable value is `0.9921875` with the absolute difference betw
 
 Encode an unsigned float value `[0,1)` into a 16-bit unsigned integer. Values less than `0` or greater-equal to `1` will be clamped.
 
-**Note**
-
-`1` cannot be encoded in this scheme, but `0.5` can be encoded exactly.
-The largest representable value is `0.9999847412109375` with the absolute difference between any successive invertible input `0.0000152587890625`. Non-invertible inputs will be rounded down to the nearest invertible representation.
+.. note :: `1` cannot be encoded in this scheme, but `0.5` can be encoded exactly. The largest representable value is `0.9999847412109375` with the absolute difference between any successive invertible input `0.0000152587890625`. Non-invertible inputs will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -81,10 +72,7 @@ The largest representable value is `0.9999847412109375` with the absolute differ
 
 Encode a signed float value `[-1,1)` into a 16-bit unsigned integer. Values less than `-1` or greater-equal to `1` will be clamped.
 
-**Note**
-
-`1` cannot be encoded in this scheme, but `0` can be encoded exactly.
-The largest representable value is `0.999969482421875` with the absolute difference between any successive invertible input `0.000030517578125`. Non-invertible inputs will be rounded down to the nearest invertible representation.
+.. note :: `1` cannot be encoded in this scheme, but `0` can be encoded exactly. The largest representable value is `0.999969482421875` with the absolute difference between any successive invertible input `0.000030517578125`. Non-invertible inputs will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -100,10 +88,7 @@ The largest representable value is `0.999969482421875` with the absolute differe
 
 Encode an unsigned float value `[0,1)` into a 32-bit signed integer. Values less than `0` or greater-equal to `1` will be clamped.
 
-**Note**
-
-`1` cannot be encoded in this scheme, but `0.5` can be encoded exactly.
-The largest representable value is `0.99999999976716935634613037109375` with the absolute difference between any successive invertible input `0.00000000023283064365386962890625`. Non-invertible inputs will be rounded down to the nearest invertible representation.
+.. note :: `1` cannot be encoded in this scheme, but `0.5` can be encoded exactly. The largest representable value is `0.99999999976716935634613037109375` with the absolute difference between any successive invertible input `0.00000000023283064365386962890625`. Non-invertible inputs will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -119,10 +104,7 @@ The largest representable value is `0.99999999976716935634613037109375` with the
 
 Encode a signed float value `[-1,1)` into a 32-bit signed integer. Values less than `-1` or greater-equal to `1` will be clamped.
 
-**Note**
-
-`1` cannot be encoded in this scheme, but `0` can be encoded exactly.
-The largest representable value is `0.9999999995343387126922607421875` with the absolute difference between any successive invertible input `0.0000000004656612873077392578125`. Non-invertible inputs will be rounded down to the nearest invertible representation.
+.. note :: `1` cannot be encoded in this scheme, but `0` can be encoded exactly. The largest representable value is `0.9999999995343387126922607421875` with the absolute difference between any successive invertible input `0.0000000004656612873077392578125`. Non-invertible inputs will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -138,10 +120,7 @@ The largest representable value is `0.9999999995343387126922607421875` with the 
 
 Encode a pair of unsigned float values `[0,1)` into a 32-bit signed integer. Components less than `0` or greater-equal to `1` will be clamped.
 
-**Note**
-
-Components equal to `1` cannot be encoded in this scheme, but `0.5` can be encoded exactly.
-The largest representable value for components is `0.9999847412109375` with the absolute difference between any successive invertible input components `0.0000152587890625`. Non-invertible input components will be rounded down to the nearest invertible representation.
+.. note :: Components equal to `1` cannot be encoded in this scheme, but `0.5` can be encoded exactly. The largest representable value for components is `0.9999847412109375` with the absolute difference between any successive invertible input components `0.0000152587890625`. Non-invertible input components will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -157,10 +136,7 @@ The largest representable value for components is `0.9999847412109375` with the 
 
 Encode a pair of signed float values `[-1,1)` into a 32-bit signed integer. Components less than `-1` or greater-equal to `1` will be clamped.
 
-**Note**
-
-Components equal to `1` cannot be encoded in this scheme, but `0.5` can be encoded exactly.
-The largest representable value for components is `0.999969482421875` with the absolute difference between any successive invertible input components `0.000030517578125`. Non-invertible input components will be rounded down to the nearest invertible representation.
+.. note :: Components equal to `1` cannot be encoded in this scheme, but `0.5` can be encoded exactly. The largest representable value for components is `0.999969482421875` with the absolute difference between any successive invertible input components `0.000030517578125`. Non-invertible input components will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -176,9 +152,7 @@ The largest representable value for components is `0.999969482421875` with the a
 
 Encode a quartet of unsigned float values `[0,1]` into a 32-bit signed integer. Components less than `0` or greater than `1` will be clamped.
 
-**Note**
-
-Different from the other encoding schemes, components equal to `1` can be encoded exactly in this scheme, but components equal to `0.5` will not be encoded. The absolute difference between any successive invertible input components `0.00392156862745098..`. Non-invertible input components will be rounded down to the nearest invertible representation.
+.. note :: Different from the other encoding schemes, components equal to `1` can be encoded exactly in this scheme, but components equal to `0.5` will not be encoded. The absolute difference between any successive invertible input components `0.00392156862745098..`. Non-invertible input components will be rounded down to the nearest invertible representation.
 
 **Syntax** ::
 
@@ -194,9 +168,7 @@ Different from the other encoding schemes, components equal to `1` can be encode
 
 Decode an 8-bit unsigned integer into an unsigned float value `[0,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeByteUnsignedFloat`.
+.. note :: This is an exact inverse (for representable values) of `encodeByteUnsignedFloat`.
 
 **Syntax** ::
 
@@ -212,9 +184,7 @@ This is an exact inverse (for representable values) of `encodeByteUnsignedFloat`
 
 Decode an 8-bit unsigned integer into a signed float value `[-1,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeByteSignedFloat`.
+.. note :: This is an exact inverse (for representable values) of `encodeByteSignedFloat`.
 
 **Syntax** ::
 
@@ -230,9 +200,7 @@ This is an exact inverse (for representable values) of `encodeByteSignedFloat`.
 
 Decode a 16-bit unsigned integer into an unsigned float value `[0,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeHalfUnsignedFloat`.
+.. note :: This is an exact inverse (for representable values) of `encodeHalfUnsignedFloat`.
 
 **Syntax** ::
 
@@ -248,9 +216,7 @@ This is an exact inverse (for representable values) of `encodeHalfUnsignedFloat`
 
 Decode a 16-bit unsigned integer into a signed float value `[-1,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeHalfSignedFloat`.
+.. note :: This is an exact inverse (for representable values) of `encodeHalfSignedFloat`.
 
 **Syntax** ::
 
@@ -266,9 +232,7 @@ This is an exact inverse (for representable values) of `encodeHalfSignedFloat`.
 
 Decode a 32-bit signed integer into an unsigned float value `[0,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeUnsignedFloat`.
+.. note :: This is an exact inverse (for representable values) of `encodeUnsignedFloat`.
 
 **Syntax** ::
 
@@ -284,9 +248,7 @@ This is an exact inverse (for representable values) of `encodeUnsignedFloat`.
 
 Decode a 32-bit signed integer into a signed float value `[-1,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeSignedFloat`.
+.. note :: This is an exact inverse (for representable values) of `encodeSignedFloat`.
 
 **Syntax** ::
 
@@ -302,9 +264,7 @@ This is an exact inverse (for representable values) of `encodeSignedFloat`.
 
 Decode a 32-bit signed integer into a pair of unsigned float values `[0,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeUnsignedFloat2`.
+.. note :: This is an exact inverse (for representable values) of `encodeUnsignedFloat2`.
 
 **Syntax** ::
 
@@ -325,9 +285,7 @@ This is an exact inverse (for representable values) of `encodeUnsignedFloat2`.
 
 Decode a 32-bit signed integer into a pair of signed float values `[-1,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeSignedFloat2`.
+.. note :: This is an exact inverse (for representable values) of `encodeSignedFloat2`.
 
 **Syntax** ::
 
@@ -348,9 +306,7 @@ This is an exact inverse (for representable values) of `encodeSignedFloat2`.
 
 Decode a 32-bit signed integer into a quartet of unsigned float values `[0,1)`.
 
-**Note**
-
-This is an exact inverse (for representable values) of `encodeUnsignedFloat4`.
+.. note :: This is an exact inverse (for representable values) of `encodeUnsignedFloat4`.
 
 **Syntax** ::
 
