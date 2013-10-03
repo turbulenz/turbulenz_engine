@@ -8,6 +8,11 @@
 //
 // API
 //
+interface GameSessionOptions
+{
+    closeExistingSessions?: boolean;
+};
+
 interface GameSessionInfo
 {
     sessionData: any;
@@ -173,7 +178,7 @@ class GameSession
     }
 
     static create(requestHandler, sessionCreatedFn,
-                  errorCallbackFn?): GameSession
+                  errorCallbackFn?, options?: GameSessionOptions): GameSession
     {
         var gameSession = new GameSession();
         var gameSlug = window.gameSlug;
@@ -249,9 +254,19 @@ class GameSession
             createSessionURL += '/' + mode;
         }
 
+        var dataSpec: any = {};
+        if (options)
+        {
+            if (options.closeExistingSessions)
+            {
+                dataSpec.closeExistingSessions = 1;
+            }
+        }
+
         gameSession.service.request({
             url: createSessionURL,
             method: 'POST',
+            data: dataSpec,
             callback: gameSessionRequestCallback,
             requestHandler: requestHandler,
             neverDiscard: true
