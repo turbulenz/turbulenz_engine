@@ -4252,7 +4252,34 @@ class ParticleSystem
     private setStateContext(ctx: AllocatedContext)
     {
         this.stateContext = ctx;
-        // TODO fill in.
+        if (!ctx)
+        {
+            return;
+        }
+
+        // TODO optimise, though is not critical by any means.
+
+        var tex = ctx.renderTargets[0].colorTexture0;
+        var uv  = ctx.uvRectangle;
+        var ts  = VMath.v2Build(tex.width, tex.height);
+        var its = VMath.v2Reciprocal(ts);
+        var rp  = VMath.v2Build(uv[0], uv[1]);
+
+        //TODO only need to update region size/invSize
+        //     when parameters are first constructed as these
+        //     do not change under state context switch
+        var rs  = VMath.v2Build(uv[2] - uv[0], uv[3] - uv[1]);
+        var irs = VMath.v2Reciprocal(rs);
+
+        var parameters;
+        parameters = this.updater.parameters;
+        VMath.v2Copy(ts,  parameters["textureSize"]);
+        VMath.v2Copy(its, parameters["invTextureSize"]);
+        VMath.v2Copy(rs,  parameters["regionSize"]);
+        VMath.v2Copy(irs, parameters["invRegionSize"]);
+        VMath.v2Copy(rp,  parameters["regionPos"]);
+
+        // TODO fill in rest.
     }
 
     createParticle(params: {
@@ -4260,7 +4287,7 @@ class ParticleSystem
         velocity      : FloatArray;
         lifeTime      : number;
         animationRange: FloatArray;
-        userData      : number;
+        userData?     : number;
         forceCreation?: boolean;
         isTracked?    : boolean;
     }): number
@@ -4287,7 +4314,7 @@ class ParticleSystem
 
         var position = params.position;
         var velocity = params.velocity;
-        var userData = params.userData;
+        var userData = (params.userData === undefined ? 0 : params.userData);
 
         var center = this.center;
         var invHalfExtents = this.invHalfExtents;
@@ -4387,6 +4414,213 @@ class ParticleSystem
         return id;
     }
 
+    removeAllParticles(): void
+    {
+        if (this.trackingEnabled)
+        {
+            this.numTracked = 0;
+        }
+        this.queue.clear();
+
+        // create dead particles in all slots.
+        var w = ParticleSystem.createdTexture.width;
+        var particleSize = this.particleSize;
+        var dimx = ParticleSystem.PARTICLE_DIMX;
+        var dimy = ParticleSystem.PARTICLE_DIMY;
+        var u, v;
+        for (v = 0; v < numY; v += 1)
+        {
+            for (u = 0; u < numX; u += 1)
+            {
+                var gpu = (v * dimy * w) + (u * dimx);
+                ParticleSystem.createdData32[gpu + 2] = 0x0000ffff; // life = 0, total life <> 0 signal to create.
+                ParticleSystem.addCreated((v * particleSize[0]) + u);
+            }
+        }
+    }
+
+    removeParticle(id: number): void
+    {
+        this.queue.removeParticle(id);
+
+        // Remove from tracked list if tracked.
+        if (this.trackingEnabled)
+        {
+            // Shuffle back anything after.
+            // (TODO) See updateParticle for reason 'swap-pop' is not performed.
+            var i, j = 0;
+            var tracked = this.tracked;
+            var numTracked = this.numTracked;
+            for (i = 0; i < numTracked; i += 1)
+            {
+                if (tracked[i] !== id)
+                {
+                    tracked[j] = tracked[i];
+                    j += 1;
+                }
+                else
+                {
+                    this.numTracked -= 1;
+                }
+            }
+        }
+
+        // create a dead particle in its place.
+        var particleSize = this.particleSize;
+        var u = (id % particleSize[0]);
+        var v = (((id - u) / particleSize[0]) | 0);
+
+        var dimx = ParticleSystem.PARTICLE_DIMX;
+        var dimy = ParticleSystem.PARTICLE_DIMY;
+        var w = ParticleSystem.createdTexture.width;
+        var gpu = (v * dimy * w) + (u * dimx);
+        ParticleSystem.createdData32[gpu + 2] = 0x0000ffff; // life = 0, total life <> 0 signal to create.
+    },
+
+    updateParticle(id: number, params: {
+        position?      : FloatArray;
+        velocity?      : FloatArray;
+        animationRange?: FloatArray;
+        userData?      : number;
+        isTracked?     : boolean;
+    }): void
+    {
+        if (!this.trackingEnabled)
+        {
+            return;
+        }
+
+        var cpuU = this.cpuU32;
+        var cpuF = this.cpuF32;
+
+        var POS = ParticleSystem.PARTICLE_POS;
+        var VEL = ParticleSystem.PARTICLE_VEL;
+        var LIFE = ParticleSystem.PARTICLE_LIFE;
+        var ANIM = ParticleSystem.PARTICLE_ANIM;
+        var DATA = ParticleSystem.PARTICLE_DATA;
+
+        var decodeHalfUnsignedFloat = TextureEncode.decodeHalfUnsignedFloat;
+        var encodeSignedFloat = TextureEncode.encodeSignedFloat;
+
+        var cpu = id * ParticleSystem.PARTICLE_SPAN;
+
+        var particleSize = this.particleSize;
+        var u = (id % particleSize[0]);
+        var v = (((id - u) / particleSize[0]) | 0);
+
+        var dimx = ParticleSystem.PARTICLE_DIMX;
+        var dimy = ParticleSystem.PARTICLE_DIMY;
+        var w = ParticleSystem.createdTexture.width;
+        var gpu = (v * dimy * w) + (u * dimx);
+        var data32 = ParticleSystem.createdData32;
+
+        // Update position
+        var x, y, z;
+        var invHalfExtents = this.invHalfExtents;
+        var position = params.position;
+        if (position !== undefined)
+        {
+            var center = this.center;
+            x = (position[0] - center[0]) * invHalfExtents[0];
+            y = (position[1] - center[1]) * invHalfExtents[1];
+            z = (position[2] - center[2]) * invHalfExtents[2];
+            x = (x < -1 ? -1 : x > 1 ? 1 : x);
+            y = (y < -1 ? -1 : y > 1 ? 1 : y);
+            z = (z < -1 ? -1 : z > 1 ? 1 : z);
+            cpuF[cpu + POS]     = x;
+            cpuF[cpu + POS + 1] = y;
+            cpuF[cpu + POS + 2] = z;
+        }
+        else
+        {
+            x = cpuF[cpu + POS];
+            y = cpuF[cpu + POS + 1];
+            z = cpuF[cpu + POS + 2];
+        }
+        data32[gpu]           = encodeSignedFloat(x);
+        data32[gpu + w]       = encodeSignedFloat(y);
+        data32[gpu + (w * 2)] = encodeSignedFloat(z);
+
+        // Update velocity
+        var velocity = params.velocity;
+        if (velocity !== undefined)
+        {
+            x = velocity[0] * invHalfExtents[0];
+            y = velocity[1] * invHalfExtents[1];
+            z = velocity[2] * invHalfExtents[2];
+            x = (x < -1 ? -1 : x > 1 ? 1 : x);
+            y = (y < -1 ? -1 : y > 1 ? 1 : y);
+            z = (z < -1 ? -1 : z > 1 ? 1 : z);
+            cpuF[cpu + VEL]     = x;
+            cpuF[cpu + VEL + 1] = y;
+            cpuF[cpu + VEL + 2] = z;
+        }
+        else
+        {
+            x = cpuF[cpu + VEL];
+            y = cpuF[cpu + VEL + 1];
+            z = cpuF[cpu + VEL + 2];
+        }
+        data32[gpu + 1]           = encodeSignedFloat(x);
+        data32[gpu + w + 1]       = encodeSignedFloat(y);
+        data32[gpu + (w * 2) + 1] = encodeSignedFloat(z);
+
+        // Update life.
+        data32[gpu + 2] = cpuU[cpu + LIFE];
+
+        // Update animation range.
+        var range = params.animationRange;
+        var encodedRange;
+        if (range !== undefined)
+        {
+            encodedRange = TextureEncode.encodeUnsignedFloat2xy(range[1], range[1] - range[0]);
+            cpuU[cpu + ANIM] = encodedRange;
+        }
+        else
+        {
+            encodedRange = cpuU[cpu + ANIM];
+        }
+        data32[gpu + w + 2] = encodedRange;
+
+        // Update userData.
+        var userData = params.userData;
+        if (userData !== undefined)
+        {
+            cpuU[cpu + DATA] = userData;
+        }
+        else
+        {
+            userData = cpuU[cpu + DATA];
+        }
+        data32[gpu + (w * 2) + 2] = userData;
+        ParticleSystem.addCreated(id);
+
+        // Remove from tracked list if no longer tracked on CPU.
+        if (params.isTracked !== undefined && !params.isTracked)
+        {
+            // Shuffle back anything after.
+            // Not the fastest of operations, but should only occur very occasionaly
+            // (TODO) Reason to shuffle back, instead of 'swap-popping' if for a full
+            // cpu-fallback to work more efficiently for partial sorts, as swap-poppping
+            // would mess up any particle sorting.
+            var tracked = this.tracked;
+            var numTracked = this.numTracked;
+            var i, j = 0;
+            for (i = 0; i < numTracked; i += 1)
+            {
+                if (tracked[i] !== id)
+                {
+                    tracked[j] = tracked[i];
+                    j += 1;
+                }
+                else
+                {
+                    this.numTracked -= 1;
+                }
+            }
+        }
+    }
+
     sync(frameVisible: number)
     {
         if (this.lastVisible === null)
@@ -4404,17 +4638,21 @@ class ParticleSystem
 
     private shouldUpdate: boolean;
     private hasLiveParticles: boolean;
-    prune(deltaTime: number)
+    private updateTime: number;
+    private updateShift: FloatArray;
+    beginUpdate(deltaTime: number, shift?: FloatArray)
     {
+        this.updateTime = deltaTime;
+        this.updateShift = shift ? VMath.v3Copy(shift, this.updateShift) : VMath.v3BuildZero(this.updateShift);
         this.shouldUpdate = this.hasLiveParticles;
         this.hasLiveParticles = this.queue.update(deltaTime);
     }
-    step(deltaTime: number, shift?: FloatArray)
+    endUpdate(): boolean
     {
         this.hasLiveParticles = this.hasLiveParticles || (ParticleSystem.numCreated !== 0);
         if (this.shouldUpdate || this.hasLiveParticles)
         {
-            this.updateParticleState(deltaTime, shift);
+            this.updateParticleState(this.updateTime, this.updateShift);
         }
         return this.hasLiveParticles;
     }
@@ -4444,7 +4682,10 @@ class ParticleSystem
 
         var gd = this.graphicsDevice;
         var targets = this.stateContext.renderTargets;
-        parameters["previousState"] = targets[this.currentState].colorTexture0;
+        var tex = parameters["previousState"] = targets[this.currentState].colorTexture0;
+        var scale = parameters["creationScale"];
+        scale[0] = this.particleSize[0] * ParticleSystem.PARTICLE_DIMX / ParticleSystem.createdTexture.width;
+        scale[1] = this.particleSize[1] * ParticleSystem.PARTICLE_DIMY / ParticleSystem.createdTexture.height;
 
         gd.setStream(ParticleSystem.fullTextureVertices, ParticleSystem.fullTextureSemantics);
         gd.beginRenderTarget(targets[1 - this.currentState]);
@@ -4458,6 +4699,53 @@ class ParticleSystem
         {
             this.numTracked = updater.update(this.cpuF32, this.cpuU32, this.tracked, this.numTracked);
         }
+    }
+
+    queryPosition(id: number, dst?: FloatArray): FloatArray
+    {
+        if (dst === undefined)
+        {
+            dst = VMath.v3BuildZero();
+        }
+        var center = this.center;
+        var halfExtents = this.halfExtents;
+        var cpuF = this.cpuF32;
+        var cpu = (id * ParticleSystem.PARTICLE_SPAN) + ParticleSystem.PARTICLE_POS;
+        dst[0] = center[0] + (halfExtents[0] * cpuF[cpu]);
+        dst[1] = center[1] + (halfExtents[1] * cpuF[cpu + 1]);
+        dst[2] = center[2] + (halfExtents[2] * cpuF[cpu + 2]);
+        return dst;
+    }
+
+    queryVelocity(id: number, dst?: FloatArray): FloatArray
+    {
+        if (dst === undefined)
+        {
+            dst = VMath.v3BuildZero();
+        }
+        var halfExtents = this.halfExtents;
+        var cpuF = this.cpuF32;
+        var cpu = (id * ParticleSystem.PARTICLE_SPAN) + ParticleSystem.PARTICLE_VEL;
+        dst[0] = halfExtents[0] * cpuF[cpu];
+        dst[1] = halfExtents[1] * cpuF[cpu + 1];
+        dst[2] = halfExtents[2] * cpuF[cpu + 2];
+        return dst;
+    }
+
+    queryRemainingLife(id: number): number
+    {
+        var pix = this.cpuU32[(id * ParticleSystem.PARTICLE_SPAN) + ParticleSystem.PARTICLE_LIFE];
+        return TextureEncode.decodeHalfUnsignedFloat(pix >>> 16) * this.maxLifeTime;
+    }
+
+    queryUserData(id: number): number
+    {
+        return this.cpuU32[(id * ParticleSystem.PARTICLE_SPAN) + ParticleSystem.PARTICLE_DATA];
+    }
+
+    renderDebug(): void
+    {
+        // TODO
     }
 }
 

@@ -1,30 +1,5 @@
 #include "particles-common.cgh"
 
-// Common to all updaters
-// ----------------------
-// textureSize, invTextureSize are defiend in particles-common
-float timeStep;
-float lifeStep;
-float3 shift;
-float3 halfExtents;
-
-sampler2D previousState = sampler_state
-{
-    MinFilter = Nearest;
-    MagFilter = Nearest;
-    WrapS = ClampToEdge;
-    WrapT = ClampToEdge;
-};
-sampler2D creationState = sampler_state
-{
-    MinFilter = Nearest;
-    MagFilter = Nearest;
-    WrapS = ClampToEdge;
-    WrapT = ClampToEdge;
-};
-
-// Specific to default updater
-// --------------------------
 float3 acceleration;
 float drag;
 
@@ -58,7 +33,7 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
     if (slot.x <= 1)
     {
         // position
-        float p = decodeSignedFloat(create ? tex2D(creationState, inParticle)
+        float p = decodeSignedFloat(create ? tex2D(creationState, inParticle * creationScale)
                                            : tex2D(previousState, particleRegionMap(inParticle)));
         float2 vt = inParticle + float2(1.0 * invRegionSize.x, 0);
         float v = decodeSignedFloat(create ? tex2D(creationState, vt)
@@ -68,7 +43,7 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
     else if (slot.x <= 2)
     {
         // velocity
-        float v = decodeSignedFloat(create ? tex2D(creationState, inParticle)
+        float v = decodeSignedFloat(create ? tex2D(creationState, inParticle * creationScale)
                                            : tex2D(previousState, particleRegionMap(inParticle)));
 
         float a = acceleration[slot.y];
@@ -80,8 +55,8 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
             float2 noiseUV = decodeUnsignedByteFloat2(data.z);
 
             float animTime = create ?
-                  getAnimationTime(creationState, pIndex, invRegionSize,
-                                    getLifePair(creationState, pIndex, invRegionSize))
+                  getAnimationTime(creationState, pIndex, invRegionSize * creationScale,
+                                    getLifePair(creationState, pIndex, invRegionSize * creationScale))
                 : getAnimationTime(previousState, particleRegionMap(pIndex), invTextureSize,
                                     getLifePair(previousState, particleRegionMap(pIndex), invTextureSize));
 
@@ -97,15 +72,15 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
         if (slot.y <= 1)
         {
             // life
-            float4 pix = create ? tex2D(creationState, inParticle)
+            float4 pix = create ? tex2D(creationState, inParticle * creationScale)
                                 : tex2D(previousState, particleRegionMap(inParticle));
-            float life = decodeUnsignedHalf(pix.zw);
-            return float4(pix.xy, encodeUnsignedHalf(life - lifeStep));
+            float life = decodeHalfUnsignedFloat(pix.zw);
+            return float4(pix.xy, encodeHalfUnsignedFloat(life - lifeStep));
         }
         else
         {
             // user store.
-            return create ? tex2D(creationState, inParticle)
+            return create ? tex2D(creationState, inParticle * creationScale)
                           : tex2D(previousState, particleRegionMap(inParticle));
         }
     }
@@ -113,7 +88,7 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
 
 // --------------------------------------------------------------
 
-technique update_state
+technique update
 {
     pass
     {

@@ -11,6 +11,8 @@ The TextureEncode Object
 
 TextureEncode provides a set of utilities for encoding and decoding normalised floating point values and vectors into integer pixel values for storage in non-floating-point textures.
 
+Analogous functions exist in `particles-common.cgh` for GPU side encoding and decoding compatible with this object's methods.
+
 Methods
 =======
 

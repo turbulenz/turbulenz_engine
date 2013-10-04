@@ -250,7 +250,7 @@ Create a new particle system.
     Specify a timer function to determine the passage of time seen by the particle system on update. By default a function will be used which returns `TurbulenzEngine.time`, you would most certainly want this to be tied to a game update tick.
 
 ``synchronize``
-    A function which will be called by a `ParticleRenderable` referencing this system, used to emit particles and update the system whenever the renderable is updated (is visible) to the `Scene`.
+    A function which will be called by a `ParticleRenderable` referencing this system, used to emit particles and update the system whenever the renderable is updated (is visible) to the `Scene`. This method is required to peform the update of the system including calls to `beginUpdate`, `createParticle` and `endUpdate`.
 
 ``trackingEnabled`` (Optional)
     Default value is `false`. If `true`, then created particles will be able to be simulated on the CPU as well as the GPU, so that positions, velocities and other attributes may be queried at any future time until death to permit emitting particles based on positions of existing particles. This will essentially double the cost of simulating any tracked particles.
@@ -260,6 +260,359 @@ Create a new particle system.
 
 ``renderer``
     The `ParticleRenderer` object for the particle system, responsible for rendering particles on the GPU.
+
+.. index::
+    pair: ParticleSystem; destroy
+
+`destroy`
+---------
+
+**Summary**
+
+Destroy particle system. The system cannot be used once it has been destroyed. This will release memory used for particle state textures, as well as any non-shared geometry and animation textures.
+
+**Syntax** ::
+
+    system.destroy();
+
+.. index::
+    pair: ParticleSystem; createParticle
+
+`createParticle`
+----------------
+
+**Summary**
+
+Create a new particle in the system.
+
+.. note :: This method should only be called between `beginUpdate` and `endUpdate`
+
+**Syntax** ::
+
+    var id = system.createParticle({
+       position: [0, 0, 0],
+       velocity: [0, 1, 0],
+       lifeTime: 1.5,
+       animationRange: [0, 1],
+       userData: 0,
+       forceCreation: false,
+       isTracked: false
+    });
+
+``position``
+    A `Vector3` for the position to create particle at in local coordinates, this will be clamped to the particles extents due to normalization.
+
+``velocity``
+    A `Vector3` for the velocity of the created particle in local coordinates, this will clamped to the particles extents size due to normalization.
+
+``lifeTime``
+    The amount of time in seconds that this particle will live for. This will clamped to the defined `maxLifeTime` of the system due to normalization.
+
+``animationRange``
+    The normalized column coordinates defining the subset of the systems `animation` texture to be used for this particle.
+
+``userData`` (Optional)
+    The 32-bit signed integer to use for this particles `userData` field. Default `0`.
+
+``forceCreation`` (Optional)
+    Defalut value is `false`. If `true`, then this particle will be created, even when there is no space remaining in the system. Under such circumstances, the live particle closest to death will be replaced by the newly created particle.
+
+``isTracked`` (Optional)
+    Default value is `false`. If `true`, and `trackingEnabled` is `true` on the system, this particle will also be simulated on the CPU so that its position, velocity and other attributes can be queried throughout its life, and partial updates of the particles attributes may be made.
+
+The return value is the integer `id` corresponding to the particle slot used to create this particle. If the particle could not be created, then this `id` will be equal to `null`. If the particle is tracked, then this `id` can be used to query the particles attributes throughout its life.
+
+If the particle was not able to be created, then it is guaranteed that no further attempt to create a particle without `forceCreation` set to `true` will succeed until a system update has been perfomed.
+
+.. index::
+    ParticleSystem; updateParticle
+
+`updateParticle`
+----------------
+
+**Summary**
+
+Update the state of a cpu-tracked particle in the system. It is up to you to know whether a particle has died and been replaced. Updating the state of a particle that has died will have no effect (it will remain dead), however updating the state of a particle that has died, and been 'replaced' will cause the replaced particle to have it's state updated instead.
+
+.. note :: This method should only be called between `beginUpdate` and `endUpdate`
+
+**Syntax** ::
+
+    system.updateParticle(particleID, {
+       position: [0, 0, 0],
+       velocity: [0, 1, 0],
+       animationRange: [0, 1],
+       userData: 0,
+       isTracked: false
+    });
+
+``particleID``
+    The id of the tracked particle to be updated.
+
+``position`` (Optional)
+    A `Vector3` for the new position of the particle in local coordinates, this will be clamped to the particles extents due to normalization. If left unspecified, position will not be changed.
+
+``velocity`` (Optional)
+    A `Vector3` for new velocity of the created particle in local coordinates, this will clamped to the particles extents size due to normalization. If left unspecified, velocity will not be changed.
+
+``animationRange`` (Optional)
+    The normalized column coordinates defining the subset of the systems `animation` texture to be used for this particle. If left unspecified, this will not be changed.
+
+``userData`` (Optional)
+    The 32-bit signed integer to use for this particles `userData` field. If left unspecified, userData will not be changed.
+
+``isTracked`` (Optional)
+    Setting to `false` will specify that you no longer wish this particle to be tracked on the CPU. Once un-tracked you cannot safely update its state, unless specifying all fields, though you still may as usual remove it from the system. If left unspecified, the tracked nature of the particle will not be changed.
+
+.. index::
+    ParticleSystem; removeParticle
+
+`removeParticle`
+----------------
+
+**Summary**
+
+Remove a particle from the system by force. This may be called for any particle, whether tracked or not, but it is up to you to ensure the particle id used refers to the particle you want. If the particle you are removing has already died and been replaced, then this call will remove the replaced particle.
+
+.. note :: This method should only be called between `beginUpdate` and `endUpdate`
+
+**Syntax** ::
+
+    system.removeParticle(particleID);
+
+``particleID``
+    The id of the tracked particle to be updated.
+
+.. index::
+    ParticleSystem; removeAllParticles
+
+`removeAllParticles`
+--------------------
+
+**Summary**
+
+Remove all particles from the system by force.
+
+.. note :: This method should only be called between `beginUpdate` and `endUpdate`
+
+**Syntax** ::
+
+    system.removeAllParticles();
+
+.. index::
+    ParticleSystem; sync
+
+`sync`
+------
+
+**Summary**
+
+Synchronise the system. This method is called by any `ParticleRenderable` visible in a `Scene` making use of this system, and may also be called manually if required.
+
+This method will invoke the systems' `synchronize` callback, providing it with the frame and time delta (as determined by the system's `timer`).
+
+**Syntax** ::
+
+    system.sync(currentFrameIndex);
+
+``currentFrameIndex``
+    The index of the current frame being rendered, this is used to determine if the system has already been updated for the current rendering frame regardless of timer return values.
+
+.. index::
+    ParticleSystem; prune
+
+`beginUpdate`
+-------------
+
+**Summary**
+
+Begin an update on the system. At this point particles which would be killed by the update are pre-emptively made available for re-use so that creation of new particles may take their place.
+
+.. note :: Only a single particle system may be updated at any time.
+
+**Syntax** ::
+
+    system.beginUpdate(deltaTime, shift);
+
+``deltaTime``
+    The amount of time that will be simulated for this update.
+
+``shift`` (Optional)
+    A `Vector3` object specifying a local displacement to apply to all existing particles in the system to enable trails to form for moving systems. Default value is `[0, 0, 0]`.
+
+.. index::
+    ParticleSystem; step
+
+`endUpdate`
+-----------
+
+**Summary**
+
+Complete an update on a system, at this point the system will be updated including adding newly created particles into the system. This call will return `true` if there is any possibility of a live particle remaining in the system indicating that a render is required for any view onto the system.
+
+**Syntax** ::
+
+    var shouldRender = system.endUpdate(deltaTime);
+
+.. index::
+    ParticleSystem; queryPosition
+
+`queryPosition`
+---------------
+
+**Summary**
+
+Query the position of a CPU-tracked particle.
+
+**Syntax** ::
+
+    var position = system.queryPosition(particleID);
+    // or
+    system.queryPosition(particleID, position);
+
+``particleID``
+    The id of the cpu-tracked particle.
+
+``position`` (Optional)
+    If specified, the position will be written to this `Vector3` and returned, otherwise a new `Vector3` will be allocated.
+
+.. index::
+    ParticleSystem; queryVelocity
+
+`queryVelocity`
+---------------
+
+**Summary**
+
+Query the velocity of a CPU-tracked particle.
+
+**Syntax** ::
+
+    var velocity = system.queryVelocity(particleID);
+    // or
+    system.queryVelocity(particleID, velocity);
+
+``particleID``
+    The id of the cpu-tracked particle.
+
+``velocity`` (Optional)
+    If specified, the velocity will be written to this `Vector3` and returned, otherwise a new `Vector3` will be allocated.
+
+.. index::
+    ParticleSystem; queryRemainingLife
+
+`queryRemainingLife`
+--------------------
+
+**Summary**
+
+Query the remaining life of a CPU-tracked particle.
+
+**Syntax** ::
+
+    var remainingLife = system.queryRemainingLife(particleID);
+
+``particleID``
+    The id of the cpu-tracked particle.
+
+
+Properties
+==========
+
+.. index::
+    pair: ParticleSystem; center
+
+`center`
+--------
+
+**Summary**
+
+The center of the particle systems extents in local coordinates.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleSystem; halfExtents
+
+`halfExtents`
+-------------
+
+**Summary**
+
+The half-extents of the particle system in local coordinates.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleSystem; maxParticles
+
+`maxParticles`
+--------------
+
+**Summary**
+
+The maximum amount of particles the system can hold.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleSystem; zSorted
+
+`zSorted`
+---------
+
+**Summary**
+
+Whether views onto this system will be z-sorted.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleSystem; updater
+
+`updater`
+---------
+
+**Summary**
+
+The `ParticleUpdater` for this system. Use this to set updater specific technique parameters.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleSystem; renderer
+
+`renderer`
+----------
+
+**Summary**
+
+The `ParticleRenderer` for this system. Use this to set renderer specific technique parameters.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleSystem; PARTICLE_
+
+`PARTICLE_`
+-----------
+
+**Summary**
+
+Integer constants defining storage information for particles on the CPU and GPU.
+
+* `PARTICLE_DIMX` Width of individual particle state on GPU in pixels.
+* `PARTICLE_DIMY` Height of individual particle state on GPU in pixels.
+* `PARTICLE_SPAN` Span of an individual particle state on CPU in data store.
+* `PARTICLE_POS` Offset from start of an individual particle state on CPU to its position vector (stored as 3 successive values).
+* `PARTICLE_VEL` Offset from start of an individual particle state on CPU to its velocity vector (stored as 3 successive values)
+* `PARTICLE_LIFE` Offset from start of an individual particle state on CPU to its life data.
+* `PARTICLE_ANIM` Offset from start of an individual particle state on CPU to its animation range data.
+* `PARTICLE_DATA` Offset from start of an individual particle state on CPU to its user data field.
+
+**Syntax** ::
+
+    var attr = ParticleSystem.PARTICLE_X;
 
 .. _particlegeometry:
 
@@ -326,7 +679,21 @@ The `Technique` to be used for updating particle states on the GPU.
 
 The `TechniqueParameters` object that will be used to set updater specific shader parameters.
 
-The `ParticleSystem` will set the following additional reserved fields: `lifeStep`, `timeStep`, `shift`, `center`, `halfExtents`, `creationState`, `previousState`.
+The `ParticleSystem` will set the following additional reserved fields defined in `particles-common.cgh`:
+
+* `timeStep`
+* `lifeStep`
+* `center`
+* `halfExtents`
+* `shift`
+* `previousState`
+* `creationState`
+* `creationScale`
+* `textureSize`
+* `invTextureSize`
+* `regionSize`
+* `regionPos`
+* `invRegionSize`
 
 .. index::
     pair: ParticleUpdater; update

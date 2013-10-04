@@ -1,37 +1,5 @@
 #include "particles-common.cgh"
 
-// Common to all renderers
-// -----------------------
-// animation, animationSize, textureSize, invTextureSize are defined in particles-common
-float3 center;
-float3 halfExtents;
-float4x4 projection;
-float4x3 modelView;
-
-sampler2D mappingTable = sampler_state
-{
-    MinFilter = Nearest;
-    MagFilter = Nearest;
-    WrapS = ClampToEdge;
-    WrapT = ClampToEdge;
-};
-sampler2D vparticleState = sampler_state
-{
-    MinFilter = Nearest;
-    MagFilter = Nearest;
-    WrapS = ClampToEdge;
-    WrapT = ClampToEdge;
-};
-sampler2D fparticleState = sampler_state
-{
-    MinFilter = Nearest;
-    MagFilter = Nearest;
-    WrapS = ClampToEdge;
-    WrapT = ClampToEdge;
-};
-
-// Specific to default renderer
-// ----------------------------
 sampler2D texture = sampler_state
 {
     MinFilter = LinearMipMapNearest;
@@ -137,7 +105,7 @@ void vp_render( in float2 inData     : TEXCOORD0,
     float4 data = getData(vparticleState, particle, invTextureSize);
     float animTime = getAnimationTime(vparticleState, particle, invTextureSize,
                                       getLifePair(vparticleState, particle, invTextureSize));
-    float2 noiseUV = decodeUnsignedByteFloat2(data.z);
+    float2 noiseUV = decodeByteUnsignedFloat2(data.z);
 
     float3 pos = (getPosition(vparticleState, particle, invTextureSize) * halfExtents) + center;
     float2 inPosition = quadVertex[inData.x] * getScale(animTime) * 0.5;
