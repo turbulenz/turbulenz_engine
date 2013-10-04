@@ -3393,6 +3393,10 @@ class SharedRenderContext
     }): AllocatedContext
     {
         var fit = this.packer.pack(params.width, params.height);
+        if (!fit)
+        {
+            return null;
+        }
 
         var bin = fit.bin;
         var binRect = this.packer.bins[bin];
@@ -3400,7 +3404,7 @@ class SharedRenderContext
         var ctxH = binRect.h;
         if (bin >= this.contexts.length)
         {
-            this.allocateContext(ctxW, ctxH);
+            this.contexts[bin] = SharedRenderContext.createContext(this.graphicsDevice, ctxW, ctxH);
         }
 
         var ctx = this.contexts[bin];
@@ -3429,11 +3433,6 @@ class SharedRenderContext
         };
     }
 
-    private allocateContext(w, h)
-    {
-        this.contexts.push(SharedRenderContext.createContext(this.graphicsDevice, w, h));
-    }
-
     private resizeContext(ctx: Context, w, h)
     {
         // don't resize to exactly the required size.
@@ -3446,11 +3445,11 @@ class SharedRenderContext
         var newH = ctx.height;
         while (newW < w)
         {
-            newW = (newW * 1.25) | 0;
+            newW = Math.ceil(newW * 1.25);
         }
         while (newH < h)
         {
-            newH = (newH * 1.25) | 0;
+            newH = Math.ceil(newH * 1.25);
         }
         if (newW > this.packer.maxWidth)
         {
@@ -3508,8 +3507,8 @@ class SharedRenderContext
         parameters["src"] = from.colorTexture0;
         parameters["dst"] = [
             0, 0,
-            from.width / to.colorTexture0.width,
-            from.height / to.colorTexture0.height
+            from.colorTexture0.width / to.colorTexture0.width,
+            from.colorTexture0.height / to.colorTexture0.height
         ];
 
         gd.beginRenderTarget(to);

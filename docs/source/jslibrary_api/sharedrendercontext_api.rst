@@ -42,7 +42,7 @@ Create a new SharedRenderContext object.
 
 **Summary**
 
-Allocate a new region of the shared textures.
+Allocate a new region of the shared textures. May return null in the case that an attempt is made to allocate a texture region larger than is supported by the `GraphicsDevice`.
 
 **Syntax** ::
 
