@@ -10,6 +10,12 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-10-04
+
+- Added closeExistingSessions option to TurbulenzServices.createGameSession function.
+- Added TurbulenzServices.onGameSessionClosed property to detect when a gamesession has been closed remotely.
+- Added closeExistingSessions option to the Tic-Tac-Toe app.
+
 2013-09-19
 
 - Added method Material.clone.

@@ -86,8 +86,11 @@ Create a :ref:`GameSession <gamesession>` object.
 
 **Syntax** ::
 
+    var options = {
+        closeExistingSessions: false
+    };
     function sessionCreatedFn(gameSession) {}
-    var gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn);
+    var gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn, options);
 
 ``requestHandler``
     A :ref:`RequestHandler <requesthandler>` object.
@@ -98,6 +101,18 @@ Create a :ref:`GameSession <gamesession>` object.
     Until this function is called the ``gameSession`` object is not valid and should not be used.
 
 ``errorCallbackFn`` :ref:`(Optional) <turbulenzservices_errorcallbackfn>`
+
+``options`` (Optional)
+    A JavaScript dictionary.
+    This can contain the following keys:
+
+    - ``closeExistingSessions`` (Optional) -
+      A JavaScript boolean. Defaults to false.
+      If the current user is playing the same game in another tab or on another device then their other games will
+      not be able to make some API requests that read or change server state once ``sessionCreatedFn`` is called.
+      This can be useful to stop users accidentally overwriting save games (and losing progress) by playing the same game in more than one place.
+      Any other instances of the game can detect that their session has been closed by assigning a function to the
+      :ref:`TurbulenzServices.onGameSessionClosed <turbulenzservices_ongamesessionclosed>` callback.
 
 The :ref:`GameSession <gamesession>` returned contains no information about the game session until ``sessionCreatedFn``
 is called.
@@ -555,6 +570,42 @@ You can find a list of currently supported service names :ref:`here <servicerequ
 
 Properties
 ==========
+
+.. index::
+    pair: TurbulenzServices; onGameSessionClosed
+
+.. _turbulenzservices_ongamesessionclosed:
+
+`onGameSessionClosed`
+---------------------
+
+**Summary**
+
+A JavaScript function.
+Called if a closed or incorrect :ref:`GameSession <gamesession>` is being used.
+This is normally triggered by another instance of the game calling
+:ref:`TurbulenzServices.createGameSession <turbulenzservices_creategamesession>` with the ``closeExistingSessions`` option.
+
+**Syntax** ::
+
+    TurbulenzServices.onGameSessionClosed = function onGameSessionClosedFn() {};
+
+    // example usage:
+    var hasGameSessionClosed = false;
+    TurbulenzServices.onGameSessionClosed = function onGameSessionClosedFn()
+    {
+        var hasGameSessionClosed = true;
+        Utilities.log('Game session closed. Looks like you have started playing somewhere else.')
+    };
+
+Once this function is called the game will no longer be able to read or change the user's server state.
+For example, you will not be able to:
+
+- Load or save game using the :ref:`UserData <userdatamanager>` or :ref:`DataShares <datasharemanager>` API's.
+- Set :ref:`leaderboards <leaderboardmanager>` or :ref:`badges <badgemanager>`.
+
+So, it is recommended that once this function is called, the game should stop and display a message like
+``"Game session closed. Looks like you have started playing somewhere else."``.
 
 .. index::
     pair: TurbulenzServices; defaultErrorCallback
