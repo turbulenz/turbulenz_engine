@@ -15,62 +15,6 @@ Methods
 =======
 
 .. index::
-    pair: ParticleSystem; createGeometry
-
-`createGeometry`
-----------------
-
-**Summary**
-
-Create geometry required for rendering particles. This method can be used to create customised geometry for custom rendering shaders, and for creating a shared geometry instance used by multiple compatible particle systems to save memory.
-
-**Syntax** ::
-
-    // Creating particle geometry for the default renderer
-    //
-    // Geometry is a single quad rendered as 2 GL_TRIANGLES where the indices in the template correspond to which vertex of the quad is being rendered.
-    // The default render shader expects a float2 as vertex data input, hence the choice of attributes
-    var geometry = ParticleSystem.createGeometry({
-        graphicsDevice: graphicsDevice,
-        maxParticles: 1024,
-        template: [0, null,  1, null,  2, null,
-                   0, null,  2, null,  3, null],
-        attributes: [graphicsDevice.VERTEXFORMAT_USHORT2],
-        stride: 2,
-        semantics: graphicsDevice.createSemantics([graphicsDevice.SEMANTIC_TEXCOORD]),
-        primitive: graphicsDevice.PRIMITIVE_TRIANGLES,
-        shared: true
-    });
-
-``graphicsDevice``
-    `GraphicsDevice` object to construct `VertexBuffer` data.
-
-``maxParticles``
-    The maximum amount of particles that will be renderable with the resultant geometry.
-
-``template``
-    The template defines the geometry for a single particle, where `null` will be replaced by the particle index `[0,maxParticles)`.
-
-    The vertex buffer data is restricted to a `Uint16Array`, so any data associated with a vertex must be compatible.
-
-``attributes``
-    Vertex formats of the particle geometry.
-
-``stride``
-    The vertex stride of the geometry.
-
-``semantics``
-    The `Semantics` object for rendering the geometry.
-
-``primtive`` (Optional)
-    The `GraphicsDevice` primitive type for rendering the geometry, by default this is `graphicsDevice.PRIMITIVE_TRIANGLES`.
-
-``shared`` (Optional)
-    Whether this geometry is shared. If geometry is not shared (Default), then when a `ParticleSystem` using this geometry is destroyed, the geometry will also be destroyed.
-
-Returns a `ParticleGeometry` object.
-
-.. index::
     pair: ParticleSystem; createDefaultRenderer
 
 `createDefaultRenderer`
@@ -614,49 +558,11 @@ Integer constants defining storage information for particles on the CPU and GPU.
 
     var attr = ParticleSystem.PARTICLE_X;
 
-.. _particlegeometry:
-
-===========================
-The ParticleGeometry Object
-===========================
-
-Represents the geometry used to render a particle system.
-
-Methods
-=======
-
-.. index::
-    pair: ParticleGeometry; destroy
-
-`destroy`
----------
-
-**Summary**
-
-Release memory used by geometry instance. This should only be called on shared geometry instances when you are sure that they are no longer in use. For un-shared geometries, the `ParticleSystem` using the geometry is responsible for calling `destroy` on the geometry when it is destroyed itself.
-
-**Syntax** ::
-
-    geometry.destroy();
-
-Properties
-==========
-
-.. index::
-    pair: ParticleGeometry; shared
-
-`shared`
---------
-
-Whether this geometry instance is shared.
-
-.. note :: Read Only
-
 .. _particleupdater:
 
-==========================
-The ParticleUpdater Object
-==========================
+=============================
+The ParticleUpdater Interface
+=============================
 
 Encapsulates a replaceble element of a particle system responsible for updating the states of particles on both the CPU and GPU and aiding emitters in retrospective creation of particles through prediction.
 
@@ -698,6 +604,9 @@ The `ParticleSystem` will set the following additional reserved fields defined i
 .. index::
     pair: ParticleUpdater; update
 
+Methods
+=======
+
 `update`
 --------
 
@@ -707,7 +616,7 @@ For the best performance, this function is required to actively kill off expired
 
 As this is such a low-level element of the particle system, there is little in the way of helpers, with design of the update method intended to match the cgfx shader technique.
 
-.. note :: Field is optional, if not present then tracking of particles on the CPU for the ParticleSystem will be disabled.
+.. note :: Method is optional, if not present then tracking of particles on the CPU for the ParticleSystem will be disabled.
 
 **Parameters**
 
@@ -741,7 +650,7 @@ This also serves, as a way of ensuring that the emittance of particles is frame-
 
 This function should only ever be called for particles, who at the end of the simulation time to be predicted, are still alive.
 
-.. note :: Field is optional, if not present then emitters will simply be unable to predict the correct position and velocity for particles created retrospectively.
+.. note :: Method is optional, if not present then emitters will simply be unable to predict the correct position and velocity for particles created retrospectively.
 
 **Parameters**
 
@@ -763,9 +672,9 @@ Function must return the predicted `userData` of the particle - should updating 
 
 .. _particlerenderer:
 
-===========================
-The ParticleRenderer Object
-===========================
+==============================
+The ParticleRenderer Interface
+==============================
 
 Encapsulates a replaceable element of a particle system responsible for rendering the particles in the system.
 
@@ -789,3 +698,51 @@ The `Technique` to be used for rendering particle states on the GPU.
 ------------
 
 The `TechniqueParameters` object that will be used to set renderer specific shader parameters.
+
+The `ParticleSystem` and `ParticleView` will set the following additional reserved fields defined in `particles-common.cgh`:
+
+* `center`
+* `halfExtents`
+* `projection`
+* `modelView`
+* `textureSize`
+* `invTextureSize`
+* `regionSize`
+* `regionPos`
+* `invRegionSize`
+* `mappingSize`
+* `invMappingSize`
+* `mappingPos`
+* `mappingTable`
+* `vParticleState`
+* `fParticleState`
+
+Methods
+=======
+
+.. index::
+    pair: ParticleRenderer; createGeometry
+
+`createGeometry`
+----------------
+
+**Summary**
+
+Create a `ParticleGeometry` object compatible with this renderer.
+
+**Syntax** ::
+
+    var geometry = renderer.createGeometry({
+        graphicsDevice: GraphicsDevice,
+        maxParticles: 1024,
+        shared: false
+    });
+
+``graphicsDevice``
+    The `GraphicsDevice` object.
+
+``maxParticles``
+    The maximum amount of particles renderable with the created geometry object.
+
+``shared`` (Optional)
+    Whether this geometry is going to be shared amongst many particle systems or not.

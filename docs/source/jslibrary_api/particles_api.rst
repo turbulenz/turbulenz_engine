@@ -8,6 +8,8 @@ Low Level Particle Systems API
     :maxdepth: 2
 
     textureencode_api
-    particlebuilder_api
     sharedrendercontext_api
+    particlebuilder_api
     particlesystem_api
+    particlegeometry_api
+    particleview_api
