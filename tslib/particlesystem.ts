@@ -4151,11 +4151,21 @@ class ParticleSystem
     }
     private static dispatchCreated(particleSize: FloatArray)
     {
+        var dimx = ParticleSystem.PARTICLE_DIMX;
+        var dimy = ParticleSystem.PARTICLE_DIMY;
+
         var numCreated = ParticleSystem.numCreated;
         if (numCreated !== 0 || ParticleSystem.createdForceFlush)
         {
             ParticleSystem.createdForceFlush = false;
-            ParticleSystem.createdTexture.setData(ParticleSystem.createdData);
+            // XXX requires SDK 0,27,0 :ref: polycraft benchmark.
+            ParticleSystem.createdTexture.setData(
+                ParticleSystem.createdData, 0, 0,
+                0,
+                0,
+                particleSize[0] * dimx,
+                particleSize[1] * dimy
+            );
         }
         if (numCreated === 0)
         {
@@ -4165,10 +4175,8 @@ class ParticleSystem
         var data = ParticleSystem.createdData32;
         var indices = ParticleSystem.createdIndices;
 
-        var w = ParticleSystem.createdTexture.width;
         var sizeX = particleSize[0];
-        var dimx = ParticleSystem.PARTICLE_DIMX;
-        var dimy = ParticleSystem.PARTICLE_DIMY;
+        var w = sizeX * dimx;
         var i;
         for (i = 0; i < numCreated; i += 1)
         {
@@ -4502,16 +4510,15 @@ class ParticleSystem
             cpuU[index + ParticleSystem.PARTICLE_DATA] = userData;
         }
 
-        ParticleSystem.addCreated(id);
-
         // Determine index into creation texture
-        var particleSize = this.particleSize;
-        var u = (id % particleSize[0]);
-        var v = (((id - u) / particleSize[0]) | 0);
+        var sizeX = this.particleSize[0];
+        var u = (id % sizeX);
+        var v = (((id - u) / sizeX) | 0);
+        ParticleSystem.addCreated(id);
 
         var dimx = ParticleSystem.PARTICLE_DIMX;
         var dimy = ParticleSystem.PARTICLE_DIMY;
-        var w = ParticleSystem.createdTexture.width;
+        var w = sizeX * dimx;
         index = (v * dimy * w) + (u * dimx);
 
         var data32 = ParticleSystem.createdData32;
@@ -4537,12 +4544,12 @@ class ParticleSystem
         this.queue.clear();
 
         // create dead particles in all slots.
-        var w = ParticleSystem.createdTexture.width;
         var particleSize = this.particleSize;
         var numX = particleSize[0];
         var numY = particleSize[1];
         var dimx = ParticleSystem.PARTICLE_DIMX;
         var dimy = ParticleSystem.PARTICLE_DIMY;
+        var w = numX * dimx;
         var u, v;
         for (v = 0; v < numY; v += 1)
         {
@@ -4582,13 +4589,13 @@ class ParticleSystem
         }
 
         // create a dead particle in its place.
-        var particleSize = this.particleSize;
-        var u = (id % particleSize[0]);
-        var v = (((id - u) / particleSize[0]) | 0);
+        var sizeX = this.particleSize[0];
+        var u = (id % sizeX);
+        var v = (((id - u) / sizeX) | 0);
 
         var dimx = ParticleSystem.PARTICLE_DIMX;
         var dimy = ParticleSystem.PARTICLE_DIMY;
-        var w = ParticleSystem.createdTexture.width;
+        var w = sizeX * dimx;
         var gpu = (v * dimy * w) + (u * dimx);
         ParticleSystem.createdData32[gpu + 2] = 0x0000ffff; // life = 0, total life <> 0 signal to create.
     }
@@ -4620,13 +4627,13 @@ class ParticleSystem
 
         var cpu = id * ParticleSystem.PARTICLE_SPAN;
 
-        var particleSize = this.particleSize;
-        var u = (id % particleSize[0]);
-        var v = (((id - u) / particleSize[0]) | 0);
+        var sizeX = this.particleSize[0];
+        var u = (id % sizeX);
+        var v = (((id - u) / sizeX) | 0);
 
         var dimx = ParticleSystem.PARTICLE_DIMX;
         var dimy = ParticleSystem.PARTICLE_DIMY;
-        var w = ParticleSystem.createdTexture.width;
+        var w = sizeX * dimx;
         var gpu = (v * dimy * w) + (u * dimx);
         var data32 = ParticleSystem.createdData32;
 
