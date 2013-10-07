@@ -48,14 +48,14 @@ float2 invMappingSize;
 // for region size we can assume size = particle size / PARTICLE_DIM
 float2 mappingPos;
 
-sampler2D vparticleState = sampler_state
+sampler2D vParticleState = sampler_state
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
     WrapS = ClampToEdge;
     WrapT = ClampToEdge;
 };
-sampler2D fparticleState = sampler_state
+sampler2D fParticleState = sampler_state
 {
     MinFilter = Nearest;
     MagFilter = Nearest;

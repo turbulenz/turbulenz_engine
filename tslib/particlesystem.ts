@@ -3969,7 +3969,8 @@ class ParticleSystem
     maxParticles: number;
     zSorted     : boolean;
     maxSortSteps: number;
-    private maxMergeStage: number;
+    /*Used by ParticleView*/
+    /*private*/ maxMergeStage: number;
 
     // when sharedAnimation is false, destruction of particle system will destroy animation texture.
     private animation: Texture;
@@ -3977,7 +3978,8 @@ class ParticleSystem
     maxLifeTime: number;
 
     private queue: ParticleQueue;
-    private particleSize: FloatArray; // [x, y] in particle counts.
+    /*Accessed by ParticleView*/
+    /*private*/ particleSize: FloatArray; // [x, y] in particle counts.
 
     private geometry: ParticleGeometry;
 
@@ -4022,8 +4024,9 @@ class ParticleSystem
         this.numTracked += 1;
     }
 
-    private static fullTextureVertices: VertexBuffer;
-    private static fullTextureSemantics: Semantics;
+    /*Used by ParticleView*/
+    /*private*/ static fullTextureVertices: VertexBuffer;
+    /*private*/ static fullTextureSemantics: Semantics;
 
     // Shared between EVERY particle system.
     //
@@ -4231,9 +4234,10 @@ class ParticleSystem
 
         ret.zSorted = (params.zSorted === undefined) ? false : params.zSorted;
         var deps = ParticleSystem.computeMaxParticleDependents(params.maxParticles, ret.zSorted);
-        ret.particleSize = deps.textureSize;
-        ret.maxParticles = params.maxParticles;
+        ret.particleSize  = deps.textureSize;
+        ret.maxParticles  = params.maxParticles;
         ret.maxMergeStage = deps.maxMergeStage;
+        ret.maxSortSteps  = (params.maxSortSteps === undefined ? 10000 : params.maxSortSteps);
 
         ret.geometry = params.geometry;
         if (!ret.geometry)
@@ -4385,8 +4389,6 @@ class ParticleSystem
         VMath.v2Copy(rp,  parameters["regionPos"]);
         parameters["vParticleState"] = tex;
         parameters["fParticleState"] = tex;
-
-        // TODO fill in rest. (sort/prepare)
     }
 
     createParticle(params: {
@@ -4746,7 +4748,8 @@ class ParticleSystem
     }
 
     private shouldUpdate: boolean;
-    private hasLiveParticles: boolean;
+    /*Used by ParticleView*/
+    /*private*/ hasLiveParticles: boolean;
     private updateTime: number;
     private updateShift: FloatArray;
     beginUpdate(deltaTime: number, shift?: FloatArray)
@@ -4947,6 +4950,35 @@ class ParticleView
         parameters["mappingTable"]   = tex;
     }
 
+    private static mergeSortTechnique   : Technique;
+    private static prepareSortTechnique : Technique;
+    private static mergeSortParameters  : TechniqueParameters;
+    private static prepareSortParameters: TechniqueParameters;
+    private static initSorting(gd: GraphicsDevice)
+    {
+        if (ParticleView.mergeSortTechnique)
+        {
+            return;
+        }
+
+        // Shader embedded from assets/shaders/particles-sort.cgfx
+        var shader = gd.createShader({"version": 1,"name": "particles-sort.cgfx","samplers":{"previousState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"creationState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"mappingTable":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"vParticleState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"fParticleState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"animation":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071}},"parameters":{"textureSize":{"type": "float","columns": 2},"invTextureSize":{"type": "float","columns": 2},"regionSize":{"type": "float","columns": 2},"invRegionSize":{"type": "float","columns": 2},"regionPos":{"type": "float","columns": 2},"halfExtents":{"type": "float","columns": 3},"center":{"type": "float","columns": 3},"previousState":{"type": "sampler2D"},"shift":{"type": "float","columns": 3},"timeStep":{"type": "float"},"lifeStep":{"type": "float"},"creationState":{"type": "sampler2D"},"creationScale":{"type": "float","columns": 2},"projection":{"type": "float","rows": 4,"columns": 4},"modelView":{"type": "float","rows": 4,"columns": 3},"mappingTable":{"type": "sampler2D"},"mappingSize":{"type": "float","columns": 2},"invMappingSize":{"type": "float","columns": 2},"mappingPos":{"type": "float","columns": 2},"vParticleState":{"type": "sampler2D"},"fParticleState":{"type": "sampler2D"},"animationSize":{"type": "float","columns": 2},"animation":{"type": "sampler2D"},"zSorted":{"type": "bool"},"zBound":{"type": "float"},"cpass":{"type": "float"},"PmS":{"type": "float"},"twoStage":{"type": "float"},"twoStage_PmS_1":{"type": "float"}},"techniques":{"prepare_sort":[{"parameters": ["regionSize","invMappingSize","mappingPos","invTextureSize","regionSize","invRegionSize","regionPos","modelView","mappingTable","invMappingSize","mappingPos","fParticleState","zBound"],"semantics": ["POSITION"],"states":{"DepthTestEnable": false,"DepthMask": false,"CullFaceEnable": false,"BlendEnable": false},"programs": ["vp_update_mapping","fp_prepare_sort"]}],"sort_pass":[{"parameters": ["regionSize","invMappingSize","mappingPos","regionSize","invRegionSize","mappingTable","invMappingSize","mappingPos","cpass","PmS","twoStage","twoStage_PmS_1"],"semantics": ["POSITION"],"states":{"DepthTestEnable": false,"DepthMask": false,"CullFaceEnable": false,"BlendEnable": false},"programs": ["vp_update_mapping","fp_merge_sort_pass"]}]},"programs":{"fp_merge_sort_pass":{"type": "fragment","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _TMP7;float _TMP11;float _TMP12;vec2 _TMP6;vec2 _TMP5;float _TMP10;float _TMP2;float _TMP3;float _TMP4;float _TMP1;vec2 _TMP0;vec2 _p0047;vec2 _x0049;float _x0053;float _x0057;float _x0059;float _u0061;float _index0061;float _v0061;float _y0063;float _x0065;float _TMP76;float _TMP88;uniform vec2 regionSize;uniform vec2 invRegionSize;uniform sampler2D mappingTable;uniform vec2 invMappingSize;uniform vec2 mappingPos;uniform float cpass;uniform float PmS;uniform float twoStage;uniform float twoStage_PmS_1;void main()\n{vec4 _self;float _index1;float _j;float _compare;vec4 _other;_TMP0=(mappingPos+(regionSize*tz_TexCoord[0].xy)/vec2(3.0,3.0))*invMappingSize;_self=texture2D(mappingTable,_TMP0);_x0049=(tz_TexCoord[0].xy*regionSize)/vec2(3.0,3.0);_p0047=floor(_x0049);_index1=(_p0047.y*regionSize.x)/3.0+_p0047.x;_x0053=_index1/twoStage;_TMP10=floor(_x0053);_TMP1=_index1-twoStage*_TMP10;_j=floor(_TMP1);if(_j<PmS||_j>twoStage_PmS_1){_TMP2=0.0;}else{_x0057=(_j+PmS)/cpass;_x0059=_x0057/2.0;_TMP10=floor(_x0059);_TMP4=_x0057-2.0*_TMP10;if(_TMP4<1.0){_TMP3=1.0;}else{_TMP3=-1.0;}\n_TMP2=_TMP3;}\n_compare=float(_TMP2);_index0061=_index1+_compare*cpass;_y0063=regionSize.x/3.0;_x0065=_index0061/_y0063;_TMP10=floor(_x0065);_u0061=_index0061-_y0063*_TMP10;_v0061=(_index0061-_u0061)*invRegionSize.x*3.0;_TMP5=vec2(_u0061+0.5,_v0061+0.5)*invRegionSize*vec2(3.0,3.0);_TMP6=(mappingPos+(regionSize*_TMP5)/vec2(3.0,3.0))*invMappingSize;_other=texture2D(mappingTable,_TMP6);_TMP11=dot(_self.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP12=min(1.0,_TMP11);_TMP76=max(0.0,_TMP12);_TMP11=dot(_other.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP12=min(1.0,_TMP11);_TMP88=max(0.0,_TMP12);if(_TMP76*_compare<=_TMP88*_compare){_TMP7=_self;}else{_TMP7=_other;}\ngl_FragColor=_TMP7;}"},"vp_update_mapping":{"type": "vertex","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outParticle1;vec2 _TMP0;uniform vec2 regionSize;uniform vec2 invMappingSize;uniform vec2 mappingPos;void main()\n{vec2 _TMP30;_TMP0=(mappingPos+(regionSize*ATTR0.xy)/vec2(3.0,3.0))*invMappingSize;_TMP30=_TMP0*2.0-1.0;_outPosition1=vec4(_TMP30.x,_TMP30.y,0.0,1.0);_outParticle1=ATTR0.xy;tz_TexCoord[0].xy=ATTR0.xy;gl_Position=_outPosition1;}"},"fp_prepare_sort":{"type": "fragment","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;vec2 _TMP5;float _TMP11;vec4 _TMP10;float _TMP13;float _TMP6;vec4 _TMP1;vec2 _TMP0;vec2 _p0051;vec4 _life0053;vec2 _c0055;float _TMP62;vec3 _TMP68;vec2 _uv0071;float _TMP72;float _TMP84;float _TMP90;vec2 _uv0091;float _TMP102;float _TMP108;vec2 _uv0109;float _TMP120;vec2 _TMP126;vec2 _enc10127;float _TMP130;vec2 _x0137;uniform vec2 invTextureSize;uniform vec2 regionSize;uniform vec2 invRegionSize;uniform vec2 regionPos;uniform vec3 modelView[4];uniform sampler2D mappingTable;uniform vec2 invMappingSize;uniform vec2 mappingPos;uniform sampler2D fParticleState;uniform float zBound;void main()\n{vec2 _particleUV;float _z1;_TMP0=(mappingPos+(regionSize*tz_TexCoord[0].xy)/vec2(3.0,3.0))*invMappingSize;_TMP1=texture2D(mappingTable,_TMP0);_p0051=(_TMP1.xy*255.0)*vec2(3.0,3.0)*invRegionSize;_particleUV=(regionPos+regionSize*_p0051)*invTextureSize;_c0055=_particleUV+vec2(2.5,0.5)*invTextureSize;_life0053=texture2D(fParticleState,_c0055);_TMP6=dot(_life0053.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP6);_TMP62=max(0.0,_TMP11);if(_TMP62<=0.0){_ret_0=vec4(_TMP1.x,_TMP1.y,1.0,1.0);gl_FragColor=_ret_0;return;}else{_uv0071=_particleUV+vec2(0.5,0.5)*invTextureSize;_TMP10=texture2D(fParticleState,_uv0071);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP84=max(0.0,_TMP11);_TMP72=(_TMP84-0.5)*2.0;_uv0091=_uv0071+vec2(0.0,invTextureSize.y);_TMP10=texture2D(fParticleState,_uv0091);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP102=max(0.0,_TMP11);_TMP90=(_TMP102-0.5)*2.0;_uv0109=_uv0071+vec2(0.0,2.0*invTextureSize.y);_TMP10=texture2D(fParticleState,_uv0109);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP120=max(0.0,_TMP11);_TMP108=(_TMP120-0.5)*2.0;_TMP68=vec3(_TMP72,_TMP90,_TMP108);_z1=_TMP68.x*modelView[0].z+_TMP68.y*modelView[1].z+_TMP68.z*modelView[2].z;_z1=(_z1+zBound)/(2.0*zBound);if(_z1>=1.0){_TMP126=vec2(1.0,1.0);}else{_TMP11=min(1.0,_z1);_TMP130=max(0.0,_TMP11);_x0137=_TMP130*vec2(256.0,1.0);_TMP5=fract(_x0137);_enc10127=_TMP5*256.0;_enc10127.y=_enc10127.y-_enc10127.x/256.0;_TMP126=_enc10127/255.0;}\n_ret_0=vec4(_TMP1.x,_TMP1.y,_TMP126.x,_TMP126.y);gl_FragColor=_ret_0;return;}\ngl_FragColor=_ret_0;}"}}});
+
+        ParticleView.prepareSortTechnique = shader.getTechnique("prepare_sort");
+        ParticleView.mergeSortTechnique   = shader.getTechnique("sort_pass");
+
+        ParticleView.prepareSortParameters = gd.createTechniqueParameters({
+            zBound        : 0
+        });
+        ParticleView.mergeSortParameters = gd.createTechniqueParameters({
+            cpass         : 0,
+            PmS           : 0,
+            twoStage      : 0,
+            twoStage_PmS_1: 0,
+            mappingTable  : null
+        });
+    }
+
     setSystem(system: ParticleSystem): void
     {
         if (this.system === system)
@@ -4980,17 +5012,20 @@ class ParticleView
         system.views.push(this);
         if (system.zSorted)
         {
-            var particleSize = (<any>system).particleSize;
+            ParticleView.initSorting(this.graphicsDevice);
+
+            var particleSize = system.particleSize;
             if (!this.renderContextShared)
             {
                 this.renderContext = new SharedRenderContext({ graphicsDevice: this.graphicsDevice });
             }
+
+            this.currentMapping = 0;
             this.setMappingContext(this.renderContext.allocate({
                 width : particleSize[0],
                 height: particleSize[1],
                 set   : this.setMappingContext.bind(this)
             }));
-            this.currentMapping = 0;
 
             // Set up first mapping texture with uv-coordinates for all possible particles
             // represented in the table.
@@ -5032,50 +5067,224 @@ class ParticleView
         }
         if (this.system.zSorted)
         {
-            // TODO
-            //this.system.sortMappingTable(this);
-            this.parameters["mappingTable"] = this.mappingContext.renderTargets[this.currentMapping].colorTexture0;
+            this.sort();
         }
     }
 
     render(): void
     {
+        this.parameters["mappingTable"] = this.mappingContext.renderTargets[this.currentMapping].colorTexture0;
         this.system.render(this);
+    }
+
+    private sort(): void
+    {
+        if (!this.system.hasLiveParticles)
+        {
+            return;
+        }
+
+        var gd = this.graphicsDevice;
+        gd.setStream(ParticleSystem.fullTextureVertices, ParticleSystem.fullTextureSemantics);
+
+        var targets = this.mappingContext.renderTargets;
+        var prepareParameters = ParticleView.prepareSortParameters;
+        var abs = Math.abs;
+        var mv = this.parameters["modelView"];
+        prepareParameters["zBound"]       = abs(mv[2]) + abs(mv[5]) + abs(mv[8]);
+        prepareParameters["mappingTable"] = targets[this.currentMapping].colorTexture0;
+
+        // PrepareSort pass.
+        gd.beginRenderTarget(targets[1 - this.currentMapping]);
+        gd.setTechnique(ParticleView.prepareSortTechnique);
+        gd.setTechniqueParameters(this.system.renderer.parameters);
+        gd.setTechniqueParameters(this.parameters);
+        gd.setTechniqueParameters(prepareParameters);
+        gd.draw(gd.PRIMITIVE_TRIANGLES, 3, 0);
+        gd.endRenderTarget();
+        this.currentMapping = 1 - this.currentMapping;
+
+        // Sort passes
+        var mergeParameters = ParticleView.mergeSortParameters;
+        gd.setTechnique(ParticleView.mergeSortTechnique);
+        gd.setTechniqueParameters(this.system.renderer.parameters);
+        gd.setTechniqueParameters(this.parameters);
+
+        var i = this.system.maxSortSteps;
+        while (i > 0)
+        {
+            i -= 1;
+            var pass  = (1 << this.mergePass);
+            var stage = (1 << this.mergeStage);
+            mergeParameters["cpass"]          = pass;
+            mergeParameters["PmS"]            = (pass % stage);
+            mergeParameters["twoStage"]       = 2 * stage;
+            mergeParameters["twoStage_PmS_1"] = (2 * stage) - (pass % stage) - 1;
+            mergeParameters["mappingTable"]   = targets[this.currentMapping].colorTexture0;
+
+            gd.beginRenderTarget(targets[1 - this.currentMapping]);
+            gd.setTechniqueParameters(mergeParameters);
+            gd.draw(gd.PRIMITIVE_TRIANGLES, 3, 0);
+            gd.endRenderTarget();
+            this.currentMapping = 1 - this.currentMapping;
+
+            this.mergePass -= 1;
+            if (this.mergePass < 0)
+            {
+                this.mergeStage += 1;
+                this.mergePass = this.mergeStage;
+                if (this.mergeStage > this.system.maxMergeStage)
+                {
+                    this.mergePass = this.mergeStage = 0;
+                    break;
+                }
+            }
+        }
     }
 }
 
 //
 // ParticleRenderable
 //
-// TODO
-//class ParticleRenderable
-//{
-//    system: ParticleSystem;
-//    passIndex: number;
-//
-//    private static material: Material;
-//    material: Material;
-//    rendererInfo: any;
-//    distance: number;
-//
-//    constructor() {}
-//    static create(params: {
-//        graphicsDevice: GraphicsDevice
-//    }): ParticleRenderable
-//    {
-//        var gd = params.graphicsDevice;
-//        if (!ParticleRenderable.material)
-//        {
-//            var material = ParticleRenderable.material = Material.create(graphicsDevice);
-//            material.meta.far         = false;
-//            material.meta.transparent = true;
-//            material.meta.decal       = false;
-//            material.meta.noshadows   = true;
-//        }
-//
-//        var ret = new ParticleRenderable();
-//        ret.sharedMaterial = material;
-//        ret.rendererInfo = {};
-//        return ret;
-//    }
-//}
+class ParticleRenderable
+{
+    // renderable interface
+    // ----------------------------------
+    addCustomWorldExtents(extents: FloatArray): void
+    {
+        throw "Not supported";
+    }
+    clone(): void
+    {
+        throw "Not supported";
+    }
+    getCustomWorldExtents(): FloatArray
+    {
+        throw "Not supported";
+    }
+    getMaterial(): Material
+    {
+        return this.sharedMaterial;
+    }
+    getWorldExtents(): FloatArray
+    {
+        return this.node.getWorldExtents();
+    }
+    hasCustomWorldExtents(): boolean
+    {
+        return false;
+    }
+    removeCustomWorldExtents():void
+    {
+        throw "Not supported";
+    }
+    setMaterial(material: Material):void
+    {
+        throw "Not supported";
+    }
+    getNode(): SceneNode
+    {
+        return this.node;
+    }
+    disabled: boolean = false;
+    geometryType: string = "ParticleSystem";
+    drawParameters       : Array<DrawParameters> = null;
+    diffuseDrawParameters: Array<DrawParameters> = null;
+    shadowDrawParameters : Array<DrawParameters> = null;
+    sharedMaterial: Material;
+    worldExtents: FloatArray;
+    distance: number;
+    frameVisible: number = 0;
+    rendererInfo: any;
+
+    // un-documented renderable interface
+    // ----------------------------------
+    halfExtents: FloatArray;
+    center: FloatArray;
+    setNode(node: SceneNode): void
+    {
+        this.node = node;
+    }
+    queryCounter: number = 0;
+    diffuseShadowDrawParameters: Array<DrawParameters> = null;
+    shadowMappingDrawParameters: Array<DrawParameters>=  null;
+    geometry: Geometry = null;
+    surface: Surface = null;
+    techniqueParameters:TechniqueParameters = null;
+    skinController: any = null;
+    isNormal: boolean = false;
+    node: SceneNode = null;
+    normalInfos: any = null;
+    isSkinned(): boolean
+    {
+        return false;
+    }
+
+    // ParticleRenderable specific
+    // ----------------------------------
+    private graphicsDevice: GraphicsDevice;
+    system: ParticleSystem;
+    lazySystem: () => ParticleSystem;
+    passIndex: number;
+
+    private static material: Material;
+    constructor() {}
+    static create(params: {
+        graphicsDevice: GraphicsDevice;
+        passIndex     : number;
+        system?       : ParticleSyste;
+    }): ParticleRenderable
+    {
+        var gd = params.graphicsDevice;
+        if (!ParticleRenderable.material)
+        {
+            var material = ParticleRenderable.material = Material.create(graphicsDevice);
+            material.meta.far         = false;
+            material.meta.transparent = true;
+            material.meta.decal       = false;
+            material.meta.noshadows   = true;
+        }
+
+        var ret = new ParticleRenderable();
+        ret.graphicsDevice = gd;
+        ret.passIndex = params.passIndex;
+        ret.sharedMaterial = material;
+        ret.rendererInfo = {};
+        ret.setSystem(params.system);
+        return ret;
+    }
+
+    destroy(): void
+    {
+        // TODO
+    }
+
+    renderUpdate(camera: Camera): void
+    {
+        if (!this.system)
+        {
+            this.setSystem(this.lazySystem());
+        }
+        this.system.sync(this.frameVisible);
+
+        // TODO
+    }
+
+    setLazySystem(system: () => ParticleSystem): void
+    {
+        this.setSystem(null);
+        this.lazySystem = system;
+    }
+
+    setSystem(system: ParticleSystem): void
+    {
+        this.system = system;
+        this.lazySystem = null;
+        if (system)
+        {
+            this.setExtents(system.center, system.halfExtents);
+            this.drawParameters       = [sys.createRenderableDrawParameters(this.passIndex)];
+            this.shadowDrawParameters = this.drawParameters;
+        }
+    }
+}
