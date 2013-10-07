@@ -174,9 +174,10 @@ Create a new particle system.
 ``maxSortSteps`` (Optional)
     The specific sorting algorithm used permits partial sorts of a view onto the system so that you may spread the cost of sorting over a period of time for better performance. The actual number of steps used depends on maxParticles, but this will place an upper bound on that number. By default a view will be completely sorted at every rendering.
 
-``geometry``
+``geometry`` (Optional)
     The `ParticleGeometry` instance to use in rendering a view of the system. This geometry instance must be at least as large as to render `maxParticles` number of particles.
     If the geometry instance is not marked as `shared`, then it will be destroyed along with the system.
+    If geometry is not specified, an un-shared geometry will be created from the provided `renderer`.
 
 ``sharedRenderContext`` (Optional)
     A `SharedRenderContext` object from which to allocate texture regions for particle states on the GPU. If unspecified then a per-system set of textures and render targets will be created isntead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
@@ -184,7 +185,7 @@ Create a new particle system.
 ``maxLifeTime``
     The maximum life permissable for any particle in the system, it will not be possible to created a particle whose life-time is greater than this value.
 
-``animation``
+``animation`` (Optional)
     The animation `Texture` created by the `ParticleBuilder` object representing the animations of all particles to be created in this system, used by a compatible rendering shader.
 
 ``sharedAnimation`` (Optional)
@@ -193,7 +194,7 @@ Create a new particle system.
 ``timer`` (Optional)
     Specify a timer function to determine the passage of time seen by the particle system on update. By default a function will be used which returns `TurbulenzEngine.time`, you would most certainly want this to be tied to a game update tick.
 
-``synchronize``
+``synchronize`` (Optional)
     A function which will be called by a `ParticleRenderable` referencing this system, used to emit particles and update the system whenever the renderable is updated (is visible) to the `Scene`. This method is required to peform the update of the system including calls to `beginUpdate`, `createParticle` and `endUpdate`.
 
 ``trackingEnabled`` (Optional)
@@ -218,6 +219,22 @@ Destroy particle system. The system cannot be used once it has been destroyed. T
 **Syntax** ::
 
     system.destroy();
+
+.. index::
+    pair: ParticleSystem; reset
+
+`reset`
+-------
+
+**Summary**
+
+Reset a particle system to initial state.
+
+All particles will be removed from the system, with internal timers reset so that particle system can be recycled.
+
+**Syntax** ::
+
+    system.reset();
 
 .. index::
     pair: ParticleSystem; createParticle
@@ -354,6 +371,8 @@ Remove all particles from the system by force.
 Synchronise the system. This method is called by any `ParticleRenderable` visible in a `Scene` making use of this system, and may also be called manually if required.
 
 This method will invoke the systems' `synchronize` callback, providing it with the frame and time delta (as determined by the system's `timer`).
+
+.. note :: Method will fail if a synchronize callback was not provided to the system.
 
 **Syntax** ::
 
@@ -716,6 +735,8 @@ The `ParticleSystem` and `ParticleView` will set the following additional reserv
 * `mappingTable`
 * `vParticleState`
 * `fParticleState`
+* `animation`
+* `animationSize`
 
 Methods
 =======

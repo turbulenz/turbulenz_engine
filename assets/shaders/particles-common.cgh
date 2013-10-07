@@ -418,10 +418,10 @@ float getAnimationTime(sampler2D texture, float2 particle, float2 invTextureSize
 
 // return boolean for if this particle should be gathered from creationState instead of previousState
 // takes non-normalised uv of particle
-bool createdParticle(sampler2D creationState, float2 uv, float2 invTextureSize)
+bool createdParticle(float2 uv)
 {
     float2 particle = floor(uv / PARTICLE_DIM) * PARTICLE_DIM;
-    float2 flag = tex2D(creationState, (particle + PARTICLE_LIFE) * invTextureSize).xy;
+    float2 flag = tex2D(creationState, (particle + PARTICLE_LIFE) * invRegionSize * creationScale).xy;
     return dot(flag, flag) > 0;
 }
 

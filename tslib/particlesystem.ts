@@ -3640,7 +3640,7 @@ class DefaultParticleUpdater
     parameters: TechniqueParameters;
     constructor() {}
 
-    defaultUpdaterPredict(
+    predict(
         pos     : FloatArray,
         vel     : FloatArray,
         userData: number,
@@ -3704,7 +3704,7 @@ class DefaultParticleUpdater
         return userData;
     }
 
-    defaultUpdaterUpdate(
+    update(
         dataF     : Float32Array,
         dataI     : Uint32Array,
         tracked   : Uint16Array,
@@ -3715,7 +3715,6 @@ class DefaultParticleUpdater
         var lifeStep    : number     = params["lifeStep"];
         var acceleration: FloatArray = params["acceleration"];
         var drag        : number     = params["drag"];
-        var center      : FloatArray = params["center"];
         var halfExtents : FloatArray = params["halfExtents"];
         var shift       : FloatArray = params["shift"];
 
@@ -3879,7 +3878,7 @@ class ParticleSystem
         shaderManager : ShaderManager;
     }): ParticleUpdater
     {
-        var shader = params.shaderManager.get("particles-default-updater.cgfx");
+        var shader = params.shaderManager.get("particles-default-update.cgfx");
         var technique = shader.getTechnique("update");
         var parameters = params.graphicsDevice.createTechniqueParameters({
             acceleration          : VMath.v3BuildZero(),
@@ -4191,7 +4190,7 @@ class ParticleSystem
         maxParticles        : number;
         zSorted?            : boolean;
         maxSortSteps?       : number;
-        geometry            : ParticleGeometry;
+        geometry?           : ParticleGeometry;
         sharedRenderContext?: SharedRenderContext;
 
         maxLifeTime         : number;
@@ -4199,7 +4198,7 @@ class ParticleSystem
         sharedAnimation?    : boolean;
 
         timer?              : () => number;
-        synchronize         : ParticleSystemSynchronizeFn;
+        synchronize?        : ParticleSystemSynchronizeFn;
 
         trackingEnabled?    : boolean;
 
@@ -4237,20 +4236,10 @@ class ParticleSystem
         ret.maxMergeStage = deps.maxMergeStage;
 
         ret.geometry = params.geometry;
-
-        var sharedRenderContext = params.sharedRenderContext;
-        ret.renderContextShared = <boolean><any>(sharedRenderContext);
-        if (!ret.renderContextShared)
+        if (!ret.geometry)
         {
-            sharedRenderContext = new SharedRenderContext({ graphicsDevice: ret.graphicsDevice });
+            ret.geometry = params.renderer.createGeometry(ret.graphicsDevice, ret.maxParticles);
         }
-        ret.renderContext = sharedRenderContext;
-        ret.stateContext = sharedRenderContext.allocate({
-            width: ret.particleSize[0] * ParticleSystem.PARTICLE_DIMX,
-            height: ret.particleSize[1] * ParticleSystem.PARTICLE_DIMY,
-            set: ret.setStateContext.bind(ret)
-        });
-        ret.currentState = 0;
 
         ParticleSystem.sizeCreated(ret.graphicsDevice, ret.particleSize);
         ret.queue = new ParticleQueue(ret.maxParticles);
@@ -4259,16 +4248,61 @@ class ParticleSystem
         ret.updater = params.updater;
         ret.views = [];
 
-        ret.trackingEnabled = params.trackingEnabled && ret.updater.hasOwnProperty("update");
+        ret.trackingEnabled = params.trackingEnabled && (ret.updater !== undefined);
+        if (ret.trackingEnabled)
+        {
+            ret.numTracked = 0;
+            ret.tracked = new Uint16Array(4);
+            ret.cpuF32 = new Float32Array(ret.maxParticles * ParticleSystem.PARTICLE_SPAN);
+            ret.cpuU32 = new Uint32Array(ret.cpuF32.buffer);
+        }
 
+        // Add system defined parameters.
         var parameters = ret.updater.parameters;
-        parameters["lifeStep"]      = 0.0;
-        parameters["timeStep"]      = 0.0;
-        parameters["shift"]         = VMath.v3BuildZero();
-        parameters["center"]        = ret.center;
-        parameters["halfExtents"]   = ret.halfExtents;
-        parameters["previousState"] = null;
-        parameters["creationState"] = null;
+        parameters["lifeStep"]       = 0.0;
+        parameters["timeStep"]       = 0.0;
+        parameters["shift"]          = VMath.v3BuildZero();
+        parameters["center"]         = ret.center;
+        parameters["halfExtents"]    = ret.halfExtents;
+        parameters["previousState"]  = null;
+        parameters["creationState"]  = null;
+        parameters["creationScale"]  = VMath.v3BuildZero();
+        parameters["textureSize"]    = VMath.v2BuildZero();
+        parameters["invTextureSize"] = VMath.v2BuildZero();
+        parameters["regionSize"]     = VMath.v2BuildZero();
+        parameters["invRegionSize"]  = VMath.v2BuildZero();
+        parameters["regionPos"]      = VMath.v2BuildZero();
+
+        // Add system defined parameters that are constant for all views onto the system.
+        // (mapping table / transformation parameters are per-view)
+        parameters = ret.renderer.parameters;
+        parameters["center"]         = ret.center;
+        parameters["halfExtents"]    = ret.halfExtents;
+        parameters["zSorted"]        = ret.zSorted;
+        parameters["vParticleState"] = null;
+        parameters["fParticleState"] = null;
+        parameters["animation"]      = ret.animation;
+        parameters["animationSize"]  = (ret.animation ? VMath.v2Build(ret.animation.width, ret.animation.height)
+                                                      : VMath.v2BuildOne());
+        parameters["textureSize"]    = VMath.v2BuildZero();
+        parameters["invTextureSize"] = VMath.v2BuildZero();
+        parameters["regionSize"]     = VMath.v2BuildZero();
+        parameters["invRegionSize"]  = VMath.v2BuildZero();
+        parameters["regionPos"]      = VMath.v2BuildZero();
+
+        var sharedRenderContext = params.sharedRenderContext;
+        ret.renderContextShared = <boolean><any>(sharedRenderContext);
+        if (!ret.renderContextShared)
+        {
+            sharedRenderContext = new SharedRenderContext({ graphicsDevice: ret.graphicsDevice });
+        }
+        ret.renderContext = sharedRenderContext;
+        ret.currentState = 0;
+        ret.setStateContext(sharedRenderContext.allocate({
+            width: ret.particleSize[0] * ParticleSystem.PARTICLE_DIMX,
+            height: ret.particleSize[1] * ParticleSystem.PARTICLE_DIMY,
+            set: ret.setStateContext.bind(ret)
+        }));
 
         if (!ParticleSystem.fullTextureVertices)
         {
@@ -4305,11 +4339,18 @@ class ParticleSystem
         this.geometry = null;
         this.timer = null;
         this.synchronize = null;
-        if (!this.sharedAnimation)
+        if (!this.sharedAnimation && this.animation)
         {
             this.animation.destroy();
         }
         this.animation = null;
+    }
+
+    reset()
+    {
+        this.removeAllParticles();
+        this.lastVisible = null;
+        this.lastTime = null;
     }
 
     private setStateContext(ctx: AllocatedContext)
@@ -4320,18 +4361,12 @@ class ParticleSystem
             return;
         }
 
-        // TODO optimise, though is not critical by any means.
-
-        var tex = ctx.renderTargets[0].colorTexture0;
+        var tex = ctx.renderTargets[this.currentState].colorTexture0;
         var uv  = ctx.uvRectangle;
         var ts  = VMath.v2Build(tex.width, tex.height);
         var its = VMath.v2Reciprocal(ts);
-        var rp  = VMath.v2Build(uv[0], uv[1]);
-
-        //TODO only need to update region size/invSize
-        //     when parameters are first constructed as these
-        //     do not change under state context switch
-        var rs  = VMath.v2Build(uv[2] - uv[0], uv[3] - uv[1]);
+        var rp  = VMath.v2Build(uv[0] * tex.width, uv[1] * tex.height);
+        var rs  = VMath.v2Build((uv[2] - uv[0]) * tex.width, (uv[3] - uv[1]) * tex.height);
         var irs = VMath.v2Reciprocal(rs);
 
         var parameters;
@@ -4342,7 +4377,16 @@ class ParticleSystem
         VMath.v2Copy(irs, parameters["invRegionSize"]);
         VMath.v2Copy(rp,  parameters["regionPos"]);
 
-        // TODO fill in rest.
+        parameters = this.renderer.parameters;
+        VMath.v2Copy(ts,  parameters["textureSize"]);
+        VMath.v2Copy(its, parameters["invTextureSize"]);
+        VMath.v2Copy(rs,  parameters["regionSize"]);
+        VMath.v2Copy(irs, parameters["invRegionSize"]);
+        VMath.v2Copy(rp,  parameters["regionPos"]);
+        parameters["vParticleState"] = tex;
+        parameters["fParticleState"] = tex;
+
+        // TODO fill in rest. (sort/prepare)
     }
 
     createParticle(params: {
@@ -4758,8 +4802,13 @@ class ParticleSystem
         gd.setTechniqueParameters(parameters);
         gd.draw(gd.PRIMITIVE_TRIANGLES, 3, 0);
         gd.endRenderTarget();
-
         this.currentState = 1 - this.currentState;
+
+        var tex = targets[this.currentState].colorTexture0;
+        parameters = this.renderer.parameters;
+        parameters["vParticleState"] = tex;
+        parameters["fParticleState"] = tex;
+
         if (this.trackingEnabled)
         {
             this.numTracked = updater.update(this.cpuF32, this.cpuU32, this.tracked, this.numTracked);
@@ -4808,6 +4857,25 @@ class ParticleSystem
         return this.cpuU32[(id * ParticleSystem.PARTICLE_SPAN) + ParticleSystem.PARTICLE_DATA];
     }
 
+    /*used by ParticleView*/
+    /*private*/ render(view: ParticleView): void
+    {
+        if (!this.hasLiveParticles)
+        {
+            return;
+        }
+
+        var gd = this.graphicsDevice;
+        var renderer = this.renderer;
+        var geom = this.geometry;
+
+        gd.setStream(geom.vertexBuffer, geom.semantics);
+        gd.setTechnique(renderer.technique);
+        gd.setTechniqueParameters(renderer.parameters);
+        gd.setTechniqueParameters(view.parameters);
+        gd.draw(geom.primitive, geom.particleStride * this.maxParticles, 0);
+    }
+
     renderDebug(): void
     {
         // TODO
@@ -4824,7 +4892,8 @@ class ParticleView
     private renderContextShared: boolean;
 
     system: ParticleSystem;
-    private renderParameters: TechniqueParameters;
+    /*Accessed by ParticleSystem*/
+    /*private*/ parameters: TechniqueParameters;
     private mergePass : number = 0;
     private mergeStage: number = 0;
 
@@ -4838,9 +4907,14 @@ class ParticleView
         var ret = new ParticleView();
         ret.graphicsDevice = params.graphicsDevice;
 
-        ret.renderParameters = ret.graphicsDevice.createTechniqueParameters({
-            modelView : VMath.m43BuildIdentity(),
-            projection: VMath.m44BuildIdentity()
+        // per-view parameters
+        ret.parameters = ret.graphicsDevice.createTechniqueParameters({
+            "modelView"     : VMath.m43BuildIdentity(),
+            "projection"    : VMath.m44BuildIdentity(),
+            "mappingTable"  : null,
+            "mappingSize"   : VMath.v2BuildZero(),
+            "invMappingSize": VMath.v2BuildZero(),
+            "mappingPos"    : VMath.v2BuildZero()
         });
 
         var sharedRenderContext = params.sharedRenderContext;
@@ -4860,16 +4934,17 @@ class ParticleView
     {
         this.mappingContext = ctx;
 
-        var tex = ctx.renderTargets[0].colorTexture0;
+        var tex = ctx.renderTargets[this.currentMapping].colorTexture0;
         var uv  = ctx.uvRectangle;
         var ms  = VMath.v2Build(tex.width, tex.height);
         var ims = VMath.v2Reciprocal(ms);
-        var mp  = VMath.v2Build(uv[0], uv[1]);
+        var mp  = VMath.v2Build(uv[0] * tex.width, uv[1] * tex.height);
 
-        var parameters = this.renderParameters;
+        var parameters = this.parameters;
         VMath.v2Copy(ms,  parameters["mappingSize"]);
         VMath.v2Copy(ims, parameters["invMappingSize"]);
         VMath.v2Copy(mp,  parameters["mappingPos"]);
+        parameters["mappingTable"]   = tex;
     }
 
     setSystem(system: ParticleSystem): void
@@ -4932,37 +5007,75 @@ class ParticleView
 
             // XXX requires SDK 0,27,0 :ref: polycraft benchmark.
             var ctx = this.mappingContext;
+            var uv = ctx.uvRectangle;
             var tex = ctx.renderTargets[this.currentMapping].colorTexture0;
             tex.setData(
                 data, 0, 0,
-                ctx.uvRectangle[0] * tex.width,
-                ctx.uvRectangle[1] * tex.height,
-                (ctx.uvRectangle[2] - ctx.uvRectangle[0]) * tex.width,
-                (ctx.uvRectangle[3] - ctx.uvRectangle[1]) * tex.height
+                uv[0] * tex.width,
+                uv[1] * tex.height,
+                (uv[2] - uv[0]) * tex.width,
+                (uv[3] - uv[1]) * tex.height
             );
         }
     }
 
     update(modelView?: FloatArray, projection?: FloatArray): void
     {
+        var parameters = this.parameters;
         if (modelView)
         {
-            VMath.m43Copy(modelView, this.renderParameters["modelView"]);
+            VMath.m43Copy(modelView, parameters["modelView"]);
         }
         if (projection)
         {
-            VMath.m44Copy(projection, this.renderParameters["projection"]);
+            VMath.m44Copy(projection, parameters["projection"]);
         }
         if (this.system.zSorted)
         {
             // TODO
             //this.system.sortMappingTable(this);
+            this.parameters["mappingTable"] = this.mappingContext.renderTargets[this.currentMapping].colorTexture0;
         }
     }
 
     render(): void
     {
-        // TODO
-        //this.system.render(this);
+        this.system.render(this);
     }
 }
+
+//
+// ParticleRenderable
+//
+// TODO
+//class ParticleRenderable
+//{
+//    system: ParticleSystem;
+//    passIndex: number;
+//
+//    private static material: Material;
+//    material: Material;
+//    rendererInfo: any;
+//    distance: number;
+//
+//    constructor() {}
+//    static create(params: {
+//        graphicsDevice: GraphicsDevice
+//    }): ParticleRenderable
+//    {
+//        var gd = params.graphicsDevice;
+//        if (!ParticleRenderable.material)
+//        {
+//            var material = ParticleRenderable.material = Material.create(graphicsDevice);
+//            material.meta.far         = false;
+//            material.meta.transparent = true;
+//            material.meta.decal       = false;
+//            material.meta.noshadows   = true;
+//        }
+//
+//        var ret = new ParticleRenderable();
+//        ret.sharedMaterial = material;
+//        ret.rendererInfo = {};
+//        return ret;
+//    }
+//}
