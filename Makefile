@@ -142,7 +142,7 @@ capturedevices_deps := platform debug
 
 # particlesystem
 particlesystem_src := tslib/particlesystem.ts
-particlesystem_deps := platform debug vmath jsengine_base
+particlesystem_deps := platform debug jsengine
 
 TSLIBS += platform debug vmath aabbtree physics_canvas platform_canvas   \
   utilities services tzdraw2d physics2d fontmanager canvas jsengine_base \

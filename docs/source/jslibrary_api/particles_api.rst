@@ -13,3 +13,4 @@ Low Level Particle Systems API
     particlesystem_api
     particlegeometry_api
     particleview_api
+    particlerenderable_api

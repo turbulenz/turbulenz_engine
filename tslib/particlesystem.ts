@@ -8,7 +8,12 @@
 /*global GraphicsDevice: false*/
 /*global ShaderManager: false*/
 /*global Technique: false*/
-/*global TechniqueParameters: false*/
+/*global TechniqueParameters: false*
+/*global Geometry: false*/
+/*global Material: false*/
+/*global Surface: false*/
+/*global SceneNode: false*/
+/*global DrawParameters: false*/
 
 "use strict";
 
@@ -3981,7 +3986,7 @@ class ParticleSystem
     /*Accessed by ParticleView*/
     /*private*/ particleSize: FloatArray; // [x, y] in particle counts.
 
-    private geometry: ParticleGeometry;
+    geometry: ParticleGeometry;
 
     private lastVisible: number;
     private lastTime   : number;
@@ -5225,20 +5230,26 @@ class ParticleRenderable
     private graphicsDevice: GraphicsDevice;
     system: ParticleSystem;
     lazySystem: () => ParticleSystem;
+    lazyView: () => ParticleView;
     passIndex: number;
+    views: { [index: number]: ParticleView };
+    sharedRenderContext: SharedRenderContext;
 
     private static material: Material;
-    constructor() {}
+    constructor() {
+        this.views = [];
+    }
     static create(params: {
-        graphicsDevice: GraphicsDevice;
-        passIndex     : number;
-        system?       : ParticleSyste;
+        graphicsDevice      : GraphicsDevice;
+        passIndex           : number;
+        system?             : ParticleSystem;
+        sharedRenderContext?: SharedRenderContext;
     }): ParticleRenderable
     {
         var gd = params.graphicsDevice;
         if (!ParticleRenderable.material)
         {
-            var material = ParticleRenderable.material = Material.create(graphicsDevice);
+            var material = ParticleRenderable.material = Material.create(gd);
             material.meta.far         = false;
             material.meta.transparent = true;
             material.meta.decal       = false;
@@ -5250,15 +5261,38 @@ class ParticleRenderable
         ret.passIndex = params.passIndex;
         ret.sharedMaterial = material;
         ret.rendererInfo = {};
+        ret.sharedRenderContext = params.sharedRenderContext;
         ret.setSystem(params.system);
         return ret;
     }
 
-    destroy(): void
+    releaseViews(callback?: (view: ParticleView) => void): void
     {
-        // TODO
+        var views = this.views;
+        for (var i in views)
+        {
+            if (views.hasOwnProperty(i))
+            {
+                if (callback)
+                {
+                    callback(views[i]);
+                }
+                else
+                {
+                    views[i].destroy();
+                }
+            }
+        }
+        this.views = [];
     }
 
+    destroy(): void
+    {
+        this.releaseViews();
+        this.views = null;
+    }
+
+    static cameraId = 0;
     renderUpdate(camera: Camera): void
     {
         if (!this.system)
@@ -5267,13 +5301,51 @@ class ParticleRenderable
         }
         this.system.sync(this.frameVisible);
 
-        // TODO
+        // Use an additional field on Camera to track unique instances
+        // and enable mapping back to a ParticleView.
+        var cam = <any>camera;
+        if (cam.__particle_id === undefined)
+        {
+            cam.__particle_id = ParticleRenderable.cameraId;
+            ParticleRenderable.cameraId += 1;
+        }
+        var views = this.views;
+        var view = views[cam.__particle_id];
+        if (!view)
+        {
+            if (this.lazyView)
+            {
+                view = this.lazyView();
+            }
+            if (!view)
+            {
+                view = ParticleView.create({
+                    graphicsDevice     : this.graphicsDevice,
+                    sharedRenderContext: this.sharedRenderContext
+                });
+            }
+            view.setSystem(this.system);
+            views[cam.__particle_id] = view;
+        }
+
+        // optimise setting of modelView to avoid extra temporary.
+        VMath.m43Mul(this.node.getWorldTransform(), camera.viewMatrix, view.parameters["modelView"]);
+        view.update(null, camera.projectionMatrix);
+
+        this.drawParameters[0].setTechniqueParameters(1, view.parameters);
     }
 
-    setLazySystem(system: () => ParticleSystem): void
+    setLazyView(view: () => ParticleView): void
+    {
+        this.lazyView = view;
+    }
+
+    setLazySystem(system: () => ParticleSystem, center: FloatArray, halfExtents: FloatArray): void
     {
         this.setSystem(null);
-        this.lazySystem = system;
+        this.center      = center;
+        this.halfExtents = halfExtents;
+        this.lazySystem  = system;
     }
 
     setSystem(system: ParticleSystem): void
@@ -5282,8 +5354,20 @@ class ParticleRenderable
         this.lazySystem = null;
         if (system)
         {
-            this.setExtents(system.center, system.halfExtents);
-            this.drawParameters       = [sys.createRenderableDrawParameters(this.passIndex)];
+            this.center      = system.center;
+            this.halfExtents = system.halfExtents;
+
+            var parameters = this.graphicsDevice.createDrawParameters();
+            parameters.setVertexBuffer(0, system.geometry.vertexBuffer);
+            parameters.setSemantics   (0, system.geometry.semantics);
+            parameters.technique = system.renderer.technique;
+            parameters.primitive = system.geometry.primitive;
+            parameters.count     = system.maxParticles * system.geometry.particleStride;
+            parameters.userData  = { passIndex: this.passIndex };
+            parameters.setTechniqueParameters(0, system.renderer.parameters);
+            parameters.setTechniqueParameters(1, null);
+
+            this.drawParameters       = [parameters];
             this.shadowDrawParameters = this.drawParameters;
         }
     }
