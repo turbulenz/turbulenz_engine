@@ -2983,23 +2983,17 @@ class Scene
         this.frustumPlanes = [];
         this.animations = {};
         this.skeletons = {};
-        this.extents = (this.float32ArrayConstructor ?
-                        new this.float32ArrayConstructor(6) :
-                        new Array(6));
+        this.extents = this.md.aabbBuildEmpty();
         this.visibleNodes = [];
         this.visibleRenderables = [];
         this.visibleLights = [];
         this.cameraAreaIndex = -1;
-        this.cameraExtents = (this.float32ArrayConstructor ?
-                              new this.float32ArrayConstructor(6) :
-                              new Array(6));
+        this.cameraExtents = this.md.aabbBuildEmpty();
         this.visiblePortals = [];
         this.frameIndex = 0;
         this.queryCounter = 0;
         this.staticNodesChangeCounter = 0;
-        this.testExtents = (this.float32ArrayConstructor ?
-                            new this.float32ArrayConstructor(6) :
-                            new Array(6));
+        this.testExtents = this.md.aabbBuildEmpty();
         this.externalNodesStack = [];
     }
 
