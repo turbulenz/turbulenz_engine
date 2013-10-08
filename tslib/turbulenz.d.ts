@@ -1283,18 +1283,19 @@ interface TurbulenzRequestCallback
 
 interface TurbulenzEngine
 {
-    version            : string;
-    time               : number;
+    version              : string;
+    time                 : number;
 
-    onload             : { (engine: TurbulenzEngine): void; };
-    onunload           : { (): void; };
-    onerror            : { (msg: string): void; };
-    onwarning          : { (msg: string): void; };
+    onload               : { (engine: TurbulenzEngine): void; };
+    onunload             : { (): void; };
+    onerror              : { (msg: string): void; };
+    onwarning            : { (msg: string): void; };
+    onperformancewarning : { (msg: string): void; };
 
-    canvas?            : any;
-    VMath?             : any;
+    canvas?              : any;
+    VMath?               : any;
 
-    encryptionEnabled? : boolean;
+    encryptionEnabled?   : boolean;
 
     // Methods
 

@@ -174,7 +174,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(2);
         }
-        debug.assert(debug.isVec2(src));
+        debug.assert(2 == src.length);
         debug.assert(debug.isVec2(dst));
         dst[0] = src[0];
         dst[1] = src[1];
@@ -5803,6 +5803,7 @@ if (typeof Float32Array !== "undefined")
     VMath.FLOAT_MAX = testVector[0];
     VMathArrayConstructor = Float32Array;
 }
+VMath.arrayConstructor = VMathArrayConstructor;
 
 // If the plugin has a 'getNativeMathDevice' method then VMath should
 // replace the standard MathDevice.

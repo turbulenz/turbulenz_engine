@@ -300,6 +300,10 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         console.warn(msg);
     }
 
+    onperformancewarning(msg)
+    {
+    }
+
     getSystemInfo()
     {
         return this.systemInfo;

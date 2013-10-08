@@ -30,6 +30,11 @@ New Features
 * - Added a :ref:`additiveMatrix <textureeffects_additivematrix>` method to the TextureEffects object which allows transforming of the red, green and blue color channels.
     The ``additiveMatrix`` function is used in the textureeffects sample with new red, green and blue additive sliders.
 
+* - Added the :ref:`TurbulenzEngine.onperformancewarning
+  <turbulenzengine_onperformancewarning>` callback to code that is
+  likely to be sub-optimal on lower-powered devices.  In particular,
+  developers planning to target mobile devices should consider using
+  this to avoid wasting memory and execution resources.
 
 Changes
 -------
@@ -40,6 +45,15 @@ Changes
 * The pacakaged Turbulenz Python tools have been updated to version 1.0.3 for a detailed list of changes see
   `turbulenz_tools changelog <https://github.com/turbulenz/turbulenz_tools/blob/1.0.3/CHANGES.rst>`__
 
+* All native-implemented math types (Vector3, Vector4, Matrix33, etc)
+  have been replaced with Float32Arrays when the native implemented
+  MathDevice is used.  Note that for most configurations, the
+  MathDevice is simply the JavaScript global VMath object, which
+  produces the fastest code when the JIT compilation is available.
+  For those platforms (such as iOS) where JIT compilation is not
+  available, the native implemented MathDevice results in faster
+  execution.  This change greatly improves compatibility of the two
+  implementations, and improves performance in the non-JIT case.
 
 Fixed
 -----

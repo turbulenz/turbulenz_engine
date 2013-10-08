@@ -14,6 +14,12 @@ interface IErrorStackResult
     stack: string;
 }
 
+declare var VMathArrayConstructor : Function;
+declare var TurbulenzEngine :
+{
+    onperformancewarning : { (msg: string):void; };
+}
+
 // The debug object is only available in debug modes.  The build tools
 // will automatically include it or prevent it from being included
 // based on the build mode.
@@ -40,6 +46,10 @@ interface TurbulenzDebug
     log(msg: string): void;
 
     isNumber(s: any): boolean;
+
+    /// Optionally call the performance warning callback
+    isMathType(v): boolean;
+
     isVec2(v): boolean;
     isVec3(v): boolean;
     isVec4(v): boolean;
@@ -127,53 +137,70 @@ var debug : TurbulenzDebug = {
         return "number" === typeof s;
     },
 
+    isMathType : function isMathTypeFn(v)
+    {
+        if (v instanceof VMathArrayConstructor)
+        {
+            return true;
+        }
+
+        if (TurbulenzEngine.onperformancewarning)
+        {
+            TurbulenzEngine.onperformancewarning(
+                "Object is not of type " + VMathArrayConstructor.toString() +
+                ".  If this message appears frequently, performance of your" +
+                " game may be affected.");
+        }
+        return false;
+    },
+
     isVec2 : function debugIsVec2Fn(v)
     {
-        return (2 === v.length);
+        return this.isMathType(v) && (2 === v.length);
     },
 
     isVec3 : function debugIsVec3Fn(v)
     {
-        return (3 === v.length);
+        return this.isMathType(v) && (3 === v.length);
     },
 
     isVec4 : function debugIsVec4Fn(v)
     {
-        return (4 === v.length);
+        return this.isMathType(v) && (4 === v.length);
     },
 
     isAABB : function debugIsAABBFn(v)
     {
-        return (6 === v.length);
+        return this.isMathType(v) && (6 === v.length);
     },
 
     isQuat : function debugIsQuatFn(v)
     {
-        return (4 === v.length);
+        return this.isMathType(v) && (4 === v.length);
     },
 
     isMtx33 : function debugIsMtx33Fn(v)
     {
-        return (9 === v.length);
+        return this.isMathType(v) && (9 === v.length);
     },
 
     isMtx43 : function debugIsMtx43Fn(v)
     {
-        return (12 === v.length);
+        return this.isMathType(v) && (12 === v.length);
     },
 
     isMtx34 : function debugIsMtx34Fn(v)
     {
-        return (12 === v.length);
+        return this.isMathType(v) && (12 === v.length);
     },
 
     isMtx44 : function debugIsMtx44Fn(v)
     {
-        return (16 === v.length);
+        return this.isMathType(v) && (16 === v.length);
     },
 
     isQuatPos : function debugIsQuatPos(v)
     {
-        return (7 === v.length);
+        return this.isMathType(v) && (7 === v.length);
     }
 };
