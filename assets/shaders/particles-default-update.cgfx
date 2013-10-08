@@ -38,7 +38,7 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
         float2 vt = inParticle + float2(1.0 * invRegionSize.x, 0);
         float v = decodeSignedFloat(create ? tex2D(creationState, vt * creationScale)
                                            : tex2D(previousState, particleRegionMap(vt)));
-        return encodeSignedFloat(p + (v * timeStep) + shift[slot.y]);
+        return encodeSignedFloat(p + (v * timeStep * maxSpeed / halfExtents[slot.y]) + shift[slot.y]);
     }
     else if (slot.x <= 2)
     {
@@ -62,10 +62,8 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
 
             a += getAccelerationNoise(noiseUV, animTime)[slot.y];
         }
-        a /= halfExtents[slot.y];
-
         float d = 1.0 - min(1.0, timeStep * drag);
-        return encodeSignedFloat(d * (v + a * timeStep));
+        return encodeSignedFloat(d * (v + a * timeStep / maxSpeed));
     }
     else
     {

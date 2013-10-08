@@ -139,6 +139,7 @@ Create a new particle system.
         graphicsDevice      : graphicsDevice,
         center              : [0, 0, 0],
         halfExtents         : [1, 1, 1],
+        maxSpeed            : 10,
         maxParticles        : 1024,
         zSorted             : true,
         maxSortSteps        : null,
@@ -163,7 +164,8 @@ Create a new particle system.
 ``halfExtents``
     The local half-extents of the particle system. Together with `center` this defines a region of spcae in local coordinates which absolutely contains the particle system. Particles will not be able to escape the extents, and the extents will be used for `ParticleRenderables` for `Scene` culling.
 
-    The `velocity` of particles in the system will also be bound by the `halfExtents`.
+``maxSpeed```
+    The maximum speed achievable for particles in the system, required to normalize velocities.
 
 ``maxParticles``
     The maximum amount of particles that can exist in the system. This value is limited to `65536` for any particle system so that higher data compression can be achieved both CPU, and GPU side.
@@ -531,28 +533,24 @@ Whether views onto this system will be z-sorted.
 .. note :: Read Only
 
 .. index::
-    pair: ParticleSystem; updater
+    pair: ParticleSystem; updateParameters
 
-`updater`
----------
+`updateParameters`
+------------------
 
 **Summary**
 
-The `ParticleUpdater` for this system. Use this to set updater specific technique parameters.
-
-.. note :: Read Only
+The `TechniqueParameters` object encapsulating all parameters defined for the specific updater, and by the system for updating the particle system. You may use this object to change the specific updater parameters exposed, but you should not make changes to those defined by the `ParticleSystem` itself.
 
 .. index::
-    pair: ParticleSystem; renderer
+    pair: ParticleSystem; renderParameters
 
-`renderer`
-----------
+`renderParameters`
+------------------
 
 **Summary**
 
-The `ParticleRenderer` for this system. Use this to set renderer specific technique parameters.
-
-.. note :: Read Only
+The `TechniqueParameters` object encapsulating all parameters defined for the specific renderer, and by the system for updating the particle system. You may use this object to change the specific renderer parameters exposed, but you should not make changes to those defined by the `ParticleSystem` itself.
 
 .. index::
     pair: ParticleSystem; PARTICLE_
@@ -585,6 +583,8 @@ The ParticleUpdater Interface
 
 Encapsulates a replaceble element of a particle system responsible for updating the states of particles on both the CPU and GPU and aiding emitters in retrospective creation of particles through prediction.
 
+This object may be shared amongst many `ParticleSystems`.
+
 Properties
 ==========
 
@@ -602,14 +602,15 @@ The `Technique` to be used for updating particle states on the GPU.
 `parameters`
 ------------
 
-The `TechniqueParameters` object that will be used to set updater specific shader parameters.
+An object defining the extra parameters that are required by this updater with their default values.
 
-The `ParticleSystem` will set the following additional reserved fields defined in `particles-common.cgh`:
+The `ParticleSystem` will produce a copy of this object, adding the following additional fields defined in `particles-common.cgh` that should not be present in this object, but will always be present for use in `update` and `predict` calls.
 
 * `timeStep`
 * `lifeStep`
 * `center`
 * `halfExtents`
+* `maxSpeed`
 * `shift`
 * `previousState`
 * `creationState`
@@ -638,6 +639,9 @@ As this is such a low-level element of the particle system, there is little in t
 .. note :: Method is optional, if not present then tracking of particles on the CPU for the ParticleSystem will be disabled.
 
 **Parameters**
+
+``parameters``
+    A `TechniqueParameters` object containing all parameters defined by the system, and defined for this update with values to be used in the update process.
 
 ``dataF``
     A `Float32Array` containing the state of all particles in the system.
@@ -673,6 +677,9 @@ This function should only ever be called for particles, who at the end of the si
 
 **Parameters**
 
+``parameters``
+    A `TechniqueParameters` object containing all parameters defined by the system, and defined for this update with values to be used in the prediction process.
+
 ``position``
     A `Vector3` object holding the position for the particle at its creation. This object should be updated with the predicted position.
 
@@ -699,6 +706,8 @@ Encapsulates a replaceable element of a particle system responsible for renderin
 
 (TODO: CPU Fallback will require extra fields and logic to be provided by a renderer most likely as the present vertex shader logic would need to be replicated on the CPU wherever it relies on texture fetches. Additinoally there would be a second technique used for the CPU fallback which would have a different vertex shader at the very least).
 
+This object may be shared amongst many `ParticleSystems`.
+
 Properties
 ==========
 
@@ -716,9 +725,9 @@ The `Technique` to be used for rendering particle states on the GPU.
 `parameters`
 ------------
 
-The `TechniqueParameters` object that will be used to set renderer specific shader parameters.
+An object definining the parameters required by this specific renderer with their default values.
 
-The `ParticleSystem` and `ParticleView` will set the following additional reserved fields defined in `particles-common.cgh`:
+The `ParticleSystem` will produce a copy of this object with additional fields added defined in `particles-common.cgh` which should not be used by this object.
 
 * `center`
 * `halfExtents`

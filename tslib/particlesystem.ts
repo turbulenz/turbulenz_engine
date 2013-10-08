@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2013 Turbulenz Limited
 
 /*global Float32Array: false*/
 /*global Uint8Array: false*/
@@ -1389,13 +1389,24 @@ class BuildError
 }
 
 //
-// Type checking (private helper of ParticleBuilder)
+// Type checking and utilities.
 //
 // TODO, make private to this moduole somewhoe?
 class Types {
+    static arrayTypes = [
+        "[object Array]",
+        "[object Float64Array]",
+        "[object Float32Array]",
+        "[object Int32Array]",
+        "[object Int16Array]",
+        "[object Int8Array]",
+        "[object Uint32Array]",
+        "[object Uint16Array]",
+        "[object Uint8Array]"
+    ];
     static isArray(x: any): boolean
     {
-        return Object.prototype.toString.call(x) === "[object Array]";
+        return Types.arrayTypes.indexOf(Object.prototype.toString.call(x)) !== -1;
     }
     static isNumber(x: any): boolean
     {
@@ -1419,42 +1430,57 @@ class Types {
         return x === null || x === undefined;
     }
 
-    static checkAssignment(error: BuildError, objx: string, objt: string, value: Array<number>, type: any): void
+    // Deep copy an arbitrary JSON compatible value from 'from' into 'to', returning 'to'
+    // to is permitted to be left undefined, otherwise fields are appended/pushed into
+    // to
+    //
+    // setting json to false, means object types will not be deep-copied to avoid
+    // trying to do things like deep-copying Texture's when not copying JSON objects.
+    static copy(from: any, to?: any, json = true)
     {
-        if (type === null)
+        if (Types.isArray(from))
         {
-            return;
+            return Types.copyElements(from, to, json);
         }
-        switch (type)
+        else if (Types.isObject(from))
         {
-            case "tFloat":
-                if (value.length !== 1)
-                {
-                    error.error("Cannot type " + BuildError.wrap(value) + " with type float for " +
-                                objt + " in " + objx);
-                }
-                break;
-            case "tFloat2":
-                if (value.length !== 2)
-                {
-                    error.error("Cannot type " + BuildError.wrap(value) + " with type float2 for " +
-                                objt + " in " + objx);
-                }
-                break;
-            case "tFloat4":
-                if (value.length !== 4)
-                {
-                    error.error("Cannot type " + BuildError.wrap(value) + " with type float4 for " +
-                                objt + " in " + objx);
-                }
-                break;
-            default: // tTexture(n)
-                if (value.length !== 1)
-                {
-                    error.error("Cannot type " + BuildError.wrap(value) + " with type texture" + <number>type +
-                                " for " + objt + " in " + objx);
-                }
+            return json ? Types.copyFields(from, to) : from;
         }
+        else
+        {
+            return from;
+        }
+    }
+
+    // As with copyFields, but for Arrays
+    static copyElements(from: Array<any>, to: Array<any>, json = true)
+    {
+        if (!from) return;
+        if (!to) to = [];
+        var i;
+        var count = from.length;
+        for (i = 0; i < count; i += 1)
+        {
+            to[i] = Types.copy(from[i], to[i], json);
+        }
+        return to;
+    }
+
+    // Copy fields of from object, onto the to object.
+    // Result is an object with all the fields of to,
+    // and with all the fields of from with values copied from from.
+    // in a deep-copy.
+    static copyFields(from: { [name: string]: any }, to: { [name: string]: any }, json = true)
+    {
+        if (!from) return to;
+        if (!to) to = {};
+        for (var f in from) {
+            if (from.hasOwnProperty(f))
+            {
+                to[f] = Types.copy(from[f], to[f], json);
+            }
+        }
+        return to;
     }
 }
 
@@ -2407,12 +2433,12 @@ class ParticleBuilder
     }
 
     static compile(params: {
-        graphicsDevice: GraphicsDevice;
-        particles     : Array<any>;
-        system?       : any;
-        uvMap?        : { [name: string]: Array<Array<number>> };
-        tweaks?       : Array<{ [name: string]: any }>; // any = number | Array<number>
-        failOnWarnings: boolean;
+        graphicsDevice : GraphicsDevice;
+        particles      : Array<any>;
+        system?        : any;
+        uvMap?         : { [name: string]: Array<Array<number>> };
+        tweaks?        : Array<{ [name: string]: any }>; // any = number | Array<number>
+        failOnWarnings?: boolean;
     }): ParticleSystemAnimation
     {
         var graphicsDevice = params.graphicsDevice;
@@ -2574,8 +2600,8 @@ class ParticleBuilder
                     {
                         tweak[f] = [tweak[f]];
                     }
-                    Types.checkAssignment(error, "particle " + parts[i].name, "tweak '" + f + "'",
-                                          tweak[f], excludeTypes[ind >>> 1]);
+                    ParticleBuilder.checkAssignment(error, "particle " + parts[i].name, "tweak '" + f + "'",
+                                                    tweak[f], excludeTypes[ind >>> 1]);
                 }
             }
 
@@ -2655,6 +2681,44 @@ class ParticleBuilder
             particle: particleDefns,
             attribute: minDelta
         };
+    }
+
+    private static checkAssignment(error: BuildError, objx: string, objt: string, value: Array<number>, type: any): void
+    {
+        if (type === null)
+        {
+            return;
+        }
+        switch (type)
+        {
+            case "tFloat":
+                if (value.length !== 1)
+                {
+                    error.error("Cannot type " + BuildError.wrap(value) + " with type float for " +
+                                objt + " in " + objx);
+                }
+                break;
+            case "tFloat2":
+                if (value.length !== 2)
+                {
+                    error.error("Cannot type " + BuildError.wrap(value) + " with type float2 for " +
+                                objt + " in " + objx);
+                }
+                break;
+            case "tFloat4":
+                if (value.length !== 4)
+                {
+                    error.error("Cannot type " + BuildError.wrap(value) + " with type float4 for " +
+                                objt + " in " + objx);
+                }
+                break;
+            default: // tTexture(n)
+                if (value.length !== 1)
+                {
+                    error.error("Cannot type " + BuildError.wrap(value) + " with type texture" + <number>type +
+                                " for " + objt + " in " + objx);
+                }
+        }
     }
 
     private static compileData(system: Array<Attribute>, width: number, particles: Array<Particle>): Uint8Array
@@ -3142,7 +3206,7 @@ class ParticleBuilder
 
             time = 0.0;
             var granularity = 1 / particle.fps;
-            while (time <= lastTime)
+            while (disc.length === 0 || disc[disc.length - 1].time < lastTime)
             {
                 // No longer care about interpolators being defined.
                 chunk = {
@@ -3161,12 +3225,6 @@ class ParticleBuilder
 
                 disc.push(chunk);
                 time += granularity;
-            }
-
-            // Depending on granularity, may have missed last snapshot.
-            if (disc[disc.length - 1].time < snaps[seqLength - 1].time)
-            {
-                disc.push(snaps[seqLength - 1]);
             }
         }
         particle.animation = disc;
@@ -3212,8 +3270,8 @@ class ParticleBuilder
                 else
                 {
                     var value = attributes[attr];
-                    Types.checkAssignment(error, "particle " + particle.name, "attribute '" + attr + "'",
-                                          value, sysAttr.type);
+                    ParticleBuilder.checkAssignment(error, "particle " + particle.name, "attribute '" + attr + "'",
+                                                    value, sysAttr.type);
                 }
             }
         }
@@ -3581,7 +3639,7 @@ class ParticleGeometry
         var maxParticles   = params.maxParticles;
         var template       = params.template;
         var templateLength = template.length;
-        var particleData   = new Uint16Array(maxParticles * params.stride);
+        var particleData   = new Uint16Array(maxParticles * templateLength);
 
         var i;
         for (i = 0; i < maxParticles; i += 1)
@@ -3629,12 +3687,14 @@ class ParticleGeometry
 interface ParticleUpdater
 {
     technique : Technique;
-    parameters: TechniqueParameters;
-    update?(data      : Float32Array,
+    parameters: { [name: string]: any };
+    update?(parameters: TechniqueParameters,
+            data      : Float32Array,
             dataI     : Uint32Array,
             tracked   : Uint16Array,
             numTracked: number): number;
-    predict?(position  : FloatArray,
+    predict?(parameters: TechniqueParameters,
+             position  : FloatArray,
              velocity  : FloatArray,
              userData  : number,
              time      : number): number;
@@ -3642,14 +3702,15 @@ interface ParticleUpdater
 class DefaultParticleUpdater
 {
     technique: Technique;
-    parameters: TechniqueParameters;
+    parameters: { [name: string]: any };
     constructor() {}
 
     predict(
-        pos     : FloatArray,
-        vel     : FloatArray,
-        userData: number,
-        time    : number
+        parameters: TechniqueParameters,
+        pos       : FloatArray,
+        vel       : FloatArray,
+        userData  : number,
+        time      : number
     ): number
     {
         // A rough approximation only!
@@ -3675,13 +3736,12 @@ class DefaultParticleUpdater
         // we note that using integration to compute position estimate is not strictly
         // correct due to euler integration used in actual simulation.
 
-        var params = this.parameters;
         var h = 1/60; // a reasonable guess at time step I would say in ideal circumstances.
-        var acceleration: FloatArray = params["acceleration"];
+        var acceleration: FloatArray = parameters["acceleration"];
         var ax = acceleration[0];
         var ay = acceleration[1];
         var az = acceleration[2];
-        var drag = (1 - Math.min(1, params["drag"] * h));
+        var drag = (1 - Math.min(1, parameters["drag"] * h));
         if (drag === 1)
         {
             pos[0] += time * (vel[0] + (time * 0.5 * ax));
@@ -3710,24 +3770,29 @@ class DefaultParticleUpdater
     }
 
     update(
+        parameters: TechniqueParameters,
         dataF     : Float32Array,
         dataI     : Uint32Array,
         tracked   : Uint16Array,
         numTracked: number
     ) {
-        var params = this.parameters;
-        var timeStep    : number     = params["timeStep"];
-        var lifeStep    : number     = params["lifeStep"];
-        var acceleration: FloatArray = params["acceleration"];
-        var drag        : number     = params["drag"];
-        var halfExtents : FloatArray = params["halfExtents"];
-        var shift       : FloatArray = params["shift"];
+        var timeStep    : number     = parameters["timeStep"];
+        var lifeStep    : number     = parameters["lifeStep"];
+        var acceleration: FloatArray = parameters["acceleration"];
+        var drag        : number     = parameters["drag"];
+        var halfExtents : FloatArray = parameters["halfExtents"];
+        var shift       : FloatArray = parameters["shift"];
+        var maxSpeed    : number     = parameters["maxSpeed"];
 
         drag = (1 - Math.min(1, timeStep * drag));
 
-        var ax = acceleration[0] / halfExtents[0];
-        var ay = acceleration[1] / halfExtents[1];
-        var az = acceleration[2] / halfExtents[2];
+        var h0 = maxSpeed / halfExtents[0];
+        var h1 = maxSpeed / halfExtents[1];
+        var h2 = maxSpeed / halfExtents[2];
+
+        var ax = acceleration[0] / maxSpeed;
+        var ay = acceleration[1] / maxSpeed;
+        var az = acceleration[2] / maxSpeed;
 
         var sx = shift[0];
         var sy = shift[1];
@@ -3762,9 +3827,9 @@ class DefaultParticleUpdater
             var vz = dataF[index + VEL + 2];
 
             // Update position
-            var x = dataF[index + POS]     + (vx * timeStep) + sx;
-            var y = dataF[index + POS + 1] + (vy * timeStep) + sy;
-            var z = dataF[index + POS + 2] + (vz * timeStep) + sz;
+            var x = dataF[index + POS]     + (vx * timeStep * h0) + sx;
+            var y = dataF[index + POS + 1] + (vy * timeStep * h1) + sy;
+            var z = dataF[index + POS + 2] + (vz * timeStep * h2) + sz;
             dataF[index + POS]     = (x < -1 ? -1 : x > 1 ? 1 : x);
             dataF[index + POS + 1] = (y < -1 ? -1 : y > 1 ? 1 : y);
             dataF[index + POS + 2] = (z < -1 ? -1 : z > 1 ? 1 : z);
@@ -3791,7 +3856,7 @@ class DefaultParticleUpdater
 interface ParticleRenderer
 {
     technique : Technique;
-    parameters: TechniqueParameters;
+    parameters: { [name: string]: any };
     createGeometry(graphicsDevice: GraphicsDevice,
                    maxParticles  : number,
                    shared?       : boolean): ParticleGeometry;
@@ -3803,7 +3868,7 @@ interface ParticleRenderer
 class DefaultParticleRenderer
 {
     technique : Technique;
-    parameters: TechniqueParameters;
+    parameters: { [name: string]: any };
     createGeometry(
         graphicsDevice: GraphicsDevice,
         maxParticles  : number,
@@ -3855,22 +3920,22 @@ class ParticleSystem
         blendMode?    : string;
     }): ParticleRenderer
     {
-        var shader = params.shaderManager.get("particles-default-render.cgfx");
+        var shader = params.shaderManager.get("shaders/particles-default-render.cgfx");
         var technique = shader.getTechnique(params.blendMode || "alpha");
-        var parameters = params.graphicsDevice.createTechniqueParameters({
-            animationScale       : VMath.v4BuildZero(),
-            animationRotation    : VMath.v2BuildZero(),
+        var parameters = {
+            animationScale       : new Float32Array(4),
+            animationRotation    : new Float32Array(2),
             texture              : null,
             noiseTexture         : null,
-            randomizedOrientation: VMath.v2BuildZero(),
-            randomizedScale      : VMath.v2BuildZero(),
+            randomizedOrientation: new Float32Array(2),
+            randomizedScale      : new Float32Array(2),
             randomizedRotation   : 0,
             randomizedAlpha      : 0,
             animatedOrientation  : false,
             animatedScale        : false,
             animatedRotation     : false,
             animatedAlpha        : false
-        });
+        };
 
         var ret = new DefaultParticleRenderer();
         ret.technique  = technique;
@@ -3883,14 +3948,15 @@ class ParticleSystem
         shaderManager : ShaderManager;
     }): ParticleUpdater
     {
-        var shader = params.shaderManager.get("particles-default-update.cgfx");
+        var shader = params.shaderManager.get("shaders/particles-default-update.cgfx");
         var technique = shader.getTechnique("update");
-        var parameters = params.graphicsDevice.createTechniqueParameters({
-            acceleration          : VMath.v3BuildZero(),
+        var parameters = {
+            acceleration          : new Float32Array(3),
             drag                  : 0,
             noiseTexture          : null,
-            randomizedAcceleration: VMath.v3BuildZero()
-        });
+            randomizedAcceleration: new Float32Array(3)
+        };
+
         var ret = new DefaultParticleUpdater();
         ret.technique = technique;
         ret.parameters = parameters;
@@ -3971,6 +4037,7 @@ class ParticleSystem
     halfExtents: FloatArray;
     private invHalfExtents: FloatArray;
 
+    maxSpeed    : number;
     maxParticles: number;
     zSorted     : boolean;
     maxSortSteps: number;
@@ -4005,6 +4072,9 @@ class ParticleSystem
     updater : ParticleUpdater;
     renderer: ParticleRenderer;
     views   : Array<ParticleView>;
+
+    updateParameters: TechniqueParameters;
+    renderParameters: TechniqueParameters;
 
     // CPU particle states
     trackingEnabled: boolean;
@@ -4203,6 +4273,7 @@ class ParticleSystem
         center?             : FloatArray;
         halfExtents         : FloatArray;
 
+        maxSpeed            : number;
         maxParticles        : number;
         zSorted?            : boolean;
         maxSortSteps?       : number;
@@ -4251,6 +4322,7 @@ class ParticleSystem
         ret.maxParticles  = params.maxParticles;
         ret.maxMergeStage = deps.maxMergeStage;
         ret.maxSortSteps  = (params.maxSortSteps === undefined ? 10000 : params.maxSortSteps);
+        ret.maxSpeed      = params.maxSpeed;
 
         ret.geometry = params.geometry;
         if (!ret.geometry)
@@ -4265,7 +4337,7 @@ class ParticleSystem
         ret.updater = params.updater;
         ret.views = [];
 
-        ret.trackingEnabled = params.trackingEnabled && (ret.updater !== undefined);
+        ret.trackingEnabled = (params.trackingEnabled === true) && (ret.updater !== undefined);
         if (ret.trackingEnabled)
         {
             ret.numTracked = 0;
@@ -4274,25 +4346,27 @@ class ParticleSystem
             ret.cpuU32 = new Uint32Array(ret.cpuF32.buffer);
         }
 
-        // Add system defined parameters.
-        var parameters = ret.updater.parameters;
+        // Add system defined parameters
+        var parameters = Types.copyFields(ret.updater.parameters, null, false);
         parameters["lifeStep"]       = 0.0;
         parameters["timeStep"]       = 0.0;
         parameters["shift"]          = VMath.v3BuildZero();
         parameters["center"]         = ret.center;
         parameters["halfExtents"]    = ret.halfExtents;
+        parameters["maxSpeed"]       = params.maxSpeed;
         parameters["previousState"]  = null;
         parameters["creationState"]  = null;
-        parameters["creationScale"]  = VMath.v3BuildZero();
+        parameters["creationScale"]  = VMath.v2BuildZero();
         parameters["textureSize"]    = VMath.v2BuildZero();
         parameters["invTextureSize"] = VMath.v2BuildZero();
         parameters["regionSize"]     = VMath.v2BuildZero();
         parameters["invRegionSize"]  = VMath.v2BuildZero();
         parameters["regionPos"]      = VMath.v2BuildZero();
+        ret.updateParameters = ret.graphicsDevice.createTechniqueParameters(parameters);
 
         // Add system defined parameters that are constant for all views onto the system.
         // (mapping table / transformation parameters are per-view)
-        parameters = ret.renderer.parameters;
+        parameters = Types.copyFields(ret.renderer.parameters, null, false);
         parameters["center"]         = ret.center;
         parameters["halfExtents"]    = ret.halfExtents;
         parameters["zSorted"]        = ret.zSorted;
@@ -4306,6 +4380,7 @@ class ParticleSystem
         parameters["regionSize"]     = VMath.v2BuildZero();
         parameters["invRegionSize"]  = VMath.v2BuildZero();
         parameters["regionPos"]      = VMath.v2BuildZero();
+        ret.renderParameters = ret.graphicsDevice.createTechniqueParameters(parameters);
 
         var sharedRenderContext = params.sharedRenderContext;
         ret.renderContextShared = <boolean><any>(sharedRenderContext);
@@ -4387,14 +4462,14 @@ class ParticleSystem
         var irs = VMath.v2Reciprocal(rs);
 
         var parameters;
-        parameters = this.updater.parameters;
+        parameters = this.updateParameters;
         VMath.v2Copy(ts,  parameters["textureSize"]);
         VMath.v2Copy(its, parameters["invTextureSize"]);
         VMath.v2Copy(rs,  parameters["regionSize"]);
         VMath.v2Copy(irs, parameters["invRegionSize"]);
         VMath.v2Copy(rp,  parameters["regionPos"]);
 
-        parameters = this.renderer.parameters;
+        parameters = this.renderParameters;
         VMath.v2Copy(ts,  parameters["textureSize"]);
         VMath.v2Copy(its, parameters["invTextureSize"]);
         VMath.v2Copy(rs,  parameters["regionSize"]);
@@ -4448,9 +4523,10 @@ class ParticleSystem
         var posy = (position[1] - center[1]) * invHalfExtents[1];
         var posz = (position[2] - center[2]) * invHalfExtents[2];
 
-        var velx = velocity[0] * invHalfExtents[0];
-        var vely = velocity[1] * invHalfExtents[1];
-        var velz = velocity[2] * invHalfExtents[2];
+        var im = 1 / this.maxSpeed;
+        var velx = velocity[0] * im;
+        var vely = velocity[1] * im;
+        var velz = velocity[2] * im;
 
         var encodedLife  = encodeUnsignedFloat2xy(normalizedLife, normalizedLife);
         var encodedRange = encodeUnsignedFloat2xy(range[1], range[1] - range[0]);
@@ -4668,9 +4744,10 @@ class ParticleSystem
         var velocity = params.velocity;
         if (velocity !== undefined)
         {
-            x = velocity[0] * invHalfExtents[0];
-            y = velocity[1] * invHalfExtents[1];
-            z = velocity[2] * invHalfExtents[2];
+            var im = 1 / this.maxSpeed;
+            x = velocity[0] * im;
+            y = velocity[1] * im;
+            z = velocity[2] * im;
             x = (x < -1 ? -1 : x > 1 ? 1 : x);
             y = (y < -1 ? -1 : y > 1 ? 1 : y);
             z = (z < -1 ? -1 : z > 1 ? 1 : z);
@@ -4786,23 +4863,16 @@ class ParticleSystem
         ParticleSystem.dispatchCreated(this.particleSize);
 
         var updater = this.updater;
-        var parameters = updater.parameters;
+        var parameters = this.updateParameters;
         var lifeStep = parameters["lifeStep"] = deltaTime / this.maxLifeTime;
         var timeStep = parameters["timeStep"] = deltaTime;
         parameters["creationState"] = ParticleSystem.createdTexture;
 
         var uShift: FloatArray = parameters["shift"];
-        if (shift)
-        {
-            var invHalfExtents = this.invHalfExtents;
-            uShift[0] = shift[0] * invHalfExtents[0];
-            uShift[1] = shift[1] * invHalfExtents[1];
-            uShift[2] = shift[2] * invHalfExtents[2];
-        }
-        else
-        {
-            uShift[0] = uShift[1] = uShift[2] = 0;
-        }
+        var invHalfExtents = this.invHalfExtents;
+        uShift[0] = shift[0] * invHalfExtents[0];
+        uShift[1] = shift[1] * invHalfExtents[1];
+        uShift[2] = shift[2] * invHalfExtents[2];
 
         var gd = this.graphicsDevice;
         var targets = this.stateContext.renderTargets;
@@ -4820,13 +4890,13 @@ class ParticleSystem
         this.currentState = 1 - this.currentState;
 
         var tex = targets[this.currentState].colorTexture0;
-        parameters = this.renderer.parameters;
+        parameters = this.renderParameters;
         parameters["vParticleState"] = tex;
         parameters["fParticleState"] = tex;
 
         if (this.trackingEnabled)
         {
-            this.numTracked = updater.update(this.cpuF32, this.cpuU32, this.tracked, this.numTracked);
+            this.numTracked = updater.update(this.updateParameters, this.cpuF32, this.cpuU32, this.tracked, this.numTracked);
         }
     }
 
@@ -4852,12 +4922,11 @@ class ParticleSystem
         {
             dst = VMath.v3BuildZero();
         }
-        var halfExtents = this.halfExtents;
         var cpuF = this.cpuF32;
         var cpu = (id * ParticleSystem.PARTICLE_SPAN) + ParticleSystem.PARTICLE_VEL;
-        dst[0] = halfExtents[0] * cpuF[cpu];
-        dst[1] = halfExtents[1] * cpuF[cpu + 1];
-        dst[2] = halfExtents[2] * cpuF[cpu + 2];
+        dst[0] = this.maxSpeed * cpuF[cpu];
+        dst[1] = this.maxSpeed * cpuF[cpu + 1];
+        dst[2] = this.maxSpeed * cpuF[cpu + 2];
         return dst;
     }
 
@@ -4886,7 +4955,7 @@ class ParticleSystem
 
         gd.setStream(geom.vertexBuffer, geom.semantics);
         gd.setTechnique(renderer.technique);
-        gd.setTechniqueParameters(renderer.parameters);
+        gd.setTechniqueParameters(this.renderParameters);
         gd.setTechniqueParameters(view.parameters);
         gd.draw(geom.primitive, geom.particleStride * this.maxParticles, 0);
     }
@@ -4895,6 +4964,28 @@ class ParticleSystem
     {
         // TODO
     }
+}
+
+interface ParticleViewParameters
+{
+    modelView     : FloatArray;
+    projection    : FloatArray;
+    mappingTable  : Texture;
+    mappingSize   : FloatArray;
+    invMappingSize: FloatArray;
+    mappingPos    : FloatArray;
+}
+interface PrepareSortParameters
+{
+    zBound: number;
+}
+interface MergeSortParameters
+{
+    cpass         : number;
+    PmS           : number;
+    twoStage      : number;
+    twoStage_PmS_1: number;
+    mappingTable  : Texture;
 }
 
 class ParticleView
@@ -4908,7 +4999,7 @@ class ParticleView
 
     system: ParticleSystem;
     /*Accessed by ParticleSystem*/
-    /*private*/ parameters: TechniqueParameters;
+    /*private*/ parameters: ParticleViewParameters;
     private mergePass : number = 0;
     private mergeStage: number = 0;
 
@@ -4923,13 +5014,13 @@ class ParticleView
         ret.graphicsDevice = params.graphicsDevice;
 
         // per-view parameters
-        ret.parameters = ret.graphicsDevice.createTechniqueParameters({
-            "modelView"     : VMath.m43BuildIdentity(),
-            "projection"    : VMath.m44BuildIdentity(),
-            "mappingTable"  : null,
-            "mappingSize"   : VMath.v2BuildZero(),
-            "invMappingSize": VMath.v2BuildZero(),
-            "mappingPos"    : VMath.v2BuildZero()
+        ret.parameters = <ParticleViewParameters>ret.graphicsDevice.createTechniqueParameters({
+            modelView     : VMath.m43BuildIdentity(),
+            projection    : VMath.m44BuildIdentity(),
+            mappingTable  : null,
+            mappingSize   : VMath.v2BuildZero(),
+            invMappingSize: VMath.v2BuildZero(),
+            mappingPos    : VMath.v2BuildZero()
         });
 
         var sharedRenderContext = params.sharedRenderContext;
@@ -4956,16 +5047,16 @@ class ParticleView
         var mp  = VMath.v2Build(uv[0] * tex.width, uv[1] * tex.height);
 
         var parameters = this.parameters;
-        VMath.v2Copy(ms,  parameters["mappingSize"]);
-        VMath.v2Copy(ims, parameters["invMappingSize"]);
-        VMath.v2Copy(mp,  parameters["mappingPos"]);
-        parameters["mappingTable"]   = tex;
+        VMath.v2Copy(ms,  parameters.mappingSize);
+        VMath.v2Copy(ims, parameters.invMappingSize);
+        VMath.v2Copy(mp,  parameters.mappingPos);
+        parameters.mappingTable = tex;
     }
 
     private static mergeSortTechnique   : Technique;
     private static prepareSortTechnique : Technique;
-    private static mergeSortParameters  : TechniqueParameters;
-    private static prepareSortParameters: TechniqueParameters;
+    private static mergeSortParameters  : MergeSortParameters;
+    private static prepareSortParameters: PrepareSortParameters;
     private static initSorting(gd: GraphicsDevice)
     {
         if (ParticleView.mergeSortTechnique)
@@ -4979,10 +5070,10 @@ class ParticleView
         ParticleView.prepareSortTechnique = shader.getTechnique("prepare_sort");
         ParticleView.mergeSortTechnique   = shader.getTechnique("sort_pass");
 
-        ParticleView.prepareSortParameters = gd.createTechniqueParameters({
+        ParticleView.prepareSortParameters = <PrepareSortParameters>gd.createTechniqueParameters({
             zBound        : 0
         });
-        ParticleView.mergeSortParameters = gd.createTechniqueParameters({
+        ParticleView.mergeSortParameters = <MergeSortParameters>gd.createTechniqueParameters({
             cpass         : 0,
             PmS           : 0,
             twoStage      : 0,
@@ -5071,21 +5162,21 @@ class ParticleView
         var parameters = this.parameters;
         if (modelView)
         {
-            VMath.m43Copy(modelView, parameters["modelView"]);
+            VMath.m43Copy(modelView, parameters.modelView);
         }
         if (projection)
         {
-            VMath.m44Copy(projection, parameters["projection"]);
+            VMath.m44Copy(projection, parameters.projection);
         }
         if (this.system.zSorted)
         {
             this.sort();
+            this.parameters.mappingTable = this.mappingContext.renderTargets[this.currentMapping].colorTexture0;
         }
     }
 
     render(): void
     {
-        this.parameters["mappingTable"] = this.mappingContext.renderTargets[this.currentMapping].colorTexture0;
         this.system.render(this);
     }
 
@@ -5102,14 +5193,14 @@ class ParticleView
         var targets = this.mappingContext.renderTargets;
         var prepareParameters = ParticleView.prepareSortParameters;
         var abs = Math.abs;
-        var mv = this.parameters["modelView"];
-        prepareParameters["zBound"]       = abs(mv[2]) + abs(mv[5]) + abs(mv[8]);
-        prepareParameters["mappingTable"] = targets[this.currentMapping].colorTexture0;
+        var mv = this.parameters.modelView;
+        prepareParameters.zBound = abs(mv[2]) + abs(mv[5]) + abs(mv[8]);
+        this.parameters.mappingTable = targets[this.currentMapping].colorTexture0;
 
         // PrepareSort pass.
         gd.beginRenderTarget(targets[1 - this.currentMapping]);
         gd.setTechnique(ParticleView.prepareSortTechnique);
-        gd.setTechniqueParameters(this.system.renderer.parameters);
+        gd.setTechniqueParameters(this.system.renderParameters);
         gd.setTechniqueParameters(this.parameters);
         gd.setTechniqueParameters(prepareParameters);
         gd.draw(gd.PRIMITIVE_TRIANGLES, 3, 0);
@@ -5119,7 +5210,7 @@ class ParticleView
         // Sort passes
         var mergeParameters = ParticleView.mergeSortParameters;
         gd.setTechnique(ParticleView.mergeSortTechnique);
-        gd.setTechniqueParameters(this.system.renderer.parameters);
+        gd.setTechniqueParameters(this.system.renderParameters);
         gd.setTechniqueParameters(this.parameters);
 
         var i = this.system.maxSortSteps;
@@ -5128,11 +5219,11 @@ class ParticleView
             i -= 1;
             var pass  = (1 << this.mergePass);
             var stage = (1 << this.mergeStage);
-            mergeParameters["cpass"]          = pass;
-            mergeParameters["PmS"]            = (pass % stage);
-            mergeParameters["twoStage"]       = 2 * stage;
-            mergeParameters["twoStage_PmS_1"] = (2 * stage) - (pass % stage) - 1;
-            mergeParameters["mappingTable"]   = targets[this.currentMapping].colorTexture0;
+            mergeParameters.cpass          = pass;
+            mergeParameters.PmS            = (pass % stage);
+            mergeParameters.twoStage       = 2 * stage;
+            mergeParameters.twoStage_PmS_1 = (2 * stage) - (pass % stage) - 1;
+            mergeParameters.mappingTable   = targets[this.currentMapping].colorTexture0;
 
             gd.beginRenderTarget(targets[1 - this.currentMapping]);
             gd.setTechniqueParameters(mergeParameters);
@@ -5166,9 +5257,10 @@ class ParticleRenderable
     {
         throw "Not supported";
     }
-    clone(): void
+    clone(): ParticleRenderable
     {
         throw "Not supported";
+        return null;
     }
     getCustomWorldExtents(): FloatArray
     {
@@ -5243,9 +5335,7 @@ class ParticleRenderable
     sharedRenderContext: SharedRenderContext;
 
     private static material: Material;
-    constructor() {
-        this.views = [];
-    }
+    constructor() {}
     static create(params: {
         graphicsDevice      : GraphicsDevice;
         passIndex           : number;
@@ -5268,6 +5358,7 @@ class ParticleRenderable
         ret.passIndex = params.passIndex;
         ret.sharedMaterial = material;
         ret.rendererInfo = {};
+        ret.views = [];
         ret.sharedRenderContext = params.sharedRenderContext;
         ret.setSystem(params.system);
         return ret;
@@ -5371,7 +5462,7 @@ class ParticleRenderable
             parameters.primitive = system.geometry.primitive;
             parameters.count     = system.maxParticles * system.geometry.particleStride;
             parameters.userData  = { passIndex: this.passIndex };
-            parameters.setTechniqueParameters(0, system.renderer.parameters);
+            parameters.setTechniqueParameters(0, system.renderParameters);
             parameters.setTechniqueParameters(1, null);
 
             this.drawParameters       = [parameters];
