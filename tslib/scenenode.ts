@@ -42,6 +42,8 @@ class SceneNode
 {
     static version = 1;
 
+    static _tempDirtyNodes: SceneNode[] = [];
+
     name                            : string;
     dynamic                         : boolean;
     disabled                        : boolean;
@@ -440,8 +442,9 @@ class SceneNode
         }
 
         //Notify children
-        var nodes = [this];
-        var numRemainingNodes = nodes.length;
+        var nodes = SceneNode._tempDirtyNodes;
+        nodes[0] = this;
+        var numRemainingNodes = 1;
         var node, index, child;
         do
         {
@@ -738,15 +741,14 @@ class SceneNode
     //
     update(scene)
     {
-        this.updateHelper(this.mathDevice, (scene || this.scene), [this]);
+        var nodes = SceneNode._tempDirtyNodes;
+        nodes[0] = this;
+        SceneNode.updateNodes(this.mathDevice, (scene || this.scene), nodes, 1);
     }
 
-    // TODO: Marked as private, but Scene accesses it
-    // PRIVATE
-    /* private */ updateHelper(mathDevice, scene, nodes)
+    static updateNodes(mathDevice, scene, nodes, numNodes)
     {
         var node, parent, index, worldExtents;
-        var numNodes = nodes.length;
         do
         {
             numNodes -= 1;
@@ -865,10 +867,7 @@ class SceneNode
                 }
             }
 
-            if (node.notifiedParent)
-            {
-                node.notifiedParent = false;
-            }
+            node.notifiedParent = false;
         }
         while (0 < numNodes);
     }
@@ -1621,6 +1620,9 @@ class SceneNode
         }
 
         delete this.scene;
+
+        // Make sure there are no references to any nodes
+        SceneNode._tempDirtyNodes.length = 0;
     }
 
     //

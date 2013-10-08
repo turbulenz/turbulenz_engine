@@ -75,6 +75,7 @@ class Scene
     rootNodesMap: { [name: string]: SceneNode; };
     dirtyRoots: { [name: string]: SceneNode; };
     nodesToUpdate: SceneNode[];
+    numNodesToUpdate: number;
     queryVisibleNodes: SceneNode[];
 
     materials: { [name: string]: Material; };
@@ -250,10 +251,22 @@ class Scene
         {
             delete this.dirtyRoots[name];
 
-            index = this.nodesToUpdate.indexOf(rootNode);
-            if (index !== -1)
+            var numNodesToUpdate = this.numNodesToUpdate;
+            var nodesToUpdate = this.nodesToUpdate;
+            nodesToUpdate.length = numNodesToUpdate; // Clamp to currently used size
+            if (0 < numNodesToUpdate)
             {
-                this.nodesToUpdate.splice(index, 1);
+                index = nodesToUpdate.indexOf(rootNode);
+                if (index !== -1)
+                {
+                    numNodesToUpdate -= 1;
+                    if (index < numNodesToUpdate)
+                    {
+                        nodesToUpdate[index] = nodesToUpdate[numNodesToUpdate];
+                    }
+                    nodesToUpdate[numNodesToUpdate] = null;
+                    this.numNodesToUpdate = numNodesToUpdate;
+                }
             }
         }
 
@@ -2608,7 +2621,9 @@ class Scene
         if (dirtyRoots[name] !== rootNode)
         {
             dirtyRoots[name] = rootNode;
-            this.nodesToUpdate.push(rootNode);
+            var numNodesToUpdate = this.numNodesToUpdate;
+            this.nodesToUpdate[numNodesToUpdate] = rootNode;
+            this.numNodesToUpdate = (numNodesToUpdate + 1);
         }
     }
 
@@ -2617,10 +2632,10 @@ class Scene
     //
     updateNodes()
     {
-        var nodesToUpdate = this.nodesToUpdate;
-        var numNodesToUpdate = nodesToUpdate.length;
+        var numNodesToUpdate = this.numNodesToUpdate;
         if (0 < numNodesToUpdate)
         {
+            var nodesToUpdate = this.nodesToUpdate;
             var dirtyRoots = this.dirtyRoots;
             var n;
             for (n = 0; n < numNodesToUpdate; n += 1)
@@ -2628,9 +2643,9 @@ class Scene
                 dirtyRoots[nodesToUpdate[n].name] = null;
             }
 
-            SceneNode.prototype.updateHelper(this.md, this, nodesToUpdate);
+            SceneNode.updateNodes(this.md, this, nodesToUpdate, numNodesToUpdate);
 
-            nodesToUpdate.length = 0;
+            this.numNodesToUpdate = 0;
         }
     }
 
@@ -2727,7 +2742,7 @@ class Scene
     //
     getExtents()
     {
-        if (0 < this.nodesToUpdate.length)
+        if (0 < this.numNodesToUpdate)
         {
             this.updateNodes();
             this.staticSpatialMap.finalize();
@@ -2963,6 +2978,7 @@ class Scene
         this.rootNodesMap = {};
         this.dirtyRoots = {};
         this.nodesToUpdate = [];
+        this.numNodesToUpdate = 0;
     }
 
     //
