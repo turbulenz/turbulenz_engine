@@ -445,13 +445,30 @@ class Application
                     var otherUser = currentGame.otherUser;
                     if (otherUser)
                     {
+                        var msgText = 'It\'s your turn';
+                        var roundEnd = currentGame.roundEnd;
+                        if (roundEnd)
+                        {
+                            if (roundEnd.winner)
+                            {
+                                msgText = 'You\'ve lost the game';
+                            }
+                            if (roundEnd.forfeit)
+                            {
+                                msgText = 'You\'ve won the game';
+                            }
+                            if (roundEnd.draw)
+                            {
+                                msgText = 'The game is a draw';
+                            }
+                        }
                         this.notificationsManager.sendInstantNotification({
                             key: 'your-turn',
                             msg: {
                                 data: {
                                     dataShareId: this.currentDataShare.id
                                 },
-                                text: 'It\'s your turn'
+                                text: msgText
                             },
                             recipient: otherUser
                         });
