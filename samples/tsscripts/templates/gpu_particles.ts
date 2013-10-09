@@ -119,12 +119,12 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Create particle renderers and updaters
         // and set some defaults before creating any systems.
-        alphaRenderer = DefaultParticleRenderer.create(shaderManager, "alpha");
-        additiveRenderer = DefaultParticleRenderer.create(shaderManager, "additive");
+        alphaRenderer = DefaultParticleRenderer.create(graphicsDevice, shaderManager, "alpha");
+        additiveRenderer = DefaultParticleRenderer.create(graphicsDevice, shaderManager, "additive");
         alphaRenderer.parameters.noiseTexture = textureManager.get("textures/noise.dds");
         additiveRenderer.parameters.noiseTexture = textureManager.get("textures/noise.dds");
 
-        updater = DefaultParticleUpdater.create(shaderManager);
+        updater = DefaultParticleUpdater.create(graphicsDevice, shaderManager);
         updater.parameters.acceleration = [0, -40*120/59, 0];
         updater.parameters.drag = 0.5;
         updater.parameters.noiseTexture = textureManager.get("textures/noise.dds");

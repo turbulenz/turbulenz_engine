@@ -3709,6 +3709,11 @@ class DefaultParticleUpdater
     technique: Technique;
     parameters: { [name: string]: any };
 
+    createUserData(randomizeAcceleration = false, seed = 0)
+    {
+        return ((<any>randomizeAcceleration) << 25) | (seed << 16);
+    }
+
     predict(
         parameters: TechniqueParameters,
         pos       : FloatArray,
@@ -3856,7 +3861,7 @@ class DefaultParticleUpdater
     }
 
     constructor() {}
-    static create(shaderManager: ShaderManager): DefaultParticleUpdater
+    static create(graphicsDevice: GraphicsDevice, shaderManager: ShaderManager): DefaultParticleUpdater
     {
         var shader = shaderManager.get("shaders/particles-default-update.cgfx");
         var ret = new DefaultParticleUpdater();
@@ -3864,7 +3869,7 @@ class DefaultParticleUpdater
         ret.parameters = {
             acceleration          : new Float32Array(3),
             drag                  : 0,
-            noiseTexture          : null,
+            noiseTexture          : ParticleSystem.getDefaultNoiseTexture(graphicsDevice),
             randomizedAcceleration: new Float32Array(3)
         };
         return ret;
@@ -3891,6 +3896,82 @@ class DefaultParticleRenderer
     technique : Technique;
     parameters: { [name: string]: any };
 
+    createUserData(params: {
+        facing?              : string;
+        randomizeOrientation?: boolean;
+        randomizeScale?      : boolean;
+        randomizeRotation?   : boolean;
+        randomizeAlpha?      : boolean;
+        seed?                : number;
+        phi?                 : number;
+        theta?               : number;
+    })
+    {
+        var ret = 0;
+        if (params.facing === "velocity")
+        {
+            ret |= (1 << 30);
+        }
+        if (params.facing === "custom")
+        {
+            ret |= (2 << 30);
+        }
+        ret |= (<any>params.randomizeRotation << 29);
+        ret |= (<any>params.randomizeScale << 28);
+        ret |= (<any>params.randomizeOrientation << 27);
+        ret |= (<any>params.randomizeAlpha << 26);
+        ret |= (params.seed << 16);
+
+        // allow phi/theta to be given as arbitrary angles
+        // mapped to appropriate bounded phi/theta before
+        // eventual mappings to [0,1) ranges.
+        var phiDelta = 0.0;
+        if (params.theta !== undefined)
+        {
+            var theta = (params.theta % (Math.PI * 2));
+            if (theta < 0)
+            {
+                theta += Math.PI * 2;
+            }
+            if (theta > Math.PI)
+            {
+                theta = (Math.PI * 2) - theta;
+                phiDelta = Math.PI;
+            }
+            ret |= TextureEncode.encodeByteUnsignedFloat(theta / Math.PI) << 8;
+        }
+        if (params.phi !== undefined || phiDelta !== 0.0)
+        {
+            var phi = ((params.phi || 0.0) + phiDelta) % (Math.PI * 2);
+            if (phi < 0)
+            {
+                phi += Math.PI * 2;
+            }
+            ret |= TextureEncode.encodeByteUnsignedFloat(phi / (Math.PI * 2));
+        }
+        return ret;
+    }
+
+    setAnimationParameters(
+        system: ParticleSystem,
+        definition: { attribute: { [name: string]: AttributeRange } }
+    ): void
+    {
+        var parameters = system.renderParameters;
+
+        var scale = parameters["animationScale"];
+        var animScale = definition.attribute["scale"];
+        scale[0] = animScale.min[0];
+        scale[1] = animScale.min[1];
+        scale[2] = animScale.delta[0];
+        scale[3] = animScale.delta[1];
+
+        var rotation = parameters["animationRotation"];
+        var animRotation = definition.attribute["rotation"];
+        rotation[0] = animRotation.min[0];
+        rotation[1] = animRotation.delta[0];
+    }
+
     createGeometry(
         graphicsDevice: GraphicsDevice,
         maxParticles  : number,
@@ -3911,7 +3992,11 @@ class DefaultParticleRenderer
     }
 
     constructor() {}
-    static create(shaderManager: ShaderManager, blendMode = "alpha"): DefaultParticleRenderer
+    static create(
+        graphicsDevice: GraphicsDevice,
+        shaderManager : ShaderManager,
+        blendMode = "alpha"
+    ): DefaultParticleRenderer
     {
         var shader = shaderManager.get("shaders/particles-default-render.cgfx");
         var ret = new DefaultParticleRenderer();
@@ -3920,7 +4005,7 @@ class DefaultParticleRenderer
             animationScale       : new Float32Array(4),
             animationRotation    : new Float32Array(2),
             texture              : null,
-            noiseTexture         : null,
+            noiseTexture         : ParticleSystem.getDefaultNoiseTexture(graphicsDevice),
             randomizedOrientation: new Float32Array(2),
             randomizedScale      : new Float32Array(2),
             randomizedRotation   : 0,
@@ -3958,6 +4043,28 @@ class ParticleSystem
     static PARTICLE_ANIM = 7;
     // offset to access userData in cpu memory
     static PARTICLE_DATA = 8;
+
+    private static defaultNoiseTexture: Texture;
+    static getDefaultNoiseTexture(graphicsDevice: GraphicsDevice): Texture
+    {
+        if (!ParticleSystem.defaultNoiseTexture)
+        {
+            var zero = TextureEncode.encodeByteSignedFloat(0.0);
+            ParticleSystem.defaultNoiseTexture = graphicsDevice.createTexture({
+                name      : "ParticleSystem defaultNoiseTeture",
+                width     : 1,
+                height    : 1,
+                depth     : 1,
+                format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
+                mipmaps   : true,
+                cubemap   : false,
+                renderable: false,
+                dynamic   : false,
+                data      : [zero, zero, zero, zero]
+            });
+        }
+        return ParticleSystem.defaultNoiseTexture;
+    }
 
     private static computeMaxParticleDependents(maxParticles: number, zSorted: boolean)
     {
@@ -4350,6 +4457,7 @@ class ParticleSystem
         parameters["center"]         = ret.center;
         parameters["halfExtents"]    = ret.halfExtents;
         parameters["maxSpeed"]       = params.maxSpeed;
+        parameters["maxLifeTime"]    = params.maxLifeTime;
         parameters["previousState"]  = null;
         parameters["creationState"]  = null;
         parameters["creationScale"]  = VMath.v2BuildZero();
@@ -4368,6 +4476,7 @@ class ParticleSystem
         parameters["zSorted"]        = ret.zSorted;
         parameters["vParticleState"] = null;
         parameters["fParticleState"] = null;
+        parameters["maxLifeTime"]    = params.maxLifeTime;
         parameters["animation"]      = ret.animation;
         parameters["animationSize"]  = (ret.animation ? VMath.v2Build(ret.animation.width, ret.animation.height)
                                                       : VMath.v2BuildOne());

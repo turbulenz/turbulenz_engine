@@ -102,7 +102,8 @@ void vp_render( in float2 inData     : TEXCOORD0,
                out float4 outColor   : COLOR)
 {
     float2 particle = particleRegionMap(getParticle(inData.y, mappingTable));
-    if (getLife(vParticleState, particle, invTextureSize) <= 0)
+    float life = getLife(vParticleState, particle, invTextureSize) * maxLifeTime;
+    if (life <= 0)
     {
         outPosition = float4(0, 0, 0, 0);
         return;
@@ -111,6 +112,7 @@ void vp_render( in float2 inData     : TEXCOORD0,
     float4 data = getData(vParticleState, particle, invTextureSize);
     float animTime = getAnimationTime(vParticleState, particle, invTextureSize,
                                       getLifePair(vParticleState, particle, invTextureSize));
+
     float2 noiseUV = decodeByteUnsignedFloat2(data.z);
 
     float3 pos = (getPosition(vParticleState, particle, invTextureSize) * halfExtents) + center;
@@ -119,14 +121,14 @@ void vp_render( in float2 inData     : TEXCOORD0,
     // random scale pertubation
     if (bitSet(data.w, BIT5))
     {
-        inPosition *= getScaleNoise(noiseUV, animTime);
+        inPosition *= getScaleNoise(noiseUV, life);
     }
 
     float rad = getRotation(animTime);
     // random rotation pertubation
     if (bitSet(data.w, BIT6))
     {
-        rad += getRotationNoise(noiseUV, animTime);
+        rad += getRotationNoise(noiseUV, life);
     }
     float3x3 rot = rotZ(rad);
 
@@ -135,7 +137,7 @@ void vp_render( in float2 inData     : TEXCOORD0,
     // random orientation pertubation
     if (bitSet(data.w, BIT4))
     {
-        float3x3 orient = orientSpherical2(getOrientNoise(noiseUV, animTime));
+        float3x3 orient = orientSpherical2(getOrientNoise(noiseUV, life));
         right = mul(orient, right);
         up = mul(orient, up);
     }
@@ -172,7 +174,7 @@ void vp_render( in float2 inData     : TEXCOORD0,
     // random alpha pertubation
     if (bitSet(data.w, BIT3))
     {
-        outColor.w *= getAlphaNoise(noiseUV, animTime);
+        outColor.w *= getAlphaNoise(noiseUV, life);
     }
 }
 

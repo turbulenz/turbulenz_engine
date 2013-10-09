@@ -9,6 +9,7 @@ float2 regionPos;
 
 float3 halfExtents;
 float3 center;
+float maxLifeTime;
 
 // Specific to updaters.
 // ----------------------------------------------------------------------------

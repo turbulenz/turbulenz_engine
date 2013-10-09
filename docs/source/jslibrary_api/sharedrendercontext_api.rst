@@ -65,7 +65,7 @@ Allocate a new region of the shared textures. May return null in the case that a
     The height of the region required.
 
 ``set``
-    A function to be called whenever the shared textures from which the region was allocated has been resized, and the textures, renderTargets, and uv-rectangle of the region has changed.
+    A function to be called when resizing the shared textures from which the region was allocated, and the uv-rectangle of the region has changed.
 
 The region object returned has the following fields:
 

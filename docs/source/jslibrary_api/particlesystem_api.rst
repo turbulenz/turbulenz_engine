@@ -15,6 +15,23 @@ Methods
 =======
 
 .. index::
+    pair: ParticleSystem; getDefaultNoiseTexture
+
+`getDefaultNoiseTexture`
+------------------------
+
+**Summary**
+
+A default 1x1 procedural noise texture for updaters and renderers, with all channels set to the normalized, signed float representation of `0` specifying no noise is to be applied.
+
+**Syntax** ::
+
+    var texture = ParticleSystem.getDefaultNoiseTexture(graphicsDevice);
+
+``graphicsDevice``
+    The :ref:`GraphicsDevice <graphicsdevice>` object.
+
+.. index::
     pair: ParticleSystem; create
 
 `create`

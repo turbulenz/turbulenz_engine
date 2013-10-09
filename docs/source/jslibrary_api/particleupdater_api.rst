@@ -39,6 +39,7 @@ The :ref:`ParticleSystem <particlesystem>` will produce a copy of this object, a
 * `center`
 * `halfExtents`
 * `maxSpeed`
+* `maxLifeTime`
 * `shift`
 * `previousState`
 * `creationState`
@@ -163,7 +164,10 @@ Create a new `DefaultParticleUpdater` object.
 
 **Syntax** ::
 
-    var updater = DefaultParticleUpdater.create(shaderManager);
+    var updater = DefaultParticleUpdater.create(graphicsDevice, shaderManager);
+
+``graphicsDevice``
+    The :ref:`GraphicsDevice <graphicsdevice>` object.
 
 ``shaderManager``
     The :ref:`ShaderManager <shadermanager>` object, expecting that `shaders/particles-default-updater.cgfx` has been pre-loaded.
@@ -211,7 +215,7 @@ Default value is `[0, 0, 0]`.
     system.updateParameters.acceleration = [0, 1, 2];
 
 .. index::
-    pair: DefaultParticleUpdater: drag
+    pair: DefaultParticleUpdater; drag
 
 `drag`
 ------
@@ -247,7 +251,7 @@ The particles current age will be used to look up an acceleration value in the t
 
 Vectors are extracted from the noise texture based on treating channels as encoded signed floats (As-per `TextureEncode.encodeSignedFloat`).
 
-Default value is a procedural texture defined so that no randomisation will occur.
+Default value is a procedural texture defined so that no randomisation will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
 
 **Syntax** ::
 

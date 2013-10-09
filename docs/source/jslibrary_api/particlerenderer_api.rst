@@ -39,6 +39,7 @@ The :ref:`ParticleSystem <particlesystem>` will produce a copy of this object wi
 * `center`
 * `halfExtents`
 * `projection`
+* `maxLifeTime`
 * `modelView`
 * `textureSize`
 * `invTextureSize`
@@ -139,7 +140,10 @@ Create a `DefaultParticleRenderer` object.
 
 **Syntax** ::
 
-    var renderer = DefaultParticleRenderer.create(shaderManager, alpha);
+    var renderer = DefaultParticleRenderer.create(graphicsDevice, shaderManager, alpha);
+
+``graphicsDevice``
+    The :ref:`GraphicsDevice <graphicsdevice>` object.
 
 ``shaderManager``
     The :ref:`ShaderManager <shadermanager>` object. The shader `particles-default-render.cgfx` must be loaded.
@@ -243,7 +247,7 @@ The particles current age will be used to look up randomised values in the textu
 
 Vectors are extracted from the noise texture based on treating channels as encoded signed floats (As-per `TextureEncode.encodeSignedFloat`).
 
-Default value is a procedural texture defined so that no randomisation will occur.
+Default value is a procedural texture defined so that no randomisation will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
 
 **Syntax** ::
 
