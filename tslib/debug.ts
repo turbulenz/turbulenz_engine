@@ -144,6 +144,9 @@ var debug : TurbulenzDebug = {
             return true;
         }
 
+        // For now, math type errors do not generate a full assert
+        // (hence we return true).  They just trigger the callback.
+
         if (TurbulenzEngine.onperformancewarning)
         {
             TurbulenzEngine.onperformancewarning(
@@ -151,7 +154,8 @@ var debug : TurbulenzDebug = {
                 ".  If this message appears frequently, performance of your" +
                 " game may be affected.");
         }
-        return false;
+
+        return true;
     },
 
     isVec2 : function debugIsVec2Fn(v)
