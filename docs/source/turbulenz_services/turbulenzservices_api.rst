@@ -109,7 +109,7 @@ Create a :ref:`GameSession <gamesession>` object.
     - ``closeExistingSessions`` (Optional) -
       A JavaScript boolean. Defaults to false.
       If the current user is playing the same game in another tab or on another device then their other games will
-      not be able to make some API requests that read or change server state once ``sessionCreatedFn`` is called.
+      not be able to make API requests that read or change server state once ``sessionCreatedFn`` is called.
       This can be useful to stop users accidentally overwriting save games (and losing progress) by playing the same game in more than one place.
       Any other instances of the game can detect that their session has been closed by assigning a function to the
       :ref:`TurbulenzServices.onGameSessionClosed <turbulenzservices_ongamesessionclosed>` callback.
@@ -594,18 +594,27 @@ This is normally triggered by another instance of the game calling
     var hasGameSessionClosed = false;
     TurbulenzServices.onGameSessionClosed = function onGameSessionClosedFn()
     {
+        if (!hasGameSessionClosed)
+        {
+            Utilities.log('Game session closed. Looks like you have started playing somewhere else.')
+        }
         var hasGameSessionClosed = true;
-        Utilities.log('Game session closed. Looks like you have started playing somewhere else.')
     };
 
 Once this function is called the game will no longer be able to read or change the user's server state.
 For example, you will not be able to:
 
 - Load or save game using the :ref:`UserData <userdatamanager>` or :ref:`DataShares <datasharemanager>` API's.
-- Set :ref:`leaderboards <leaderboardmanager>` or :ref:`badges <badgemanager>`.
+- Update a :ref:`user's game profile <gameprofilemanager>`.
+- Set :ref:`leaderboards <leaderboardmanager>` or :ref:`badges <badgemanager>` values.
+- Send :ref:`custom metrics <turbulenzservices_sendcustommetricevent>`.
+- :ref:`Consume store items <storemanager_consume>`.
 
 So, it is recommended that once this function is called, the game should stop and display a message like
 ``"Game session closed. Looks like you have started playing somewhere else."``.
+
+.. NOTE::
+    This function can be called multiple times.
 
 .. index::
     pair: TurbulenzServices; defaultErrorCallback
