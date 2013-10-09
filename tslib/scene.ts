@@ -257,13 +257,12 @@ class Scene
         {
             delete this.dirtyRoots[name];
 
-            var numNodesToUpdate = this.numNodesToUpdate;
+            // Can not use indexOf because it will search the whole array instead of just the active range
             var nodesToUpdate = this.nodesToUpdate;
-            nodesToUpdate.length = numNodesToUpdate; // Clamp to currently used size
-            if (0 < numNodesToUpdate)
+            var numNodesToUpdate = this.numNodesToUpdate;
+            for (index = 0; index < numNodesToUpdate; index += 1)
             {
-                index = nodesToUpdate.indexOf(rootNode);
-                if (index !== -1)
+                if (nodesToUpdate[index] === rootNode)
                 {
                     numNodesToUpdate -= 1;
                     if (index < numNodesToUpdate)
@@ -272,6 +271,7 @@ class Scene
                     }
                     nodesToUpdate[numNodesToUpdate] = null;
                     this.numNodesToUpdate = numNodesToUpdate;
+                    break;
                 }
             }
         }
