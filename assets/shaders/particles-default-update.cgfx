@@ -27,38 +27,33 @@ float3 getAccelerationNoise(float2 uv, float t)
 float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
 {
     float2 particle = inParticle * regionSize;
-    float2 slot = getSlot(particle);
-    bool create = createdParticle(particle);
+    if (createdParticle(particle))
+    {
+        return tex2D(creationState, inParticle * creationScale);
+    }
 
+    float2 slot = getSlot(particle);
     if (slot.x <= 1)
     {
         // position
-        float p = decodeSignedFloat(create ? tex2D(creationState, inParticle * creationScale)
-                                           : tex2D(previousState, particleRegionMap(inParticle)));
+        float p = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
         float2 vt = inParticle + float2(1.0 * invRegionSize.x, 0);
-        float v = decodeSignedFloat(create ? tex2D(creationState, vt * creationScale)
-                                           : tex2D(previousState, particleRegionMap(vt)));
+        float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(vt)));
         return encodeSignedFloat(p + (v * timeStep * maxSpeed / halfExtents[slot.y]) + shift[slot.y]);
     }
     else if (slot.x <= 2)
     {
         // velocity
-        float v = decodeSignedFloat(create ? tex2D(creationState, inParticle * creationScale)
-                                           : tex2D(previousState, particleRegionMap(inParticle)));
-
+        float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
         float a = acceleration[slot.y];
         float2 pIndex = floor(particle / PARTICLE_DIM) * PARTICLE_DIM * invRegionSize;
-        float4 data = create ? getData(creationState, pIndex, invRegionSize)
-                             : getData(previousState, particleRegionMap(pIndex), invTextureSize);
+        float4 data = getData(previousState, particleRegionMap(pIndex), invTextureSize);
         if (bitSet(data.w, BIT2))
         {
             float2 noiseUV = decodeByteUnsignedFloat2(data.z);
 
-            float animTime = create ?
-                  getAnimationTime(creationState, pIndex, invRegionSize * creationScale,
-                                    getLifePair(creationState, pIndex, invRegionSize * creationScale))
-                : getAnimationTime(previousState, particleRegionMap(pIndex), invTextureSize,
-                                    getLifePair(previousState, particleRegionMap(pIndex), invTextureSize));
+            float animTime = getAnimationTime(previousState, particleRegionMap(pIndex), invTextureSize,
+                                              getLifePair(previousState, particleRegionMap(pIndex), invTextureSize));
 
             a += getAccelerationNoise(noiseUV, animTime)[slot.y];
         }
@@ -70,16 +65,14 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
         if (slot.y <= 1)
         {
             // life
-            float4 pix = create ? tex2D(creationState, inParticle * creationScale)
-                                : tex2D(previousState, particleRegionMap(inParticle));
+            float4 pix = tex2D(previousState, particleRegionMap(inParticle));
             float life = decodeHalfUnsignedFloat(pix.zw);
             return float4(pix.xy, encodeHalfUnsignedFloat(life - lifeStep));
         }
         else
         {
             // user store.
-            return create ? tex2D(creationState, inParticle * creationScale)
-                          : tex2D(previousState, particleRegionMap(inParticle));
+            return tex2D(previousState, particleRegionMap(inParticle));
         }
     }
 }

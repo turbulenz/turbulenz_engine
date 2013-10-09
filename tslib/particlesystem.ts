@@ -867,6 +867,7 @@ class MinHeap<K,T>
     {
         var heap = this.heap;
         var i = heap.length;
+        // TODO pool heap elements.
         heap.push({
             data: data,
             key: key
@@ -919,11 +920,15 @@ class TimeoutQueue<T>
 {
     private heap: MinHeap<number, T>;
     // Time since queue was created
-    private time: number;
+    time: number;
 
+    static compare(x, y)
+    {
+        return x < y;
+    }
     constructor()
     {
-        this.heap = new MinHeap(function (x, y) { return x < y; });
+        this.heap = new MinHeap(TimeoutQueue.compare);
         this.time = 0.0;
     }
 
@@ -3703,7 +3708,6 @@ class DefaultParticleUpdater
 {
     technique: Technique;
     parameters: { [name: string]: any };
-    constructor() {}
 
     predict(
         parameters: TechniqueParameters,
@@ -3742,11 +3746,13 @@ class DefaultParticleUpdater
         var ay = acceleration[1];
         var az = acceleration[2];
         var drag = (1 - Math.min(1, parameters["drag"] * h));
+        var coef;
         if (drag === 1)
         {
-            pos[0] += time * (vel[0] + (time * 0.5 * ax));
-            pos[1] += time * (vel[1] + (time * 0.5 * ay));
-            pos[2] += time * (vel[2] + (time * 0.5 * az));
+            coef = 0.5 * (time - h);
+            pos[0] += time * (vel[0] + (coef * ax));
+            pos[1] += time * (vel[1] + (coef * ay));
+            pos[2] += time * (vel[2] + (coef * az));
             vel[0] += time * ax;
             vel[1] += time * ay;
             vel[2] += time * az;
@@ -3755,7 +3761,7 @@ class DefaultParticleUpdater
         {
             var pow = Math.pow(drag, time / h);
             var log = Math.log(drag);
-            var coef = h * (pow - 1) / log;
+            coef = h * (pow - 1) / log;
             var coef2 = ((h * (pow - 1)) - (time * log)) / ((drag - 1) * log) * drag * h;
             var coef3 = h * drag * (pow - 1) / (drag - 1);
             pos[0] += (coef * vel[0]) + (coef2 * ax);
@@ -3848,6 +3854,21 @@ class DefaultParticleUpdater
         }
         return store;
     }
+
+    constructor() {}
+    static create(shaderManager: ShaderManager): DefaultParticleUpdater
+    {
+        var shader = shaderManager.get("shaders/particles-default-update.cgfx");
+        var ret = new DefaultParticleUpdater();
+        ret.technique = shader.getTechnique("update");
+        ret.parameters = {
+            acceleration          : new Float32Array(3),
+            drag                  : 0,
+            noiseTexture          : null,
+            randomizedAcceleration: new Float32Array(3)
+        };
+        return ret;
+    }
 }
 
 //
@@ -3869,6 +3890,7 @@ class DefaultParticleRenderer
 {
     technique : Technique;
     parameters: { [name: string]: any };
+
     createGeometry(
         graphicsDevice: GraphicsDevice,
         maxParticles  : number,
@@ -3887,14 +3909,37 @@ class DefaultParticleRenderer
             shared        : shared
         });
     }
+
+    constructor() {}
+    static create(shaderManager: ShaderManager, blendMode = "alpha"): DefaultParticleRenderer
+    {
+        var shader = shaderManager.get("shaders/particles-default-render.cgfx");
+        var ret = new DefaultParticleRenderer();
+        ret.technique  = shader.getTechnique(blendMode);
+        ret.parameters = {
+            animationScale       : new Float32Array(4),
+            animationRotation    : new Float32Array(2),
+            texture              : null,
+            noiseTexture         : null,
+            randomizedOrientation: new Float32Array(2),
+            randomizedScale      : new Float32Array(2),
+            randomizedRotation   : 0,
+            randomizedAlpha      : 0,
+            animatedOrientation  : false,
+            animatedScale        : false,
+            animatedRotation     : false,
+            animatedAlpha        : false
+        };
+        return ret;
+    }
 }
 
 //
 // ParticleSystem
 //
-interface ParticleSystemSynchronizeFn
+interface ParticleSystemSynchronizer
 {
-    (system: ParticleSystem, numFramesElapsed: number, elapsedTime: number): void;
+    synchronize(system: ParticleSystem, numFramesElapsed: number, elapsedTime: number): void;
 }
 class ParticleSystem
 {
@@ -3913,55 +3958,6 @@ class ParticleSystem
     static PARTICLE_ANIM = 7;
     // offset to access userData in cpu memory
     static PARTICLE_DATA = 8;
-
-    static createDefaultRenderer(params: {
-        graphicsDevice: GraphicsDevice;
-        shaderManager : ShaderManager;
-        blendMode?    : string;
-    }): ParticleRenderer
-    {
-        var shader = params.shaderManager.get("shaders/particles-default-render.cgfx");
-        var technique = shader.getTechnique(params.blendMode || "alpha");
-        var parameters = {
-            animationScale       : new Float32Array(4),
-            animationRotation    : new Float32Array(2),
-            texture              : null,
-            noiseTexture         : null,
-            randomizedOrientation: new Float32Array(2),
-            randomizedScale      : new Float32Array(2),
-            randomizedRotation   : 0,
-            randomizedAlpha      : 0,
-            animatedOrientation  : false,
-            animatedScale        : false,
-            animatedRotation     : false,
-            animatedAlpha        : false
-        };
-
-        var ret = new DefaultParticleRenderer();
-        ret.technique  = technique;
-        ret.parameters = parameters;
-        return ret;
-    }
-
-    static createDefaultUpdater(params: {
-        graphicsDevice: GraphicsDevice;
-        shaderManager : ShaderManager;
-    }): ParticleUpdater
-    {
-        var shader = params.shaderManager.get("shaders/particles-default-update.cgfx");
-        var technique = shader.getTechnique("update");
-        var parameters = {
-            acceleration          : new Float32Array(3),
-            drag                  : 0,
-            noiseTexture          : null,
-            randomizedAcceleration: new Float32Array(3)
-        };
-
-        var ret = new DefaultParticleUpdater();
-        ret.technique = technique;
-        ret.parameters = parameters;
-        return ret;
-    }
 
     private static computeMaxParticleDependents(maxParticles: number, zSorted: boolean)
     {
@@ -4057,8 +4053,8 @@ class ParticleSystem
 
     private lastVisible: number;
     private lastTime   : number;
-    private timer: () => number;
-    private synchronize: ParticleSystemSynchronizeFn;
+    synchronizer: ParticleSystemSynchronizer;
+    timer: () => number;
 
     // particle states
     // renderContextShared is false, when no renderContext was supplied to particle system
@@ -4285,7 +4281,7 @@ class ParticleSystem
         sharedAnimation?    : boolean;
 
         timer?              : () => number;
-        synchronize?        : ParticleSystemSynchronizeFn;
+        synchronizer?       : ParticleSystemSynchronizer;
 
         trackingEnabled?    : boolean;
 
@@ -4312,7 +4308,7 @@ class ParticleSystem
                     return TurbulenzEngine.time;
                 };
         }
-        ret.synchronize = params.synchronize;
+        ret.synchronizer = params.synchronizer;
         ret.lastVisible = null;
         ret.lastTime = null;
 
@@ -4430,7 +4426,7 @@ class ParticleSystem
         }
         this.geometry = null;
         this.timer = null;
-        this.synchronize = null;
+        this.synchronizer = null;
         if (!this.sharedAnimation && this.animation)
         {
             this.animation.destroy();
@@ -4830,7 +4826,7 @@ class ParticleSystem
         else if (frameVisible !== this.lastVisible)
         {
             var currentTime = this.timer();
-            this.synchronize(this, frameVisible - this.lastVisible, currentTime - this.lastTime);
+            this.synchronizer.synchronize(this, frameVisible - this.lastVisible, currentTime - this.lastTime);
             this.lastTime = currentTime;
         }
         this.lastVisible = frameVisible;
@@ -5264,7 +5260,7 @@ class ParticleRenderable
     }
     getCustomWorldExtents(): FloatArray
     {
-        throw "Not supported";
+        return this.getWorldExtents();
     }
     getMaterial(): Material
     {
@@ -5272,11 +5268,18 @@ class ParticleRenderable
     }
     getWorldExtents(): FloatArray
     {
-        return this.node.getWorldExtents();
+        var node = this.node;
+        if (node.worldUpdate > this.worldExtentsUpdate || this.invalidated)
+        {
+            this.invalidated = false;
+            this.updateWorldExtents();
+            this.worldExtentsUpdate = node.worldUpdate;
+        }
+        return this.worldExtents;
     }
     hasCustomWorldExtents(): boolean
     {
-        return false;
+        return true;
     }
     removeCustomWorldExtents():void
     {
@@ -5307,7 +5310,19 @@ class ParticleRenderable
     center: FloatArray;
     setNode(node: SceneNode): void
     {
+        if (this.node)
+        {
+            this.node.renderableWorldExtentsRemoved();
+        }
+
         this.node = node;
+
+        if (this.node)
+        {
+            this.node.renderableWorldExtentsUpdated(false);
+        }
+
+        this.worldExtentsUpdate = -1;
     }
     queryCounter: number = 0;
     diffuseShadowDrawParameters: Array<DrawParameters> = null;
@@ -5327,13 +5342,117 @@ class ParticleRenderable
     // ParticleRenderable specific
     // ----------------------------------
     private graphicsDevice: GraphicsDevice;
-    system: ParticleSystem;
-    lazySystem: () => ParticleSystem;
-    lazyView: () => ParticleView;
-    passIndex: number;
-    views: { [index: number]: ParticleView };
-    sharedRenderContext: SharedRenderContext;
+    private lazySystem: () => ParticleSystem;
+    private lazyView: () => ParticleView;
+    private passIndex: number;
+    private views: { [index: number]: ParticleView };
+    private sharedRenderContext: SharedRenderContext;
 
+    private invalidated: boolean;
+    private worldExtentsUpdate: number;
+    private world: FloatArray;
+
+    system: ParticleSystem;
+    fixedOrientation: boolean;
+    localTransform: FloatArray;
+
+    setLocalTransform(localTransform?: FloatArray)
+    {
+        if (localTransform && this.localTransform !== localTransform)
+        {
+            VMath.m43Copy(localTransform, this.localTransform);
+        }
+        this.invalidated = true;
+        if (this.node)
+        {
+            this.node.renderableWorldExtentsUpdated(true);
+        }
+    }
+
+    setFixedOrientation(fixedOrientation: boolean)
+    {
+        if (this.fixedOrientation !== fixedOrientation)
+        {
+            this.fixedOrientation = fixedOrientation;
+            this.invalidated = true;
+            if (this.node)
+            {
+                this.node.renderableWorldExtentsUpdated(true);
+            }
+        }
+    }
+
+    private updateWorldExtents()
+    {
+        var center = this.system.center;
+        var halfExtents = this.system.halfExtents;
+        var worldExtents = this.worldExtents;
+        var world = this.world;
+        var node = this.node;
+        var local = this.localTransform;
+        var nodeWorld = node.world;
+
+        // compute actual world transform to use.
+        if (this.fixedOrientation)
+        {
+            // build up target world transform
+            var Lx = local[9];
+            var Ly = local[10];
+            var Lz = local[11];
+            // (local scale/rotation)
+            world[0] = local[0];
+            world[1] = local[1];
+            world[2] = local[2];
+            world[3] = local[3];
+            world[4] = local[4];
+            world[5] = local[5];
+            world[6] = local[6];
+            world[7] = local[7];
+            world[8] = local[8];
+            // (with position in world space to translate particle system to)
+            world[9]  = (nodeWorld[0] * Lx + nodeWorld[3] * Ly + nodeWorld[6] * Lz + nodeWorld[9]);
+            world[10] = (nodeWorld[1] * Lx + nodeWorld[4] * Ly + nodeWorld[7] * Lz + nodeWorld[10]);
+            world[11] = (nodeWorld[2] * Lx + nodeWorld[5] * Ly + nodeWorld[8] * Lz + nodeWorld[11]);
+        }
+        else
+        {
+            VMath.m43Mul(local, nodeWorld, world);
+        }
+
+        var m0  = world[0];
+        var m1  = world[1];
+        var m2  = world[2];
+        var m3  = world[3];
+        var m4  = world[4];
+        var m5  = world[5];
+        var m6  = world[6];
+        var m7  = world[7];
+        var m8  = world[8];
+        var m9  = world[9];
+        var m10 = world[10];
+        var m11 = world[11];
+
+        var c0  = center[0];
+        var c1  = center[1];
+        var c2  = center[2];
+        var ct0 = m9  + (m0 * c0 + m3 * c1 + m6 * c2);
+        var ct1 = m10 + (m1 * c0 + m4 * c1 + m7 * c2);
+        var ct2 = m11 + (m2 * c0 + m5 * c1 + m8 * c2);
+
+        var h0  = halfExtents[0];
+        var h1  = halfExtents[1];
+        var h2  = halfExtents[2];
+        var ht0 = ((m0 < 0 ? -m0 : m0) * h0 + (m3 < 0 ? -m3 : m3) * h1 + (m6 < 0 ? -m6 : m6) * h2);
+        var ht1 = ((m1 < 0 ? -m1 : m1) * h0 + (m4 < 0 ? -m4 : m4) * h1 + (m7 < 0 ? -m7 : m7) * h2);
+        var ht2 = ((m2 < 0 ? -m2 : m2) * h0 + (m5 < 0 ? -m5 : m5) * h1 + (m8 < 0 ? -m8 : m8) * h2);
+
+        worldExtents[0] = (ct0 - ht0);
+        worldExtents[1] = (ct1 - ht1);
+        worldExtents[2] = (ct2 - ht2);
+        worldExtents[3] = (ct0 + ht0);
+        worldExtents[4] = (ct1 + ht1);
+        worldExtents[5] = (ct2 + ht2);
+    }
     private static material: Material;
     constructor() {}
     static create(params: {
@@ -5356,9 +5475,13 @@ class ParticleRenderable
         var ret = new ParticleRenderable();
         ret.graphicsDevice = gd;
         ret.passIndex = params.passIndex;
-        ret.sharedMaterial = material;
+        ret.sharedMaterial = ParticleRenderable.material;
         ret.rendererInfo = {};
         ret.views = [];
+        ret.fixedOrientation = true;
+        ret.world = VMath.m43BuildIdentity();
+        ret.worldExtents = new Float32Array(6);
+        ret.localTransform = VMath.m43BuildIdentity();
         ret.sharedRenderContext = params.sharedRenderContext;
         ret.setSystem(params.system);
         return ret;
@@ -5427,7 +5550,7 @@ class ParticleRenderable
         }
 
         // optimise setting of modelView to avoid extra temporary.
-        VMath.m43Mul(this.node.getWorldTransform(), camera.viewMatrix, view.parameters["modelView"]);
+        VMath.m43Mul(this.world, camera.viewMatrix, view.parameters["modelView"]);
         view.update(null, camera.projectionMatrix);
 
         this.drawParameters[0].setTechniqueParameters(1, view.parameters);
@@ -5468,5 +5591,252 @@ class ParticleRenderable
             this.drawParameters       = [parameters];
             this.shadowDrawParameters = this.drawParameters;
         }
+    }
+}
+
+//
+// DefaultParticleSynchronize
+//
+interface DefaultParticleSynchronizeEvent
+{
+    time    : number;
+    lifeTime: number;
+    fun(event  : DefaultParticleSynchronizeEvent,
+        emitter: DefaultParticleSynchronize,
+        system : ParticleSystem): void;
+}
+interface DefaultParticleSynchronizeEmitter
+{
+    enabled: boolean;
+    sync(emitter : DefaultParticleSynchronize,
+         system  : ParticleSystem,
+         timeStep: number): void;
+}
+class DefaultParticleSynchronize
+{
+    emitters: Array<DefaultParticleSynchronizeEmitter>;
+    events: TimeoutQueue<DefaultParticleSynchronizeEvent>;
+
+    fixedTimeStep: number;
+    maxSubSteps: number;
+    offsetTime: number = 0;
+    synchronize(system: ParticleSystem, _, timeStep: number)
+    {
+        if (this.fixedTimeStep !== undefined)
+        {
+            timeStep += this.offsetTime;
+            var numSteps = Math.floor(timeStep / this.fixedTimeStep);
+            if (numSteps > this.maxSubSteps)
+            {
+                numSteps = this.maxSubSteps - 1;
+                // jump forwards to have fixed time steps at end of frame.
+                this.update(system, timeStep - (numSteps * this.fixedTimeStep));
+                this.offsetTime = 0;
+            }
+            else
+            {
+                this.offsetTime = timeStep - (numSteps * this.fixedTimeStep);
+            }
+            while (numSteps > 0)
+            {
+                numSteps -= 1;
+                this.update(system, this.fixedTimeStep);
+            }
+        }
+        else
+        {
+            this.update(system, timeStep);
+        }
+    }
+
+    update(system: ParticleSystem, timeStep: number)
+    {
+        system.beginUpdate(timeStep);
+
+        var emitters = this.emitters;
+        var num = emitters.length;
+        var i;
+        for (i = 0; i < num; i += 1)
+        {
+            if (emitters[i].enabled)
+            {
+                emitters[i].sync(this, system, timeStep);
+            }
+        }
+
+        var events = this.events;
+        events.update(timeStep);
+        while (events.hasNext())
+        {
+            var event = events.next();
+            if (event.time + event.lifeTime > 0)
+            {
+                event.fun(event, this, system);
+            }
+        }
+
+        system.endUpdate();
+    }
+
+    enqueue(event: DefaultParticleSynchronizeEvent)
+    {
+        this.events.insert(event, event.time);
+    }
+
+    addEmitter(sync: DefaultParticleSynchronizeEmitter)
+    {
+        this.emitters.push(sync);
+    }
+
+    removeEmitter(sync: DefaultParticleSynchronizeEmitter)
+    {
+        var index = this.emitters.indexOf(sync);
+        if (index !== -1)
+        {
+            this.emitters.splice(index, 1);
+        }
+    }
+
+    constructor() {}
+    static create(params: {
+        fixedTimeStep?: number;
+        maxSubSteps?  : number;
+    })
+    {
+        var ret = new DefaultParticleSynchronize();
+        ret.events = new TimeoutQueue();
+        ret.emitters  = [];
+        ret.fixedTimeStep = params.fixedTimeStep;
+        ret.maxSubSteps = (params.maxSubSteps !== undefined ? params.maxSubSteps : 3);
+        return ret;
+    }
+}
+class DefaultParticleEmitter
+{
+    private offsetTime: number;
+    rate: number;
+    bursting: boolean;
+    forceCreation: boolean;
+    usePrediction: boolean;
+
+    enabled: boolean;
+    sync(emitter: DefaultParticleSynchronize, system: ParticleSystem, timeStep: number): void
+    {
+        // timeLapse is the amount of time that has passed
+        // since the cue for the next particle generation.
+        //
+        // numGen is the total number of particles that need to be
+        // created retrospectively.
+        var timeLapse = timeStep + this.offsetTime;
+        var numGen = Math.ceil(timeLapse * this.rate);
+        this.offsetTime += timeStep - (numGen / this.rate);
+        if (numGen <= 0)
+        {
+            return;
+        }
+        else if (this.bursting)
+        {
+            numGen = 1;
+        }
+
+        // startGen is the number of particles we `skip` based on max life time
+        // that have already died.
+        var maxLife = 1; // TODO
+        var startGen = Math.max(0, Math.ceil((timeLapse - maxLife) * this.rate));
+        if (startGen >= numGen)
+        {
+            if (this.bursting)
+            {
+                this.bursting = false;
+                this.enabled = false;
+            }
+            return;
+        }
+
+        var i;
+        for (i = startGen; i < numGen; i += 1)
+        {
+            var burstingCount = 1; //TODO
+            var j;
+            for (j = 0; j < burstingCount; j += 1)
+            {
+                // compute relative creation and death times for specific generated particle
+                // using real randomised time, and discard if already dead.
+                var creationTime = (i / this.rate) - timeLapse;
+                var lifeTime = 1; // TODO
+                if (creationTime + lifeTime <= 0)
+                {
+                    continue;
+                }
+
+                // TODO sort out memory usage here, creating functions etc. ew.
+                var position = [0, 0, 0];
+                var velocity = [4, 40, 0];
+                var animRange = [0, 1];
+                if (this.usePrediction)
+                {
+                    system.updater.predict(system.updateParameters, position, velocity, 0, -creationTime);
+                    animRange[0] = animRange[1] - (animRange[1] - animRange[0]) * (1 + creationTime / lifeTime);
+                }
+                var event = {
+                    time: creationTime,
+                    lifeTime: lifeTime,
+
+                    // particle creation parameters
+                    particle: {
+                        position: position,
+                        velocity: velocity,
+                        lifeTime: lifeTime + creationTime,
+                        animationRange: animRange,
+                        userData: 0,
+                        forceCreation: false,
+                    },
+
+                    fun: function (event, emitter, system)
+                    {
+                        system.createParticle(event.particle);
+                    }
+                };
+                emitter.enqueue(event);
+            }
+        }
+
+        if (this.bursting)
+        {
+            this.bursting = false;
+            this.enabled = false;
+        }
+    }
+
+    constructor() {}
+    static create(params: {
+        rate? : number;
+        enabled?: boolean;
+        forceCreation?: boolean;
+        usePrediction?: boolean;
+    })
+    {
+        var ret = new DefaultParticleEmitter();
+        ret.offsetTime    = 0;
+        ret.bursting      = false;
+        ret.rate          = (params.rate          === undefined ? 4     : params.rate);
+        ret.forceCreation = (params.forceCreation === undefined ? false : params.forceCreation);
+        ret.usePrediction = (params.usePrediction === undefined ? true  : params.usePrediction);
+        ret.enabled       = (params.enabled       === undefined ? true  : params.enabled);
+        return ret;
+    }
+
+    enable(): void
+    {
+        this.enabled = true;
+    }
+    disable(): void
+    {
+        this.enabled = false;
+    }
+    burst(): void
+    {
+        this.enable();
+        this.bursting = true;
     }
 }

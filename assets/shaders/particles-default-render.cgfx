@@ -102,6 +102,12 @@ void vp_render( in float2 inData     : TEXCOORD0,
                out float4 outColor   : COLOR)
 {
     float2 particle = particleRegionMap(getParticle(inData.y, mappingTable));
+    if (getLife(vParticleState, particle, invTextureSize) <= 0)
+    {
+        outPosition = float4(0, 0, 0, 0);
+        return;
+    }
+
     float4 data = getData(vParticleState, particle, invTextureSize);
     float animTime = getAnimationTime(vParticleState, particle, invTextureSize,
                                       getLifePair(vParticleState, particle, invTextureSize));

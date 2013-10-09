@@ -50,7 +50,7 @@ Any verification errors will be reported as late as possible, and any non-critic
     var attribute = result.attribute;
 
 ``graphicsDevice``
-    `GraphicsDevice` object to construct texture with.
+    :ref:`GraphicsDevice <graphicsdevice>` object to construct texture with.
 
 ``particles``
     An array of particle animation definition objects to be compiled into the resultant texture.
@@ -140,7 +140,7 @@ Any verification errors will be reported as late as possible, and any non-critic
             ?default-interpolation: Interpolator
         }
 
-    Where each attribute value is either a `number` for `float` and `texture#` types, or an `Array` or `numbers` of the appropariate length for `float2` and `float4` types.
+    Where each attribute value is either a `number` for `float` and `texture#` types, or an `Array` of `numbers` of the appropariate length for `float2` and `float4` types.
 
     ``default``
         The attribute default value if unspecified is all `0`.
@@ -203,7 +203,7 @@ Any verification errors will be reported as late as possible, and any non-critic
             ]
         };
 
-    uv-maps are declared by a `Vector4` object of the form `[x0, y0, x1, y1]` in normalised texture coordinates.
+    uv-maps are declared by a :ref:`Vector4 <v4object>` object of the form `[x0, y0, x1, y1]` in normalised texture coordinates.
 
     Use of this parameter enables re-use of particle animations amongst many systems as each individual particle animation can assume use of a full texture instead of requiring foresight into how its texture is packed together with others later on.
 
@@ -233,7 +233,7 @@ The resultant object contains the following fields:
     The maximum life time of any particle in the animation.
 
 ``animation``
-    The compiled animation `Texture` object.
+    The compiled animation :ref:`Texture <texture>` object.
 
 ``particle``
     A dictionary of particle attributes for the animation texture. Each input particle will be mapped to a field of that particles' name contining the following fields:
@@ -280,10 +280,10 @@ Restrictions on how textures can be packed means that if possible, you should in
     var uvMap = result.uvMap;
 
 ``graphicsDevice``
-    A `GraphicsDevice` object used to create the newly packed texture and to perform required draw calls to render input textures into the packed texture on the GPU.
+    A :ref:`GraphicsDevice <graphicsdevice>` object used to create the newly packed texture and to perform required draw calls to render input textures into the packed texture on the GPU.
 
 ``texturesArray``
-    An Array of `Texture` objects to be packed on the GPU. These textures need not be mipmapped, and repetitions are permitted.
+    An Array of :ref:`Texture <texture>` objects to be packed on the GPU. These textures need not be mipmapped, and repetitions are permitted.
 
 ``borderShrink`` (Optional)
     Default value 4. This parameter controls how much input textures are shrunk so as to retain a border around regions of the packed textures without requiring the total size of the packed texture to be increased.
@@ -292,7 +292,7 @@ Restrictions on how textures can be packed means that if possible, you should in
 The resultant object contains the following fields:
 
 ``texture``
-    The packed `Texture` storing all unique input textures
+    The packed :ref:`Texture <texture>` storing all unique input textures
 
 ``uvMap``
-    An Array of `Vector4` objects storing the uv-rectangle of each corresponding input texture in the format `[x0, y0, x1, y1]`
+    An Array of :ref:`Vector4 <v4object>` objects storing the uv-rectangle of each corresponding input texture in the format `[x0, y0, x1, y1]`

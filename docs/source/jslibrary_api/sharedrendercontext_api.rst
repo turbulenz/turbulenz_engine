@@ -11,7 +11,7 @@ The SharedRenderContext Object
 
 The SharedRenderContext object provides a utility for handling the sharing of particle state textures, and mapping table textures between many particle systems.
 
-The context can be used to allocate new regions of the double-buffered renderable textures required by a `ParticleSystem` and a `ParticleView` which is z-sorted.
+The context can be used to allocate new regions of the double-buffered renderable textures required by a :ref:`ParticleSystem <particlesystem>` and a :ref:`ParticleView <particleview>` which is z-sorted.
 
 This object does not expose any way of releasing previously allocated regions, as the underlying allocation algorithm (`OnlineTexturePacker`) does not support this. The intention is that these shared textures are used where systems are either permanent, or short-lived and recycled.
 
@@ -42,7 +42,7 @@ Create a new SharedRenderContext object.
 
 **Summary**
 
-Allocate a new region of the shared textures. May return null in the case that an attempt is made to allocate a texture region larger than is supported by the `GraphicsDevice`.
+Allocate a new region of the shared textures. May return null in the case that an attempt is made to allocate a texture region larger than is supported by the :ref:`GraphicsDevice <graphicsdevice>`.
 
 **Syntax** ::
 
@@ -70,10 +70,10 @@ Allocate a new region of the shared textures. May return null in the case that a
 The region object returned has the following fields:
 
     ``renderTargets``
-        The pair of `RenderTargets` representing the double buffer texture store region is allocated from.
+        The pair of :ref:`RenderTargets <rendertarget>` representing the double buffer texture store region is allocated from.
 
     ``uvRectangle``
-        A `Vector4` object representing the texture coordinate rectangle of the region in the shared textures. This is of the form `[x0, y0, x1, y1]` in normalize coordinates.
+        A :ref:`Vector4 <v4object>` object representing the texture coordinate rectangle of the region in the shared textures. This is of the form `[x0, y0, x1, y1]` in normalize coordinates.
 
 .. index::
     pair: SharedRenderContext; release

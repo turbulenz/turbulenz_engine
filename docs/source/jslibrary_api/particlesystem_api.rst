@@ -15,115 +15,6 @@ Methods
 =======
 
 .. index::
-    pair: ParticleSystem; createDefaultRenderer
-
-`createDefaultRenderer`
------------------------
-
-**Summary**
-
-Create a default `ParticleRenderer` object.
-
-The default updater is compatible with the default updater, animation system and emitter.
-
-**Syntax** ::
-
-    var renderer = ParticleSystem.createDefaultRenderer({
-        graphicsDevice: graphicsDevice,
-        shaderManager: shaderManager,
-        blendMode: "alpha"
-    });
-
-``graphicsDevice``
-    The `GraphicsDevice` object.
-
-``shaderManager``
-    The `ShaderManager` object. The shader `particles-default-render.cgfx` must be loaded.
-
-``blendMode`` (Optional)
-    Rendering shader supports one of `3` blend modes: `"alpha"` (default), `"additive"` and `"opaque"`.
-
-Result is a `ParticleRenderer` object, with its `parameters` object having all parameters specific to the renderer defined with defaults, these are:
-
-``animationScale``
-    A `Vector4` storing the min/delta for particle scales as provided by `ParticleBuilder` compilation result in the form `[minx, miny, deltax, deltay]`. (default `[0, 0, 0, 0]`)
-
-``animationRotation``
-    A `Vector2` storing the min/delta for particle rotations as provided by `ParticleBuilder` compilation result in the form `[min, delta]`. (default `[0, 0`])
-
-``texture``
-    A `Texture` storing the packed visual flip-book animations of all the particles in the system. (default `null`)
-
-``noiseTexture``
-    A 4-channel smooth noise `Texture`, such as the one provided by `textures/noise.dds` in the SDK. (default `null`)
-
-``randomizedOrientation``
-    A `Vector2` providing absolute maximums for the amount of randomization applied to particles in spherical coordinate radians. (default `[0, 0]`)
-
-``randomizedScale``
-    A `Vector2` providing absolute maximums for the amount of randomization applied to particle scales as an offset scale factor. (default `[0, 0]`)
-
-``randomizedRotation``
-    A number providing absolute maximum for the amount of randomization applied to particle rotations in radians. (default `0`)
-
-``randomizedAlpha``
-    A number providing absolute maximum for the amount of randomization applied to particle texture alpha as an offset scale factor. (default `0`)
-
-``animatedOrientation``
-    A boolean specifying whether randomization of orientation is animated over time, or static per-particle. (default `false`)
-
-``animatedScale``
-    A boolean specifying whether randomization of scale is animated over time, or static per-particle. (default `false`)
-
-``animatedRotation``
-    A boolean specifying whether randomization of rotation is animated over time, or static per-particle. (default `false`)
-
-``animatedAlpha``
-    A boolean specifying whether randomization of alpha is animated over time, or static per-particle. (default `false`)
-
-.. index::
-    pair: ParticleSystem; createDefaultUpdater
-
-`createDefaultUpdater`
-----------------------
-
-**Summary**
-
-Create a default `ParticleUpdater` object.
-
-The default updater is compatible with the default renderer, animation system and emitter.
-
-**Syntax** ::
-
-    var updater = ParticleSystem.createDefaultUpdater({
-        graphicsDevice: GraphicsDevice,
-        shaderManager: shaderManager
-    });
-
-``graphicsDevice``
-    The `GraphicsDevice` object.
-
-``shaderManager``
-    The `ShaderManager` object. The shader `particles-default-render.cgfx` must be loaded.
-
-Result is a `ParticleUpdater` object, with its `parameters` object having all parameters specific to the updater defined with defaults, these are:
-
-``acceleration``
-    A `Vector3` of the acceleration (in local coordinates) for the particle system. (default `[0, 0, 0`])
-
-``drag``
-    A number for the drag applied to particles in the world. A drag of `f` would specify that after `1/f` seconds of simulation (Ignoring effects of acceleration), an emitted particle will come to a complete stop. (default `0`).
-
-``noiseTexture``
-    A 4-channel smooth noise `Texture`, such as the one provided by `textures/noise.dds` in the SDK. (default `null`)
-
-``randomizedAcceleration``
-    A `Vector3` providing absolute maximums for the amount of randomized acceleration added to particles on update. (default `[0, 0, 0]`)
-
-.. note :: Randomized acceleration is not taken into account for tracking, and prediction of particles as this occurs on the CPU.
-
-
-.. index::
     pair: ParticleSystem; create
 
 `create`
@@ -149,20 +40,20 @@ Create a new particle system.
         animation           : animationTexture,
         sharedAnimation     : false,
         timer               : null,
-        synchronize         : synchronizeFn,
+        synchronizer        : synchronizer,
         trackingEnabled     : false,
         updater             : systemUpdater,
         renderer            : systemRenderer
     });
 
 ``graphicsDevice``
-    `GraphicsDevice` object.
+    :ref:`GraphicsDevice <graphicsdevice>` object.
 
 ``center`` (Optional)
     Default value `[0, 0, 0]`. The center of the local particle extents.
 
 ``halfExtents``
-    The local half-extents of the particle system. Together with `center` this defines a region of spcae in local coordinates which absolutely contains the particle system. Particles will not be able to escape the extents, and the extents will be used for `ParticleRenderables` for `Scene` culling.
+    The local half-extents of the particle system. Together with `center` this defines a region of spcae in local coordinates which absolutely contains the particle system. Particles will not be able to escape the extents, and the extents will be used for :ref:`ParticleRenderables <particlerenderable>` for :ref:`Scene <scene>` culling.
 
 ``maxSpeed```
     The maximum speed achievable for particles in the system, required to normalize velocities.
@@ -177,18 +68,18 @@ Create a new particle system.
     The specific sorting algorithm used permits partial sorts of a view onto the system so that you may spread the cost of sorting over a period of time for better performance. The actual number of steps used depends on maxParticles, but this will place an upper bound on that number. By default a view will be completely sorted at every rendering.
 
 ``geometry`` (Optional)
-    The `ParticleGeometry` instance to use in rendering a view of the system. This geometry instance must be at least as large as to render `maxParticles` number of particles.
+    The :ref:`ParticleGeometry <particlegeometry>` instance to use in rendering a view of the system. This geometry instance must be at least as large as to render `maxParticles` number of particles.
     If the geometry instance is not marked as `shared`, then it will be destroyed along with the system.
     If geometry is not specified, an un-shared geometry will be created from the provided `renderer`.
 
 ``sharedRenderContext`` (Optional)
-    A `SharedRenderContext` object from which to allocate texture regions for particle states on the GPU. If unspecified then a per-system set of textures and render targets will be created isntead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
+    A :ref:`SharedRenderContext <sharedrendercontext>` object from which to allocate texture regions for particle states on the GPU. If unspecified then a per-system set of textures and render targets will be created isntead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
 
 ``maxLifeTime``
     The maximum life permissable for any particle in the system, it will not be possible to created a particle whose life-time is greater than this value.
 
 ``animation`` (Optional)
-    The animation `Texture` created by the `ParticleBuilder` object representing the animations of all particles to be created in this system, used by a compatible rendering shader.
+    The animation :ref:`Texture <texture>` created by the :ref:`ParticleBuilder <particlebuilder>` object representing the animations of all particles to be created in this system, used by a compatible rendering shader.
 
 ``sharedAnimation`` (Optional)
     Default value is `false`. If `false`, then when the system is destroyed, the `animation` texture supplied to the system will also be destroyed.
@@ -196,17 +87,32 @@ Create a new particle system.
 ``timer`` (Optional)
     Specify a timer function to determine the passage of time seen by the particle system on update. By default a function will be used which returns `TurbulenzEngine.time`, you would most certainly want this to be tied to a game update tick.
 
-``synchronize`` (Optional)
-    A function which will be called by a `ParticleRenderable` referencing this system, used to emit particles and update the system whenever the renderable is updated (is visible) to the `Scene`. This method is required to peform the update of the system including calls to `beginUpdate`, `createParticle` and `endUpdate`.
+``synchronizer`` (Optional)
+    An object whose `synchronize` function will be called by a :ref:`ParticleRenderable <particlerenderable>` referencing this system, used to emit particles and update the system whenever the renderable is updated (is visible) to the :ref:`Scene <scene>`. This method is required to peform the update of the system including calls to `beginUpdate`, `createParticle` and `endUpdate`.
+
+    The `synchronize` function takes the following arguments:
+
+    ``system``
+        The `ParticleSystem` being synchronized.
+
+    ``numFrames``
+        The number of frames elapsed since last synchronization.
+
+    ``elapsedTime``
+        The amount of time (as determined by the `ParticleSystem` timer) that has elapsed since the last synchronization.
 
 ``trackingEnabled`` (Optional)
     Default value is `false`. If `true`, then created particles will be able to be simulated on the CPU as well as the GPU, so that positions, velocities and other attributes may be queried at any future time until death to permit emitting particles based on positions of existing particles. This will essentially double the cost of simulating any tracked particles.
 
 ``updater``
-    The `ParticleUpdater` object for the particle system, responsible for defining the techniques and parameters used for GPU side simulation of particles, a function used to work on simulation of CPU side particles, and a prediction function to support retrospective creation of particles by emitters.
+    The :ref:`ParticleUpdater <particleupdater>` object for the particle system, responsible for defining the techniques and parameters used for GPU side simulation of particles, a function used to work on simulation of CPU side particles, and a prediction function to support retrospective creation of particles by emitters.
+
+    See :ref:`DefaultParticleUpdater <defaultparticleupdater>` for the default implementation.
 
 ``renderer``
-    The `ParticleRenderer` object for the particle system, responsible for rendering particles on the GPU.
+    The :ref:`ParticleRenderer <particlerenderer>` object for the particle system, responsible for rendering particles on the GPU.
+
+    See :ref:`DefaultParticleRenderer <defaultparticlerenderer>` for the default implementation.
 
 .. index::
     pair: ParticleSystem; destroy
@@ -248,6 +154,8 @@ All particles will be removed from the system, with internal timers reset so tha
 
 Create a new particle in the system.
 
+Note that this particle will be created at the end of the current update, and so will not take part in the simulation until the following update occurs.
+
 .. note :: This method should only be called between `beginUpdate` and `endUpdate`
 
 **Syntax** ::
@@ -263,10 +171,10 @@ Create a new particle in the system.
     });
 
 ``position``
-    A `Vector3` for the position to create particle at in local coordinates, this will be clamped to the particles extents due to normalization.
+    A :ref:`Vector3 <v3object>` for the position to create particle at in local coordinates, this will be clamped to the particles extents due to normalization.
 
 ``velocity``
-    A `Vector3` for the velocity of the created particle in local coordinates, this will clamped to the particles extents size due to normalization.
+    A :ref:`Vector3 <v3object>` for the velocity of the created particle in local coordinates, this will clamped to the particles extents size due to normalization.
 
 ``lifeTime``
     The amount of time in seconds that this particle will live for. This will clamped to the defined `maxLifeTime` of the system due to normalization.
@@ -313,10 +221,10 @@ Update the state of a cpu-tracked particle in the system. It is up to you to kno
     The id of the tracked particle to be updated.
 
 ``position`` (Optional)
-    A `Vector3` for the new position of the particle in local coordinates, this will be clamped to the particles extents due to normalization. If left unspecified, position will not be changed.
+    A :ref:`Vector3 <v3object>` for the new position of the particle in local coordinates, this will be clamped to the particles extents due to normalization. If left unspecified, position will not be changed.
 
 ``velocity`` (Optional)
-    A `Vector3` for new velocity of the created particle in local coordinates, this will clamped to the particles extents size due to normalization. If left unspecified, velocity will not be changed.
+    A :ref:`Vector3 <v3object>` for new velocity of the created particle in local coordinates, this will clamped to the particles extents size due to normalization. If left unspecified, velocity will not be changed.
 
 ``animationRange`` (Optional)
     The normalized column coordinates defining the subset of the systems `animation` texture to be used for this particle. If left unspecified, this will not be changed.
@@ -370,11 +278,11 @@ Remove all particles from the system by force.
 
 **Summary**
 
-Synchronise the system. This method is called by any `ParticleRenderable` visible in a `Scene` making use of this system, and may also be called manually if required.
+Synchronise the system. This method is called by any :ref:`ParticleRenderable <particlerenderable>` visible in a :ref:`Scene <scene>` making use of this system, and may also be called manually if required.
 
-This method will invoke the systems' `synchronize` callback, providing it with the frame and time delta (as determined by the system's `timer`).
+This method will invoke the systems synchronizer method, providing it with the frame and time delta (as determined by the system's `timer`).
 
-.. note :: Method will fail if a synchronize callback was not provided to the system.
+.. note :: Method will fail if a synchronizer object was not provided to the system.
 
 **Syntax** ::
 
@@ -403,7 +311,7 @@ Begin an update on the system. At this point particles which would be killed by 
     The amount of time that will be simulated for this update.
 
 ``shift`` (Optional)
-    A `Vector3` object specifying a local displacement to apply to all existing particles in the system to enable trails to form for moving systems. Default value is `[0, 0, 0]`.
+    A :ref:`Vector3 <v3object>` object specifying a local displacement to apply to all existing particles in the system to enable trails to form for moving systems. Default value is `[0, 0, 0]`.
 
 .. index::
     ParticleSystem; step
@@ -439,7 +347,7 @@ Query the position of a CPU-tracked particle.
     The id of the cpu-tracked particle.
 
 ``position`` (Optional)
-    If specified, the position will be written to this `Vector3` and returned, otherwise a new `Vector3` will be allocated.
+    If specified, the position will be written to this :ref:`Vector3 <v3object>` and returned, otherwise a new :ref:`Vector3 <v3object>` will be allocated.
 
 .. index::
     ParticleSystem; queryVelocity
@@ -461,7 +369,7 @@ Query the velocity of a CPU-tracked particle.
     The id of the cpu-tracked particle.
 
 ``velocity`` (Optional)
-    If specified, the velocity will be written to this `Vector3` and returned, otherwise a new `Vector3` will be allocated.
+    If specified, the velocity will be written to this :ref:`Vector3 <v3object>` and returned, otherwise a new :ref:`Vector3 <v3object>` will be allocated.
 
 .. index::
     ParticleSystem; queryRemainingLife
@@ -521,6 +429,18 @@ The maximum amount of particles the system can hold.
 .. note :: Read Only
 
 .. index::
+    pair: ParticleSystem; maxSpeed
+
+`maxSpeed`
+----------
+
+**Summary**
+
+The maximum speed achievable for any particle in the system.
+
+.. note :: Read Only
+
+.. index::
     pair: ParticleSystem; zSorted
 
 `zSorted`
@@ -533,6 +453,42 @@ Whether views onto this system will be z-sorted.
 .. note :: Read Only
 
 .. index::
+    pair: ParticleSystem; updater
+
+`updater`
+---------
+
+**Summary**
+
+The :ref:`ParticleUpdater <particleupdater>` object assigned to this system. Note that modifying the `parameters` field of this object will have no effect on any system already using the updater.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleSystem; renderer
+
+`renderer`
+----------
+
+**Summary**
+
+The :ref:`ParticleUpdater <particleupdater>` object assigned to this system. Note that modifying the `parameters` field of this object will have no effect on any system already using the renderer.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleSystem; synchronizer
+
+`synchronizer`
+--------------
+
+**Summary**
+
+The synchronizer object assigned to this system.
+
+.. note :: Read Only
+
+.. index::
     pair: ParticleSystem; updateParameters
 
 `updateParameters`
@@ -540,7 +496,7 @@ Whether views onto this system will be z-sorted.
 
 **Summary**
 
-The `TechniqueParameters` object encapsulating all parameters defined for the specific updater, and by the system for updating the particle system. You may use this object to change the specific updater parameters exposed, but you should not make changes to those defined by the `ParticleSystem` itself.
+The :ref:`TechniqueParameters <techniqueparameters>` object encapsulating all parameters defined for the specific updater, and by the system for updating the particle system. You may use this object to change the specific updater parameters exposed, but you should not make changes to those defined by the `ParticleSystem` itself.
 
 .. index::
     pair: ParticleSystem; renderParameters
@@ -550,7 +506,7 @@ The `TechniqueParameters` object encapsulating all parameters defined for the sp
 
 **Summary**
 
-The `TechniqueParameters` object encapsulating all parameters defined for the specific renderer, and by the system for updating the particle system. You may use this object to change the specific renderer parameters exposed, but you should not make changes to those defined by the `ParticleSystem` itself.
+The :ref:`TechniqueParameters <techniqueparameters>` object encapsulating all parameters defined for the specific renderer, and by the system for updating the particle system. You may use this object to change the specific renderer parameters exposed, but you should not make changes to those defined by the `ParticleSystem` itself.
 
 .. index::
     pair: ParticleSystem; PARTICLE_
@@ -575,204 +531,3 @@ Integer constants defining storage information for particles on the CPU and GPU.
 
     var attr = ParticleSystem.PARTICLE_X;
 
-.. _particleupdater:
-
-=============================
-The ParticleUpdater Interface
-=============================
-
-Encapsulates a replaceble element of a particle system responsible for updating the states of particles on both the CPU and GPU and aiding emitters in retrospective creation of particles through prediction.
-
-This object may be shared amongst many `ParticleSystems`.
-
-Properties
-==========
-
-.. index::
-    pair: ParticleUpdater; technique
-
-`technique`
------------
-
-The `Technique` to be used for updating particle states on the GPU.
-
-.. index::
-    pair: ParticleUpdater; parameters
-
-`parameters`
-------------
-
-An object defining the extra parameters that are required by this updater with their default values.
-
-The `ParticleSystem` will produce a copy of this object, adding the following additional fields defined in `particles-common.cgh` that should not be present in this object, but will always be present for use in `update` and `predict` calls.
-
-* `timeStep`
-* `lifeStep`
-* `center`
-* `halfExtents`
-* `maxSpeed`
-* `shift`
-* `previousState`
-* `creationState`
-* `creationScale`
-* `textureSize`
-* `invTextureSize`
-* `regionSize`
-* `regionPos`
-* `invRegionSize`
-
-.. index::
-    pair: ParticleUpdater; update
-
-Methods
-=======
-
-`update`
---------
-
-A function responsible for updating particle states on the CPU (For tracked particles).
-
-For the best performance, this function is required to actively kill off expired particles by removing them from the `tracked` array, and returning the number of tracked particles still alive at the end of the update.
-
-As this is such a low-level element of the particle system, there is little in the way of helpers, with design of the update method intended to match the cgfx shader technique.
-
-.. note :: Method is optional, if not present then tracking of particles on the CPU for the ParticleSystem will be disabled.
-
-**Parameters**
-
-``parameters``
-    A `TechniqueParameters` object containing all parameters defined by the system, and defined for this update with values to be used in the update process.
-
-``dataF``
-    A `Float32Array` containing the state of all particles in the system.
-
-``dataI``
-    A `Uint32Array` containing another view of the state of all particles in the system.
-
-``tracked``
-    A `Uint16Array` containing the list of particle indexes for particles of the statem that are both alive and tracked.
-
-``numTracked``
-    The number of elements of the `tracked` array to be considered.
-
-**Returns**
-
-Function must return the (possibly fewer) number of tracked particles still alive.
-
-.. index::
-    pair: ParticleUpdater; predict
-
-`predict`
----------
-
-A function responsible for predicting the position and velocity of a particle at some given time in the future.
-
-The function is used by emitters to "pretend" that the particle system and emitter are active at all times, even if the system is currently in hibernation due to being invisible in the Scene. The emitter can create particles in retrospect and call this prediction function to determine what position and velocity the particle would have had, if the system was actually active the entire time.
-
-This also serves, as a way of ensuring that the emittance of particles is frame-rate independent, as the emitter is able to emit particles at a higher rate than the update tick, with prediction and retrospective creation of particles making it appear as though the update tick was higher.
-
-This function should only ever be called for particles, who at the end of the simulation time to be predicted, are still alive.
-
-.. note :: Method is optional, if not present then emitters will simply be unable to predict the correct position and velocity for particles created retrospectively.
-
-**Parameters**
-
-``parameters``
-    A `TechniqueParameters` object containing all parameters defined by the system, and defined for this update with values to be used in the prediction process.
-
-``position``
-    A `Vector3` object holding the position for the particle at its creation. This object should be updated with the predicted position.
-
-``velocity``
-    A `Vector3` object holding the velocity for the particle at its creation. This object should be updated with the predicted velocity.
-
-``userData``
-    The `userData` of the particle at creation.
-
-``time``
-    The amount of time for which the particle should have its simulation predicted.
-
-**Returns**
-
-Function must return the predicted `userData` of the particle - should updating of the particle make use of a subset of the `userData` field for additional logic.
-
-.. _particlerenderer:
-
-==============================
-The ParticleRenderer Interface
-==============================
-
-Encapsulates a replaceable element of a particle system responsible for rendering the particles in the system.
-
-(TODO: CPU Fallback will require extra fields and logic to be provided by a renderer most likely as the present vertex shader logic would need to be replicated on the CPU wherever it relies on texture fetches. Additinoally there would be a second technique used for the CPU fallback which would have a different vertex shader at the very least).
-
-This object may be shared amongst many `ParticleSystems`.
-
-Properties
-==========
-
-.. index::
-    pair: ParticleRenderer; technique
-
-`technique`
------------
-
-The `Technique` to be used for rendering particle states on the GPU.
-
-.. index::
-    pair: ParticleRenderer; parameters
-
-`parameters`
-------------
-
-An object definining the parameters required by this specific renderer with their default values.
-
-The `ParticleSystem` will produce a copy of this object with additional fields added defined in `particles-common.cgh` which should not be used by this object.
-
-* `center`
-* `halfExtents`
-* `projection`
-* `modelView`
-* `textureSize`
-* `invTextureSize`
-* `regionSize`
-* `regionPos`
-* `invRegionSize`
-* `mappingSize`
-* `invMappingSize`
-* `mappingPos`
-* `mappingTable`
-* `vParticleState`
-* `fParticleState`
-* `animation`
-* `animationSize`
-
-Methods
-=======
-
-.. index::
-    pair: ParticleRenderer; createGeometry
-
-`createGeometry`
-----------------
-
-**Summary**
-
-Create a `ParticleGeometry` object compatible with this renderer.
-
-**Syntax** ::
-
-    var geometry = renderer.createGeometry({
-        graphicsDevice: GraphicsDevice,
-        maxParticles: 1024,
-        shared: false
-    });
-
-``graphicsDevice``
-    The `GraphicsDevice` object.
-
-``maxParticles``
-    The maximum amount of particles renderable with the created geometry object.
-
-``shared`` (Optional)
-    Whether this geometry is going to be shared amongst many particle systems or not.
