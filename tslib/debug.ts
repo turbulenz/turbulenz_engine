@@ -45,6 +45,9 @@ interface TurbulenzDebug
     assert(condition: any, msg?: string): void
     log(msg: string): void;
 
+    /// Call the given function.  No returns values are propagated.
+    evaluate(fn: { ():void; }): void;
+
     isNumber(s: any): boolean;
 
     /// Optionally call the performance warning callback
@@ -132,6 +135,11 @@ var debug : TurbulenzDebug = {
         window.console.log(msg);
     },
 
+    evaluate : function debugEvaluateFn(fn: {():void;})
+    {
+        fn();
+    },
+
     isNumber : function debugIsNumber(s)
     {
         return "number" === typeof s;
@@ -160,51 +168,51 @@ var debug : TurbulenzDebug = {
 
     isVec2 : function debugIsVec2Fn(v)
     {
-        return this.isMathType(v) && (2 === v.length);
+        return (2 === v.length);
     },
 
     isVec3 : function debugIsVec3Fn(v)
     {
-        return this.isMathType(v) && (3 === v.length);
+        return (3 === v.length);
     },
 
     isVec4 : function debugIsVec4Fn(v)
     {
-        return this.isMathType(v) && (4 === v.length);
+        return (4 === v.length);
     },
 
     isAABB : function debugIsAABBFn(v)
     {
-        return this.isMathType(v) && (6 === v.length);
+        return (6 === v.length);
     },
 
     isQuat : function debugIsQuatFn(v)
     {
-        return this.isMathType(v) && (4 === v.length);
+        return (4 === v.length);
     },
 
     isMtx33 : function debugIsMtx33Fn(v)
     {
-        return this.isMathType(v) && (9 === v.length);
+        return (9 === v.length);
     },
 
     isMtx43 : function debugIsMtx43Fn(v)
     {
-        return this.isMathType(v) && (12 === v.length);
+        return (12 === v.length);
     },
 
     isMtx34 : function debugIsMtx34Fn(v)
     {
-        return this.isMathType(v) && (12 === v.length);
+        return (12 === v.length);
     },
 
     isMtx44 : function debugIsMtx44Fn(v)
     {
-        return this.isMathType(v) && (16 === v.length);
+        return (16 === v.length);
     },
 
     isQuatPos : function debugIsQuatPos(v)
     {
-        return this.isMathType(v) && (7 === v.length);
+        return (7 === v.length);
     }
 };

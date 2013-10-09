@@ -207,12 +207,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         {
         }
 
-        return VMath;
+        return WebGLMathDevice;
     }
 
     createNativeMathDevice(params): MathDevice
     {
-        return VMath;
+        return WebGLMathDevice;
     }
 
     getGraphicsDevice(): WebGLGraphicsDevice
@@ -247,12 +247,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     getMathDevice(): MathDevice
     {
-        return VMath;
+        return WebGLMathDevice;
     }
 
     getNativeMathDevice(): MathDevice
     {
-        return VMath;
+        return WebGLMathDevice;
     }
 
     getObjectStats()
