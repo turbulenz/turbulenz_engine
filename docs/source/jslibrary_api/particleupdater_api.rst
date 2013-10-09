@@ -61,7 +61,7 @@ Methods
 
 A function responsible for updating particle states on the CPU (For tracked particles).
 
-For the best performance, this function is required to actively kill off expired particles by removing them from the `tracked` array, and returning the number of tracked particles still alive at the end of the update.
+For best performance, this function is provided with the full list of particles to be simulated, particles that are already dead should be ignored as these are later removed by the user.
 
 As this is such a low-level element of the particle system, there is little in the way of helpers, with design of the update method intended to match the cgfx shader technique.
 
@@ -83,10 +83,6 @@ As this is such a low-level element of the particle system, there is little in t
 
 ``numTracked``
     The number of elements of the `tracked` array to be considered.
-
-**Returns**
-
-Function must return the (possibly fewer) number of tracked particles still alive.
 
 .. index::
     pair: ParticleUpdater; predict

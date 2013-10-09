@@ -205,12 +205,16 @@ Note that this particle will be created at the end of the current update, and so
 ``forceCreation`` (Optional)
     Defalut value is `false`. If `true`, then this particle will be created, even when there is no space remaining in the system. Under such circumstances, the live particle closest to death will be replaced by the newly created particle.
 
+    Note that tracked particles are excluded from such replacement, so that even with `forceCreation` as `true`, in the rare event that the system is saturated with tracked particles, the creation will still fail.
+
 ``isTracked`` (Optional)
     Default value is `false`. If `true`, and `trackingEnabled` is `true` on the system, this particle will also be simulated on the CPU so that its position, velocity and other attributes can be queried throughout its life, and partial updates of the particles attributes may be made.
 
 The return value is the integer `id` corresponding to the particle slot used to create this particle. If the particle could not be created, then this `id` will be equal to `null`. If the particle is tracked, then this `id` can be used to query the particles attributes throughout its life.
 
 If the particle was not able to be created, then it is guaranteed that no further attempt to create a particle without `forceCreation` set to `true` will succeed until a system update has been perfomed.
+
+    Note that tracked particles will `not` be killed when their life is exhausted, and must be removed manually. This is to enable particle attributes to be queried even after death to determine final position/velocities.
 
 .. index::
     ParticleSystem; updateParticle

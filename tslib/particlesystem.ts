@@ -1157,7 +1157,7 @@ class ParticleQueue
 
     create(timeTillDeath: number, forceCreation:boolean = false): number
     {
-        if (forceCreation || (this.heap[0] <= this.time))
+        if ((forceCreation && isFinite(this.heap[0])) || (this.heap[0] <= this.time))
         {
             this.wasForced = (this.heap[0] > this.time);
             var id = this.heap[1];
@@ -3697,7 +3697,7 @@ interface ParticleUpdater
             data      : Float32Array,
             dataI     : Uint32Array,
             tracked   : Uint16Array,
-            numTracked: number): number;
+            numTracked: number): void;
     predict?(parameters: TechniqueParameters,
              position  : FloatArray,
              velocity  : FloatArray,
@@ -3817,38 +3817,42 @@ class DefaultParticleUpdater
         var decodeHalfUnsignedFloat = TextureEncode.decodeHalfUnsignedFloat;
         var encodeHalfUnsignedFloat = TextureEncode.encodeHalfUnsignedFloat;
 
-        var store = 0;
         var i;
         for (i = 0; i < numTracked; i += 1)
         {
             var index = tracked[i] * SPAN;
 
-            // Compute next life, kill particle if expired.
-            var life = decodeHalfUnsignedFloat(dataI[index + LIFE] >>> 16) - lifeStep;
-            if (life <= 0.0)
+            // Compute next life, if particle is dead, skip simulation
+            // Also prevent 'too much' time being simulated so that tracked
+            // particles stop simulation exactly at death.
+            var oldLife = decodeHalfUnsignedFloat(dataI[index + LIFE] >>> 16);
+            if (oldLife <= 0)
             {
                 continue;
             }
-
-            tracked[store] = tracked[i];
-            store++;
+            var life = oldLife - lifeStep;
+            var time = timeStep;
+            if (lifeStep !== 0)
+            {
+                time *= Math.min(lifeStep, oldLife) / lifeStep;
+            }
 
             var vx = dataF[index + VEL];
             var vy = dataF[index + VEL + 1];
             var vz = dataF[index + VEL + 2];
 
             // Update position
-            var x = dataF[index + POS]     + (vx * timeStep * h0) + sx;
-            var y = dataF[index + POS + 1] + (vy * timeStep * h1) + sy;
-            var z = dataF[index + POS + 2] + (vz * timeStep * h2) + sz;
+            var x = dataF[index + POS]     + (vx * time * h0) + sx;
+            var y = dataF[index + POS + 1] + (vy * time * h1) + sy;
+            var z = dataF[index + POS + 2] + (vz * time * h2) + sz;
             dataF[index + POS]     = (x < -1 ? -1 : x > 1 ? 1 : x);
             dataF[index + POS + 1] = (y < -1 ? -1 : y > 1 ? 1 : y);
             dataF[index + POS + 2] = (z < -1 ? -1 : z > 1 ? 1 : z);
 
             // Update velocity
-            x = drag * (vx + (ax * timeStep));
-            y = drag * (vy + (ay * timeStep));
-            z = drag * (vz + (az * timeStep));
+            x = drag * (vx + (ax * time));
+            y = drag * (vy + (ay * time));
+            z = drag * (vz + (az * time));
             dataF[index + VEL]     = (x < -1 ? -1 : x > 1 ? 1 : x);
             dataF[index + VEL + 1] = (y < -1 ? -1 : y > 1 ? 1 : y);
             dataF[index + VEL + 2] = (z < -1 ? -1 : z > 1 ? 1 : z);
@@ -3857,7 +3861,6 @@ class DefaultParticleUpdater
             dataI[index + LIFE] = (encodeHalfUnsignedFloat(life) << 16) |
                                   (0xffff & dataI[index + LIFE]);
         }
-        return store;
     }
 
     constructor() {}
@@ -4604,7 +4607,13 @@ class ParticleSystem
             lifeTime = this.maxLifeTime;
         }
 
-        var id = this.queue.create(lifeTime, params.forceCreation);
+        var queueTime = lifeTime;
+        if (params.isTracked && this.trackingEnabled)
+        {
+            queueTime = Number.POSITIVE_INFINITY;
+        }
+
+        var id = this.queue.create(queueTime, params.forceCreation);
         if (id === null)
         {
             return null;
@@ -5001,7 +5010,7 @@ class ParticleSystem
 
         if (this.trackingEnabled)
         {
-            this.numTracked = updater.update(this.updateParameters, this.cpuF32, this.cpuU32, this.tracked, this.numTracked);
+            updater.update(this.updateParameters, this.cpuF32, this.cpuU32, this.tracked, this.numTracked);
         }
     }
 
