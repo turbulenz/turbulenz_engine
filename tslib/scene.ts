@@ -240,10 +240,16 @@ class Scene
         debug.assert(rootNode.scene === this, "Root node is not in the scene");
         rootNode.removedFromScene(this);
 
-        var index = this.rootNodes.indexOf(rootNode);
+        var rootNodes = this.rootNodes;
+        var index = rootNodes.indexOf(rootNode);
         if (index !== -1)
         {
-            this.rootNodes.splice(index, 1);
+            var numRootNodes = (rootNodes.length - 1);
+            if (index < numRootNodes)
+            {
+                rootNodes[index] = rootNodes[numRootNodes];
+            }
+            rootNodes.length = numRootNodes;
         }
         delete this.rootNodesMap[name];
 
