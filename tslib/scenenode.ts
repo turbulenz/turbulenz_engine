@@ -1622,7 +1622,13 @@ class SceneNode
         delete this.scene;
 
         // Make sure there are no references to any nodes
-        SceneNode._tempDirtyNodes.length = 0;
+        var nodes = SceneNode._tempDirtyNodes;
+        var numNodes = nodes.length;
+        var n;
+        for (n = 0; n < numNodes; n += 1)
+        {
+            nodes[n] = null;
+        }
     }
 
     //
