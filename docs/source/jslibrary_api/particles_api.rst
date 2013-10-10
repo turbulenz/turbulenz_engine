@@ -11,8 +11,9 @@ Low Level Particle Systems API
     sharedrendercontext_api
     particlebuilder_api
     particlesystem_api
+    particlegeometry_api
     particleupdater_api
     particlerenderer_api
-    particlegeometry_api
+    particlesynchronizer_api
     particleview_api
     particlerenderable_api

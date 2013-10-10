@@ -51,16 +51,17 @@ Create a new particle system.
         maxParticles        : 1024,
         zSorted             : true,
         maxSortSteps        : null,
-        geometry            : particleGeometry,
-        sharedRenderContext : null,
         maxLifeTime         : 10,
         animation           : animationTexture,
         sharedAnimation     : false,
-        timer               : null,
-        synchronizer        : synchronizer,
         trackingEnabled     : false,
+        timer               : null,
+        synchronizer        : systemSynchronizer,
         updater             : systemUpdater,
-        renderer            : systemRenderer
+        renderer            : systemRenderer,
+        shaderManager       : shaderManager,
+        geometry            : particleGeometry,
+        sharedRenderContext : null
     });
 
 ``graphicsDevice``
@@ -84,14 +85,6 @@ Create a new particle system.
 ``maxSortSteps`` (Optional)
     The specific sorting algorithm used permits partial sorts of a view onto the system so that you may spread the cost of sorting over a period of time for better performance. The actual number of steps used depends on maxParticles, but this will place an upper bound on that number. By default a view will be completely sorted at every rendering.
 
-``geometry`` (Optional)
-    The :ref:`ParticleGeometry <particlegeometry>` instance to use in rendering a view of the system. This geometry instance must be at least as large as to render `maxParticles` number of particles.
-    If the geometry instance is not marked as `shared`, then it will be destroyed along with the system.
-    If geometry is not specified, an un-shared geometry will be created from the provided `renderer`.
-
-``sharedRenderContext`` (Optional)
-    A :ref:`SharedRenderContext <sharedrendercontext>` object from which to allocate texture regions for particle states on the GPU. If unspecified then a per-system set of textures and render targets will be created isntead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
-
 ``maxLifeTime``
     The maximum life permissable for any particle in the system, it will not be possible to created a particle whose life-time is greater than this value.
 
@@ -101,35 +94,41 @@ Create a new particle system.
 ``sharedAnimation`` (Optional)
     Default value is `false`. If `false`, then when the system is destroyed, the `animation` texture supplied to the system will also be destroyed.
 
-``timer`` (Optional)
-    Specify a timer function to determine the passage of time seen by the particle system on update. By default a function will be used which returns `TurbulenzEngine.time`, you would most certainly want this to be tied to a game update tick.
-
-``synchronizer`` (Optional)
-    An object whose `synchronize` function will be called by a :ref:`ParticleRenderable <particlerenderable>` referencing this system, used to emit particles and update the system whenever the renderable is updated (is visible) to the :ref:`Scene <scene>`. This method is required to peform the update of the system including calls to `beginUpdate`, `createParticle` and `endUpdate`.
-
-    The `synchronize` function takes the following arguments:
-
-    ``system``
-        The `ParticleSystem` being synchronized.
-
-    ``numFrames``
-        The number of frames elapsed since last synchronization.
-
-    ``elapsedTime``
-        The amount of time (as determined by the `ParticleSystem` timer) that has elapsed since the last synchronization.
-
 ``trackingEnabled`` (Optional)
     Default value is `false`. If `true`, then created particles will be able to be simulated on the CPU as well as the GPU, so that positions, velocities and other attributes may be queried at any future time until death to permit emitting particles based on positions of existing particles. This will essentially double the cost of simulating any tracked particles.
 
-``updater``
+``timer`` (Optional)
+    Specify a timer function to determine the passage of time seen by the particle system on update. By default a function will be used which returns `TurbulenzEngine.time`, you would most certainly want this to be tied to a game update tick instead.
+
+``synchronizer`` (Optional)
+    A :ref:`ParticleSynchronizer <particlesynchronizer>` object, to update the system and emit particles when the system is updated via a :ref:`ParticleRenderable <particlerenderable>`.
+
+    If unspecified, a :ref:`DefaultParticleSynchronizer <defaultparticlesynchronizer>` will be used.
+
+``updater`` (Optional)
     The :ref:`ParticleUpdater <particleupdater>` object for the particle system, responsible for defining the techniques and parameters used for GPU side simulation of particles, a function used to work on simulation of CPU side particles, and a prediction function to support retrospective creation of particles by emitters.
 
-    See :ref:`DefaultParticleUpdater <defaultparticleupdater>` for the default implementation.
+    If unspecified, a shared :ref:`DefaultParticleUpdater <defaultparticleupdater>` will be used.
 
-``renderer``
+``renderer`` (Optional)
     The :ref:`ParticleRenderer <particlerenderer>` object for the particle system, responsible for rendering particles on the GPU.
 
-    See :ref:`DefaultParticleRenderer <defaultparticlerenderer>` for the default implementation.
+    If unspecified, a shared :ref:`DefaultParticleRenderer <defaultparticlerenderer>` will be used using the `alpha` blend mode.
+
+``shaderManager`` (Optional)
+    A :ref:`ShaderManager <shadermanager>` object used to construct the default updater or renderer when un-specified. If specifying both a renderer and updater, then the shader manager is not required.
+
+``geometry`` (Optional)
+    The :ref:`ParticleGeometry <particlegeometry>` instance to use in rendering a view of the system. This geometry instance must be at least as large as to render `maxParticles` number of particles.
+    If the geometry instance is not marked as `shared`, then it will be destroyed along with the system.
+    If geometry is not specified, an un-shared geometry will be created from the provided `renderer`.
+
+``sharedRenderContext`` (Optional)
+    A :ref:`SharedRenderContext <sharedrendercontext>` object from which to allocate texture regions for particle states on the GPU.
+
+    If unspecified then a per-system set of textures and render targets will be created isntead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
+
+
 
 .. index::
     pair: ParticleSystem; destroy
@@ -160,6 +159,8 @@ All particles will be removed from the system, with internal timers reset so tha
 **Syntax** ::
 
     system.reset();
+
+.. _particlesystem_createparticle:
 
 .. index::
     pair: ParticleSystem; createParticle

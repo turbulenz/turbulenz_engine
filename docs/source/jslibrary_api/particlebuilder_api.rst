@@ -9,7 +9,7 @@
 The ParticleBuilder Object
 ==========================
 
-ParticleBuilder provides methods for constructing the necessary tetextures required for animating particle appearances in a particle system.
+ParticleBuilder provides methods for constructing the necessary textures required for animating particle appearances in a particle system.
 
 Methods
 =======
@@ -212,15 +212,20 @@ Any verification errors will be reported as late as possible, and any non-critic
 
         var tweaks = [
             /*particle 0*/ {
-                "rotation-scale": 0.5,
-                "rotation-offset": Math.PI
+                "color-scale": [-1, -1, -1, 1],
+                "color-offset": [1, 1, 1, 0]
             },
             /*particle 1*/ {
-                "scale-offset": [0, 1]
+                "scale-scale": [2, 2]
             }
         ];
 
+        // Effect here, would be to invert the color of particles using "particle 0" animation,
+        // and to double the size of particles using "particle 1" animation,
+
     Each tweak is of the form `attr-scale` or `attr-offset` defining an appropriately typed scale or offset for the system attribute.
+
+    These tweaks are applied before any interpolation or normalization occurs.
 
     Use of this parameter enables re-use of a basic particle animation amongst many systems with slightly different behaviours.
 

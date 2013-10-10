@@ -48,7 +48,9 @@ Allocate a new region of the shared textures. May return null in the case that a
 
     function setCallbackFn(newRegion)
     {
-        ..
+        // The shared render context was resized by some later allocations
+        // and the uvRectangle and renderTargets have been changed.
+        // .. handle changes here.
     }
     var region = sharedRenderContext.allocate({
         width: 64,

@@ -47,10 +47,20 @@ Create a new `ParticleGeometry` object.
     `GraphicsDevice` object to construct `VertexBuffer` data.
 
 ``maxParticles``
-    The maximum amount of particles that will be renderable with the resultant geometry.
+    The maximum amount of particles that will be renderable with the resultant geometry. Attempts to render more than this number of particles will fail.
 
 ``template``
     The template defines the geometry for a single particle, where `null` will be replaced by the particle index `[0,maxParticles)`.
+
+    In the above example, assuming `maxParticles = 5` would generate vertex data equivalent to: ::
+
+        [0,0, 1,0, 2,0,  0,0, 2,0, 3,0,
+         0,1, 1,1, 2,1,  0,1, 2,1, 3,1,
+         0,2, 1,2, 2,2,  0,2, 2,2, 3,2,
+         0,3, 1,3, 2,3,  0,3, 2,3, 3,3,
+         0,4, 1,4, 2,4,  0,4, 2,4, 3,4]
+
+    The default renderer uses the first integer to determine suitable offsets to the particles position for the 4 quad vertices, whilst the second integer (represented by `null` in the template) represents the index of the particle the vertex corresponds to.
 
     The vertex buffer data is restricted to a `Uint16Array`, so any data associated with a vertex must be compatible.
 

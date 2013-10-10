@@ -1413,6 +1413,10 @@ class Types {
     {
         return Types.arrayTypes.indexOf(Object.prototype.toString.call(x)) !== -1;
     }
+    static isFunction(x: any): boolean
+    {
+        return Object.prototype.toString.call(x) === "[object Function]";
+    }
     static isNumber(x: any): boolean
     {
         return Object.prototype.toString.call(x) === "[object Number]";
@@ -2440,7 +2444,7 @@ class ParticleBuilder
     static compile(params: {
         graphicsDevice : GraphicsDevice;
         particles      : Array<any>;
-        system?        : any;
+        system         : any;
         uvMap?         : { [name: string]: Array<Array<number>> };
         tweaks?        : Array<{ [name: string]: any }>; // any = number | Array<number>
         failOnWarnings?: boolean;
@@ -2455,35 +2459,6 @@ class ParticleBuilder
         if (failOnWarnings === undefined)
         {
             failOnWarnings = true;
-        }
-
-        if (!system)
-        {
-            system = [
-                {
-                    name: "color",
-                    type: "float4",
-                    "default": [1.0, 1.0, 1.0, 1.0],
-                    min: [0.0, 0.0, 0.0, 0.0],
-                    max: [1.0, 1.0, 1.0, 1.0],
-                    storage: "direct"
-                },
-                {
-                    name: "scale",
-                    type: "float2",
-                    "default": [1.0, 1.0]
-                },
-                {
-                    name: "rotation",
-                    type: "float",
-                    "default": 0.0
-                },
-                {
-                    name: "frame",
-                    type: "texture0",
-                    "default": 0
-                }
-            ];
         }
 
         var error = new BuildError();
@@ -3709,6 +3684,13 @@ class DefaultParticleUpdater
     technique: Technique;
     parameters: { [name: string]: any };
 
+    static template = {
+        acceleration          : [0, 0, 0],
+        drag                  : 0,
+        noiseTexture          : <string>null,
+        randomizedAcceleration: [0, 0, 0]
+    };
+
     createUserData(randomizeAcceleration = false, seed = 0)
     {
         return ((<any>randomizeAcceleration) << 25) | (seed << 16);
@@ -3899,6 +3881,18 @@ class DefaultParticleRenderer
     technique : Technique;
     parameters: { [name: string]: any };
 
+    static template = {
+        noiseTexture         : <string>null,
+        randomizedRotation   : 0.0,
+        randomizedOrientation: [0.0, 0.0],
+        randomizedScale      : [0.0, 0.0],
+        randomizedAlpha      : 0.0,
+        animatedRotation     : false,
+        animatedOrientation  : false,
+        animatedScale        : false,
+        animatedAlpha        : false
+    };
+
     createUserData(params: {
         facing?              : string;
         randomizeOrientation?: boolean;
@@ -4046,6 +4040,17 @@ class ParticleSystem
     static PARTICLE_ANIM = 7;
     // offset to access userData in cpu memory
     static PARTICLE_DATA = 8;
+
+    // For ParticleArchetype
+    static template = {
+        center         : [0, 0, 0],
+        halfExtents    : [1, 1, 1],
+        maxSpeed       : 10,
+        maxParticles   : 64,
+        zSorted        : false,
+        maxSortSteps   : 10000,
+        trackingEnabled: false
+    };
 
     private static defaultNoiseTexture: Texture;
     static getDefaultNoiseTexture(graphicsDevice: GraphicsDevice): Texture
@@ -4372,6 +4377,9 @@ class ParticleSystem
         ParticleSystem.numCreated = 0;
     }
 
+    private static sharedDefaultUpdater: ParticleUpdater;
+    private static sharedDefaultRenderer: ParticleRenderer;
+
     private constructor() {}
     static create(params: {
         graphicsDevice      : GraphicsDevice;
@@ -4395,8 +4403,9 @@ class ParticleSystem
 
         trackingEnabled?    : boolean;
 
-        updater             : ParticleUpdater;
-        renderer            : ParticleRenderer;
+        updater?            : ParticleUpdater;
+        renderer?           : ParticleRenderer;
+        shaderManager?      : ShaderManager;
     }): ParticleSystem
     {
         var ret = new ParticleSystem();
@@ -4419,6 +4428,10 @@ class ParticleSystem
                 };
         }
         ret.synchronizer = params.synchronizer;
+        if (!ret.synchronizer)
+        {
+            ret.synchronizer = DefaultParticleSynchronizer.create({});
+        }
         ret.lastVisible = null;
         ret.lastTime = null;
 
@@ -4430,6 +4443,37 @@ class ParticleSystem
         ret.maxSortSteps  = (params.maxSortSteps === undefined ? 10000 : params.maxSortSteps);
         ret.maxSpeed      = params.maxSpeed;
 
+        ret.views = [];
+
+        ret.renderer = params.renderer;
+        if (!ret.renderer)
+        {
+            if (!ParticleSystem.sharedDefaultRenderer)
+            {
+                ParticleSystem.sharedDefaultRenderer =
+                    DefaultParticleRenderer.create(
+                        params.graphicsDevice,
+                        params.shaderManager,
+                        "alpha"
+                    );
+            }
+            ret.renderer = ParticleSystem.sharedDefaultRenderer;
+        }
+
+        ret.updater = params.updater;
+        if (!ret.updater)
+        {
+            if (!ParticleSystem.sharedDefaultUpdater)
+            {
+                ParticleSystem.sharedDefaultUpdater =
+                    DefaultParticleUpdater.create(
+                        params.graphicsDevice,
+                        params.shaderManager
+                    );
+            }
+            ret.updater = ParticleSystem.sharedDefaultUpdater;
+        }
+
         ret.geometry = params.geometry;
         if (!ret.geometry)
         {
@@ -4439,9 +4483,6 @@ class ParticleSystem
         ParticleSystem.sizeCreated(ret.graphicsDevice, ret.particleSize);
         ret.queue = new ParticleQueue(ret.maxParticles);
 
-        ret.renderer = params.renderer;
-        ret.updater = params.updater;
-        ret.views = [];
 
         ret.trackingEnabled = (params.trackingEnabled === true) && (ret.updater !== undefined);
         if (ret.trackingEnabled)
@@ -5468,7 +5509,7 @@ class ParticleRenderable
 
     private invalidated: boolean;
     private worldExtentsUpdate: number;
-    private world: FloatArray;
+    world: FloatArray;
 
     system: ParticleSystem;
     fixedOrientation: boolean;
@@ -5713,52 +5754,60 @@ class ParticleRenderable
 }
 
 //
-// DefaultParticleSynchronize
+// DefaultParticleSynchronizer
 //
-interface DefaultParticleSynchronizeEvent
+interface DefaultParticleSynchronizerEvent
 {
-    time    : number;
-    lifeTime: number;
-    fun(event  : DefaultParticleSynchronizeEvent,
-        emitter: DefaultParticleSynchronize,
-        system : ParticleSystem): void;
+    time: number;
+    fun(event       : DefaultParticleSynchronizerEvent,
+        synchronizer: DefaultParticleSynchronizer,
+        system      : ParticleSystem): void;
 }
-interface DefaultParticleSynchronizeEmitter
+interface DefaultParticleSynchronizerEmitter
 {
     enabled: boolean;
-    sync(emitter : DefaultParticleSynchronize,
+    sync(emitter : DefaultParticleSynchronizer,
          system  : ParticleSystem,
          timeStep: number): void;
 }
-class DefaultParticleSynchronize
+class DefaultParticleSynchronizer
 {
-    emitters: Array<DefaultParticleSynchronizeEmitter>;
-    events: TimeoutQueue<DefaultParticleSynchronizeEvent>;
+    emitters: Array<DefaultParticleSynchronizerEmitter>;
+    events: TimeoutQueue<DefaultParticleSynchronizerEvent>;
+
+    renderable: ParticleRenderable;
+    trailFollow: number;
+
+    static template = {
+        fixedTimeStep: 1/60,
+        maxSubSteps: 3,
+        trailFollow: 1
+    };
 
     fixedTimeStep: number;
     maxSubSteps: number;
     offsetTime: number = 0;
     synchronize(system: ParticleSystem, _, timeStep: number)
     {
-        if (this.fixedTimeStep !== undefined)
+        if (this.fixedTimeStep !== undefined && this.fixedTimeStep !== null)
         {
             timeStep += this.offsetTime;
             var numSteps = Math.floor(timeStep / this.fixedTimeStep);
             if (numSteps > this.maxSubSteps)
             {
-                numSteps = this.maxSubSteps - 1;
-                // jump forwards to have fixed time steps at end of frame.
-                this.update(system, timeStep - (numSteps * this.fixedTimeStep));
+                numSteps = this.maxSubSteps;
+                timeStep /= numSteps;
                 this.offsetTime = 0;
             }
             else
             {
                 this.offsetTime = timeStep - (numSteps * this.fixedTimeStep);
+                timeStep = this.fixedTimeStep;
             }
             while (numSteps > 0)
             {
                 numSteps -= 1;
-                this.update(system, this.fixedTimeStep);
+                this.update(system, timeStep);
             }
         }
         else
@@ -5767,9 +5816,32 @@ class DefaultParticleSynchronize
         }
     }
 
-    update(system: ParticleSystem, timeStep: number)
+    private previousPos: FloatArray;
+    private shift: FloatArray;
+    private update(system: ParticleSystem, timeStep: number)
     {
-        system.beginUpdate(timeStep);
+        var shift = this.shift;
+        if (this.renderable)
+        {
+            var xform = this.renderable.world;
+            var prev = this.previousPos;
+            if (!prev)
+            {
+                prev = this.previousPos = VMath.m43Pos(xform);
+            }
+            shift[0] = (prev[0] - xform[9])  * this.trailFollow;
+            shift[1] = (prev[1] - xform[10]) * this.trailFollow;
+            shift[2] = (prev[2] - xform[11]) * this.trailFollow;
+            prev[0] = xform[9];
+            prev[1] = xform[10];
+            prev[2] = xform[11];
+        }
+        else
+        {
+            VMath.v3BuildZero(shift);
+        }
+
+        system.beginUpdate(timeStep, shift);
 
         var emitters = this.emitters;
         var num = emitters.length;
@@ -5787,26 +5859,26 @@ class DefaultParticleSynchronize
         while (events.hasNext())
         {
             var event = events.next();
-            if (event.time + event.lifeTime > 0)
-            {
-                event.fun(event, this, system);
-            }
+            event.fun(event, this, system);
         }
 
         system.endUpdate();
     }
 
-    enqueue(event: DefaultParticleSynchronizeEvent)
+    enqueue(event: DefaultParticleSynchronizerEvent)
     {
         this.events.insert(event, event.time);
     }
 
-    addEmitter(sync: DefaultParticleSynchronizeEmitter)
+    addEmitter(sync: DefaultParticleSynchronizerEmitter)
     {
-        this.emitters.push(sync);
+        if (this.emitters.indexOf(sync) === -1)
+        {
+            this.emitters.push(sync);
+        }
     }
 
-    removeEmitter(sync: DefaultParticleSynchronizeEmitter)
+    removeEmitter(sync: DefaultParticleSynchronizerEmitter)
     {
         var index = this.emitters.indexOf(sync);
         if (index !== -1)
@@ -5819,95 +5891,421 @@ class DefaultParticleSynchronize
     static create(params: {
         fixedTimeStep?: number;
         maxSubSteps?  : number;
+        renderable?   : ParticleRenderable;
+        trailFollow?  : number;
     })
     {
-        var ret = new DefaultParticleSynchronize();
+        var ret = new DefaultParticleSynchronizer();
         ret.events = new TimeoutQueue();
         ret.emitters  = [];
         ret.fixedTimeStep = params.fixedTimeStep;
         ret.maxSubSteps = (params.maxSubSteps !== undefined ? params.maxSubSteps : 3);
+        ret.renderable = params.renderable;
+        ret.trailFollow = (params.trailFollow !== undefined ? params.trailFollow : 1.0);
+        ret.shift = VMath.v3BuildZero();
         return ret;
     }
 }
 class DefaultParticleEmitter
 {
     private offsetTime: number;
-    rate: number;
-    bursting: boolean;
+    private bursting: number;
     forceCreation: boolean;
     usePrediction: boolean;
 
+    emittance: {
+        // emit every '1/rate' seconds, after a delay of 'delay' seconds.
+        delay: number;
+        rate: number;
+
+        // at each emit event, emit between burstMin and burstMax particles.
+        burstMin: number;
+        burstMax: number;
+    };
+
+    particle: {
+        // range of animation texture to use.
+        animationRange: FloatArray;
+
+        // emit particles with life time between min and max.
+        lifeTimeMin: number;
+        lifeTimeMax: number;
+
+        // emit particles with this user data.
+        userData: number;
+    };
+
+    position: {
+        // emit particles at this position.
+        position: FloatArray;
+
+        // if spherical, emit within a sphere of the position.
+        // otherwise within a disc whose normal is specified.
+        spherical: boolean;
+        normal: FloatArray;
+
+        // emit within min and max radius of position.
+        radiusMin: number;
+        radiusMax: number;
+        // and using the following distribution 'uniform'/'normal' using given sigma.
+        radiusDistribution: string;
+        radiusSigma: number;
+    };
+
+    velocity: {
+        // emit particles in this direction (spherical coordinates)
+        theta: number;
+        phi: number;
+
+        // emit with a speed between min and max.
+        speedMin: number;
+        speedMax: number;
+
+        // emit in a flat spread of given angular range.
+        flatSpread: number;
+        // and with the flat spread at a given angle from direction.
+        flatSpreadAngle: number;
+        // using given distribution.
+        flatSpreadDistribution: string;
+        flatSpreadSigma: number;
+
+        // emit about a cone after flat spread of given angular range.
+        conicalSpread: number;
+        // using given distribution.
+        conicalSpreadDistribution: string;
+        conicalSpreadSigma: number;
+    };
+
     enabled: boolean;
-    sync(emitter: DefaultParticleSynchronize, system: ParticleSystem, timeStep: number): void
+
+    static template = {
+        enabled: true,
+        forceCreation: false,
+        usePrediction: true,
+        emittance: {
+            delay: 0,
+            rate: 4,
+            burstMin: 1,
+            burstMax: 1
+        },
+        particle: {
+            // animationRange is built from particle descriptions in archetype.
+            lifeTimeMin: 1,
+            lifeTimeMax: 1,
+            userData: 0
+        },
+        position: {
+            position: [0, 0, 0],
+            spherical: true,
+            normal: [0, 1, 0],
+            radiusMin: 0,
+            radiusMax: 0,
+            radiusDistribution: "uniform",
+            radiusSigma: 0.25
+        },
+        velocity: {
+            theta: 0,
+            phi: 0,
+            speedMin: 1,
+            speedMax: 1,
+            flatSpread: 0,
+            flatSpreadAngle: 0,
+            flatSpreadDistribution: "uniform",
+            flatSpreadSigma: 0.25,
+            conicalSpread: 0,
+            conicalSpreadDistribution: "uniform",
+            conicalSpreadSigma: 0.25
+        }
+    };
+
+    sync(emitter: DefaultParticleSynchronizer, system: ParticleSystem, timeStep: number): void
     {
+        var particle = this.particle;
+        var emittance = this.emittance;
+        var position = this.position;
+        var velocity = this.velocity;
+
         // timeLapse is the amount of time that has passed
         // since the cue for the next particle generation.
         //
         // numGen is the total number of particles that need to be
         // created retrospectively.
         var timeLapse = timeStep + this.offsetTime;
-        var numGen = Math.ceil(timeLapse * this.rate);
-        this.offsetTime += timeStep - (numGen / this.rate);
+        var numGen = Math.ceil(timeLapse * emittance.rate);
+        this.offsetTime += timeStep - (numGen / emittance.rate);
         if (numGen <= 0)
         {
             return;
         }
-        else if (this.bursting)
+        else if (this.bursting !== null)
         {
-            numGen = 1;
+            numGen = Math.min(numGen, this.bursting);
+        }
+
+        if (this.bursting !== null)
+        {
+            this.bursting -= numGen;
+            if (this.bursting === 0)
+            {
+                this.bursting = null;
+                this.enabled = false;
+            }
         }
 
         // startGen is the number of particles we `skip` based on max life time
         // that have already died.
-        var maxLife = 1; // TODO
-        var startGen = Math.max(0, Math.ceil((timeLapse - maxLife) * this.rate));
+        var maxLife = particle.lifeTimeMax;
+        var startGen = Math.max(0, Math.ceil((timeLapse - maxLife) * emittance.rate));
         if (startGen >= numGen)
         {
-            if (this.bursting)
-            {
-                this.bursting = false;
-                this.enabled = false;
-            }
             return;
         }
+
+        var pSigmaSqr = position.radiusSigma * position.radiusSigma;
+        var pSigmaRecip = 1 / Math.sqrt(pSigmaSqr * 2 * Math.PI);
+        var pSigmaMin = pSigmaRecip * Math.exp(-1 / (2 * pSigmaSqr));
+
+        var cSigmaSqr = velocity.conicalSpreadSigma * velocity.conicalSpreadSigma;
+        var cSigmaRecip = 1 / Math.sqrt(cSigmaSqr * 2 * Math.PI);
+        var cSigmaMin = cSigmaRecip * Math.exp(-1 / (2 * cSigmaSqr));
+        var cSpreadCoef = 2 * velocity.conicalSpread / Math.PI;
+
+        var fSigmaSqr = velocity.flatSpreadSigma * velocity.flatSpreadSigma;
+        var fSigmaRecip = 1 / Math.sqrt(fSigmaSqr * 2 * Math.PI);
+        var fSigmaMin = fSigmaRecip * Math.exp(-1 / (2 * fSigmaSqr));
 
         var i;
         for (i = startGen; i < numGen; i += 1)
         {
-            var burstingCount = 1; //TODO
+            var burstCount = emittance.burstMin + Math.random() * (emittance.burstMax - emittance.burstMin);
             var j;
-            for (j = 0; j < burstingCount; j += 1)
+            for (j = 0; j < burstCount; j += 1)
             {
                 // compute relative creation and death times for specific generated particle
                 // using real randomised time, and discard if already dead.
-                var creationTime = (i / this.rate) - timeLapse;
-                var lifeTime = 1; // TODO
+                var creationTime = (i / emittance.rate) - timeLapse;
+                var lifeTime = particle.lifeTimeMin + Math.random() * (particle.lifeTimeMax - particle.lifeTimeMin);
                 if (creationTime + lifeTime <= 0)
                 {
                     continue;
                 }
 
                 // TODO sort out memory usage here, creating functions etc. ew.
-                var position = [0, 0, 0];
-                var velocity = [4, 40, 0];
-                var animRange = [0, 1];
+                var pos = [0, 0, 0];
+                var vel = [0, 0, 0];
+                var anim = [0, 0];
+
+                var y0: number, y1: number, y2: number, rand: number;
+                var ctheta: number, cphi: number, rad: number;
+                var theta: number, phi: number, sint: number, cost: number, sinp: number, cosp: number;
+
+                pos[0] = position.position[0];
+                pos[1] = position.position[1];
+                pos[2] = position.position[2];
+                rand = 0;
+                switch (position.radiusDistribution)
+                {
+                    case "uniform":
+                        rand = Math.random();
+                        break;
+                    case "normal":
+                        rand = Math.random();
+                        rand = pSigmaRecip * Math.exp(-rand * rand / (2 * pSigmaSqr));
+                        // normalise to [0, 1]
+                        rand = (rand - pSigmaMin) / (pSigmaRecip - pSigmaMin);
+                        break;
+                }
+                if (position.spherical)
+                {
+                    // uniform distribution of spherical angles in sphere.
+                    theta = Math.acos(1 - (Math.random() * 2));
+                    phi   = Math.random() * (Math.PI * 2);
+                    sint  = Math.sin(theta);
+                    cost  = Math.cos(theta);
+                    sinp  = Math.sin(phi);
+                    cosp  = Math.cos(phi);
+
+                    // Re-distribute radius for volume element.
+                    rand = Math.pow(rand, 1 / 3);
+                    rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
+
+                    pos[0] += cosp * sint * rad;
+                    pos[1] += cost * rad;
+                    pos[2] += sinp * sint * rad;
+                }
+                else
+                {
+                    // Re-distribute radius for area element.
+                    rand = Math.sqrt(rand);
+                    rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
+
+                    var rx, rz;
+                    var tx, ty, tz;
+                    var normal = position.normal;
+                    var nx = normal[0];
+                    var ny = normal[1];
+                    var nz = normal[2];
+                    if (nx == 0 && nz == 0)
+                    {
+                        rx = tz = rad;
+                        rz = tx = ty = 0;
+                    }
+                    else
+                    {
+                        var rec = rad / Math.sqrt(nx * nx + nz * nz);
+                        rx = -nz * rec;
+                        rz = nx * rec;
+
+                        tx = -rz * ny;
+                        ty = (rz * nx) - (rx * nz);
+                        tz = rx * ny;
+                        rec = rad / Math.sqrt(tx * tx + ty * ty + tz * tz);
+                        tx *= rec;
+                        ty *= rec;
+                        tz *= rec;
+                    }
+
+                    // Uniform angle around disc.
+                    theta = Math.random() * Math.PI * 2;
+                    cost = Math.cos(theta);
+                    sint = Math.sin(theta);
+
+                    pos[0] += rx * cost + tx * sint;
+                    pos[1] += ty * sint;
+                    pos[2] += rz * cost + tz * sint;
+                }
+
+                var phi   = velocity.phi;
+                var theta = velocity.theta;
+                var sint  = Math.sin(theta);
+                var cost  = Math.cos(theta);
+                var sinp  = Math.sin(phi);
+                var cosp  = Math.cos(phi);
+
+                // local y-axis becomes target direction after circular spread
+                // and base direction rotation.
+                if (velocity.conicalSpread !== 0)
+                {
+                    rand = 0;
+                    switch (velocity.conicalSpreadDistribution)
+                    {
+                        case "uniform":
+                            rand = Math.random();
+                            break;
+                        case "normal":
+                            rand = Math.random();
+                            rand = cSigmaRecip * Math.exp(-rand * rand / (2 * cSigmaSqr));
+                            // normalise to [0,1]
+                            rand = (rand - cSigmaMin) / (cSigmaRecip - cSigmaMin);
+                            break;
+                    }
+                    // Massage ctheta so that the spherical sampling is uniform on the surface of a sphere.
+                    ctheta = Math.acos(1 - rand * cSpreadCoef);
+                    cphi   = Math.random() * (Math.PI * 2);
+                    var csint  = Math.sin(ctheta);
+                    var ccost  = Math.cos(ctheta);
+                    var csinp  = Math.sin(cphi);
+                    var ccosp  = Math.cos(cphi);
+                    var r0     = ccosp * csint;
+                    var r1     = (cost * r0) + (sint * ccost);
+                    var r2     = csinp * csint;
+                    var r3     = csinp * ccost;
+                    var r4     = ccosp * ccost;
+                    var r5     = (cost * r4) - (sint * csint);
+                    // spherical rotation by ctheta, cphi of y-axis (0,1,0)
+                    // followed by spherical rotation by theta, phi
+                    y0 = ((cosp * r1) - (sinp * r2));
+                    y1 = ((cost * ccost) - (sint * r0));
+                    y2 = ((sinp * r1) + (cosp * r2));
+                }
+                else
+                {
+                    // spherical rotation by theta, phi of y-axis (0,1,0)
+                    y0 = cosp * sint;
+                    y1 = cost;
+                    y2 = sinp * sint;
+                }
+
+                // directional spreads
+                // rotate around (base-rotated) z-axis for vertical spread of y
+                var d, s, c, C, y0n, y1n, cs;
+                if (velocity.flatSpread !== 0)
+                {
+                    rand = 0;
+                    switch (velocity.flatSpreadDistribution)
+                    {
+                        case "uniform":
+                            rand = (Math.random() - 0.5) * 2.0;
+                            break;
+                        case "normal":
+                            var frand = (Math.random() - 0.5) * 2.0;
+                            rand = fSigmaRecip * Math.exp(-frand * frand / (2 * fSigmaSqr));
+                            // normalise to [0,1]
+                            rand = (rand - fSigmaMin) / (fSigmaRecip - fSigmaMin);
+                            // negate if required, bringing range to [-1, 1]
+                            if (frand < 0) rand = -rand;
+                            break;
+                    }
+                    d  = rand * velocity.flatSpread;
+                    s  = Math.sin(d);
+                    c  = Math.cos(d);
+                    C  = 1 - c;
+                    cs = cosp * s;
+                    var csC = cosp * sinp * C;
+                    var ss  = sinp * s;
+                    y0n = (sinp * sinp * C + c) * y0 - (csC * y2 + cs * y1);
+                    y1n = (cs * y0) + (c * y1) + (ss * y2);
+                    y2  = (cosp * cosp * C + c) * y2 - (csC * y0 + ss * y1);
+                    y0  = y0n;
+                    y1  = y1n;
+                }
+                // rotate around (base-rotated) y-axis for direction of spread
+                if (velocity.flatSpreadAngle !== 0)
+                {
+                    d  = velocity.flatSpreadAngle;
+                    s  = Math.sin(d);
+                    c  = Math.cos(d);
+                    C  = 1 - c;
+                    var x0 = cosp * sint;
+                    var x2 = sinp * sint;
+                    var x0C  = x0 * C;
+                    var x2C  = x2 * C;
+                    var x0s  = x0 * s;
+                    var x2s  = x2 * s;
+                    var x20C = x2 * x0C;
+                    var x2cC = x2C * cost;
+                    var x0cC = x0C * cost;
+                    cs  = cost * s;
+                    y0n = (x0 * x0C + c) * y0 + (x0cC - x2s) * y1 + (x20C + cs) * y2;
+                    y1n = (x0cC + x2s) * y0 + (cost * cost * C + c) * y1 + (x2cC - x0s) * y2;
+                    y2  = (x2 * x2C + c) * y2 + (x2cC + x0s) * y1 + (x20C - cs) * y0;
+                    y0  = y0n;
+                    y1  = y1n;
+                }
+                var speed = velocity.speedMin + Math.random() * (velocity.speedMax - velocity.speedMin);
+                vel[0] = speed * y0;
+                vel[1] = speed * y1;
+                vel[2] = speed * y2;
+
+                anim[0] = particle.animationRange[0];
+                anim[1] = particle.animationRange[1];
+
                 if (this.usePrediction)
                 {
-                    system.updater.predict(system.updateParameters, position, velocity, 0, -creationTime);
-                    animRange[0] = animRange[1] - (animRange[1] - animRange[0]) * (1 + creationTime / lifeTime);
+                    system.updater.predict(system.updateParameters, pos, vel, 0, -creationTime);
+                    anim[0] = anim[1] - (anim[1] - anim[0]) * (1 + creationTime / lifeTime);
                 }
                 var event = {
                     time: creationTime,
-                    lifeTime: lifeTime,
 
                     // particle creation parameters
                     particle: {
-                        position: position,
-                        velocity: velocity,
+                        position: pos,
+                        velocity: vel,
                         lifeTime: lifeTime + creationTime,
-                        animationRange: animRange,
-                        userData: 0,
-                        forceCreation: false,
+                        animationRange: anim,
+                        userData: particle.userData,
+                        forceCreation: this.forceCreation,
                     },
 
                     fun: function (event, emitter, system)
@@ -5918,43 +6316,610 @@ class DefaultParticleEmitter
                 emitter.enqueue(event);
             }
         }
-
-        if (this.bursting)
-        {
-            this.bursting = false;
-            this.enabled = false;
-        }
     }
 
     constructor() {}
-    static create(params: {
-        rate? : number;
-        enabled?: boolean;
-        forceCreation?: boolean;
-        usePrediction?: boolean;
-    })
+    static create()
     {
+        var template = DefaultParticleEmitter.template;
+
         var ret = new DefaultParticleEmitter();
-        ret.offsetTime    = 0;
-        ret.bursting      = false;
-        ret.rate          = (params.rate          === undefined ? 4     : params.rate);
-        ret.forceCreation = (params.forceCreation === undefined ? false : params.forceCreation);
-        ret.usePrediction = (params.usePrediction === undefined ? true  : params.usePrediction);
-        ret.enabled       = (params.enabled       === undefined ? true  : params.enabled);
+        ret.emittance = Types.copy(template.emittance);
+        ret.particle = Types.copy(template.particle);
+        ret.particle.animationRange = [0, 1]; // not part of template.
+        ret.position = Types.copy(template.position);
+        ret.velocity = Types.copy(template.velocity);
+        ret.forceCreation = template.forceCreation;
+        ret.usePrediction = template.usePrediction;
+        ret.enabled = template.enabled;
+        ret.bursting = null;
+
+        if (ret.enabled)
+        {
+            ret.enable();
+        }
+
         return ret;
     }
 
     enable(): void
     {
         this.enabled = true;
+        this.offsetTime = -this.emittance.delay;
     }
     disable(): void
     {
         this.enabled = false;
     }
-    burst(): void
+    burst(count = 1): void
     {
         this.enable();
-        this.bursting = true;
+        this.bursting = count;
     }
 }
+
+
+//
+// ParticleArchetype
+//
+// (Complete, serializable description of a particle system)
+//
+interface ParticleArchetype
+{
+    system: any; // ParticleSystem.template.
+    renderer: { name?: string }; // name left out = default
+    updater: { name?: string }; //
+    synchronizer: { name?: string };
+    animationSystem?: string; //
+    packedTexture: string; // may be null
+    particles: {
+        [name: string]: {
+            animation?: any; // may be null, string (name) or object
+            tweaks?: { [name: string]: any }; // may be null, applied to animation
+            uvRectangle?: Array<number>; // may be null, applied to animation (uvMaps)
+            // texture[0]: Array<string>; // may be null, packed, applied to animation (texture0)
+        }
+    };
+    emitters: Array<{ name?: string; particle: string }>; // at least a name and particle
+    context: any; // defined by manager to enable shared storages and live reloading.
+}
+
+//
+// ParticleManager
+//
+class ParticleManager
+{
+    private renderers:     { [name: string]: { template: any; preload: (any) => void; value: any } };
+    private updaters:      { [name: string]: { template: any; preload: (any) => void; value: any } };
+    private systems:       { [name: string]: any };
+    private particles:     { [name: string]: any };
+    private synchronizers: { [name: string]: { template: any; value: () => any } };
+    private emitters:      { [name: string]: { template: any; value: () => any } };
+
+    private graphicsDevice: GraphicsDevice;
+    private textureManager: TextureManager;
+    private shaderManager: ShaderManager;
+
+    constructor() {}
+    static create(graphicsDevice, textureManager, shaderManager)
+    {
+        var ret = new ParticleManager();
+        ret.graphicsDevice = graphicsDevice;
+        ret.textureManager = textureManager;
+        ret.shaderManager = shaderManager;
+        ret.renderers = {};
+        ret.updaters = {};
+        ret.systems = {};
+        ret.particles = {};
+        ret.synchronizers = {};
+        ret.emitters = {};
+
+        function preloadDefaultRenderer(defn)
+        {
+            shaderManager.load("shaders/particles-default-render.cgfx");
+            if (defn.noiseTexture)
+            {
+                textureManager.load(defn.noiseTexture);
+            }
+        }
+        function preloadDefaultUpdater(defn)
+        {
+            shaderManager.load("shaders/particles-default-update.cgfx");
+            if (defn.noiseTexture)
+            {
+                textureManager.load(defn.noiseTexture);
+            }
+        }
+
+        ret.registerRenderer("default", DefaultParticleRenderer.template, preloadDefaultRenderer, function ()
+        {
+            return DefaultParticleRenderer.create(graphicsDevice, shaderManager, "alpha");
+        });
+        ret.registerRenderer("alpha", DefaultParticleRenderer.template, preloadDefaultRenderer, function ()
+        {
+            return DefaultParticleRenderer.create(graphicsDevice, shaderManager, "alpha");
+        });
+        ret.registerRenderer("additive", DefaultParticleRenderer.template, preloadDefaultRenderer, function ()
+        {
+            return DefaultParticleRenderer.create(graphicsDevice, shaderManager, "additive");
+        });
+        ret.registerRenderer("opaque", DefaultParticleRenderer.template, preloadDefaultRenderer, function ()
+        {
+            return DefaultParticleRenderer.create(graphicsDevice, shaderManager, "opaque");
+        });
+        ret.registerUpdater("default", DefaultParticleUpdater.template, preloadDefaultUpdater, function ()
+        {
+            return DefaultParticleUpdater.create(graphicsDevice, shaderManager);
+        });
+        ret.registerAnimationSystem("default", [
+            {
+                name: "color",
+                type: "float4",
+                "default": [1.0, 1.0, 1.0, 1.0],
+                min: [0.0, 0.0, 0.0, 0.0],
+                max: [1.0, 1.0, 1.0, 1.0],
+                storage: "direct"
+            },
+            {
+                name: "scale",
+                type: "float2",
+                "default": [1.0, 1.0]
+            },
+            {
+                name: "rotation",
+                type: "float",
+                "default": 0.0
+            },
+            {
+                name: "frame",
+                type: "texture0",
+                "default": 0
+            }
+        ]);
+        ret.registerParticleAnimation("default", {
+            name: "default",
+            animation: [{}]
+        });
+        ret.registerSynchronizer("default", DefaultParticleSynchronizer.template, function () {
+            return DefaultParticleSynchronizer.create({});
+        });
+        ret.registerEmitter("default", DefaultParticleEmitter.template, function () {
+            return DefaultParticleEmitter.create();
+        });
+        return ret;
+    }
+
+    getRenderer(name?: string): ParticleRenderer
+    {
+        name = name || "default";
+        if (!this.renderers.hasOwnProperty(name))
+        {
+            return null;
+        }
+        else
+        {
+            var renderer = this.renderers[name].value;
+            if (typeof(renderer) === "function")
+            {
+                renderer = this.renderers[name].value = renderer();
+            }
+            return renderer;
+        }
+    }
+    registerRenderer(name: string, template: any, preload: any, generator?: any): void
+    {
+        if (generator)
+        {
+            this.renderers[name] = { template: template, preload: preload, value: generator };
+        }
+        else
+        {
+            this.renderers[name] = { template: template, preload: function () {}, value: generator };
+        }
+    }
+    getUpdater(name?: string): ParticleUpdater
+    {
+        name = name || "default";
+        if (!this.updaters.hasOwnProperty(name))
+        {
+            return null;
+        }
+        else
+        {
+            var updater = this.updaters[name].value;
+            if (typeof(updater) === "function")
+            {
+                updater = this.updaters[name].value = updater();
+            }
+            return updater;
+        }
+    }
+    registerUpdater(name: string, template: any, preload: any, generator: any): void
+    {
+        if (generator)
+        {
+            this.updaters[name] = { template: template, preload: preload, value: generator };
+        }
+        else
+        {
+            this.updaters[name] = { template: template, preload: function () {}, value: generator };
+        }
+    }
+    getAnimationSystem(name?: string): any
+    {
+        return this.systems[name || "default"];
+    }
+    registerAnimationSystem(name: string, definition: any): void
+    {
+        this.systems[name] = definition;
+    }
+    getParticleAnimation(name?: string): any
+    {
+        return this.particles[name || "default"];
+    }
+    registerParticleAnimation(name: string, definition: any): void
+    {
+        this.particles[name] = definition;
+    }
+    getEmitter(name?: string): any
+    {
+        return this.emitters[name || "default"];
+    }
+    registerEmitter(name: string, template: any, generator: () => any): void
+    {
+        this.emitters[name] = { template: template, value: generator };
+    }
+    getSynchronizer(name?: string): any
+    {
+        return this.synchronizers[name || "default"];
+    }
+    registerSynchronizer(name: string, template: any, generator: () => any): void
+    {
+        this.synchronizers[name] = { template: template, value: generator };
+    }
+
+    preloadArchetype(archetype: ParticleArchetype): void
+    {
+        this.renderers[archetype.renderer.name || "default"].preload(archetype.renderer);
+        this.updaters[archetype.updater.name || "default"].preload(archetype.updater);
+        if (archetype.packedTexture)
+        {
+            this.textureManager.load(archetype.packedTexture);
+        }
+        for (var f in archetype.particles)
+        {
+            if (!archetype.particles.hasOwnProperty(f))
+            {
+                continue;
+            }
+
+            var particle = archetype.particles[f];
+            for (var g in particle)
+            {
+                if (!particle.hasOwnProperty(g))
+                {
+                    continue;
+                }
+                if (g.substr(0, 7) === "texture")
+                {
+                    if (Types.isString(particle[g]))
+                    {
+                        this.textureManager.load(particle[g]);
+                    }
+                    else if (Types.isArray(particle[g]))
+                    {
+                        particle[g].map(this.textureManager.load);
+                    }
+                }
+            }
+        }
+    }
+
+    initializeArchetype(archetype: ParticleArchetype): void
+    {
+        var context = archetype.context;
+        if (context.builtOnce)
+        {
+            return;
+        }
+        context.builtOnce = true;
+
+        var mapping, texture, tweaks;
+        if (archetype.packedTexture)
+        {
+            texture = this.textureManager.get(archetype.packedTexture);
+            mapping = null; // TODO get uvRectangles from particles
+        }
+        else
+        {
+            // TODO may need to pack texture for individual particles too.
+            // TODO do packing.
+        }
+
+        tweaks = null; // TODO get tweaks from particles
+
+        context.definition = ParticleBuilder.compile({
+            system: this.getSystem(archetype.animationSystem || "default"),
+            particles: [], // TODO
+            mapping: mapping,
+            tweaks: tweaks
+        });
+        context.renderer     = this.getRenderer    (this._name(archetype.renderer));
+        context.updater      = this.getUpdater     (this._name(archetype.updater));
+        context.synchronizer = this.getSynchronizer(this._name(archetype.synchronize));
+
+        // TODO
+        // can we resize ParticleGeometry?
+        // please do: would allow 1 geometry per renderer type (and even then, shared for same 'type')
+    },
+
+    serializeArchetype(archetype: ParticleArchetype): string
+    {
+        return JSON.stringify(this.compressArchetype(archetype));
+    }
+
+    deserializeArchetype(archetype: string): ParticleArchetype
+    {
+        return this.decompressArchetype(JSON.parse(archetype));
+    }
+
+    _name(x: {name?: string})
+    {
+        return (x && x.name) || "default";
+    }
+    compressArchetype(archetype: ParticleArchetype): any
+    {
+        var renderer     = this.renderers    [this._name(archetype.renderer)];
+        var updater      = this.updaters     [this._name(archetype.updater)];
+        var synchronizer = this.synchronizers[this._name(archetype.synchronizer)];
+        var delta = {
+            system         : this.recordDelta(ParticleSystem.template, archetype.system),
+            renderer       : this.recordDelta(renderer.template,       archetype.renderer),
+            updater        : this.recordDelta(updater.template,        archetype.updater),
+            synchronizer   : this.recordDelta(synchronizer.template,   archetype.synchronizer),
+            animationSystem: archetype.animationSystem,
+            packedTexture  : archetype.packedTexture,
+            particles      : archetype.particles,
+            emitters       : []
+        };
+        var i;
+        var count = archetype.emitters.length;
+        for (i = 0; i < count; i += 1)
+        {
+            var emitter = archetype.emitters[i];
+            var edelta = this.recordDelta(this.emitters[this._name(emitter)].template, emitter);
+            edelta.name     = this._name(emitter);
+            edelta.particle = emitter.particle;
+            delta.emitters.push(edelta);
+        }
+        delta.renderer.name      = this._name(archetype.renderer);
+        delta.updater.name       = this._name(archetype.updater);
+        delta.synchronizer.name  = this._name(archetype.synchronizer);
+        return delta;
+    }
+
+    decompressArchetype(data: any): ParticleArchetype
+    {
+        var renderer     = this.renderers    [this._name(data.renderer)];
+        var updater      = this.updaters     [this._name(data.updater)];
+        var synchronizer = this.synchronizers[this._name(data.synchronizer)];
+        var archetype: any = {
+            system         : this.applyDelta(ParticleSystem.template, data.system),
+            renderer       : this.applyDelta(renderer.template,       data.renderer),
+            updater        : this.applyDelta(updater.template,        data.updater),
+            synchronizer   : this.applyDelta(synchronizer.template,   data.synchronizer),
+            animationSystem: data.animationSystem,
+            packedTexture  : data.packedTexture,
+            particles      : data.particles,
+            emitters       : []
+        };
+        var i;
+        var count = data.emitters.length;
+        for (i = 0; i < count; i += 1)
+        {
+            var emitter = data.emitters[i];
+            var earchetype = this.applyDelta(this.emitters[this._name(emitter)].template, emitter);
+            earchetype.name     = this._name(emitter);
+            earchetype.particle = emitter.particle;
+            archetype.emitters.push(earchetype);
+        }
+        archetype.renderer.name      = this._name(data.renderer);
+        archetype.updater.name       = this._name(data.updater);
+        archetype.synchronizer.name  = this._name(data.synchronizer);
+        return archetype;
+    }
+
+    // Build an object delta of the given object from a template.
+    // Assumption that the object has a structure matching the template exactly except
+    // that objects are permitted to have extra fields (ignored)
+    //
+    // pseudo:
+    // let delta t o = match type(t) with
+    //    | Null | Undefined ->
+    //         o
+    //    | Array ->
+    //         let del = zipWith delta t o in
+    //         if (all (= null) del) then null else del
+    //    | Object ->
+    //         let o = filter(hasField t) o in
+    //         let del = filter (.!= null) $ zipFieldsWith delta t o
+    //         if (del = {}) then null else del
+    //    | Function ->
+    //         let del = map (delta t()) o in
+    //         if (all (= null) del) then null else del
+    //    | _ ->
+    //         if (t = o) then null else o
+    //
+    // eg:
+    // delta {xs: function () { return {x: 10, y: [20, 30] }; }, y: null}
+    //       {xs: [{x: 10, y: [20, 30]}, {x: 20, y: [10, 30]}, {x: 20, y: [20, 30]}], y: "hello"}
+    //     = {xs: [null, {x: 20, y: [10, null]}, {x: 20}], y: "hello"}
+    recordDelta(template, obj)
+    {
+        var allZero = true;
+        var count, i, delta;
+        if (Types.isNullUndefined(template))
+        {
+            delta = Types.copy(obj);
+            allZero = false;
+        }
+        else if (Types.isArray(template))
+        {
+            delta = [];
+            count = template.length;
+            for (i = 0; i < count; i += 1)
+            {
+                delta.push(this.recordDelta(template[i], obj[i]));
+                if (delta[i] !== null)
+                {
+                    allZero = false;
+                }
+            }
+        }
+        else if (Types.isObject(template))
+        {
+            allZero = true;
+            delta = {};
+            var f;
+            for (f in template)
+            {
+                if (template.hasOwnProperty(f))
+                {
+                    var del = this.recordDelta(template[f], obj[f]);
+                    if (del !== null)
+                    {
+                        delta[f] = del;
+                        allZero = false;
+                    }
+                }
+            }
+        }
+        else if (Types.isFunction(template))
+        {
+            template = template();
+            delta = [];
+            count = obj.length;
+            for (i = 0; i < count; i += 1)
+            {
+                delta.push(this.recordDelta(template, obj[i]));
+                if (delta[i] !== null)
+                {
+                    allZero = false;
+                }
+            }
+        }
+        else
+        {
+            delta = obj;
+            allZero = template === obj;
+        }
+        return (allZero ? null : delta);
+    }
+
+    // Apply an object delta to a given template.
+    // Method is written to permit the template to have changed since the delta was created
+    //   to account for archetype updates with old saved deltas being loaded.
+    //   Behaviour that objects in the template can have fields add/removed and still use the
+    //     appropriate parts of the delta, with any other change leading to a discard of the
+    //     relevant portion of the delta.
+    //
+    // To enable easier usage from editors, can specify the object to which the delta-applied
+    // template should be stored to keep ui elements set up based on template functional.
+    //
+    // pseudo (ignoring storage):
+    // let apply t d = match type(t) with
+    //    | Null | Undefined ->
+    //         clone d
+    //    | Array ->
+    //         if (type(d) != Array || d.length != t.length) map (apply _ null) t
+    //         else zipWith apply t d
+    //    | Object ->
+    //         if (type(d) != Object) mapFields (apply _ null) t
+    //         else let d = filter (hasField t) d in
+    //              zipFieldsWith apply t d
+    //    | Function ->
+    //         if (type(d) != Array) []
+    //         else map (apply t()) d
+    //    | _ ->
+    //         if (d = null) then t else d
+    applyDelta(template, delta, obj?)
+    {
+        var count, i;
+        if (Types.isNullUndefined(template))
+        {
+            obj = Types.copy(delta);
+        }
+        else if (Types.isArray(template))
+        {
+            if (Types.isNullUndefined(obj))
+            {
+                obj = [];
+            }
+            count = template.length;
+            if (!Types.isArray(delta) || delta.length !== template.length)
+            {
+                for (i = 0; i < count; i += 1)
+                {
+                    obj[i] = this.applyDelta(template[i], null, obj[i]);
+                }
+            }
+            else
+            {
+                for (i = 0; i < count; i += 1)
+                {
+                    obj[i] = this.applyDelta(template[i], delta[i], obj[i]);
+                }
+            }
+        }
+        else if (Types.isObject(template))
+        {
+            if (Types.isNullUndefined(obj))
+            {
+                obj = {};
+            }
+            var f;
+            if (!Types.isObject(delta))
+            {
+                for (f in template)
+                {
+                    if (template.hasOwnProperty(f))
+                    {
+                        obj[f] = this.applyDelta(template[f], null, obj[f]);
+                    }
+                }
+            }
+            else
+            {
+                for (f in template)
+                {
+                    if (template.hasOwnProperty(f))
+                    {
+                        obj[f] = this.applyDelta(template[f], delta[f], obj[f]);
+                    }
+                }
+            }
+        }
+        else if (Types.isFunction(template))
+        {
+            if (Types.isNullUndefined(obj))
+            {
+                obj = [];
+            }
+            if (Types.isArray(delta))
+            {
+                template = template();
+                count = delta.length;
+                for (i = 0; i < count; i += 1)
+                {
+                    obj[i] = this.applyDelta(template, delta[i], obj[i]);
+                }
+            }
+        }
+        else
+        {
+            obj = Types.isNullUndefined(delta) ? template : delta;
+        }
+        return obj;
+    }
+}
+
