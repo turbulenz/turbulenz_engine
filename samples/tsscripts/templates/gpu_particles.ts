@@ -103,27 +103,43 @@ TurbulenzEngine.onload = function onloadFn()
     var node2;
 
     var manager = ParticleManager.create(graphicsDevice, textureManager, shaderManager);
+    manager.registerParticleAnimation({
+        name: "black and white",
+        animation: [{
+            color: [0, 0, 0, 1]
+        },
+        {
+            time: 1,
+            color: [1, 1, 1, 1]
+        }]
+    });
     var archetype1 = manager.decompressArchetype({
-        renderer: { noiseTexture: "textures/noise.dds" },
-        synchronizer: {
-            fixedTimeStep: 1/60
+        packedTexture: "textures/smoke.dds",
+        renderer: {
+            name: "additive"
         },
         particles: {
-            smoke: {
-                texture: "textures/smoke.dds"
-            }
+            smoke: {}
         },
         emitters: [{
-            particle: "smoke"
+            particle: "smoke",
+            emittance: {
+                burstMin: 0,
+                burstMax: 4
+            },
+            velocity: {
+                speedMin: 0.5,
+                speedMax: 1
+            }
         }]
     });
     var archetype2 = manager.decompressArchetype({
-        renderer: { name: "additive" },
+        packedTexture: "textures/smoke.dds",
+        renderer: {
+            name: "opaque"
+        },
         particles: {
-            smoke: {
-                animation: "smoke",
-                texture: "textures/smoke.dds"
-            }
+            smoke: {}
         },
         emitters: [{
             particle: "smoke"
@@ -137,8 +153,6 @@ TurbulenzEngine.onload = function onloadFn()
     var previousFrameTime;
     function init()
     {
-        previousFrameTime = TurbulenzEngine.time;
-
         renderer = ForwardRendering.create(
             graphicsDevice,
             mathDevice,
@@ -146,6 +160,20 @@ TurbulenzEngine.onload = function onloadFn()
             effectManager,
             {}
         );
+
+        manager.initialize(scene, renderer.passIndex.transparent);
+
+        var instance1 = manager.createInstance(archetype2);
+        var instance2 = manager.createInstance(archetype2);
+        var instance3 = manager.createInstance(archetype1);
+        instance1.renderable.setLocalTransform(VMath.m43BuildTranslation(2, 0, 0));
+        instance2.renderable.setLocalTransform(VMath.m43BuildTranslation(-2, 0, 0));
+        manager.addInstanceToScene(instance1);
+        manager.addInstanceToScene(instance2);
+        manager.addInstanceToScene(instance3);
+        previousFrameTime = TurbulenzEngine.time;
+
+        var context = (<any>manager).systemContext;
 
         // Create particle renderers and updaters
         // and set some defaults before creating any systems.
@@ -213,7 +241,7 @@ TurbulenzEngine.onload = function onloadFn()
             renderer: alphaRenderer,
             updater: updater,
             synchronizer: sync,
-            zSorted: true
+            sharedRenderContext: context
         });
         system.updateParameters["acceleration"] = [0, 0, 0];
         system.updateParameters["drag"] = 0;
@@ -264,10 +292,10 @@ TurbulenzEngine.onload = function onloadFn()
             maxParticles: 1000,
             maxLifeTime: defn.maxLifeTime,
             animation: defn.animation,
-            renderer: additiveRenderer,
+            renderer: alphaRenderer,
             updater: updater,
             synchronizer: sync,
-            zSorted: true
+            sharedRenderContext: context
         });
         var scale = defn.attribute["scale"];
         var rotation = defn.attribute["rotation"];
@@ -300,8 +328,8 @@ TurbulenzEngine.onload = function onloadFn()
             return;
         }
 
-        node1.setLocalTransform(mathDevice.m43BuildTranslation(3 + 3 * Math.sin(TurbulenzEngine.time), 0, 0));
-        node2.setLocalTransform(mathDevice.m43BuildTranslation(-3 + 3 * Math.sin(TurbulenzEngine.time), 0, 0));
+/*        node1.setLocalTransform(mathDevice.m43BuildTranslation(3 + 3 * Math.sin(TurbulenzEngine.time), 0, 0));
+        node2.setLocalTransform(mathDevice.m43BuildTranslation(-3 + 3 * Math.sin(TurbulenzEngine.time), 0, 0));*/
 
         var currentTime = TurbulenzEngine.time;
         var deltaTime = (currentTime - previousFrameTime);

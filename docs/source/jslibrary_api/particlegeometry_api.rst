@@ -95,6 +95,52 @@ Release memory used by geometry instance. This should only be called on shared g
 
     geometry.destroy();
 
+.. index::
+    pair: ParticleGeometry; resize
+
+`resize`
+--------
+
+**Summary**
+
+Resize the geometry object.
+
+**Syntax** ::
+
+    geometry.resize(newMaxParticles);
+
+.. index::
+    pair: ParticleGeometry; register
+
+`register`
+----------
+
+**Summary**
+
+Register callback handler for when geometry is resized.
+
+**Syntax** ::
+
+    geometry.register(callback);
+
+``callback``
+
+    Function taking no arguments, should handle that `geometry.vertexBuffer` will have been changed to a new object.
+
+.. index::
+    pair: ParticleGeometry; unregister
+
+`unregister`
+------------
+
+**Summary**
+
+Unregister callback handler.
+
+**Syntax** ::
+
+    geometry.unregister(callback);
+
 Properties
 ==========
 

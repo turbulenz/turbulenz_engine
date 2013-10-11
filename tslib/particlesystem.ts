@@ -3454,6 +3454,8 @@ class SharedRenderContext
         if (ctxW > ctx.width || ctxH > ctx.height)
         {
             ctx = this.contexts[bin] = this.resizeContext(ctx, ctxW, ctxH);
+            ctxW = ctx.width;
+            ctxH = ctx.height;
         }
 
         var invW = (1 / ctxW);
@@ -3599,10 +3601,73 @@ class ParticleGeometry
     vertexBuffer  : VertexBuffer;
     particleStride: number;
     semantics     : Semantics;
+    attributes    : Array<any>;
     primitive     : any;
 
     maxParticles  : number;
     shared        : boolean;
+
+    private graphicsDevice: GraphicsDevice;
+    private template: Array<number>;
+
+    private handlers: Array<() => void>;
+    register(cb: () => void)
+    {
+        if (this.handlers.indexOf(cb) === -1)
+        {
+            this.handlers.push(cb);
+        }
+    }
+    unregister(cb: () => void)
+    {
+        var index = this.handlers.indexOf(cb);
+        if (index !== -1)
+        {
+            this.handlers.splice(index, 1);
+        }
+    }
+
+    resize(maxParticles: number)
+    {
+        if (maxParticles <= this.maxParticles)
+        {
+            return;
+        }
+
+        var template       = this.template;
+        var templateLength = template.length;
+        var particleData   = new Uint16Array(maxParticles * templateLength);
+
+        var i;
+        for (i = 0; i < maxParticles; i += 1)
+        {
+            var index = (i * templateLength);
+            var j;
+            for (j = 0; j < templateLength; j += 1)
+            {
+                particleData[index + j] = (template[j] === null ? i : template[j]);
+            }
+        }
+
+        this.maxParticles = maxParticles;
+        if (this.vertexBuffer)
+        {
+            this.vertexBuffer.destroy();
+        }
+        this.vertexBuffer = this.graphicsDevice.createVertexBuffer({
+            numVertices: maxParticles * this.particleStride,
+            attributes : this.attributes,
+            dynamic    : false,
+            data       : particleData
+        });
+
+        var handlers = this.handlers;
+        var count = handlers.length;
+        for (i = 0; i < count; i += 1)
+        {
+            handlers[i]();
+        }
+    }
 
     constructor() {}
     static create(params: {
@@ -3619,26 +3684,8 @@ class ParticleGeometry
         var maxParticles   = params.maxParticles;
         var template       = params.template;
         var templateLength = template.length;
-        var particleData   = new Uint16Array(maxParticles * templateLength);
-
-        var i;
-        for (i = 0; i < maxParticles; i += 1)
-        {
-            var index = (i * templateLength);
-            var j;
-            for (j = 0; j < templateLength; j += 1)
-            {
-                particleData[index + j] = (template[j] === null ? i : template[j]);
-            }
-        }
 
         var particleStride = (templateLength / params.stride) | 0;
-        var particleVertices = params.graphicsDevice.createVertexBuffer({
-            numVertices: maxParticles * particleStride,
-            attributes : params.attributes,
-            dynamic    : false,
-            data       : particleData
-        });
         var primitive = params.primitive;
         if (primitive === undefined)
         {
@@ -3646,12 +3693,15 @@ class ParticleGeometry
         }
 
         var ret = new ParticleGeometry();
-        ret.maxParticles   = maxParticles;
-        ret.vertexBuffer   = particleVertices;
+        ret.handlers       = [];
+        ret.graphicsDevice = params.graphicsDevice;
         ret.particleStride = particleStride;
         ret.semantics      = params.semantics;
         ret.primitive      = primitive;
         ret.shared         = (params.shared === undefined ? false : params.shared);
+        ret.template       = template.concat();
+        ret.attributes     = params.attributes.concat();
+        ret.resize(params.maxParticles);
         return ret;
     }
 
@@ -3690,6 +3740,14 @@ class DefaultParticleUpdater
         noiseTexture          : <string>null,
         randomizedAcceleration: [0, 0, 0]
     };
+    applyTemplate(textureManager, system, template)
+    {
+        var parameters = system.updateParameters;
+        VMath.v3Copy(template.acceleration, parameters["acceleration"]);
+        VMath.v3Copy(template.randomizedAcceleration, parameters["randomizedAcceleration"]);
+        parameters["drag"] = template.drag;
+        parameters["noiseTexture"] = textureManager.get(template.noiseTexture);
+    }
 
     createUserData(randomizeAcceleration = false, seed = 0)
     {
@@ -3864,6 +3922,10 @@ class DefaultParticleUpdater
 //
 // ParticleRenderer
 //
+interface ParticleGeometryFn
+{
+    (graphicsDevice: GraphicsDevice, maxParticles: number, shared?: boolean): ParticleGeometry;
+}
 interface ParticleRenderer
 {
     technique : Technique;
@@ -3871,6 +3933,10 @@ interface ParticleRenderer
     createGeometry(graphicsDevice: GraphicsDevice,
                    maxParticles  : number,
                    shared?       : boolean): ParticleGeometry;
+    setAnimationParameters(
+        system: ParticleSystem,
+        definition: { attribute: { [name: string]: AttributeRange } }
+    ): void
 }
 
 //
@@ -3881,6 +3947,7 @@ class DefaultParticleRenderer
     technique : Technique;
     parameters: { [name: string]: any };
 
+    // For ParticleArchetype
     static template = {
         noiseTexture         : <string>null,
         randomizedRotation   : 0.0,
@@ -3892,6 +3959,20 @@ class DefaultParticleRenderer
         animatedScale        : false,
         animatedAlpha        : false
     };
+    applyTemplate(textureManager, system, template, texture)
+    {
+        var parameters = system.renderParameters;
+        parameters["noiseTexture"] = textureManager.get(template.noiseTexture);
+        parameters["randomizedRotation"] = template.randomizedRotation;
+        VMath.v2Copy(template.randomizedOrientation, parameters["randomizedOrientation"]);
+        VMath.v2Copy(template.randomizedScale, parameters["randomizedScale"]);
+        parameters["randomizedAlpha"] = template.randomizedAlpha;
+        parameters["animatedRotation"] = template.animatedRotation;
+        parameters["animatedOrientation"] = template.animatedOrientation;
+        parameters["animatedScale"] = template.animatedScale;
+        parameters["animatedAlpha"] = template.animatedAlpha;
+        parameters["texture"] = texture;
+    }
 
     createUserData(params: {
         facing?              : string;
@@ -4231,7 +4312,11 @@ class ParticleSystem
     private static createdData      : Uint8Array;
     private static createdData32    : Uint32Array;
     private static createdTexture   : Texture;
-    private static createdForceFlush: boolean = false;
+
+    // region is clean, no need to flush when no particles were created and used region is smaller.
+    private static createdValidWidth : number;
+    private static createdValidHeight: number;
+
     private static addCreated(id: number): void
     {
         // we don't care about corner cases like id's being duplicated, the amount of work
@@ -4326,6 +4411,8 @@ class ParticleSystem
                 renderable: false,
                 dynamic   : true
             });
+            ParticleSystem.createdValidWidth  = newW;
+            ParticleSystem.createdValidHeight = newH;
             ParticleSystem.createdData    = new Uint8Array(newW * newH * 4); // rgba
             ParticleSystem.createdData32  = new Uint32Array(ParticleSystem.createdData.buffer);
         }
@@ -4335,25 +4422,40 @@ class ParticleSystem
         var dimx = ParticleSystem.PARTICLE_DIMX;
         var dimy = ParticleSystem.PARTICLE_DIMY;
 
+        var validW = ParticleSystem.createdValidWidth;
+        var validH = ParticleSystem.createdValidHeight;
+
+        var usedW = particleSize[0] * dimx;
+        var usedH = particleSize[1] * dimy;
+
         var numCreated = ParticleSystem.numCreated;
-        if (numCreated !== 0 || ParticleSystem.createdForceFlush)
+        if (numCreated !== 0 || (usedW > validW || usedH > validH))
         {
-            ParticleSystem.createdForceFlush = false;
             // XXX requires SDK 0,27,0 :ref: polycraft benchmark.
-            ParticleSystem.createdTexture.setData(
-                ParticleSystem.createdData, 0, 0,
-                0,
-                0,
-                particleSize[0] * dimx,
-                particleSize[1] * dimy
-            );
+            ParticleSystem.createdTexture.setData(ParticleSystem.createdData, 0, 0, 0, 0, usedW, usedH);
+            if (numCreated === 0)
+            {
+                // Only expand valid region if it is contained in used region.
+                // Particle states are 'square like' so this is almost always
+                // the best decision.
+                if (usedW >= validW && usedH >= validH)
+                {
+                    ParticleSystem.createdValidWidth = usedW;
+                    ParticleSystem.createdValidHeight = usedH;
+                }
+            }
+            else
+            {
+                ParticleSystem.createdValidWidth  = 0;
+                ParticleSystem.createdValidHeight = 0;
+            }
         }
         if (numCreated === 0)
         {
             return;
         }
 
-        var data = ParticleSystem.createdData32;
+        var data32 = ParticleSystem.createdData32;
         var indices = ParticleSystem.createdIndices;
 
         var sizeX = particleSize[0];
@@ -4368,12 +4470,11 @@ class ParticleSystem
             var v = ((id - u) / sizeX) | 0;
             var index = (v * dimy * w) + (u * dimx);
 
-            data[index] = data[index + 1] = data[index + 2] =
-                data[index + w] = data[index + w + 1] = data[index + w + 2] =
-                data[index + (w * 2)] = data[index + (w * 2) + 1] = data[index + (w * 2) + 2] = 0;
+            data32[index] = data32[index + 1] = data32[index + 2] =
+                data32[index + w] = data32[index + w + 1] = data32[index + w + 2] =
+                data32[index + (w * 2)] = data32[index + (w * 2) + 1] = data32[index + (w * 2) + 2] = 0;
         }
 
-        ParticleSystem.createdForceFlush = true;
         ParticleSystem.numCreated = 0;
     }
 
@@ -4775,6 +4876,7 @@ class ParticleSystem
         this.queue.clear();
 
         // create dead particles in all slots.
+        var data = ParticleSystem.createdData32;
         var particleSize = this.particleSize;
         var numX = particleSize[0];
         var numY = particleSize[1];
@@ -4787,7 +4889,7 @@ class ParticleSystem
             for (u = 0; u < numX; u += 1)
             {
                 var gpu = (v * dimy * w) + (u * dimx);
-                ParticleSystem.createdData32[gpu + 2] = 0x0000ffff; // life = 0, total life <> 0 signal to create.
+                data[gpu + 2] = 0x0000ffff; // life = 0, total life <> 0 signal to create.
                 ParticleSystem.addCreated((v * particleSize[0]) + u);
             }
         }
@@ -5543,8 +5645,8 @@ class ParticleRenderable
 
     private updateWorldExtents()
     {
-        var center = this.system.center;
-        var halfExtents = this.system.halfExtents;
+        var center = this.center;
+        var halfExtents = this.halfExtents;
         var worldExtents = this.worldExtents;
         var world = this.world;
         var node = this.node;
@@ -5632,6 +5734,7 @@ class ParticleRenderable
         }
 
         var ret = new ParticleRenderable();
+        ret.resizedGeometryCb = ParticleRenderable.resizedGeometry.bind(ret);
         ret.graphicsDevice = gd;
         ret.passIndex = params.passIndex;
         ret.sharedMaterial = ParticleRenderable.material;
@@ -5730,10 +5833,17 @@ class ParticleRenderable
 
     setSystem(system: ParticleSystem): void
     {
+        if (this.system)
+        {
+            this.system.geometry.unregister(this.resizedGeometryCb);
+        }
+
         this.system = system;
         this.lazySystem = null;
+
         if (system)
         {
+            system.geometry.register(this.resizedGeometryCb);
             this.center      = system.center;
             this.halfExtents = system.halfExtents;
 
@@ -5749,6 +5859,17 @@ class ParticleRenderable
 
             this.drawParameters       = [parameters];
             this.shadowDrawParameters = this.drawParameters;
+        }
+    }
+
+    private resizedGeometryCb: () => void;
+    private static resizedGeometry(self): void
+    {
+        var system = self.system;
+        if (system)
+        {
+            var parameters = self.drawParameters[0];
+            parameters.setVertexBuffer(0, self.geometry.vertexBuffer);
         }
     }
 }
@@ -5779,10 +5900,16 @@ class DefaultParticleSynchronizer
     trailFollow: number;
 
     static template = {
-        fixedTimeStep: 1/60,
+        fixedTimeStep: <number>null,
         maxSubSteps: 3,
         trailFollow: 1
     };
+    applyTemplate(template)
+    {
+        this.fixedTimeStep = template.fixedTimeStep;
+        this.maxSubSteps = template.maxSubSteps;
+        this.trailFollow = template.trailFollow;
+    }
 
     fixedTimeStep: number;
     maxSubSteps: number;
@@ -6017,6 +6144,24 @@ class DefaultParticleEmitter
             conicalSpreadSigma: 0.25
         }
     };
+    applyTemplate(template, animationRange)
+    {
+        if (template.enabled)
+        {
+            this.enable();
+        }
+        else
+        {
+            this.disable();
+        }
+        this.forceCreation = template.forceCreation;
+        this.usePrediction = template.usePrediction;
+        Types.copy(template.emittance, this.emittance);
+        Types.copy(template.particle, this.particle);
+        VMath.v2Copy(animationRange, this.particle.animationRange);
+        Types.copy(template.position, this.position);
+        Types.copy(template.velocity, this.velocity);
+    }
 
     sync(emitter: DefaultParticleSynchronizer, system: ParticleSystem, timeStep: number): void
     {
@@ -6389,16 +6534,34 @@ interface ParticleArchetype
 //
 class ParticleManager
 {
-    private renderers:     { [name: string]: { template: any; preload: (any) => void; value: any } };
+    private geometries:    { [name: string]: any };
+    private renderers:     { [name: string]: { template: any; preload: (any) => void; value: any; geometry: string } };
     private updaters:      { [name: string]: { template: any; preload: (any) => void; value: any } };
     private systems:       { [name: string]: any };
     private particles:     { [name: string]: any };
     private synchronizers: { [name: string]: { template: any; value: () => any } };
     private emitters:      { [name: string]: { template: any; value: () => any } };
 
+    private systemContext: SharedRenderContext;
+    private viewContext: SharedRenderContext;
+    private getViewCb: () => ParticleView;
+    private viewPool: Array<ParticleView>;
+
     private graphicsDevice: GraphicsDevice;
     private textureManager: TextureManager;
     private shaderManager: ShaderManager;
+
+    private uniqueId = 0;
+    private scene: Scene;
+    private passIndex: number;
+    private initialized: boolean = false;
+
+    initialize(scene: Scene, passIndex: number)
+    {
+        this.scene = scene;
+        this.passIndex = passIndex;
+        this.initialized = true;
+    }
 
     constructor() {}
     static create(graphicsDevice, textureManager, shaderManager)
@@ -6413,6 +6576,13 @@ class ParticleManager
         ret.particles = {};
         ret.synchronizers = {};
         ret.emitters = {};
+        ret.geometries = {};
+
+        ret.systemContext = SharedRenderContext.create({ graphicsDevice: graphicsDevice });
+        ret.viewContext = SharedRenderContext.create({ graphicsDevice: graphicsDevice });
+
+        ret.getViewCb = ret.getView.bind(ret);
+        ret.viewPool = [];
 
         function preloadDefaultRenderer(defn)
         {
@@ -6431,22 +6601,23 @@ class ParticleManager
             }
         }
 
+        ret.registerGeometry("default", DefaultParticleRenderer.prototype.createGeometry);
         ret.registerRenderer("default", DefaultParticleRenderer.template, preloadDefaultRenderer, function ()
         {
             return DefaultParticleRenderer.create(graphicsDevice, shaderManager, "alpha");
-        });
+        }, "default");
         ret.registerRenderer("alpha", DefaultParticleRenderer.template, preloadDefaultRenderer, function ()
         {
             return DefaultParticleRenderer.create(graphicsDevice, shaderManager, "alpha");
-        });
+        }, "default");
         ret.registerRenderer("additive", DefaultParticleRenderer.template, preloadDefaultRenderer, function ()
         {
             return DefaultParticleRenderer.create(graphicsDevice, shaderManager, "additive");
-        });
+        }, "default");
         ret.registerRenderer("opaque", DefaultParticleRenderer.template, preloadDefaultRenderer, function ()
         {
             return DefaultParticleRenderer.create(graphicsDevice, shaderManager, "opaque");
-        });
+        }, "default");
         ret.registerUpdater("default", DefaultParticleUpdater.template, preloadDefaultUpdater, function ()
         {
             return DefaultParticleUpdater.create(graphicsDevice, shaderManager);
@@ -6476,7 +6647,7 @@ class ParticleManager
                 "default": 0
             }
         ]);
-        ret.registerParticleAnimation("default", {
+        ret.registerParticleAnimation({
             name: "default",
             animation: [{}]
         });
@@ -6489,6 +6660,31 @@ class ParticleManager
         return ret;
     }
 
+    registerGeometry(name: string, generator: ParticleGeometryFn): void
+    {
+        this.geometries[name] = generator;
+    }
+    getGeometry(maxParticles: number, name?: string): ParticleGeometry
+    {
+        name = name || "default";
+        if (!this.geometries.hasOwnProperty(name))
+        {
+            return null;
+        }
+        else
+        {
+            var geometry = this.geometries[name];
+            if (typeof(geometry) === "function")
+            {
+                geometry = this.geometries[name] = geometry(this.graphicsDevice, maxParticles, true);
+            }
+            else
+            {
+                geometry.resize(maxParticles);
+            }
+            return geometry;
+        }
+    }
     getRenderer(name?: string): ParticleRenderer
     {
         name = name || "default";
@@ -6506,16 +6702,9 @@ class ParticleManager
             return renderer;
         }
     }
-    registerRenderer(name: string, template: any, preload: any, generator?: any): void
+    registerRenderer(name, template, preload, generator, geometry): void
     {
-        if (generator)
-        {
-            this.renderers[name] = { template: template, preload: preload, value: generator };
-        }
-        else
-        {
-            this.renderers[name] = { template: template, preload: function () {}, value: generator };
-        }
+        this.renderers[name] = { template: template, preload: preload, value: generator, geometry: geometry };
     }
     getUpdater(name?: string): ParticleUpdater
     {
@@ -6557,13 +6746,13 @@ class ParticleManager
     {
         return this.particles[name || "default"];
     }
-    registerParticleAnimation(name: string, definition: any): void
+    registerParticleAnimation(definition: any): void
     {
-        this.particles[name] = definition;
+        this.particles[definition.name] = definition;
     }
     getEmitter(name?: string): any
     {
-        return this.emitters[name || "default"];
+        return this.emitters[name || "default"].value();
     }
     registerEmitter(name: string, template: any, generator: () => any): void
     {
@@ -6571,7 +6760,7 @@ class ParticleManager
     }
     getSynchronizer(name?: string): any
     {
-        return this.synchronizers[name || "default"];
+        return this.synchronizers[name || "default"].value();
     }
     registerSynchronizer(name: string, template: any, generator: () => any): void
     {
@@ -6617,12 +6806,46 @@ class ParticleManager
 
     initializeArchetype(archetype: ParticleArchetype): void
     {
+        if (!this.initialized)
+        {
+            throw "ParticleManager not initialized";
+        }
+
         var context = archetype.context;
+        if (!context)
+        {
+            context = archetype.context = {};
+        }
         if (context.builtOnce)
         {
             return;
         }
         context.builtOnce = true;
+
+        var particles = [];
+        for (var f in archetype.particles)
+        {
+            if (!archetype.particles.hasOwnProperty(f))
+            {
+                continue;
+            }
+            var particle = archetype.particles[f];
+            if (particle.animation)
+            {
+                if (Types.isString(particle.animation))
+                {
+                   particles.push(this.getParticleAnimation(particle.animation));
+                }
+                else
+                {
+                    particles.push(particle.animation);
+                }
+            }
+            else
+            {
+                particles.push(this.getParticleAnimation());
+            }
+        }
 
         var mapping, texture, tweaks;
         if (archetype.packedTexture)
@@ -6635,23 +6858,201 @@ class ParticleManager
             // TODO may need to pack texture for individual particles too.
             // TODO do packing.
         }
-
+        context.texture = texture;
         tweaks = null; // TODO get tweaks from particles
 
         context.definition = ParticleBuilder.compile({
-            system: this.getSystem(archetype.animationSystem || "default"),
-            particles: [], // TODO
-            mapping: mapping,
-            tweaks: tweaks
+            graphicsDevice: this.graphicsDevice,
+            system        : this.getAnimationSystem(archetype.animationSystem || "default"),
+            particles     : particles,
+            mapping       : mapping,
+            tweaks        : tweaks
         });
-        context.renderer     = this.getRenderer    (this._name(archetype.renderer));
-        context.updater      = this.getUpdater     (this._name(archetype.updater));
-        context.synchronizer = this.getSynchronizer(this._name(archetype.synchronize));
+        var renderer = this._name(archetype.renderer);
+        context.renderer = this.getRenderer(renderer);
+        context.updater  = this.getUpdater(this._name(archetype.updater));
+        context.geometry = this.getGeometry(archetype.system.maxParticles, this.renderers[renderer].geometry);
+        context.instances    = [];
+        context.instancePool = [];
+        context.systemPool   = [];
+    }
 
-        // TODO
-        // can we resize ParticleGeometry?
-        // please do: would allow 1 geometry per renderer type (and even then, shared for same 'type')
-    },
+    createInstance(archetype)
+    {
+        this.initializeArchetype(archetype);
+        var context = archetype.context;
+        var pool = context.instancePool;
+        var instance;
+        if (pool.length > 0)
+        {
+            instance = pool.pop();
+            // TODO
+            return null;
+        }
+        else
+        {
+            // TODO
+            instance = this.createNewInstance(archetype);
+            return instance;
+        }
+    }
+
+    addInstanceToScene(instance, parent?)
+    {
+        var sceneNode = instance.sceneNode;
+        if (sceneNode.isInScene())
+        {
+            this.removeInstanceFromScene(instance);
+        }
+
+        if (parent)
+        {
+            parent.addChild(sceneNode);
+        }
+        else
+        {
+            // XXX Bug in <0,27 prevents this working without work-around
+            // setting worldExtentsUpdate to true on sceneNode
+            this.scene.addRootNode(sceneNode);
+        }
+    }
+
+    removeInstanceFromScene(instance)
+    {
+        var sceneNode = instance.sceneNode;
+        if (sceneNode.isInScene())
+        {
+            if (sceneNode.getRoot() === sceneNode)
+            {
+                this.scene.removeRootNode(sceneNode);
+            }
+            else
+            {
+                var parent = sceneNode.getParent();
+                if (parent)
+                {
+                    parent.removeChild(sceneNode);
+                }
+            }
+        }
+    }
+
+    getSystem(archetype, instance)
+    {
+        var context = archetype.context;
+        var pool = context.systemPool;
+        var system;
+        if (pool.length > 0)
+        {
+            system = pool.pop();
+            system.beginUpdate(0);
+            system.reset();
+            system.endUpdate();
+        }
+        else
+        {
+            var template: any = archetype.synchronizer;
+            // TODO synchronizer/emitters should be set up when instance is first created
+            // not when its 'system' is first created.
+            var synchronizer = this.getSynchronizer(template.name);
+            synchronizer.applyTemplate(template);
+            synchronizer.renderable = instance.renderable;
+
+            var emitters = archetype.emitters;
+            var count = emitters.length;
+            var i;
+            for (i = 0; i < count; i += 1)
+            {
+                template = emitters[i];
+                var emitter = this.getEmitter(template.name);
+                var animationRange;
+                var animation = archetype.particles[template.particle].animation || "default";
+                if (Types.isString(animation))
+                {
+                    animationRange = context.definition.particle[animation].animationRange;
+                }
+                else
+                {
+                    animationRange = context.definition.particle[animation.name].animationRange;
+                }
+                emitter.applyTemplate(template, animationRange);
+                synchronizer.addEmitter(emitter);
+            }
+
+            template = archetype.system;
+            system = ParticleSystem.create({
+                graphicsDevice     : this.graphicsDevice,
+                center             : template.center,
+                halfExtents        : template.halfExtents,
+                maxSpeed           : template.maxSpeed,
+                maxParticles       : template.maxParticles,
+                zSorted            : template.zSorted,
+                maxSortSteps       : template.maxSortSteps,
+                geometry           : context.geometry,
+                sharedRenderContext: this.systemContext,
+                maxLifeTime        : 10, // TODO
+                animation          : context.definition.animation,
+                sharedAnimation    : true,
+                //timer            : this.timerCb, TODO
+                synchronizer       : synchronizer,
+                trackingEnabled    : template.trackingEnabled,
+                updater            : context.updater,
+                renderer           : context.renderer
+            });
+
+            context.updater .applyTemplate(this.textureManager, system, archetype.updater);
+            context.renderer.applyTemplate(this.textureManager, system, archetype.renderer, context.texture);
+            context.renderer.setAnimationParameters(system, context.definition);
+        }
+        instance.system = system;
+        return system;
+    }
+    getView()
+    {
+        var pool = this.viewPool;
+        if (pool.length > 0)
+        {
+            return pool.pop();
+        }
+        else
+        {
+            return ParticleView.create({
+                graphicsDevice: this.graphicsDevice,
+                sharedRenderContext: this.viewContext
+            });
+        }
+    }
+
+    createNewInstance(archetype)
+    {
+        var instance = {};
+        var context = archetype.context;
+        context.instances.push(instance);
+        this.buildParticleSceneNode(archetype, instance);
+        return instance;
+    }
+
+    buildParticleSceneNode(archetype, instance)
+    {
+        var context = archetype.context;
+        var renderable = ParticleRenderable.create({
+            graphicsDevice: this.graphicsDevice,
+            passIndex: this.passIndex,
+            sharedRenderContext: this.viewContext
+        });
+        renderable.setLazySystem(this.getSystem.bind(this, archetype, instance), archetype.system.center, archetype.system.halfExtents);
+        renderable.setLazyView(this.getViewCb);
+
+        var sceneNode = SceneNode.create({
+            name: "ParticleManager_SceneNode_" + this.uniqueId,
+            dynamic: true
+        });
+        this.uniqueId += 1;
+        sceneNode.addRenderable(renderable);
+
+        instance.renderable = renderable;
+        instance.sceneNode = sceneNode;
+    }
 
     serializeArchetype(archetype: ParticleArchetype): string
     {
