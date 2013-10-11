@@ -31,9 +31,9 @@ New Features
     The ``additiveMatrix`` function is used in the textureeffects sample with new red, green and blue additive sliders.
 
 * - Added :ref:`onperformancewarning <turbulenzengine_onperformancewarning>`
-  callback to flag code that is likely to be sub-optimal.  In
-  particular, developers planning to target mobile devices should
-  consider using this to help avoid performance issues.
+    callback to flag code that is likely to be sub-optimal.  In
+    particular, developers planning to target mobile devices should
+    consider using this to help avoid performance issues.
 
 Changes
 -------
@@ -56,8 +56,8 @@ Changes
   arguments, whereas `MathDevice` expects all arguments to be
   Float32Array, which results in much faster execution).  At this
   stage, developers must implement the
-  :ref:`turbulenz_onperformancewarning` callback to receive these
-  warnings.  This behaviour may change in future versions.
+  :ref:`turbulenzengine_onperformancewarning` callback to receive
+  these warnings.  This behaviour may change in future versions.
 
 * All native-implemented math types (Vector3, Vector4, Matrix33, etc)
   have been removed and replaced by Float32Arrays.  This, along with
