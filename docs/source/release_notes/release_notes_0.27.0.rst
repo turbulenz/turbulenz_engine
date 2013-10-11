@@ -45,15 +45,25 @@ Changes
 * The pacakaged Turbulenz Python tools have been updated to version 1.0.3 for a detailed list of changes see
   `turbulenz_tools changelog <https://github.com/turbulenz/turbulenz_tools/blob/1.0.3/CHANGES.rst>`__
 
+* The JavaScript `VMath` global is no longer always the same object as
+  `MathDevice` (returned by `TurbulenzEngine.getMathDevice()`).  In
+  particular, in the canvas-debug build configuration they are now
+  distinct objects (albeit with the same interface).  This is intended
+  to help catch errors that may only appear on certain platforms.
+
+* `MathDevice` now includes type checks in canvas-debug mode, to catch
+  cases where developers use the sub-optimal Array types.  (Note that
+  `VMath` is intended to accept either Array or Float32Array
+  arguments, whereas `MathDevice` expects all arguments to be
+  Float32Array, which results in much faster execution).  At this
+  stage, developers must implement the
+  :ref:`turbulenz_onperformancewarning` callback to receive these
+  warnings.  This behaviour may change in future versions.
+
 * All native-implemented math types (Vector3, Vector4, Matrix33, etc)
-  have been replaced with Float32Arrays when the native implemented
-  MathDevice is used.  Note that for most configurations, the
-  MathDevice is simply the JavaScript global VMath object, which
-  produces the fastest code when the JIT compilation is available.
-  For those platforms (such as iOS) where JIT compilation is not
-  available, the native implemented MathDevice results in faster
-  execution.  This change greatly improves compatibility of the two
-  implementations, and improves performance in the non-JIT case.
+  have been removed and replaced by Float32Arrays.  This, along with
+  the other math changes, greatly improve consistency across
+  platforms.
 
 Fixed
 -----
