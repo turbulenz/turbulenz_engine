@@ -1,3 +1,4 @@
+// Copyright (c) 2011-2013 Turbulenz Limited
 
 declare var WebGLMathDevice : MathDevice;
 WebGLMathDevice = VMath;
