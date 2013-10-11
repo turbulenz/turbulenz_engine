@@ -182,14 +182,7 @@ float4 fp_render(float2 inParticle: TEXCOORD0,
                  float2 inUV      : TEXCOORD1,
                  float4 inColor   : COLOR) : COLOR
 {
-    if (getLife(fParticleState, inParticle, invTextureSize) <= 0)
-    {
-        discard;
-    }
-    else
-    {
-        return tex2D(texture, inUV) * inColor;
-    }
+    return tex2D(texture, inUV) * inColor;
 }
 
 // -----------------------------------------------------------------------------

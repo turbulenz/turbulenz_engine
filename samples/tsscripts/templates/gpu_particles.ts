@@ -164,7 +164,7 @@ TurbulenzEngine.onload = function onloadFn()
         manager.initialize(scene, renderer.passIndex.transparent);
 
         var instance1 = manager.createInstance(archetype2);
-        var instance2 = manager.createInstance(archetype2);
+        var instance2 = manager.createInstance(archetype1);
         var instance3 = manager.createInstance(archetype1);
         instance1.renderable.setLocalTransform(VMath.m43BuildTranslation(2, 0, 0));
         instance2.renderable.setLocalTransform(VMath.m43BuildTranslation(-2, 0, 0));
@@ -186,6 +186,8 @@ TurbulenzEngine.onload = function onloadFn()
         updater.parameters.acceleration = [0, -40*120/59, 0];
         updater.parameters.drag = 0.5;
         updater.parameters.noiseTexture = textureManager.get("textures/noise.dds");
+
+        var geometry = manager.getGeometry(100);
 
         // TODO TEMPORARY, SAMPLE SHOULD USE PARTICLE MANAGER WITH ARCHETYPES
         // RATHER THAN MANUAL CONSTRUCTION OF SYSTEMS AND ANIMATIONS.
@@ -235,10 +237,11 @@ TurbulenzEngine.onload = function onloadFn()
             center: [0, 20, 0],
             halfExtents: [10, 20, 10],
             maxSpeed: 100,
-            maxParticles: 1000,
+            maxParticles: 100,
             maxLifeTime: defn.maxLifeTime,
             animation: defn.animation,
             renderer: alphaRenderer,
+            geometry: geometry,
             updater: updater,
             synchronizer: sync,
             sharedRenderContext: context
@@ -289,10 +292,11 @@ TurbulenzEngine.onload = function onloadFn()
             center: [0, 20, 0],
             halfExtents: [5, 20, 2],
             maxSpeed: 100,
-            maxParticles: 1000,
+            maxParticles: 100,
             maxLifeTime: defn.maxLifeTime,
             animation: defn.animation,
             renderer: alphaRenderer,
+            geometry: geometry,
             updater: updater,
             synchronizer: sync,
             sharedRenderContext: context

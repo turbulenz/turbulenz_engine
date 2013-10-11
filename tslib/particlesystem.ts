@@ -2957,7 +2957,7 @@ class ParticleBuilder
             var attr = system[i];
             if (!snap.attributes.hasOwnProperty(attr.name))
             {
-                snap.attributes[attr.name] = attr.defaultValue;
+                snap.attributes[attr.name] = Types.copy(attr.defaultValue);
             }
             if (!snap.interpolators.hasOwnProperty(attr.name))
             {
@@ -3454,12 +3454,9 @@ class SharedRenderContext
         if (ctxW > ctx.width || ctxH > ctx.height)
         {
             ctx = this.contexts[bin] = this.resizeContext(ctx, ctxW, ctxH);
-            ctxW = ctx.width;
-            ctxH = ctx.height;
         }
-
-        var invW = (1 / ctxW);
-        var invH = (1 / ctxH);
+        var invW = (1 / ctx.width);
+        var invH = (1 / ctx.height);
 
         ctx.store.push({
             set: params.set,
@@ -4584,7 +4581,6 @@ class ParticleSystem
         ParticleSystem.sizeCreated(ret.graphicsDevice, ret.particleSize);
         ret.queue = new ParticleQueue(ret.maxParticles);
 
-
         ret.trackingEnabled = (params.trackingEnabled === true) && (ret.updater !== undefined);
         if (ret.trackingEnabled)
         {
@@ -4649,10 +4645,10 @@ class ParticleSystem
         if (!ParticleSystem.fullTextureVertices)
         {
             ParticleSystem.fullTextureVertices = ret.graphicsDevice.createVertexBuffer({
-                numVertices: 3,
+                numVertices: 4,
                 attributes : [ret.graphicsDevice.VERTEXFORMAT_FLOAT2],
                 dynamic    : false,
-                data       : [0,0, 2,0, 0,2]
+                data       : [0,0, 1,0, 0,1, 1,1]
             });
             ParticleSystem.fullTextureSemantics =
                 ret.graphicsDevice.createSemantics([ret.graphicsDevice.SEMANTIC_POSITION]);
@@ -5142,7 +5138,7 @@ class ParticleSystem
         gd.beginRenderTarget(targets[1 - this.currentState]);
         gd.setTechnique(updater.technique);
         gd.setTechniqueParameters(parameters);
-        gd.draw(gd.PRIMITIVE_TRIANGLES, 3, 0);
+        gd.draw(gd.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
         gd.endRenderTarget();
         this.currentState = 1 - this.currentState;
 
@@ -5460,7 +5456,7 @@ class ParticleView
         gd.setTechniqueParameters(this.system.renderParameters);
         gd.setTechniqueParameters(this.parameters);
         gd.setTechniqueParameters(prepareParameters);
-        gd.draw(gd.PRIMITIVE_TRIANGLES, 3, 0);
+        gd.draw(gd.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
         gd.endRenderTarget();
         this.currentMapping = 1 - this.currentMapping;
 
@@ -5734,7 +5730,7 @@ class ParticleRenderable
         }
 
         var ret = new ParticleRenderable();
-        ret.resizedGeometryCb = ParticleRenderable.resizedGeometry.bind(ret);
+        ret.resizedGeometryCb = ParticleRenderable.resizedGeometry.bind(null, ret);
         ret.graphicsDevice = gd;
         ret.passIndex = params.passIndex;
         ret.sharedMaterial = ParticleRenderable.material;
@@ -5869,7 +5865,7 @@ class ParticleRenderable
         if (system)
         {
             var parameters = self.drawParameters[0];
-            parameters.setVertexBuffer(0, self.geometry.vertexBuffer);
+            parameters.setVertexBuffer(0, system.geometry.vertexBuffer);
         }
     }
 }
