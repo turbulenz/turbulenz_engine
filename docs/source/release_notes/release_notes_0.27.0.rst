@@ -30,11 +30,10 @@ New Features
 * - Added a :ref:`additiveMatrix <textureeffects_additivematrix>` method to the TextureEffects object which allows transforming of the red, green and blue color channels.
     The ``additiveMatrix`` function is used in the textureeffects sample with new red, green and blue additive sliders.
 
-* - Added the :ref:`TurbulenzEngine.onperformancewarning
-  <turbulenzengine_onperformancewarning>` callback to code that is
-  likely to be sub-optimal on lower-powered devices.  In particular,
-  developers planning to target mobile devices should consider using
-  this to avoid wasting memory and execution resources.
+* - Added :ref:`onperformancewarning <turbulenzengine_onperformancewarning>`
+  callback to flag code that is likely to be sub-optimal.  In
+  particular, developers planning to target mobile devices should
+  consider using this to help avoid performance issues.
 
 Changes
 -------
