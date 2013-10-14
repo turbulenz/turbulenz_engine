@@ -113,22 +113,13 @@ TurbulenzEngine.onload = function onloadFn()
             color: [1, 1, 1, 1]
         }]
     });
-    var archetype1 = manager.decompressArchetype({
+    var archetype1 = manager.parseArchetype({
         renderer: {
             name: "alpha"
         },
         particles: {
             smoke: {
-                animation: {
-                    animation: [{
-                        frame: 0
-                    },{
-                        time: 0.5,
-                        frame: 1
-                    },{
-                        time: 0.5
-                    }]
-                },
+                animation: "black and white",
                 texture: ["textures/smoke.dds", "textures/noise.dds"]
             }
         },
@@ -144,7 +135,7 @@ TurbulenzEngine.onload = function onloadFn()
             }
         }]
     });
-    var archetype2 = manager.decompressArchetype({
+    var archetype2 = manager.parseArchetype({
         packedTexture: "textures/smoke.dds",
         renderer: {
             name: "opaque"
@@ -183,7 +174,7 @@ TurbulenzEngine.onload = function onloadFn()
         manager.addInstanceToScene(instance2);
         manager.addInstanceToScene(instance3);
         previousFrameTime = TurbulenzEngine.time;
-
+/*
         var context = (<any>manager).systemContext;
 
         // Create particle renderers and updaters
@@ -333,7 +324,7 @@ TurbulenzEngine.onload = function onloadFn()
         });
         node.addRenderable(renderable);
         node.setLocalTransform(mathDevice.m43BuildTranslation(3, 0, 0));
-        scene.addRootNode(node);
+        scene.addRootNode(node);*/
     }
 
     function mainLoop()

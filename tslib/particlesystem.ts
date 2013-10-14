@@ -1858,6 +1858,26 @@ class Parser {
         }
     }
 
+    static hasTextureIndex(system, index): boolean
+    {
+        var count = system.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var sysAttr = system[i];
+            switch (sysAttr.type)
+            {
+                case "tFloat": case "tFloat2": case "tFloat4": break;
+                default: // tTexture(n)
+                    if (index === sysAttr.type)
+                    {
+                        return true;
+                    }
+            }
+        }
+        return false;
+    }
+
     // Parse a system attribute definition.
     static parseSystemAttribute(error: BuildError, defn: any): Attribute
     {
@@ -6611,146 +6631,142 @@ class DefaultParticleEmitter
             forceCreation: maybe(delta, "forceCreation", checkBoolean, val(false)),
             usePrediction: maybe(delta, "usePrediction", checkBoolean, val(true)),
             emittance    : Parser.maybeField(delta, "emittance", function (delta)
+            {
+                if (Types.isNullUndefined(delta))
                 {
-                    if (Types.isNullUndefined(delta))
-                    {
-                        return Types.copy(DefaultParticleEmitter.template.emittance);
-                    }
-                    if (!Types.isObject(delta))
-                    {
-                        error.error("default emitter archetype emittance should be an object");
-                        return null;
-                    }
+                    return Types.copy(DefaultParticleEmitter.template.emittance);
+                }
+                if (!Types.isObject(delta))
+                {
+                    error.error("default emitter archetype emittance should be an object");
+                    return null;
+                }
 
-                    function checkNum(n): (any) => number
-                    {
-                        return checkNumber(n, " emittance");
-                    }
+                function checkNum(n): (any) => number
+                {
+                    return checkNumber(n, " emittance");
+                }
 
-                    Parser.extraFields(error, "default emitter archetype emittance", delta,
-                        ["delay", "rate", "burstMin", "burstMax"]);
+                Parser.extraFields(error, "default emitter archetype emittance", delta,
+                    ["delay", "rate", "burstMin", "burstMax"]);
 
-                    return {
-                        delay   : maybe(delta, "delay"   , checkNum, val(0)),
-                        rate    : maybe(delta, "rate"    , checkNum, val(4)),
-                        burstMin: maybe(delta, "burstMin", checkNum, val(1)),
-                        burstMax: maybe(delta, "burstMin", checkNum, val(1))
-                    };
-                },
-                Types.copy.bind(null, DefaultParticleEmitter.template.emittance)),
+                return {
+                    delay   : maybe(delta, "delay"   , checkNum, val(0)),
+                    rate    : maybe(delta, "rate"    , checkNum, val(4)),
+                    burstMin: maybe(delta, "burstMin", checkNum, val(1)),
+                    burstMax: maybe(delta, "burstMin", checkNum, val(1))
+                };
+            }, Types.copy.bind(null, DefaultParticleEmitter.template.emittance)),
             particle: Parser.maybeField(delta, "particle", function (delta)
+            {
+                if (Types.isNullUndefined(delta))
                 {
-                    if (Types.isNullUndefined(delta))
-                    {
-                        return Types.copy(DefaultParticleEmitter.template.particle);
-                    }
-                    if (!Types.isObject(delta))
-                    {
-                        error.error("default emitter archetype particle should be an object");
-                        return null;
-                    }
+                    return Types.copy(DefaultParticleEmitter.template.particle);
+                }
+                if (!Types.isObject(delta))
+                {
+                    error.error("default emitter archetype particle should be an object");
+                    return null;
+                }
 
-                    function checkNum(n): (any) => number
-                    {
-                        return checkNumber(n, " particle");
-                    }
+                function checkNum(n): (any) => number
+                {
+                    return checkNumber(n, " particle");
+                }
 
-                    Parser.extraFields(error, "default emitter archetype particle", delta,
-                        ["lifeTimeMin", "lifeTimeMax", "userData"]);
+                Parser.extraFields(error, "default emitter archetype particle", delta,
+                    ["lifeTimeMin", "lifeTimeMax", "userData"]);
 
-                    return {
-                        lifeTimeMin: maybe(delta, "lifeTimeMin", checkNum, val(1)),
-                        lifeTimeMax: maybe(delta, "lifeTimeMax", checkNum, val(1)),
-                        userData   : maybe(delta, "userData"   , checkNum, val(0))
-                    };
-                },
-                Types.copy.bind(null, DefaultParticleEmitter.template.particle)),
+                return {
+                    lifeTimeMin: maybe(delta, "lifeTimeMin", checkNum, val(1)),
+                    lifeTimeMax: maybe(delta, "lifeTimeMax", checkNum, val(1)),
+                    userData   : maybe(delta, "userData"   , checkNum, val(0))
+                };
+            }, Types.copy.bind(null, DefaultParticleEmitter.template.particle)),
             position: Parser.maybeField(delta, "position", function (delta)
+            {
+                if (Types.isNullUndefined(delta))
                 {
-                    if (Types.isNullUndefined(delta))
-                    {
-                        return Types.copy(DefaultParticleEmitter.template.position);
-                    }
-                    if (!Types.isObject(delta))
-                    {
-                        error.error("default emitter archetype position should be an object");
-                        return null;
-                    }
+                    return Types.copy(DefaultParticleEmitter.template.position);
+                }
+                if (!Types.isObject(delta))
+                {
+                    error.error("default emitter archetype position should be an object");
+                    return null;
+                }
 
-                    function checkNum(n): (any) => number
-                    {
-                        return checkNumber(n, " position");
-                    }
-                    function checkDist(n): (any) => string
-                    {
-                        return checkDistribution(n, " position");
-                    }
-                    function checkVec3(n): (any) => FloatArray
-                    {
-                        return checkV3(n, " position");
-                    }
-                    function checkBool(n): (any) => boolean
-                    {
-                        return checkBoolean(n, " position");
-                    }
+                function checkNum(n): (any) => number
+                {
+                    return checkNumber(n, " position");
+                }
+                function checkDist(n): (any) => string
+                {
+                    return checkDistribution(n, " position");
+                }
+                function checkVec3(n): (any) => FloatArray
+                {
+                    return checkV3(n, " position");
+                }
+                function checkBool(n): (any) => boolean
+                {
+                    return checkBoolean(n, " position");
+                }
 
-                    Parser.extraFields(error, "default emitter archetype position", delta,
-                        ["position", "spherical", "normal", "radiusMin", "radiusMax",
-                         "radiusDistribution", "radiusSigma"]);
+                Parser.extraFields(error, "default emitter archetype position", delta,
+                    ["position", "spherical", "normal", "radiusMin", "radiusMax",
+                     "radiusDistribution", "radiusSigma"]);
 
-                    return {
-                        position          : maybe(delta, "position"          , checkVec3, VMath.v3BuildZero),
-                        spherical         : maybe(delta, "spherical"         , checkBool, val(false)),
-                        normal            : maybe(delta, "normal"            , checkVec3, VMath.v3BuildYAxis),
-                        radiusMin         : maybe(delta, "radiusMin"         , checkNum , val(0)),
-                        radiusMax         : maybe(delta, "radiusMax"         , checkNum , val(0)),
-                        radiusDistribution: maybe(delta, "radiusDistribution", checkDist, val("uniform")),
-                        radiusSigma       : maybe(delta, "radiusSigma"       , checkNum , val(0.25))
-                    };
-                },
-                Types.copy.bind(null, DefaultParticleEmitter.template.position)),
+                return {
+                    position          : maybe(delta, "position"          , checkVec3, VMath.v3BuildZero),
+                    spherical         : maybe(delta, "spherical"         , checkBool, val(false)),
+                    normal            : maybe(delta, "normal"            , checkVec3, VMath.v3BuildYAxis),
+                    radiusMin         : maybe(delta, "radiusMin"         , checkNum , val(0)),
+                    radiusMax         : maybe(delta, "radiusMax"         , checkNum , val(0)),
+                    radiusDistribution: maybe(delta, "radiusDistribution", checkDist, val("uniform")),
+                    radiusSigma       : maybe(delta, "radiusSigma"       , checkNum , val(0.25))
+                };
+            }, Types.copy.bind(null, DefaultParticleEmitter.template.position)),
             // Typescript compiler infers this next field as type {} erroneously... siigh.
             velocity: <any>Parser.maybeField(delta, "velocity", function (delta)
+            {
+                if (Types.isNullUndefined(delta))
                 {
-                    if (Types.isNullUndefined(delta))
-                    {
-                        return Types.copy(DefaultParticleEmitter.template.velocity);
-                    }
-                    if (!Types.isObject(delta))
-                    {
-                        error.error("default emitter archetype velocity should be an object");
-                        return null;
-                    }
+                    return Types.copy(DefaultParticleEmitter.template.velocity);
+                }
+                if (!Types.isObject(delta))
+                {
+                    error.error("default emitter archetype velocity should be an object");
+                    return null;
+                }
 
-                    function checkNum(n)
-                    {
-                        return checkNumber(n, " velocity");
-                    }
-                    function checkDist(n)
-                    {
-                        return checkDistribution(n, " velocity");
-                    }
+                function checkNum(n)
+                {
+                    return checkNumber(n, " velocity");
+                }
+                function checkDist(n)
+                {
+                    return checkDistribution(n, " velocity");
+                }
 
-                    Parser.extraFields(error, "default emitter archetype velocity", delta,
-                        ["theta", "phi", "speedMin", "speedMax", "flatSpread", "flatSpreadAngle",
-                         "flatSpreadDistribution", "flatSpreadSigma", "conicalSpread", "conicalSpreadDistribution",
-                         "conicalSpreadSigma"]);
+                Parser.extraFields(error, "default emitter archetype velocity", delta,
+                    ["theta", "phi", "speedMin", "speedMax", "flatSpread", "flatSpreadAngle",
+                     "flatSpreadDistribution", "flatSpreadSigma", "conicalSpread", "conicalSpreadDistribution",
+                     "conicalSpreadSigma"]);
 
-                    return {
-                        theta              : maybe(delta, "theta"              , checkNum , val(0)),
-                        phi                : maybe(delta, "phi"                , checkNum , val(0)),
-                        speedMin           : maybe(delta, "speedMin"           , checkNum , val(1)),
-                        speedMax           : maybe(delta, "speedMax"           , checkNum , val(1)),
-                        flatSpread         : maybe(delta, "flatSpread"         , checkNum , val(0)),
-                        flatSpreadAngle    : maybe(delta, "flatSpreadAngle"    , checkNum , val(0)),
-                        flatDistribution   : maybe(delta, "flatDistribution"   , checkDist, val("uniform")),
-                        flatSigma          : maybe(delta, "flatSigma"          , checkNum , val(0.25)),
-                        conicalSpread      : maybe(delta, "conicalSpread"      , checkNum , val(0)),
-                        conicalDistribution: maybe(delta, "conicalDistribution", checkDist, val("uniform")),
-                        conicalSigma       : maybe(delta, "conicalSigma"       , checkNum , val(0.25))
-                    };
-                },
-                Types.copy.bind(null, DefaultParticleEmitter.template.velocity))
+                return {
+                    theta              : maybe(delta, "theta"              , checkNum , val(0)),
+                    phi                : maybe(delta, "phi"                , checkNum , val(0)),
+                    speedMin           : maybe(delta, "speedMin"           , checkNum , val(1)),
+                    speedMax           : maybe(delta, "speedMax"           , checkNum , val(1)),
+                    flatSpread         : maybe(delta, "flatSpread"         , checkNum , val(0)),
+                    flatSpreadAngle    : maybe(delta, "flatSpreadAngle"    , checkNum , val(0)),
+                    flatDistribution   : maybe(delta, "flatDistribution"   , checkDist, val("uniform")),
+                    flatSigma          : maybe(delta, "flatSigma"          , checkNum , val(0.25)),
+                    conicalSpread      : maybe(delta, "conicalSpread"      , checkNum , val(0)),
+                    conicalDistribution: maybe(delta, "conicalDistribution", checkDist, val("uniform")),
+                    conicalSigma       : maybe(delta, "conicalSigma"       , checkNum , val(0.25))
+                };
+            }, Types.copy.bind(null, DefaultParticleEmitter.template.velocity))
         };
     }
     applyArchetype(archetype, animationRange)
@@ -7163,7 +7179,7 @@ class ParticleManager
     private renderers: { [name: string]: {
                             parseArchetype   : (BuildError, any) => any;
                             compressArchetype: (any) => any;
-                            preload          : (any) => void;
+                            preload          : (any, ShaderManager, TextureManager) => void;
                             value            : any;
                             geometry         : string } };
 
@@ -7174,7 +7190,7 @@ class ParticleManager
     private updaters: { [name: string]: {
                           parseArchetype   : (BuildError, any) => any;
                           compressArchetype: (any) => any;
-                          preload          : (any) => void;
+                          preload          : (any, ShaderManager, TextureManager) => void;
                           value            : any } };
 
     // ParticleSynchronizers.
@@ -7462,8 +7478,8 @@ class ParticleManager
 
     preloadArchetype(archetype: ParticleArchetype): void
     {
-        this.renderers[archetype.renderer.name].preload(archetype.renderer);
-        this.updaters [archetype.updater.name ].preload(archetype.updater);
+        this.renderers[archetype.renderer.name].preload(archetype.renderer, this.shaderManager, this.textureManager);
+        this.updaters [archetype.updater.name ].preload(archetype.updater,  this.shaderManager, this.textureManager);
 
         var packedTextures = archetype.packedTextures;
         var count = packedTextures.length;
@@ -7508,6 +7524,118 @@ class ParticleManager
             return;
         }
         context.builtOnce = true;
+
+        var textureManager = this.textureManager;
+        var system = this.getAnimationSystem(archetype.animationSystem);
+
+        // Gather particle animations, tweaks, mappings and textures to pack.
+        var textures = [];
+        var mapping = {};
+        var toPack  = {};
+        var tweaks  = [];
+        var animations = [], particle, count, i;
+        count = archetype.packedTextures.length;
+        for (i = 0; i < count; i += 1)
+        {
+            if (archetype.packedTextures[i])
+            {
+                mapping["texture" + i] = [];
+                textures[i] = this.textureManager.get(archetype.packedTextures[i]);
+            }
+        }
+
+        var j;
+        for (var f in archetype.particles)
+        {
+            if (!archetype.particles.hasOwnProperty(f))
+            {
+                continue;
+            }
+            particle = archetype.particles[f];
+
+            animations.push(this.getParticleAnimation(particle.animation));
+            tweaks.push(particle.tweaks);
+
+            var uvs = particle.textureUVs;
+            var texs = particle.textures;
+            count = Math.max(texs.length, uvs.length);
+            for (i = 0; i < count; i += 1)
+            {
+                var maps = mapping["texture" + i];
+                var packs = toPack["texture" + i];
+                if (maps)
+                {
+                    maps.push(uvs[i]);
+                }
+                else if (packs || Parser.hasTextureIndex(system, i))
+                {
+                    if (!packs)
+                    {
+                        packs = toPack["texture" + i] = [];
+                    }
+                    var packTextures = texs[i];
+                    var count2 = packTextures.length;
+                    for (j = 0; j < count2; j += 1)
+                    {
+                        packs.push(this.textureManager.get(packTextures[j]));
+                    }
+                }
+            }
+        }
+
+        // pack any required textures, and set uv's on particle animations.
+        for (var f in toPack)
+        {
+            if (!toPack.hasOwnProperty(f))
+            {
+                continue;
+            }
+            var index = parseInt(f.substr(7));
+            var packing = ParticleBuilder.packTextures({
+                graphicsDevice: this.graphicsDevice,
+                textures      : toPack[f]
+            });
+            textures[f] = packing.texture;
+
+            i = 0;
+            j = 0;
+            for (var f in archetype.particles)
+            {
+                if (!archetype.particles.hasOwnProperty(f))
+                {
+                    continue;
+                }
+                var animUVs = animations[i][f] = [];
+                i += 1;
+
+                particle = archetype.particles[f];
+                count = particle.textures[index].length;
+                while (count > 0)
+                {
+                    count -= 1;
+                    animUVs.push(packing.uvMap[j]);
+                    j += 1;
+                }
+            }
+        }
+
+        context.textures = textures;
+        context.definition = ParticleBuilder.compile({
+            graphicsDevice: this.graphicsDevice,
+            system        : system,
+            particles     : animations,
+            alreadyParsed : true,
+            uvMap         : mapping,
+            tweaks        : tweaks
+        });
+        var renderer = archetype.renderer.name;
+        context.renderer = this.getRenderer(renderer);
+        context.updater  = this.getUpdater(archetype.updater.name);
+        context.geometry = this.getGeometry(archetype.system.maxParticles, this.renderers[renderer].geometry);
+        context.instances    = [];
+        context.instancePool = [];
+        context.systemPool   = [];
+        archetype.context = context;
 //
 //        var error = new BuildError();
 //        var textureManager = this.textureManager;
@@ -8144,7 +8272,7 @@ class ParticleManager
             }
             for (i = 0; i < count; i += 1)
             {
-                if (textures[i])
+                if (textures[i] && textures[i].length !== 0)
                 {
                     outParticle["texture" + (i || "")] = Types.copy(textures[i]);
                 }
@@ -8152,15 +8280,13 @@ class ParticleManager
 
             var textureUVs = particle.textureUVs;
             count = textureUVs.length;
-            if (count !== 0)
-            {
-                outParticle = outParticle || {};
-            }
             for (i = 0; i < count; i += 1)
             {
-                if (textureUVs[i])
+                var uv = textureUVs[i];
+                if (uv && !(uv[0] === 0 && uv[1] === 0 && uv[2] === 1 && uv[3] === 1))
                 {
-                    outParticle["texture-uv" + (i || "")] = Types.copy(textureUVs[i]);
+                    outParticle = outParticle || {};
+                    outParticle["texture-uv" + (i || "")] = Types.copy(uv);
                 }
             }
 
@@ -8253,6 +8379,13 @@ class ParticleManager
             return Parser.maybeField(delta, n, x(n), y);
         }
 
+        var animationSystem = !delta ? "default" : maybe(delta, "animationSystem", checkString, val("default"));
+        var parsedSystem = this.getAnimationSystem(animationSystem);
+        if (!parsedSystem)
+        {
+            error.error("Archetype references animation system '" + animationSystem + "' not registered with manager");
+        }
+
         var packedTextures = [];
         if (delta)
         {
@@ -8268,18 +8401,19 @@ class ParticleManager
                 {
                     error.error("Archetype packedTexture index must be an integer >= 0 for " + f);
                 }
-                packedTextures[index] = checkString(f)(delta[f]);
+                else if (parsedSystem && !Parser.hasTextureIndex(parsedSystem, index))
+                {
+                    error.warning("Archetype specifies " + f + ", but system animation " +
+                                  "specifies no attribute requiring " + f + ". Field will be ignored");
+                }
+                else
+                {
+                    packedTextures[index] = checkString(f)(delta[f]);
+                }
             }
         }
 
         var self = this;
-        var animationSystem = !delta ? "default" : maybe(delta, "animationSystem", checkString, val("default"));
-        var parsedSystem = this.getAnimationSystem(animationSystem);
-        if (!parsedSystem)
-        {
-            error.error("Archetype references animation system '" + animationSystem + "' not registered with manager");
-        }
-
         var archetype = {
             system         : ParticleSystem.parseArchetype(error, delta && delta.system),
             renderer       : renderer      .parseArchetype(error, delta && delta.renderer),
@@ -8288,78 +8422,101 @@ class ParticleManager
             animationSystem: animationSystem,
             packedTextures : packedTextures,
             particles      : !delta ? {} : Parser.maybeField(delta, "particles", function (particles)
+            {
+                var ret = {};
+                for (var p in particles)
                 {
-                    var ret = {};
-                    for (var p in particles)
+                    if (!particles.hasOwnProperty(p))
                     {
-                        if (!particles.hasOwnProperty(p))
+                        continue;
+                    }
+
+                    var particle = particles[p];
+                    if (Types.isNullUndefined(particle))
+                    {
+                        ret[p] = {
+                            animation : "default",
+                            tweaks    : {},
+                            textureUVs: [],
+                            textures  : []
+                        };
+                        continue;
+                    }
+
+                    var animation = particle.animation;
+                    if (!Types.isNullUndefined(animation) &&
+                        !Types.isString(animation) &&
+                        !Types.isObject(animation))
+                    {
+                        error.error("Archetype particle animation should be a string name referencing a " +
+                                    "registered particle animation for particle '" + p + "'");
+                    }
+
+                    var tweaks = particle.tweaks || {};
+
+                    var parsedParticle = self.getParticleAnimation(animation);
+                    if (!parsedParticle)
+                    {
+                        error.error("Archetype particle animation '" + animation + "' has not been registered " +
+                                    "with the manager");
+                    }
+                    else if(parsedSystem)
+                    {
+                        ParticleBuilder.checkAttributes(error, parsedParticle, parsedSystem);
+                    }
+
+                    var extraFields = [];
+                    var textures    = [];
+                    var textureUVs  = [];
+                    for (var f in particle)
+                    {
+                        if (!particle.hasOwnProperty(f))
                         {
                             continue;
                         }
 
-                        var particle = particles[p];
-                        if (Types.isNullUndefined(particle))
+                        var index;
+                        if (f.substr(0, 10) === "texture-uv")
                         {
-                            ret[p] = {
-                                animation : "default",
-                                tweaks    : {},
-                                textureUVs: [],
-                                textures  : []
-                            };
-                            continue;
-                        }
-
-                        var animation = particle.animation;
-                        if (!Types.isNullUndefined(animation) &&
-                            !Types.isString(animation) &&
-                            !Types.isObject(animation))
-                        {
-                            error.error("Archetype particle animation should be a string name referencing a " +
-                                        "registered particle animation for particle '" + p + "'");
-                        }
-
-                        var parsedParticle = self.getParticleAnimation(animation);
-                        if (!parsedParticle)
-                        {
-                            error.error("Archetype particle animation '" + animation + "' has not been registered " +
-                                        "with the manager");
-                        }
-                        else if(parsedSystem)
-                        {
-                            ParticleBuilder.checkAttributes(error, parsedParticle, parsedSystem);
-                        }
-
-                        var extraFields = [];
-                        var textures    = [];
-                        var textureUVs  = [];
-                        for (var f in particle)
-                        {
-                            if (!particle.hasOwnProperty(f))
+                            extraFields.push(f);
+                            index = parseFloat(f.substr(10) || "0");
+                            if ((index | 0) !== index || index < 0)
                             {
-                                continue;
+                                error.error("Archetype particle texture-uv index must be an integer >= 0 for " +
+                                            "particle '" + p + "' " + f);
                             }
-
-                            var index;
-                            if (f.substr(0, 10) === "texture-uv")
+                            if (!packedTextures[index])
                             {
-                                extraFields.push(f);
-                                index = parseFloat(f.substr(10) || "0");
-                                if ((index | 0) !== index || index < 0)
-                                {
-                                    error.error("Archetype particle texture-uv index must be an integer >= 0 for " +
-                                                "particle '" + p + "' " + f);
-                                }
-                                textureUVs[index] = Parser.checkVector(error, "Archetype particle", f, 4, particle[f]);
+                                error.warning("Archetype particle specifies " + f + ", but archetype has not " +
+                                              "specified a pre-packed texture for index. Field will be ignored");
                             }
-                            else if (f.substr(0, 7) === "texture")
+                            else
                             {
-                                extraFields.push(f);
-                                index = parseFloat(f.substr(7) || "0");
-                                if ((index | 0) !== index || index < 0)
-                                {
-                                    error.error("Archetype particle texture index must be an integer >= 0 for " +
-                                                "particle '" + p + "' " + f);
-                                }
+                                textureUVs[index] =
+                                    Parser.checkVector(error, "Archetype particle", f, 4, particle[f]);
+                            }
+                        }
+                        else if (f.substr(0, 7) === "texture")
+                        {
+                            extraFields.push(f);
+                            index = parseFloat(f.substr(7) || "0");
+                            if ((index | 0) !== index || index < 0)
+                            {
+                                error.error("Archetype particle texture index must be an integer >= 0 for " +
+                                            "particle '" + p + "' " + f);
+                            }
+                            if (packedTextures[index])
+                            {
+                                error.warning("Archetype particle specifies " + f + ", but archetype already" +
+                                              "specified a pre-packed texture for index. Field will be ignored");
+                            }
+                            else if (parsedSystem && !Parser.hasTextureIndex(parsedSystem, index))
+                            {
+                                error.warning("Archetype particle specifies " + f + ", but system animation " +
+                                              "specifies no attribute requiring " + f + ". Field will be ignored");
+                            }
+                            else
+                            {
                                 var texs = particle[f];
                                 if (Types.isString(texs))
                                 {
@@ -8387,64 +8544,96 @@ class ParticleManager
                                 }
                             }
                         }
-
-                        Parser.extraFields(error, "Archetype particle '" + p + "'", particle,
-                            ["animation", "tweaks"].concat(extraFields));
-
-                        ret[p] = {
-                            animation : particle.animation,
-                            tweaks    : particle.tweaks,
-                            textures  : textures,
-                            textureUVs: textureUVs
-                        };
                     }
-                    return ret;
-                },
-                val({})),
+
+                    Parser.extraFields(error, "Archetype particle '" + p + "'", particle,
+                        ["animation", "tweaks"].concat(extraFields));
+
+                    ret[p] = {
+                        animation : particle.animation || "default",
+                        tweaks    : tweaks,
+                        textures  : textures,
+                        textureUVs: textureUVs
+                    };
+                }
+                return ret;
+            }, val({})),
             emitters: !delta ? [] : Parser.maybeField(delta, "emitters", function (emitters)
+            {
+                function checkString(n): (any) => string
                 {
-                    function checkString(n): (any) => string
+                    return Parser.checkString.bind(null, error, "archetype emitter", n);
+                }
+
+                var ret = [];
+                var count = emitters.length;
+                var i;
+                for (i = 0; i < count; i += 1)
+                {
+                    var emitter = emitters[i];
+                    if (!emitter || !Types.isObject(emitter))
                     {
-                        return Parser.checkString.bind(null, error, "archetype emitter", n);
+                        error.error("Archetype emitter must be an object");
+                        continue;
                     }
 
-                    var ret = [];
-                    var count = emitters.length;
-                    var i;
-                    for (i = 0; i < count; i += 1)
+                    var name = maybe(emitter, "name", checkString, val("default"));
+                    var emitterDef = self.emitters[name];
+                    if (!emitterDef)
                     {
-                        var emitter = emitters[i];
-                        if (!emitter || !Types.isObject(emitter))
-                        {
-                            error.error("Archetype emitter must be an object");
-                            continue;
-                        }
-
-                        var name = maybe(emitter, "name", checkString, val("default"));
-                        var emitterDef = self.emitters[name];
-                        if (!emitterDef)
-                        {
-                            throw "Emitter with name " + name + " has not been registered with manager";
-                        }
-                        var particleName = Parser.stringField(error, "Archetype emitter", emitter, "particleName");
-
-                        // Delete extra fields from emitter before parsing sub-archetype.
-                        delete emitter.name;
-                        delete emitter.particleName;
-
-                        var parsed = emitterDef.parseArchetype(error, emitter);
-                        if (parsed)
-                        {
-                            parsed.name = name;
-                            parsed.particleName = particleName;
-                            ret.push(parsed);
-                        }
+                        throw "Emitter with name " + name + " has not been registered with manager";
                     }
-                    return ret;
-                },
-                val([])),
+                    var particleName = Parser.stringField(error, "Archetype emitter", emitter, "particleName");
+
+                    // Delete extra fields from emitter before parsing sub-archetype.
+                    delete emitter.name;
+                    delete emitter.particleName;
+
+                    var parsed = emitterDef.parseArchetype(error, emitter);
+                    if (parsed)
+                    {
+                        parsed.name = name;
+                        parsed.particleName = particleName;
+                        ret.push(parsed);
+                    }
+                }
+                return ret;
+            }, val([])),
             context: null
         };
+
+        var particles = archetype.particles;
+        var count = packedTextures.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            if (parsedSystem && Parser.hasTextureIndex(parsedSystem, i))
+            {
+                for (var p in particles)
+                {
+                    if (!particles.hasOwnProperty(p))
+                    {
+                        continue;
+                    }
+                    var particle = particles[p];
+
+                    if (packedTextures[i])
+                    {
+                        if (!particle.textureUVs[i])
+                        {
+                            particle.textureUVs[i] = VMath.v4Build(0, 0, 1, 1);
+                        }
+                    }
+                    else
+                    {
+                        if (!particle.textures[i])
+                        {
+                            particle.textures[i] = [null];
+                        }
+                    }
+                }
+            }
+        }
 
         if (!error.empty(true))
         {
@@ -8458,8 +8647,7 @@ class ParticleManager
         // Verify all emitters reference valid particles.
         // We do not require that all particles are referenced by emitters.
         var emitters = archetype.emitters;
-        var count = emitters.length;
-        var i;
+        count = emitters.length;
         for (i = 0; i < count; i += 1)
         {
             var emitter = emitters[i];
@@ -8478,64 +8666,6 @@ class ParticleManager
 
         return archetype;
     }
-
-//    _name(x: {name?: string})
-//    {
-//        return (x && x.name) || "default";
-//    }
-//    compressArchetype(archetype: ParticleArchetype): any
-//    {
-//        var renderer     = this.renderers    [this._name(archetype.renderer)];
-//        var updater      = this.updaters     [this._name(archetype.updater)];
-//        var synchronizer = this.synchronizers[this._name(archetype.synchronizer)];
-//        var delta = {
-//            system         : ParticleManager.recordDelta(ParticleSystem.template, archetype.system),
-//            renderer       : ParticleManager.recordDelta(renderer.template,       archetype.renderer),
-//            updater        : ParticleManager.recordDelta(updater.template,        archetype.updater),
-//            synchronizer   : ParticleManager.recordDelta(synchronizer.template,   archetype.synchronizer),
-//            animationSystem: archetype.animationSystem,
-//            particles      : archetype.particles,
-//            emitters       : []
-//        };
-//        for (var f in archetype)
-//        {
-//            if (archetype.hasOwnProperty(f) && f.substr(0, 13) === "packedTexture")
-//            {
-//                delta[f] = archetype[f];
-//            }
-//        }
-//        var i;
-//        var count = archetype.emitters.length;
-//        for (i = 0; i < count; i += 1)
-//        {
-//            var emitter = archetype.emitters[i];
-//            var edelta = ParticleManager.recordDelta(this.emitters[this._name(emitter)].template, emitter);
-//            delta.emitters.push(edelta);
-//        }
-//        delta.renderer.name      = this._name(archetype.renderer);
-//        delta.updater.name       = this._name(archetype.updater);
-//        delta.synchronizer.name  = this._name(archetype.synchronizer);
-//        return delta;
-//    }
-//
-//    decompressArchetype(archetype: any): ParticleArchetype
-//    {
-//        var renderer     = this.renderers    [this._name(archetype.renderer)];
-//        var updater      = this.updaters     [this._name(archetype.updater)];
-//        var synchronizer = this.synchronizers[this._name(archetype.synchronizer)];
-//        archetype.system       = ParticleManager.applyDelta(ParticleSystem.template, archetype.system);
-//        archetype.renderer     = ParticleManager.applyDelta(renderer.template,       archetype.renderer);
-//        archetype.updater      = ParticleManager.applyDelta(updater.template,        archetype.updater);
-//        archetype.synchronizer = ParticleManager.applyDelta(synchronizer.template,   archetype.synchronizer);
-//        var i;
-//        var count = archetype.emitters.length;
-//        for (i = 0; i < count; i += 1)
-//        {
-//            var emitter = archetype.emitters[i];
-//            emitter = archetype.emitters[i] = ParticleManager.applyDelta(this.emitters[this._name(emitter)].template, emitter);
-//        }
-//        return archetype;
-//    }
 
     // Build an object delta of the given object from a template.
     // Assumption that the object has a structure matching the template exactly except
