@@ -160,7 +160,7 @@ Set up particles' `userData` storage for creation.
 
 **Syntax** ::
 
-    var userData = renderer.createUserData({
+    var userData = DefaultParticleRenderer.createUserData({
         facing: "custom",
         theta: 0.5,
         phi: Math.PI,

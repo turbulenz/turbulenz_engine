@@ -180,7 +180,7 @@ Set up particles' `userData` storage for creation.
 
 **Syntax** ::
 
-    var userData = updater.createUserData(randomizeAcceleration, seed);
+    var userData = DefaultParticleUpdater.createUserData(randomizeAcceleration, seed);
 
 ``randomizeAcceleration`` (Optional)
     Default value `false`. Specify the particle to which this userData will be applied should have its acceleration randomized.

@@ -220,6 +220,18 @@ The :ref:`ParticleRenderable <particlerenderable>` to use when tracking movement
 The number specifying how trails form, with `1` specifying a standard trail, and `0` specifying that already emitted particles will follow the movements of the system without trails forming. Any value is permited, though values between `0` and `1` are 'expected'.
 
 .. index::
+    pair: DefaultParticleSynchronizer; emitters
+
+`emitters`
+----------
+
+**Summary**
+
+The current set of emitters added to the synchronizer.
+
+.. note :: Read Only
+
+.. index::
     single: DefaultParticleEmitter
 
 .. _defaultparticleemitter:
