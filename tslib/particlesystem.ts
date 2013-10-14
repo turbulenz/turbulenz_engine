@@ -2495,10 +2495,16 @@ class ParticleBuilder
         };
     }
 
+    // alreadyParsed is a private parameter to compile.
+    //
+    // When true, the input particles and systems are presumed to be pre-parsed.
+    // and with particles attributes checked against the system. (relavent calls
+    // made to parseSystem, parseParticle and checkAttributes)
     static compile(params: {
         graphicsDevice : GraphicsDevice;
         particles      : Array<any>;
         system         : any;
+        alreadyParsed? : boolean;
         uvMap?         : { [name: string]: Array<Array<number>> };
         tweaks?        : Array<{ [name: string]: any }>; // any = number | Array<number>
         failOnWarnings?: boolean;
@@ -2516,13 +2522,61 @@ class ParticleBuilder
         }
 
         var error = new BuildError();
-        var sys = Parser.parseSystem(error, system);
-        var parts = [];
+        var sys, parts;
         var count = particles.length;
         var i;
-        for (i = 0; i < count; i += 1)
+        if (params.alreadyParsed)
         {
-            parts[i] = Parser.parseParticle(error, particles[i]);
+            sys = system;
+            parts = []
+            // copy over whatever fields are mutated by compilation process.
+            // This is still far more efficient than parsing from scratch!
+            for (i = 0; i < count; i += 1)
+            {
+                var part = particles[i]
+                // deep copy.
+                var textureUVs = Types.copy(part.textureUVs);
+                // shallow copy. dont want to try and copy interpolator objects.
+                var anim = [];
+                var animation = part.animation;
+                var animCount = animation.length;
+                var j;
+                for (j = 0; j < animCount; j += 1)
+                {
+                    var snap = animation[j];
+                    var interpolators = snap.interpolators;
+                    var interps = {};
+                    for (var f in interpolators)
+                    {
+                        if (interpolators.hasOwnProperty(f))
+                        {
+                            interps[f] = interpolators[f];
+                        }
+                    }
+                    anim.push({
+                        time         : snap.time,
+                        attributes   : Types.copy(snap.attributes),
+                        interpolators: interps
+                    });
+                }
+
+                parts.push({
+                    name        : part.name,
+                    fps         : part.fps,
+                    animation   : anim,
+                    textureUVs  : textureUVs,
+                    textureSizes: part.textureSizes
+                });
+            }
+        }
+        else
+        {
+            sys = Parser.parseSystem(error, system);
+            parts = [];
+            for (i = 0; i < count; i += 1)
+            {
+                parts[i] = Parser.parseParticle(error, particles[i]);
+            }
         }
 
         // Can't go any further in the compile to gather more errors.
@@ -2541,11 +2595,14 @@ class ParticleBuilder
         }
 
         // Check attribute of particles against system attributes
-        for (i = 0; i < count; i += 1)
+        if (!params.alreadyParsed)
         {
-            if (parts[i])
+            for (i = 0; i < count; i += 1)
             {
-                ParticleBuilder.checkAttributes(error, parts[i], sys);
+                if (parts[i])
+                {
+                    ParticleBuilder.checkAttributes(error, parts[i], sys);
+                }
             }
         }
 
@@ -3267,7 +3324,7 @@ class ParticleBuilder
         particle.animation = disc;
     }
 
-    private static checkAttributes(error: BuildError, particle: Particle, system: Array<Attribute>): void
+    static checkAttributes(error: BuildError, particle: Particle, system: Array<Attribute>): void
     {
         var sysAttr;
         var seq = particle.animation;
@@ -5586,7 +5643,7 @@ class ParticleView
         }
 
         // Shader embedded from assets/shaders/particles-sort.cgfx
-        var shader = gd.createShader({"version": 1,"name": "particles-sort.cgfx","samplers":{"previousState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"creationState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"mappingTable":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"vParticleState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"fParticleState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"animation":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071}},"parameters":{"textureSize":{"type": "float","columns": 2},"invTextureSize":{"type": "float","columns": 2},"regionSize":{"type": "float","columns": 2},"invRegionSize":{"type": "float","columns": 2},"regionPos":{"type": "float","columns": 2},"halfExtents":{"type": "float","columns": 3},"center":{"type": "float","columns": 3},"previousState":{"type": "sampler2D"},"shift":{"type": "float","columns": 3},"timeStep":{"type": "float"},"lifeStep":{"type": "float"},"creationState":{"type": "sampler2D"},"creationScale":{"type": "float","columns": 2},"projection":{"type": "float","rows": 4,"columns": 4},"modelView":{"type": "float","rows": 4,"columns": 3},"mappingTable":{"type": "sampler2D"},"mappingSize":{"type": "float","columns": 2},"invMappingSize":{"type": "float","columns": 2},"mappingPos":{"type": "float","columns": 2},"vParticleState":{"type": "sampler2D"},"fParticleState":{"type": "sampler2D"},"animationSize":{"type": "float","columns": 2},"animation":{"type": "sampler2D"},"zSorted":{"type": "bool"},"zBound":{"type": "float"},"cpass":{"type": "float"},"PmS":{"type": "float"},"twoStage":{"type": "float"},"twoStage_PmS_1":{"type": "float"}},"techniques":{"prepare_sort":[{"parameters": ["regionSize","invMappingSize","mappingPos","invTextureSize","regionSize","invRegionSize","regionPos","modelView","mappingTable","invMappingSize","mappingPos","fParticleState","zBound"],"semantics": ["POSITION"],"states":{"DepthTestEnable": false,"DepthMask": false,"CullFaceEnable": false,"BlendEnable": false},"programs": ["vp_update_mapping","fp_prepare_sort"]}],"sort_pass":[{"parameters": ["regionSize","invMappingSize","mappingPos","regionSize","invRegionSize","mappingTable","invMappingSize","mappingPos","cpass","PmS","twoStage","twoStage_PmS_1"],"semantics": ["POSITION"],"states":{"DepthTestEnable": false,"DepthMask": false,"CullFaceEnable": false,"BlendEnable": false},"programs": ["vp_update_mapping","fp_merge_sort_pass"]}]},"programs":{"fp_merge_sort_pass":{"type": "fragment","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _TMP7;float _TMP11;float _TMP12;vec2 _TMP6;vec2 _TMP5;float _TMP10;float _TMP2;float _TMP3;float _TMP4;float _TMP1;vec2 _TMP0;vec2 _p0047;vec2 _x0049;float _x0053;float _x0057;float _x0059;float _u0061;float _index0061;float _v0061;float _y0063;float _x0065;float _TMP76;float _TMP88;uniform vec2 regionSize;uniform vec2 invRegionSize;uniform sampler2D mappingTable;uniform vec2 invMappingSize;uniform vec2 mappingPos;uniform float cpass;uniform float PmS;uniform float twoStage;uniform float twoStage_PmS_1;void main()\n{vec4 _self;float _index1;float _j;float _compare;vec4 _other;_TMP0=(mappingPos+(regionSize*tz_TexCoord[0].xy)/vec2(3.0,3.0))*invMappingSize;_self=texture2D(mappingTable,_TMP0);_x0049=(tz_TexCoord[0].xy*regionSize)/vec2(3.0,3.0);_p0047=floor(_x0049);_index1=(_p0047.y*regionSize.x)/3.0+_p0047.x;_x0053=_index1/twoStage;_TMP10=floor(_x0053);_TMP1=_index1-twoStage*_TMP10;_j=floor(_TMP1);if(_j<PmS||_j>twoStage_PmS_1){_TMP2=0.0;}else{_x0057=(_j+PmS)/cpass;_x0059=_x0057/2.0;_TMP10=floor(_x0059);_TMP4=_x0057-2.0*_TMP10;if(_TMP4<1.0){_TMP3=1.0;}else{_TMP3=-1.0;}\n_TMP2=_TMP3;}\n_compare=float(_TMP2);_index0061=_index1+_compare*cpass;_y0063=regionSize.x/3.0;_x0065=_index0061/_y0063;_TMP10=floor(_x0065);_u0061=_index0061-_y0063*_TMP10;_v0061=(_index0061-_u0061)*invRegionSize.x*3.0;_TMP5=vec2(_u0061+0.5,_v0061+0.5)*invRegionSize*vec2(3.0,3.0);_TMP6=(mappingPos+(regionSize*_TMP5)/vec2(3.0,3.0))*invMappingSize;_other=texture2D(mappingTable,_TMP6);_TMP11=dot(_self.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP12=min(1.0,_TMP11);_TMP76=max(0.0,_TMP12);_TMP11=dot(_other.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP12=min(1.0,_TMP11);_TMP88=max(0.0,_TMP12);if(_TMP76*_compare<=_TMP88*_compare){_TMP7=_self;}else{_TMP7=_other;}\ngl_FragColor=_TMP7;}"},"vp_update_mapping":{"type": "vertex","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outParticle1;vec2 _TMP0;uniform vec2 regionSize;uniform vec2 invMappingSize;uniform vec2 mappingPos;void main()\n{vec2 _TMP30;_TMP0=(mappingPos+(regionSize*ATTR0.xy)/vec2(3.0,3.0))*invMappingSize;_TMP30=_TMP0*2.0-1.0;_outPosition1=vec4(_TMP30.x,_TMP30.y,0.0,1.0);_outParticle1=ATTR0.xy;tz_TexCoord[0].xy=ATTR0.xy;gl_Position=_outPosition1;}"},"fp_prepare_sort":{"type": "fragment","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;vec2 _TMP5;float _TMP11;vec4 _TMP10;float _TMP13;float _TMP6;vec4 _TMP1;vec2 _TMP0;vec2 _p0051;vec4 _life0053;vec2 _c0055;float _TMP62;vec3 _TMP68;vec2 _uv0071;float _TMP72;float _TMP84;float _TMP90;vec2 _uv0091;float _TMP102;float _TMP108;vec2 _uv0109;float _TMP120;vec2 _TMP126;vec2 _enc10127;float _TMP130;vec2 _x0137;uniform vec2 invTextureSize;uniform vec2 regionSize;uniform vec2 invRegionSize;uniform vec2 regionPos;uniform vec3 modelView[4];uniform sampler2D mappingTable;uniform vec2 invMappingSize;uniform vec2 mappingPos;uniform sampler2D fParticleState;uniform float zBound;void main()\n{vec2 _particleUV;float _z1;_TMP0=(mappingPos+(regionSize*tz_TexCoord[0].xy)/vec2(3.0,3.0))*invMappingSize;_TMP1=texture2D(mappingTable,_TMP0);_p0051=(_TMP1.xy*255.0)*vec2(3.0,3.0)*invRegionSize;_particleUV=(regionPos+regionSize*_p0051)*invTextureSize;_c0055=_particleUV+vec2(2.5,0.5)*invTextureSize;_life0053=texture2D(fParticleState,_c0055);_TMP6=dot(_life0053.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP6);_TMP62=max(0.0,_TMP11);if(_TMP62<=0.0){_ret_0=vec4(_TMP1.x,_TMP1.y,1.0,1.0);gl_FragColor=_ret_0;return;}else{_uv0071=_particleUV+vec2(0.5,0.5)*invTextureSize;_TMP10=texture2D(fParticleState,_uv0071);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP84=max(0.0,_TMP11);_TMP72=(_TMP84-0.5)*2.0;_uv0091=_uv0071+vec2(0.0,invTextureSize.y);_TMP10=texture2D(fParticleState,_uv0091);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP102=max(0.0,_TMP11);_TMP90=(_TMP102-0.5)*2.0;_uv0109=_uv0071+vec2(0.0,2.0*invTextureSize.y);_TMP10=texture2D(fParticleState,_uv0109);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP120=max(0.0,_TMP11);_TMP108=(_TMP120-0.5)*2.0;_TMP68=vec3(_TMP72,_TMP90,_TMP108);_z1=_TMP68.x*modelView[0].z+_TMP68.y*modelView[1].z+_TMP68.z*modelView[2].z;_z1=(_z1+zBound)/(2.0*zBound);if(_z1>=1.0){_TMP126=vec2(1.0,1.0);}else{_TMP11=min(1.0,_z1);_TMP130=max(0.0,_TMP11);_x0137=_TMP130*vec2(256.0,1.0);_TMP5=fract(_x0137);_enc10127=_TMP5*256.0;_enc10127.y=_enc10127.y-_enc10127.x/256.0;_TMP126=_enc10127/255.0;}\n_ret_0=vec4(_TMP1.x,_TMP1.y,_TMP126.x,_TMP126.y);gl_FragColor=_ret_0;return;}\ngl_FragColor=_ret_0;}"}}});
+        var shader = gd.createShader({"version": 1,"name": "particles-sort.cgfx","samplers":{"previousState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"creationState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"mappingTable":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"vParticleState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"fParticleState":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071},"animation":{"MinFilter": 9728,"MagFilter": 9728,"WrapS": 33071,"WrapT": 33071}},"parameters":{"textureSize":{"type": "float","columns": 2},"invTextureSize":{"type": "float","columns": 2},"regionSize":{"type": "float","columns": 2},"invRegionSize":{"type": "float","columns": 2},"regionPos":{"type": "float","columns": 2},"halfExtents":{"type": "float","columns": 3},"center":{"type": "float","columns": 3},"maxLifeTime":{"type": "float"},"previousState":{"type": "sampler2D"},"shift":{"type": "float","columns": 3},"timeStep":{"type": "float"},"lifeStep":{"type": "float"},"maxSpeed":{"type": "float"},"creationState":{"type": "sampler2D"},"creationScale":{"type": "float","columns": 2},"projection":{"type": "float","rows": 4,"columns": 4},"modelView":{"type": "float","rows": 4,"columns": 3},"mappingTable":{"type": "sampler2D"},"mappingSize":{"type": "float","columns": 2},"invMappingSize":{"type": "float","columns": 2},"mappingPos":{"type": "float","columns": 2},"vParticleState":{"type": "sampler2D"},"fParticleState":{"type": "sampler2D"},"animationSize":{"type": "float","columns": 2},"animation":{"type": "sampler2D"},"zSorted":{"type": "bool"},"zBound":{"type": "float"},"cpass":{"type": "float"},"PmS":{"type": "float"},"twoStage":{"type": "float"},"twoStage_PmS_1":{"type": "float"}},"techniques":{"prepare_sort":[{"parameters": ["regionSize","invMappingSize","mappingPos","invTextureSize","regionSize","invRegionSize","regionPos","modelView","mappingTable","invMappingSize","mappingPos","fParticleState","zBound"],"semantics": ["POSITION"],"states":{"DepthTestEnable": false,"DepthMask": false,"CullFaceEnable": false,"BlendEnable": false},"programs": ["vp_update_mapping","fp_prepare_sort"]}],"sort_pass":[{"parameters": ["regionSize","invMappingSize","mappingPos","regionSize","invRegionSize","mappingTable","invMappingSize","mappingPos","cpass","PmS","twoStage","twoStage_PmS_1"],"semantics": ["POSITION"],"states":{"DepthTestEnable": false,"DepthMask": false,"CullFaceEnable": false,"BlendEnable": false},"programs": ["vp_update_mapping","fp_merge_sort_pass"]}]},"programs":{"fp_merge_sort_pass":{"type": "fragment","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _TMP7;float _TMP11;float _TMP12;vec2 _TMP6;vec2 _TMP5;float _TMP10;float _TMP2;float _TMP3;float _TMP4;float _TMP1;vec2 _TMP0;vec2 _p0049;vec2 _x0051;float _x0055;float _x0059;float _x0061;float _u0063;float _index0063;float _v0063;float _y0065;float _x0067;float _TMP78;float _TMP90;uniform vec2 regionSize;uniform vec2 invRegionSize;uniform sampler2D mappingTable;uniform vec2 invMappingSize;uniform vec2 mappingPos;uniform float cpass;uniform float PmS;uniform float twoStage;uniform float twoStage_PmS_1;void main()\n{vec4 _self;float _index1;float _j;float _compare;vec4 _other;_TMP0=(mappingPos+(regionSize*tz_TexCoord[0].xy)/vec2(3.0,3.0))*invMappingSize;_self=texture2D(mappingTable,_TMP0);_x0051=(tz_TexCoord[0].xy*regionSize)/vec2(3.0,3.0);_p0049=floor(_x0051);_index1=(_p0049.y*regionSize.x)/3.0+_p0049.x;_x0055=_index1/twoStage;_TMP10=floor(_x0055);_TMP1=_index1-twoStage*_TMP10;_j=floor(_TMP1);if(_j<PmS||_j>twoStage_PmS_1){_TMP2=0.0;}else{_x0059=(_j+PmS)/cpass;_x0061=_x0059/2.0;_TMP10=floor(_x0061);_TMP4=_x0059-2.0*_TMP10;if(_TMP4<1.0){_TMP3=1.0;}else{_TMP3=-1.0;}\n_TMP2=_TMP3;}\n_compare=float(_TMP2);_index0063=_index1+_compare*cpass;_y0065=regionSize.x/3.0;_x0067=_index0063/_y0065;_TMP10=floor(_x0067);_u0063=_index0063-_y0065*_TMP10;_v0063=(_index0063-_u0063)*invRegionSize.x*3.0;_TMP5=vec2(_u0063+0.5,_v0063+0.5)*invRegionSize*vec2(3.0,3.0);_TMP6=(mappingPos+(regionSize*_TMP5)/vec2(3.0,3.0))*invMappingSize;_other=texture2D(mappingTable,_TMP6);_TMP11=dot(_self.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP12=min(1.0,_TMP11);_TMP78=max(0.0,_TMP12);_TMP11=dot(_other.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP12=min(1.0,_TMP11);_TMP90=max(0.0,_TMP12);if(_TMP78*_compare<=_TMP90*_compare){_TMP7=_self;}else{_TMP7=_other;}\ngl_FragColor=_TMP7;}"},"vp_update_mapping":{"type": "vertex","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _outPosition1;vec2 _outParticle1;vec2 _TMP0;uniform vec2 regionSize;uniform vec2 invMappingSize;uniform vec2 mappingPos;void main()\n{vec2 _TMP32;_TMP0=(mappingPos+(regionSize*ATTR0.xy)/vec2(3.0,3.0))*invMappingSize;_TMP32=_TMP0*2.0-1.0;_outPosition1=vec4(_TMP32.x,_TMP32.y,0.0,1.0);_outParticle1=ATTR0.xy;tz_TexCoord[0].xy=ATTR0.xy;gl_Position=_outPosition1;}"},"fp_prepare_sort":{"type": "fragment","code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying vec4 tz_TexCoord[1];\nvec4 _ret_0;vec2 _TMP5;float _TMP11;vec4 _TMP10;float _TMP13;float _TMP6;vec4 _TMP1;vec2 _TMP0;vec2 _p0053;vec4 _life0055;vec2 _c0057;float _TMP64;vec3 _TMP70;vec2 _uv0073;float _TMP74;float _TMP86;float _TMP92;vec2 _uv0093;float _TMP104;float _TMP110;vec2 _uv0111;float _TMP122;vec2 _TMP128;vec2 _enc10129;float _TMP132;vec2 _x0139;uniform vec2 invTextureSize;uniform vec2 regionSize;uniform vec2 invRegionSize;uniform vec2 regionPos;uniform vec3 modelView[4];uniform sampler2D mappingTable;uniform vec2 invMappingSize;uniform vec2 mappingPos;uniform sampler2D fParticleState;uniform float zBound;void main()\n{vec2 _particleUV;float _z1;_TMP0=(mappingPos+(regionSize*tz_TexCoord[0].xy)/vec2(3.0,3.0))*invMappingSize;_TMP1=texture2D(mappingTable,_TMP0);_p0053=(_TMP1.xy*255.0)*vec2(3.0,3.0)*invRegionSize;_particleUV=(regionPos+regionSize*_p0053)*invTextureSize;_c0057=_particleUV+vec2(2.5,0.5)*invTextureSize;_life0055=texture2D(fParticleState,_c0057);_TMP6=dot(_life0055.zw,vec2(3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP6);_TMP64=max(0.0,_TMP11);if(_TMP64<=0.0){_ret_0=vec4(_TMP1.x,_TMP1.y,1.0,1.0);gl_FragColor=_ret_0;return;}else{_uv0073=_particleUV+vec2(0.5,0.5)*invTextureSize;_TMP10=texture2D(fParticleState,_uv0073);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP86=max(0.0,_TMP11);_TMP74=(_TMP86-0.5)*2.0;_uv0093=_uv0073+vec2(0.0,invTextureSize.y);_TMP10=texture2D(fParticleState,_uv0093);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP104=max(0.0,_TMP11);_TMP92=(_TMP104-0.5)*2.0;_uv0111=_uv0073+vec2(0.0,2.0*invTextureSize.y);_TMP10=texture2D(fParticleState,_uv0111);_TMP13=dot(_TMP10,vec4(5.93718141E-08,1.51991844E-05,3.89099121E-03,9.96093750E-01));_TMP11=min(1.0,_TMP13);_TMP122=max(0.0,_TMP11);_TMP110=(_TMP122-0.5)*2.0;_TMP70=vec3(_TMP74,_TMP92,_TMP110);_z1=_TMP70.x*modelView[0].z+_TMP70.y*modelView[1].z+_TMP70.z*modelView[2].z;_z1=(_z1+zBound)/(2.0*zBound);if(_z1>=1.0){_TMP128=vec2(1.0,1.0);}else{_TMP11=min(1.0,_z1);_TMP132=max(0.0,_TMP11);_x0139=_TMP132*vec2(256.0,1.0);_TMP5=fract(_x0139);_enc10129=_TMP5*256.0;_enc10129.y=_enc10129.y-_enc10129.x/256.0;_TMP128=_enc10129/255.0;}\n_ret_0=vec4(_TMP1.x,_TMP1.y,_TMP128.x,_TMP128.y);gl_FragColor=_ret_0;return;}\ngl_FragColor=_ret_0;}"}}});
 
         ParticleView.prepareSortTechnique = shader.getTechnique("prepare_sort");
         ParticleView.mergeSortTechnique   = shader.getTechnique("sort_pass");
@@ -5748,7 +5805,7 @@ class ParticleView
 
             gd.beginRenderTarget(targets[1 - this.currentMapping]);
             gd.setTechniqueParameters(mergeParameters);
-            gd.draw(gd.PRIMITIVE_TRIANGLES, 3, 0);
+            gd.draw(gd.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
             gd.endRenderTarget();
             this.currentMapping = 1 - this.currentMapping;
 
@@ -7071,7 +7128,7 @@ interface ParticleArchetype
     packedTextures : Array<string>;
     particles: {
         [name: string]: {
-            animation : any;
+            animation : string;
             tweaks    : { [name: string]: any };
             textureUVs: Array<Array<number>>;
             textures  : Array<Array<string>>;
@@ -7356,7 +7413,13 @@ class ParticleManager
     }
     registerAnimationSystem(name: string, definition: any): void
     {
-        this.systems[name] = definition;
+        var error = new BuildError();
+        var parsed = Parser.parseSystem(error, definition);
+        if (!error.empty(true))
+        {
+            throw error.fail("System parse failed!");
+        }
+        this.systems[name] = parsed;
     }
     getParticleAnimation(name?: string): any
     {
@@ -7364,7 +7427,13 @@ class ParticleManager
     }
     registerParticleAnimation(definition: any): void
     {
-        this.particles[definition.name] = definition;
+        var error = new BuildError();
+        var parsed = Parser.parseParticle(error, definition);
+        if (!error.empty(true))
+        {
+            throw error.fail("Particle parse failed!");
+        }
+        this.particles[definition.name] = parsed;
     }
     getEmitter(name?: string): any
     {
@@ -8054,7 +8123,7 @@ class ParticleManager
             if (particle.animation !== "default")
             {
                 outParticle = outParticle || {};
-                outParticle.animation = Types.copy(particle.animation);
+                outParticle.animation = particle.animation;
             }
 
             for (var t in particle.tweaks)
@@ -8204,12 +8273,19 @@ class ParticleManager
         }
 
         var self = this;
+        var animationSystem = !delta ? "default" : maybe(delta, "animationSystem", checkString, val("default"));
+        var parsedSystem = this.getAnimationSystem(animationSystem);
+        if (!parsedSystem)
+        {
+            error.error("Archetype references animation system '" + animationSystem + "' not registered with manager");
+        }
+
         var archetype = {
             system         : ParticleSystem.parseArchetype(error, delta && delta.system),
             renderer       : renderer      .parseArchetype(error, delta && delta.renderer),
             updater        : updater       .parseArchetype(error, delta && delta.updater),
             synchronizer   : synchronizer  .parseArchetype(error, delta && delta.synchronizer),
-            animationSystem: !delta ? "default" : maybe(delta, "animationSystem", checkString, val("default")),
+            animationSystem: animationSystem,
             packedTextures : packedTextures,
             particles      : !delta ? {} : Parser.maybeField(delta, "particles", function (particles)
                 {
@@ -8238,15 +8314,19 @@ class ParticleManager
                             !Types.isString(animation) &&
                             !Types.isObject(animation))
                         {
-                            error.error("Archetype particle animation should be either a string name referencing a " +
-                                        "registered particle animation, or an inline animation object for particle '" +
-                                        p + "'");
+                            error.error("Archetype particle animation should be a string name referencing a " +
+                                        "registered particle animation for particle '" + p + "'");
                         }
 
-                        if (Types.isString(animation) && !self.getParticleAnimation(animation))
+                        var parsedParticle = self.getParticleAnimation(animation);
+                        if (!parsedParticle)
                         {
                             error.error("Archetype particle animation '" + animation + "' has not been registered " +
                                         "with the manager");
+                        }
+                        else if(parsedSystem)
+                        {
+                            ParticleBuilder.checkAttributes(error, parsedParticle, parsedSystem);
                         }
 
                         var extraFields = [];
