@@ -2486,6 +2486,15 @@ class ParticleBuilder
             }
         }
 
+        // Check attribute of particles against system attributes
+        for (i = 0; i < count; i += 1)
+        {
+            if (parts[i])
+            {
+                ParticleBuilder.checkAttributes(error, parts[i], sys);
+            }
+        }
+
         // Perform UV-remapping of particles
         var sysCount = sys.length;
         var attr;
@@ -2505,7 +2514,7 @@ class ParticleBuilder
                     for (i = 0; i < sysCount; i += 1)
                     {
                         attr = sys[i];
-                        if (Types.isNumber(attr.type) && f.substr(8) === ""+attr.type)
+                        if (Types.isNumber(attr.type) && f.substr(7) === ""+attr.type)
                         {
                             found = true;
                             break;
@@ -2519,21 +2528,15 @@ class ParticleBuilder
             }
             for (i = 0; i < count; i += 1)
             {
-                ParticleBuilder.remapUVs(parts[i], uvMap, i);
-            }
-        }
-
-        // Check attribute of particles against system attributes
-        for (i = 0; i < count; i += 1)
-        {
-            if (parts[i])
-            {
-                ParticleBuilder.checkAttributes(error, parts[i], sys);
+                if (parts[i])
+                {
+                    ParticleBuilder.remapUVs(parts[i], uvMap, i);
+                }
             }
         }
 
         // Can't reasonably go further in the compile if any errors have occured.
-        if (error.checkErrorState())
+        if (!error.empty(failOnWarnings))
         {
             throw error.fail("Build failed!");
         }
@@ -2600,7 +2603,7 @@ class ParticleBuilder
         // Check for any warnings at any point during compile
         if (!error.empty(failOnWarnings))
         {
-            throw error.fail("Build failed! (fail on warnings enabled)");
+            throw error.fail("Build failed!");
         }
 
         // ----------------------------------------------------
@@ -3265,7 +3268,7 @@ class ParticleBuilder
                 default: // tTexture(n)
                     if (!particle.textureUVs.hasOwnProperty("texture" + (<number>sysAttr.type)))
                     {
-                        particle.textureUVs["texture" + (<number>sysAttr.type)] = [[0.0, 0.0, 1.0, 1.0]];
+                        particle.textureUVs["texture" + (<number>sysAttr.type)] = [[0, 0, 1, 1]];
                     }
             }
         }
@@ -3956,7 +3959,7 @@ class DefaultParticleRenderer
         animatedScale        : false,
         animatedAlpha        : false
     };
-    applyTemplate(textureManager, system, template, texture)
+    applyTemplate(textureManager, system, template, textures)
     {
         var parameters = system.renderParameters;
         parameters["noiseTexture"] = textureManager.get(template.noiseTexture);
@@ -3968,7 +3971,7 @@ class DefaultParticleRenderer
         parameters["animatedOrientation"] = template.animatedOrientation;
         parameters["animatedScale"] = template.animatedScale;
         parameters["animatedAlpha"] = template.animatedAlpha;
-        parameters["texture"] = texture;
+        parameters["texture"] = textures["texture0"];
     }
 
     createUserData(params: {
@@ -4127,7 +4130,8 @@ class ParticleSystem
         maxParticles   : 64,
         zSorted        : false,
         maxSortSteps   : 10000,
-        trackingEnabled: false
+        trackingEnabled: false,
+        maxLifeTime    : 2
     };
 
     private static defaultNoiseTexture: Texture;
@@ -6512,16 +6516,16 @@ interface ParticleArchetype
     updater: { name?: string }; //
     synchronizer: { name?: string };
     animationSystem?: string; //
-    packedTexture: string; // may be null
+    // packedTexture[0]: string; // may be null
     particles: {
         [name: string]: {
             animation?: any; // may be null, string (name) or object
             tweaks?: { [name: string]: any }; // may be null, applied to animation
-            uvRectangle?: Array<number>; // may be null, applied to animation (uvMaps)
-            // texture[0]: Array<string>; // may be null, packed, applied to animation (texture0)
+            // texture-uv[0]: Array<number>; // may be null, applied to animation (uvMaps) when using packed tex.
+            // texture[0]: Array<string>; // may be null, packed, applied to animation (texture0) otherwise.
         }
     };
-    emitters: Array<{ name?: string; particle: string }>; // at least a name and particle
+    emitters: Array<{ name?: string; particleName: string }>; // at least a name and particle
     context: any; // defined by manager to enable shared storages and live reloading.
 }
 
@@ -6551,6 +6555,8 @@ class ParticleManager
     private scene: Scene;
     private passIndex: number;
     private initialized: boolean = false;
+
+    failOnWarnings = true;
 
     initialize(scene: Scene, passIndex: number)
     {
@@ -6767,9 +6773,12 @@ class ParticleManager
     {
         this.renderers[archetype.renderer.name || "default"].preload(archetype.renderer);
         this.updaters[archetype.updater.name || "default"].preload(archetype.updater);
-        if (archetype.packedTexture)
+        for (var f in archetype)
         {
-            this.textureManager.load(archetype.packedTexture);
+            if (archetype.hasOwnProperty(f) && f.substr(0, 13) === "packedTexture")
+            {
+                this.textureManager.load(archetype[f]);
+            }
         }
         for (var f in archetype.particles)
         {
@@ -6785,15 +6794,21 @@ class ParticleManager
                 {
                     continue;
                 }
-                if (g.substr(0, 7) === "texture")
+                if (g.substr(0, 7) === "texture" && g.substr(0,10) !== "texture-uv")
                 {
-                    if (Types.isString(particle[g]))
+                    var textures = particle[g];
+                    if (Types.isString(textures))
                     {
-                        this.textureManager.load(particle[g]);
+                        this.textureManager.load(textures);
                     }
-                    else if (Types.isArray(particle[g]))
+                    else if (Types.isArray(textures))
                     {
-                        particle[g].map(this.textureManager.load);
+                        var count = textures.length;
+                        var i;
+                        for (i = 0; i < count; i += 1)
+                        {
+                            this.textureManager.load(textures[i]);
+                        }
                     }
                 }
             }
@@ -6810,7 +6825,7 @@ class ParticleManager
         var context = archetype.context;
         if (!context)
         {
-            context = archetype.context = {};
+            context = {};
         }
         if (context.builtOnce)
         {
@@ -6818,50 +6833,310 @@ class ParticleManager
         }
         context.builtOnce = true;
 
-        var particles = [];
+        var error = new BuildError();
+        var textureManager = this.textureManager;
+        function getTexture(path)
+        {
+            var instance = textureManager.getInstance(path);
+            if (!instance)
+            {
+                error.warning("Texture '"+path+"' is not loaded, falling back onto default texture.");
+                return textureManager.defaultTexture;
+            }
+            else
+            {
+                return instance.getTexture();
+            }
+        }
+
+        // Gather particle animation descriptions.
+        if (!archetype.hasOwnProperty("particles"))
+        {
+            error.fail("Archetype requires array field 'particles'");
+        }
+        if (!Types.isArray(archetype.particles))
+        {
+            error.fail("Archetype 'particles' fields must be an array");
+        }
+
+        var particles = [], particle;
         for (var f in archetype.particles)
         {
             if (!archetype.particles.hasOwnProperty(f))
             {
                 continue;
             }
-            var particle = archetype.particles[f];
+            particle = archetype.particles[f];
             if (particle.animation)
             {
                 if (Types.isString(particle.animation))
                 {
-                   particles.push(this.getParticleAnimation(particle.animation));
+                    // named animation registered with manager.
+                    var animation = this.getParticleAnimation(particle.animation);
+                    if (!animation)
+                    {
+                        error.warning("Animation '" + particle.animation + "' has not been registered with the manager, " +
+                                      "falling back to default particle animation");
+                        animation = this.getParticleAnimation();
+                    }
+                    particles.push(animation);
                 }
                 else
                 {
+                    // inline animation description.
+                    particle.animation.name = "'" + f + "' inline animation";
                     particles.push(particle.animation);
                 }
             }
             else
             {
+                // no animation, use default.
                 particles.push(this.getParticleAnimation());
             }
         }
 
-        var mapping, texture, tweaks;
-        if (archetype.packedTexture)
+        var textures: { [texName: string]: Texture } = {};
+        var isPacked: { [texName: string]: boolean } = {};
+        // used for packed textures.
+        var mapping: { [texName: string]: Array<Array<number>> } = {};
+        // used for un-packed textures.
+        var toPack: { [texName: string]: Array<Texture> } = {};
+        var index, texName;
+        var extraFields = [];
+        for (var f in archetype)
         {
-            texture = this.textureManager.get(archetype.packedTexture);
-            mapping = null; // TODO get uvRectangles from particles
+            if (!archetype.hasOwnProperty(f))
+            {
+                continue;
+            }
+            if (f.substr(0, 13) === "packedTexture")
+            {
+                extraFields.push(f);
+                index = parseInt(f.substr(13) || "0");
+                if ((index | 0) !== index || index < 0)
+                {
+                    error.error("Archetype specifies invalid packedTexture field '" + f + "', " +
+                                "index must be a positive integer");
+                }
+                else if (!Types.isString(archetype[f]))
+                {
+                    error.error("Archetype packedTexture field '" + f + "' should be a string path to texture");
+                    isPacked[texName] = true;
+                    textures[texName] = null;
+                    mapping[texName] = [];
+                }
+                else
+                {
+                    texName = "texture" + index;
+                    isPacked[texName] = true;
+                    textures[texName] = getTexture(archetype[f]);
+                    mapping[texName] = []; // to be populated.
+                }
+            }
         }
-        else
-        {
-            // TODO may need to pack texture for individual particles too.
-            // TODO do packing.
-        }
-        context.texture = texture;
-        tweaks = null; // TODO get tweaks from particles
+        Parser.extraFields(error, "Archetype", archetype,
+            ["system", "renderer", "updater", "synchronizer", "animationSystem",
+             "particles", "emitters"].concat(extraFields));
 
+        var i;
+        for (var f in archetype.particles)
+        {
+            if (!archetype.particles.hasOwnProperty(f))
+            {
+                continue;
+            }
+            particle = archetype.particles[f];
+            // allow particle to not specify texture-uv when using packed textures, and assume [0, 0, 1, 1]
+            for (var g in isPacked)
+            {
+                if (isPacked.hasOwnProperty(g))
+                {
+                    var index = g.substr(7);
+                    if (!particle.hasOwnProperty("texture-uv"+index) &&
+                        !(index === "0" && particle.hasOwnProperty("texture-uv")))
+                    {
+                        mapping[g].push([0, 0, 1, 1]);
+                    }
+                }
+            }
+
+            extraFields = [];
+            for (var g in particle)
+            {
+                if (!particle.hasOwnProperty(g))
+                {
+                    continue;
+                }
+                var uv = null;
+                if (g.substr(0, 10) === "texture-uv")
+                {
+                    extraFields.push(g);
+                    index = parseInt(g.substr(10) || "0");
+                    if ((index | 0) !== index || index < 0)
+                    {
+                        error.error("Particle '" + f + "' specifies invalid texture-uv field '" + g + "', " +
+                                    "index must be a positive integer");
+                    }
+                    else
+                    {
+                        texName = "texture" + index;
+                        if (!isPacked.hasOwnProperty(texName))
+                        {
+                            error.warning("Archetype has no pre-packed texture defined for '" + texName + "', " +
+                                          "ignoring texture-uv defined for particle '" + f + "'");
+                        }
+                        else
+                        {
+                            uv = particle[g];
+                            if (!Types.isArray(uv) || uv.length !== 4 || !Types.isNumber(uv[0]))
+                            {
+                                error.error("Particle '" + f + "'s texture-uv field must be an array of 4 numbers " +
+                                            "specifying the uv-rectangle");
+                            }
+                            else
+                            {
+                                mapping[texName].push(uv);
+                            }
+                        }
+                    }
+                }
+                else if (g.substr(0, 7) === "texture")
+                {
+                    extraFields.push(g);
+                    index = parseInt(g.substr(7) || "0");
+                    if ((index | 0) !== index || index < 0)
+                    {
+                        error.error("Particle '" + f + "' specifies invalid texture field '" + g + "', " +
+                                    "index must be a positive integer");
+                    }
+                    else
+                    {
+                        texName = "texture" + index;
+                        if (isPacked.hasOwnProperty(texName))
+                        {
+                            error.warning("Archetype has a defined pre-packed texture for '" + texName + "', " +
+                                          "ignoring defined textures for particle '" + f + "'");
+                        }
+                        else
+                        {
+                            if (!toPack.hasOwnProperty(texName))
+                            {
+                                toPack[texName] = [];
+                            }
+                            var texs = toPack[texName];
+                            var ptexs = particle[g];
+                            if (Types.isString(ptexs))
+                            {
+                                texs.push(this.textureManager.get(ptexs));
+                            }
+                            else if (Types.isArray(ptexs))
+                            {
+                                var count = ptexs.length;
+                                for (i = 0; i < count; i += 1)
+                                {
+                                    if (!Types.isString(ptexs[i]))
+                                    {
+                                        error.error("Element of particle '" + f + "' texture array for '" + texName + "' " +
+                                                    "is not a string");
+                                    }
+                                    else
+                                    {
+                                        texs.push(getTexture(ptexs[i]));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                error.error("Particle '" + f + "'s texture field '" + texName + "' must be either " +
+                                            "a string-path, or array of string-paths to textures");
+                            }
+                        }
+                    }
+                }
+            }
+            Parser.extraFields(error, "Particle '" + f + "'", particle,
+                ["animation", "tweaks"].concat(extraFields));
+        }
+
+        if (!error.empty(this.failOnWarnings))
+        {
+            throw error.fail("Initialization failed!");
+        }
+
+        // pack any required textures.
+        for (var f in toPack)
+        {
+            if (!toPack.hasOwnProperty(f))
+            {
+                continue;
+            }
+            index = f.substr(7);
+            var packing = ParticleBuilder.packTextures({
+                graphicsDevice: this.graphicsDevice,
+                textures: toPack[f]
+            });
+            textures[f] = packing.texture;
+            // populate animation descriptions with uv-rectangles for animations.
+            i = 0;
+            var j = 0;
+            for (var g in archetype.particles)
+            {
+                if (!archetype.particles.hasOwnProperty(g))
+                {
+                    continue;
+                }
+                particle = archetype.particles[g];
+                var animation = particles[i];
+                i += 1;
+                if (particle.hasOwnProperty("texture" + index) ||
+                    (index === "0" && particle.hasOwnProperty("texture")))
+                {
+                    var tex;
+                    if (!particle.hasOwnProperty("texture" + index))
+                    {
+                        tex = particle["texture"];
+                    }
+                    else
+                    {
+                        tex = particle["texture" + index];
+                    }
+                    if (Types.isArray(tex))
+                    {
+                        animation[f] = [];
+                        count = tex.length;
+                        while (count > 0)
+                        {
+                            count -= 1;
+                            animation[f].push(packing.uvMap[j]);
+                            j += 1;
+                        }
+                    }
+                    else
+                    {
+                        animation[f] = [packing.uvMap[j]];
+                        j += 1;
+                    }
+                }
+            }
+        }
+
+        var tweaks = [];
+        for (var f in archetype.particles)
+        {
+            if (!archetype.particles.hasOwnProperty(f))
+            {
+                continue;
+            }
+            particle = archetype.particles[f];
+            tweaks.push(particle.tweaks || {});
+        }
+
+        context.textures = textures;
         context.definition = ParticleBuilder.compile({
             graphicsDevice: this.graphicsDevice,
             system        : this.getAnimationSystem(archetype.animationSystem || "default"),
             particles     : particles,
-            mapping       : mapping,
+            uvMap         : mapping,
             tweaks        : tweaks
         });
         var renderer = this._name(archetype.renderer);
@@ -6871,9 +7146,15 @@ class ParticleManager
         context.instances    = [];
         context.instancePool = [];
         context.systemPool   = [];
+        archetype.context = context;
+
+        if (!error.empty(this.failOnWarnings))
+        {
+            throw error.fail("Initialization failed!");
+        }
     }
 
-    createInstance(archetype)
+    createInstance(archetype, timeout?)
     {
         this.initializeArchetype(archetype);
         var context = archetype.context;
@@ -6891,6 +7172,8 @@ class ParticleManager
             instance = this.createNewInstance(archetype);
             return instance;
         }
+
+        // TODO timeouts.
     }
 
     addInstanceToScene(instance, parent?)
@@ -6962,7 +7245,7 @@ class ParticleManager
                 template = emitters[i];
                 var emitter = this.getEmitter(template.name);
                 var animationRange;
-                var animation = archetype.particles[template.particle].animation || "default";
+                var animation = archetype.particles[template.particleName].animation || "default";
                 if (Types.isString(animation))
                 {
                     animationRange = context.definition.particle[animation].animationRange;
@@ -6986,7 +7269,7 @@ class ParticleManager
                 maxSortSteps       : template.maxSortSteps,
                 geometry           : context.geometry,
                 sharedRenderContext: this.systemContext,
-                maxLifeTime        : 10, // TODO
+                maxLifeTime        : template.maxLifeTime,
                 animation          : context.definition.animation,
                 sharedAnimation    : true,
                 //timer            : this.timerCb, TODO
@@ -6997,7 +7280,7 @@ class ParticleManager
             });
 
             context.updater .applyTemplate(this.textureManager, system, archetype.updater);
-            context.renderer.applyTemplate(this.textureManager, system, archetype.renderer, context.texture);
+            context.renderer.applyTemplate(this.textureManager, system, archetype.renderer, context.textures);
             context.renderer.setAnimationParameters(system, context.definition);
         }
         instance.system = system;
@@ -7075,18 +7358,22 @@ class ParticleManager
             updater        : this.recordDelta(updater.template,        archetype.updater),
             synchronizer   : this.recordDelta(synchronizer.template,   archetype.synchronizer),
             animationSystem: archetype.animationSystem,
-            packedTexture  : archetype.packedTexture,
             particles      : archetype.particles,
             emitters       : []
         };
+        for (var f in archetype)
+        {
+            if (archetype.hasOwnProperty(f) && f.substr(0, 13) === "packedTexture")
+            {
+                delta[f] = archetype[f];
+            }
+        }
         var i;
         var count = archetype.emitters.length;
         for (i = 0; i < count; i += 1)
         {
             var emitter = archetype.emitters[i];
             var edelta = this.recordDelta(this.emitters[this._name(emitter)].template, emitter);
-            edelta.name     = this._name(emitter);
-            edelta.particle = emitter.particle;
             delta.emitters.push(edelta);
         }
         delta.renderer.name      = this._name(archetype.renderer);
@@ -7095,40 +7382,28 @@ class ParticleManager
         return delta;
     }
 
-    decompressArchetype(data: any): ParticleArchetype
+    decompressArchetype(archetype: any): ParticleArchetype
     {
-        var renderer     = this.renderers    [this._name(data.renderer)];
-        var updater      = this.updaters     [this._name(data.updater)];
-        var synchronizer = this.synchronizers[this._name(data.synchronizer)];
-        var archetype: any = {
-            system         : this.applyDelta(ParticleSystem.template, data.system),
-            renderer       : this.applyDelta(renderer.template,       data.renderer),
-            updater        : this.applyDelta(updater.template,        data.updater),
-            synchronizer   : this.applyDelta(synchronizer.template,   data.synchronizer),
-            animationSystem: data.animationSystem,
-            packedTexture  : data.packedTexture,
-            particles      : data.particles,
-            emitters       : []
-        };
+        var renderer     = this.renderers    [this._name(archetype.renderer)];
+        var updater      = this.updaters     [this._name(archetype.updater)];
+        var synchronizer = this.synchronizers[this._name(archetype.synchronizer)];
+        archetype.system       = this.applyDelta(ParticleSystem.template, archetype.system);
+        archetype.renderer     = this.applyDelta(renderer.template,       archetype.renderer);
+        archetype.updater      = this.applyDelta(updater.template,        archetype.updater);
+        archetype.synchronizer = this.applyDelta(synchronizer.template,   archetype.synchronizer);
         var i;
-        var count = data.emitters.length;
+        var count = archetype.emitters.length;
         for (i = 0; i < count; i += 1)
         {
-            var emitter = data.emitters[i];
-            var earchetype = this.applyDelta(this.emitters[this._name(emitter)].template, emitter);
-            earchetype.name     = this._name(emitter);
-            earchetype.particle = emitter.particle;
-            archetype.emitters.push(earchetype);
+            var emitter = archetype.emitters[i];
+            emitter = archetype.emitters[i] = this.applyDelta(this.emitters[this._name(emitter)].template, emitter);
         }
-        archetype.renderer.name      = this._name(data.renderer);
-        archetype.updater.name       = this._name(data.updater);
-        archetype.synchronizer.name  = this._name(data.synchronizer);
         return archetype;
     }
 
     // Build an object delta of the given object from a template.
     // Assumption that the object has a structure matching the template exactly except
-    // that objects are permitted to have extra fields (ignored)
+    // that objects are permitted to have extra fields
     //
     // pseudo:
     // let delta t o = match type(t) with
@@ -7139,7 +7414,7 @@ class ParticleManager
     //         if (all (= null) del) then null else del
     //    | Object ->
     //         let o = filter(hasField t) o in
-    //         let del = filter (.!= null) $ zipFieldsWith delta t o
+    //         let del = filter (.!= null) $ zipFieldsWith delta t o ^ filter(!hasField t) o
     //         if (del = {}) then null else del
     //    | Function ->
     //         let del = map (delta t()) o in
@@ -7190,6 +7465,13 @@ class ParticleManager
                     }
                 }
             }
+            for (f in obj)
+            {
+                if (obj.hasOwnProperty(f) && !template.hasOwnProperty(f))
+                {
+                    delta[f] = obj[f];
+                }
+            }
         }
         else if (Types.isFunction(template))
         {
@@ -7217,8 +7499,7 @@ class ParticleManager
     // Method is written to permit the template to have changed since the delta was created
     //   to account for archetype updates with old saved deltas being loaded.
     //   Behaviour that objects in the template can have fields add/removed and still use the
-    //     appropriate parts of the delta, with any other change leading to a discard of the
-    //     relevant portion of the delta.
+    //     appropriate parts of the delta
     //
     // To enable easier usage from editors, can specify the object to which the delta-applied
     // template should be stored to keep ui elements set up based on template functional.
@@ -7233,7 +7514,7 @@ class ParticleManager
     //    | Object ->
     //         if (type(d) != Object) mapFields (apply _ null) t
     //         else let d = filter (hasField t) d in
-    //              zipFieldsWith apply t d
+    //              zipFieldsWith apply t d ^ filter (!hasField t) d
     //    | Function ->
     //         if (type(d) != Array) []
     //         else map (apply t()) d
@@ -7292,6 +7573,13 @@ class ParticleManager
                     if (template.hasOwnProperty(f))
                     {
                         obj[f] = this.applyDelta(template[f], delta[f], obj[f]);
+                    }
+                }
+                for (f in delta)
+                {
+                    if (delta.hasOwnProperty(f) && !template.hasOwnProperty(f))
+                    {
+                        obj[f] = delta[f];
                     }
                 }
             }

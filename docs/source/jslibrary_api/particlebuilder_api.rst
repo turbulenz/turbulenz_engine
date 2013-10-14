@@ -165,6 +165,8 @@ Any verification errors will be reported as late as possible, and any non-critic
     ``default-interpolation``
         The attribute default interpolator will itself default to `"linear"` interpolation.
 
+.. _defaultparticlesystem:
+
     The default system is ::
 
             [

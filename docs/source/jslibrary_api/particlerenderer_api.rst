@@ -215,6 +215,8 @@ Set up extra shader parameters required to de-normalize attributes of the partic
 ``animationDefn``
     The resultant object returned from `ParticleBuilder.compile`.
 
+.. _defaultparticlerenderer_parameters:
+
 Parameters
 ==========
 

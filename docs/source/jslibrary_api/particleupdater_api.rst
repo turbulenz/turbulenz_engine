@@ -188,6 +188,8 @@ Set up particles' `userData` storage for creation.
 ``seed`` (Optional)
     The 8-bit integer seed to write to the `userData`. Default value is `0`.
 
+.. _defaultparticleupdater_parameters:
+
 Parameters
 ==========
 

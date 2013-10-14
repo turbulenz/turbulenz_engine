@@ -174,6 +174,8 @@ Enqueue an event object to the synchronizer for processing.
         ``system``
             The :ref:`ParticleSystem <particlesystem>` the synchronizer is working with.
 
+.. _defaultparticlesynchronizer_parameters:
+
 Properties
 ==========
 
@@ -220,7 +222,7 @@ The number specifying how trails form, with `1` specifying a standard trail, and
 .. index::
     single: DefaultParticleEmitter
 
-.. _defaultparticlemitter:
+.. _defaultparticleemitter:
 
 =================================
 The DefaultParticleEmitter Object
@@ -297,6 +299,8 @@ Enable the emitter for a set number of bursts. Once the burst of particles is co
 
 ``count`` (Optional)
     Default value `1`. Emitter is enabled for this many bursts of particles.
+
+.. _defaultparticleemitter_parameters:
 
 Properties
 ==========

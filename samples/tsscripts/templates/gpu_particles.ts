@@ -114,15 +114,26 @@ TurbulenzEngine.onload = function onloadFn()
         }]
     });
     var archetype1 = manager.decompressArchetype({
-        packedTexture: "textures/smoke.dds",
         renderer: {
-            name: "additive"
+            name: "alpha"
         },
         particles: {
-            smoke: {}
+            smoke: {
+                animation: {
+                    animation: [{
+                        frame: 0
+                    },{
+                        time: 0.5,
+                        frame: 1
+                    },{
+                        time: 0.5
+                    }]
+                },
+                texture: ["textures/smoke.dds", "textures/noise.dds"]
+            }
         },
         emitters: [{
-            particle: "smoke",
+            particleName: "smoke",
             emittance: {
                 burstMin: 0,
                 burstMax: 4
@@ -142,7 +153,7 @@ TurbulenzEngine.onload = function onloadFn()
             smoke: {}
         },
         emitters: [{
-            particle: "smoke"
+            particleName: "smoke"
         }]
     });
 
