@@ -277,8 +277,6 @@ float2 getParticle(float index, sampler2D mappingTable)
 // extract float4 data for animation frame in given row at particular animation time.
 float4 getAnimation4(float t, float row)
 {
-    t *= (animationSize.x - 1.0);
-    t = (floor(t) + 0.5) / animationSize.x;
     float s = (0.5 + row) / animationSize.y;
     return tex2D(animation, float2(t, s));
 }

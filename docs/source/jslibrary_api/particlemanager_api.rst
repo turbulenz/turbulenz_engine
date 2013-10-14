@@ -79,6 +79,20 @@ Register a particle animation object to be referenced by particle systems create
     The name of the particle animation defined will be used to look up this definition when creating particle systems.
 
 .. index::
+    pair: ParticleManager; computeAnimationLifeTime
+
+`computeAnimationLifeTime`
+--------------------------
+
+**Summary**
+
+Compute the amount of time covered by the given particle animation.
+
+**Syntax** ::
+
+    var lifeTime = manager.computeAnimationLifeTime(particleAnimationName);
+
+.. index::
     pair: ParticleManager; preloadArchetype
 
 `preloadArchetype`
@@ -227,19 +241,19 @@ This can be used to save space when saving or transferring archetypes, and will 
 .. index::
     pair: ParticleManager; decompressArchetype
 
-`decompressArchetype`
+`parseArchetype`
 ---------------------
 
 **Summary**
 
-De-compress the provided archetype from its delta.
+Parse a given archetype into a fully prepared object for use in manager, this allows an archetype to be specified with only those fields that are not equal to the defaults.
 
 **Syntax** ::
 
-    var archetype = manager.decompressArchetype(delta);
+    var archetype = manager.parseArchetype(delta);
 
-``delta``
-    The archetype object delta to be decompressed.
+``archetype``
+    The archetype object to be parsed.
 
 .. index::
     pair: ParticleManager; serializeArchetype
@@ -265,7 +279,7 @@ This method can be used as a cost-efficient way of saving archetypes to file.
 
 **Summary**
 
-Deserializes an archetype from its compressed JSON representation, this method will decompress the stringified object delta of the archetype.
+Deserializes an archetype from its compressed JSON representation, this method will parse the object delta of the archetype into a fully prepared archetype object for use in the manager.
 
 **Syntax** ::
 

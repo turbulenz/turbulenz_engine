@@ -117,31 +117,55 @@ TurbulenzEngine.onload = function onloadFn()
         renderer: {
             name: "alpha"
         },
+        system: {
+            zSorted: true
+        },
         particles: {
             smoke: {
                 animation: "black and white",
-                texture: ["textures/smoke.dds", "textures/noise.dds"]
+                texture: "textures/smoke.dds"
+            },
+            fire: {
+                animation: "black and white",
+                texture: "textures/noise.dds"
             }
         },
         emitters: [{
             particleName: "smoke",
             emittance: {
                 burstMin: 0,
-                burstMax: 4
+                burstMax: 2
             },
             velocity: {
                 speedMin: 0.5,
                 speedMax: 1
             }
+        }, {
+            particleName: "fire",
+            emittance: {
+                burstMin: 0,
+                burstMax: 2
+            },
+            velocity: {
+                speedMin: 0.75,
+                speedMax: 1.0,
+                theta: Math.PI/4,
+                phi: Math.PI/2
+            }
         }]
     });
     var archetype2 = manager.parseArchetype({
         packedTexture: "textures/smoke.dds",
+        system: {
+            zSorted: true
+        },
         renderer: {
             name: "opaque"
         },
         particles: {
-            smoke: {}
+            smoke: {
+                animation: "black and white"
+            }
         },
         emitters: [{
             particleName: "smoke"
@@ -341,6 +365,7 @@ TurbulenzEngine.onload = function onloadFn()
         var deltaTime = (currentTime - previousFrameTime);
         cameraController.maxSpeed = (deltaTime * maxSpeed);
 
+        manager.update(deltaTime);
         inputDevice.update();
         cameraController.update();
 

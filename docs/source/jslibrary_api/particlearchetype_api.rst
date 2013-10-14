@@ -154,11 +154,11 @@ As this is a data-driven API, the methods of the manager will verify the data to
         If not using a corresponding packed texture, this field must not be present.
 
     ``texture#``
-        A texture (or set of textures) to be used for this particle when no pre-packed texture is specified.
+        A texture to be used for this individual particle including its entire flip-book animation if applicable.
 
         This field must not be present if using packed textures.
 
-        This fields value should be either a `string` specifying the path to the texture used for this particle's appearance, or an `array` of `strings` specifying the paths to the set of textures to be used for the flip-book animation of the particle`s appearance.
+        This fields value should be a `string` specifying the path to the texture used for this particle.
 
         If not using a corresponding packed texture, and this field is omitted, then a default texture will be used.
 

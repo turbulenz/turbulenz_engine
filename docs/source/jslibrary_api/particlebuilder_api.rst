@@ -243,7 +243,7 @@ The resultant object contains the following fields:
     The compiled animation :ref:`Texture <texture>` object.
 
 ``particle``
-    A dictionary of particle attributes for the animation texture. Each input particle will be mapped to a field of that particles' name contining the following fields:
+    An array of particle attributes for the animation texture. Each input particle animation is mapped to an object with the same index containing the following fields:
 
     ``lifeTime``
         The total life time of the particles animation.
