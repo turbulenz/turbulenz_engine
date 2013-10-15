@@ -7271,6 +7271,7 @@ interface ParticleArchetype
 
 interface ParticleManagerContext
 {
+    packed      : Array<Texture>;
     textures    : { [name: string]: Texture };
     definition  : ParticleSystemAnimation;
     renderer    : ParticleRenderer;
@@ -7968,6 +7969,7 @@ class ParticleManager
         }
 
         // pack any required textures
+        var packed = [];
         for (var f in toPack)
         {
             if (!toPack.hasOwnProperty(f))
@@ -7981,7 +7983,11 @@ class ParticleManager
             });
             textures[f] = packing.texture;
             mapping[f] = packing.uvMap;
+            packed.push(packing.texture);
         }
+
+        // Stored so that on archetype descruction, they may be destroyed also.
+        context.packed = packed;
 
         context.textures = textures;
         context.definition = ParticleBuilder.compile({
@@ -8238,6 +8244,58 @@ class ParticleManager
         }
     }
 
+    destroy()
+    {
+        // Destroy all initialised archetypes and all their instances.
+        var archetypes = this.archetypes;
+        var count = archetypes.length;
+        while (count > 0)
+        {
+            count -= 1;
+            this.destroyArchetype(archetypes[count]);
+        }
+
+        // Destroy all geometries
+        var geometries = this.geometries;
+        for (var f in geometries)
+        {
+            if (!geometries.hasOwnProperty(f))
+            {
+                continue;
+            }
+            var geometry = geometries[f];
+            if (typeof(geometry) !== "function")
+            {
+                geometry.destroy();
+            }
+        }
+        this.geometries = null;
+
+        // destroy all views
+        var views = this.viewPool;
+        count = views.length;
+        while (count > 0)
+        {
+            count -= 1;
+            views.pop().destroy();
+        }
+        this.viewPool = null;
+
+        this.renderers = null;
+        this.updaters = null;
+        this.systems = null;
+        this.particles = null;
+        this.synchronizers = null;
+        this.emitters = null;
+        this.archetypes = null;
+
+        this.systemContext.destroy();
+        this.systemContext = null;
+        this.viewContext.destroy();
+        this.viewContext = null;
+        this.queue = null;
+    }
+
     destroyArchetype(archetype)
     {
         var context = archetype.context;
@@ -8261,9 +8319,32 @@ class ParticleManager
             var renderable = instance.renderable;
             renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
             this.queue.remove(instance);
+            if (renderable.system)
+            {
+                renderable.system.destroy();
+            }
         }
 
-        archetype.context = { DESTROYED: true };
+        // Destroy all pooled systems.
+        var systems = context.systemPool;
+        count = systems.length;
+        while (count > 0)
+        {
+            count -= 1;
+            systems.pop().destroy();
+        }
+
+        // Destroy animation texture, and any run-time packed textures.
+        context.definition.animation.destroy();
+        var packed = context.packed;
+        count = packed.length;
+        while (count > 0)
+        {
+            count -= 1;
+            packed.pop().destroy();
+        }
+
+        archetype.context = null;
     }
 
     private buildParticleSceneNode(archetype, instance)

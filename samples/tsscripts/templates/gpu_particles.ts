@@ -88,6 +88,7 @@ TurbulenzEngine.onload = function onloadFn()
     camera.lookAt([0, 1, 0], [0, 1, 0], [sceneWidth/2, 1, sceneHeight/2]);
     camera.updateProjectionMatrix();
     camera.updateViewMatrix();
+
     var cameraController = CameraController.create(graphicsDevice, inputDevice, camera);
     var maxSpeed = 200;
 
@@ -98,8 +99,15 @@ TurbulenzEngine.onload = function onloadFn()
     var floor = Floor.create(graphicsDevice, mathDevice);
     floor.color = [0, 0, 0.6, 1.0];
     floor.fadeToColor = clearColor;
-    var drawCallback = function () {
+
+    var drawExtents = false;
+    function extraDrawCallback()
+    {
         floor.render(graphicsDevice, camera);
+        if (drawExtents)
+        {
+            (<any>scene).drawVisibleRenderablesExtents(graphicsDevice, shaderManager, camera, false, true);
+        }
     }
 
     // Create canvas object for minimap.
@@ -110,13 +118,15 @@ TurbulenzEngine.onload = function onloadFn()
     var scaleY = 100 / sceneHeight;
     ctx.lineWidth = 0.1;
 
-    var drawExtents = false;
+    var fontTechnique;
+    var fontTechniqueParameters;
 
     //==========================================================================
     // Particle Systems
     //==========================================================================
 
     var manager = ParticleManager.create(graphicsDevice, textureManager, shaderManager);
+
     manager.registerParticleAnimation({
         name: "black and white",
         animation: [{
@@ -138,6 +148,7 @@ TurbulenzEngine.onload = function onloadFn()
             color: [1, 1, 1, 0]
         }]
     });
+
     manager.registerParticleAnimation({
         name: "portal",
         animation: [{
@@ -160,8 +171,7 @@ TurbulenzEngine.onload = function onloadFn()
         }]
     });
 
-    var description1;
-    var archetype1 = manager.parseArchetype(description1 = {
+    var description1 = {
         renderer: {
             name: "alpha"
         },
@@ -205,9 +215,9 @@ TurbulenzEngine.onload = function onloadFn()
                 conicalSpread: Math.PI*0.25
             }
         }]
-    });
-    var description2;
-    var archetype2 = manager.parseArchetype(description2 = {
+    };
+
+    var description2 = {
         system: {
             center: [0, 5, 0],
             halfExtents: [5, 5, 5],
@@ -298,14 +308,15 @@ TurbulenzEngine.onload = function onloadFn()
                 radiusDistribution: "uniform"
             }
         }]
-    });
+    };
+
+    var archetype1 = manager.parseArchetype(description1);
+    var archetype2 = manager.parseArchetype(description2);
 
     //==========================================================================
     // Main loop
     //=========================================================================
 
-    var fontTechnique;
-    var fontTechniqueParameters;
     var previousFrameTime;
     function init()
     {
@@ -384,12 +395,7 @@ TurbulenzEngine.onload = function onloadFn()
         renderer.update(graphicsDevice, camera, scene, currentTime);
 
         // Render scene
-        renderer.draw(graphicsDevice, clearColor, drawCallback);
-
-        if (drawExtents)
-        {
-            (<any>scene).drawVisibleRenderablesExtents(graphicsDevice, shaderManager, camera, false, true);
-        }
+        renderer.draw(graphicsDevice, clearColor, extraDrawCallback);
 
         // Draw fonts.
         graphicsDevice.setTechnique(fontTechnique);
@@ -517,16 +523,27 @@ TurbulenzEngine.onload = function onloadFn()
             textureManager.destroy();
             textureManager = null;
         }
+        if (fontManager)
+        {
+            fontManager.destroy();
+            fontManager = null;
+        }
         if (renderer)
         {
             renderer.destroy();
             renderer = null;
+        }
+        if (manager)
+        {
+            manager.destroy();
+            manager = null;
         }
 
         effectManager = null;
         requestHandler = null;
         cameraController = null;
         camera = null;
+        floor = null;
 
         TurbulenzEngine.flush();
 
@@ -565,7 +582,6 @@ TurbulenzEngine.onload = function onloadFn()
         value: "Destroy (1)",
         fn: function () {
             manager.destroyArchetype(archetype1);
-            archetype1 = manager.parseArchetype(description1);
         }
     });
     htmlControls.addButtonControl({
@@ -573,7 +589,6 @@ TurbulenzEngine.onload = function onloadFn()
         value: "Destroy (2)",
         fn: function () {
             manager.destroyArchetype(archetype2);
-            archetype2 = manager.parseArchetype(description2);
         }
     });
 

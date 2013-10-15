@@ -119,9 +119,9 @@ This must be performed before creating a system from its archetype, and it is as
 
 **Summary**
 
-Destroy an archetype, rendering it useless and cleaning up every instance, pooled or otherwise corresponding to this archetype along with any other retained objects in object pools.
+Destroy all instances of an archetype, and any other generated data such as run-time packed textures and object pools. This has the effect of completely resetting the state of an archetype, so that when used to again create instances it will be as though it was never used in the past. This should be used to clean up an archetype that will no longer be used.
 
-This should only be used if you are absolutely sure the archetype will never be used again. For example, if when editing a world at runtime you load a new version of the same archetype and have just replaced all old archetypes with the new one via `replaceArchetype`.
+Note that this does not actually 'destroy' the archetype, the archetype itself may be used again.
 
 **Syntax** ::
 
@@ -212,7 +212,23 @@ Destroy every instance associated with the particle manager.
     manager.clear(archetype);
 
 ``archetype`` (Optional)
-    If an archetype is specified, only instances of that archetype will be destroyed.
+    If an archetype is specified, only instances of that archetype will be destroyed. This is not the same as `destroyArchetype`, as other generated state such as run-time packed textures and object pools will remain intact. If you are not intending on ever using this archetype again, you should use `destroyArchetype` instead.
+
+.. index::
+    pair: ParticleManager; destroy
+
+`destroy`
+---------
+
+**Summary**
+
+Destroy the particle manager. This will destroy all state associated with every archetype used with this manager including all existing particle instances, and will also destroy shared texture and render target states, and release any other allocated GPU memory, ensuring all memory allocated on the CPU is released for garbage collection.
+
+The manager nor any particle instance created with it may be used after this call.
+
+**Syntax** ::
+
+    manager.destroy();
 
 .. index::
     pair: ParticleManager; update
