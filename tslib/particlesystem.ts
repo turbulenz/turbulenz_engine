@@ -6875,11 +6875,11 @@ class DefaultParticleEmitter
         }
         this.forceCreation = archetype.forceCreation;
         this.usePrediction = archetype.usePrediction;
-        Types.copy(archetype.emittance, this.emittance);
-        Types.copy(archetype.particle, this.particle);
+        Types.copyFields(archetype.emittance, this.emittance);
+        Types.copyFields(archetype.particle, this.particle);
         VMath.v2Copy(animationRange, this.particle.animationRange);
-        Types.copy(archetype.position, this.position);
-        Types.copy(archetype.velocity, this.velocity);
+        Types.copyFields(archetype.position, this.position);
+        Types.copyFields(archetype.velocity, this.velocity);
     }
 
     reset(): void
@@ -7420,7 +7420,6 @@ class ParticleManager
     {
         this.destroyInstance(instance, true);
     }
-
 
     initialize(scene: Scene, passIndex: number)
     {

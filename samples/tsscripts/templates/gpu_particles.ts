@@ -302,7 +302,7 @@ TurbulenzEngine.onload = function onloadFn()
         inputDevice.update();
         cameraController.update();
 
-        if (Math.random() < 0.01)
+        if (Math.random() < 0.001)
         {
             manager.clear();
         }

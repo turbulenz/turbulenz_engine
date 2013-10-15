@@ -149,6 +149,8 @@ Create a :ref:`ParticleInstance <particleinstance>` of a particle system from it
 
 It is assumed that this archetype has had all its required textures and shaders pre-loaded.
 
+.. note :: This call must be made between calls to graphicsDevice.beginFrame() and graphicsDevice.endFrame() to guarantee correct execution.
+
 **Syntax** ::
 
     var instance = manager.createInstance(archetype, timeout);
@@ -160,6 +162,34 @@ It is assumed that this archetype has had all its required textures and shaders 
     The amount of time this instance should exist for. Once this amount of time has passed, the instance will be automatically removed from the scene if necessary, and recycled.
 
     This parameter should be specified for the creation of short-lived effects, making use of an internal optimized data structure for handling large numbers of short-lived effects in conjunction with the updates of the manager.
+
+.. index::
+    pair: ParticleManager; destroyInstance
+
+`destroyInstance`
+-----------------
+
+**Summary**
+
+Destroy a :ref:`ParticleInstance <particleinstance>`, removing it from the scene and releasing it for re-use by another instantiation of the same archetype.
+
+**Syntax** ::
+
+    manager.destroyInstance(instance);
+
+.. index::
+    pair: ParticleManager; clear
+
+`clear`
+-------
+
+**Summary**
+
+Destroy every instance associated with the particle manager.
+
+**Syntax** ::
+
+    manager.clear();
 
 .. index::
     pair: ParticleManager; update
@@ -284,6 +314,70 @@ Deserializes an archetype from its compressed JSON representation, this method w
 **Syntax** ::
 
     var archetype = manager.deserializeArchetype(jsonString);
+
+.. index::
+    pair: ParticleManager; gatherMetrics
+
+`gatherMetrics`
+---------------
+
+**Summary**
+
+Gather metrics regarding the state of the particle manager and its memory usage.
+
+**Syntax** ::
+
+    var metrics = manager.gatherMetrics(archetype);
+
+``archetype`` (Optional)
+    If an archetype is provided, then only metrics regarding instances of that particular archetype will be gathered.
+
+The return object has fields:
+
+`(If no archetype was provided)`
+ * numInitializedArchetypes
+ * numPooledViews
+ * numPooledSynchronizers
+ * numPooledEmitters
+
+`(Always present on object)`
+ * numPooledSystems
+ * numPooledInstances
+ * numActiveInstances: `number of ParticleInstances that are actively being updated and rendered (Are currently visible).`
+ * numAllocatedInstances: `number of ParticleInstances that have had systems and views allocated, and occupy space on the CPU and GPU (Have been visible at least once).`
+ * numInstances: `number of ParticleInstances that are alive as part of the Scene.`
+
+The total number of `ParticleInstances` created is the sum of `numInstances` and `numPooledInstances`. `numAllocatedInstances` is always less than or equal to `numInstances`, and `numActiveInstances` is always less than or equal to `numAllocatedInstances`.
+
+.. index::
+    pair: ParticleManager; gatherInstanceMetrics
+
+`gatherInstanceMetrics`
+-----------------------
+
+**Summary**
+
+Gather metrics about individual :ref:`ParticleInstances <particleinstances>`.
+
+**Syntax** ::
+
+    var metrics = manager.gatherInstanceMetrics(archetype);
+
+``archetype`` (Optional)
+    If an archetype is provided, then only instances of that archetype will be gathered by this call.
+
+The return value is an array of objects having the following fields:
+
+``instance``
+    The :ref:`ParticleInstance <particleinstance>` this metric object relates to.
+
+``allocated``
+    Whether this instance has been allocated a particle system and views, and occupies space on the CPU and GPU beyond its emitters and synchronizer.
+
+``active``
+    Whether this instance is actively being updated and rendered.
+
+If an instance is `active`, then it is also `allocated`.
 
 .. index::
     single: ParticleInstance

@@ -9,7 +9,7 @@
 The ParticleArchetype Object
 ============================
 
-A particle system archetype has the following structure: ::
+A particle system archetype fully describes a particle system for the :ref:`ParticleManager <particlemanager>`. An archetype is constructed from an easily serializable data description described below: ::
 
     {
         system: {
@@ -61,7 +61,8 @@ A particle system archetype has the following structure: ::
         ]
     }
 
-All fields of the archetype need not be specified by use of the `decompressArchetype` method which will fill in all missing fields with default values.
+
+Not all fields must be specified, as the `parseArchetype` method of the :ref:`ParticleManager <particlemanager>` will treat this description like an object-diff, filling in defaults whenever fields are missing.
 
 The values shown above, are the basic default values for an archetype.
 
