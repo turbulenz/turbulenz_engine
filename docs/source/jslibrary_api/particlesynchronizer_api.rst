@@ -31,10 +31,7 @@ This function is required to update the particle system, and emit any new partic
 ``system``
     The :ref:`ParticleSystem <particlesystem>` being synchronized.
 
-``numFrames``
-    The number of frames elapsed since the last synchronization.
-
-``elapsedTime``
+``timeStep``
     The amount of time (as determined by the particle system `timer`) that has elapsed since the last synchronization.
 
 .. index::

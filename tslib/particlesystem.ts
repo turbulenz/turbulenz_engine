@@ -472,10 +472,11 @@ class SizeTree<T>
     }
 
     // Depth first traversal of tree executing lambda for every node
+    stack: Array<SizeTreeNode<T>>;
     traverse(lambda: (node: SizeTreeNode<T>) => boolean): void
     {
-        // TODO, don't use a temporary for stack
-        var stack = [];
+        this.stack = this.stack || [];
+        var stack = this.stack;
         if (this.root)
         {
             stack.push(this.root);
@@ -499,8 +500,8 @@ class SizeTree<T>
     // which search will terminate), or any real number.
     searchBestFit(w: number, h: number, getCost: (w: number, h: number, data: T) => number): SizeTreeNode<T>
     {
-        // TODO, don't use a temporary for stack
-        var stack = [];
+        this.stack = this.stack || [];
+        var stack = this.stack;
         if (this.root)
         {
             stack.push(this.root);
@@ -525,6 +526,10 @@ class SizeTree<T>
                     {
                         // Early exit, got a best fit
                         minLeaf = node;
+                        while (stack.length !== 0)
+                        {
+                            stack.pop();
+                        }
                         break;
                     }
                     else if (cost < minCost)
@@ -757,15 +762,22 @@ class OnlineTexturePacker
 //
 class MinHeap<K,T>
 {
+    static pool: Array<{key: any; data: any }> = [];
     private heap: Array<{ key: K; data: T; }>;
     private compare: (key1: K, key2: K) => boolean;
 
     private swap(i1, i2)
     {
         var heap = this.heap;
-        var tmp = heap[i1];
-        heap[i1] = heap[i2];
-        heap[i2] = tmp;
+        var h1 = heap[i1];
+        var h2 = heap[i2];
+        var tmp: any;
+        tmp = h1.key;
+        h1.key = h2.key;
+        h2.key = tmp;
+        tmp = h1.data;
+        h1.data = h2.data;
+        h2.data = tmp;
     }
 
     constructor(compare: (key1: K, key2: K) => boolean)
@@ -776,18 +788,20 @@ class MinHeap<K,T>
 
     clear(cb?: (T) => void): void
     {
-        // TODO pool heap elements.
-        if (cb)
+        var heap = this.heap;
+        var count = heap.length;
+        while (count > 0)
         {
-            var heap = this.heap;
-            var count = heap.length;
-            var i;
-            for (i = 0; i < count; i += 1)
+            count -= 1;
+            var elt = heap.pop();
+            if (cb)
             {
-                cb(heap[i].data);
+                cb(elt.data);
             }
+            elt.key = null;
+            elt.data = null;
+            MinHeap.pool.push(elt);
         }
-        this.heap = [];
     }
 
     // Remove element from binary heap at some location 'i'
@@ -800,7 +814,7 @@ class MinHeap<K,T>
         var h2 = heap.length - 1;
         if (i !== h2)
         {
-            heap[i] = heap[h2];
+            this.swap(i, h2);
             // Check if we must filter up or down.
             var parent = (i - 1) >>> 1;
             if (i === 0 || this.compare(heap[parent].key, heap[i].key))
@@ -842,7 +856,10 @@ class MinHeap<K,T>
                 }
             }
         }
-        heap.pop();
+        var elt = heap.pop();
+        elt.key = null;
+        elt.data = null;
+        MinHeap.pool.push(elt);
     }
 
     // Find element id based on value
@@ -878,11 +895,21 @@ class MinHeap<K,T>
     {
         var heap = this.heap;
         var i = heap.length;
-        // TODO pool heap elements.
-        heap.push({
-            data: data,
-            key: key
-        });
+        var pool = MinHeap.pool;
+        if (pool.length > 0)
+        {
+            var elt = pool.pop();
+            elt.data = data;
+            elt.key = key;
+            heap.push(elt);
+        }
+        else
+        {
+            heap.push({
+                data: data,
+                key: key
+            });
+        }
         if (i !== 0)
         {
             var parent = (i - 1) >>> 1;
@@ -1407,7 +1434,6 @@ class BuildError
 //
 // Type checking and utilities.
 //
-// TODO, make private to this moduole somewhoe?
 class Types {
     static arrayTypes = [
         "[object Float64Array]",
@@ -1514,7 +1540,6 @@ class Types {
 //
 // Parser (private helper of ParticleBuilder)
 //
-// TODO, make private to this module somehow?
 class Parser {
     private static interpolators: { [name: string]: (params: any) => Interpolator } = {
         "none": function (_): Interpolator
@@ -4405,7 +4430,7 @@ class DefaultParticleRenderer
 //
 interface ParticleSystemSynchronizer
 {
-    synchronize(system: ParticleSystem, numFramesElapsed: number, elapsedTime: number): void;
+    synchronize(system: ParticleSystem, timeStep: number): void;
 }
 interface ParticleSystemArchetype
 {
@@ -5054,11 +5079,19 @@ class ParticleSystem
         this.animation = null;
     }
 
-    reset()
+    reset(lastTime?)
     {
         this.removeAllParticles();
-        this.lastVisible = null;
-        this.lastTime = null;
+        if (lastTime !== undefined)
+        {
+            this.lastVisible = -1;
+            this.lastTime = lastTime;
+        }
+        else
+        {
+            this.lastVisible = null;
+            this.lastTime = null;
+        }
     }
 
     private setStateContext(ctx: AllocatedContext)
@@ -5453,7 +5486,7 @@ class ParticleSystem
         else if (frameVisible !== this.lastVisible)
         {
             var currentTime = this.timer();
-            this.synchronizer.synchronize(this, frameVisible - this.lastVisible, currentTime - this.lastTime);
+            this.synchronizer.synchronize(this, currentTime - this.lastTime);
             this.lastTime = currentTime;
         }
         this.lastVisible = frameVisible;
@@ -6253,7 +6286,7 @@ interface ParticleSynchronizer
     renderable: ParticleRenderable;
     addEmitter(emitter: ParticleEmitter): void;
     removeEmitter(emitter: ParticleEmitter): void;
-    synchronize(system: ParticleSystem, frameStep: number, timeStep: number): void;
+    synchronize(system: ParticleSystem, timeStep: number): void;
     reset(): void;
 }
 
@@ -6266,6 +6299,7 @@ interface DefaultParticleSynchronizerEvent
     fun(event       : DefaultParticleSynchronizerEvent,
         synchronizer: DefaultParticleSynchronizer,
         system      : ParticleSystem): void;
+    recycle(event: DefaultParticleSynchronizerEvent): void;
 }
 interface DefaultParticleSynchronizerEmitter
 {
@@ -6346,7 +6380,7 @@ class DefaultParticleSynchronizer
     fixedTimeStep: number;
     maxSubSteps: number;
     offsetTime: number = 0;
-    synchronize(system: ParticleSystem, _, timeStep: number)
+    synchronize(system: ParticleSystem, timeStep: number)
     {
         if (this.fixedTimeStep !== undefined && this.fixedTimeStep !== null)
         {
@@ -6456,8 +6490,12 @@ class DefaultParticleSynchronizer
             this.removeEmitter(emitters[count]);
         }
         this.offsetTime = 0;
-        // TODO pool event objects.
-        this.events.clear();
+        this.events.clear(DefaultParticleSynchronizer.recycleEvent);
+    }
+
+    static recycleEvent(event)
+    {
+        event.recycle();
     }
 
     constructor() {}
@@ -6849,6 +6887,17 @@ class DefaultParticleEmitter
         this.bursting = null;
     }
 
+    static eventPool = [];
+    static eventFun(event, emitter, system)
+    {
+        system.createParticle(event.particle);
+        DefaultParticleEmitter.eventPool.push(event);
+    }
+    static recycleFun(event)
+    {
+        DefaultParticleEmitter.eventPool.push(event);
+    }
+
     sync(emitter: DefaultParticleSynchronizer, system: ParticleSystem, timeStep: number): void
     {
         var particle = this.particle;
@@ -6905,31 +6954,63 @@ class DefaultParticleEmitter
         var fSigmaRecip = 1 / Math.sqrt(fSigmaSqr * 2 * Math.PI);
         var fSigmaMin = fSigmaRecip * Math.exp(-1 / (2 * fSigmaSqr));
 
+        var eventPool = DefaultParticleEmitter.eventPool;
+
+        var sin    = Math.sin;
+        var cos    = Math.cos;
+        var acos   = Math.acos;
+        var random = Math.random;
+        var exp    = Math.exp;
+        var pow    = Math.pow;
+        var sqrt   = Math.sqrt;
+        var PI     = Math.PI;
+
         var i;
         for (i = startGen; i < numGen; i += 1)
         {
-            var burstCount = emittance.burstMin + Math.random() * (emittance.burstMax - emittance.burstMin);
+            var burstCount = emittance.burstMin + random() * (emittance.burstMax - emittance.burstMin);
             var j;
             for (j = 0; j < burstCount; j += 1)
             {
                 // compute relative creation and death times for specific generated particle
                 // using real randomised time, and discard if already dead.
                 var creationTime = (i / emittance.rate) - timeLapse;
-                var lifeTime = particle.lifeTimeMin + Math.random() * (particle.lifeTimeMax - particle.lifeTimeMin);
+                var lifeTime = particle.lifeTimeMin + random() * (particle.lifeTimeMax - particle.lifeTimeMin);
                 if (creationTime + lifeTime <= 0)
                 {
                     continue;
                 }
 
-                // TODO sort out memory usage here, creating functions etc. ew.
-                var pos = [0, 0, 0];
-                var vel = [0, 0, 0];
-                var anim = [0, 0];
+                var event;
+                if (eventPool.length != 0)
+                {
+                    event = eventPool.pop();
+                }
+                else
+                {
+                    event = {
+                        particle: {
+                            position: new Float32Array(3),
+                            velocity: new Float32Array(3),
+                            animationRange: new Float32Array(2)
+                        },
+                        fun    : DefaultParticleEmitter.eventFun,
+                        recycle: DefaultParticleEmitter.recycleFun
+                    };
+                }
+                event.time = creationTime;
+                var part = event.particle;
+                var pos  = part.position;
+                var vel  = part.velocity;
+                var anim = part.animationRange;
+                part.lifeTime = lifeTime + creationTime;
+                part.forceCreation = this.forceCreation;
+                part.userData = particle.userData | system.renderer.createUserDataSeed() |
+                                                    system.updater.createUserDataSeed();
 
-                var y0: number, y1: number, y2: number, rand: number;
-                var ctheta: number, cphi: number, rad: number;
-                var theta: number, phi: number, sint: number, cost: number, sinp: number, cosp: number;
-
+                var y0, y1, y2, rand;
+                var ctheta, cphi, rad;
+                var theta, phi, sint, cost, sinp, cosp;
                 pos[0] = position.position[0];
                 pos[1] = position.position[1];
                 pos[2] = position.position[2];
@@ -6937,11 +7018,11 @@ class DefaultParticleEmitter
                 switch (position.radiusDistribution)
                 {
                     case "uniform":
-                        rand = Math.random();
+                        rand = random();
                         break;
                     case "normal":
-                        rand = Math.random();
-                        rand = pSigmaRecip * Math.exp(-rand * rand / (2 * pSigmaSqr));
+                        rand = random();
+                        rand = pSigmaRecip * exp(-rand * rand / (2 * pSigmaSqr));
                         // normalise to [0, 1]
                         rand = (rand - pSigmaMin) / (pSigmaRecip - pSigmaMin);
                         break;
@@ -6949,15 +7030,15 @@ class DefaultParticleEmitter
                 if (position.spherical)
                 {
                     // uniform distribution of spherical angles in sphere.
-                    theta = Math.acos(1 - (Math.random() * 2));
-                    phi   = Math.random() * (Math.PI * 2);
-                    sint  = Math.sin(theta);
-                    cost  = Math.cos(theta);
-                    sinp  = Math.sin(phi);
-                    cosp  = Math.cos(phi);
+                    theta = acos(1 - (random() * 2));
+                    phi   = random() * (PI * 2);
+                    sint  = sin(theta);
+                    cost  = cos(theta);
+                    sinp  = sin(phi);
+                    cosp  = cos(phi);
 
                     // Re-distribute radius for volume element.
-                    rand = Math.pow(rand, 1 / 3);
+                    rand = pow(rand, 1 / 3);
                     rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
 
                     pos[0] += cosp * sint * rad;
@@ -6967,7 +7048,7 @@ class DefaultParticleEmitter
                 else
                 {
                     // Re-distribute radius for area element.
-                    rand = Math.sqrt(rand);
+                    rand = sqrt(rand);
                     rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
 
                     var rx, rz;
@@ -6983,35 +7064,35 @@ class DefaultParticleEmitter
                     }
                     else
                     {
-                        var rec = rad / Math.sqrt(nx * nx + nz * nz);
+                        var rec = rad / sqrt(nx * nx + nz * nz);
                         rx = -nz * rec;
                         rz = nx * rec;
 
                         tx = -rz * ny;
                         ty = (rz * nx) - (rx * nz);
                         tz = rx * ny;
-                        rec = rad / Math.sqrt(tx * tx + ty * ty + tz * tz);
+                        rec = rad / sqrt(tx * tx + ty * ty + tz * tz);
                         tx *= rec;
                         ty *= rec;
                         tz *= rec;
                     }
 
                     // Uniform angle around disc.
-                    theta = Math.random() * Math.PI * 2;
-                    cost = Math.cos(theta);
-                    sint = Math.sin(theta);
+                    theta = random() * PI * 2;
+                    cost = cos(theta);
+                    sint = sin(theta);
 
                     pos[0] += rx * cost + tx * sint;
                     pos[1] += ty * sint;
                     pos[2] += rz * cost + tz * sint;
                 }
 
-                var phi   = velocity.phi;
-                var theta = velocity.theta;
-                var sint  = Math.sin(theta);
-                var cost  = Math.cos(theta);
-                var sinp  = Math.sin(phi);
-                var cosp  = Math.cos(phi);
+                phi   = velocity.phi;
+                theta = velocity.theta;
+                sint  = sin(theta);
+                cost  = cos(theta);
+                sinp  = sin(phi);
+                cosp  = cos(phi);
 
                 // local y-axis becomes target direction after circular spread
                 // and base direction rotation.
@@ -7021,22 +7102,22 @@ class DefaultParticleEmitter
                     switch (velocity.conicalSpreadDistribution)
                     {
                         case "uniform":
-                            rand = Math.random();
+                            rand = random();
                             break;
                         case "normal":
-                            rand = Math.random();
-                            rand = cSigmaRecip * Math.exp(-rand * rand / (2 * cSigmaSqr));
+                            rand = random();
+                            rand = cSigmaRecip * exp(-rand * rand / (2 * cSigmaSqr));
                             // normalise to [0,1]
                             rand = (rand - cSigmaMin) / (cSigmaRecip - cSigmaMin);
                             break;
                     }
                     // Massage ctheta so that the spherical sampling is uniform on the surface of a sphere.
-                    ctheta = Math.acos(1 - rand * cSpreadCoef);
-                    cphi   = Math.random() * (Math.PI * 2);
-                    var csint  = Math.sin(ctheta);
-                    var ccost  = Math.cos(ctheta);
-                    var csinp  = Math.sin(cphi);
-                    var ccosp  = Math.cos(cphi);
+                    ctheta = acos(1 - rand * cSpreadCoef);
+                    cphi   = random() * (PI * 2);
+                    var csint  = sin(ctheta);
+                    var ccost  = cos(ctheta);
+                    var csinp  = sin(cphi);
+                    var ccosp  = cos(cphi);
                     var r0     = ccosp * csint;
                     var r1     = (cost * r0) + (sint * ccost);
                     var r2     = csinp * csint;
@@ -7066,11 +7147,11 @@ class DefaultParticleEmitter
                     switch (velocity.flatSpreadDistribution)
                     {
                         case "uniform":
-                            rand = (Math.random() - 0.5) * 2.0;
+                            rand = (random() - 0.5) * 2.0;
                             break;
                         case "normal":
-                            var frand = (Math.random() - 0.5) * 2.0;
-                            rand = fSigmaRecip * Math.exp(-frand * frand / (2 * fSigmaSqr));
+                            var frand = (random() - 0.5) * 2.0;
+                            rand = fSigmaRecip * exp(-frand * frand / (2 * fSigmaSqr));
                             // normalise to [0,1]
                             rand = (rand - fSigmaMin) / (fSigmaRecip - fSigmaMin);
                             // negate if required, bringing range to [-1, 1]
@@ -7078,8 +7159,8 @@ class DefaultParticleEmitter
                             break;
                     }
                     d  = rand * velocity.flatSpread;
-                    s  = Math.sin(d);
-                    c  = Math.cos(d);
+                    s  = sin(d);
+                    c  = cos(d);
                     C  = 1 - c;
                     cs = cosp * s;
                     var csC = cosp * sinp * C;
@@ -7094,8 +7175,8 @@ class DefaultParticleEmitter
                 if (velocity.flatSpreadAngle !== 0)
                 {
                     d  = velocity.flatSpreadAngle;
-                    s  = Math.sin(d);
-                    c  = Math.cos(d);
+                    s  = sin(d);
+                    c  = cos(d);
                     C  = 1 - c;
                     var x0 = cosp * sint;
                     var x2 = sinp * sint;
@@ -7113,7 +7194,7 @@ class DefaultParticleEmitter
                     y0  = y0n;
                     y1  = y1n;
                 }
-                var speed = velocity.speedMin + Math.random() * (velocity.speedMax - velocity.speedMin);
+                var speed = velocity.speedMin + random() * (velocity.speedMax - velocity.speedMin);
                 vel[0] = speed * y0;
                 vel[1] = speed * y1;
                 vel[2] = speed * y2;
@@ -7126,24 +7207,6 @@ class DefaultParticleEmitter
                     system.updater.predict(system.updateParameters, pos, vel, 0, -creationTime);
                     anim[0] = anim[1] - (anim[1] - anim[0]) * (1 + creationTime / lifeTime);
                 }
-                var event = {
-                    time: creationTime,
-
-                    // particle creation parameters
-                    particle: {
-                        position: pos,
-                        velocity: vel,
-                        lifeTime: lifeTime + creationTime,
-                        animationRange: anim,
-                        userData: particle.userData | system.renderer.createUserDataSeed() | system.updater.createUserDataSeed(),
-                        forceCreation: this.forceCreation,
-                    },
-
-                    fun: function (event, emitter, system)
-                    {
-                        system.createParticle(event.particle);
-                    }
-                };
                 emitter.enqueue(event);
             }
         }
@@ -7333,6 +7396,31 @@ class ParticleManager
             this.destroyInstance(instance, true);
         }
     }
+
+    clear()
+    {
+        this.queue.clear(this.clearQueueFun.bind(this));
+
+        // Any remaining instances, not part of the queue.
+        var archetypes = this.archetypes;
+        var archetypeCount = archetypes.length;
+        var i;
+        for (i = 0; i < archetypeCount; i += 1)
+        {
+            var instances = archetypes[i].context.instances;
+            var count = instances.length;
+            while (count > 0)
+            {
+                count -= 1;
+                this.destroyInstance(instances[count]);
+            }
+        }
+    }
+    private clearQueueFun(instance)
+    {
+        this.destroyInstance(instance, true);
+    }
+
 
     initialize(scene: Scene, passIndex: number)
     {
@@ -8053,9 +8141,7 @@ class ParticleManager
         instance.system = system;
 
         // Pretend that system was always being updated!
-        // TODO: should not delve into private aspects of System.
-        (<any>system).lastVisible = -1;
-        (<any>system).lastTime = instance.creationTime;
+        system.reset(instance.creationTime);
 
         return system;
     }
@@ -8674,7 +8760,6 @@ class ParticleManager
             throw error.fail("Archetype parse failed!");
         }
 
-
         return archetype;
     }
 
@@ -8771,117 +8856,5 @@ class ParticleManager
         }
         return (allZero ? null : delta);
     }
-
-//    // Apply an object delta to a given template.
-//    // Method is written to permit the template to have changed since the delta was created
-//    //   to account for archetype updates with old saved deltas being loaded.
-//    //   Behaviour that objects in the template can have fields add/removed and still use the
-//    //     appropriate parts of the delta
-//    //
-//    // To enable easier usage from editors, can specify the object to which the delta-applied
-//    // template should be stored to keep ui elements set up based on template functional.
-//    //
-//    // pseudo (ignoring storage):
-//    // let apply t d = match type(t) with
-//    //    | Null | Undefined ->
-//    //         clone d
-//    //    | Array ->
-//    //         if (type(d) != Array || d.length != t.length) map (apply _ null) t
-//    //         else zipWith apply t d
-//    //    | Object ->
-//    //         if (type(d) != Object) mapFields (apply _ null) t
-//    //         else let d = filter (hasField t) d in
-//    //              zipFieldsWith apply t d ^ filter (!hasField t) d
-//    //    | Function ->
-//    //         if (type(d) != Array) []
-//    //         else map (apply t()) d
-//    //    | _ ->
-//    //         if (d = null) then t else d
-//    static applyDelta(template, delta, obj?)
-//    {
-//        var count, i;
-//        if (Types.isNullUndefined(template))
-//        {
-//            obj = Types.copy(delta);
-//        }
-//        else if (Types.isArray(template))
-//        {
-//            if (Types.isNullUndefined(obj))
-//            {
-//                obj = [];
-//            }
-//            count = template.length;
-//            if (!Types.isArray(delta) || delta.length !== template.length)
-//            {
-//                for (i = 0; i < count; i += 1)
-//                {
-//                    obj[i] = this.applyDelta(template[i], null, obj[i]);
-//                }
-//            }
-//            else
-//            {
-//                for (i = 0; i < count; i += 1)
-//                {
-//                    obj[i] = this.applyDelta(template[i], delta[i], obj[i]);
-//                }
-//            }
-//        }
-//        else if (Types.isObject(template))
-//        {
-//            if (Types.isNullUndefined(obj))
-//            {
-//                obj = {};
-//            }
-//            var f;
-//            if (!Types.isObject(delta))
-//            {
-//                for (f in template)
-//                {
-//                    if (template.hasOwnProperty(f))
-//                    {
-//                        obj[f] = this.applyDelta(template[f], null, obj[f]);
-//                    }
-//                }
-//            }
-//            else
-//            {
-//                for (f in template)
-//                {
-//                    if (template.hasOwnProperty(f))
-//                    {
-//                        obj[f] = this.applyDelta(template[f], delta[f], obj[f]);
-//                    }
-//                }
-//                for (f in delta)
-//                {
-//                    if (delta.hasOwnProperty(f) && !template.hasOwnProperty(f))
-//                    {
-//                        obj[f] = delta[f];
-//                    }
-//                }
-//            }
-//        }
-//        else if (Types.isFunction(template))
-//        {
-//            if (Types.isNullUndefined(obj))
-//            {
-//                obj = [];
-//            }
-//            if (Types.isArray(delta))
-//            {
-//                template = template();
-//                count = delta.length;
-//                for (i = 0; i < count; i += 1)
-//                {
-//                    obj[i] = this.applyDelta(template, delta[i], obj[i]);
-//                }
-//            }
-//        }
-//        else
-//        {
-//            obj = Types.isNullUndefined(delta) ? template : delta;
-//        }
-//        return obj;
-//    }
 }
 

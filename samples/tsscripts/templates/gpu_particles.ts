@@ -270,7 +270,7 @@ TurbulenzEngine.onload = function onloadFn()
 
         function run()
         {
-            if (Math.random() < 0.25)
+            if (Math.random() < 0.25 || !graphicsDevice.beginFrame())
             {
                 return;
             }
@@ -284,26 +284,28 @@ TurbulenzEngine.onload = function onloadFn()
             instance2.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
             manager.addInstanceToScene(instance1);
             manager.addInstanceToScene(instance2);
+            graphicsDevice.endFrame();
         }
-        TurbulenzEngine.setInterval(run, 1);
+        TurbulenzEngine.setInterval(run, 10);
         run();
         previousFrameTime = TurbulenzEngine.time;
     }
 
     function mainLoop()
     {
-        if (!graphicsDevice.beginFrame())
-        {
-            return;
-        }
-
         var currentTime = TurbulenzEngine.time;
         var deltaTime = (currentTime - previousFrameTime);
         cameraController.maxSpeed = (deltaTime * maxSpeed);
+        previousFrameTime = currentTime;
 
         manager.update(deltaTime);
         inputDevice.update();
         cameraController.update();
+
+        if (Math.random() < 0.01)
+        {
+            manager.clear();
+        }
 
         // Update the aspect ratio of the camera in case of window resizes
         var aspectRatio = (graphicsDevice.width / graphicsDevice.height);
@@ -313,6 +315,11 @@ TurbulenzEngine.onload = function onloadFn()
             camera.updateProjectionMatrix();
         }
         camera.updateViewProjectionMatrix();
+
+        if (!graphicsDevice.beginFrame())
+        {
+            return;
+        }
 
         // Update scene
         scene.update();
@@ -380,7 +387,6 @@ TurbulenzEngine.onload = function onloadFn()
         ctx.endFrame();
 
         graphicsDevice.endFrame();
-        previousFrameTime = currentTime;
     }
 
     //==========================================================================
