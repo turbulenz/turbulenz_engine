@@ -171,29 +171,31 @@ Set up particles' `userData` storage for creation.
         seed: seed
     });
 
-``facing`` (Optional)
-    Default value `"billboard"`. One of `"billboard"`, `"velocity"` or `"custom"`.
+``facing`` (Default `"billboard"`)
+   One of `"billboard"`, `"velocity"` or `"custom"`.
 
-``theta`` (Optional)
-    Default value `0`. Useful only in conjunction with `custom` facing.
+``theta`` (Default `0`)
+    Useful only in conjunction with `custom` facing. Defines the spherical angle of elevation, with `0` pointing along y-axis and `Math.PI` pointing along negative y-axis.
 
-``phi`` (Optional)
-    Default value `0`. Useful only in conjunction with `custom` facing.
+``phi`` (Default `0`)
+    Useful only in conjunction with `custom` facing. Defines the clockwise spherical angle of azimuth, with `0` pointing along x-axis.
 
-``randomizeOrientation`` (Optional)
-    Defalut value `false`. Specify the particle to which this userData will be applied should have its orientation randomized.
+``randomizeOrientation`` (Default `false`)
+    Specify the particle to which this userData will be applied should have its orientation randomized.
 
-``randomizeScale`` (Optional)
-    Defalut value `false`. Specify the particle to which this userData will be applied should have its scale randomized.
+``randomizeScale`` (Default `false`)
+    Specify the particle to which this userData will be applied should have its scale randomized.
 
-``randomizeRotation`` (Optional)
-    Defalut value `false`. Specify the particle to which this userData will be applied should have its rotation randomized.
+``randomizeRotation`` (Default `false`)
+    Specify the particle to which this userData will be applied should have its rotation randomized.
 
-``randomizeAlpha`` (Optional)
-    Defalut value `false`. Specify the particle to which this userData will be applied should have its alpha randomized.
+``randomizeAlpha`` (Default `false`)
+    Specify the particle to which this userData will be applied should have its alpha randomized.
 
-``seed`` (Optional)
-    The 8-bit integer seed to write to the `userData`. Default value is `0`.
+``seed`` (Default `0`)
+    The 8-bit integer seed to write to the `userData`.
+
+.. note:: The seed parameter should be ignored when creating userData values for ParticleArchetypes, as it is the responsibility of the emitter to initialise the seed to a random value for each emitted particle.
 
 .. index::
     pair: DefaultParticleRenderer; setAnimationParameters
@@ -215,205 +217,67 @@ Set up extra shader parameters required to de-normalize attributes of the partic
 ``animationDefn``
     The resultant object returned from `ParticleBuilder.compile`.
 
-.. _defaultparticlerenderer_parameters:
+.. _defaultparticlerenderer_archetype:
 
 Parameters
 ==========
 
-.. index::
-    pair: DefaultParticleRenderer; texture
+The list of technique parameters exposed by the `DefaultParticleRenderer`. Unless otherwise stated these are the same as the parameters supported by a :ref:`ParticleArchetype <particlearchetype>` using this renderer.
 
-`texture`
----------
+``noiseTexture``
 
-**Summary**
+    The noise :ref:`Texture <texture>` to be used for randomising appearance of particles. This noise texture should be a 4-channel smooth noise such as `textures/noise.dds` present in the SDK.
 
-The :ref:`Texture <texture>` object, with each animations flip-book of textures packed together.
+    The particles current age will be used to look up randomised values in the texture along a pseudo-random path, therefore a higher frequency noise texture will produce higher frequency fluctuations in the randomised values used to alter the particles appearances.
 
-**Syntax** ::
+    Vectors are extracted from the noise texture based on treating channels as encoded signed floats (As-per :ref:`TextureEncode.encodeSignedFloat <textureencode>`).
 
-    // Set on a constructed ParticleSystem
-    system.renderParameters.texture = packedTexture;
+    Default value is a procedural texture defined so that no randomisation will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
 
-.. index::
-    pair: DefaultParticleRenderer; noiseTexture
+.. note :: For a ParticleArchetype, this field should be a string path to the texture to be retrieved from the TextureManager rather than a real Texture object.
 
-`noiseTexture`
---------------
+``randomizedOrientation`` (Default `[0, 0]`)
 
-**Summary**
+    A :ref:`Vector2 <v2object>` defining the maximum amount of randomisation applied to particles orientations in spherical coordinates.
 
-The noise texture to be used for randomising appearance of particles. This noise texture should be a 4-channel smooth noise such as `textures/noise.dds` present in the SDK.
+``randomizedScale`` (Default `[0, 0]`)
 
-The particles current age will be used to look up randomised values in the texture along a pseudo-random path, therefore a higher frequency noise texture will produce higher frequency fluctuations in the randomised values used to alter the particles appearances.
+    A :ref:`Vector2 <v2object>` defining the maximum amount of randomisation applied to particles scale (width/height).
 
-Vectors are extracted from the noise texture based on treating channels as encoded signed floats (As-per `TextureEncode.encodeSignedFloat`).
+``randomizedRotation`` (Default `0`)
 
-Default value is a procedural texture defined so that no randomisation will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
+    A number defining the maximum amount of randomisation applied to particles spin-rotation.
 
-**Syntax** ::
+``randomizedAlpha`` (Default `0`)
 
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.noiseTexture = textureManager.get("textures/noise.dds");
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.noiseTexture = textureManager.get("textures/noise.dds");
+    A number defining the maximum amount of randomisation applied to particles alpha.
 
-.. index::
-    pair: DefaultParticleRenderer; randomizedOrientation
+``animatedOrientation`` (Default `false`)
 
-`randomizedOrientation`
------------------------
+    A boolean flag defining whether the randomisation of particle orientations is fixed, or animated over time.
 
-**Summary**
+    If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 
-A :ref:`Vector2 <v2object>` defining the maximum amount of randomisation applied to particles orientations in spherical coordinates.
+``animatedScale`` (Default `false`)
 
-Default value is `[0, 0]`.
+    A boolean flag defining whether the randomisation of particle scales is fixed, or animated over time.
 
-**Syntax** ::
+    If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.randomizedOrientation = [Math.PI, Math.PI/2];
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.randomizedOrientation = [Math.PI, Math.PI/2];
+``animatedRotation`` (Default `false`)
 
-.. index::
-    pair: DefaultParticleRenderer; randomizedScale
+    A boolean flag defining whether the randomisation of particle rotations is fixed, or animated over time.
 
-`randomizedScale`
------------------
+    If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 
-**Summary**
+``animatedAlpha`` (Default `false`)
 
-A :ref:`Vector2 <v2object>` defining the maximum amount of randomisation applied to particles scale (width/height).
+    A boolean flag defining whether the randomisation of particle alphas is fixed, or animated over time.
 
-Default value is `[0, 0]`.
+    If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 
-**Syntax** ::
+``texture``
 
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.randomizedScale = [1, 2];
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.randomizedScale = [1, 2];
+    The :ref:`Texture <texture>` object, with each animations flip-book of textures packed together.
 
-.. index::
-    pair: DefaultParticleRenderer; randomizedRotation
-
-`randomizedRotation`
---------------------
-
-**Summary**
-
-A number defining the maximum amount of randomisation applied to particles spin-rotation.
-
-Default value is `0`.
-
-**Syntax** ::
-
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.randomizedRotation = 1;
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.randomizedRotation = 1;
-
-.. index::
-    pair: DefaultParticleRenderer; randomizedAlpha
-
-`randomizedAlpha`
------------------
-
-**Summary**
-
-A number defining the maximum amount of randomisation applied to particles alpha.
-
-Default value is `0`.
-
-**Syntax** ::
-
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.randomizedAlpha = 1;
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.randomizedAlpha = 1;
-
-.. index::
-    pair: DefaultParticleRenderer; animatedOrientation
-
-`animatedOrientation`
----------------------
-
-**Summary**
-
-A boolean flag defining whether the randomisation of particle orientations is fixed, or animated over time.
-
-If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
-
-Default value is `false`.
-
-**Syntax** ::
-
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.animatedOrientation = true;
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.animatedOrientation = true;
-
-.. index::
-    pair: DefaultParticleRenderer; animatedScale
-
-`animatedScale`
----------------
-
-**Summary**
-
-A boolean flag defining whether the randomisation of particle scales is fixed, or animated over time.
-
-If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
-
-Default value is `false`.
-
-**Syntax** ::
-
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.animatedScale = true;
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.animatedScale = true;
-
-.. index::
-    pair: DefaultParticleRenderer; animatedRotation
-
-`animatedRotation`
-------------------
-
-**Summary**
-
-A boolean flag defining whether the randomisation of particle rotations is fixed, or animated over time.
-
-If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
-
-Default value is `false`.
-
-**Syntax** ::
-
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.animatedRotation = true;
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.animatedRotation = true;
-
-.. index::
-    pair: DefaultParticleRenderer; animatedAlpha
-
-`animatedAlpha`
----------------------
-
-**Summary**
-
-A boolean flag defining whether the randomisation of particle alphas is fixed, or animated over time.
-
-If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
-
-Default value is `false`.
-
-**Syntax** ::
-
-    // To set default value for any ParticleSystem constructed using this renderer.
-    renderer.parameters.animatedAlpha = true;
-    // To modify on a constructed ParticleSystem
-    system.renderParameters.animatedAlpha = true;
+.. note :: This parameter is not supported on a ParticleArchetype description.

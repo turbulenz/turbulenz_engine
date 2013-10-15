@@ -1,4 +1,4 @@
-.. _particles_api:
+.. _lowlevelparticles_api:
 
 =============================
 Low Level Particle System API
@@ -15,15 +15,6 @@ Low Level Particle System API
     particleupdater_api
     particlerenderer_api
     particlesynchronizer_api
+    particleemitter_api
     particleview_api
     particlerenderable_api
-
-==============================
-High Level Particle System API
-==============================
-
-.. toctree::
-    :maxdepth: 2
-
-    particlearchetype_api
-    particlemanager_api

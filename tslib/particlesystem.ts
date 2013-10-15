@@ -4467,7 +4467,7 @@ class ParticleSystem
         maxSpeed       : 10,
         maxParticles   : 64,
         zSorted        : false,
-        maxSortSteps   : 10000,
+        maxSortSteps   : 136,
         trackingEnabled: false,
         maxLifeTime    : 2
     };
@@ -4519,7 +4519,7 @@ class ParticleSystem
             maxSpeed       : maybe("maxSpeed"       , checkNumber , val(10)),
             maxParticles   : maybe("maxParticles"   , checkNumber , val(64)),
             zSorted        : maybe("zSorted"        , checkBoolean, val(false)),
-            maxSortSteps   : maybe("maxSortSteps"   , checkNumber , val(10000)),
+            maxSortSteps   : maybe("maxSortSteps"   , checkNumber , val(136)),
             trackingEnabled: maybe("trackingEnabled", checkBoolean, val(false)),
             maxLifeTime    : maybe("maxLifeTime"    , checkNumber , val(2))
         };
@@ -4933,7 +4933,7 @@ class ParticleSystem
         ret.particleSize  = deps.textureSize;
         ret.maxParticles  = params.maxParticles;
         ret.maxMergeStage = deps.maxMergeStage;
-        ret.maxSortSteps  = (params.maxSortSteps === undefined ? 10000 : params.maxSortSteps);
+        ret.maxSortSteps  = (params.maxSortSteps === undefined ? 136 : params.maxSortSteps);
         ret.maxSpeed      = params.maxSpeed;
 
         ret.views = [];
@@ -6281,6 +6281,9 @@ interface ParticleEmitter
          system      : ParticleSystem,
          timeStep    : number);
     reset(): void;
+    enable(): void;
+    disable(): void;
+    burst(count?): void;
 }
 interface ParticleSynchronizer
 {
@@ -7262,7 +7265,7 @@ interface ParticleArchetype
     };
     emitters: Array<{ name: string; particleName: string }>;
 
-    // used by manager. User need not know this even exists.
+    // manager stored data.
     context: ParticleManagerContext;
 }
 

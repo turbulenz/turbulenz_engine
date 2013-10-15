@@ -182,100 +182,47 @@ Set up particles' `userData` storage for creation.
 
     var userData = DefaultParticleUpdater.createUserData(randomizeAcceleration, seed);
 
-``randomizeAcceleration`` (Optional)
-    Default value `false`. Specify the particle to which this userData will be applied should have its acceleration randomized.
+``randomizeAcceleration`` (Default `false`)
+    Specify the particle to which this userData will be applied should have its acceleration randomized.
 
-``seed`` (Optional)
-    The 8-bit integer seed to write to the `userData`. Default value is `0`.
+``seed`` (Default `0`)
+    The 8-bit integer seed to write to the `userData`.
 
-.. _defaultparticleupdater_parameters:
+.. note:: The seed parameter should be ignored when creating userData values for ParticleArchetypes, as it is the responsibility of the emitter to initialise the seed to a random value for each emitted particle.
+
+.. _defaultparticleupdater_archetype:
 
 Parameters
 ==========
 
-.. index::
-    pair: DefaultParticleUpdater; acceleration
+The list of technique parameters exposed by the `DefaultParticleUpdater`. Unless otherwise stated these are the same as the parameters supported by a :ref:`ParticleArchetype <particlearchetype>` using this updater.
 
-`acceleration`
---------------
+``acceleration`` (Default `[0, 0, 0]`)
 
-**Summary**
+    The :ref:`Vector3 <v3object>` acceleration in local coordinates to apply to all particles in the system.
 
-The :ref:`Vector3 <v3object>` acceleration in local coordinates to apply to all particles in the system.
+``drag`` (Default `0`)
 
-Default value is `[0, 0, 0]`.
+    The drag to be applied to all particles in the system.
 
-**Syntax** ::
+    A drag equal to `f` will specify that - ignoring acceleration - any emitted particle will come to a complete stop in `1/f` seconds of simulation time.
 
-    // To set default value for any ParticleSystem constructed using this updater.
-    updater.parameters.acceleration = [0, 1, 2];
-    // To modify on a constructed ParticleSystem
-    system.updateParameters.acceleration = [0, 1, 2];
+    Example: A drag of `0` means no drag will be applied, and a drag of `2` specifies that particles will come to a stop in `0.5` seconds.
 
-.. index::
-    pair: DefaultParticleUpdater; drag
+``noiseTexture``
 
-`drag`
-------
+    The noise :ref:`Texture <texture>` to be used for randomising appearance of particles. This noise texture should be a 4-channel smooth noise such as `textures/noise.dds` present in the SDK.
 
-**Summary**
+    The particles current age will be used to look up randomised values in the texture along a pseudo-random path, therefore a higher frequency noise texture will produce higher frequency fluctuations in the randomised values used to alter the particles appearances.
 
-The drag to be applied to all particles in the system.
+    Vectors are extracted from the noise texture based on treating channels as encoded signed floats (As-per :ref:`TextureEncode.encodeSignedFloat <textureencode>`).
 
-A drag equal to `f` will specify that - ignoring acceleration - any emitted particle will come to a complete stop in `1/f` seconds of simulation time.
+    Default value is a procedural texture defined so that no randomisation will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
 
-Example: A drag of `0` means no drag will be applied, and a drag of `2` specifies that particles will come to a stop in `0.5` seconds.
+.. note :: For a ParticleArchetype, this field should be a string path to the texture to be retrieved from the TextureManager rather than a real Texture object.
 
-Default value is `0`.
+``randomizedAcceleration`` (Default `[0, 0, 0]`)
 
-**Syntax** ::
+    A :ref:`Vector3 <v3object>` defining the maximum amount of randomised acceleration applicable to the particles.
 
-    // To set default value for any ParticleSystem constructed using this updater.
-    updater.parameters.drag = 0.5;
-    // To modify on a constructed ParticleSystem
-    system.updateParameters.drag = 0.5;
-
-.. index::
-    pair: DefaultParticleUpdater; noiseTexture
-
-`noiseTexture`
---------------
-
-**Summary**
-
-The noise texture to be used for randomising accelerations. This noise texture should be a 4-channel smooth noise such as `textures/noise.dds` present in the SDK.
-
-The particles current age will be used to look up an acceleration value in the texture along a pseudo-random path, therefore a higher frequency noise texture will produce higher frequency fluctuations in the randomised acceleration applied to the particles.
-
-Vectors are extracted from the noise texture based on treating channels as encoded signed floats (As-per `TextureEncode.encodeSignedFloat`).
-
-Default value is a procedural texture defined so that no randomisation will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
-
-**Syntax** ::
-
-    // To set default value for any ParticleSystem constructed using this updater.
-    updater.parameters.noiseTexture = textureManager.get("textures/noise.dds");
-    // To modify on a constructed ParticleSystem
-    system.updateParameters.noiseTexture = textureManager.get("textures/noise.dds");
-
-.. index::
-    pair: DefaultParticleUpdater; randomizedAcceleration
-
-`randomizedAcceleration`
-------------------------
-
-**Summary**
-
-A :ref:`Vector3 <v3object>` defining the maximum amount of randomised acceleration applicable to the particles.
-
-This :ref:`Vector3 <v3object>` will be multiplied with the vector extracted from the noise texture.
-
-Defalut value is `[0, 0, 0`].
-
-**Syntax** ::
-
-    // To set default value for any ParticleSystem constructed using this updater.
-    updater.parameters.randomizedAcceleration = [1, 2, 3];
-    // To modify on a constructed ParticleSystem
-    system.updateParameters.randomizedAcceleration = [1, 2, 3];
-
+    This :ref:`Vector3 <v3object>` will be multiplied with the vector extracted from the noise texture.

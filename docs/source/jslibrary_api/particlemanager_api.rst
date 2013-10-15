@@ -392,7 +392,7 @@ The total number of `ParticleInstances` created is the sum of `numInstances` and
 
 **Summary**
 
-Gather metrics about individual :ref:`ParticleInstances <particleinstances>`.
+Gather metrics about individual :ref:`ParticleInstances <particleinstance>`.
 
 **Syntax** ::
 
