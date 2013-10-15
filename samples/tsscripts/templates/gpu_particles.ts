@@ -92,8 +92,15 @@ TurbulenzEngine.onload = function onloadFn()
     var maxSpeed = 200;
 
     var renderer;
-    var clearColor = [0.4, 0.4, 0.4, 1.0];
+    var clearColor = [0, 0, 0, 1.0];
     var scene = Scene.create(mathDevice);
+
+    var floor = Floor.create(graphicsDevice, mathDevice);
+    floor.color = [0, 0, 0.6, 1.0];
+    floor.fadeToColor = clearColor;
+    var drawCallback = function () {
+        floor.render(graphicsDevice, camera);
+    }
 
     // Create canvas object for minimap.
     var canvas = Canvas.create(graphicsDevice);
@@ -221,21 +228,26 @@ TurbulenzEngine.onload = function onloadFn()
             drag: 1
         },
         particles: {
-            "spark-small": {
+            spark: {
                 animation: "portal",
                 tweaks: {
                     "scale-scale": [0.5, 0.5]
                 },
                 texture: "textures/particle_spark.png"
-            }
-            spark: {
+            },
+            smoke: {
                 animation: "portal",
-                texture: "textures/particle_spark.png"
+                tweaks: {
+                    "color-scale": [-1, -1, -1, 1],
+                    "color-offset": [1, 1, 1, 0]
+                },
+                texture: "textures/smoke.dds"
             }
         },
         emitters: [{
             particleName: "spark",
             emittance: {
+                delay: 1,
                 rate: 40,
                 burstMin: 4,
                 burstMax: 4
@@ -263,20 +275,20 @@ TurbulenzEngine.onload = function onloadFn()
             }
         },
         {
-            particleName: "spark-small",
+            particleName: "smoke",
             emittance: {
-                rate: 20,
-                burstMin: 2,
-                burstMax: 2
+                rate: 10,
+                burstMin: 0,
+                burstMax: 4
             },
             particle: {
                 userData: DefaultParticleRenderer.createUserData({ facing: "billboard" }),
-                lifeTimeMin: 0,
-                lifeTimeMax: 1
+                lifeTimeMin: 0.5,
+                lifeTimeMax: 1.5
             },
             velocity: {
-                speedMin: 1,
-                speedMax: 10
+                speedMin: 5,
+                speedMax: 15
             },
             position: {
                 spherical: false,
@@ -321,27 +333,19 @@ TurbulenzEngine.onload = function onloadFn()
                 return;
             }
 
-            var timeout = 1.5 + 2 * Math.random();
+            var timeout = 2 + 2 * Math.random();
             var instance1 = manager.createInstance(archetype1, timeout);
             var x = Math.random() * sceneWidth;
             var z = Math.random() * sceneHeight;
             instance1.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
             manager.addInstanceToScene(instance1);
-            var emitter = instance1.synchronizer.emitters[0];
-            emitter.burst(emitter.emittance.rate * (timeout - emitter.particle.lifeTimeMax));
-            var emitter = instance1.synchronizer.emitters[1];
-            emitter.burst(emitter.emittance.rate * (timeout - emitter.particle.lifeTimeMax));
 
             var x = Math.random() * sceneWidth;
             var z = Math.random() * sceneHeight;
-            var timeout = 1.5 + 2 * Math.random();
+            var timeout = 2 + 2 * Math.random();
             var instance2 = manager.createInstance(archetype2, timeout);
             instance2.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
             manager.addInstanceToScene(instance2);
-            var emitter = instance2.synchronizer.emitters[0];
-            emitter.burst(emitter.emittance.rate * (timeout - emitter.particle.lifeTimeMax));
-            var emitter = instance2.synchronizer.emitters[1];
-            emitter.burst(emitter.emittance.rate * (timeout - emitter.particle.lifeTimeMax));
 
             graphicsDevice.endFrame();
         }
@@ -380,7 +384,7 @@ TurbulenzEngine.onload = function onloadFn()
         renderer.update(graphicsDevice, camera, scene, currentTime);
 
         // Render scene
-        renderer.draw(graphicsDevice, clearColor);
+        renderer.draw(graphicsDevice, clearColor, drawCallback);
 
         if (drawExtents)
         {
@@ -551,7 +555,8 @@ TurbulenzEngine.onload = function onloadFn()
         id: "button-clear",
         value: "Clear",
         fn: function () {
-            manager.clear();
+            manager.clear(archetype1);
+            manager.clear(archetype2);
         }
     });
 

@@ -6521,7 +6521,6 @@ class DefaultParticleSynchronizer
 }
 interface DefaultEmitterArchetype
 {
-    enabled      : boolean;
     forceCreation: boolean;
     usePrediction: boolean;
     emittance: {
@@ -6631,7 +6630,6 @@ class DefaultParticleEmitter
     enabled: boolean;
 
     static template = {
-        enabled      : true,
         forceCreation: false,
         usePrediction: true,
         emittance: {
@@ -6720,10 +6718,9 @@ class DefaultParticleEmitter
         }
 
         Parser.extraFields(error, "default emitter archetype", delta,
-           ["enabled", "forceCreation", "usePrediction", "emittance", "particle", "position", "velocity"]);
+           ["forceCreation", "usePrediction", "emittance", "particle", "position", "velocity"]);
 
         return {
-            enabled      : maybe(delta, "enabled"      , checkBoolean, val(true)),
             forceCreation: maybe(delta, "forceCreation", checkBoolean, val(false)),
             usePrediction: maybe(delta, "usePrediction", checkBoolean, val(true)),
             emittance    : Parser.maybeField(delta, "emittance", function (delta)
@@ -6867,14 +6864,6 @@ class DefaultParticleEmitter
     }
     applyArchetype(archetype, animationRange)
     {
-        if (archetype.enabled)
-        {
-            this.enable();
-        }
-        else
-        {
-            this.disable();
-        }
         this.forceCreation = archetype.forceCreation;
         this.usePrediction = archetype.usePrediction;
         Types.copyFields(archetype.emittance, this.emittance);
@@ -6914,7 +6903,7 @@ class DefaultParticleEmitter
         // created retrospectively.
         var timeLapse = timeStep + this.offsetTime;
         var numGen = Math.ceil(timeLapse * emittance.rate);
-        this.offsetTime += timeStep - (numGen / emittance.rate);
+        this.offsetTime += timeStep - (Math.max(0, numGen) / emittance.rate);
         if (numGen <= 0)
         {
             return;
@@ -7227,13 +7216,8 @@ class DefaultParticleEmitter
         ret.velocity = Types.copy(template.velocity);
         ret.forceCreation = template.forceCreation;
         ret.usePrediction = template.usePrediction;
-        ret.enabled = template.enabled;
+        ret.enabled = false;
         ret.bursting = null;
-
-        if (ret.enabled)
-        {
-            ret.enable();
-        }
 
         return ret;
     }
@@ -7399,18 +7383,33 @@ class ParticleManager
         }
     }
 
-    clear()
+    clear(archetype?)
     {
-        this.queue.clear(this.clearQueueFun.bind(this));
-
-        // Any remaining instances, not part of the queue.
-        var archetypes = this.archetypes;
-        var archetypeCount = archetypes.length;
-        var i;
-        for (i = 0; i < archetypeCount; i += 1)
+        var instances, count;
+        if (!archetype)
         {
-            var instances = archetypes[i].context.instances;
-            var count = instances.length;
+            this.queue.clear(this.clearQueueFun.bind(this));
+
+            // Any remaining instances, not part of the queue.
+            var archetypes = this.archetypes;
+            var archetypeCount = archetypes.length;
+            var i;
+            for (i = 0; i < archetypeCount; i += 1)
+            {
+                instances = archetypes[i].context.instances;
+                count = instances.length;
+                while (count > 0)
+                {
+                    count -= 1;
+                    this.destroyInstance(instances[count]);
+                }
+            }
+        }
+        else if (archetype.context)
+        {
+            // destroy individual instances of the archetype.
+            instances = archetype.context.instances;
+            count = instances.length;
             while (count > 0)
             {
                 count -= 1;
@@ -8025,6 +8024,24 @@ class ParticleManager
         }
         context.instances.push(instance);
 
+        var emitters = instance.synchronizer.emitters;
+        var count = emitters.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var emitter = emitters[i];
+            if (instance.queued)
+            {
+                var emittance = emitter.emittance;
+                var burstCount = emittance.rate * (timeout - emitter.particle.lifeTimeMax - emittance.delay);
+                emitter.burst(burstCount);
+            }
+            else
+            {
+                emitter.enable();
+            }
+        }
+
         return instance;
     }
 
@@ -8328,6 +8345,7 @@ class ParticleManager
             }
             var animationRange = context.definition.particle[index].animationRange;
             emitter.applyArchetype(template, animationRange);
+            emitter.enable();
             synchronizer.addEmitter(emitter);
         }
 

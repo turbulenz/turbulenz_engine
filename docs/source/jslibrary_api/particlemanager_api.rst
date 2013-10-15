@@ -141,6 +141,8 @@ As some properties, such as particle system extents and particle capacities are 
 
 Existing references to particle instances will remain valid, with the existing particle isntance objects re-used for the replaced systems.
 
+Emitters of the new instance will all be enabled, this is not intended for use with short-lived effects that are already created.
+
 **Syntax** ::
 
     manager.replaceArchetype(oldArchetype, newArchetype);
@@ -164,6 +166,8 @@ Existing references to particle instances will remain valid, with the existing p
 Create a :ref:`ParticleInstance <particleinstance>` of a particle system from its archetype.
 
 It is assumed that this archetype has had all its required textures and shaders pre-loaded.
+
+The emitters of the system will be enabled automatically. If a timeout is specified, then the emitters will be `burst`, with the number of bursts set so that the effect comes to a natural end when the timeout has finished.
 
 .. note :: This call must be made between calls to graphicsDevice.beginFrame() and graphicsDevice.endFrame() to guarantee correct execution.
 
@@ -205,7 +209,10 @@ Destroy every instance associated with the particle manager.
 
 **Syntax** ::
 
-    manager.clear();
+    manager.clear(archetype);
+
+``archetype`` (Optional)
+    If an archetype is specified, only instances of that archetype will be destroyed.
 
 .. index::
     pair: ParticleManager; update
