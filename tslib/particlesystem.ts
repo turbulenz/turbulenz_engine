@@ -6228,6 +6228,7 @@ class ParticleRenderable
         this.center      = center;
         this.halfExtents = halfExtents;
         this.lazySystem  = system;
+        this.worldExtentsUpdate = -1;
     }
 
     setSystem(system: ParticleSystem): void
@@ -6244,6 +6245,7 @@ class ParticleRenderable
             system.geometry.register(this.resizedGeometryCb);
             this.center      = system.center;
             this.halfExtents = system.halfExtents;
+            this.worldExtentsUpdate = -1;
 
             var parameters = this.graphicsDevice.createDrawParameters();
             parameters.setVertexBuffer(0, system.geometry.vertexBuffer);
@@ -8096,7 +8098,7 @@ class ParticleManager
         }
     }
 
-    getSystem(archetype, instance)
+    private getSystem(archetype, instance)
     {
         var context = archetype.context;
         var pool = context.systemPool;
@@ -8144,7 +8146,7 @@ class ParticleManager
 
         return system;
     }
-    getView()
+    private getView()
     {
         var pool = this.viewPool;
         if (pool.length > 0)
@@ -8169,7 +8171,82 @@ class ParticleManager
         return instance;
     }
 
-    buildParticleSceneNode(archetype, instance)
+    replaceArchetype(oldArchetype, newArchetype)
+    {
+        var context = oldArchetype.context;
+        if (!context)
+        {
+            return;
+        }
+
+        this.initializeArchetype(newArchetype);
+        var newContext = newArchetype.context;
+
+        var instances = context.instances;
+        var newInstances = newContext.instances;
+
+        var count = instances.length;
+        while (count > 0)
+        {
+            count -= 1;
+            var instance = instances.pop();
+
+            // Partially recycle instance.
+            var parent = instance.sceneNode.getParent();
+            this.removeInstanceFromScene(instance);
+
+            this.releaseSynchronizer(instance);
+
+            var renderable = instance.renderable;
+            renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
+            if (renderable.system)
+            {
+                context.systemPool.push(renderable.system);
+                renderable.setSystem(null);
+            }
+            instance.system = null;
+
+            // Set up for new archetype.
+            instance.archetype = newArchetype;
+            var lazySystem = this.getSystem.bind(this, newArchetype, instance);
+            renderable.setLazySystem(lazySystem, newArchetype.system.center, newArchetype.system.halfExtents);
+
+            this.buildSynchronizer(newArchetype, instance);
+            newInstances.push(instance);
+
+            this.addInstanceToScene(instance, parent);
+        }
+    }
+
+    destroyArchetype(archetype)
+    {
+        var context = archetype.context;
+        if (!context)
+        {
+            return;
+        }
+
+        this.archetypes.splice(this.archetypes.indexOf(archetype), 1);
+
+        var instances = context.instances;
+        var count = instances.length;
+        while (count > 0)
+        {
+            count -= 1;
+            var instance = instances.pop();
+
+            // Partially recycle instance.
+            this.removeInstanceFromScene(instance);
+            this.releaseSynchronizer(instance);
+            var renderable = instance.renderable;
+            renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
+            this.queue.remove(instance);
+        }
+
+        archetype.context = { DESTROYED: true };
+    }
+
+    private buildParticleSceneNode(archetype, instance)
     {
         var context = archetype.context;
         var renderable = ParticleRenderable.create({
@@ -8192,7 +8269,7 @@ class ParticleManager
         instance.sceneNode = sceneNode;
     }
 
-    releaseSynchronizer(instance)
+    private releaseSynchronizer(instance)
     {
         var synchronizer = instance.synchronizer;
         instance.synchronizer = null;
@@ -8217,7 +8294,7 @@ class ParticleManager
         this.synchronizers[synchronizer.name].pool.push(synchronizer);
     }
 
-    buildSynchronizer(archetype, instance)
+    private buildSynchronizer(archetype, instance)
     {
         var template: any = archetype.synchronizer;
         var context: any = archetype.context;
@@ -8692,6 +8769,10 @@ class ParticleManager
                         parsed.particleName = particleName;
                         ret.push(parsed);
                     }
+
+                    // add back fields to avoid destroying original delta.
+                    emitter.name = name;
+                    emitter.particleName = particleName;
                 }
                 return ret;
             }, val([])),
@@ -8739,6 +8820,20 @@ class ParticleManager
         archetype.renderer.name     = rendererName;
         archetype.updater.name      = updaterName;
         archetype.synchronizer.name = synchronizerName;
+
+        // add names back to original delta to avoid destroying it.
+        if (delta && delta.renderer)
+        {
+            delta.renderer.name = rendererName;
+        }
+        if (delta && delta.updater)
+        {
+            delta.updater.name = updaterName;
+        }
+        if (delta && delta.synchronizer)
+        {
+            delta.synchronizer.name = synchronizerName;
+        }
 
         // Verify all emitters reference valid particles.
         // We do not require that all particles are referenced by emitters.

@@ -94,12 +94,6 @@ TurbulenzEngine.onload = function onloadFn()
     var renderer;
     var clearColor = [0.4, 0.4, 0.4, 1.0];
     var scene = Scene.create(mathDevice);
-    var floor = Floor.create(graphicsDevice, mathDevice);
-    floor.fadeToColor = clearColor;
-    function drawFloor()
-    {
-        floor.render(graphicsDevice, camera);
-    }
 
     // Create canvas object for minimap.
     var canvas = Canvas.create(graphicsDevice);
@@ -109,15 +103,11 @@ TurbulenzEngine.onload = function onloadFn()
     var scaleY = 100 / sceneHeight;
     ctx.lineWidth = 0.1;
 
+    var drawExtents = false;
+
     //==========================================================================
     // Particle Systems
     //==========================================================================
-
-    var alphaRenderer;
-    var additiveRenderer;
-    var updater;
-    var node1;
-    var node2;
 
     var manager = ParticleManager.create(graphicsDevice, textureManager, shaderManager);
     manager.registerParticleAnimation({
@@ -125,7 +115,7 @@ TurbulenzEngine.onload = function onloadFn()
         animation: [{
             scale: [0, 0],
             "scale-interpolation": "catmull",
-            color: [0, 0, 0, 1]
+            color: [0, 0, 0, 0]
         },
         {
             time: 0.2,
@@ -141,7 +131,30 @@ TurbulenzEngine.onload = function onloadFn()
             color: [1, 1, 1, 0]
         }]
     });
-    var archetype1 = manager.parseArchetype({
+    manager.registerParticleAnimation({
+        name: "portal",
+        animation: [{
+            scale: [1, 1],
+            "scale-interpolation": "catmull",
+            color: [0, 1, 0, 1]
+        },
+        {
+            time: 0.3,
+            scale: [2, 2],
+            color: [1, 1, 1, 1]
+        },
+        {
+            time: 0.5,
+        },
+        {
+            time: 0.2,
+            scale: [0.5, 0.5],
+            color: [1, 0, 0, 0]
+        }]
+    });
+
+    var description1;
+    var archetype1 = manager.parseArchetype(description1 = {
         renderer: {
             name: "alpha"
         },
@@ -186,11 +199,13 @@ TurbulenzEngine.onload = function onloadFn()
             }
         }]
     });
-    var archetype2 = manager.parseArchetype({
-        packedTexture: "textures/smoke.dds",
+    var description2;
+    var archetype2 = manager.parseArchetype(description2 = {
         system: {
-            center: [0, 3, 0],
-            halfExtents: [4, 3, 4],
+            center: [0, 5, 0],
+            halfExtents: [5, 5, 5],
+            maxParticles: 250,
+            maxSpeed: 20
         },
         renderer: {
             name: "additive",
@@ -206,17 +221,24 @@ TurbulenzEngine.onload = function onloadFn()
             drag: 1
         },
         particles: {
-            smoke: {
-                animation: "black and white",
+            "spark-small": {
+                animation: "portal",
                 tweaks: {
                     "scale-scale": [0.5, 0.5]
-                }
+                },
+                texture: "textures/particle_spark.png"
+            }
+            spark: {
+                animation: "portal",
+                texture: "textures/particle_spark.png"
             }
         },
         emitters: [{
-            particleName: "smoke",
+            particleName: "spark",
             emittance: {
-                rate: 40
+                rate: 40,
+                burstMin: 4,
+                burstMax: 4
             },
             particle: {
                 userData: DefaultParticleUpdater.createUserData(true) |
@@ -229,15 +251,39 @@ TurbulenzEngine.onload = function onloadFn()
             },
             velocity: {
                 speedMin: 3,
-                speedMax: 6,
+                speedMax: 20,
                 conicalSpread: Math.PI/10
             },
             position: {
                 spherical: false,
                 normal: [0, 1, 0],
-                radiusMin: 2,
-                radiusMax: 3,
+                radiusMin: 4,
+                radiusMax: 5,
                 radiusDistribution: "normal"
+            }
+        },
+        {
+            particleName: "spark-small",
+            emittance: {
+                rate: 20,
+                burstMin: 2,
+                burstMax: 2
+            },
+            particle: {
+                userData: DefaultParticleRenderer.createUserData({ facing: "billboard" }),
+                lifeTimeMin: 0,
+                lifeTimeMax: 1
+            },
+            velocity: {
+                speedMin: 1,
+                speedMax: 10
+            },
+            position: {
+                spherical: false,
+                normal: [0, 1, 0],
+                radiusMin: 0,
+                radiusMax: 2,
+                radiusDistribution: "uniform"
             }
         }]
     });
@@ -274,16 +320,29 @@ TurbulenzEngine.onload = function onloadFn()
             {
                 return;
             }
-            var instance1 = manager.createInstance(archetype1, 1.5 + 2 * Math.random());
-            var instance2 = manager.createInstance(archetype2, 1.5 + 2 * Math.random());
+
+            var timeout = 1.5 + 2 * Math.random();
+            var instance1 = manager.createInstance(archetype1, timeout);
             var x = Math.random() * sceneWidth;
             var z = Math.random() * sceneHeight;
             instance1.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
+            manager.addInstanceToScene(instance1);
+            var emitter = instance1.synchronizer.emitters[0];
+            emitter.burst(emitter.emittance.rate * (timeout - emitter.particle.lifeTimeMax));
+            var emitter = instance1.synchronizer.emitters[1];
+            emitter.burst(emitter.emittance.rate * (timeout - emitter.particle.lifeTimeMax));
+
             var x = Math.random() * sceneWidth;
             var z = Math.random() * sceneHeight;
+            var timeout = 1.5 + 2 * Math.random();
+            var instance2 = manager.createInstance(archetype2, timeout);
             instance2.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
-            manager.addInstanceToScene(instance1);
             manager.addInstanceToScene(instance2);
+            var emitter = instance2.synchronizer.emitters[0];
+            emitter.burst(emitter.emittance.rate * (timeout - emitter.particle.lifeTimeMax));
+            var emitter = instance2.synchronizer.emitters[1];
+            emitter.burst(emitter.emittance.rate * (timeout - emitter.particle.lifeTimeMax));
+
             graphicsDevice.endFrame();
         }
         TurbulenzEngine.setInterval(run, 10);
@@ -301,11 +360,6 @@ TurbulenzEngine.onload = function onloadFn()
         manager.update(deltaTime);
         inputDevice.update();
         cameraController.update();
-
-        if (Math.random() < 0.001)
-        {
-            manager.clear();
-        }
 
         // Update the aspect ratio of the camera in case of window resizes
         var aspectRatio = (graphicsDevice.width / graphicsDevice.height);
@@ -326,10 +380,13 @@ TurbulenzEngine.onload = function onloadFn()
         renderer.update(graphicsDevice, camera, scene, currentTime);
 
         // Render scene
-        //renderer.draw(graphicsDevice, clearColor, undefined, drawFloor);
         renderer.draw(graphicsDevice, clearColor);
 
-        //(<any>scene).drawVisibleRenderablesExtents(graphicsDevice, shaderManager, camera, false, true);
+        if (drawExtents)
+        {
+            (<any>scene).drawVisibleRenderablesExtents(graphicsDevice, shaderManager, camera, false, true);
+        }
+
         // Draw fonts.
         graphicsDevice.setTechnique(fontTechnique);
         mathDevice.v4Build(2 / graphicsDevice.width, -2 / graphicsDevice.height, -1, 1,
@@ -478,5 +535,57 @@ TurbulenzEngine.onload = function onloadFn()
     // HTML Controls
     //=========================================================================
     var htmlControls = HTMLControls.create();
+
+    htmlControls.addCheckboxControl({
+        id : "draw-extents",
+        value : "drawExtents",
+        isSelected : drawExtents,
+        fn: function ()
+        {
+            drawExtents = !drawExtents;
+            return drawExtents;
+        }
+    });
+
+    htmlControls.addButtonControl({
+        id: "button-clear",
+        value: "Clear",
+        fn: function () {
+            manager.clear();
+        }
+    });
+
+    htmlControls.addButtonControl({
+        id: "button-destroy-1",
+        value: "Destroy (1)",
+        fn: function () {
+            manager.destroyArchetype(archetype1);
+            archetype1 = manager.parseArchetype(description1);
+        }
+    });
+    htmlControls.addButtonControl({
+        id: "button-destroy-2",
+        value: "Destroy (2)",
+        fn: function () {
+            manager.destroyArchetype(archetype2);
+            archetype2 = manager.parseArchetype(description2);
+        }
+    });
+
+    htmlControls.addButtonControl({
+        id: "button-replace-1-2",
+        value: "Replace (1 with 2)",
+        fn: function () {
+            manager.replaceArchetype(archetype1, archetype2);
+        }
+    });
+    htmlControls.addButtonControl({
+        id: "button-replace-2-1",
+        value: "Replace (2 with 1)",
+        fn: function () {
+            manager.replaceArchetype(archetype2, archetype1);
+        }
+    });
+
     htmlControls.register();
 }

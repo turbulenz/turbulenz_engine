@@ -112,6 +112,22 @@ This must be performed before creating a system from its archetype, and it is as
     The particle system archetype to be pre-loaded.
 
 .. index::
+    pair: ParticleManager; destroyArchetype
+
+`destroyArchetype`
+------------------
+
+**Summary**
+
+Destroy an archetype, rendering it useless and cleaning up every instance, pooled or otherwise corresponding to this archetype along with any other retained objects in object pools.
+
+This should only be used if you are absolutely sure the archetype will never be used again. For example, if when editing a world at runtime you load a new version of the same archetype and have just replaced all old archetypes with the new one via `replaceArchetype`.
+
+**Syntax** ::
+
+    manager.destroyArchetype(archetype);
+
+.. index::
     pair: ParticleManager; replaceArchetype
 
 `replaceArchetype`
@@ -257,16 +273,18 @@ Remove the provided :ref:`ParticleInstance <particleinstance>` from the scene.
 
 **Summary**
 
-Compress the provided archetype, returning an object delta no larger than the input archetype.
+Compress the provided archetype, returning a minimal description from which the archetype can be recovered.
 
 This can be used to save space when saving or transferring archetypes, and will be used when serialising an archetype.
 
 **Syntax** ::
 
-    var delta = manager.compressArchetype(archetype);
+    var description = manager.compressArchetype(archetype);
 
 ``archetype``
     The particle system archetype to be compressed.
+
+    The original archetype will be left intact.
 
 .. index::
     pair: ParticleManager; decompressArchetype
@@ -280,10 +298,12 @@ Parse a given archetype into a fully prepared object for use in manager, this al
 
 **Syntax** ::
 
-    var archetype = manager.parseArchetype(delta);
+    var archetype = manager.parseArchetype(description);
 
-``archetype``
-    The archetype object to be parsed.
+``description``
+    The archetype description to be parsed.
+
+    The description will be left intact, and may - if ever required - be re-used.
 
 .. index::
     pair: ParticleManager; serializeArchetype
@@ -293,13 +313,18 @@ Parse a given archetype into a fully prepared object for use in manager, this al
 
 **Summary**
 
-Serialize the provided archetype to a JSON string, this method will first compress the archetype to its object delta.
+Serialize the provided archetype to a JSON string, this method will first compress the archetype to its minimal description.
 
 This method can be used as a cost-efficient way of saving archetypes to file.
 
 **Syntax** ::
 
     var serializedString = manager.serializeArchetype(archetype);
+
+``archetype``
+    The archetype to be serialized.
+
+    The archetype will be left intact for continued use.
 
 .. index::
     pair: ParticleManager; deserializeArchetype
@@ -309,11 +334,14 @@ This method can be used as a cost-efficient way of saving archetypes to file.
 
 **Summary**
 
-Deserializes an archetype from its compressed JSON representation, this method will parse the object delta of the archetype into a fully prepared archetype object for use in the manager.
+Deserializes an archetype from its compressed JSON representation, this method will parse the archetype description into a fully prepared archetype object for use in the manager.
 
 **Syntax** ::
 
     var archetype = manager.deserializeArchetype(jsonString);
+
+``jsonString``
+    The serialized representation of an archetype.
 
 .. index::
     pair: ParticleManager; gatherMetrics
