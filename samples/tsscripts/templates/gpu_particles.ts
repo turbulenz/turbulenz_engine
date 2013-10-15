@@ -26,24 +26,28 @@
 /*{{ javascript("jslib/renderingcommon.js") }}*/
 /*{{ javascript("jslib/forwardrendering.js") }}*/
 /*{{ javascript("jslib/particlesystem.js") }}*/
+/*{{ javascript("jslib/fontmanager.js") }}*/
+/*{{ javascript("jslib/canvas.js") }}*/
 /*{{ javascript("scripts/htmlcontrols.js") }}*/
 
-/*global TurbulenzEngine: true */
-/*global ForwardRendering: false */
-/*global TurbulenzServices: false */
-/*global Camera: false */
 /*global CameraController: false */
-/*global TextureManager: false */
-/*global ShaderManager: false */
+/*global Camera: false */
+/*global Canvas: false */
 /*global EffectManager: false */
-/*global Scene: false */
-/*global SceneNode: false */
 /*global Floor: false */
+/*global FontManager: false */
+/*global ForwardRendering: false */
 /*global HTMLControls: false */
 /*global ParticleBuilder: false */
 /*global ParticleSystem: false */
 /*global ParticleView: false */
 /*global RequestHandler: false*/
+/*global Scene: false */
+/*global SceneNode: false */
+/*global ShaderManager: false */
+/*global TextureManager: false */
+/*global TurbulenzEngine: true */
+/*global TurbulenzServices: false */
 /*global window: false */
 
 TurbulenzEngine.onload = function onloadFn()
@@ -71,16 +75,21 @@ TurbulenzEngine.onload = function onloadFn()
     var textureManager = TextureManager.create(graphicsDevice, requestHandler, undefined, errorCallback);
     var shaderManager = ShaderManager.create(graphicsDevice, requestHandler, undefined, errorCallback);
     var effectManager = EffectManager.create();
+    var fontManager = FontManager.create(graphicsDevice, requestHandler);
+
+    // region of world (x/z) where systems are created.
+    var sceneWidth = 500;
+    var sceneHeight = 500;
 
     var camera = Camera.create(mathDevice);
     var halfFOV = Math.tan(30 * Math.PI / 180);
     camera.recipViewWindowX = 1 / halfFOV;
     camera.recipViewWindowY = 1 / halfFOV;
-    camera.lookAt([0, 1, 0], [0, 1, 0], [0, 1, -1]);
+    camera.lookAt([0, 1, 0], [0, 1, 0], [sceneWidth/2, 1, sceneHeight/2]);
     camera.updateProjectionMatrix();
     camera.updateViewMatrix();
     var cameraController = CameraController.create(graphicsDevice, inputDevice, camera);
-    var maxSpeed = 10;
+    var maxSpeed = 200;
 
     var renderer;
     var clearColor = [0.4, 0.4, 0.4, 1.0];
@@ -91,6 +100,14 @@ TurbulenzEngine.onload = function onloadFn()
     {
         floor.render(graphicsDevice, camera);
     }
+
+    // Create canvas object for minimap.
+    var canvas = Canvas.create(graphicsDevice);
+    var ctx = canvas.getContext('2d');
+
+    var scaleX = 100 / sceneWidth;
+    var scaleY = 100 / sceneHeight;
+    ctx.lineWidth = 0.1;
 
     //==========================================================================
     // Particle Systems
@@ -106,11 +123,22 @@ TurbulenzEngine.onload = function onloadFn()
     manager.registerParticleAnimation({
         name: "black and white",
         animation: [{
+            scale: [0, 0],
+            "scale-interpolation": "catmull",
             color: [0, 0, 0, 1]
         },
         {
-            time: 1,
+            time: 0.2,
+            scale: [1, 1],
             color: [1, 1, 1, 1]
+        },
+        {
+            time: 0.6,
+        },
+        {
+            time: 0.2,
+            scale: [1.5, 1.5],
+            color: [1, 1, 1, 0]
         }]
     });
     var archetype1 = manager.parseArchetype({
@@ -118,7 +146,9 @@ TurbulenzEngine.onload = function onloadFn()
             name: "alpha"
         },
         system: {
-            zSorted: true
+            center: [0, 6, 0],
+            halfExtents: [3, 6, 3],
+            maxParticles: 128
         },
         particles: {
             smoke: {
@@ -134,41 +164,81 @@ TurbulenzEngine.onload = function onloadFn()
             particleName: "smoke",
             emittance: {
                 burstMin: 0,
-                burstMax: 2
+                burstMax: 2,
+                rate: 20
             },
             velocity: {
-                speedMin: 0.5,
-                speedMax: 1
+                speedMin: 2.5,
+                speedMax: 4.5,
+                conicalSpread: Math.PI*0.25
             }
         }, {
             particleName: "fire",
             emittance: {
                 burstMin: 0,
-                burstMax: 2
+                burstMax: 2,
+                rate: 30
             },
             velocity: {
-                speedMin: 0.75,
-                speedMax: 1.0,
-                theta: Math.PI/4,
-                phi: Math.PI/2
+                speedMin: 3.75,
+                speedMax: 4.8,
+                conicalSpread: Math.PI*0.25
             }
         }]
     });
     var archetype2 = manager.parseArchetype({
         packedTexture: "textures/smoke.dds",
         system: {
-            zSorted: true
+            center: [0, 3, 0],
+            halfExtents: [4, 3, 4],
         },
         renderer: {
-            name: "opaque"
+            name: "additive",
+            randomizedAlpha: 0.5,
+            animatedAlpha: true,
+            randomizedOrientation: [Math.PI*0.25, Math.PI*0.25],
+            animatedOrientation: true,
+            randomizedRotation: Math.PI*2
+        },
+        updater: {
+            noiseTexture: "textures/noise.dds",
+            randomizedAcceleration: [10, 0, 10],
+            drag: 1
         },
         particles: {
             smoke: {
-                animation: "black and white"
+                animation: "black and white",
+                tweaks: {
+                    "scale-scale": [0.5, 0.5]
+                }
             }
         },
         emitters: [{
-            particleName: "smoke"
+            particleName: "smoke",
+            emittance: {
+                rate: 40
+            },
+            particle: {
+                userData: DefaultParticleUpdater.createUserData(true) |
+                          DefaultParticleRenderer.createUserData({
+                              facing               : "velocity",
+                              randomizedAlpha      : true,
+                              randomizedOrientation: true,
+                              randomizedRotation   : true
+                          })
+            },
+            velocity: {
+                speedMin: 3,
+                speedMax: 6,
+                conicalSpread: Math.PI/10
+            },
+            position: {
+                spherical: false,
+                normal: [0, 1, 0],
+                radiusMin: 2,
+                radiusMax: 3,
+                radiusDistribution: "normal"
+            }
         }]
     });
 
@@ -176,9 +246,18 @@ TurbulenzEngine.onload = function onloadFn()
     // Main loop
     //=========================================================================
 
+    var fontTechnique;
+    var fontTechniqueParameters;
     var previousFrameTime;
     function init()
     {
+        fontTechnique = shaderManager.get("shaders/font.cgfx").getTechnique('font');
+        fontTechniqueParameters = graphicsDevice.createTechniqueParameters({
+            clipSpace : mathDevice.v4BuildZero(),
+            alphaRef : 0.01,
+            color : mathDevice.v4BuildOne()
+        });
+
         renderer = ForwardRendering.create(
             graphicsDevice,
             mathDevice,
@@ -189,166 +268,26 @@ TurbulenzEngine.onload = function onloadFn()
 
         manager.initialize(scene, renderer.passIndex.transparent);
 
-        var instance1 = manager.createInstance(archetype2);
-        var instance2 = manager.createInstance(archetype1);
-        var instance3 = manager.createInstance(archetype1);
-        instance1.renderable.setLocalTransform(VMath.m43BuildTranslation(2, 0, 0));
-        instance2.renderable.setLocalTransform(VMath.m43BuildTranslation(-2, 0, 0));
-        manager.addInstanceToScene(instance1);
-        manager.addInstanceToScene(instance2);
-        manager.addInstanceToScene(instance3);
+        function run()
+        {
+            if (Math.random() < 0.25)
+            {
+                return;
+            }
+            var instance1 = manager.createInstance(archetype1, 1.5 + 2 * Math.random());
+            var instance2 = manager.createInstance(archetype2, 1.5 + 2 * Math.random());
+            var x = Math.random() * sceneWidth;
+            var z = Math.random() * sceneHeight;
+            instance1.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
+            var x = Math.random() * sceneWidth;
+            var z = Math.random() * sceneHeight;
+            instance2.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
+            manager.addInstanceToScene(instance1);
+            manager.addInstanceToScene(instance2);
+        }
+        TurbulenzEngine.setInterval(run, 1);
+        run();
         previousFrameTime = TurbulenzEngine.time;
-/*
-        var context = (<any>manager).systemContext;
-
-        // Create particle renderers and updaters
-        // and set some defaults before creating any systems.
-        alphaRenderer = manager.getRenderer("alpha");
-        additiveRenderer = manager.getRenderer("additive");
-        alphaRenderer.parameters.noiseTexture = textureManager.get("textures/noise.dds");
-        additiveRenderer.parameters.noiseTexture = textureManager.get("textures/noise.dds");
-
-        updater = manager.getUpdater();
-        updater.parameters.acceleration = [0, -40*120/59, 0];
-        updater.parameters.drag = 0.5;
-        updater.parameters.noiseTexture = textureManager.get("textures/noise.dds");
-
-        var geometry = manager.getGeometry(100);
-
-        // TODO TEMPORARY, SAMPLE SHOULD USE PARTICLE MANAGER WITH ARCHETYPES
-        // RATHER THAN MANUAL CONSTRUCTION OF SYSTEMS AND ANIMATIONS.
-        var smokeAnimation = {
-            name: "smoke",
-            animation: [
-                {
-                    "scale": [1, 1],
-                    "color": [1, 1, 1, 0],
-                    "color-interpolation": "catmull",
-                    "scale-interpolation": "catmull"
-                },
-                {
-                    "time": 0.5,
-                    "scale": [1, 1],
-                    "color": [1, 1, 1, 1]
-                },
-                {
-                    "time": 0.5,
-                    "scale": [1.2, 1.2],
-                    "color": [1, 1, 1, 0]
-                }
-            ]
-        };
-        var defn = ParticleBuilder.compile({
-            graphicsDevice: graphicsDevice,
-            particles: [smokeAnimation],
-            system: manager.getAnimationSystem()
-        });
-
-        var sync = DefaultParticleSynchronizer.create({});
-        var emitter = DefaultParticleEmitter.create();
-        emitter.emittance.rate = 100;
-        emitter.emittance.burstMin = 1;
-        emitter.emittance.burstMax = 10;
-        emitter.position.position = [0, 10, 0];
-        emitter.position.spherical = false;
-        emitter.position.normal = [0, 1, 0];
-        emitter.position.radiusMin = 6;
-        emitter.position.radiusMax = 10;
-        emitter.position.radiusDistribution = "normal";
-        emitter.position.radiusSigma = 0.125;
-        sync.addEmitter(emitter);
-
-        var system = ParticleSystem.create({
-            graphicsDevice: graphicsDevice,
-            center: [0, 20, 0],
-            halfExtents: [10, 20, 10],
-            maxSpeed: 100,
-            maxParticles: 100,
-            maxLifeTime: defn.maxLifeTime,
-            animation: defn.animation,
-            renderer: alphaRenderer,
-            geometry: geometry,
-            updater: updater,
-            synchronizer: sync,
-            sharedRenderContext: context
-        });
-        system.updateParameters["acceleration"] = [0, 0, 0];
-        system.updateParameters["drag"] = 0;
-        var scale = defn.attribute["scale"];
-        var rotation = defn.attribute["rotation"];
-        system.renderParameters["animationScale"] = [
-            scale.min[0], scale.min[1], scale.delta[0], scale.delta[1]
-        ];
-        system.renderParameters["animationRotation"] = [
-            rotation.min[0], rotation.delta[0]
-        ];
-        system.renderParameters["texture"] = textureManager.get("textures/smoke.dds");
-        var renderable = ParticleRenderable.create({
-            graphicsDevice: graphicsDevice,
-            passIndex: renderer.passIndex.transparent,
-            system: system
-        });
-        sync.renderable = renderable;
-        sync.trailFollow = 0.5;
-        var node = node2 = SceneNode.create({
-            name: "TODO_TMP_2",
-            dynamic: true
-        });
-        node.addRenderable(renderable);
-        node.setLocalTransform(mathDevice.m43BuildTranslation(-3, 0, 0));
-        scene.addRootNode(node);
-
-        var sync = DefaultParticleSynchronizer.create({
-            fixedTimeStep: 1 / 60
-        });
-        var emitter = DefaultParticleEmitter.create();
-        emitter.emittance.rate = 5;
-        emitter.emittance.burstMin = 0;
-        emitter.emittance.burstMax = 4;
-        emitter.velocity.speedMin = 25;
-        emitter.velocity.speedMax = 50;
-        emitter.disable();
-        TurbulenzEngine.setInterval(function () {
-            emitter.burst(5);
-        }, 2000);
-        sync.addEmitter(emitter);
-
-        var system = ParticleSystem.create({
-            graphicsDevice: graphicsDevice,
-            center: [0, 20, 0],
-            halfExtents: [5, 20, 2],
-            maxSpeed: 100,
-            maxParticles: 100,
-            maxLifeTime: defn.maxLifeTime,
-            animation: defn.animation,
-            renderer: alphaRenderer,
-            geometry: geometry,
-            updater: updater,
-            synchronizer: sync,
-            sharedRenderContext: context
-        });
-        var scale = defn.attribute["scale"];
-        var rotation = defn.attribute["rotation"];
-        system.renderParameters["animationScale"] = [
-            scale.min[0], scale.min[1], scale.delta[0], scale.delta[1]
-        ];
-        system.renderParameters["animationRotation"] = [
-            rotation.min[0], rotation.delta[0]
-        ];
-        system.renderParameters["texture"] = textureManager.get("textures/smoke.dds");
-        var renderable = ParticleRenderable.create({
-            graphicsDevice: graphicsDevice,
-            passIndex: renderer.passIndex.transparent,
-            system: system
-        });
-        sync.renderable = renderable;
-        var node = node1 = SceneNode.create({
-            name: "TODO_TMP",
-            dynamic: true
-        });
-        node.addRenderable(renderable);
-        node.setLocalTransform(mathDevice.m43BuildTranslation(3, 0, 0));
-        scene.addRootNode(node);*/
     }
 
     function mainLoop()
@@ -357,9 +296,6 @@ TurbulenzEngine.onload = function onloadFn()
         {
             return;
         }
-
-/*        node1.setLocalTransform(mathDevice.m43BuildTranslation(3 + 3 * Math.sin(TurbulenzEngine.time), 0, 0));
-        node2.setLocalTransform(mathDevice.m43BuildTranslation(-3 + 3 * Math.sin(TurbulenzEngine.time), 0, 0));*/
 
         var currentTime = TurbulenzEngine.time;
         var deltaTime = (currentTime - previousFrameTime);
@@ -383,9 +319,65 @@ TurbulenzEngine.onload = function onloadFn()
         renderer.update(graphicsDevice, camera, scene, currentTime);
 
         // Render scene
-        renderer.draw(graphicsDevice, clearColor, undefined, drawFloor);
+        //renderer.draw(graphicsDevice, clearColor, undefined, drawFloor);
+        renderer.draw(graphicsDevice, clearColor);
 
-        (<any>scene).drawVisibleRenderablesExtents(graphicsDevice, shaderManager, camera, false, true);
+        //(<any>scene).drawVisibleRenderablesExtents(graphicsDevice, shaderManager, camera, false, true);
+        // Draw fonts.
+        graphicsDevice.setTechnique(fontTechnique);
+        mathDevice.v4Build(2 / graphicsDevice.width, -2 / graphicsDevice.height, -1, 1,
+                           fontTechniqueParameters.clipSpace);
+        graphicsDevice.setTechniqueParameters(fontTechniqueParameters);
+
+        var metrics = manager.gatherMetrics();
+        var text = "";
+        for (var f in metrics)
+        {
+            text += f + ": " + metrics[f] + "\n";
+        }
+
+        var font = fontManager.get("fonts/hero.fnt");
+        var width = font.calculateTextDimensions(text, 0.5, 0).width;
+        font.drawTextRect(text, {
+            rect: [0, 0, width, 0/*ignored*/],
+            scale: 0.5
+        });
+
+        // Draw 2d mini-map
+        if (canvas.width !== graphicsDevice.width)
+        {
+            canvas.width = graphicsDevice.width;
+        }
+        if (canvas.height !== graphicsDevice.height)
+        {
+            canvas.height = graphicsDevice.height;
+        }
+        ctx.beginFrame();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.translate(canvas.width - sceneWidth * scaleX - 2, 2);
+
+        ctx.strokeStyle = "#000000";
+        ctx.strokeRect(0, 0, sceneWidth * scaleX, sceneHeight * scaleY);
+
+        var instanceMetrics = manager.gatherInstanceMetrics();
+        var count = instanceMetrics.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var metric = instanceMetrics[i];
+            var extents = metric.instance.renderable.getWorldExtents();
+            var x = (extents[0] + extents[3]) / 2 * scaleX;
+            var z = (extents[2] + extents[5]) / 2 * scaleY;
+            ctx.strokeStyle = metric.active    ? "#00ff00" :
+                              metric.allocated ? "#ffff00" :
+                                                 "#ff0000";
+            ctx.strokeRect(x - 0.5, z - 0.5, 1, 1);
+        }
+
+        var pos = mathDevice.m43Pos(mathDevice.m43Inverse(camera.viewMatrix));
+        ctx.strokeStyle = "#ffffff";
+        ctx.strokeRect(pos[0] * scaleX - 0.5, pos[2] * scaleY - 0.5, 1, 1);
+        ctx.endFrame();
 
         graphicsDevice.endFrame();
         previousFrameTime = currentTime;
@@ -414,6 +406,8 @@ TurbulenzEngine.onload = function onloadFn()
     function loadAssets()
     {
         shaderManager.load("shaders/debug.cgfx");
+        shaderManager.load("shaders/font.cgfx");
+        fontManager.load('fonts/hero.fnt');
 
         manager.preloadArchetype(archetype1);
         manager.preloadArchetype(archetype2);
@@ -424,6 +418,7 @@ TurbulenzEngine.onload = function onloadFn()
     {
         textureManager.setPathRemapping(table.urlMapping, table.assetPrefix);
         shaderManager.setPathRemapping(table.urlMapping, table.assetPrefix);
+        fontManager.setPathRemapping(table.urlMapping, table.assetPrefix);
         loadAssets();
     }
     function sessionCreated(gameSession)

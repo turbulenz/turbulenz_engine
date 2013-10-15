@@ -76,8 +76,6 @@ Create a new `ParticleRenderable`
 
 Set the :ref:`ParticleSystem <particlesystem>` to be rendered by this renderable. This method should not be used whilst the renderable is inside a :ref:`Scene <scene>`.
 
-This call will override any previous calls to `setSystem` or `setLazySystem`.
-
 **Syntax** ::
 
     renderable.setSystem(system);
@@ -94,8 +92,6 @@ This call will override any previous calls to `setSystem` or `setLazySystem`.
 **Summary**
 
 Assign a callback function to be used when the renderable is first made visible to assign a :ref:`ParticleSystem <particlesystem>` to be rendered from that point on.
-
-This call will override any previous calls to `setSystem` or `setLazySystem`.
 
 **Syntax** ::
 

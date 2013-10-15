@@ -774,8 +774,19 @@ class MinHeap<K,T>
         this.heap = [];
     }
 
-    clear(): void
+    clear(cb?: (T) => void): void
     {
+        // TODO pool heap elements.
+        if (cb)
+        {
+            var heap = this.heap;
+            var count = heap.length;
+            var i;
+            for (i = 0; i < count; i += 1)
+            {
+                cb(heap[i].data);
+            }
+        }
         this.heap = [];
     }
 
@@ -932,9 +943,9 @@ class TimeoutQueue<T>
         this.time = 0.0;
     }
 
-    clear(): void
+    clear(cb?: (T) => void): void
     {
-        this.heap.clear();
+        this.heap.clear(cb);
         this.time = 0.0;
     }
 
@@ -3134,6 +3145,10 @@ class ParticleBuilder
             var j;
             for (j = 0; j < seqCount; j += 1)
             {
+                if (!seq[j].attributes.hasOwnProperty(attr.name))
+                {
+                    continue;
+                }
                 var snap = seq[j].attributes[attr.name];
                 var k;
                 for (k = 0; k < dim; k += 1)
@@ -3859,6 +3874,7 @@ interface ParticleUpdater
              velocity  : FloatArray,
              userData  : number,
              time      : number): number;
+    createUserDataSeed(): number;
 }
 
 //
@@ -3909,15 +3925,15 @@ class DefaultParticleUpdater
 
         function checkV3(n): (any) => FloatArray
         {
-            return Parser.checkVector.bind(error, "default updater archetype", n, 3);
+            return Parser.checkVector.bind(null, error, "default updater archetype", n, 3);
         }
         function checkNumber(n): (any) => number
         {
-            return Parser.checkNumber.bind(error, "default updater archetype", n);
+            return Parser.checkNumber.bind(null, error, "default updater archetype", n);
         }
         function checkString(n): (any) => string
         {
-            return Parser.checkString.bind(error, "default updater archetype", n);
+            return Parser.checkString.bind(null, error, "default updater archetype", n);
         }
         function val<R>(x: R): () => R
         {
@@ -3947,6 +3963,10 @@ class DefaultParticleUpdater
         VMath.v3Copy(archetype.randomizedAcceleration, parameters["randomizedAcceleration"]);
     }
 
+    createUserDataSeed()
+    {
+        return (Math.random() * 0xff) << 16;
+    }
     static createUserData(randomizeAcceleration = false, seed = 0)
     {
         return ((<any>randomizeAcceleration) << 25) | (seed << 16);
@@ -4134,7 +4154,8 @@ interface ParticleRenderer
     setAnimationParameters(
         system: ParticleSystem,
         definition: { attribute: { [name: string]: AttributeRange } }
-    ): void
+    ): void;
+    createUserDataSeed(): number;
 }
 
 //
@@ -4197,19 +4218,19 @@ class DefaultParticleRenderer
         // Pre: delta is a non-null object. Manager will guarantee this.
         function checkV2(n): (any) => FloatArray
         {
-            return Parser.checkVector.bind(error, "default renderer archetype", n, 2);
+            return Parser.checkVector.bind(null, error, "default renderer archetype", n, 2);
         }
         function checkNumber(n): (any) => number
         {
-            return Parser.checkNumber.bind(error, "default renderer archetype", n);
+            return Parser.checkNumber.bind(null, error, "default renderer archetype", n);
         }
         function checkBoolean(n): (any) => boolean
         {
-            return Parser.checkBoolean.bind(error, "default renderer archetype", n);
+            return Parser.checkBoolean.bind(null, error, "default renderer archetype", n);
         }
         function checkString(n): (any) => string
         {
-            return Parser.checkString.bind(error, "default renderer archetype", n);
+            return Parser.checkString.bind(null, error, "default renderer archetype", n);
         }
         function val<R>(x: R): () => R
         {
@@ -4252,6 +4273,10 @@ class DefaultParticleRenderer
         parameters["texture"] = textures["texture0"];
     }
 
+    createUserDataSeed()
+    {
+        return (Math.random() * 0xff) << 16;
+    }
     static createUserData(params: {
         facing?              : string;
         randomizeOrientation?: boolean;
@@ -6180,7 +6205,6 @@ class ParticleRenderable
         }
 
         this.system = system;
-        this.lazySystem = null;
 
         if (system)
         {
@@ -6213,6 +6237,24 @@ class ParticleRenderable
             parameters.setVertexBuffer(0, system.geometry.vertexBuffer);
         }
     }
+}
+
+interface ParticleEmitter
+{
+    enabled: boolean;
+    sync(synchronizer: ParticleSynchronizer,
+         system      : ParticleSystem,
+         timeStep    : number);
+    reset(): void;
+}
+interface ParticleSynchronizer
+{
+    emitters: Array<ParticleEmitter>;
+    renderable: ParticleRenderable;
+    addEmitter(emitter: ParticleEmitter): void;
+    removeEmitter(emitter: ParticleEmitter): void;
+    synchronize(system: ParticleSystem, frameStep: number, timeStep: number): void;
+    reset(): void;
 }
 
 //
@@ -6402,6 +6444,20 @@ class DefaultParticleSynchronizer
         {
             this.emitters.splice(index, 1);
         }
+    }
+
+    reset()
+    {
+        var emitters = this.emitters;
+        var count = emitters.length;
+        while (count !== 0)
+        {
+            count -= 1;
+            this.removeEmitter(emitters[count]);
+        }
+        this.offsetTime = 0;
+        // TODO pool event objects.
+        this.events.clear();
     }
 
     constructor() {}
@@ -6788,6 +6844,11 @@ class DefaultParticleEmitter
         Types.copy(archetype.velocity, this.velocity);
     }
 
+    reset(): void
+    {
+        this.bursting = null;
+    }
+
     sync(emitter: DefaultParticleSynchronizer, system: ParticleSystem, timeStep: number): void
     {
         var particle = this.particle;
@@ -7074,7 +7135,7 @@ class DefaultParticleEmitter
                         velocity: vel,
                         lifeTime: lifeTime + creationTime,
                         animationRange: anim,
-                        userData: particle.userData,
+                        userData: particle.userData | system.renderer.createUserDataSeed() | system.updater.createUserDataSeed(),
                         forceCreation: this.forceCreation,
                     },
 
@@ -7153,7 +7214,32 @@ interface ParticleArchetype
     emitters: Array<{ name: string; particleName: string }>;
 
     // used by manager. User need not know this even exists.
-    context: any;
+    context: ParticleManagerContext;
+}
+
+interface ParticleManagerContext
+{
+    textures    : { [name: string]: Texture };
+    definition  : ParticleSystemAnimation;
+    renderer    : ParticleRenderer;
+    updater     : ParticleUpdater;
+    geometry    : ParticleGeometry;
+    instances   : Array<ParticleInstance>;
+    instancePool: Array<ParticleInstance>;
+    systemPool  : Array<ParticleSystem>;
+}
+
+interface ParticleInstance
+{
+    archetype   : ParticleArchetype;
+    system      : ParticleSystem;
+    renderable  : ParticleRenderable;
+    synchronizer: ParticleSynchronizer;
+
+    // private
+    queued      : boolean;
+    creationTime: number;
+    lazySystem  : () => ParticleSystem;
 }
 
 //
@@ -7199,7 +7285,8 @@ class ParticleManager
     private synchronizers: { [name: string]: {
                                parseArchetype   : (BuildError, any) => any;
                                compressArchetype: (any) => any;
-                               value            : () => any } };
+                               value            : () => any;
+                               pool             : Array<any> } };
 
     // ParticleEmitters.
     //   parseArchetype, compressArchetype definitions.
@@ -7207,7 +7294,12 @@ class ParticleManager
     private emitters: { [name: string]: {
                         parseArchetype   : (BuildError, any) => any;
                         compressArchetype: (any) => any;
-                        value            : () => any } };
+                        value            : () => any;
+                        pool             : Array<any>} };
+
+    // ParticleArchetypes
+    //  list of those initialised with the manager.
+    private archetypes: Array<ParticleArchetype>;
 
     private systemContext: SharedRenderContext;
     private viewContext: SharedRenderContext;
@@ -7227,11 +7319,19 @@ class ParticleManager
 
     private time = 0;
     private timerCb: () => number;
+    private queue: TimeoutQueue<ParticleInstance>;
 
     update(timeStep: number)
     {
         this.time += timeStep;
-        // TODO temporary effect cleanup, queue management.
+
+        var queue = this.queue;
+        queue.update(timeStep);
+        while (queue.hasNext())
+        {
+            var instance = queue.next();
+            this.destroyInstance(instance, true);
+        }
     }
 
     initialize(scene: Scene, passIndex: number)
@@ -7248,6 +7348,7 @@ class ParticleManager
         ret.graphicsDevice = graphicsDevice;
         ret.textureManager = textureManager;
         ret.shaderManager = shaderManager;
+
         ret.renderers = {};
         ret.updaters = {};
         ret.systems = {};
@@ -7255,12 +7356,15 @@ class ParticleManager
         ret.synchronizers = {};
         ret.emitters = {};
         ret.geometries = {};
+        ret.archetypes = [];
 
         ret.systemContext = SharedRenderContext.create({ graphicsDevice: graphicsDevice });
         ret.viewContext = SharedRenderContext.create({ graphicsDevice: graphicsDevice });
 
         ret.getViewCb = ret.getView.bind(ret);
         ret.viewPool = [];
+
+        ret.queue = new TimeoutQueue();
 
         function preloadDefaultRenderer(defn)
         {
@@ -7358,11 +7462,143 @@ class ParticleManager
         return ret;
     }
 
-    registerGeometry(name: string, generator: ParticleGeometryFn): void
+    gatherInstanceMetrics(archetype?)
     {
-        this.geometries[name] = generator;
+        var time = this.timerCb();
+        var metrics, count, i;
+        if (archetype)
+        {
+            if (!archetype.context)
+            {
+                return [];
+            }
+            else
+            {
+                metrics = [];
+                var instances = archetype.context.instances;
+                count = instances.length;
+                for (i = 0; i < count; i += 1)
+                {
+                    var instance = instances[i];
+                    metrics.push({
+                        instance : instance,
+                        allocated: (<boolean><any>instance.system),
+                        active   : instance.system && instance.system.lastTime === time
+                    });
+                }
+                return metrics;
+            }
+        }
+        else
+        {
+            var archetypes = this.archetypes;
+            count = archetypes.length;
+            metrics = [];
+            for (i = 0; i < count; i += 1)
+            {
+                metrics = metrics.concat(this.gatherInstanceMetrics(archetypes[i]));
+            }
+            return metrics;
+        }
     }
-    getGeometry(maxParticles: number, name?: string): ParticleGeometry
+
+    gatherMetrics(archetype?)
+    {
+        var time = this.timerCb();
+        var metrics, context, i;
+        if (archetype)
+        {
+            if (!archetype.context)
+            {
+                return {
+                    numPooledSystems     : 0,
+                    numPooledInstances   : 0,
+                    numActiveInstances   : 0,
+                    numAllocatedInstances: 0,
+                    numInstances         : 0
+                };
+            }
+            else
+            {
+                var context = archetype.context;
+                var instances = context.instances;
+                var count = instances.length;
+                metrics = {
+                    numPooledSystems     : context.systemPool.length,
+                    numPooledInstances   : context.instancePool.length,
+                    numActiveInstances   : 0,
+                    numAllocatedInstances: 0,
+                    numInstances         : count
+                };
+                for (i = 0; i < count; i += 1)
+                {
+                    var instance = instances[i];
+                    if (instance.system)
+                    {
+                        metrics.numAllocatedInstances += 1;
+                        if (instance.system.lastTime === time)
+                        {
+                            metrics.numActiveInstances += 1;
+                        }
+                    }
+                }
+                return metrics;
+            }
+        }
+        else
+        {
+            var archetypes = this.archetypes;
+            var archetypeCount = archetypes.length;
+            metrics = {
+                // global values.
+                numInitializedArchetypes: archetypeCount,
+                numPooledViews          : this.viewPool.length,
+                numPooledSynchronizers  : 0,
+                numPooledEmitters       : 0,
+
+                // collective values
+                numPooledSystems        : 0,
+                numPooledInstances      : 0,
+                numActiveInstances      : 0,
+                numAllocatedInstances   : 0,
+                numInstances            : 0
+            };
+
+            for (i = 0; i < archetypeCount; i += 1)
+            {
+                var ms = this.gatherMetrics(archetypes[i]);
+                metrics.numPooledSystems      += ms.numPooledSystems;
+                metrics.numPooledInstances    += ms.numPooledInstances;
+                metrics.numActiveInstances    += ms.numActiveInstances;
+                metrics.numAllocatedInstances += ms.numAllocatedInstances;
+                metrics.numInstances          += ms.numInstances;
+            }
+
+            for (var f in this.emitters)
+            {
+                if (!this.emitters.hasOwnProperty(f))
+                {
+                    continue;
+                }
+                var emitter = this.emitters[f];
+                metrics.numPooledEmitters += emitter.pool.length;
+            }
+
+            for (var f in this.synchronizers)
+            {
+                if (!this.synchronizers.hasOwnProperty(f))
+                {
+                    continue;
+                }
+                var synchronizer = this.synchronizers[f];
+                metrics.numPooledSynchronizers += synchronizer.pool.length;
+            }
+        }
+
+        return metrics;
+    }
+
+    private getGeometry(maxParticles: number, name?: string): ParticleGeometry
     {
         name = name || "default";
         if (!this.geometries.hasOwnProperty(name))
@@ -7383,7 +7619,12 @@ class ParticleManager
             return geometry;
         }
     }
-    getRenderer(name?: string): ParticleRenderer
+    registerGeometry(name: string, generator: ParticleGeometryFn): void
+    {
+        this.geometries[name] = generator;
+    }
+
+    private getRenderer(name?: string): ParticleRenderer
     {
         name = name || "default";
         if (!this.renderers.hasOwnProperty(name))
@@ -7410,7 +7651,8 @@ class ParticleManager
             geometry         : geometry
         };
     }
-    getUpdater(name?: string): ParticleUpdater
+
+    private getUpdater(name?: string): ParticleUpdater
     {
         name = name || "default";
         if (!this.updaters.hasOwnProperty(name))
@@ -7436,7 +7678,8 @@ class ParticleManager
             value            : generator
         };
     }
-    getAnimationSystem(name?: string): any
+
+    private getAnimationSystem(name?: string): any
     {
         return this.systems[name || "default"];
     }
@@ -7450,6 +7693,7 @@ class ParticleManager
         }
         this.systems[name] = parsed;
     }
+
     computeAnimationLifeTime(name?: string): any
     {
         var animation = this.getParticleAnimation(name).animation;
@@ -7462,7 +7706,8 @@ class ParticleManager
         }
         return time;
     }
-    getParticleAnimation(name?: string): any
+
+    private getParticleAnimation(name?: string): any
     {
         return this.particles[name || "default"];
     }
@@ -7476,28 +7721,58 @@ class ParticleManager
         }
         this.particles[definition.name] = parsed;
     }
-    getEmitter(name?: string): any
+
+    private getEmitter(name?: string): any
     {
-        return this.emitters[name || "default"].value();
+        name = name || "default";
+        var emitter = this.emitters[name];
+        var ret;
+        if (emitter.pool.length > 0)
+        {
+            ret = emitter.pool.pop();
+        }
+        else
+        {
+            ret = emitter.value();
+        }
+        // store name for pooling.
+        ret.name = name;
+        return ret;
     }
     registerEmitter(name, parser, compressor, generator): void
     {
         this.emitters[name] = {
             parseArchetype   : parser,
             compressArchetype: compressor,
-            value            : generator
+            value            : generator,
+            pool             : []
         };
     }
-    getSynchronizer(name?: string): any
+
+    private getSynchronizer(name?: string): any
     {
-        return this.synchronizers[name || "default"].value();
+        name = name || "default";
+        var synchronizer = this.synchronizers[name];
+        var ret;
+        if (synchronizer.pool.length > 0)
+        {
+            ret = synchronizer.pool.pop();
+        }
+        else
+        {
+            ret = synchronizer.value();
+        }
+        // store name for pooling.
+        ret.name = name;
+        return ret;
     }
     registerSynchronizer(name, parser, compressor, generator): void
     {
         this.synchronizers[name] = {
             parseArchetype   : parser,
             compressArchetype: compressor,
-            value            : generator
+            value            : generator,
+            pool             : []
         };
     }
 
@@ -7540,15 +7815,13 @@ class ParticleManager
         }
 
         var context = archetype.context;
-        if (!context)
-        {
-            context = {};
-        }
-        if (context.buildOnce)
+        if (context)
         {
             return;
         }
-        context.builtOnce = true;
+
+        context = <any>{};
+        this.archetypes.push(archetype);
 
         var textureManager = this.textureManager;
         var system = this.getAnimationSystem(archetype.animationSystem);
@@ -7642,22 +7915,58 @@ class ParticleManager
     {
         this.initializeArchetype(archetype);
         var context = archetype.context;
+
         var pool = context.instancePool;
         var instance;
         if (pool.length > 0)
         {
             instance = pool.pop();
-            // TODO
-            return null;
         }
         else
         {
-            // TODO
             instance = this.createNewInstance(archetype);
-            return instance;
         }
+        this.buildSynchronizer(archetype, instance);
 
-        // TODO timeouts.
+        instance.queued = (timeout !== undefined);
+        instance.creationTime = this.timerCb();
+        if (instance.queued)
+        {
+            this.queue.insert(instance, timeout);
+        }
+        context.instances.push(instance);
+
+        return instance;
+    }
+
+    static m43Identity = VMath.m43BuildIdentity();
+    destroyInstance(instance, removedFromQueue=false)
+    {
+        var archetype = instance.archetype;
+        var context = archetype.context;
+
+        this.removeInstanceFromScene(instance);
+        this.releaseSynchronizer(instance);
+
+        var renderable = instance.renderable;
+        renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
+        if (renderable.system)
+        {
+            context.systemPool.push(renderable.system);
+            renderable.setSystem(null);
+        }
+        renderable.setLocalTransform(ParticleManager.m43Identity);
+
+        instance.system = null;
+
+        var instances = context.instances;
+        instances.splice(instances.indexOf(instance), 1);
+        context.instancePool.push(instance);
+
+        if (instance.queued && !removedFromQueue)
+        {
+            this.queue.remove(instance);
+        }
     }
 
     addInstanceToScene(instance, parent?)
@@ -7712,7 +8021,6 @@ class ParticleManager
             system.reset();
             system.endUpdate();
 
-            // TODO this is untested, probably incomplete.
             system.synchronizer = instance.synchronizer;
         }
         else
@@ -7743,6 +8051,12 @@ class ParticleManager
             context.renderer.setAnimationParameters(system, context.definition);
         }
         instance.system = system;
+
+        // Pretend that system was always being updated!
+        // TODO: should not delve into private aspects of System.
+        (<any>system).lastVisible = -1;
+        (<any>system).lastTime = instance.creationTime;
+
         return system;
     }
     getView()
@@ -7763,11 +8077,10 @@ class ParticleManager
 
     createNewInstance(archetype)
     {
-        var instance = {};
-        var context = archetype.context;
-        context.instances.push(instance);
+        var instance = {
+            archetype: archetype
+        };
         this.buildParticleSceneNode(archetype, instance);
-        this.buildSynchronizer(archetype, instance);
         return instance;
     }
 
@@ -7779,7 +8092,8 @@ class ParticleManager
             passIndex: this.passIndex,
             sharedRenderContext: this.viewContext
         });
-        renderable.setLazySystem(this.getSystem.bind(this, archetype, instance), archetype.system.center, archetype.system.halfExtents);
+        var lazySystem = this.getSystem.bind(this, archetype, instance);
+        renderable.setLazySystem(lazySystem, archetype.system.center, archetype.system.halfExtents);
         renderable.setLazyView(this.getViewCb);
 
         var sceneNode = SceneNode.create({
@@ -7791,6 +8105,31 @@ class ParticleManager
 
         instance.renderable = renderable;
         instance.sceneNode = sceneNode;
+    }
+
+    releaseSynchronizer(instance)
+    {
+        var synchronizer = instance.synchronizer;
+        instance.synchronizer = null;
+        synchronizer.renderable = null;
+        if (instance.system)
+        {
+            instance.system.synchronizer = null;
+        }
+        var emitters = synchronizer.emitters;
+        var count = emitters.length;
+        while (count > 0)
+        {
+            count -= 1;
+            var emitter = emitters[count];
+            synchronizer.removeEmitter(emitter);
+
+            emitter.reset();
+            this.emitters[emitter.name].pool.push(emitter);
+        }
+
+        synchronizer.reset();
+        this.synchronizers[synchronizer.name].pool.push(synchronizer);
     }
 
     buildSynchronizer(archetype, instance)
@@ -8018,9 +8357,9 @@ class ParticleManager
 
     parseArchetype(delta: any): ParticleArchetype
     {
-        var rendererName     = (delta && delta.renderer)     ? delta.renderer.name     : "default";
-        var updaterName      = (delta && delta.updater)      ? delta.updater.name      : "default";
-        var synchronizerName = (delta && delta.synchronizer) ? delta.synchronizer.name : "default";
+        var rendererName     = (delta && delta.renderer     && delta.renderer.name)     || "default";
+        var updaterName      = (delta && delta.updater      && delta.updater.name)      || "default";
+        var synchronizerName = (delta && delta.synchronizer && delta.synchronizer.name) || "default";
         var renderer     = this.renderers    [rendererName];
         var updater      = this.updaters     [updaterName];
         var synchronizer = this.synchronizers[synchronizerName];

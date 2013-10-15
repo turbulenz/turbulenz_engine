@@ -104,8 +104,7 @@ TurbulenzEngine.onload = function onloadFn()
     {
         canvas = Canvas.create(graphicsDevice);
     }
-
-    ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d');
 
     // Set the initial previous frametime for the first loop
     var previousFrameTime = TurbulenzEngine.time;
