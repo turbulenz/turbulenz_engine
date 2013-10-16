@@ -2521,8 +2521,8 @@ class ParticleBuilder
             var map = [
                 mx + (borderShrink / w),
                 my + (borderShrink / h),
-                mx + mw - (borderShrink / w),
-                my + mh - (borderShrink / h)
+                mw - 2 * (borderShrink / w),
+                mh - 2 * (borderShrink / h)
             ];
             var mapCount = ref.mapping.length;
             var k;
@@ -3210,10 +3210,10 @@ class ParticleBuilder
                 for (i = 0; i < count; i += 1)
                 {
                     var uv = uvs[i];
-                    uv[0] = map[0] + (uv[0] * (map[2] - map[0]));
-                    uv[1] = map[1] + (uv[1] * (map[3] - map[1]));
-                    uv[2] = map[0] + (uv[2] * (map[2] - map[0]));
-                    uv[3] = map[1] + (uv[3] * (map[3] - map[1]));
+                    uv[0] = map[0] + (uv[0] * map[2]);
+                    uv[1] = map[1] + (uv[1] * map[3]);
+                    uv[2] *= map[2];
+                    uv[3] *= map[3];
                 }
             }
         }
@@ -3598,8 +3598,8 @@ class SharedRenderContext
             ctx.bin,
             Math.round(uv[0] * ctxW),
             Math.round(uv[1] * ctxH),
-            Math.round((uv[2] - uv[0]) * ctxW),
-            Math.round((uv[3] - uv[1]) * ctxH)
+            Math.round(uv[2] * ctxW),
+            Math.round(uv[3] * ctxH)
         );
     }
 
@@ -3640,10 +3640,10 @@ class SharedRenderContext
         return {
             renderTargets: ctx.renderTargets,
             uvRectangle: [
-                (fit.x * invW),
-                (fit.y * invH),
-                (fit.x + fit.w) * invW,
-                (fit.y + fit.h) * invH
+                fit.x * invW,
+                fit.y * invH,
+                fit.w * invW,
+                fit.h * invH
             ],
             bin: fit.bin
         };
@@ -3702,10 +3702,10 @@ class SharedRenderContext
             elt.set({
                 renderTargets: newCtx.renderTargets,
                 uvRectangle: [
-                    (fit.x * invW),
-                    (fit.y * invH),
-                    (fit.x + fit.w) * invW,
-                    (fit.y + fit.h) * invH
+                    fit.x * invW,
+                    fit.y * invH,
+                    fit.w * invW,
+                    fit.h * invH
                 ],
                 bin: fit.bin
             });
@@ -5107,7 +5107,7 @@ class ParticleSystem
         var ts  = VMath.v2Build(tex.width, tex.height);
         var its = VMath.v2Reciprocal(ts);
         var rp  = VMath.v2Build(uv[0] * tex.width, uv[1] * tex.height);
-        var rs  = VMath.v2Build((uv[2] - uv[0]) * tex.width, (uv[3] - uv[1]) * tex.height);
+        var rs  = VMath.v2Build(uv[2] * tex.width, uv[3] * tex.height);
         var irs = VMath.v2Reciprocal(rs);
 
         var parameters;
@@ -5807,8 +5807,8 @@ class ParticleView
                 data, 0, 0,
                 uv[0] * tex.width,
                 uv[1] * tex.height,
-                (uv[2] - uv[0]) * tex.width,
-                (uv[3] - uv[1]) * tex.height
+                uv[2] * tex.width,
+                uv[3] * tex.height
             );
         }
     }

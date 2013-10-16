@@ -84,7 +84,7 @@ Any verification errors will be reported as late as possible, and any non-critic
         Default value 30. Specifies the frames per second that will be compiled into the texture for this particle. A higher fps means that the animation when used in a particle system will appear smoother, at the expense of a large texture being created to store the animation.
 
     `texture#` (Optional)
-        Provides a set of uv-rectangles of the form `[x0, y0, x1, y1]` defining the frames of a flip-book animation. These uv-rectangles must be normalised, but may be specified in pixel coordinates as long as an appropriate `texture#-size` field is defined to enable the compiler to normalise them for you.
+        Provides a set of uv-rectangles of the form `[x, y, w, h]` defining the frames of a flip-book animation. These uv-rectangles must be normalised, but may be specified in pixel coordinates as long as an appropriate `texture#-size` field is defined to enable the compiler to normalise them for you.
 
         These fields should match the system defined attributes. If the system has defined an attribute using `texture0`, and a particle has not defined uv-rectangles for `texture0`, then a default value of `[[0, 0, 1, 1]]` will be used.
 
@@ -201,11 +201,11 @@ Any verification errors will be reported as late as possible, and any non-critic
         var uvMap = {
             "texture0": [
                 /*particle 0*/ [0, 0, 1, 0.5],
-                /*particle 1*/ [0, 0.5, 1, 1]
+                /*particle 1*/ [0, 0.5, 1, 0.5]
             ]
         };
 
-    uv-maps are declared by a :ref:`Vector4 <v4object>` object of the form `[x0, y0, x1, y1]` in normalised texture coordinates.
+    uv-maps are declared by a :ref:`Vector4 <v4object>` object of the form `[x, y, w, h]` in normalised texture coordinates.
 
     Use of this parameter enables re-use of particle animations amongst many systems as each individual particle animation can assume use of a full texture instead of requiring foresight into how its texture is packed together with others later on.
 
@@ -302,4 +302,4 @@ The resultant object contains the following fields:
     The packed :ref:`Texture <texture>` storing all unique input textures
 
 ``uvMap``
-    An Array of :ref:`Vector4 <v4object>` objects storing the uv-rectangle of each corresponding input texture in the format `[x0, y0, x1, y1]`
+    An Array of :ref:`Vector4 <v4object>` objects storing the uv-rectangle of each corresponding input texture in the format `[x, y, w, h]`

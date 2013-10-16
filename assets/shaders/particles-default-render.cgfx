@@ -168,7 +168,7 @@ void vp_render( in float2 inData     : TEXCOORD0,
 
     float4 texuv = getUV(animTime);
     // swap y-coordinates to avoid texture-flip
-    outUV = texuv.xw + (quadVertex[inData.x] + 1.0) * 0.5 * (texuv.zy - texuv.xw);
+    outUV = texuv.xy + (quadVertex[inData.x] * float2(1, -1) + 1.0) * 0.5 * texuv.zw;
     outColor = getColor(animTime);
 
     // random alpha pertubation
