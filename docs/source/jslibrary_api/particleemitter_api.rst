@@ -129,8 +129,8 @@ Apply emitter specific archetype parameters to this emitter. This is used by the
 ``archetype``
     The emitter specific archetype parameters to be applied.
 
-``particleDefn``
-    The definition object for the particle being emitted. This is the object returned by :ref:`ParticleBuilder.compile <particlebuilder>` as elements of the `particle` dictionary.
+``particle``
+    The definition objects for the particles in an archetype. This is the dictionary returned by :ref:`ParticleBuilder.compile <particlebuilder>`.
 
 .. index::
     pair: ParticleEmitter; getMaxLifeTime
@@ -278,14 +278,12 @@ Parameters controlling the emittance of particles.
 `particle`
 ----------
 
-Parameters about the particles appearances and life times.
+Parameters about the particles appearances and life times. This object is vastly different for the :ref:`ParticleArchetype <particlearchetype>` and is described seperately.
 
-**Fields**
+**Object Fields**
 
 ``animationRange`` (Default `[0, 1]`)
     The range of the animation texture used by this particle, this should be accessed from the :ref:`ParticleBuilder <particlebuilder>` compilation result.
-
-.. note :: This parameter is not supported on a ParticleArchetype, it will be set automatically by the manager.
 
 ``lifeTimeMin`` (Default `1`)
     The minimum life time of the emitted particles.
@@ -293,14 +291,15 @@ Parameters about the particles appearances and life times.
 ``lifeTimeMax`` (Default `1`)
     The maximum life time of the emitted particles. The actual life time varies uniformnly between the min and max values.
 
-.. note :: For ParticleArchetypes, these fields are only considered in the archetype if "useAnimationLifeTime` is false. Otherwise these will be computed based on other parameters of the archetype.
-
 ``userData`` (Default `0`)
     The `userData` applied when creating particles from this emitter.
 
 .. note :: This field should not contain randomized seed values, as these will be added automatically by the emitters.
 
-**Archetype specific fields**
+**Archetype Fields**
+
+``name``
+    `not-optional`. The name of the particle to be emitted, must exist in the :ref:`ParticleArchetype <particlearchetype>`.
 
 ``useAnimationLifeTime`` (Default `true`)
     If true, then the particle animation's life time will be used as a basis of setting the `lifeTimeMin` and `lifeTimeMax` parameters of the emitter when using this emitter with the :ref:`ParticleManager <particlemanager>`.
@@ -310,6 +309,17 @@ Parameters about the particles appearances and life times.
 
 ``lifeTimeScaleMax`` (Default `1`)
     If `useAnimationLifeTime` is true, then this scale will be applied to the animations life time to compute the required value of `lifeTimeMax`.
+
+``lifeTimeMin`` (Default `1`)
+    The minimum life time of the emitted particles when `useAnimationLifeTime` is false.
+
+``lifeTimeMax`` (Default `1`)
+    The maximum life time of the emitted particles when `useAnimationLifeTime` is false.
+
+``userData`` (Default `0`)
+    The `userData` applied when creating particles from this emitter.
+
+.. note :: This field should not contain randomized seed values, as these will be added automatically by the emitters.
 
 .. index::
     pair: DefaultParticleEmitter; position

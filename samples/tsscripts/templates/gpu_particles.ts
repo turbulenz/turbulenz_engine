@@ -192,7 +192,9 @@ TurbulenzEngine.onload = function onloadFn()
         },
         // define two emitters, one for each of our particles.
         emitters: [{
-            particleName: "smoke",
+            particle: {
+               name: "smoke",
+            },
             emittance: {
                 // we're going to emit particles 20 times per second.
                 rate: 20,
@@ -208,7 +210,9 @@ TurbulenzEngine.onload = function onloadFn()
                 conicalSpread: Math.PI * 0.25
             }
         }, {
-            particleName: "fire",
+            particle: {
+                name: "fire"
+            },
             emittance: {
                 rate: 30,
                 burstMin: 0,
@@ -278,7 +282,6 @@ TurbulenzEngine.onload = function onloadFn()
             }
         },
         emitters: [{
-            particleName: "spark",
             emittance: {
                 // After 1 second from the start of the effect, we're going to emit particles 40 times per second.
                 delay: 1,
@@ -288,6 +291,7 @@ TurbulenzEngine.onload = function onloadFn()
                 burstMax: 4
             },
             particle: {
+                name: "spark",
                 // Here we access functions of the updater and renderer that will be used, to set the userData
                 //    that will be applied to each particle emitted.
                 // We define that we want particles emitted by this emitter to have their acceleration randomize
@@ -322,7 +326,6 @@ TurbulenzEngine.onload = function onloadFn()
             }
         },
         {
-            particleName: "smoke",
             emittance: {
                 // We will emit particles 10 times per second.
                 rate: 10,
@@ -331,6 +334,7 @@ TurbulenzEngine.onload = function onloadFn()
                 burstMax: 4
             },
             particle: {
+                name: "smoke",
                 // Particles of this emitter will have their quads billboarded to face camera.
                 userData: DefaultParticleRenderer.createUserData({ facing: "billboard" }),
                 // Particles will live for between these amounts of time in seconds.

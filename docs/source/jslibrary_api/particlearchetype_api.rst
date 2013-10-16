@@ -67,7 +67,6 @@ Serialisation and Deserialisation of the archetypes should be done using the met
         emitters: [
             {
                 name: "default",
-                particleName: "particle-name",
                 ... emitter parameters
             }
             ...
@@ -209,9 +208,6 @@ The values shown above, are the basic default values for an archetype descriptio
 
     ``name`` (Default `"default"`)
         The name of a registered :ref:`ParticleEmitter <particleemitter>`.
-
-    ``particleName`` (The only `non`-optional field in the entire archetype!)
-        The name of the defined particle animation in this archetype to be emitted by this emitter.
 
     By default, there is a single emitter defined for a manager:
 

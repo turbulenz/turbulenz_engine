@@ -786,7 +786,7 @@ class MinHeap<K,T>
         this.heap = [];
     }
 
-    clear(cb?: (T) => void): void
+    clear(cb?: (data: T) => void): void
     {
         var heap = this.heap;
         var count = heap.length;
@@ -970,7 +970,7 @@ class TimeoutQueue<T>
         this.time = 0.0;
     }
 
-    clear(cb?: (T) => void): void
+    clear(cb?: (data: T) => void): void
     {
         this.heap.clear(cb);
         this.time = 0.0;
@@ -1728,6 +1728,19 @@ class Parser {
     static maybeField<R>(x: Object, n: string, run: (field: any) => R, def: () => R): R
     {
         return (x.hasOwnProperty(n)) ? run(x[n]) : def();
+    }
+
+    static runField<R>(error: BuildError, obj: string, x: Object, n: string, run: (field: any) => R): R
+    {
+        if (!x.hasOwnProperty(n))
+        {
+            error.error("No field '" + n + "' found on " + obj);
+            return null;
+        }
+        else
+        {
+            return run(<R>x[n]);
+        }
     }
 
     // [null, 1, 2] (dim 3) => VMath.v3Build(0, 1, 2)
@@ -3966,15 +3979,15 @@ class DefaultParticleUpdater
             return null;
         }
 
-        function checkV3(n): (any) => FloatArray
+        function checkV3(n): (_: any) => FloatArray
         {
             return Parser.checkVector.bind(null, error, "default updater archetype", n, 3);
         }
-        function checkNumber(n): (any) => number
+        function checkNumber(n): (_: any) => number
         {
             return Parser.checkNumber.bind(null, error, "default updater archetype", n);
         }
-        function checkString(n): (any) => string
+        function checkString(n): (_: any) => string
         {
             return Parser.checkString.bind(null, error, "default updater archetype", n);
         }
@@ -3982,7 +3995,7 @@ class DefaultParticleUpdater
         {
             return function () { return x; };
         }
-        function maybe<R>(n, x: (string) => (any) => R, y: () => R): R
+        function maybe<R>(n, x: (_: string) => (_: any) => R, y: () => R): R
         {
             return Parser.maybeField(delta, n, x(n), y);
         }
@@ -4203,7 +4216,7 @@ interface ParticleRenderer
     applyArchetype(textureManager: TextureManager,
                    system        : ParticleSystem,
                    archetype     : ParticleArchetype,
-                   textures      : (string) => Texture): void;
+                   textures      : (name: string) => Texture): void;
 }
 
 //
@@ -4264,19 +4277,19 @@ class DefaultParticleRenderer
         }
 
         // Pre: delta is a non-null object. Manager will guarantee this.
-        function checkV2(n): (any) => FloatArray
+        function checkV2(n): (_: any) => FloatArray
         {
             return Parser.checkVector.bind(null, error, "default renderer archetype", n, 2);
         }
-        function checkNumber(n): (any) => number
+        function checkNumber(n): (_: any) => number
         {
             return Parser.checkNumber.bind(null, error, "default renderer archetype", n);
         }
-        function checkBoolean(n): (any) => boolean
+        function checkBoolean(n): (_: any) => boolean
         {
             return Parser.checkBoolean.bind(null, error, "default renderer archetype", n);
         }
-        function checkString(n): (any) => string
+        function checkString(n): (_: any) => string
         {
             return Parser.checkString.bind(null, error, "default renderer archetype", n);
         }
@@ -4284,7 +4297,7 @@ class DefaultParticleRenderer
         {
             return function () { return x; };
         }
-        function maybe<R>(n, x: (string) => (any) => R, y: () => R): R
+        function maybe<R>(n, x: (string) => (_: any) => R, y: () => R): R
         {
             return Parser.maybeField(delta, n, x(n), y);
         }
@@ -4511,15 +4524,15 @@ class ParticleSystem
             return null;
         }
 
-        function checkV3(n): (any) => FloatArray
+        function checkV3(n): (_: any) => FloatArray
         {
             return Parser.checkVector.bind(null, error, "system archetype", n, 3);
         }
-        function checkNumber(n): (any) => number
+        function checkNumber(n): (_: any) => number
         {
             return Parser.checkNumber.bind(null, error, "system archetype", n);
         }
-        function checkBoolean(n): (any) => boolean
+        function checkBoolean(n): (_: any) => boolean
         {
             return Parser.checkBoolean.bind(null, error, "system archetype", n);
         }
@@ -4527,7 +4540,7 @@ class ParticleSystem
         {
             return function () { return x; };
         }
-        function maybe<R>(n, x: (string) => (any) => R, y: () => R): R
+        function maybe<R>(n, x: (string) => (_: any) => R, y: () => R): R
         {
             return Parser.maybeField(delta, n, x(n), y);
         }
@@ -6318,7 +6331,7 @@ interface ParticleEmitter
     burst  (count?) : void;
     timeout(timeout): void;
 
-    applyArchetype(archetype: any, particleDef: ParticleDefn): void;
+    applyArchetype(archetype: any, particleDef: { [name: string]: ParticleDefn }): void;
 
     getMaxLifeTime (): number;
     getMaxParticles(): number;
@@ -6569,6 +6582,7 @@ interface DefaultEmitterArchetype
         burstMax: number;
     };
     particle: {
+        name                : string;
         lifeTimeMin         : number;
         lifeTimeMax         : number;
         useAnimationLifeTime: boolean;
@@ -6681,6 +6695,7 @@ class DefaultParticleEmitter
             burstMax: 1
         },
         particle: {
+            name                : <string>null,
             lifeTimeMin         : 1,
             lifeTimeMax         : 1,
             useAnimationLifeTime: true,
@@ -6715,11 +6730,12 @@ class DefaultParticleEmitter
     {
         return ParticleManager.recordDelta(DefaultParticleEmitter.template, archetype);
     }
-    static parseArchetype(error: BuildError, delta: any): DefaultEmitterArchetype
+    static parseArchetype(error: BuildError, delta: any, particles: { [name: string]: any }): DefaultEmitterArchetype
     {
         if (Types.isNullUndefined(delta))
         {
-            return Types.copy(DefaultParticleEmitter.template);
+            error.error("archetype cannot be null for DefaultParticleEmitter");
+            return null;
         }
 
         if (!Types.isObject(delta))
@@ -6728,19 +6744,19 @@ class DefaultParticleEmitter
             return null;
         }
 
-        function checkV3(n, field=""): (any) => FloatArray
+        function checkV3(n, field=""): (_: any) => FloatArray
         {
             return Parser.checkVector.bind(null, error, "default emitter archetype" + field, n, 3);
         }
-        function checkNumber(n, field=""): (any) => number
+        function checkNumber(n, field=""): (_: any) => number
         {
             return Parser.checkNumber.bind(null, error, "default emitter archetype" + field, n);
         }
-        function checkBoolean(n, field=""): (any) => boolean
+        function checkBoolean(n, field=""): (_: any) => boolean
         {
             return Parser.checkBoolean.bind(null, error, "default emitter archetype" + field, n);
         }
-        function checkDistribution(n, field=""): (any) => string
+        function checkDistribution(n, field=""): (_: any) => string
         {
             return function (val: any): string
             {
@@ -6757,7 +6773,7 @@ class DefaultParticleEmitter
         {
             return function () { return x; };
         }
-        function maybe<R>(delta, n, x: (string) => (any) => R, y: () => R): R
+        function maybe<R>(delta, n, x: (_: string) => (_: any) => R, y: () => R): R
         {
             return Parser.maybeField(delta, n, x(n), y);
         }
@@ -6780,7 +6796,7 @@ class DefaultParticleEmitter
                     return null;
                 }
 
-                function checkNum(n): (any) => number
+                function checkNum(n): (_: any) => number
                 {
                     return checkNumber(n, " emittance");
                 }
@@ -6795,11 +6811,12 @@ class DefaultParticleEmitter
                     burstMax: maybe(delta, "burstMax", checkNum, val(1))
                 };
             }, Types.copy.bind(null, DefaultParticleEmitter.template.emittance)),
-            particle: Parser.maybeField(delta, "particle", function (delta)
+            particle: Parser.runField(error, "default emitter", delta, "particle", function (delta)
             {
                 if (Types.isNullUndefined(delta))
                 {
-                    return Types.copy(DefaultParticleEmitter.template.particle);
+                    error.error("default emitter archetype particle must be defined");
+                    return null;
                 }
                 if (!Types.isObject(delta))
                 {
@@ -6807,20 +6824,27 @@ class DefaultParticleEmitter
                     return null;
                 }
 
-                function checkNum(n): (any) => number
+                function checkNum(n): (_: any) => number
                 {
                     return checkNumber(n, " particle");
                 }
-                function checkBool(n): (any) => boolean
+                function checkBool(n): (_: any) => boolean
                 {
                     return checkBoolean(n, " particle");
                 }
 
                 Parser.extraFields(error, "default emitter archetype particle", delta,
                     ["lifeTimeMin", "lifeTimeMax", "userData", "useAnimationLifeTime",
-                     "lifeTimeScaleMin", "lifeTimeScaleMax"]);
+                     "lifeTimeScaleMin", "lifeTimeScaleMax", "name"]);
+
+                var name = Parser.stringField(error, "default emitter archetype particle", delta, "name");
+                if (name && !particles.hasOwnProperty(name))
+                {
+                    error.error("Emitter references non-existant particle of system '" + name + "'");
+                }
 
                 var ret = {
+                    name                : name,
                     lifeTimeMin         : maybe(delta, "lifeTimeMin"         , checkNum , val(1)),
                     lifeTimeMax         : maybe(delta, "lifeTimeMax"         , checkNum , val(1)),
                     useAnimationLifeTime: maybe(delta, "useAnimationLifeTime", checkBool, val(true)),
@@ -6829,7 +6853,7 @@ class DefaultParticleEmitter
                     userData            : maybe(delta, "userData"            , checkNum , val(0))
                 };
                 return ret;
-            }, Types.copy.bind(null, DefaultParticleEmitter.template.particle)),
+            }),
             position: Parser.maybeField(delta, "position", function (delta)
             {
                 if (Types.isNullUndefined(delta))
@@ -6842,19 +6866,19 @@ class DefaultParticleEmitter
                     return null;
                 }
 
-                function checkNum(n): (any) => number
+                function checkNum(n): (_: any) => number
                 {
                     return checkNumber(n, " position");
                 }
-                function checkDist(n): (any) => string
+                function checkDist(n): (_: any) => string
                 {
                     return checkDistribution(n, " position");
                 }
-                function checkVec3(n): (any) => FloatArray
+                function checkVec3(n): (_: any) => FloatArray
                 {
                     return checkV3(n, " position");
                 }
-                function checkBool(n): (any) => boolean
+                function checkBool(n): (_: any) => boolean
                 {
                     return checkBoolean(n, " position");
                 }
@@ -6916,7 +6940,7 @@ class DefaultParticleEmitter
             }, Types.copy.bind(null, DefaultParticleEmitter.template.velocity))
         };
     }
-    applyArchetype(archetype, particleDefn)
+    applyArchetype(archetype, particleDefns)
     {
         // This function is used to simplify constructor also.
         // so can't assume that we're initialized already.
@@ -6926,6 +6950,8 @@ class DefaultParticleEmitter
         this.emittance = <any>Types.copyFields(archetype.emittance, this.emittance);
         this.position  = <any>Types.copyFields(archetype.position, this.position);
         this.velocity  = <any>Types.copyFields(archetype.velocity, this.velocity);
+
+        var particleDefn = particleDefns[archetype.particle.name];
 
         // determine true min and max life times.
         var particle = archetype.particle;
@@ -7295,14 +7321,17 @@ class DefaultParticleEmitter
     }
 
     constructor() {}
+    static createArchetype =
+        DefaultParticleEmitter.parseArchetype(
+            null, // no errors generated, don't need a BuildError object
+            { particle: { name: "#", useAnimationLifeTime: false } },
+            { "#": "" }
+        );
+    static createParticleDefns = <any>{ "#": { animationRange: [0, 1] } };
     static create()
     {
         var ret = new DefaultParticleEmitter();
-        var archetype = DefaultParticleEmitter.parseArchetype(null, null);
-        archetype.particle.useAnimationLifeTime = false;
-        ret.applyArchetype(DefaultParticleEmitter.parseArchetype(null, null), <any>{
-            animationRange: [0, 1]
-        });
+        ret.applyArchetype(DefaultParticleEmitter.createArchetype, DefaultParticleEmitter.createParticleDefns);
         ret.enabled = false;
         ret.bursting = null;
 
@@ -7354,7 +7383,7 @@ interface ParticleArchetype
             textures  : Array<Array<string>>;
         }
     };
-    emitters: Array<{ name: string; particleName: string }>;
+    emitters: Array<{ name: string }>;
 
     // manager stored data.
     context: ParticleManagerContext;
@@ -7362,21 +7391,22 @@ interface ParticleArchetype
 
 interface ParticleManagerContext
 {
-    packed      : Array<string>;
-    textures    : { [name: string]: any }; // each element is either Texture, or () => Texture
-    getTextureCb: (string) => Texture;
-    definition  : ParticleSystemAnimation;
-    renderer    : ParticleRenderer;
-    updater     : ParticleUpdater;
-    geometry    : ParticleGeometry;
-    instances   : Array<ParticleInstance>;
-    instancePool: Array<ParticleInstance>;
-    systemPool  : Array<ParticleSystem>;
+    packed       : Array<string>;
+    textures     : { [name: string]: any }; // each element is either Texture, or () => Texture
+    getTextureCb : (type: string) => Texture;
+    definition   : ParticleSystemAnimation;
+    particleDefns: { [name: string]: ParticleDefn };
+    renderer     : ParticleRenderer;
+    updater      : ParticleUpdater;
+    geometry     : ParticleGeometry;
+    instances    : Array<ParticleInstance>;
+    instancePool : Array<ParticleInstance>;
+    systemPool   : Array<ParticleSystem>;
 
     // computed from emitters for use if required.
-    maxParticles: number;
-    maxLifeTime : number;
-    maxSpeed    : number;
+    maxParticles : number;
+    maxLifeTime  : number;
+    maxSpeed     : number;
 }
 
 interface ParticleInstance
@@ -7413,9 +7443,9 @@ class ParticleManager
     //   geometry (the geometry type used)
     //   value (cached) : () => ParticleRenderer | ParticleRenderer
     private renderers: { [name: string]: {
-                            parseArchetype   : (BuildError, any) => any;
-                            compressArchetype: (any) => any;
-                            load          : (any, ShaderManager, TextureManager) => void;
+                            parseArchetype   : (_: BuildError, def: any) => any;
+                            compressArchetype: (_: any) => any;
+                            load             : (_: any, sm: ShaderManager, tm: TextureManager) => void;
                             value            : any;
                             geometry         : string } };
 
@@ -7424,17 +7454,17 @@ class ParticleManager
     //   loader (load assets a parsed archetype uses)
     //   value (cached) : () => ParticleUpdater | ParticleUpdater
     private updaters: { [name: string]: {
-                          parseArchetype   : (BuildError, any) => any;
-                          compressArchetype: (any) => any;
-                          load          : (any, ShaderManager, TextureManager) => void;
+                          parseArchetype   : (_: BuildError, def: any) => any;
+                          compressArchetype: (_: any) => any;
+                          load             : (_: any, sm: ShaderManager, tm: TextureManager) => void;
                           value            : any } };
 
     // ParticleSynchronizers.
     //   parseArchetype, compressArchetype definitions.
     //   value : () => ParticleSynchronizer
     private synchronizers: { [name: string]: {
-                               parseArchetype   : (BuildError, any) => any;
-                               compressArchetype: (any) => any;
+                               parseArchetype   : (_: BuildError, def: any) => any;
+                               compressArchetype: (_: any) => any;
                                value            : () => any;
                                pool             : Array<any> } };
 
@@ -7442,10 +7472,10 @@ class ParticleManager
     //   parseArchetype, compressArchetype definitions.
     //   value : () => ParticleEmitter
     private emitters: { [name: string]: {
-                        parseArchetype   : (BuildError, any) => any;
-                        compressArchetype: (any) => any;
+                        parseArchetype   : (_: BuildError, def: any, parts: { [name: string]: any }) => any;
+                        compressArchetype: (_: any) => any;
                         value            : () => any;
-                        pool             : Array<any>} };
+                        pool             : Array<any> } };
 
     // ParticleArchetypes
     //  list of those initialised with the manager.
@@ -7956,7 +7986,7 @@ class ParticleManager
         };
     }
 
-    loadArchetype(archetype: ParticleArchetype, onload?: (ParticleArchetype) => void): void
+    loadArchetype(archetype: ParticleArchetype, onload?: (_: ParticleArchetype) => void): void
     {
         var textureLoad, shaderLoad, loaded: any;
         if (onload)
@@ -8138,6 +8168,21 @@ class ParticleManager
             uvMap         : mapping,
             tweaks        : tweaks
         });
+
+        // build map from particle name to animation definition.
+        context.particleDefns = {};
+        j = 0;
+        for (var f in archetype.particles)
+        {
+            if (!archetype.particles.hasOwnProperty(f))
+            {
+                continue;
+            }
+            particle = archetype.particles[f];
+            context.particleDefns[f] = context.definition.particle[j];
+            j += 1;
+        }
+
         var renderer = archetype.renderer.name;
         context.renderer = this.getRenderer(renderer);
         context.updater  = this.getUpdater(archetype.updater.name);
@@ -8567,23 +8612,7 @@ class ParticleManager
         {
             template = archetypes[i];
             var emitter = this.getEmitter(template.name);
-            var index = 0;
-            for (var f in archetype.particles)
-            {
-                if (!archetype.particles.hasOwnProperty(f))
-                {
-                    continue;
-                }
-                else if (f === template.particleName)
-                {
-                    break;
-                }
-                else
-                {
-                    index += 1;
-                }
-            }
-            emitter.applyArchetype(template, context.definition.particle[index]);
+            emitter.applyArchetype(template, context.particleDefns);
             emitter.enable();
             synchronizer.addEmitter(emitter);
 
@@ -8774,18 +8803,15 @@ class ParticleManager
             var emitter = emitters[i];
 
             var emitterName = emitter.name;
-            var emitterParticleName = emitter.particleName;
 
             // remove extra fields before sub-compression.
             delete emitter.name;
-            delete emitter.particleName;
 
             var outEmitter = this.emitters[emitterName].compressArchetype(emitter);
             outEmitter.name = emitterName;
 
             // Add back again to avoid destroying archetype
             emitter.name         = emitterName;
-            emitter.particleName = emitterParticleName;
 
             if (emitterName !== "default")
             {
@@ -8835,7 +8861,7 @@ class ParticleManager
         }
 
         var error = new BuildError();
-        function checkString(n): (any) => string
+        function checkString(n): (_: any) => string
         {
             return Parser.checkString.bind(null, error, "archetype", n);
         }
@@ -8843,7 +8869,7 @@ class ParticleManager
         {
             return function () { return x; };
         }
-        function maybe<R>(delta, n, x: (string) => (any) => R, y: () => R): R
+        function maybe<R>(delta, n, x: (_: string) => (_: any) => R, y: () => R): R
         {
             return Parser.maybeField(delta, n, x(n), y);
         }
@@ -8883,14 +8909,14 @@ class ParticleManager
         }
 
         var self = this;
-        var archetype = {
-            system         : ParticleSystem.parseArchetype(error, delta && delta.system),
-            renderer       : renderer      .parseArchetype(error, delta && delta.renderer),
-            updater        : updater       .parseArchetype(error, delta && delta.updater),
-            synchronizer   : synchronizer  .parseArchetype(error, delta && delta.synchronizer),
-            animationSystem: animationSystem,
-            packedTextures : packedTextures,
-            particles      : !delta ? {} : Parser.maybeField(delta, "particles", function (particles)
+        var archetype = <any>{};
+        archetype.system          = ParticleSystem.parseArchetype(error, delta && delta.system);
+        archetype.renderer        = renderer      .parseArchetype(error, delta && delta.renderer);
+        archetype.updater         = updater       .parseArchetype(error, delta && delta.updater);
+        archetype.synchronizer    = synchronizer  .parseArchetype(error, delta && delta.synchronizer);
+        archetype.animationSystem = animationSystem;
+        archetype.packedTextures  = packedTextures;
+        archetype.particles       = !delta ? {} : Parser.maybeField(delta, "particles", function (particles)
             {
                 var ret = {};
                 for (var p in particles)
@@ -9011,10 +9037,10 @@ class ParticleManager
                     };
                 }
                 return ret;
-            }, val({})),
-            emitters: !delta ? [] : Parser.maybeField(delta, "emitters", function (emitters)
+            }, val({}));
+        archetype.emitters = !delta ? [] : Parser.maybeField(delta, "emitters", function (emitters)
             {
-                function checkString(n): (any) => string
+                function checkString(n): (_: any) => string
                 {
                     return Parser.checkString.bind(null, error, "archetype emitter", n);
                 }
@@ -9037,29 +9063,25 @@ class ParticleManager
                     {
                         throw "Emitter with name " + name + " has not been registered with manager";
                     }
-                    var particleName = Parser.stringField(error, "Archetype emitter", emitter, "particleName");
 
                     // Delete extra fields from emitter before parsing sub-archetype.
                     delete emitter.name;
-                    delete emitter.particleName;
 
-                    var parsed = emitterDef.parseArchetype(error, emitter);
+                    var parsed = emitterDef.parseArchetype(error, emitter, archetype.particles);
                     if (parsed)
                     {
                         parsed.name = name;
-                        parsed.particleName = particleName;
                         ret.push(parsed);
                     }
 
                     // add back fields to avoid destroying original delta.
                     emitter.name = name;
-                    emitter.particleName = particleName;
                 }
                 return ret;
-            }, val([])),
-            context: null
-        };
+            }, val([]));
+        archetype.context = null;
 
+        // set default texture-uvs and textures appropriately based on animation system.
         var particles = archetype.particles;
         var count = packedTextures.length;
         var i;
@@ -9114,20 +9136,6 @@ class ParticleManager
         if (delta && delta.synchronizer)
         {
             delta.synchronizer.name = synchronizerName;
-        }
-
-        // Verify all emitters reference valid particles.
-        // We do not require that all particles are referenced by emitters.
-        var emitters = archetype.emitters;
-        count = emitters.length;
-        for (i = 0; i < count; i += 1)
-        {
-            var emitter = emitters[i];
-            if (!archetype.particles.hasOwnProperty(emitter.particleName))
-            {
-                error.error("Emitter #" + i + " references non-existant particle of system '" +
-                            emitter.particleName + "'");
-            }
         }
 
         if (!error.empty(this.failOnWarnings))
