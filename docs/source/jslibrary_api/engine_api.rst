@@ -417,7 +417,7 @@ Returns immediately.
 
         var onLoadedData = function onLoadedDataFn(responseText, status)
         {
-            if (!responseText || status !== 200)
+            if (responseText && status === 200)
             {
                 var obj = JSON.parse(responseText);
             }
