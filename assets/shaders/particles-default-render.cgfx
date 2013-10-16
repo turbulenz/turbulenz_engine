@@ -77,7 +77,7 @@ float2 getScaleNoise(float2 uv, float t)
     t *= animatedScale;
     return (2.0 * tex2D(vnoiseTexture, uv + (float2(0.13936933642253284, 0.75842813239432871) * t)
                                            + float2(0.18285232875496157, 0.14858058188110593)).xw - 1.0)
-           * randomizedScale + 1.0;
+           * randomizedScale;
 }
 float getRotationNoise(float2 uv, float t) {
     t *= animatedRotation;
@@ -89,7 +89,7 @@ float getAlphaNoise(float2 uv, float t) {
     t *= animatedAlpha;
     return (2.0 * tex2D(vnoiseTexture, uv + (float2(0.25916925235651433, 0.09688800573348999) * t)
                                            + float2(0.83695788355544211, 0.90477761672809723)).w - 1.0)
-           * randomizedAlpha + 1.0;
+           * randomizedAlpha;
 }
 
 // -----------------------------------------------------------------------------
@@ -116,13 +116,14 @@ void vp_render( in float2 inData     : TEXCOORD0,
     float2 noiseUV = decodeByteUnsignedFloat2(data.z);
 
     float3 pos = (getPosition(vParticleState, particle, invTextureSize) * halfExtents) + center;
-    float2 inPosition = quadVertex[inData.x] * getScale(animTime) * 0.5;
 
+    float2 scale = getScale(animTime);
     // random scale pertubation
     if (bitSet(data.w, BIT5))
     {
-        inPosition *= getScaleNoise(noiseUV, life);
+        scale += getScaleNoise(noiseUV, life);
     }
+    float2 inPosition = quadVertex[inData.x] * scale * 0.5;
 
     float rad = getRotation(animTime);
     // random rotation pertubation
@@ -174,7 +175,7 @@ void vp_render( in float2 inData     : TEXCOORD0,
     // random alpha pertubation
     if (bitSet(data.w, BIT3))
     {
-        outColor.w *= getAlphaNoise(noiseUV, life);
+        outColor.w += getAlphaNoise(noiseUV, life);
     }
 }
 

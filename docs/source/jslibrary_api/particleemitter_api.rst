@@ -334,7 +334,7 @@ Parameters about the spawn positions of particles in this emitter.
 ``position`` (Default `[0, 0, 0]`)
     The base position of particles emitted in the particle system.
 
-``spherical`` (Default `true`)
+``spherical`` (Default `false`)
     If true, then particle position will be selected from within a sphere.
 
     If false, then particle positions will be selected from within a disc.

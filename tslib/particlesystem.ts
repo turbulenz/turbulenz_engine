@@ -1489,7 +1489,7 @@ class Types {
     {
         if (Types.isTypedArray(from) && !to)
         {
-            return from.subarray(0, from.length);
+            return new from.constructor(from);
         }
         else if (Types.isArray(from))
         {
@@ -1549,7 +1549,7 @@ class Parser {
                 offsets: [-1],
                 fun: function (vs, _1, _2)
                 {
-                    return vs[0];
+                    return vs[0].concat();
                 }
             };
         },
@@ -1562,7 +1562,7 @@ class Parser {
                 {
                     if (!vs[1])
                     {
-                        return vs[0];
+                        return vs[0].concat();
                     }
                     else
                     {
@@ -6705,7 +6705,7 @@ class DefaultParticleEmitter
         },
         position: {
             position          : [0, 0, 0],
-            spherical         : true,
+            spherical         : false,
             normal            : [0, 1, 0],
             radiusMin         : 0,
             radiusMax         : 0,
