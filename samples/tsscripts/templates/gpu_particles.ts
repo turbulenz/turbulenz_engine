@@ -176,9 +176,7 @@ TurbulenzEngine.onload = function onloadFn()
         system: {
             // define local system extents to be from (-3, 0, -3) to (3, 12, 3)
             center      : [0, 6, 0],
-            halfExtents : [3, 6, 3],
-            // allow system to use up to 128 particles.
-            maxParticles: 128
+            halfExtents : [3, 6, 3]
         },
         particles: {
             // define two particles to use, both of these define their own texture.
@@ -228,11 +226,7 @@ TurbulenzEngine.onload = function onloadFn()
         system: {
             // define local system extents to be from (-5, 0, -5) to (5, 10, 5)
             center     : [0, 5, 0],
-            halfExtents: [5, 5, 5],
-            // allow system to use up to 250 particles.
-            maxParticles: 250,
-            // allow the local speed of particles to reach up 20 units per second.
-            maxSpeed: 20
+            halfExtents: [5, 5, 5]
         },
         renderer: {
             // we're going to use the default renderer with the "additive" blend mode.

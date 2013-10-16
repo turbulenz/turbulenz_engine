@@ -132,6 +132,48 @@ Apply emitter specific archetype parameters to this emitter. This is used by the
 ``particleDefn``
     The definition object for the particle being emitted. This is the object returned by :ref:`ParticleBuilder.compile <particlebuilder>` as elements of the `particle` dictionary.
 
+.. index::
+    pair: ParticleEmitter; getMaxLifeTime
+
+`getMaxLifeTime`
+----------------
+
+**Summary**
+
+Get the maximum life time required to fully support the intended behaviour of this emitter.
+
+**Syntax** ::
+
+    var maxLifeTime = emitter.getMaxLifeTime();
+
+.. index::
+    pair: ParticleEmitter; getMaxParticles
+
+`getMaxParticles`
+-----------------
+
+**Summary**
+
+Get the maximum amount of particles required to fully support the intended behaviour of this emitter.
+
+**Syntax** ::
+
+    var maxParticles = emitter.getMaxParticles();
+
+.. index::
+    pair: ParticleEmitter; getMaxSpeed
+
+`getMaxSpeed`
+-------------
+
+**Summary**
+
+Get the maximum speed required for particles to fully support the intended behaviour of this emitter.
+
+**Syntax** ::
+
+    var maxSpeed = emitter.getMaxSpeed();
+
 Properties
 ==========
 

@@ -4102,9 +4102,10 @@ class DefaultParticleUpdater
         var h1 = maxSpeed / halfExtents[1];
         var h2 = maxSpeed / halfExtents[2];
 
-        var ax = acceleration[0] / maxSpeed;
-        var ay = acceleration[1] / maxSpeed;
-        var az = acceleration[2] / maxSpeed;
+        var im = maxSpeed === 0 ? 0 : (1 / maxSpeed);
+        var ax = acceleration[0] * im;
+        var ay = acceleration[1] * im;
+        var az = acceleration[2] * im;
 
         var sx = shift[0];
         var sy = shift[1];
@@ -4486,12 +4487,12 @@ class ParticleSystem
     static template = {
         center         : [0, 0, 0],
         halfExtents    : [1, 1, 1],
-        maxSpeed       : 10,
-        maxParticles   : 64,
+        maxSpeed       : <number>null,
+        maxParticles   : <number>null,
         zSorted        : false,
         maxSortSteps   : 136,
         trackingEnabled: false,
-        maxLifeTime    : 2
+        maxLifeTime    : <number>null
     };
     static compressArchetype(archetype: ParticleSystemArchetype): any
     {
@@ -4538,12 +4539,12 @@ class ParticleSystem
         return {
             center         : maybe("center"         , checkV3     , VMath.v3BuildZero),
             halfExtents    : maybe("halfExtents"    , checkV3     , VMath.v3BuildOne),
-            maxSpeed       : maybe("maxSpeed"       , checkNumber , val(10)),
-            maxParticles   : maybe("maxParticles"   , checkNumber , val(64)),
+            maxSpeed       : maybe("maxSpeed"       , checkNumber , val(null)),
+            maxParticles   : maybe("maxParticles"   , checkNumber , val(null)),
             zSorted        : maybe("zSorted"        , checkBoolean, val(false)),
             maxSortSteps   : maybe("maxSortSteps"   , checkNumber , val(136)),
             trackingEnabled: maybe("trackingEnabled", checkBoolean, val(false)),
-            maxLifeTime    : maybe("maxLifeTime"    , checkNumber , val(2))
+            maxLifeTime    : maybe("maxLifeTime"    , checkNumber , val(null))
         };
     }
 
@@ -4624,6 +4625,14 @@ class ParticleSystem
             if (maxParticles > 66536)
             {
                 maxParticles = 66536;
+            }
+            if (maxParticles <= 1)
+            {
+                return {
+                    maxMergeStage: null,
+                    textureSize  : [1, 1],
+                    capacity     : 1
+                };
             }
             dimx = Math.ceil(Math.sqrt(maxParticles));
             dimy = Math.ceil(maxParticles / dimx);
@@ -5193,14 +5202,14 @@ class ParticleSystem
         var center = this.center;
         var invHalfExtents = this.invHalfExtents;
 
-        var normalizedLife = lifeTime / this.maxLifeTime;
+        var normalizedLife = lifeTime * (this.maxLifeTime === 0 ? 0 : 1 / (this.maxLifeTime));
         var range = params.animationRange;
 
         var posx = (position[0] - center[0]) * invHalfExtents[0];
         var posy = (position[1] - center[1]) * invHalfExtents[1];
         var posz = (position[2] - center[2]) * invHalfExtents[2];
 
-        var im = 1 / this.maxSpeed;
+        var im = this.maxSpeed === 0 ? 0 : (1 / this.maxSpeed);
         var velx = velocity[0] * im;
         var vely = velocity[1] * im;
         var velz = velocity[2] * im;
@@ -5422,7 +5431,7 @@ class ParticleSystem
         var velocity = params.velocity;
         if (velocity !== undefined)
         {
-            var im = 1 / this.maxSpeed;
+            var im = this.maxSpeed === 0 ? 0 : (1 / this.maxSpeed);
             x = velocity[0] * im;
             y = velocity[1] * im;
             z = velocity[2] * im;
@@ -5542,7 +5551,7 @@ class ParticleSystem
 
         var updater = this.updater;
         var parameters = this.updateParameters;
-        var lifeStep = parameters["lifeStep"] = deltaTime / this.maxLifeTime;
+        var lifeStep = parameters["lifeStep"] = deltaTime * (this.maxLifeTime === 0 ? 0 : (1 / this.maxLifeTime));
         var timeStep = parameters["timeStep"] = deltaTime;
         parameters["creationState"] = ParticleSystem.createdTexture;
 
@@ -6302,21 +6311,30 @@ interface ParticleEmitter
     sync(synchronizer: ParticleSynchronizer,
          system      : ParticleSystem,
          timeStep    : number);
-    reset(): void;
-    enable(): void;
+
+    reset  (): void;
+    enable (): void;
     disable(): void;
-    burst(count?): void;
+    burst  (count?) : void;
     timeout(timeout): void;
+
     applyArchetype(archetype: any, particleDef: ParticleDefn): void;
+
+    getMaxLifeTime (): number;
+    getMaxParticles(): number;
+    getMaxSpeed    (): number;
 }
 interface ParticleSynchronizer
 {
     emitters: Array<ParticleEmitter>;
     renderable: ParticleRenderable;
-    addEmitter(emitter: ParticleEmitter): void;
-    removeEmitter(emitter: ParticleEmitter): void;
+
     synchronize(system: ParticleSystem, timeStep: number): void;
+
     reset(): void;
+    addEmitter   (emitter: ParticleEmitter): void;
+    removeEmitter(emitter: ParticleEmitter): void;
+
     applyArchetype(archetype: any): void;
 }
 
@@ -6932,6 +6950,20 @@ class DefaultParticleEmitter
         thisParticle.lifeTimeMax = max;
     }
 
+    getMaxLifeTime(): number
+    {
+        return this.particle.lifeTimeMax;
+    }
+    getMaxParticles(): number
+    {
+        var emittance = this.emittance;
+        return Math.ceil(this.particle.lifeTimeMax * emittance.rate * emittance.burstMax);
+    }
+    getMaxSpeed(): number
+    {
+        return this.velocity.speedMax;
+    }
+
     reset(): void
     {
         this.bursting = null;
@@ -7340,6 +7372,11 @@ interface ParticleManagerContext
     instances   : Array<ParticleInstance>;
     instancePool: Array<ParticleInstance>;
     systemPool  : Array<ParticleSystem>;
+
+    // computed from emitters for use if required.
+    maxParticles: number;
+    maxLifeTime : number;
+    maxSpeed    : number;
 }
 
 interface ParticleInstance
@@ -8104,7 +8141,6 @@ class ParticleManager
         var renderer = archetype.renderer.name;
         context.renderer = this.getRenderer(renderer);
         context.updater  = this.getUpdater(archetype.updater.name);
-        context.geometry = this.getGeometry(archetype.system.maxParticles, this.renderers[renderer].geometry);
         context.instances    = [];
         context.instancePool = [];
         context.systemPool   = [];
@@ -8242,17 +8278,24 @@ class ParticleManager
         else
         {
             var template = archetype.system;
+            var maxParticles = template.maxParticles || context.maxParticles;
+            if (!context.geometry)
+            {
+                context.geometry = this.getGeometry(maxParticles, this.renderers[archetype.renderer.name].geometry);
+            }
+
+            var template = archetype.system;
             system = ParticleSystem.create({
                 graphicsDevice     : this.graphicsDevice,
                 center             : template.center,
                 halfExtents        : template.halfExtents,
-                maxSpeed           : template.maxSpeed,
-                maxParticles       : template.maxParticles,
+                maxSpeed           : template.maxSpeed || context.maxSpeed,
+                maxParticles       : maxParticles,
                 zSorted            : template.zSorted,
                 maxSortSteps       : template.maxSortSteps,
                 geometry           : context.geometry,
                 sharedRenderContext: this.systemContext,
-                maxLifeTime        : template.maxLifeTime,
+                maxLifeTime        : template.maxLifeTime || context.maxLifeTime,
                 animation          : context.definition.animation,
                 sharedAnimation    : true,
                 timer              : this.timerCb,
@@ -8511,6 +8554,12 @@ class ParticleManager
         synchronizer.applyArchetype(template);
         synchronizer.renderable = instance.renderable;
 
+        // Compute values from emitters if not yet defined for the archetype context.
+        var maxLifeTime  = 0;
+        var maxParticles = 0;
+        var maxSpeed     = 0;
+
+        var emitters = archetype.emitters;
         var archetypes = archetype.emitters;
         var count = archetypes.length;
         var i;
@@ -8537,6 +8586,30 @@ class ParticleManager
             emitter.applyArchetype(template, context.definition.particle[index]);
             emitter.enable();
             synchronizer.addEmitter(emitter);
+
+            if (!context.maxParticles)
+            {
+                var lifeTime = emitter.getMaxLifeTime();
+                if (lifeTime > maxLifeTime)
+                {
+                    maxLifeTime = lifeTime;
+                }
+                var speed = emitter.getMaxSpeed();
+                if (speed > maxSpeed)
+                {
+                    maxSpeed = speed;
+                }
+                maxParticles += emitter.getMaxParticles();
+            }
+        }
+
+        if (!context.maxParticles)
+        {
+            context.maxParticles = maxParticles;
+            context.maxLifeTime  = maxLifeTime;
+            // Add a scaling by 10 to be conservative (updater may do acceleration, and don't want
+            // to limit the usefulness of not needing to specify this ahead of time).
+            context.maxSpeed     = (Math.max(1, maxSpeed)) * 10;
         }
 
         instance.synchronizer = synchronizer;

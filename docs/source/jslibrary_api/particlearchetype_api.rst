@@ -20,9 +20,6 @@ Serialisation and Deserialisation of the archetypes should be done using the met
         system: {
             center         : [0, 0, 0],
             halfExtents    : [1, 1, 1],
-            maxParticles   : 64,
-            maxSpeed       : 10,
-            maxLifeTime    : 2,
             zSorted        : false,
             maxSortSteps   : 136,
             trackingEnabled: false
@@ -90,14 +87,20 @@ The values shown above, are the basic default values for an archetype descriptio
     ``halfExtents`` (Default `[1, 1, 1]`)
         The local half-extents of the particle system.
 
-    ``maxParticles`` (Default `64`)
+    ``maxParticles`` (Optional)
         The maximum number of particles the system will be able to hold. The absolute maximum value for this property is `65536`.
 
-    ``maxSpeed`` (Default `10`)
+        If unspecified, this value will be computed from the archetype emitters.
+
+    ``maxSpeed`` (Optional)
         The maximum speed (in local coordinates) achievable for a particle in the system. This field is required to define a suitable normalization of particle velocities into texture storage for the GPU.
 
-    ``maxLifeTime`` (Default `2`)
+        If unspecified, this value will be computed from the archetype emitters.
+
+    ``maxLifeTime`` (Optional)
         The maximum time for which any particle in the system will be able to live for. This field is required to define a suitable normalization of particle life-times into texture storage for the GPU.
+
+        If unspecified, this value will be computed from the archetype emitters.
 
     ``zSorted`` (Default `false`)
         Whether this system will have its views z-sorted for correct alpha-blending. Enabling z-sorting for a system will have performance implications with sorting performed on the GPU through a sequence of draw calls that iteratively improve the sorting of the view.
