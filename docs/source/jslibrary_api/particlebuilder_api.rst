@@ -283,7 +283,7 @@ Restrictions on how textures can be packed means that if possible, you should in
         textures: texturesArray,
         borderShrink: 4
     );
-    var texture = result.texture;
+    var texture = result.texture();
     var uvMap = result.uvMap;
 
 ``graphicsDevice``
@@ -299,7 +299,7 @@ Restrictions on how textures can be packed means that if possible, you should in
 The resultant object contains the following fields:
 
 ``texture``
-    The packed :ref:`Texture <texture>` storing all unique input textures
+    A function which will perform the actual packing of textures into a single returned :ref:`Texture <texture>`. This function can be called immediately, or be used to defer actual packing until a suitable time. Note that this function should only be called to pack the textures between :ref:`GraphicsDevice <graphicsdevice>`'s `beginFrame` and `endFrame` to guarantee correct operation.
 
 ``uvMap``
     An Array of :ref:`Vector4 <v4object>` objects storing the uv-rectangle of each corresponding input texture in the format `[x, y, w, h]`

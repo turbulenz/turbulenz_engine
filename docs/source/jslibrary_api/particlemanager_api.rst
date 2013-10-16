@@ -93,23 +93,23 @@ Compute the amount of time covered by the given particle animation.
     var lifeTime = manager.computeAnimationLifeTime(particleAnimationName);
 
 .. index::
-    pair: ParticleManager; preloadArchetype
+    pair: ParticleManager; loadArchetype
 
-`preloadArchetype`
-------------------
+`loadArchetype`
+---------------
 
 **Summary**
 
-Pre-load a particle system archetype, ensuring that all shaders and textures required by the system are loaded on the manager's shader and texture managers.
+Load all assets required by a particle system archetype.
 
 This must be performed before creating a system from its archetype, and it is assumed that all required textures and shaders have completed their load before a system is created.
 
 **Syntax** ::
 
-    manager.preloadArchetype(archetype, onload);
+    manager.loadArchetype(archetype, onload);
 
 ``archetype``
-    The particle system archetype to be pre-loaded.
+    The particle system archetype to be loaded.
 
 ``onload`` (Optional)
     A function to be called once the archetypes dependents have been loaded. This function should take the fully loaded archetype as argument.
@@ -171,8 +171,6 @@ Create a :ref:`ParticleInstance <particleinstance>` of a particle system from it
 It is assumed that this archetype has had all its required textures and shaders pre-loaded.
 
 The emitters of the system will be enabled automatically. If a timeout is specified, then the emitters will be `burst`, with the number of bursts set so that the effect comes to a natural end when the timeout has finished.
-
-.. note :: This call must be made between calls to graphicsDevice.beginFrame() and graphicsDevice.endFrame() to guarantee correct execution.
 
 **Syntax** ::
 

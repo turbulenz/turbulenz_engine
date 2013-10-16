@@ -2397,7 +2397,7 @@ class ParticleBuilder
         graphicsDevice: GraphicsDevice;
         textures      : Array<Texture>;
         borderShrink? : number;
-    }): { texture: Texture; uvMap : Array<Array<number>> }
+    }): { texture: () => Texture; uvMap : Array<Array<number>> }
     {
         var graphicsDevice = params.graphicsDevice;
         var textures = params.textures;
@@ -2483,70 +2483,85 @@ class ParticleBuilder
             }
         }
 
-        graphicsDevice.setStream(vertices, semantics);
-        graphicsDevice.setTechnique(technique);
-        parameters["border"] = borderShrink;
-
         // Create texture required with size as the next >= powers of 2 for mip-mapping.
         var bin = packer.bins[0];
         var w = ParticleBuilder.nearPow2Geq(bin.w);
         var h = ParticleBuilder.nearPow2Geq(bin.h);
+        var iw = 1 / w;
+        var ih = 1 / h;
 
-        var tex = graphicsDevice.createTexture({
-            name      : "ParticleBuilder Packed-Texture",
-            width     : w,
-            height    : h,
-            depth     : 1,
-            format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
-            mipmaps   : true,
-            cubemap   : false,
-            renderable: true,
-            dynamic   : true
-        });
-        var target = graphicsDevice.createRenderTarget({
-            colorTexture0: tex
-        });
-        graphicsDevice.beginRenderTarget(target);
+        var borderW = borderShrink * iw;
+        var borderH = borderShrink * ih;
 
         var j;
         var maps = [];
+        var dsts = [];
         for (j = 0; j < refCount; j += 1)
         {
             ref = unique[j];
-
-            var mx = (ref.store.x / w);
-            var my = (ref.store.y / h);
-            var mw = (ref.store.w / w);
-            var mh = (ref.store.h / h);
-            var map = [
-                mx + (borderShrink / w),
-                my + (borderShrink / h),
-                mw - 2 * (borderShrink / w),
-                mh - 2 * (borderShrink / h)
-            ];
+            var store = ref.store;
+            var mx = store.x * iw;
+            var my = store.y * ih;
+            var mw = store.w * iw;
+            var mh = store.h * ih;
+            var map = VMath.v4Build(
+                mx + borderW,
+                my + borderH,
+                mw - 2 * borderW,
+                mh - 2 * borderH
+            );
             var mapCount = ref.mapping.length;
             var k;
             for (k = 0; k < mapCount; k += 1)
             {
                 maps[ref.mapping[k]] = map;
             }
-
-            parameters["src"]    = ref.texture;
-            parameters["dim"][0] = ref.texture.width;
-            parameters["dim"][1] = ref.texture.height;
-            parameters["dst"][0] = mx;
-            parameters["dst"][1] = my;
-            parameters["dst"][2] = mx + mw;
-            parameters["dst"][3] = my + mh;
-            graphicsDevice.setTechniqueParameters(parameters);
-            graphicsDevice.draw(graphicsDevice.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
+            dsts[j] = VMath.v4Build(mx, my, mx + mw, my + mh);
         }
 
-        graphicsDevice.endRenderTarget();
-        target.destroy();
+        var generator = function ()
+        {
+            graphicsDevice.setStream(vertices, semantics);
+            graphicsDevice.setTechnique(technique);
+            parameters["border"] = borderShrink;
+
+            var tex = graphicsDevice.createTexture({
+                name      : "ParticleBuilder Packed-Texture",
+                width     : w,
+                height    : h,
+                depth     : 1,
+                format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
+                mipmaps   : true,
+                cubemap   : false,
+                renderable: true,
+                dynamic   : true
+            });
+            var target = graphicsDevice.createRenderTarget({
+                colorTexture0: tex
+            });
+            graphicsDevice.beginRenderTarget(target);
+
+            var j;
+            var dim = parameters["dim"];
+            for (j = 0; j < refCount; j += 1)
+            {
+                ref = unique[j];
+                parameters["dst"] = dsts[j];
+                dim[0] = ref.texture.width;
+                dim[1] = ref.texture.height;
+                parameters["src"]    = ref.texture;
+                graphicsDevice.setTechniqueParameters(parameters);
+                graphicsDevice.draw(graphicsDevice.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
+            }
+
+            graphicsDevice.endRenderTarget();
+            target.destroy();
+
+            return tex;
+        };
 
         return {
-            texture: tex,
+            texture: generator,
             uvMap  : maps
         };
     }
@@ -3923,7 +3938,7 @@ class DefaultParticleUpdater
         noiseTexture          : <string>null,
         randomizedAcceleration: [0, 0, 0]
     };
-    static preload(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad, request): void
+    static load(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad, request): void
     {
         shaderLoad("shaders/particles-default-update.cgfx");
         if (archetype.noiseTexture)
@@ -4215,7 +4230,7 @@ class DefaultParticleRenderer
         animatedScale        : false,
         animatedAlpha        : false
     };
-    static preload(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad): void
+    static load(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad): void
     {
         shaderLoad("shaders/particles-default-render.cgfx");
         if (archetype.noiseTexture)
@@ -4295,7 +4310,7 @@ class DefaultParticleRenderer
         parameters["animatedOrientation"] = archetype.animatedOrientation;
         parameters["animatedScale"] = archetype.animatedScale;
         parameters["animatedAlpha"] = archetype.animatedAlpha;
-        parameters["texture"] = textures["texture0"];
+        parameters["texture"] = textures("texture0");
     }
 
     createUserDataSeed()
@@ -7271,8 +7286,9 @@ interface ParticleArchetype
 
 interface ParticleManagerContext
 {
-    packed      : Array<Texture>;
-    textures    : { [name: string]: Texture };
+    packed      : Array<string>;
+    textures    : { [name: string]: any }; // each element is either Texture, or () => Texture
+    getTextureCb: (string) => Texture;
     definition  : ParticleSystemAnimation;
     renderer    : ParticleRenderer;
     updater     : ParticleUpdater;
@@ -7312,24 +7328,24 @@ class ParticleManager
 
     // ParticleRenderers.
     //   parseArchetype, compressArchetype definitions.
-    //   preloader (preload assets a parsed archetype uses)
+    //   loader (load assets a parsed archetype uses)
     //   geometry (the geometry type used)
     //   value (cached) : () => ParticleRenderer | ParticleRenderer
     private renderers: { [name: string]: {
                             parseArchetype   : (BuildError, any) => any;
                             compressArchetype: (any) => any;
-                            preload          : (any, ShaderManager, TextureManager) => void;
+                            load          : (any, ShaderManager, TextureManager) => void;
                             value            : any;
                             geometry         : string } };
 
     // ParticleUpdaters.
     //   parseArchetype, compressArchetype definitions.
-    //   preloader (preload assets a parsed archetype uses)
+    //   loader (load assets a parsed archetype uses)
     //   value (cached) : () => ParticleUpdater | ParticleUpdater
     private updaters: { [name: string]: {
                           parseArchetype   : (BuildError, any) => any;
                           compressArchetype: (any) => any;
-                          preload          : (any, ShaderManager, TextureManager) => void;
+                          load          : (any, ShaderManager, TextureManager) => void;
                           value            : any } };
 
     // ParticleSynchronizers.
@@ -7466,35 +7482,35 @@ class ParticleManager
         ret.registerRenderer("default",
                              DefaultParticleRenderer.parseArchetype,
                              DefaultParticleRenderer.compressArchetype,
-                             DefaultParticleRenderer.preload,
+                             DefaultParticleRenderer.load,
                              DefaultParticleRenderer.create.bind(null, graphicsDevice, shaderManager, "alpha"),
                              "default");
 
         ret.registerRenderer("alpha",
                              DefaultParticleRenderer.parseArchetype,
                              DefaultParticleRenderer.compressArchetype,
-                             DefaultParticleRenderer.preload,
+                             DefaultParticleRenderer.load,
                              DefaultParticleRenderer.create.bind(null, graphicsDevice, shaderManager, "alpha"),
                              "default");
 
         ret.registerRenderer("additive",
                              DefaultParticleRenderer.parseArchetype,
                              DefaultParticleRenderer.compressArchetype,
-                             DefaultParticleRenderer.preload,
+                             DefaultParticleRenderer.load,
                              DefaultParticleRenderer.create.bind(null, graphicsDevice, shaderManager, "additive"),
                              "default");
 
         ret.registerRenderer("opaque",
                              DefaultParticleRenderer.parseArchetype,
                              DefaultParticleRenderer.compressArchetype,
-                             DefaultParticleRenderer.preload,
+                             DefaultParticleRenderer.load,
                              DefaultParticleRenderer.create.bind(null, graphicsDevice, shaderManager, "opaque"),
                              "default");
 
         ret.registerUpdater("default",
                             DefaultParticleUpdater.parseArchetype,
                             DefaultParticleUpdater.compressArchetype,
-                            DefaultParticleUpdater.preload,
+                            DefaultParticleUpdater.load,
                             DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager));
 
         ret.registerAnimationSystem("default", [
@@ -7724,12 +7740,12 @@ class ParticleManager
             return renderer;
         }
     }
-    registerRenderer(name, parser, compressor, preloader, generator, geometry): void
+    registerRenderer(name, parser, compressor, loader, generator, geometry): void
     {
         this.renderers[name] = {
             parseArchetype   : parser,
             compressArchetype: compressor,
-            preload          : preloader,
+            load          : loader,
             value            : generator,
             geometry         : geometry
         };
@@ -7752,12 +7768,12 @@ class ParticleManager
             return updater;
         }
     }
-    registerUpdater(name, parser, compressor, preloader, generator): void
+    registerUpdater(name, parser, compressor, loader, generator): void
     {
         this.updaters[name] = {
             parseArchetype   : parser,
             compressArchetype: compressor,
-            preload          : preloader,
+            load          : loader,
             value            : generator
         };
     }
@@ -7859,7 +7875,7 @@ class ParticleManager
         };
     }
 
-    preloadArchetype(archetype: ParticleArchetype, onload?: (ParticleArchetype) => void): void
+    loadArchetype(archetype: ParticleArchetype, onload?: (ParticleArchetype) => void): void
     {
         var textureLoad, shaderLoad, loaded: any;
         if (onload)
@@ -7891,8 +7907,8 @@ class ParticleManager
             shaderLoad = this.shaderManager.load.bind(this.shaderManager);
         }
 
-        this.renderers[archetype.renderer.name].preload(archetype.renderer, shaderLoad, textureLoad);
-        this.updaters [archetype.updater.name ].preload(archetype.updater,  shaderLoad, textureLoad);
+        this.renderers[archetype.renderer.name].load(archetype.renderer, shaderLoad, textureLoad);
+        this.updaters [archetype.updater.name ].load(archetype.updater,  shaderLoad, textureLoad);
 
         var packedTextures = archetype.packedTextures;
         var count = packedTextures.length;
@@ -8013,13 +8029,26 @@ class ParticleManager
             });
             textures[f] = packing.texture;
             mapping[f] = packing.uvMap;
-            packed.push(packing.texture);
+            packed.push(f);
         }
 
-        // Stored so that on archetype descruction, they may be destroyed also.
         context.packed = packed;
-
         context.textures = textures;
+        context.getTextureCb = function (name)
+        {
+            if (!textures.hasOwnProperty(name))
+            {
+                return null;
+            }
+            var texture = textures[name];
+            if (typeof (texture) === "function")
+            {
+                // perform deferred texture packing.
+                texture = textures[name] = texture();
+            }
+            return texture;
+        };
+
         context.definition = ParticleBuilder.compile({
             graphicsDevice: this.graphicsDevice,
             system        : system,
@@ -8192,7 +8221,7 @@ class ParticleManager
             });
 
             context.updater .applyArchetype(this.textureManager, system, archetype.updater);
-            context.renderer.applyArchetype(this.textureManager, system, archetype.renderer, context.textures);
+            context.renderer.applyArchetype(this.textureManager, system, archetype.renderer, context.getTextureCb);
             context.renderer.setAnimationParameters(system, context.definition);
         }
         instance.system = system;
@@ -8367,11 +8396,17 @@ class ParticleManager
         // Destroy animation texture, and any run-time packed textures.
         context.definition.animation.destroy();
         var packed = context.packed;
+        var textures = context.textures;
         count = packed.length;
         while (count > 0)
         {
             count -= 1;
-            packed.pop().destroy();
+            // destroy packed texture only if it has actually been generated.
+            var texture = textures[packed.pop()];
+            if (typeof (texture) !== "function")
+            {
+                texture.destroy();
+            }
         }
 
         archetype.context = null;
