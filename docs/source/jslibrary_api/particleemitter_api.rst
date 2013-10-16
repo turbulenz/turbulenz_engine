@@ -97,6 +97,22 @@ Enable emitter for a specific set of spawn events.
     The number of spawn events to enable emitter for.
 
 .. index::
+    pair: ParticleEmitter; timeout
+
+`timeout`
+---------
+
+**Summary**
+
+Enable emitter for a specific amount of time.
+
+The emitter should behave so that after `timeout` seconds have passed, the last emitted particle has just finished its life time.
+
+**Syntax** ::
+
+    emitter.timeout(timeout);
+
+.. index::
     pair: ParticleEmitter; applyArchetype
 
 `applyArchetype`

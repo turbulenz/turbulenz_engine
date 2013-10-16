@@ -6306,6 +6306,7 @@ interface ParticleEmitter
     enable(): void;
     disable(): void;
     burst(count?): void;
+    timeout(timeout): void;
     applyArchetype(archetype: any, particleDef: ParticleDefn): void;
 }
 interface ParticleSynchronizer
@@ -6330,13 +6331,6 @@ interface DefaultParticleSynchronizerEvent
         system      : ParticleSystem): void;
     recycle(event: DefaultParticleSynchronizerEvent): void;
 }
-interface DefaultParticleSynchronizerEmitter
-{
-    enabled: boolean;
-    sync(emitter : DefaultParticleSynchronizer,
-         system  : ParticleSystem,
-         timeStep: number): void;
-}
 interface DefaultSynchronizerArchetype
 {
     fixedTimeStep: number;
@@ -6345,7 +6339,7 @@ interface DefaultSynchronizerArchetype
 }
 class DefaultParticleSynchronizer
 {
-    emitters: Array<DefaultParticleSynchronizerEmitter>;
+    emitters: Array<ParticleEmitter>;
     events: TimeoutQueue<DefaultParticleSynchronizerEvent>;
 
     renderable: ParticleRenderable;
@@ -6492,7 +6486,7 @@ class DefaultParticleSynchronizer
         this.events.insert(event, event.time);
     }
 
-    addEmitter(sync: DefaultParticleSynchronizerEmitter)
+    addEmitter(sync: ParticleEmitter)
     {
         if (this.emitters.indexOf(sync) === -1)
         {
@@ -6500,7 +6494,7 @@ class DefaultParticleSynchronizer
         }
     }
 
-    removeEmitter(sync: DefaultParticleSynchronizerEmitter)
+    removeEmitter(sync: ParticleEmitter)
     {
         var index = this.emitters.indexOf(sync);
         if (index !== -1)
@@ -6557,9 +6551,12 @@ interface DefaultEmitterArchetype
         burstMax: number;
     };
     particle: {
-        lifeTimeMin: number;
-        lifeTimeMax: number;
-        userData   : number;
+        lifeTimeMin         : number;
+        lifeTimeMax         : number;
+        useAnimationLifeTime: boolean;
+        lifeTimeScaleMin    : number;
+        lifeTimeScaleMax    : number;
+        userData            : number;
     };
     position: {
         position          : FloatArray;
@@ -6903,11 +6900,14 @@ class DefaultParticleEmitter
     }
     applyArchetype(archetype, particleDefn)
     {
+        // This function is used to simplify constructor also.
+        // so can't assume that we're initialized already.
+
         this.forceCreation = archetype.forceCreation;
         this.usePrediction = archetype.usePrediction;
-        Types.copyFields(archetype.emittance, this.emittance);
-        Types.copyFields(archetype.position, this.position);
-        Types.copyFields(archetype.velocity, this.velocity);
+        this.emittance = <any>Types.copyFields(archetype.emittance, this.emittance);
+        this.position  = <any>Types.copyFields(archetype.position, this.position);
+        this.velocity  = <any>Types.copyFields(archetype.velocity, this.velocity);
 
         // determine true min and max life times.
         var particle = archetype.particle;
@@ -6923,10 +6923,13 @@ class DefaultParticleEmitter
             max = particle.lifeTimeMax;
         }
 
-        VMath.v2Copy(particleDefn.animationRange, this.particle.animationRange);
-        this.particle.userData = particle.userData;
-        this.particle.lifeTimeMin = min;
-        this.particle.lifeTimeMax = max;
+        var thisParticle = this.particle || <any>{};
+        this.particle = thisParticle;
+
+        thisParticle.animationRange = VMath.v2Copy(particleDefn.animationRange, thisParticle.animationRange);
+        thisParticle.userData = particle.userData;
+        thisParticle.lifeTimeMin = min;
+        thisParticle.lifeTimeMax = max;
     }
 
     reset(): void
@@ -7262,16 +7265,12 @@ class DefaultParticleEmitter
     constructor() {}
     static create()
     {
-        var template = DefaultParticleEmitter.template;
-
         var ret = new DefaultParticleEmitter();
-        ret.emittance = Types.copy(template.emittance);
-        ret.particle = Types.copy(template.particle);
-        ret.particle.animationRange = [0, 1]; // not part of template.
-        ret.position = Types.copy(template.position);
-        ret.velocity = Types.copy(template.velocity);
-        ret.forceCreation = template.forceCreation;
-        ret.usePrediction = template.usePrediction;
+        var archetype = DefaultParticleEmitter.parseArchetype(null, null);
+        archetype.particle.useAnimationLifeTime = false;
+        ret.applyArchetype(DefaultParticleEmitter.parseArchetype(null, null), <any>{
+            animationRange: [0, 1]
+        });
         ret.enabled = false;
         ret.bursting = null;
 
@@ -7291,6 +7290,13 @@ class DefaultParticleEmitter
     {
         this.enable();
         this.bursting = count;
+    }
+    timeout(timeout): void
+    {
+        var emittance = this.emittance;
+        var particle = this.particle;
+        var burstCount = emittance.rate * (timeout - particle.lifeTimeMax - emittance.delay);
+        this.burst(burstCount);
     }
 }
 
@@ -8138,10 +8144,7 @@ class ParticleManager
             var emitter = emitters[i];
             if (instance.queued)
             {
-                // TODO this makes assumptions about emitter!!!!
-                var emittance = emitter.emittance;
-                var burstCount = emittance.rate * (timeout - emitter.particle.lifeTimeMax - emittance.delay);
-                emitter.burst(burstCount);
+                emitter.timeout(timeout);
             }
             else
             {

@@ -170,7 +170,7 @@ Create a :ref:`ParticleInstance <particleinstance>` of a particle system from it
 
 It is assumed that this archetype has had all its required textures and shaders pre-loaded.
 
-The emitters of the system will be enabled automatically. If a timeout is specified, then the emitters will be `burst`, with the number of bursts set so that the effect comes to a natural end when the timeout has finished.
+The emitters of the system will be enabled automatically. If a timeout is specified, then the emitters will have its `timeout` function called to enable the emitter as long as is necessary to have the effect come to a natural end when the instance is removed.
 
 **Syntax** ::
 
@@ -182,7 +182,7 @@ The emitters of the system will be enabled automatically. If a timeout is specif
 ``timeout`` (Optional)
     The amount of time this instance should exist for. Once this amount of time has passed, the instance will be automatically removed from the scene if necessary, and recycled.
 
-    This parameter should be specified for the creation of short-lived effects, making use of an internal optimized data structure for handling large numbers of short-lived effects in conjunction with the updates of the manager.
+    This parameter should be specified for the creation of short-lived effects, the manager makes use of an internal optimized data structure for handling large numbers of short-lived effects in conjunction with the updates of the manager.
 
 .. index::
     pair: ParticleManager; destroyInstance
