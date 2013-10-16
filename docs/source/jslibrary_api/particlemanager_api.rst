@@ -106,10 +106,13 @@ This must be performed before creating a system from its archetype, and it is as
 
 **Syntax** ::
 
-    manager.preloadArchetype(archetype);
+    manager.preloadArchetype(archetype, onload);
 
 ``archetype``
     The particle system archetype to be pre-loaded.
+
+``onload`` (Optional)
+    A function to be called once the archetypes dependents have been loaded. This function should take the fully loaded archetype as argument.
 
 .. index::
     pair: ParticleManager; destroyArchetype
