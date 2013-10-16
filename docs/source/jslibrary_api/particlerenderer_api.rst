@@ -85,6 +85,48 @@ Create a `ParticleGeometry` object compatible with this renderer.
 ``shared`` (Optional)
     Whether this geometry is going to be shared amongst many particle systems or not.
 
+.. index::
+    pair: ParticleRenderer; createUserDataSeed
+
+`createUserDataSeed`
+--------------------
+
+**Summary**
+
+This function will be called by :ref:`ParticleEmitters <particleemitter>`, and should return a particle particle `userData` field, containing randomized seed values if appropriate.
+
+**Syntax** ::
+
+    var userData = renderer.createUserDataSeed();
+
+.. index::
+    pair: ParticleRenderer; applyArchetype
+
+`applyArchetype`
+----------------
+
+**Summary**
+
+This function will be called by the high level :ref:`ParticleManager <particlemanager>` to apply a constructed :ref:`ParticleArchetype <particlearchetype>` to this renderer.
+
+This function should use the constructed archetype and other parameters to specify all parameters required on `system.renderParameters` object specific to this renderer.
+
+**Syntax** ::
+
+    renderer.applyArchetype(textureManager, system, archetype, particleTextures);
+
+``textureManager``
+    The :ref:`TextureManager <texturemanager>` to look up :ref:`Textures <texture>` from paths given in archetype.
+
+``system``
+    The :ref:`ParticleSystem <particlesystem>` to apply archetype to.
+
+``archetype``
+    The renderer specific archetype parameters to be applied.
+
+``particleTextures``
+    A function to be used to retrieve packed particle textures from a texture type name (Eg: `"texture0"`).
+
 .. _defaultparticlerenderer:
 
 ==================================

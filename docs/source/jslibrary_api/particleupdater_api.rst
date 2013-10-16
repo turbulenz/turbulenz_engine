@@ -121,6 +121,45 @@ This function should only ever be called for particles, who at the end of the si
 
 Function must return the predicted `userData` of the particle - should updating of the particle make use of a subset of the `userData` field for additional logic.
 
+.. index::
+    pair: ParticleUpdater; createUserDataSeed
+
+`createUserDataSeed`
+--------------------
+
+**Summary**
+
+This function will be called by :ref:`ParticleEmitters <particleemitter>`, and should return a particle particle `userData` field, containing randomized seed values if appropriate.
+
+**Syntax** ::
+
+    var userData = updater.createUserDataSeed();
+
+.. index::
+    pair: ParticleUpdater; applyArchetype
+
+`applyArchetype`
+----------------
+
+**Summary**
+
+This function will be called by the high level :ref:`ParticleManager <particlemanager>` to apply a constructed :ref:`ParticleArchetype <particlearchetype>` to this renderer.
+
+This function should use the constructed archetype and other parameters to specify all parameters required on `system.updateParameters` object specific to this updater.
+
+**Syntax** ::
+
+    updater.applyArchetype(textureManager, system, archetype);
+
+``textureManager``
+    The :ref:`TextureManager <texturemanager>` to look up :ref:`Textures <texture>` from paths given in archetype.
+
+``system``
+    The :ref:`ParticleSystem <particlesystem>` to apply archetype to.
+
+``archetype``
+    The updater specific archetype parameters to be applied.
+
 .. _defaultparticleupdater:
 
 =================================

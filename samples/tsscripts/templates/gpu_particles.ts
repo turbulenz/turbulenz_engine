@@ -340,6 +340,7 @@ TurbulenzEngine.onload = function onloadFn()
                 // Particles of this emitter will have their quads billboarded to face camera.
                 userData: DefaultParticleRenderer.createUserData({ facing: "billboard" }),
                 // Particles will live for between these amounts of time in seconds.
+                useAnimationLifeTime: false,
                 lifeTimeMin: 0.5,
                 lifeTimeMax: 1.5
             },

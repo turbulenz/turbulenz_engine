@@ -3915,6 +3915,9 @@ interface ParticleUpdater
              userData  : number,
              time      : number): number;
     createUserDataSeed(): number;
+    applyArchetype(textureManager: TextureManager,
+                   system        : ParticleSystem,
+                   archetype     : ParticleArchetype): void;
 }
 
 //
@@ -4196,6 +4199,10 @@ interface ParticleRenderer
         definition: { attribute: { [name: string]: AttributeRange } }
     ): void;
     createUserDataSeed(): number;
+    applyArchetype(textureManager: TextureManager,
+                   system        : ParticleSystem,
+                   archetype     : ParticleArchetype,
+                   textures      : (string) => Texture): void;
 }
 
 //
@@ -6299,6 +6306,7 @@ interface ParticleEmitter
     enable(): void;
     disable(): void;
     burst(count?): void;
+    applyArchetype(archetype: any, particleDef: ParticleDefn): void;
 }
 interface ParticleSynchronizer
 {
@@ -6308,6 +6316,7 @@ interface ParticleSynchronizer
     removeEmitter(emitter: ParticleEmitter): void;
     synchronize(system: ParticleSystem, timeStep: number): void;
     reset(): void;
+    applyArchetype(archetype: any): void;
 }
 
 //
@@ -6657,9 +6666,12 @@ class DefaultParticleEmitter
             burstMax: 1
         },
         particle: {
-            lifeTimeMin: 1,
-            lifeTimeMax: 1,
-            userData   : 0
+            lifeTimeMin         : 1,
+            lifeTimeMax         : 1,
+            useAnimationLifeTime: true,
+            lifeTimeScaleMin    : 1,
+            lifeTimeScaleMax    : 1,
+            userData            : 0
         },
         position: {
             position          : [0, 0, 0],
@@ -6784,15 +6796,24 @@ class DefaultParticleEmitter
                 {
                     return checkNumber(n, " particle");
                 }
+                function checkBool(n): (any) => boolean
+                {
+                    return checkBoolean(n, " particle");
+                }
 
                 Parser.extraFields(error, "default emitter archetype particle", delta,
-                    ["lifeTimeMin", "lifeTimeMax", "userData"]);
+                    ["lifeTimeMin", "lifeTimeMax", "userData", "useAnimationLifeTime",
+                     "lifeTimeScaleMin", "lifeTimeScaleMax"]);
 
-                return {
-                    lifeTimeMin: maybe(delta, "lifeTimeMin", checkNum, val(1)),
-                    lifeTimeMax: maybe(delta, "lifeTimeMax", checkNum, val(1)),
-                    userData   : maybe(delta, "userData"   , checkNum, val(0))
+                var ret = {
+                    lifeTimeMin         : maybe(delta, "lifeTimeMin"         , checkNum , val(1)),
+                    lifeTimeMax         : maybe(delta, "lifeTimeMax"         , checkNum , val(1)),
+                    useAnimationLifeTime: maybe(delta, "useAnimationLifeTime", checkBool, val(true)),
+                    lifeTimeScaleMin    : maybe(delta, "lifeTimeScaleMin"    , checkNum , val(1)),
+                    lifeTimeScaleMax    : maybe(delta, "lifeTimeScaleMax"    , checkNum , val(1)),
+                    userData            : maybe(delta, "userData"            , checkNum , val(0))
                 };
+                return ret;
             }, Types.copy.bind(null, DefaultParticleEmitter.template.particle)),
             position: Parser.maybeField(delta, "position", function (delta)
             {
@@ -6880,15 +6901,32 @@ class DefaultParticleEmitter
             }, Types.copy.bind(null, DefaultParticleEmitter.template.velocity))
         };
     }
-    applyArchetype(archetype, animationRange)
+    applyArchetype(archetype, particleDefn)
     {
         this.forceCreation = archetype.forceCreation;
         this.usePrediction = archetype.usePrediction;
         Types.copyFields(archetype.emittance, this.emittance);
-        Types.copyFields(archetype.particle, this.particle);
-        VMath.v2Copy(animationRange, this.particle.animationRange);
         Types.copyFields(archetype.position, this.position);
         Types.copyFields(archetype.velocity, this.velocity);
+
+        // determine true min and max life times.
+        var particle = archetype.particle;
+        var min, max;
+        if (particle.useAnimationLifeTime)
+        {
+            min = particle.lifeTimeScaleMin * particleDefn.lifeTime;
+            max = particle.lifeTimeScaleMax * particleDefn.lifeTime;
+        }
+        else
+        {
+            min = particle.lifeTimeMin;
+            max = particle.lifeTimeMax;
+        }
+
+        VMath.v2Copy(particleDefn.animationRange, this.particle.animationRange);
+        this.particle.userData = particle.userData;
+        this.particle.lifeTimeMin = min;
+        this.particle.lifeTimeMax = max;
     }
 
     reset(): void
@@ -8100,6 +8138,7 @@ class ParticleManager
             var emitter = emitters[i];
             if (instance.queued)
             {
+                // TODO this makes assumptions about emitter!!!!
                 var emittance = emitter.emittance;
                 var burstCount = emittance.rate * (timeout - emitter.particle.lifeTimeMax - emittance.delay);
                 emitter.burst(burstCount);
@@ -8492,8 +8531,7 @@ class ParticleManager
                     index += 1;
                 }
             }
-            var animationRange = context.definition.particle[index].animationRange;
-            emitter.applyArchetype(template, animationRange);
+            emitter.applyArchetype(template, context.definition.particle[index]);
             emitter.enable();
             synchronizer.addEmitter(emitter);
         }

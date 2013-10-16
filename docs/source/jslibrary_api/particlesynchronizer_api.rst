@@ -76,6 +76,23 @@ Reset synchronizer object, removing all its emitters in the process.
 
     synchronizer.reset();
 
+.. index::
+    pair: ParticleSynchronizer; applyArchetype
+
+`applyArchetype`
+----------------
+
+**Summary**
+
+Apply synchronizer specific archetype parameters to this archetype. This is used by the :ref:`ParticleManager <particlemanager>`.
+
+**Syntax** ::
+
+    synchronizer.applyArchetype(archetype);
+
+``archetype``
+    The synchronizer specific archetype parameters to be applied.
+
 Properties
 ==========
 

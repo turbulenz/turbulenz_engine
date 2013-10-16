@@ -96,6 +96,26 @@ Enable emitter for a specific set of spawn events.
 ``count`` (Optional)
     The number of spawn events to enable emitter for.
 
+.. index::
+    pair: ParticleEmitter; applyArchetype
+
+`applyArchetype`
+----------------
+
+**Summary**
+
+Apply emitter specific archetype parameters to this emitter. This is used by the :ref:`ParticleManager <particlemanager>`.
+
+**Syntax** ::
+
+    emitter.applyArchetype(archetype, particleDefn);
+
+``archetype``
+    The emitter specific archetype parameters to be applied.
+
+``particleDefn``
+    The definition object for the particle being emitted. This is the object returned by :ref:`ParticleBuilder.compile <particlebuilder>` as elements of the `particle` dictionary.
+
 Properties
 ==========
 
@@ -215,10 +235,23 @@ Parameters about the particles appearances and life times.
 ``lifeTimeMax`` (Default `1`)
     The maximum life time of the emitted particles. The actual life time varies uniformnly between the min and max values.
 
+.. note :: For ParticleArchetypes, these fields are only considered in the archetype if "useAnimationLifeTime` is false. Otherwise these will be computed based on other parameters of the archetype.
+
 ``userData`` (Default `0`)
     The `userData` applied when creating particles from this emitter.
 
 .. note :: This field should not contain randomized seed values, as these will be added automatically by the emitters.
+
+**Archetype specific fields**
+
+``useAnimationLifeTime`` (Default `true`)
+    If true, then the particle animation's life time will be used as a basis of setting the `lifeTimeMin` and `lifeTimeMax` parameters of the emitter when using this emitter with the :ref:`ParticleManager <particlemanager>`.
+
+``lifeTimeScaleMin`` (Default `1`)
+    If `useAnimationLifeTime` is true, then this scale will be applied to the animations life time to compute the required value of `lifeTimeMin`.
+
+``lifeTimeScaleMax`` (Default `1`)
+    If `useAnimationLifeTime` is true, then this scale will be applied to the animations life time to compute the required value of `lifeTimeMax`.
 
 .. index::
     pair: DefaultParticleEmitter; position
