@@ -79,8 +79,12 @@ TurbulenzEngine.onload = function onloadFn()
     var fontManager    = FontManager.create(graphicsDevice, requestHandler, null, errorCallback);
 
     // region of world where systems will be spawned.
-    var sceneWidth  = 500;
-    var sceneHeight = 500;
+    var sceneWidth  = 1000;
+    var sceneHeight = 1000;
+
+    // speed of generation.
+    var generationSpeed = 200; // generations per second.
+    var lastGen = 0;
 
     var camera = Camera.create(mathDevice);
     var halfFOV = Math.tan(30 * Math.PI / 180);
@@ -131,23 +135,72 @@ TurbulenzEngine.onload = function onloadFn()
     var manager = ParticleManager.create(graphicsDevice, textureManager, shaderManager);
 
     manager.registerParticleAnimation({
-        name: "black and white",
+        name: "fire",
+        // define a texture-size to normalize uv-coordinates with.
+        // this avoid needing to use fractional values, especcialy if texture
+        // may be changed in future.
+        //
+        // In this case the actual texture is 512x512, but we map the particle animation
+        // to the top-half, so can pretend it is really 512x256.
+        //
+        // To simplify the uv-coordinates further, we can 'pretend' it is really 4x2 as
+        // after normalization the resulting uv-coordinates would be equivalent.
+        "texture0-size": [4, 2],
+        texture0: [
+        //  [x  y   w  h]
+            [0, 0,  1, 1], // frame 0
+            [1, 0,  1, 1], //
+            [2, 0,  1, 1], //
+            [3, 0,  1, 1], //
+            [0, 1,  1, 1], //
+            [1, 1,  1, 1], //
+            [2, 1,  1, 1], //
+            [3, 1,  1, 1], // frame 7
+        ],
         animation: [{
-            scale: [0, 0],
-            "scale-interpolation": "catmull",
-            color: [0, 0, 0, 0]
-        },
-        {
-            // after 0.2 seconds
-            time : 0.2,
-            scale: [1, 1],
+            frame: 0
+        }, {
+            // after 0.6 seconds, ensure colour is still [1,1,1,1]
+            time: 0.6,
             color: [1, 1, 1, 1]
-        },
-        {
-            // after another 0.8 seconds
-            time : 0.8,
-            scale: [1.5, 1.5],
+        }, {
+            // after another 0.1 seconds
+            time: 0.1,
+            // want to be 'just past' the last frame.
+            // so all frames of animation have equal screen presence.
+            frame: 8,
             color: [1, 1, 1, 0]
+        }]
+    });
+
+    manager.registerParticleAnimation({
+        name: "smoke",
+        // smoke is similarly mapped as "fire" particle above, but to bottom of packed texture.
+        "texture0-size": [4, 2],
+        texture0: [
+        //  [x  y   w  h]
+            [0, 0,  1, 1], // frame 0
+            [1, 0,  1, 1], //
+            [2, 0,  1, 1], //
+            [3, 0,  1, 1], //
+            [0, 1,  1, 1], //
+            [1, 1,  1, 1], //
+            [2, 1,  1, 1], //
+            [3, 1,  1, 1], // frame 7
+        ],
+        animation: [{
+            frame: 0
+        }, {
+            // after 0.8 seconds
+            time: 0.8,
+            color: [1, 0.5, 0.5, 1]
+        }, {
+            // after another 1.4 seconds, we fade out.
+            time: 0.5,
+            // want to be 'just past' the last frame.
+            // so all frames of animation have equal screen presence.
+            frame: 8,
+            color: [0, 0, 0, 0]
         }]
     });
 
@@ -176,52 +229,152 @@ TurbulenzEngine.onload = function onloadFn()
         system: {
             // define local system extents to be from (-3, 0, -3) to (3, 12, 3)
             center      : [0, 6, 0],
-            halfExtents : [3, 6, 3]
+            halfExtents : [5, 6, 5]
         },
+        updater: {
+            // set noise texture to use for randomization, and allow acceleration (when enabled)
+            // to be randomized to up to the given amounts.
+            noiseTexture: "textures/noise.dds",
+            randomizedAcceleration: [10, 10, 10]
+        },
+        renderer: {
+            // use default renderer with aditive blend mode
+            name: "additive",
+            // set noise texture to use for randomizations.
+            noiseTexture: "textures/noise.dds",
+            // for particles that enable these options, we're going to allow particle alphas
+            // if enabled on particles, allow particle orientation to be randomized up to these
+            // spherical amounts (+/-), in this case, to rotate around y-axis by +/- 0.3*Math.PI
+            // specify this variation should change over time
+            randomizedOrientation: [0, 0.3 * Math.PI],
+            animatedOrientation: true,
+            // if enabled on particles, allow particle scale to be randomized up to these
+            // amounts (+/-), and define that this variation should not change over time.
+            randomizedScale: [3, 3],
+            animatedScale  : false
+        },
+        // All particles make use of this single texture.
+        packedTexture: "textures/flamesmokesequence.png",
         particles: {
-            // define two particles to use, both of these define their own texture.
-            // the manager will pack these textures itself at runtime.
-            smoke: {
-                animation: "black and white",
-                texture  : "textures/smoke.dds"
-            },
             fire: {
-                animation: "black and white",
-                texture  : "textures/noise.dds"
+                animation: "fire",
+                // select sub-set of packed texture this particles animation should be mapped to.
+                "texture-uv": [0, 0, 1, 0.5], // top-half
+                // apply animation tweaks to increase size of animation (x5)
+                tweaks: {
+                    "scale-scale": [5, 5]
+                }
+            },
+            ember: {
+                animation: "fire",
+                "texture-uv": [0, 0.0, 1, 0.5], // top-half
+                // apply animation tweaks so that only the second half of flip-book is used.
+                // and double the size.
+                tweaks: {
+                    "scale-scale": [2, 2],
+                    "frame-scale": 0.5,
+                    "frame-offset": 4
+                }
+            },
+            smoke: {
+                animation: "smoke",
+                // select sub-set of packed texture this particles animation should be mapped to.
+                "texture-uv": [0, 0.5, 1, 0.5], // bottom-half
+                // apply animation tweaks to increase size of animation (x3)
+                tweaks: {
+                    "scale-scale": [3, 3]
+                }
             }
         },
-        // define two emitters, one for each of our particles.
         emitters: [{
             particle: {
-               name: "smoke",
+                name: "fire",
+                // let life time of particle vary between 0.6 and 1.2 of animation life time.
+                lifeTimeScaleMin: 0.6,
+                lifeTimeScaleMax: 1.2,
+                // set userData so that its orientation will be randomized, and will have a
+                // also define scale should be randomized.
+                userData: DefaultParticleRenderer.createUserData({
+                              facing              : "billboard",
+                              randomizeOrientation: true,
+                              randomizeScale      : true
+                          })
             },
             emittance: {
-                // we're going to emit particles 20 times per second.
-                rate: 20,
-                // each time we emit particles, we will emit between 0 and 2 particles.
+                // emit particles 10 times per second. With 0 - 2 particles emitted each time.
+                rate: 10,
                 burstMin: 0,
                 burstMax: 2
             },
-            velocity: {
-                // particls will be emitted with speeds between these values.
-                speedMin: 2.5,
-                speedMax: 4.5,
-                // and with a conical spread about the default direction (along y-axis) of this angle.
-                conicalSpread: Math.PI * 0.25
+            position: {
+                // position 2 units above system position
+                position: [0, 2, 0],
+                // and with a randomized radius in disc of up to 1 unit
+                // with a normal (gaussian) distribution to focus on centre.
+                radiusMax: 1,
+                radiusDistribution: "normal"
             }
         }, {
             particle: {
-                name: "fire"
+                name: "ember",
+                // override animation life times.
+                lifeTimeMin: 0.2,
+                lifeTimeMax: 0.6,
+                // set userData so that acceleration will be randomized and also orientation.
+                userData: DefaultParticleUpdater.createUserData(true) |
+                          DefaultParticleRenderer.createUserData({
+                              randomizeOrientation: true
+                          })
             },
             emittance: {
-                rate: 30,
+                // emit particles 3 times per second. With 0 - 15 particles emitted each time.
+                rate: 3,
                 burstMin: 0,
-                burstMax: 2
+                burstMax: 15,
+                // only start emitting after 0.25 seconds
+                delay: 0.25
             },
             velocity: {
-                speedMin: 3.75,
-                speedMax: 4.8,
-                conicalSpread: Math.PI * 0.25
+                // set velocity to a random direction in conical spread
+                conicalSpread: Math.PI * 0.25,
+                // and with speeds between these values.
+                speedMin: 1,
+                speedMax: 3
+            },
+            position: {
+                // position 3 units above system position
+                position: [0, 3, 0],
+                // and in a random radius of this position in a sphere.
+                spherical: true,
+                radiusMin: 1,
+                radiusMax: 2.5
+            }
+        }, {
+            particle: {
+                name: "smoke",
+                // set userData so that acceleration will be randomized.
+                userData: DefaultParticleUpdater.createUserData(true)
+            },
+            emittance: {
+                // emit particles 20 times per second, with 0 - 3 every time.
+                rate: 20,
+                burstMin: 0,
+                burstMax: 3
+            },
+            velocity: {
+                // set velocity to a random direction in conical spread
+                conicalSpread: Math.PI * 0.25,
+                // and with speeds between these values.
+                speedMin: 2,
+                speedMax: 6
+            },
+            position: {
+                // position 3 units above system position
+                position: [0, 3, 0],
+                // and in a random radius of this position in a sphere.
+                spherical: true,
+                radiusMin: 0,
+                radiusMax: 1.5
             }
         }]
     };
@@ -235,9 +388,12 @@ TurbulenzEngine.onload = function onloadFn()
         renderer: {
             // we're going to use the default renderer with the "additive" blend mode.
             name: "additive",
+            // set noise texture to use for randomizations
+            noiseTexture: "textures/noise.dds",
             // for particles that enable these options, we're going to allow particle alphas
-            //    to vary +/- 0.5, and this alpha variation will be fixed when particle is created.
-            randomizedAlpha: 0.5,
+            //    to vary +/- 0.5, and this alpha variation will change over time.
+            randomizedAlpha: 1.0,
+            animatedAlpha: true,
             // for particles that enable these options, we're going to allow particle orientations
             //    to vary by the given spherical angles (+/-), and this variation will change over time.
             randomizedOrientation: [Math.PI*0.25, Math.PI*0.25],
@@ -283,9 +439,9 @@ TurbulenzEngine.onload = function onloadFn()
         },
         emitters: [{
             emittance: {
-                // After 1 second from the start of the effect, we're going to emit particles 40 times per second.
+                // After 1 second from the start of the effect, we're going to emit particles 80 times per second.
                 delay: 1,
-                rate: 40,
+                rate: 80,
                 // Whenever we emit particles, we will emit exactly 4 particles.
                 burstMin: 4,
                 burstMax: 4
@@ -299,10 +455,10 @@ TurbulenzEngine.onload = function onloadFn()
                 //    with the particles velocity vector.
                 userData: DefaultParticleUpdater.createUserData(true) |
                           DefaultParticleRenderer.createUserData({
-                              facing               : "velocity",
-                              randomizedAlpha      : true,
-                              randomizedOrientation: true,
-                              randomizedRotation   : true
+                              facing              : "velocity",
+                              randomizeAlpha      : true,
+                              randomizeOrientation: true,
+                              randomizeRotation   : true
                           })
             },
             velocity: {
@@ -313,9 +469,6 @@ TurbulenzEngine.onload = function onloadFn()
                 conicalSpread: Math.PI/10
             },
             position: {
-                // Letting spherical be false, means we're going to generate particles in a disc shape.
-                //   The default normal is along y-axis, so the disc will be flat on the floor.
-                spherical: false,
                 // Particles will be generated at radii between these values.
                 radiusMin: 4,
                 radiusMax: 5,
@@ -327,11 +480,11 @@ TurbulenzEngine.onload = function onloadFn()
         },
         {
             emittance: {
-                // We will emit particles 10 times per second.
-                rate: 10,
-                // And whenever we emit particles, we'll emit between 0 and 4 particles.
+                // We will emit particles 20 times per second.
+                rate: 20,
+                // And whenever we emit particles, we'll emit between 0 and 6 particles.
                 burstMin: 0,
-                burstMax: 4
+                burstMax: 6
             },
             particle: {
                 name: "smoke",
@@ -416,8 +569,11 @@ TurbulenzEngine.onload = function onloadFn()
         manager.update(deltaTime);
 
         // Create new ParticleInstances in manager.
-        if (Math.random() > 0.25)
+        lastGen += deltaTime;
+        while (lastGen > 1 / generationSpeed)
         {
+            lastGen -= 1 / generationSpeed;
+
             var instance, x, z, timeout;
             timeout = 2 + 2 * Math.random();
             instance = manager.createInstance(archetype1, timeout);

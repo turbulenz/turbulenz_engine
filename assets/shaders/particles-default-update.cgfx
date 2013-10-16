@@ -56,7 +56,7 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
         float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
         float a = acceleration[slot.y];
         float4 data = getData(previousState, particleRegionMap(pIndex), invTextureSize);
-        if (bitSet(data.w, BIT2))
+        if (bitSet(data.w, BIT1))
         {
             float2 noiseUV = decodeByteUnsignedFloat2(data.z);
 

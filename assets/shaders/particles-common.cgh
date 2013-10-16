@@ -116,7 +116,6 @@ void vp_update_full(in float2 inPosition   : POSITION,
 // ENCODE / DECODE METHODS
 // ----------------------------------------------------------------------------
 
-static const float BIT0 = 255.0 / 1.0;
 static const float BIT1 = 255.0 / 2.0;
 static const float BIT2 = 255.0 / 4.0;
 static const float BIT3 = 255.0 / 8.0;

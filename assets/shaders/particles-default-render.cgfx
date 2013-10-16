@@ -10,14 +10,7 @@ sampler2D texture = sampler_state
 float4 animationScale;
 float2 animationRotation;
 
-sampler2D vnoiseTexture = sampler_state
-{
-    MinFilter = LinearMipMapNearest;
-    magFilter = Linear;
-    WrapS = Wrap;
-    WrapT = Wrap;
-};
-sampler2D fnoiseTexture = sampler_state
+sampler2D noiseTexture = sampler_state
 {
     MinFilter = LinearMipMapNearest;
     magFilter = Linear;
@@ -68,26 +61,26 @@ float4 getUV(float t)
 float2 getOrientNoise(float2 uv, float t)
 {
     t *= animatedOrientation;
-    return (2.0 * tex2D(vnoiseTexture, uv + (float2(0.40390668832696974, 0.32054057461209595) * t)
+    return (2.0 * tex2D(noiseTexture, uv + (float2(0.40390668832696974, 0.32054057461209595) * t)
                                            + float2(0.48812856408767412, 0.09654562245123088)).yx - 1.0)
            * randomizedOrientation;
 }
 float2 getScaleNoise(float2 uv, float t)
 {
     t *= animatedScale;
-    return (2.0 * tex2D(vnoiseTexture, uv + (float2(0.13936933642253284, 0.75842813239432871) * t)
+    return (2.0 * tex2D(noiseTexture, uv + (float2(0.13936933642253284, 0.75842813239432871) * t)
                                            + float2(0.18285232875496157, 0.14858058188110593)).xw - 1.0)
            * randomizedScale;
 }
 float getRotationNoise(float2 uv, float t) {
     t *= animatedRotation;
-    return (2.0 * tex2D(vnoiseTexture, uv + (float2(0.68003948801197112, 0.32643742742948234) * t)
+    return (2.0 * tex2D(noiseTexture, uv + (float2(0.68003948801197112, 0.32643742742948234) * t)
                                            + float2(0.26063257455825806, 0.29187747463583946)).z - 1.0)
            * randomizedRotation;
 }
 float getAlphaNoise(float2 uv, float t) {
     t *= animatedAlpha;
-    return (2.0 * tex2D(vnoiseTexture, uv + (float2(0.25916925235651433, 0.09688800573348999) * t)
+    return (2.0 * tex2D(noiseTexture, uv + (float2(0.25916925235651433, 0.09688800573348999) * t)
                                            + float2(0.83695788355544211, 0.90477761672809723)).w - 1.0)
            * randomizedAlpha;
 }
@@ -138,7 +131,7 @@ void vp_render( in float2 inData     : TEXCOORD0,
     // random orientation pertubation
     if (bitSet(data.w, BIT4))
     {
-        float3x3 orient = orientSpherical2(getOrientNoise(noiseUV, life));
+        float3x3 orient = orientSpherical2(getOrientNoise(noiseUV, life).yx);
         right = mul(orient, right);
         up = mul(orient, up);
     }

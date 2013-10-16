@@ -4025,7 +4025,7 @@ class DefaultParticleUpdater
     }
     static createUserData(randomizeAcceleration = false, seed = 0)
     {
-        return ((<any>randomizeAcceleration) << 25) | (seed << 16);
+        return ((<any>randomizeAcceleration) << 24) | (seed << 16);
     }
 
     predict(

@@ -176,7 +176,7 @@ Additionally, supports a noise-randomised acceleration applied per-particle from
 
 **Particle userData storage used**
 
-To randomise the acceleration of a particle, bit `25` of the userData field should be set, with bits `[16,24)` specifying an 8-bit integer seed used to select a path in the noise texture.
+To randomise the acceleration of a particle, bit `24` of the userData field should be set, with bits `[16,24)` specifying an 8-bit integer seed used to select a path in the noise texture.
 
 **Compatibility**
 
