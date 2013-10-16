@@ -907,64 +907,84 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             }
             else
             {
-                osIndex = userAgent.indexOf('Linux');
+                osIndex = userAgent.indexOf('Tizen');
                 if (osIndex !== -1)
                 {
-                    systemInfo.osName = 'Linux';
-                    if (navigator.platform.indexOf('64') !== -1)
+                    systemInfo.osName = 'Tizen';
+                    if (navigator.platform.indexOf('arm'))
                     {
-                        systemInfo.architecture = 'x86_64';
+                        systemInfo.architecture = 'arm';
                     }
-                    else if (navigator.platform.indexOf('x86') !== -1)
+                    if (-1 !== userAgent.indexOf('Mobile'))
                     {
-                        systemInfo.architecture = 'x86';
+                        systemInfo.platformProfile = "smartphone";
                     }
-                    if (looksLikeNetbook())
+                    else
                     {
                         systemInfo.platformProfile = "tablet";
-                        if (debug)
-                        {
-                            debug.log("Setting platformProfile to 'tablet'");
-                        }
                     }
                 }
                 else
                 {
-                    osIndex = userAgent.indexOf('Android');
-                    if (-1 !== osIndex)
+                    osIndex = userAgent.indexOf('Linux');
+                    if (osIndex !== -1)
                     {
-                        systemInfo.osName = 'Android';
-                        if (navigator.platform.indexOf('arm'))
+                        systemInfo.osName = 'Linux';
+                        if (navigator.platform.indexOf('64') !== -1)
                         {
-                            systemInfo.architecture = 'arm';
+                            systemInfo.architecture = 'x86_64';
                         }
-                        else if (navigator.platform.indexOf('x86'))
+                        else if (navigator.platform.indexOf('x86') !== -1)
                         {
                             systemInfo.architecture = 'x86';
                         }
-                        if (-1 !== userAgent.indexOf('Mobile'))
-                        {
-                            systemInfo.platformProfile = "smartphone";
-                        }
-                        else
+                        if (looksLikeNetbook())
                         {
                             systemInfo.platformProfile = "tablet";
+                            if (debug)
+                            {
+                                debug.log("Setting platformProfile to 'tablet'");
+                            }
                         }
                     }
                     else
                     {
-                        if (-1 !== userAgent.indexOf("iPhone") ||
-                            -1 !== userAgent.indexOf("iPod"))
+                        osIndex = userAgent.indexOf('Android');
+                        if (-1 !== osIndex)
                         {
-                            systemInfo.osName = 'iOS';
-                            systemInfo.architecture = 'arm';
-                            systemInfo.platformProfile = 'smartphone';
+                            systemInfo.osName = 'Android';
+                            if (navigator.platform.indexOf('arm'))
+                            {
+                                systemInfo.architecture = 'arm';
+                            }
+                            else if (navigator.platform.indexOf('x86'))
+                            {
+                                systemInfo.architecture = 'x86';
+                            }
+                            if (-1 !== userAgent.indexOf('Mobile'))
+                            {
+                                systemInfo.platformProfile = "smartphone";
+                            }
+                            else
+                            {
+                                systemInfo.platformProfile = "tablet";
+                            }
                         }
-                        else if (-1 !== userAgent.indexOf("iPad"))
+                        else
                         {
-                            systemInfo.osName = 'iOS';
-                            systemInfo.architecture = 'arm';
-                            systemInfo.platformProfile = 'tablet';
+                            if (-1 !== userAgent.indexOf("iPhone") ||
+                                -1 !== userAgent.indexOf("iPod"))
+                            {
+                                systemInfo.osName = 'iOS';
+                                systemInfo.architecture = 'arm';
+                                systemInfo.platformProfile = 'smartphone';
+                            }
+                            else if (-1 !== userAgent.indexOf("iPad"))
+                            {
+                                systemInfo.osName = 'iOS';
+                                systemInfo.architecture = 'arm';
+                                systemInfo.platformProfile = 'tablet';
+                            }
                         }
                     }
                 }
