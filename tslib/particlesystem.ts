@@ -3923,12 +3923,12 @@ class DefaultParticleUpdater
         noiseTexture          : <string>null,
         randomizedAcceleration: [0, 0, 0]
     };
-    static preload(archetype: DefaultUpdaterArchetype, shaderManager, textureManager): void
+    static preload(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad, request): void
     {
-        shaderManager.load("shaders/particles-default-update.cgfx");
+        shaderLoad("shaders/particles-default-update.cgfx");
         if (archetype.noiseTexture)
         {
-            textureManager.load(archetype.noiseTexture);
+            textureLoad(archetype.noiseTexture);
         }
     }
     static compressArchetype(archetype: DefaultUpdaterArchetype): any
@@ -4215,12 +4215,12 @@ class DefaultParticleRenderer
         animatedScale        : false,
         animatedAlpha        : false
     };
-    static preload(archetype: DefaultUpdaterArchetype, shaderManager, textureManager): void
+    static preload(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad): void
     {
-        shaderManager.load("shaders/particles-default-render.cgfx");
+        shaderLoad("shaders/particles-default-render.cgfx");
         if (archetype.noiseTexture)
         {
-            textureManager.load(archetype.noiseTexture);
+            textureLoad(archetype.noiseTexture);
         }
     }
     static compressArchetype(archetype: DefaultRendererArchetype): any
@@ -7458,15 +7458,6 @@ class ParticleManager
 
         ret.queue = new TimeoutQueue();
 
-        function preloadDefaultRenderer(defn)
-        {
-            shaderManager.load("shaders/particles-default-render.cgfx");
-            if (defn.noiseTexture)
-            {
-                textureManager.load(defn.noiseTexture);
-            }
-        }
-
         ret.registerGeometry("default", function (gd, num)
             {
                 return DefaultParticleRenderer.prototype.createGeometry(gd, num, true);
@@ -7868,17 +7859,47 @@ class ParticleManager
         };
     }
 
-    preloadArchetype(archetype: ParticleArchetype): void
+    preloadArchetype(archetype: ParticleArchetype, onload?: (ParticleArchetype) => void): void
     {
-        this.renderers[archetype.renderer.name].preload(archetype.renderer, this.shaderManager, this.textureManager);
-        this.updaters [archetype.updater.name ].preload(archetype.updater,  this.shaderManager, this.textureManager);
+        var textureLoad, shaderLoad, loaded: any;
+        if (onload)
+        {
+            // requestCount is artifically set to 1 to ensure all load calls are made
+            // before any posibility of onload being invoked in the event that assets
+            // are already loaded, and onload callbacks are made synchronously by managers.
+            var requestCount = 1;
+            var self = this;
+            var loaded = <any>function() {
+                requestCount -= 1;
+                if (requestCount === 0)
+                {
+                    onload(archetype);
+                }
+            }
+            textureLoad = function (path) {
+                requestCount += 1;
+                self.textureManager.load(path, undefined, loaded);
+            };
+            shaderLoad = function (path) {
+                requestCount += 1;
+                self.shaderManager.load(path, loaded);
+            };
+        }
+        else
+        {
+            textureLoad = this.textureManager.load.bind(this.textureManager);
+            shaderLoad = this.shaderManager.load.bind(this.shaderManager);
+        }
+
+        this.renderers[archetype.renderer.name].preload(archetype.renderer, shaderLoad, textureLoad);
+        this.updaters [archetype.updater.name ].preload(archetype.updater,  shaderLoad, textureLoad);
 
         var packedTextures = archetype.packedTextures;
         var count = packedTextures.length;
         var i;
         for (i = 0; i < count; i += 1)
         {
-            this.textureManager.load(packedTextures[i]);
+            textureLoad(packedTextures[i]);
         }
 
         var particles = archetype.particles;
@@ -7894,8 +7915,17 @@ class ParticleManager
             count = textures.length;
             for (i = 0; i < count; i += 1)
             {
-                this.textureManager.load(textures[i]);
+                textureLoad(textures[i]);
             }
+        }
+
+        // deal with artifically setting requestCount to 1 at start.
+        // if everything loaded synchronously, onload will be called here.
+        // if not, it will allow the asynchrous loading of requested assets
+        // above to invoke it when required.
+        if (loaded)
+        {
+            loaded();
         }
     }
 
