@@ -12,6 +12,33 @@
 /*{% block tz_app_title_name %}*/GPU ParticleSystem/*{% endblock %}*/
 
 /*{% block tz_app_html_controls %}*/
+<div class="html-control control-output-pair">Simulation Speed:
+    <input type="text" id="speedSliderinput" size="4" value="0" class="control-textfield">
+</div>
+<div class="html-control control-slider">
+    <div id="speedSlider" class="sliderinput"></div>
+</div>
+
+<div class="html-control control-output-pair">Instances created / s:
+    <input type="text" id="instanceSliderinput" size="4" value="0" class="control-textfield">
+</div>
+<div class="html-control control-slider">
+    <div id="instanceSlider" class="sliderinput"></div>
+</div>
+
+<div class="html-control control-button-pair">
+    <span class="control-title">Particle Counts</span>
+    <span class="control-button-small">
+        <input type="button" id="button-decrease-particles" value="-">
+        <input type="button" id="button-increase-particles" value="+">
+    </span>
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Move Systems</span>
+    <input type="checkbox" id="move-systems"/>
+</div>
+
 <div class="html-control control-checkbox">
     <span class="control-title">Draw Extents</span>
     <input type="checkbox" id="draw-extents"/>
@@ -47,6 +74,10 @@
 <div class="engine-control">
 <table cellspacing="0">
 <tbody>
+<tr>
+    <td class="key">FPS:</td>
+    <td id="fps"></td>
+</tr>
 <tr>
     <td class="key">Minimap:</td>
 </tr>

@@ -586,7 +586,12 @@ class OnlineTexturePacker
         this.maxHeight = maxHeight;
     }
 
-    releaseSpace(bin, x, y, w, h): void
+    release(rect: PackedRect): void
+    {
+        this.free.insert(rect, rect.w, rect.h);
+    }
+
+    private releaseSpace(bin, x, y, w, h): void
     {
         if (w !== 0 && h !== 0)
         {
@@ -3531,8 +3536,9 @@ interface Context
     height       : number;
     renderTargets: Array<RenderTarget>;
     store        : Array<{
-        fit : PackedRect;
-        set : (ctx: AllocatedContext) => void;
+        fit: PackedRect;
+        set: (ctx: AllocatedContext) => void;
+        ctx: AllocatedContext;
     }>
 }
 interface AllocatedContext
@@ -3616,19 +3622,21 @@ class SharedRenderContext
 
     release(ctx: AllocatedContext): void
     {
-        var uv = ctx.uvRectangle;
-        var binRect = this.packer.bins[ctx.bin];
-        var ctxW = binRect.w;
-        var ctxH = binRect.h;
-        // Math.round is used, as we know the x/y/w/h of the region are integer
-        // but after normalisation numerical errors could creep in.
-        this.packer.releaseSpace(
-            ctx.bin,
-            Math.round(uv[0] * ctxW),
-            Math.round(uv[1] * ctxH),
-            Math.round(uv[2] * ctxW),
-            Math.round(uv[3] * ctxH)
-        );
+        var context = this.contexts[ctx.bin];
+        var store = context.store;
+        var count = store.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var elt = store[i];
+            if (elt.ctx === ctx)
+            {
+                store[i] = store[count - 1];
+                store.pop();
+                this.packer.release(elt.fit);
+                break;
+            }
+        }
     }
 
     allocate(params: {
@@ -3660,12 +3668,7 @@ class SharedRenderContext
         var invW = (1 / ctx.width);
         var invH = (1 / ctx.height);
 
-        ctx.store.push({
-            set: params.set,
-            fit: fit
-        });
-
-        return {
+        var ret = {
             renderTargets: ctx.renderTargets,
             uvRectangle: [
                 fit.x * invW,
@@ -3675,6 +3678,12 @@ class SharedRenderContext
             ],
             bin: fit.bin
         };
+        ctx.store.push({
+            set: params.set,
+            fit: fit,
+            ctx: ret
+        });
+        return ret;
     }
 
     private resizeContext(ctx: Context, w, h)
@@ -3727,7 +3736,7 @@ class SharedRenderContext
             var elt = store[i];
             var fit = elt.fit;
             newStore.push(elt);
-            elt.set({
+            elt.ctx = {
                 renderTargets: newCtx.renderTargets,
                 uvRectangle: [
                     fit.x * invW,
@@ -3736,7 +3745,8 @@ class SharedRenderContext
                     fit.h * invH
                 ],
                 bin: fit.bin
-            });
+            };
+            elt.set(elt.ctx);
         }
         return newCtx;
     }
@@ -7122,77 +7132,80 @@ class DefaultParticleEmitter
                 pos[0] = position.position[0];
                 pos[1] = position.position[1];
                 pos[2] = position.position[2];
-                rand = 0;
-                switch (position.radiusDistribution)
+                if (position.radiusMax !== 0)
                 {
-                    case "uniform":
-                        rand = random();
-                        break;
-                    case "normal":
-                        rand = random();
-                        rand = pSigmaRecip * exp(-rand * rand / (2 * pSigmaSqr));
-                        // normalise to [0, 1]
-                        rand = (rand - pSigmaMin) / (pSigmaRecip - pSigmaMin);
-                        break;
-                }
-                if (position.spherical)
-                {
-                    // uniform distribution of spherical angles in sphere.
-                    theta = acos(1 - (random() * 2));
-                    phi   = random() * (PI * 2);
-                    sint  = sin(theta);
-                    cost  = cos(theta);
-                    sinp  = sin(phi);
-                    cosp  = cos(phi);
-
-                    // Re-distribute radius for volume element.
-                    rand = pow(rand, 1 / 3);
-                    rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
-
-                    pos[0] += cosp * sint * rad;
-                    pos[1] += cost * rad;
-                    pos[2] += sinp * sint * rad;
-                }
-                else
-                {
-                    // Re-distribute radius for area element.
-                    rand = sqrt(rand);
-                    rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
-
-                    var rx, rz;
-                    var tx, ty, tz;
-                    var normal = position.normal;
-                    var nx = normal[0];
-                    var ny = normal[1];
-                    var nz = normal[2];
-                    if (nx == 0 && nz == 0)
+                    rand = 0;
+                    switch (position.radiusDistribution)
                     {
-                        rx = tz = rad;
-                        rz = tx = ty = 0;
+                        case "uniform":
+                            rand = random();
+                            break;
+                        case "normal":
+                            rand = random();
+                            rand = pSigmaRecip * exp(-rand * rand / (2 * pSigmaSqr));
+                            // normalise to [0, 1]
+                            rand = (rand - pSigmaMin) / (pSigmaRecip - pSigmaMin);
+                            break;
+                    }
+                    if (position.spherical)
+                    {
+                        // uniform distribution of spherical angles in sphere.
+                        theta = acos(1 - (random() * 2));
+                        phi   = random() * (PI * 2);
+                        sint  = sin(theta);
+                        cost  = cos(theta);
+                        sinp  = sin(phi);
+                        cosp  = cos(phi);
+
+                        // Re-distribute radius for volume element.
+                        rand = pow(rand, 1 / 3);
+                        rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
+
+                        pos[0] += cosp * sint * rad;
+                        pos[1] += cost * rad;
+                        pos[2] += sinp * sint * rad;
                     }
                     else
                     {
-                        var rec = rad / sqrt(nx * nx + nz * nz);
-                        rx = -nz * rec;
-                        rz = nx * rec;
+                        // Re-distribute radius for area element.
+                        rand = sqrt(rand);
+                        rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
 
-                        tx = -rz * ny;
-                        ty = (rz * nx) - (rx * nz);
-                        tz = rx * ny;
-                        rec = rad / sqrt(tx * tx + ty * ty + tz * tz);
-                        tx *= rec;
-                        ty *= rec;
-                        tz *= rec;
+                        var rx, rz;
+                        var tx, ty, tz;
+                        var normal = position.normal;
+                        var nx = normal[0];
+                        var ny = normal[1];
+                        var nz = normal[2];
+                        if (nx == 0 && nz == 0)
+                        {
+                            rx = tz = rad;
+                            rz = tx = ty = 0;
+                        }
+                        else
+                        {
+                            var rec = rad / sqrt(nx * nx + nz * nz);
+                            rx = -nz * rec;
+                            rz = nx * rec;
+
+                            tx = -rz * ny;
+                            ty = (rz * nx) - (rx * nz);
+                            tz = rx * ny;
+                            rec = rad / sqrt(tx * tx + ty * ty + tz * tz);
+                            tx *= rec;
+                            ty *= rec;
+                            tz *= rec;
+                        }
+
+                        // Uniform angle around disc.
+                        theta = random() * PI * 2;
+                        cost = cos(theta);
+                        sint = sin(theta);
+
+                        pos[0] += rx * cost + tx * sint;
+                        pos[1] += ty * sint;
+                        pos[2] += rz * cost + tz * sint;
                     }
-
-                    // Uniform angle around disc.
-                    theta = random() * PI * 2;
-                    cost = cos(theta);
-                    sint = sin(theta);
-
-                    pos[0] += rx * cost + tx * sint;
-                    pos[1] += ty * sint;
-                    pos[2] += rz * cost + tz * sint;
                 }
 
                 phi   = velocity.phi;
@@ -7725,7 +7738,8 @@ class ParticleManager
                     numPooledInstances   : 0,
                     numActiveInstances   : 0,
                     numAllocatedInstances: 0,
-                    numInstances         : 0
+                    numInstances         : 0,
+                    activeParticleCount  : 0
                 };
             }
             else
@@ -7738,7 +7752,8 @@ class ParticleManager
                     numPooledInstances   : context.instancePool.length,
                     numActiveInstances   : 0,
                     numAllocatedInstances: 0,
-                    numInstances         : count
+                    numInstances         : count,
+                    activeParticleCount  : 0
                 };
                 for (i = 0; i < count; i += 1)
                 {
@@ -7749,6 +7764,7 @@ class ParticleManager
                         if (instance.system.lastTime === time)
                         {
                             metrics.numActiveInstances += 1;
+                            metrics.activeParticleCount += instance.system.maxParticles;
                         }
                     }
                 }
@@ -7771,7 +7787,8 @@ class ParticleManager
                 numPooledInstances      : 0,
                 numActiveInstances      : 0,
                 numAllocatedInstances   : 0,
-                numInstances            : 0
+                numInstances            : 0,
+                activeParticleCount     : 0
             };
 
             for (i = 0; i < archetypeCount; i += 1)
@@ -7782,6 +7799,7 @@ class ParticleManager
                 metrics.numActiveInstances    += ms.numActiveInstances;
                 metrics.numAllocatedInstances += ms.numAllocatedInstances;
                 metrics.numInstances          += ms.numInstances;
+                metrics.activeParticleCount   += ms.activeParticleCount;
             }
 
             for (var f in this.emitters)

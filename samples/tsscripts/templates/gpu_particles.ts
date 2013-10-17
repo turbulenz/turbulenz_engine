@@ -83,8 +83,11 @@ TurbulenzEngine.onload = function onloadFn()
     var sceneHeight = 1000;
 
     // speed of generation.
-    var generationSpeed = 200; // generations per second.
+    var generationSpeed = 50; // generations per second.
     var lastGen = 0;
+
+    // speed of simulation (log 1.3)
+    var simulationSpeed = 0;
 
     var camera = Camera.create(mathDevice);
     var halfFOV = Math.tan(30 * Math.PI / 180);
@@ -92,7 +95,7 @@ TurbulenzEngine.onload = function onloadFn()
     camera.recipViewWindowY = 1 / halfFOV;
     camera.lookAt(mathDevice.v3Build(0, 0, 0),
                   mathDevice.v3BuildYAxis(),
-                  mathDevice.v3Build(sceneWidth / 2, 10, sceneHeight / 2));
+                  mathDevice.v3Build(sceneWidth / 2, 30, sceneHeight / 2));
     camera.updateProjectionMatrix();
     camera.updateViewMatrix();
     var cameraController = CameraController.create(graphicsDevice, inputDevice, camera);
@@ -127,6 +130,23 @@ TurbulenzEngine.onload = function onloadFn()
 
     var fontTechnique;
     var fontTechniqueParameters;
+
+    var fpsElement = document.getElementById("fps");
+    var fpsText = "";
+    function displayFPS()
+    {
+        if (!fpsElement)
+        {
+            return;
+        }
+
+        var text = graphicsDevice.fps.toFixed(2) +" fps";
+        if (text !== fpsText)
+        {
+            fpsText = text;
+            fpsElement.innerHTML = fpsText;
+        }
+    }
 
     //==========================================================================
     // Particle Systems
@@ -227,9 +247,11 @@ TurbulenzEngine.onload = function onloadFn()
 
     var description1 = {
         system: {
-            // define local system extents to be from (-3, 0, -3) to (3, 12, 3)
+            // define local system extents
+            // We make extents a little larger than necessary so that in movement of system
+            // particles will not push up against the edges of extents so easily.
             center      : [0, 6, 0],
-            halfExtents : [5, 6, 5]
+            halfExtents : [7, 6, 7]
         },
         updater: {
             // set noise texture to use for randomization, and allow acceleration (when enabled)
@@ -369,21 +391,23 @@ TurbulenzEngine.onload = function onloadFn()
                 speedMax: 6
             },
             position: {
-                // position 3 units above system position
-                position: [0, 3, 0],
+                // position 2.5 units above system position
+                position: [0, 2.5, 0],
                 // and in a random radius of this position in a sphere.
                 spherical: true,
-                radiusMin: 0,
-                radiusMax: 1.5
+                radiusMin: 0.5,
+                radiusMax: 2.0
             }
         }]
     };
 
     var description2 = {
         system: {
-            // define local system extents to be from (-5, 0, -5) to (5, 10, 5)
-            center     : [0, 5, 0],
-            halfExtents: [5, 5, 5]
+            // define local system extents
+            // as with first system these are defined to be a bit larger to account for
+            // movements of the system.
+            center     : [0, 6, 0],
+            halfExtents: [12, 6, 12]
         },
         renderer: {
             // we're going to use the default renderer with the "additive" blend mode.
@@ -543,11 +567,25 @@ TurbulenzEngine.onload = function onloadFn()
         previousFrameTime = TurbulenzEngine.time;
     }
 
+    // All systems are added as childs of this node so we can shuffle them around
+    // in space, demonstrating trails.
+    var particleNode = SceneNode.create({
+        name   : "particleNode",
+        dynamic: true
+    });
+    scene.addRootNode(particleNode);
+
+    var moveSystems = false;
+    var movementTime = 0;
+    // movement radius of particleNode.
+    var radius = 50;
+
     function mainLoop()
     {
         var currentTime = TurbulenzEngine.time;
         var deltaTime = (currentTime - previousFrameTime);
         previousFrameTime = currentTime;
+        displayFPS();
 
         inputDevice.update();
 
@@ -563,6 +601,10 @@ TurbulenzEngine.onload = function onloadFn()
         }
         camera.updateViewProjectionMatrix();
 
+        // alter deltaTime for simulation speed after camera maxSpeed was set to avoid
+        // slowing down the camera movement.
+        deltaTime *= Math.pow(1.3, simulationSpeed);
+
         // Update ParticleManager object with elapsed time.
         // This will add the deltaTime to the managers internal clock used by systems when synchronizing
         // and will also remove any expired ParticleInstance objects created in the manager.
@@ -570,24 +612,51 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Create new ParticleInstances in manager.
         lastGen += deltaTime;
-        while (lastGen > 1 / generationSpeed)
+        var limit = 0;
+        while (lastGen > 1 / generationSpeed && limit < 100)
         {
+            limit += 1;
             lastGen -= 1 / generationSpeed;
 
-            var instance, x, z, timeout;
+            var instance, x, z, s, timeout;
             timeout = 2 + 2 * Math.random();
             instance = manager.createInstance(archetype1, timeout);
-            x = Math.random() * sceneWidth;
-            z = Math.random() * sceneHeight;
-            instance.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
-            manager.addInstanceToScene(instance);
+            x = Math.random() * (sceneWidth - radius * 2) + radius;
+            z = Math.random() * (sceneHeight - radius * 2) + radius;
+            s = 1 + Math.random() * 2;
+            instance.renderable.setLocalTransform(mathDevice.m43Build(
+                s, 0, 0,
+                0, s, 0,
+                0, 0, s,
+                x, 0, z));
+            manager.addInstanceToScene(instance, particleNode);
 
             timeout = 2 + 2 * Math.random();
             instance = manager.createInstance(archetype2, timeout);
-            x = Math.random() * sceneWidth;
-            z = Math.random() * sceneHeight;
-            instance.renderable.setLocalTransform(VMath.m43BuildTranslation(x, 0, z));
-            manager.addInstanceToScene(instance);
+            x = Math.random() * (sceneWidth - radius * 2) + radius;
+            z = Math.random() * (sceneHeight - radius * 2) + radius;
+            s = 1 + Math.random() * 2;
+            instance.renderable.setLocalTransform(mathDevice.m43Build(
+                s, 0, 0,
+                0, s, 0,
+                0, 0, s,
+                x, 0, z));
+            manager.addInstanceToScene(instance, particleNode);
+        }
+        lastGen %= (1 / generationSpeed);
+
+        // Shuffle node containing all particle systems around
+        if (moveSystems)
+        {
+            movementTime += deltaTime;
+            var time = movementTime / 5;
+            var rad = radius * Math.sin(time);
+            var transform =
+                mathDevice.m43BuildTranslation(
+                    Math.sin(time) * rad,
+                    0,
+                    Math.cos(time) * rad);
+            particleNode.setLocalTransform(transform);
         }
 
         // Update scene
@@ -613,7 +682,7 @@ TurbulenzEngine.onload = function onloadFn()
         graphicsDevice.setTechniqueParameters(fontTechniqueParameters);
 
         var metrics = manager.gatherMetrics();
-        var text = "";
+        var text = "ParticleManager Metrics:\n";
         for (var f in metrics)
         {
             if (metrics.hasOwnProperty(f))
@@ -794,6 +863,90 @@ TurbulenzEngine.onload = function onloadFn()
     //=========================================================================
     var htmlControls = HTMLControls.create();
 
+    htmlControls.addSliderControl({
+        id: "speedSlider",
+        value: (simulationSpeed),
+        max: 6,
+        min: -10,
+        step: 1,
+        fn: function ()
+        {
+            simulationSpeed = this.value;
+            htmlControls.updateSlider("speedSlider", simulationSpeed);
+        }
+    });
+
+    htmlControls.addSliderControl({
+        id: "instanceSlider",
+        value: (generationSpeed),
+        max: 200,
+        min: 20,
+        step: 20,
+        fn: function ()
+        {
+            generationSpeed = this.value;
+            htmlControls.updateSlider("instanceSlider", generationSpeed);
+        }
+    });
+
+    var scaleOffset = 0;
+    function refreshArchetype(description, archetype, scale)
+    {
+        var emitters = description.emitters;
+        var count = emitters.length;
+        var i;
+        for (i = 0; i < count; i += 1)
+        {
+            var emitter = emitters[i];
+            emitter.emittance.burstMin *= scale;
+            emitter.emittance.burstMax *= scale;
+        }
+        // build new archetype from modified description.
+        // replacing all instances of old with new.
+        // and destroying the old.
+        var newArchetype = manager.parseArchetype(description);
+        manager.replaceArchetype(archetype, newArchetype);
+        manager.destroyArchetype(archetype);
+        return newArchetype;
+    }
+    htmlControls.addButtonControl({
+        id: "button-decrease-particles",
+        value: "-",
+        fn: function ()
+        {
+            if (scaleOffset > -5)
+            {
+                scaleOffset -= 1;
+                archetype1 = refreshArchetype(description1, archetype1, 1 / 1.5);
+                archetype2 = refreshArchetype(description2, archetype2, 1 / 1.5);
+            }
+        }
+    });
+    htmlControls.addButtonControl({
+        id: "button-increase-particles",
+        value: "+",
+        fn: function ()
+        {
+            if (scaleOffset < 4)
+            {
+                scaleOffset += 1;
+                archetype1 = refreshArchetype(description1, archetype1, 1.5);
+                archetype2 = refreshArchetype(description2, archetype2, 1.5);
+            }
+        }
+    });
+
+    htmlControls.addCheckboxControl({
+        id : "move-systems",
+        value : "moveSystems",
+        isSelected : moveSystems,
+        fn: function ()
+        {
+            moveSystems = !moveSystems;
+            return moveSystems;
+        }
+    });
+
     htmlControls.addCheckboxControl({
         id : "draw-extents",
         value : "drawRenderableExtents",
@@ -809,6 +962,8 @@ TurbulenzEngine.onload = function onloadFn()
         id: "button-clear",
         value: "Clear",
         fn: function () {
+            // remove all instances of both archetypes, retaining other state like object
+            // pools and allocated memory on gpu.
             manager.clear(archetype1);
             manager.clear(archetype2);
         }
@@ -818,6 +973,7 @@ TurbulenzEngine.onload = function onloadFn()
         id: "button-destroy-1",
         value: "Destroy (1)",
         fn: function () {
+            // destroy all state and instances associated with archetype1 (complete reset)
             manager.destroyArchetype(archetype1);
         }
     });
@@ -825,6 +981,7 @@ TurbulenzEngine.onload = function onloadFn()
         id: "button-destroy-2",
         value: "Destroy (2)",
         fn: function () {
+            // destroy all state and instances associated with archetype2 (complete reset)
             manager.destroyArchetype(archetype2);
         }
     });
@@ -833,6 +990,7 @@ TurbulenzEngine.onload = function onloadFn()
         id: "button-replace-1-2",
         value: "Replace (1 with 2)",
         fn: function () {
+            // replace all instances of archetype1 with ones of archetype2 in-place.
             manager.replaceArchetype(archetype1, archetype2);
         }
     });
@@ -840,6 +998,7 @@ TurbulenzEngine.onload = function onloadFn()
         id: "button-replace-2-1",
         value: "Replace (2 with 1)",
         fn: function () {
+            // replace all instances of archetype2 with ones of archetype1 in-place.
             manager.replaceArchetype(archetype2, archetype1);
         }
     });
