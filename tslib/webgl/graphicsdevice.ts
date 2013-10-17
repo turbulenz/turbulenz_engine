@@ -1575,7 +1575,7 @@ class WebGLRenderBuffer implements RenderBuffer
             internalFormat = gl.DEPTH_COMPONENT16;
             attachment = gl.DEPTH_ATTACHMENT;
         }
-        else //if (gd.PIXELFORMAT_D24S8 === format)
+        else // if (gd.PIXELFORMAT_D24S8 === format)
         {
             internalFormat = gl.DEPTH_STENCIL;
             attachment = gl.DEPTH_STENCIL_ATTACHMENT;
@@ -1583,6 +1583,7 @@ class WebGLRenderBuffer implements RenderBuffer
         // else if (gd.PIXELFORMAT_S8 === format)
         // {
         //     internalFormat = gl.STENCIL_INDEX8;
+        //     attachment = gl.STENCIL_ATTACHMENT;
         // }
 
         gl.renderbufferStorage(gl.RENDERBUFFER, internalFormat, width, height);
@@ -4739,11 +4740,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
     width: number;
     height: number;
     extensions: string;
-    shadingLanguageVersion: number;
+    shadingLanguageVersion: string;
 
     fullscreen: boolean;
 
-    rendererVersion: number;
+    rendererVersion: string;
     renderer: string;
     vendor: string;
     videoRam: number;
@@ -8208,3 +8209,4 @@ WebGLGraphicsDevice.prototype.PIXELFORMAT_D16 = 9;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT1 = 10;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT3 = 11;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT5 = 12;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_S8 = 13;
