@@ -44,7 +44,6 @@ class WebGLSound implements Sound
         var audioContext = this.audioContext;
         if (audioContext)
         {
-            delete this.audioContext;
             delete this.buffer;
         }
         else
@@ -73,8 +72,6 @@ class WebGLSound implements Sound
         var audioContext = sd.audioContext;
         if (audioContext)
         {
-            sound.audioContext = audioContext;
-
             var buffer;
             if (soundPath)
             {
@@ -856,8 +853,6 @@ class WebGLSoundSource implements SoundSource
                 pannerNode.disconnect();
                 delete this.pannerNode;
             }
-
-            delete this.audioContext;
         }
     }
 
@@ -881,7 +876,6 @@ class WebGLSoundSource implements SoundSource
         var audioContext = sd.audioContext;
         if (audioContext)
         {
-            source.audioContext = audioContext;
             source.bufferNode = null;
             source.playStart = -1;
             source.playPaused = -1;
@@ -1623,6 +1617,9 @@ class WebGLSoundDevice implements SoundDevice
             {
                 return null;
             }
+
+            WebGLSound.prototype.audioContext = audioContext;
+            WebGLSoundSource.prototype.audioContext = audioContext;
 
             sd.renderer = 'WebAudio';
             sd.audioContext = audioContext;
