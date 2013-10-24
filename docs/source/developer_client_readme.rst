@@ -202,7 +202,7 @@ On iOS, the Developer Client is not able to intercept arbitrary URLs
 in the same way as on Android.  By default, it is configured to open
 in response to URLs with the `tblz` and `tblzs` schemes.  Internally,
 these are translated into `http` and `https`.  The Turbulenz servers
-automatically generates URLs of the appropriate form when viewed from
+automatically generate URLs of the appropriate form when viewed from
 the iOS browser.
 
 .. NOTE::
@@ -217,8 +217,12 @@ Developer Workflow
 Run the Developer Client from Xcode to capture the log output into the
 debug console.
 
+Several development options are available from the appropriate section
+of the iOS Settings menu, including a in-app development menu.
+
 It is possible to hard-code URLs into the Developer Client (see the
 comments at the top of the file `ViewController.mm` in the Xcode
 project).  When this is done, the hard-coded URL will be used whenever
-the app is run from Xcode or and launched via the Turbulenz
-Developer Client icon in the home screen.
+the app is run from Xcode or and launched via the Turbulenz Developer
+Client icon in the home screen.  This allows developers to create
+standalone apps that wrap a specific game.
