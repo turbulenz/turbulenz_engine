@@ -538,10 +538,10 @@ Clears a delay set by :ref:`tz_settimeout`.
 
 **Syntax** ::
 
-    TurbulenzEngine.clearTimeout(intervalID);
+    TurbulenzEngine.clearTimeout(timeoutID);
 
-``intervalID``
-    The intervalID returned by a call to ``TurbulenzEngine.setInterval``.
+``timeoutID``
+    The ID returned by a call to ``TurbulenzEngine.setTimeout``.
 
 .. index::
     pair: TurbulenzEngine; clearInterval
