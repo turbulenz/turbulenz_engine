@@ -492,42 +492,29 @@ class WebGLSoundSource implements SoundSource
     // Public API
     play(sound: Sound, seek?: number)
     {
+        if (seek === undefined)
+        {
+            seek = 0;
+        }
+
+        if (this.sound === sound)
+        {
+            return this.seek(seek);
+        }
+
+        this.sound = <WebGLSound>sound;
+
         var audioContext = this.audioContext;
         if (audioContext)
         {
             var bufferNode = this.bufferNode;
-
-            if (this.sound !== sound)
+            if (bufferNode)
             {
-                if (bufferNode)
-                {
-                    bufferNode.stop(0);
-                }
-            }
-            else
-            {
-                if (bufferNode)
-                {
-                    return this.seek(seek);
-                }
+                bufferNode.stop(0);
+                bufferNode.disconnect();
             }
 
             bufferNode = this.createBufferNode(sound);
-
-            this.sound = <WebGLSound>sound;
-
-            if (!this.playing)
-            {
-                this.playing = true;
-                this.paused = false;
-
-                this.sd.addPlayingSource(this);
-            }
-
-            if (seek === undefined)
-            {
-                seek = 0;
-            }
 
             if (0 < seek)
             {
@@ -550,54 +537,28 @@ class WebGLSoundSource implements SoundSource
         }
         else
         {
-            var audio;
-
-            if (this.sound !== sound)
+            var audio = this.audio;
+            if (audio)
             {
-                this.stop();
+                audio.pause();
+                audio.removeEventListener('ended', this.loopAudio, false);
+            }
 
-                if ((<WebGLSound>sound).data)
-                {
-                    audio = new Audio();
-                    audio.mozSetup(sound.channels, sound.frequency);
-                }
-                else
-                {
-                    audio = (<WebGLSound>sound).audio.cloneNode(true);
-                }
-
-                this.sound = <WebGLSound>sound;
-                this.audio = audio;
-
-                audio.loop = this.looping;
-
-                audio.addEventListener('ended', this.loopAudio, false);
+            if ((<WebGLSound>sound).data)
+            {
+                audio = new Audio();
+                audio.mozSetup(sound.channels, sound.frequency);
             }
             else
             {
-                if (this.playing && !this.paused)
-                {
-                    if (this.looping)
-                    {
-                        return true;
-                    }
-                }
-
-                audio = this.audio;
+                audio = <HTMLAudioElement>(<WebGLSound>sound).audio.cloneNode(true);
             }
 
-            if (!this.playing)
-            {
-                this.playing = true;
-                this.paused = false;
+            this.audio = audio;
 
-                this.sd.addPlayingSource(this);
-            }
+            audio.loop = this.looping;
 
-            if (seek === undefined)
-            {
-                seek = 0;
-            }
+            audio.addEventListener('ended', this.loopAudio, false);
 
             if (0.05 < Math.abs(audio.currentTime - seek))
             {
@@ -613,13 +574,18 @@ class WebGLSoundSource implements SoundSource
 
             if ((<WebGLSound>sound).data)
             {
-                audio.mozWriteAudio((<WebGLSound>sound).data);
+                (<any>audio).mozWriteAudio((<WebGLSound>sound).data);
             }
             else
             {
                 audio.play();
             }
         }
+
+        this.playing = true;
+        this.paused = false;
+
+        this.sd.addPlayingSource(this);
 
         return true;
     }
@@ -631,18 +597,17 @@ class WebGLSoundSource implements SoundSource
         {
             this.playing = false;
             this.paused = false;
+            this.sound = null;
 
             var audioContext = this.audioContext;
             if (audioContext)
             {
-                this.sound = null;
-
                 var bufferNode = this.bufferNode;
                 if (bufferNode)
                 {
+                    this.bufferNode = null;
                     bufferNode.stop(0);
                     bufferNode.disconnect();
-                    this.bufferNode = null;
                 }
             }
             else
@@ -650,14 +615,9 @@ class WebGLSoundSource implements SoundSource
                 var audio = this.audio;
                 if (audio)
                 {
-                    this.sound = null;
                     this.audio = null;
-
                     audio.pause();
-
                     audio.removeEventListener('ended', this.loopAudio, false);
-
-                    audio = null;
                 }
             }
 
@@ -775,6 +735,7 @@ class WebGLSoundSource implements SoundSource
                 if (bufferNode)
                 {
                     bufferNode.stop(0);
+                    bufferNode.disconnect();
                 }
 
                 bufferNode = this.createBufferNode(this.sound);
@@ -813,6 +774,7 @@ class WebGLSoundSource implements SoundSource
                     if (bufferNode)
                     {
                         bufferNode.stop(0);
+                        bufferNode.disconnect();
                     }
 
                     bufferNode = this.createBufferNode(this.sound);
@@ -844,8 +806,7 @@ class WebGLSoundSource implements SoundSource
                 var audio = this.audio;
                 if (audio)
                 {
-                    // There does not seem to be any reliable way of seeking
-                    if (audio.currentTime > seek)
+                    if (0.05 < Math.abs(audio.currentTime - seek))
                     {
                         try
                         {
@@ -853,6 +814,7 @@ class WebGLSoundSource implements SoundSource
                         }
                         catch (e)
                         {
+                            // There does not seem to be any reliable way of seeking
                         }
                     }
 
