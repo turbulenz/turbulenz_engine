@@ -65,8 +65,7 @@ class WebGLSound implements Sound
         sound.length = audio.duration;
 
         if (audio.buffered &&
-            audio.buffered.length &&
-            0 < audio.buffered.end(0))
+            audio.buffered.length)
         {
             if (isNaN(sound.length) ||
                 sound.length === Number.POSITIVE_INFINITY)
@@ -76,7 +75,14 @@ class WebGLSound implements Sound
 
             if (onload)
             {
-                onload(sound, 200);
+                if (sound.length)
+                {
+                    onload(sound, 200);
+                }
+                else
+                {
+                    onload(null, 0);
+                }
                 onload = null;
             }
         }
