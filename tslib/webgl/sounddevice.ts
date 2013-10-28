@@ -34,6 +34,7 @@ class WebGLSound implements Sound
     compressed   : boolean;
 
     // WebGLSound
+    forceUncompress: boolean;
     audioContext : any; // TODO
     buffer       : any; // TODO
     data         : any; // TODO
@@ -126,7 +127,7 @@ class WebGLSound implements Sound
         var numSamples, numChannels, samplerRate;
 
         var audioContext = sd.audioContext;
-        if (audioContext && (!audioContext.createMediaElementSource || params.uncompress))
+        if (audioContext && (sound.forceUncompress || params.uncompress))
         {
             var buffer;
             if (soundPath)
@@ -1815,6 +1816,10 @@ class WebGLSoundDevice implements SoundDevice
                 return null;
             }
 
+            // HTML5 + WebAudio just does not work on Android or iOS
+            WebGLSound.prototype.forceUncompress = (TurbulenzEngine.getSystemInfo().platformProfile !== 'desktop' ||
+                                                    !audioContext.createMediaElementSource);
+
             WebGLSound.prototype.audioContext = audioContext;
             WebGLSoundSource.prototype.audioContext = audioContext;
 
@@ -1920,6 +1925,10 @@ class WebGLSoundDevice implements SoundDevice
                     delete playingSources[stopped[n]];
                 }
             };
+        }
+        else
+        {
+            WebGLSound.prototype.forceUncompress = false;
         }
 
         sd.listenerTransform = (params.listenerTransform || VMath.m43BuildIdentity());
