@@ -39,6 +39,7 @@ class WebGLSound implements Sound
     buffer       : any; // TODO
     data         : any; // TODO
     audio        : HTMLAudioElement;
+    blob         : Blob;
 
     destroy()
     {
@@ -54,6 +55,10 @@ class WebGLSound implements Sound
                 URL.revokeObjectURL(src);
             }
             this.audio = null;
+        }
+        if (this.blob)
+        {
+            this.blob = null;
         }
     }
 
@@ -395,6 +400,7 @@ class WebGLSound implements Sound
                             dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
                         }
                         debug.assert(dataArray.length === dataBlob.size, "Blob constructor does not support typed arrays.");
+                        sound.blob = dataBlob;
                         soundPath = URL.createObjectURL(dataBlob);
                     }
                     else
@@ -469,7 +475,8 @@ class WebGLSound implements Sound
                                 {
                                     if (xhrStatus === 200 || xhrStatus === 0)
                                     {
-                                        audio.src = URL.createObjectURL(xhr.response);
+                                        sound.blob = xhr.response;
+                                        audio.src = URL.createObjectURL(sound.blob);
 
                                         sd.addLoadingSound(checkLoaded);
                                     }
