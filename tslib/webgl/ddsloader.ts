@@ -494,7 +494,15 @@ class DDSLoader
         var url = (typeof URL !== "undefined" ? URL : window['webkitURL']);
         var objectURL = url.createObjectURL(blob);
 
-        var worker = new Worker(objectURL);
+        var worker;
+        try
+        {
+            worker = new Worker(objectURL);
+        }
+        catch (e)
+        {
+            worker = null;
+        }
         if (worker)
         {
             var workerQueue = DDSLoader.workerQueues[index];
