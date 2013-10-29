@@ -1408,12 +1408,7 @@ class WebGLSoundSource implements SoundSource
                 });
 
                 source.loopAudio = function loopAudioFn() {
-                    var audio = source.audio;
-                    if (audio)
-                    {
-                        source.playing = false;
-                        source.sd.removePlayingSource(source);
-                    }
+                    source.stop();
                 };
             }
             else
@@ -1431,8 +1426,7 @@ class WebGLSoundSource implements SoundSource
                         }
                         else
                         {
-                            source.playing = false;
-                            source.sd.removePlayingSource(source);
+                            source.stop();
                         }
                     }
                 };
