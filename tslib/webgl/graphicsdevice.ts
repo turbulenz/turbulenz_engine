@@ -1096,6 +1096,7 @@ class TZWebGLTexture implements Texture
                     {
                         imageLoaded();
                         URL.revokeObjectURL(img.src);
+                        dataBlob = null;
                     };
                     src = URL.createObjectURL(dataBlob);
                 }
@@ -1146,12 +1147,14 @@ class TZWebGLTexture implements Texture
                             {
                                 if (xhrStatus === 200 || xhrStatus === 0)
                                 {
+                                    var blob = xhr.response;
                                     img.onload = function blobImageLoadedFn()
                                     {
                                         imageLoaded();
                                         URL.revokeObjectURL(img.src);
+                                        blob = null;
                                     };
-                                    img.src = URL.createObjectURL(xhr.response);
+                                    img.src = URL.createObjectURL(blob);
                                 }
                                 else
                                 {
@@ -4119,7 +4122,19 @@ class TZWebGLShader implements Shader
                 }
                 var glShader = gl.createShader(glShaderType);
 
-                gl.shaderSource(glShader, program.code);
+                var code = program.code;
+
+                if (gd.fixIE)
+                {
+                    code = code.replace(/#.*\n/g, '');
+                    code = code.replace(/TZ_LOWP/g, '');
+                    if (-1 !== code.indexOf('texture2DProj'))
+                    {
+                        code = 'vec4 texture2DProj(sampler2D s, vec3 uv){ return texture2D(s, uv.xy / uv.z); }\n' + code;
+                    }
+                }
+
+                gl.shaderSource(glShader, code);
 
                 gl.compileShader(glShader);
 
@@ -4788,6 +4803,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     metrics: WebGLMetrics;
 
     counters: WebGLCreationCounters;
+
+    fixIE: boolean;
 
     drawIndexed(primitive: number, numIndices: number, first?: number)
     {
@@ -7138,6 +7155,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.INDEXFORMAT_USHORT = gl.UNSIGNED_SHORT;
         gd.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
 
+        // Detect IE11 partial WebGL implementation...
+        gd.fixIE = (gd.vendor === 'Microsoft' && -1 !== gd.rendererVersion.indexOf('0.9'));
+
         var getNormalizationScale = function getNormalizationScaleFn(format)
         {
             if (format === gl.BYTE)
@@ -7261,22 +7281,44 @@ class WebGLGraphicsDevice implements GraphicsDevice
             return attributeFormat;
         }
 
-        gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
-        gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
-        gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
-        gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
-        gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
-        gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
-        gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
-        gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
-        gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
-        gd.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
-        gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
-        gd.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
-        gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-        gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-        gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-        gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+        if (gd.fixIE)
+        {
+            gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
+            gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
+            gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4');
+            gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
+            gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2');
+            gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2N');
+            gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4');
+            gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
+            gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2');
+            gd.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2N');
+            gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4');
+            gd.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
+            gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+            gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+            gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+            gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+        }
+        else
+        {
+            gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
+            gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
+            gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
+            gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
+            gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
+            gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
+            gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
+            gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
+            gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
+            gd.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
+            gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
+            gd.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
+            gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+            gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+            gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+            gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+        }
 
         gd.DEFAULT_SAMPLER = {
             minFilter : gl.LINEAR_MIPMAP_LINEAR,
@@ -8075,7 +8117,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
         addStateHandler("StencilOp", setStencilOp, resetStencilOp, parseEnum3, [defaultStencilOp, defaultStencilOp, defaultStencilOp]);
         addStateHandler("PolygonOffsetFillEnable", setPolygonOffsetFillEnable, resetPolygonOffsetFillEnable, parseBoolean, [false]);
         addStateHandler("PolygonOffset", setPolygonOffset, resetPolygonOffset, parseFloat2, [0, 0]);
-        addStateHandler("LineWidth", setLineWidth, resetLineWidth, parseFloat, [1]);
+        if (!gd.fixIE)
+        {
+            addStateHandler("LineWidth", setLineWidth, resetLineWidth, parseFloat, [1]);
+        }
         gd.stateHandlers = stateHandlers;
 
         gd.syncState();
