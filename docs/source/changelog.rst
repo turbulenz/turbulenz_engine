@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-10-30
+
+- Fixed animation NodeTransformControllers which would not bind to multiple root nodes in a scene.
+
 2013-09-19
 
 - Added method Material.clone.
