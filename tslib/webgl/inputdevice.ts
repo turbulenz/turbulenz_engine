@@ -721,8 +721,6 @@ class WebGLInputDevice implements InputDevice
         var keyCode = event.keyCode;
         keyCode = this.keyMap[keyCode];
 
-        var keyLocation = event.keyLocation || event.location;
-
         if (undefined !== keyCode &&
            (keyCodes.ESCAPE !== keyCode))
         {
@@ -734,6 +732,7 @@ class WebGLInputDevice implements InputDevice
             //   DOM_KEY_LOCATION_MOBILE   = 0x04;
             //   DOM_KEY_LOCATION_JOYSTICK = 0x05;
 
+            var keyLocation = (typeof event.location === "number" ? event.location : event.keyLocation);
             if (2 === keyLocation)
             {
                 // The Turbulenz KeyCodes are such that CTRL, SHIFT
@@ -761,8 +760,6 @@ class WebGLInputDevice implements InputDevice
         var keyCode = event.keyCode;
         keyCode = this.keyMap[keyCode];
 
-        var keyLocation = event.keyLocation || event.location;
-
         if (keyCode === keyCodes.ESCAPE)
         {
             this.unlockMouse();
@@ -788,6 +785,7 @@ class WebGLInputDevice implements InputDevice
         {
             // Handle LEFT / RIGHT.  (See OnKeyDown)
 
+            var keyLocation = (typeof event.location === "number" ? event.location : event.keyLocation);
             if (2 === keyLocation)
             {
                 keyCode = keyCode + 1;
