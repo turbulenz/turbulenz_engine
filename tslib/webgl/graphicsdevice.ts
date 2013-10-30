@@ -149,6 +149,99 @@ class TZWebGLTexture implements Texture
         return true;
     }
 
+    convertDataToRGBA(gl, data, internalFormat, gltype, srcStep)
+    {
+        var numPixels = (data.length / srcStep);
+        var rgbaData = new Uint8Array(numPixels * 4);
+        var offset = 0;
+        var n, value, r, g, b, a;
+        if (internalFormat === gl.LUMINANCE)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                r = data[n];
+                rgbaData[offset    ] = r;
+                rgbaData[offset + 1] = r;
+                rgbaData[offset + 2] = r;
+                rgbaData[offset + 3] = 0xff;
+            }
+        }
+        else if (internalFormat === gl.ALPHA)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                a = data[n];
+                rgbaData[offset    ] = 0xff
+                rgbaData[offset + 1] = 0xff;
+                rgbaData[offset + 2] = 0xff;
+                rgbaData[offset + 3] = a;
+            }
+        }
+        else if (internalFormat === gl.LUMINANCE_ALPHA)
+        {
+            debug.assert(srcStep === 2);
+            for (n = 0; n < numPixels; n += 2, offset += 4)
+            {
+                r = data[n];
+                a = data[n + 1];
+                rgbaData[offset    ] = r
+                rgbaData[offset + 1] = r;
+                rgbaData[offset + 2] = r;
+                rgbaData[offset + 3] = a;
+            }
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_5_6_5)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 11) & 31);
+                g = ((value >> 5) & 63);
+                b = ((value) & 31);
+                rgbaData[offset    ] = ((r << 3) | (r >> 2));
+                rgbaData[offset + 1] = ((g << 2) | (g >> 4));
+                rgbaData[offset + 2] = ((b << 3) | (b >> 2));
+                rgbaData[offset + 3] = 0xff;
+            }
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_5_5_5_1)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 11) & 31);
+                g = ((value >> 6) & 31);
+                b = ((value >> 1) & 31);
+                a = ((value) & 1);
+                rgbaData[offset    ] = ((r << 3) | (r >> 2));
+                rgbaData[offset + 1] = ((g << 3) | (g >> 2));
+                rgbaData[offset + 2] = ((b << 3) | (b >> 2));
+                rgbaData[offset + 3] = (a ? 0xff : 0);
+            }
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_4_4_4_4)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 12) & 15);
+                g = ((value >> 8) & 15);
+                b = ((value >> 4) & 15);
+                a = ((value) & 15);
+                rgbaData[offset    ] = ((r << 4) | r);
+                rgbaData[offset + 1] = ((g << 4) | g);
+                rgbaData[offset + 2] = ((b << 4) | b);
+                rgbaData[offset + 3] = ((a << 4) | a);
+            }
+        }
+        return rgbaData;
+    }
+
     updateData(data)
     {
         var gd = this.gd;
@@ -387,6 +480,19 @@ class TZWebGLTexture implements Texture
         else
         {
             return;   //unknown/unsupported format
+        }
+
+        if (gd.fixIE &&
+            ((internalFormat !== gl.RGBA && internalFormat !== gl.RGB) ||
+             (gltype !== gl.UNSIGNED_BYTE && gltype !== gl.FLOAT)))
+        {
+            if (bufferData)
+            {
+                bufferData = this.convertDataToRGBA(gl, bufferData, internalFormat, gltype, srcStep);
+            }
+            internalFormat = gl.RGBA;
+            gltype = gl.UNSIGNED_BYTE;
+            srcStep = 4;
         }
 
         var numLevels = (data && 0 < this.numDataLevels ? this.numDataLevels : 1);
