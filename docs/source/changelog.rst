@@ -10,12 +10,12 @@ Changelog
 Version 1.x-dev
 ---------------
 
+Version 1.2
+-----------
+
 2013-10-30
 
 - Fixed animation NodeTransformControllers which would not bind to multiple root nodes in a scene.
-
-2013-09-19
-
 - Added method Material.clone.
 - Added default effect callbacks for all the renderers:
     * defaultPrepareFn
@@ -24,103 +24,40 @@ Version 1.x-dev
     * defaultShadowMappingUpdateFn
     * defaultShadowMappingSkinnedUpdateFn
     * loadTechniquesFn
-
-2013-09-12
-
 - Added VERTEX_SHADER_PRECISION and FRAGMENT_SHADER_PRECISION to GraphicsDevice.maxSupported.
-
-2013-09-11
-
 - Added utility function PhysicsManager.addNode.
-
-2013-09-10
-
 - Fixed CanvasContext.fillText to support scale and rotation transforms.
 - Updated all Python code to comply with a Pylint 1.0.0 based on updated .pylintrc file.
-
-2013-08-16
-
 - Upgraded to TypeScript 0.9.1 compiler for all engine, sample and
   application builds.  See http://www.typescriptlang.org/ for
   information about breaking changes from 0.8.x.
-
-2013-08-08
-
 - Added alpha channel support when creating the GraphicsDevice.
 - Added TEXTURE_UNITS and VERTEX_TEXTURE_UNITS to GraphicsDevice.maxSupported.
-
-2013-08-02
-
 - Added experimental header and footer code required to run .canvas.js
   builds under ejecta.js.  See scripts directory.
-
-2013-07-31
-
 - Updated hub documentation relating to changes in metrics display. See the Hub user guide metrics section for
   details of changes.
-
-2013-07-30
-
 - Numerous small fixes and optimizations across all the typescript and javascript libraries.
 - Fixed background sound source bug in Protolib.
-
-2013-07-22
-
 - Added a setProgress method to the LoadingScreen object.
-
-2013-07-17
-
 - Added id property to Texture, VertexBuffer, IndexBuffer, RenderBuffer, RenderTarget, Shader, and Technique objects.
-
-2013-07-15
-
 - Canvas 2D API no longer requires a MathDevice object.
-
-2013-07-11
-
 - When setting a negative or invalid score the leaderboard manager will now raise an error.
 - Added getTime method to TurbulenzEngine.
-
-2013-07-05
-
 - Added a getMetrics method on the scene when scenedebugging is enabled, and show metrics in the viewer.
-
-2013-07-04
-
 - Fixed wireframe rendering issues in scenedebugging, adds support for non-indexed geometries sharing buffers.
-
-2013-07-01
-
 - Fix for removal of playbackRate property in Firefox 22.
-
-2013-06-28
-
 - Updates and optimizations to cgfx2json shader compilation.
-
-2013-06-27
-
 - Enable support for pointer lock outside of fullscreen mode in Firefox 22 and higher.
 - Added new copyFiltered post effect to PostEffects.
-
-2013-06-19
-
 - Respect the requested version of typescript when setting up the env to avoid failures with new releases.
-
-2013-06-12
-
 - Enable deferred rendering sample for canvas builds when extensions are supported.
 - Added support for WEBGL_draw_buffers or EXT_draw_buffers extensions.
 - Added sphere loading to load_model sample.
 - Fixed dependencies link in README.rst.
 - Various minor updates shadowmapping.
-
-2013-06-10
-
 - Added NodeJS script to allow exportevents tool to work with open source engine releases.
 - Added compilers check to 'env' command. Should warn if correct compilers can't be found.
-
-2013-06-07
-
 - Fix for unnecessary NvTriStrip build argument
 
 Version 1.1
