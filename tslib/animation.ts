@@ -2169,6 +2169,8 @@ class NodeTransformController
                 if (rootNode)
                 {
                     j = matchJointHierarchy(j, rootNode, this.nodesMap, numJoints, jointNames, jointParents);
+                    // matchJointHierarchy returns the next joint to process but the loop will step to the node after
+                    j -= 1;
                 }
             }
         }

@@ -1620,6 +1620,7 @@ WebGLMathDevice =
         {
             debug.assert(debug.isMathType(x));
             debug.assert(debug.isMathType(y));
+            return this._vmath.quatPosBuild(x, y, z);
         }
         return this._vmath.quatPosBuild(x, y, z, w, px, py, pz, dst);
     },
