@@ -1114,9 +1114,6 @@ class DDSLoader
 
     static convertDXT1To565(srcBuffer, srcWidth, srcHeight, srcNumLevels, srcNumFaces)
     {
-        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
-        var colorArray = new Array(4);
-
         function decodeDXT1Color(data, src, out, cache, colorArray)
         {
             function decode565(value, color)
@@ -1128,7 +1125,6 @@ class DDSLoader
                 color[0] = ((r << 3) | (r >> 2));
                 color[1] = ((g << 2) | (g >> 4));
                 color[2] = ((b << 3) | (b >> 2));
-                color[3] = 255;
                 /*jshint bitwise: true*/
                 return color;
             }
@@ -1156,18 +1152,14 @@ class DDSLoader
                         c2[i] = ((((c0i * 2) + c1i) / 3) | 0);
                         c3[i] = (((c0i + (c1i * 2)) / 3) | 0);
                     }
-                    c2[3] = 255;
-                    c3[3] = 255;
                 }
                 else
                 {
                     for (i = 0; i < 3; i += 1)
                     {
-                        c2[i] = ((c0[i] + c1[i]) >> 1);
+                        c2[i] = ((c0[i] + c1[i]) >>> 1);
                         c3[i] = 0;
                     }
-                    c2[3] = 255;
-                    c3[3] = 0;
                 }
             }
             else
@@ -1176,17 +1168,13 @@ class DDSLoader
                 c1 = c0;
                 c2 = c0;
                 c3 = cache[1];
-                for (i = 0; i < 4; i += 1)
-                {
-                    c3[i] = 0;
-                }
             }
 
             var c = colorArray;
-            c[0] = c0;
-            c[1] = c1;
-            c[2] = c2;
-            c[3] = c3;
+            c[0] = (((c0[2] & 0xf8) >>> 3) | ((c0[1] & 0xfc) << 3) | ((c0[0] & 0xf8) << 8));
+            c[1] = (((c1[2] & 0xf8) >>> 3) | ((c1[1] & 0xfc) << 3) | ((c1[0] & 0xf8) << 8));
+            c[2] = (((c2[2] & 0xf8) >>> 3) | ((c2[1] & 0xfc) << 3) | ((c2[0] & 0xf8) << 8));
+            c[3] = (((c3[2] & 0xf8) >>> 3) | ((c3[1] & 0xfc) << 3) | ((c3[0] & 0xf8) << 8));
 
             // ((1 << 2) - 1) === 3;
             var row, dest, color;
@@ -1222,11 +1210,10 @@ class DDSLoader
 
         var src = 0, dest = 0;
 
-        var color = [[new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)]
-                ];
+        var color = [new Uint16Array(4), new Uint16Array(4), new Uint16Array(4), new Uint16Array(4)];
+        var cache = [new Uint8Array(3), new Uint8Array(3), new Uint8Array(3), new Uint8Array(3)];
+        var colorArray = new Uint16Array(4);
+
         for (var face = 0; face < numFaces; face += 1)
         {
             width = srcWidth;
@@ -1252,10 +1239,7 @@ class DDSLoader
                             var destRGBA = destLine;
                             for (var i = 0 ; i < numColumns; i += 1)
                             {
-                                var rgba = colorLine[i];
-                                dst[destRGBA] = (((rgba[2] & 0xf8) >>> 3) |
-                                                 ((rgba[1] & 0xfc) << 3) |
-                                                 ((rgba[0] & 0xf8) << 8));
+                                dst[destRGBA] = colorLine[i];
                                 destRGBA += 1;
                             }
                             destLine += desinationStride;
@@ -1277,9 +1261,6 @@ class DDSLoader
 
     static convertDXT1To5551(srcBuffer, srcWidth, srcHeight, srcNumLevels, srcNumFaces)
     {
-        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
-        var colorArray = new Array(4);
-
         function decodeDXT1Color(data, src, out, cache, colorArray)
         {
             function decode565(value, color)
@@ -1346,10 +1327,10 @@ class DDSLoader
             }
 
             var c = colorArray;
-            c[0] = c0;
-            c[1] = c1;
-            c[2] = c2;
-            c[3] = c3;
+            c[0] = ((c0[3] >>> 7) | ((c0[2] & 0xf8) >>> 2) | ((c0[1] & 0xf8) << 3) | ((c0[0] & 0xf8) << 8));
+            c[1] = ((c1[3] >>> 7) | ((c1[2] & 0xf8) >>> 2) | ((c1[1] & 0xf8) << 3) | ((c1[0] & 0xf8) << 8));
+            c[2] = ((c2[3] >>> 7) | ((c2[2] & 0xf8) >>> 2) | ((c2[1] & 0xf8) << 3) | ((c2[0] & 0xf8) << 8));
+            c[3] = ((c3[3] >>> 7) | ((c3[2] & 0xf8) >>> 2) | ((c3[1] & 0xf8) << 3) | ((c3[0] & 0xf8) << 8));
 
             // ((1 << 2) - 1) === 3;
             var row, dest, color;
@@ -1385,11 +1366,10 @@ class DDSLoader
 
         var src = 0, dest = 0;
 
-        var color = [[new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)]
-                ];
+        var color = [new Uint16Array(4), new Uint16Array(4), new Uint16Array(4), new Uint16Array(4)];
+        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+        var colorArray = new Uint16Array(4);
+
         for (var face = 0; face < numFaces; face += 1)
         {
             width = srcWidth;
@@ -1415,11 +1395,7 @@ class DDSLoader
                             var destRGBA = destLine;
                             for (var i = 0 ; i < numColumns; i += 1)
                             {
-                                var rgba = colorLine[i];
-                                dst[destRGBA] = ((rgba[3] >>> 7) |
-                                                 ((rgba[2] & 0xf8) >>> 2) |
-                                                 ((rgba[1] & 0xf8) << 3) |
-                                                 ((rgba[0] & 0xf8) << 8));
+                                dst[destRGBA] = colorLine[i];
                                 destRGBA += 1;
                             }
                             destLine += desinationStride;
@@ -1573,9 +1549,6 @@ class DDSLoader
             /*jshint bitwise: true*/
         }
 
-        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
-        var colorArray = new Array(4);
-
         //var bpp = 2;
         var level;
         var width = srcWidth;
@@ -1601,6 +1574,9 @@ class DDSLoader
                      [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
                      [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)]
                     ];
+        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+        var colorArray = new Array(4);
+
         for (var face = 0; face < numFaces; face += 1)
         {
             width = srcWidth;
@@ -1818,10 +1794,6 @@ class DDSLoader
             /*jshint bitwise: true*/
         }
 
-        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
-        var colorArray = new Array(4);
-        var alphaArray = new Uint8Array(8);
-
         //var bpp = 2;
         var level;
         var width = srcWidth;
@@ -1847,6 +1819,10 @@ class DDSLoader
                      [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
                      [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)]
                     ];
+        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+        var colorArray = new Array(4);
+        var alphaArray = new Uint8Array(8);
+
         for (var face = 0; face < numFaces; face += 1)
         {
             width = srcWidth;
