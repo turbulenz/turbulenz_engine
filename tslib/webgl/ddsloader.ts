@@ -1062,27 +1062,26 @@ class DDSLoader
 
     hasDXT1Alpha(data)
     {
-        var length = data.length;
-        var n, i, row;
-        for (n = 0; n < length; n += 8)
+        var length16 = (data.length >>> 1);
+        var data16 = new Uint16Array(data.buffer, data.byteOffset, length16);
+        var n, b, i, row;
+        for (n = 0; n < length16; n += 4)
         {
-            var col0 = ((data[n + 1] << 8) | data[n]);
-            var col1 = ((data[n + 3] << 8) | data[n + 2]);
-            if (col0 <= col1)
+            if (data16[n] <= data16[n + 1])
             {
+                b = ((n + 2) << 1);
                 for (i = 0; i < 4; i += 1)
                 {
-                    row = data[n + 4 + i];
-                    if (row === 0)
+                    row = data[b + i];
+                    if (2 < row)
                     {
-                        continue;
-                    }
-                    if (((row)      & 3) === 3 ||
-                        ((row >> 2) & 3) === 3 ||
-                        ((row >> 4) & 3) === 3 ||
-                        ((row >> 6) & 3) === 3)
-                    {
-                        return true;
+                        if (((row) & 3) === 3 ||
+                            ((row >> 2) & 3) === 3 ||
+                            ((row >> 4) & 3) === 3 ||
+                            ((row >> 6) & 3) === 3)
+                        {
+                            return true;
+                        }
                     }
                 }
             }
