@@ -1521,7 +1521,7 @@ class WebGLSoundSource implements SoundSource
 
         }
 
-        source.relative = params.relative;
+        source.relative = (params.relative || false);
         source.position = (params.position || VMath.v3BuildZero());
         source.direction = (params.direction || VMath.v3BuildZero());
         source.velocity = (params.velocity || VMath.v3BuildZero());
