@@ -581,6 +581,9 @@ class WebGLSoundSource implements SoundSource
     tell        : number;
 
     // WebGLSoundSource
+    _position: any; // v3
+    _velocity: any; // v3
+    _direction: any; // v3
     sd: WebGLSoundDevice;
     id: number;
     sound: WebGLSound;
@@ -979,6 +982,72 @@ class WebGLSoundSource implements SoundSource
         }
     }
 
+    updateRelativePositionWebAudio(listenerPosition0,
+                                   listenerPosition1,
+                                   listenerPosition2)
+    {
+        var position = this._position;
+        this.pannerNode.setPosition(position[0] + listenerPosition0,
+                                    position[1] + listenerPosition1,
+                                    position[2] + listenerPosition2);
+    }
+
+    updateRelativePositionHTML5(listenerPosition0,
+                                listenerPosition1,
+                                listenerPosition2)
+    {
+        // Change volume depending on distance to listener
+        var minDistance = this.minDistance;
+        var maxDistance = this.maxDistance;
+        var position = this._position;
+        var position0 = position[0];
+        var position1 = position[1];
+        var position2 = position[2];
+
+        var distanceSq;
+        if (this.relative)
+        {
+            distanceSq = ((position0 * position0) + (position1 * position1) + (position2 * position2));
+        }
+        else
+        {
+            var delta0 = (listenerPosition0 - position0);
+            var delta1 = (listenerPosition1 - position1);
+            var delta2 = (listenerPosition2 - position2);
+            distanceSq = ((delta0 * delta0) + (delta1 * delta1) + (delta2 * delta2));
+        }
+
+        var gainFactor;
+        if (distanceSq <= (minDistance * minDistance))
+        {
+            gainFactor = 1;
+        }
+        else if (distanceSq >= (maxDistance * maxDistance))
+        {
+            gainFactor = 0;
+        }
+        else
+        {
+            var distance = Math.sqrt(distanceSq);
+            if (this.sd.linearDistance)
+            {
+                gainFactor = ((maxDistance - distance) / (maxDistance - minDistance));
+            }
+            else
+            {
+                gainFactor = minDistance / (minDistance + (this.rollOff * (distance - minDistance)));
+            }
+        }
+
+        gainFactor *= this.sd.listenerGain;
+
+        if (this.gainFactor !== gainFactor)
+        {
+            this.gainFactor = gainFactor;
+            this.updateAudioVolume();
+        }
+    }
+
     createBufferNode(sound: WebGLSound): any
     {
         var gainNode = this.gainNode;
@@ -1001,7 +1070,7 @@ class WebGLSoundSource implements SoundSource
             gainNode.connect(this.sd.gainNode);
             if (debug)
             {
-                var position = this.position;
+                var position = this._position;
                 debug.assert(this.relative &&
                              position[0] === 0 &&
                              position[1] === 0 &&
@@ -1057,7 +1126,7 @@ class WebGLSoundSource implements SoundSource
             gainNode.connect(this.sd.gainNode);
             if (debug)
             {
-                var position = this.position;
+                var position = this._position;
                 debug.assert(this.relative &&
                              position[0] === 0 &&
                              position[1] === 0 &&
@@ -1086,10 +1155,13 @@ class WebGLSoundSource implements SoundSource
         source.playing = false;
         source.paused = false;
 
+        source._position = (params.position || VMath.v3BuildZero());
+        source._velocity = (params.velocity || VMath.v3BuildZero());
+        source._direction = (params.direction || VMath.v3BuildZero());
+
         var gain = (typeof params.gain === "number" ? params.gain : 1);
         var looping = (params.looping || false);
         var pitch = (params.pitch || 1);
-        var position, direction, velocity;
 
         var audioContext = sd.audioContext;
         if (audioContext)
@@ -1129,12 +1201,14 @@ class WebGLSoundSource implements SoundSource
                 pannerNode.panningModel = pannerNode.EQUALPOWER;
             }
 
+            source.updateRelativePosition = source.updateRelativePositionWebAudio;
+
             Object.defineProperty(source, "position", {
                 get : function getPositionFn() {
-                    return position.slice();
+                    return this._position.slice();
                 },
                 set : function setPositionFn(newPosition) {
-                    position = VMath.v3Copy(newPosition, position);
+                    this._position = VMath.v3Copy(newPosition, this._position);
                     if (!source.relative)
                     {
                         this.pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
@@ -1146,10 +1220,10 @@ class WebGLSoundSource implements SoundSource
 
             Object.defineProperty(source, "direction", {
                 get : function getDirectionFn() {
-                    return direction.slice();
+                    return this._direction.slice();
                 },
                 set : function setDirectionFn(newDirection) {
-                    direction = VMath.v3Copy(newDirection, direction);
+                    this._direction = VMath.v3Copy(newDirection, this._direction);
                     this.pannerNode.setOrientation(newDirection[0], newDirection[1], newDirection[2]);
                 },
                 enumerable : true,
@@ -1158,10 +1232,10 @@ class WebGLSoundSource implements SoundSource
 
             Object.defineProperty(source, "velocity", {
                 get : function getVelocityFn() {
-                    return velocity.slice();
+                    return this._velocity.slice();
                 },
                 set : function setVelocityFn(newVelocity) {
-                    velocity = VMath.v3Copy(newVelocity, velocity);
+                    this._velocity = VMath.v3Copy(newVelocity, this._velocity);
                     this.pannerNode.setVelocity(newVelocity[0], newVelocity[1], newVelocity[2]);
                 },
                 enumerable : true,
@@ -1182,19 +1256,6 @@ class WebGLSoundSource implements SoundSource
                 enumerable : true,
                 configurable : false
             });
-
-            source.updateRelativePosition = function updateRelativePositionFn(listenerPosition0,
-                                                                              listenerPosition1,
-                                                                              listenerPosition2)
-            {
-                if (1 >= this.sound.channels)
-                {
-                    // We only support panning of mono sources
-                    pannerNode.setPosition(position[0] + listenerPosition0,
-                                           position[1] + listenerPosition1,
-                                           position[2] + listenerPosition2);
-                }
-            };
 
             Object.defineProperty(source, "looping", {
                 get : function getLoopingFn() {
@@ -1344,12 +1405,14 @@ class WebGLSoundSource implements SoundSource
                 }
             };
 
+            source.updateRelativePosition = source.updateRelativePositionHTML5;
+
             Object.defineProperty(source, "position", {
                 get : function getPositionFn() {
-                    return position.slice();
+                    return this._position.slice();
                 },
                 set : function setPositionFn(newPosition) {
-                    position = VMath.v3Copy(newPosition, position);
+                    this._position = VMath.v3Copy(newPosition, this._position);
                 },
                 enumerable : true,
                 configurable : false
@@ -1357,10 +1420,10 @@ class WebGLSoundSource implements SoundSource
 
             Object.defineProperty(source, "direction", {
                 get : function getDirectionFn() {
-                    return direction.slice();
+                    return this._direction.slice();
                 },
                 set : function setDirectionFn(newDirection) {
-                    direction = VMath.v3Copy(newDirection, direction);
+                    this._direction = VMath.v3Copy(newDirection, this._direction);
                 },
                 enumerable : true,
                 configurable : false
@@ -1368,10 +1431,10 @@ class WebGLSoundSource implements SoundSource
 
             Object.defineProperty(source, "velocity", {
                 get : function getVelocityFn() {
-                    return velocity.slice();
+                    return this._velocity.slice();
                 },
                 set : function setVelocityFn(newVelocity) {
-                    velocity = VMath.v3Copy(newVelocity, velocity);
+                    this._velocity = VMath.v3Copy(newVelocity, this._velocity);
                 },
                 enumerable : true,
                 configurable : false
@@ -1463,62 +1526,6 @@ class WebGLSoundSource implements SoundSource
                 enumerable : true,
                 configurable : false
             });
-
-            source.updateRelativePosition = function updateRelativePositionFn(listenerPosition0,
-                                                                              listenerPosition1,
-                                                                              listenerPosition2)
-            {
-                // Change volume depending on distance to listener
-                var minDistance = this.minDistance;
-                var maxDistance = this.maxDistance;
-                var position0 = position[0];
-                var position1 = position[1];
-                var position2 = position[2];
-
-                var distanceSq;
-                if (this.relative)
-                {
-                    distanceSq = ((position0 * position0) + (position1 * position1) + (position2 * position2));
-                }
-                else
-                {
-                    var delta0 = (listenerPosition0 - position0);
-                    var delta1 = (listenerPosition1 - position1);
-                    var delta2 = (listenerPosition2 - position2);
-                    distanceSq = ((delta0 * delta0) + (delta1 * delta1) + (delta2 * delta2));
-                }
-
-                var gainFactor;
-                if (distanceSq <= (minDistance * minDistance))
-                {
-                    gainFactor = 1;
-                }
-                else if (distanceSq >= (maxDistance * maxDistance))
-                {
-                    gainFactor = 0;
-                }
-                else
-                {
-                    var distance = Math.sqrt(distanceSq);
-                    if (this.sd.linearDistance)
-                    {
-                        gainFactor = ((maxDistance - distance) / (maxDistance - minDistance));
-                    }
-                    else
-                    {
-                        gainFactor = minDistance / (minDistance + (this.rollOff * (distance - minDistance)));
-                    }
-                }
-
-                gainFactor *= this.sd.listenerGain;
-
-                if (this.gainFactor !== gainFactor)
-                {
-                    this.gainFactor = gainFactor;
-                    this.updateAudioVolume();
-                }
-            };
-
         }
 
         source.relative = (params.relative || false);
