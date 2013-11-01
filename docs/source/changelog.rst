@@ -18,12 +18,13 @@ Version 1.2
 - Fixed animation NodeTransformControllers which would not bind to multiple root nodes in a scene.
 - Added method Material.clone.
 - Added default effect callbacks for all the renderers:
-    * defaultPrepareFn
-    * defaultUpdateFn
-    * defaultSkinnedUpdateFn
-    * defaultShadowMappingUpdateFn
-    * defaultShadowMappingSkinnedUpdateFn
-    * loadTechniquesFn
+
+  * defaultPrepareFn
+  * defaultUpdateFn
+  * defaultSkinnedUpdateFn
+  * defaultShadowMappingUpdateFn
+  * defaultShadowMappingSkinnedUpdateFn
+  * loadTechniquesFn
 - Added VERTEX_SHADER_PRECISION and FRAGMENT_SHADER_PRECISION to GraphicsDevice.maxSupported.
 - Added utility function PhysicsManager.addNode.
 - Fixed CanvasContext.fillText to support scale and rotation transforms.
@@ -66,6 +67,7 @@ Version 1.1
 2013-06-04
 
 - Update protolib library (version 0.2.0):
+
   * Added version number field.
   * Added horizontalAlign, verticalAlign properties to drawText.
   * Depricated alignment property of drawText and textAlignment enum.
