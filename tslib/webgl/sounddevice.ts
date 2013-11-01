@@ -1064,24 +1064,7 @@ class WebGLSoundSource implements SoundSource
         bufferNode.connect(gainNode);
 
         gainNode.disconnect();
-        if (1 < sound.channels)
-        {
-            // We do not support panning of stereo sources
-            gainNode.connect(this.sd.gainNode);
-            if (debug)
-            {
-                var position = this._position;
-                debug.assert(this.relative &&
-                             position[0] === 0 &&
-                             position[1] === 0 &&
-                             position[2] === 0,
-                             "Stereo sounds only supported for relative sources at origin!");
-            }
-        }
-        else
-        {
-            gainNode.connect(this.pannerNode);
-        }
+        gainNode.connect(this.pannerNode);
 
         // Backwards compatibility
         if (!bufferNode.start)
@@ -1120,24 +1103,7 @@ class WebGLSoundSource implements SoundSource
         mediaNode.connect(gainNode);
 
         gainNode.disconnect();
-        if (1 < sound.channels)
-        {
-            // We do not support panning of stereo sources
-            gainNode.connect(this.sd.gainNode);
-            if (debug)
-            {
-                var position = this._position;
-                debug.assert(this.relative &&
-                             position[0] === 0 &&
-                             position[1] === 0 &&
-                             position[2] === 0,
-                             "Stereo sounds only supported for relative sources at origin!");
-            }
-        }
-        else
-        {
-            gainNode.connect(this.pannerNode);
-        }
+        gainNode.connect(this.pannerNode);
 
         this.mediaNode = mediaNode;
     }
