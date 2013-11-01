@@ -6640,6 +6640,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 canvas.mozRequestFullScreen();
             }
+            else if (canvas.msRequestFullscreen)
+            {
+                canvas.msRequestFullscreen();
+            }
             else if (canvas.requestFullScreen)
             {
                 canvas.requestFullScreen();
@@ -6654,6 +6658,14 @@ class WebGLGraphicsDevice implements GraphicsDevice
             if (document.webkitCancelFullScreen)
             {
                 document.webkitCancelFullScreen();
+            }
+            else if (document['mozCancelFullScreen'])
+            {
+                document['mozCancelFullScreen']();
+            }
+            else if (document.msExitFullscreen)
+            {
+                document.msExitFullscreen();
             }
             else if (document.cancelFullScreen)
             {
@@ -8239,10 +8251,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             Object.defineProperty(gd, "fullscreen", {
                 get : function getFullscreenFn() {
-                    return (document.fullscreenEnabled ||
-                            document.mozFullScreen ||
-                            document.webkitIsFullScreen ||
-                            false);
+                    return (document.fullscreenElement ||
+                            document.webkitFullscreenElement ||
+                            document.mozFullScreenElement ||
+                            document.msFullscreenElement ?
+                            true : false);
                 },
                 set : function setFullscreenFn(newFullscreen) {
                     gd.requestFullScreen(newFullscreen);

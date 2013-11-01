@@ -765,7 +765,10 @@ class WebGLInputDevice implements InputDevice
             this.unlockMouse();
 
             // Some apps environments will not exit fullscreen automatically on ESCAPE
-            if (document.fullscreenEnabled || document.mozFullScreen || document.webkitIsFullScreen)
+            if (document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement)
             {
                 if (document.webkitCancelFullScreen)
                 {
@@ -774,6 +777,14 @@ class WebGLInputDevice implements InputDevice
                 else if (document.cancelFullScreen)
                 {
                     document.cancelFullScreen();
+                }
+                else if (document['mozCancelFullScreen'])
+                {
+                    document['mozCancelFullScreen']();
+                }
+                else if (document.msExitFullscreen)
+                {
+                    document.msExitFullscreen();
                 }
                 else if (document.exitFullscreen)
                 {
@@ -1068,7 +1079,10 @@ class WebGLInputDevice implements InputDevice
     {
         if (this.isMouseLocked)
         {
-            if (document.fullscreenEnabled || document.mozFullScreen || document.webkitIsFullScreen)
+            if (document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement)
             {
                 this.ignoreNextMouseMoves = 2; // Some browsers will send 2 mouse events with a massive delta
                 this.requestBrowserLock();
@@ -1136,13 +1150,14 @@ class WebGLInputDevice implements InputDevice
         this.addInternalEventListener(document, 'fullscreenchange', this.onFullscreenChanged);
         this.addInternalEventListener(document, 'mozfullscreenchange', this.onFullscreenChanged);
         this.addInternalEventListener(document, 'webkitfullscreenchange', this.onFullscreenChanged);
+        this.addInternalEventListener(document, 'MSFullscreenChange', this.onFullscreenChanged);
     }
 
     setEventHandlersUnlock()
     {
         this.removeInternalEventListener(document, 'webkitfullscreenchange', this.onFullscreenChanged);
         this.removeInternalEventListener(document, 'mozfullscreenchange', this.onFullscreenChanged);
-        this.removeInternalEventListener(document, 'fullscreenchange', this.onFullscreenChanged);
+        this.removeInternalEventListener(document, 'MSFullscreenChange', this.onFullscreenChanged);
 
         this.removeInternalEventListener(window, 'mousemove', this.onMouseMove);
 
