@@ -516,14 +516,7 @@ class TZWebGLTexture implements Texture
                         levelSize = (Math.floor((w + 3) / 4) * Math.floor((h + 3) / 4) * srcStep);
                         if (bufferData)
                         {
-                            if (numLevels === 1)
-                            {
-                                levelData = bufferData;
-                            }
-                            else
-                            {
-                                levelData = bufferData.subarray(offset, (offset + levelSize));
-                            }
+                            levelData = bufferData.subarray(offset, (offset + levelSize));
                         }
                         else
                         {
@@ -545,14 +538,7 @@ class TZWebGLTexture implements Texture
                         levelSize = (w * h * srcStep);
                         if (bufferData)
                         {
-                            if (numLevels === 1)
-                            {
-                                levelData = bufferData;
-                            }
-                            else
-                            {
-                                levelData = bufferData.subarray(offset, (offset + levelSize));
-                            }
+                            levelData = bufferData.subarray(offset, (offset + levelSize));
                             gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
                         }
                         else if (data)
