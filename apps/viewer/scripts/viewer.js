@@ -1292,7 +1292,7 @@ function createSceneFn()
             sceneDetailsString += lightsString;
         }
 
-        sceneDetailsDiv.innerHTML += sceneDetailsString;
+        sceneDetailsDiv.innerHTML = sceneDetailsString;
 
         function drawOptionFn()
         {
