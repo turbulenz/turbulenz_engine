@@ -337,7 +337,15 @@ class InterpolatorController implements ControllerBaseClass
                         return;
                     }
                 }
-                this.currentTime -= animLength;
+                if (0 !== animLength)
+                {
+                    this.currentTime -= animLength;
+                }
+                else
+                {
+                    this.currentTime = 0;
+                    break;
+                }
             }
             else
             {
@@ -349,6 +357,7 @@ class InterpolatorController implements ControllerBaseClass
                     }
                 }
                 this.currentTime = animLength;
+                break;
             }
         }
 
