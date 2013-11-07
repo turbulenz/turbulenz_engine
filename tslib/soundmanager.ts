@@ -113,6 +113,7 @@ class SoundManager
                     data   : SoundManager.beep(1.0, 4000, 400, 1),
                     channels : 1,
                     frequency : 4000,
+                    uncompress: true,
                     onload : function (s)
                     {
                         defaultSound = s;

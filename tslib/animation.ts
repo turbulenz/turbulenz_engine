@@ -337,7 +337,15 @@ class InterpolatorController implements ControllerBaseClass
                         return;
                     }
                 }
-                this.currentTime -= animLength;
+                if (0 !== animLength)
+                {
+                    this.currentTime -= animLength;
+                }
+                else
+                {
+                    this.currentTime = 0;
+                    break;
+                }
             }
             else
             {
@@ -349,6 +357,7 @@ class InterpolatorController implements ControllerBaseClass
                     }
                 }
                 this.currentTime = animLength;
+                break;
             }
         }
 
@@ -2169,6 +2178,8 @@ class NodeTransformController
                 if (rootNode)
                 {
                     j = matchJointHierarchy(j, rootNode, this.nodesMap, numJoints, jointNames, jointParents);
+                    // matchJointHierarchy returns the next joint to process but the loop will step to the node after
+                    j -= 1;
                 }
             }
         }

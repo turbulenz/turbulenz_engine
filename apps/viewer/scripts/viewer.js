@@ -1247,14 +1247,25 @@ function createSceneFn()
         var sceneDetailsString = "";
 
         var sceneMetrics = scene.getMetrics();
-        var metricsString = "<div>Scene metrics:<\/div><table class=\"status\" border=\"1\" bordercolor=\"gray\">";
-        metricsString += "<tr><td>Nodes<\/td><td align=\"right\">" + sceneMetrics.numNodes + "<\/td><\/tr>";
-        metricsString += "<tr><td>Renderables<\/td><td align=\"right\">" + sceneMetrics.numRenderables + "<\/td><\/tr>";
-        metricsString += "<tr><td>Vertices<\/td><td align=\"right\">" + sceneMetrics.numVertices + "<\/td><\/tr>";
-        metricsString += "<tr><td>Primitives<\/td><td align=\"right\">" + sceneMetrics.numPrimitives + "<\/td><\/tr>";
-        metricsString += "<tr><td>Lights<\/td><td align=\"right\">" + sceneMetrics.numLights + "<\/td><\/tr>";
-        metricsString += "<\/table>";
+        var metricsString = "<div>Scene metrics:<\/div><table class=\"status\" border=\"1\" bordercolor=\"gray\">" +
+                            "<tr><td>Nodes<\/td><td align=\"right\">" + sceneMetrics.numNodes + "<\/td><\/tr>" +
+                            "<tr><td>Renderables<\/td><td align=\"right\">" + sceneMetrics.numRenderables + "<\/td><\/tr>" +
+                            "<tr><td>Vertices<\/td><td align=\"right\">" + sceneMetrics.numVertices + "<\/td><\/tr>" +
+                            "<tr><td>Primitives<\/td><td align=\"right\">" + sceneMetrics.numPrimitives + "<\/td><\/tr>" +
+                            "<tr><td>Lights<\/td><td align=\"right\">" + sceneMetrics.numLights + "<\/td><\/tr>" +
+                            "<\/table>";
         sceneDetailsString += metricsString;
+
+        var extents = scene.getExtents();
+        var extentsString = "<div>Scene extents:<\/div><table class=\"status\" border=\"1\" bordercolor=\"gray\">" +
+                            "<tr><td>Min<\/td><td align=\"right\">" + extents[0].toFixed(3) + "<\/td>" +
+                                             "<td align=\"right\">" + extents[1].toFixed(3) + "<\/td>" +
+                                             "<td align=\"right\">" + extents[2].toFixed(3) + "<\/td><\/tr>" +
+                            "<tr><td>Max<\/td><td align=\"right\">" + extents[3].toFixed(3) + "<\/td>" +
+                                             "<td align=\"right\">" + extents[4].toFixed(3) + "<\/td>" +
+                                             "<td align=\"right\">" + extents[5].toFixed(3) + "<\/td><\/tr>" +
+                            "<\/table>";
+        sceneDetailsString += extentsString;
 
         var globalLights = scene.globalLights;
         var numGlobalLights = globalLights.length;
@@ -1292,7 +1303,7 @@ function createSceneFn()
             sceneDetailsString += lightsString;
         }
 
-        sceneDetailsDiv.innerHTML += sceneDetailsString;
+        sceneDetailsDiv.innerHTML = sceneDetailsString;
 
         function drawOptionFn()
         {

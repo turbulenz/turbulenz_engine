@@ -547,6 +547,7 @@ interface HTMLCanvasElement {
     requestFullScreenWithKeys?: () => void;
     webkitRequestFullScreen?: (flags?: any) => void;
     mozRequestFullScreen?: () => void;
+    msRequestFullscreen?: () => void;
     requestFullScreen?: () => void;
     requestFullscreen?: () => void;
 

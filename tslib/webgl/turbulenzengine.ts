@@ -777,7 +777,8 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             {
                 if (document.fullscreenElement === canvas ||
                     document.mozFullScreenElement === canvas ||
-                    document.webkitFullscreenElement === canvas)
+                    document.webkitFullscreenElement === canvas ||
+                    document.msFullscreenElement === canvas)
                 {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;

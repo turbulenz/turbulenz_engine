@@ -99,13 +99,13 @@ void vp_skinned(in float3 INPosition : POSITION,
                 out float4 OUTPosition : POSITION,
                 out float  OUTDepth    : TEXCOORD0)
 {
-    SkinTransform skinTransform = BuildSkinTransform(INIndices, INWeights);
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
     float4 skinTempPosition = float4(INPosition, 1.0);
     float3 Position;
-    Position.x = dot(skinTempPosition, skinTransform.X);
-    Position.y = dot(skinTempPosition, skinTransform.Y);
-    Position.z = dot(skinTempPosition, skinTransform.Z);
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
 
     float4 worldPosition = float4(((Position.x * world[0]) +
                                    (Position.y * world[1]) +
