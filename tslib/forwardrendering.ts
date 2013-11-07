@@ -191,14 +191,14 @@ class ForwardRendering
             if (!sharedMaterialTechniqueParameters.materialColor &&
                 !renderable.techniqueParameters.materialColor)
             {
-                renderable.techniqueParameters.materialColor = this.v4One;
+                sharedMaterialTechniqueParameters.materialColor = this.v4One;
             }
         }
 
         if (!sharedMaterialTechniqueParameters.uvTransform &&
             !renderable.techniqueParameters.uvTransform)
         {
-            renderable.techniqueParameters.uvTransform = this.identityUVTransform;
+            sharedMaterialTechniqueParameters.uvTransform = this.identityUVTransform;
         }
 
         var node = renderable.node;

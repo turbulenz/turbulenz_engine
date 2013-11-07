@@ -10,6 +10,11 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-11-07
+
+- Changed default materialColor and uvTransform setting behaviour in the renderers to set on the sharedMaterial
+  instead of each renderable
+
 2013-09-19
 
 - Added method Material.clone.

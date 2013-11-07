@@ -1754,6 +1754,7 @@ class DeferredRendering
             dr.defaultShadowMappingSkinnedUpdateFn = shadowMappingSkinnedUpdateFn;
         }
 
+        var v4One = new Float32Array([1.0, 1.0, 1.0, 1.0]);
         var identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
         var flareIndexBuffer, flareSemantics, flareVertexData, flareMatrix;
         var worldView; // Temp variable for reused matrix
@@ -1872,10 +1873,16 @@ class DeferredRendering
                 drawParameters.userData.passIndex = dr.passIndex.opaque;
             }
 
+            if (!geometryInstance.sharedMaterial.techniqueParameters.materialColor &&
+                !geometryInstance.techniqueParameters.materialColor)
+            {
+                geometryInstance.sharedMaterial.techniqueParameters.materialColor = v4One;
+            }
+
             if (!geometryInstance.sharedMaterial.techniqueParameters.uvTransform &&
                 !geometryInstance.techniqueParameters.uvTransform)
             {
-                geometryInstance.techniqueParameters.uvTransform = identityUVTransform;
+                geometryInstance.sharedMaterial.techniqueParameters.uvTransform = identityUVTransform;
             }
 
             drawParameters.sortKey = renderingCommonSortKeyFn(this.techniqueIndex, meta.materialIndex);
