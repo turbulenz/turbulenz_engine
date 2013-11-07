@@ -748,6 +748,7 @@ class SceneNode
 
     static updateNodes(mathDevice, scene, nodes, numNodes)
     {
+        var dynamicSpatialMap = scene.dynamicSpatialMap;
         var node, parent, index, worldExtents;
         do
         {
@@ -819,7 +820,7 @@ class SceneNode
                 {
                     if (node.dynamic)
                     {
-                        scene.dynamicSpatialMap.update(node, worldExtents);
+                        dynamicSpatialMap.update(node, worldExtents);
                     }
                     else
                     {
@@ -837,7 +838,7 @@ class SceneNode
                 {
                     if (node.dynamic)
                     {
-                        scene.dynamicSpatialMap.remove(node);
+                        dynamicSpatialMap.remove(node);
                     }
                     else
                     {
