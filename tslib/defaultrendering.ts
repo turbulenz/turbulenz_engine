@@ -182,7 +182,7 @@ class DefaultRendering
         this.scene = scene;
     }
 
-    updateBuffers(/* gd, deviceWidth, deviceHeight */): boolean
+    updateBuffers(gd?, deviceWidth?, deviceHeight?): boolean
     {
         return true;
     }
