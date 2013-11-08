@@ -18,6 +18,7 @@ interface Hierarchy
 interface Skeleton extends Hierarchy
 {
     invBoneLTMs: any[]; // m43[]
+    bindPoses?: any[]; // m43[]
 };
 
 // TODO: There is more we can add to this.  It can also be turned into
