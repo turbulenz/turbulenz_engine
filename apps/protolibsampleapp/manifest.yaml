@@ -6,7 +6,7 @@ deploy_files:
 - mapping_table.json
 - staticmax/*
 deployed: Never
-engine_version: '0.27'
+engine_version: '0.28'
 flash_main: ''
 is_multiplayer: false
 is_temp: false

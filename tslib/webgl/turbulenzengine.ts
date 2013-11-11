@@ -45,7 +45,7 @@ declare var WebGLPhysicsDevice : WebGLPhysicsDeviceConstructor;
 
 class WebGLTurbulenzEngine implements TurbulenzEngine
 {
-    version = '0.27.0.0';
+    version = '0.28.0.0';
 
     time               : number;
 
