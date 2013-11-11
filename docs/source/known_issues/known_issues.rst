@@ -6,6 +6,9 @@ Known Issues
 
 The following is a list of the changes to the known issues in this SDK.
 
+* Importing tools/local server directly from Python has changed. Previously you could import them using 'turbulenz.tools.*' and 'turbulenz.devserver.*', now you must invoke them via 'turbulenz_tools.tools.*' and 'turbulenz_local.*'.
+* Any manual changes to release.ini configuration files have to be manually applied to the release.ini, after first running the local server command for the first time, since the file needs to be generated.
+* The default list of games in the local server flows onto the next page. You must click the arrow to scroll to the second page to see all applications.
 * The Linux SDK does not include a browser plugin.  Developers can
   build and deploy plugin versions of their games, but only run the
   canvas versions.

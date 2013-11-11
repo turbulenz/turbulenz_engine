@@ -6,15 +6,15 @@ Debugging Game Code
 -------------------
 
 There are a number browsers and debuggers that can be used to debug
-the JavaScript you write. For Canvas develpoment Turbulenz recommends Chrome using
-its built in Developer Tools. For plugin development Turbulenz
-recommends the use of Firefox and Firebug as a debugging and testing environment.
-This section covers the use of Firebug to debug your JavaScript.
-The techniques in this section are merely suggestions and may still be relevant to other
-debuggers.
+the JavaScript you write. For Canvas develpoment Turbulenz recommends
+Chrome using its built in Developer Tools. For plugin development
+Turbulenz recommends the use of Firefox and Firebug as a debugging and
+testing environment.  This section covers the use of Firebug to debug
+your JavaScript.  The techniques in this section are merely
+suggestions and may still be relevant to other debuggers.
 
 Note that the information here is generally only relevant when running
-the game in *plugin-debug* or *canvas-debug* mode.
+the game in *canvas-debug* mode.
 
 See also :ref:`DebuggingTools <debuggingtools>`.
 

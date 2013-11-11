@@ -460,13 +460,12 @@ Templating and the Build Tools
 
 When developing JavaScript applications to run on the Turbulenz Engine
 it's useful to build and test all configurations.  The development
-configurations (*plugin-debug* and *canvas-debug*) are set up to run
-inside the browser and allow use of browser debugging tools.  The
-release configurations (*plugin* and *canvas*) load and run a code
-bundle, often compacted.  In the case of *plugin* mode, JavaScript
-code is executed inside the engine provided by the Turbulenz browser
-extensions (for reasons of performance and compatibility), making
-debugging much more difficult.
+configuration *canvas-debug* is set up to run inside the browser and
+allow use of browser debugging tools.  The release configurations
+(*plugin* and *canvas*) load and run a code bundle, often compacted.
+In the case of *plugin* mode, JavaScript code is executed inside the
+engine provided by the Turbulenz browser extensions (for reasons of
+performance and compatibility), making debugging much more difficult.
 
 Compacting code is an important optimization for deployment and can
 dramatically reduce the size of the code that needs to be transferred
@@ -599,7 +598,7 @@ configurations.  Examples are:
     * ``/*{% if tz_development %}*/`` means the JavaScript game code
       is included using script tags allowing for easy debugging. This
       variable is true then the ``--mode`` flag to tools is used to
-      specify *plugin-debug* or *canvas-debug* modes.
+      specify *canvas-debug* mode.
 
     * ``/*{% if tz_canvas %}*/`` means the game is running using the
       canvas (non-plugin) version of the Turbulenz engine. This
@@ -688,7 +687,7 @@ directory structure below.  See the *templateapp* for an example.
 
     Intermediate build files and dependency data
 
-When using *plugin-debug* and *canvas-debug* build modes, only the minimal code
+When using the *canvas-debug* build mode, only the minimal code
 generated from *templates* will be embedded into the HTML page.
 Changes in the *scripts* directory will not require rebuilds.
 (*plugin* and *canvas* modes will always require rebuilds of the code
