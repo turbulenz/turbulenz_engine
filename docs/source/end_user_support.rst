@@ -43,6 +43,7 @@ Turbulenz Game Engine for playing games.
 Developers
 ----------
 
-The Turbulenz Development Client for Android is available to
-developers.  Please see the :ref:`Developer Client section
+In addition to the OS and browser combinations above, the *Turbulenz
+Developer Client* for Android and iOS is available to developers.
+Please see the :ref:`Developer Client section
 <developer_client_readme>` for details.

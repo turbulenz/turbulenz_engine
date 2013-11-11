@@ -184,7 +184,7 @@ TypeScript:
    number of browsers.
  * A build step is always required after changes are made to source
    files.  With JavaScript alone, code changes are reflected
-   immediately in *debug* and *canvas-debug* builds.
+   immediately in *canvas-debug* builds.
  * Not all editing environments that support JavaScript provide the
    same level of functionality for TypeScript.
  * Some TypeScript language features introduce extra code into the
