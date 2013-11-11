@@ -36,6 +36,11 @@ Changes
   any tools.  The *canvas-debug* mode is the recommended way to use
   the browser debugging tools.
 
+* Mac OS X 10.6 and Safari 5 are no longer officially supported.  This
+  removes the need for any browser plugin on Mac OS X platforms, and
+  so the *TurbulenzEngine* binary installers are no longer bundled
+  with SDKs or available for download.
+
 Fixed
 -----
 
