@@ -612,7 +612,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
             var clearZeroTimeout = function clearZeroTimeoutFn(timeout)
             {
-                var id = timeout;
+                var id = timeout.id;
                 var numTimeouts = timeouts.length;
                 for (var n = 0; n < numTimeouts; n += 1)
                 {
