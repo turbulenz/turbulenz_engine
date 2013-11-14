@@ -79,10 +79,6 @@ class ForwardRendering
     zonlySkinnedNoCullTechnique: Technique;
     zonlyRigidAlphaNoCullTechnique: Technique;
     zonlySkinnedAlphaNoCullTechnique: Technique;
-    stencilSetTechnique: Technique;
-    stencilClearTechnique: Technique;
-    stencilSetSpotLightTechnique: Technique;
-    stencilClearSpotLightTechnique: Technique;
 
     forwardShader: Shader;
     skyboxTechnique: Technique;
@@ -133,10 +129,6 @@ class ForwardRendering
             this.zonlySkinnedNoCullTechnique = shader.getTechnique("skinned_nocull");
             this.zonlyRigidAlphaNoCullTechnique = shader.getTechnique("rigid_alphatest_nocull");
             this.zonlySkinnedAlphaNoCullTechnique = shader.getTechnique("skinned_alphatest_nocull");
-            this.stencilSetTechnique = shader.getTechnique("stencil_set");
-            this.stencilClearTechnique = shader.getTechnique("stencil_clear");
-            this.stencilSetSpotLightTechnique = shader.getTechnique("stencil_set_spotlight");
-            this.stencilClearSpotLightTechnique = shader.getTechnique("stencil_clear_spotlight");
         }
 
         shader = shaderManager.get("shaders/forwardrendering.cgfx");
@@ -1316,10 +1308,6 @@ class ForwardRendering
             delete this.zonlySkinnedNoCullTechnique;
             delete this.zonlyRigidAlphaNoCullTechnique;
             delete this.zonlySkinnedAlphaNoCullTechnique;
-            delete this.stencilSetTechnique;
-            delete this.stencilClearTechnique;
-            delete this.stencilSetSpotLightTechnique;
-            delete this.stencilClearSpotLightTechnique;
         }
 
         if (this.forwardShader)
