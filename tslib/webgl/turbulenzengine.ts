@@ -83,6 +83,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     resizeCanvas: { (): void; };
     base64Encode: { (bytes: any): string; };
+    handleZeroTimeoutMessages: { (event): void; };
 
     setInterval(f, t): any
     {
@@ -435,6 +436,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         if (this.resizeCanvas)
         {
             window.removeEventListener('resize', this.resizeCanvas, false);
+            delete this.resizeCanvas;
+        }
+        if (this.handleZeroTimeoutMessages)
+        {
+            window.removeEventListener("message", this.handleZeroTimeoutMessages, true);
+            delete this.handleZeroTimeoutMessages;
         }
     }
 
@@ -639,6 +646,9 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                     }
                 }
             };
+
+            tz.handleZeroTimeoutMessages = handleZeroTimeoutMessages;
+
             window.addEventListener("message", handleZeroTimeoutMessages, true);
 
             tz.setTimeout = function (f, t)
