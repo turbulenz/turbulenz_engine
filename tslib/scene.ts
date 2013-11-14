@@ -3620,6 +3620,81 @@ class Scene
         }
     }
 
+    // For cases where > 1-index per vertex we process it to create 1-index per vertex from data
+    _updateSingleIndexTables(surface,
+                             indicesPerVertex,
+                             verticesAsIndexLists,
+                             verticesAsIndexListTable)
+    {
+        var faces = surface.faces;
+        var numIndices = faces.length;
+        var numVerts = ((numIndices / indicesPerVertex) | 0);
+
+        var singleIndices = new Array(numVerts);
+        var thisVert = new Array(indicesPerVertex);
+
+        var vertIdx = 0;
+        var srcIdx = 0;
+        var nextSrcIdx = indicesPerVertex;
+        var numUniqueVertIndex = verticesAsIndexLists.length;
+        var numUniqueVertices = ((numUniqueVertIndex / indicesPerVertex) | 0 );
+        var n;
+
+        while (srcIdx < numIndices)
+        {
+            n = 0;
+            do
+            {
+                thisVert[n] = faces[srcIdx];
+                n += 1;
+                srcIdx += 1;
+            }
+            while (srcIdx < nextSrcIdx);
+
+            var thisVertHash = thisVert.join(",");
+
+            var thisVertIndex = verticesAsIndexListTable[thisVertHash];
+            if (thisVertIndex === undefined)
+            {
+                // New index - add to tables
+                thisVertIndex = numUniqueVertices;
+                verticesAsIndexListTable[thisVertHash] = thisVertIndex;
+                numUniqueVertices += 1;
+
+                // Copy indices
+                n = 0;
+                do
+                {
+                    verticesAsIndexLists[numUniqueVertIndex] = thisVert[n];
+                    numUniqueVertIndex += 1;
+                    n += 1;
+                }
+                while (n < indicesPerVertex);
+            }
+
+            singleIndices[vertIdx] = thisVertIndex;
+
+            nextSrcIdx += indicesPerVertex;
+            vertIdx += 1;
+        }
+
+        surface.faces = singleIndices;
+    }
+
+    _isSequentialIndices(indices, numIndices): boolean
+    {
+        var baseIndex = indices[0];
+        var n;
+        for (n = 1; n < numIndices; n += 1)
+        {
+            if (indices[n] !== (baseIndex + n))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     //
     // loadShape
     //
@@ -3924,67 +3999,6 @@ class Scene
                     }
                 }
 
-                // For cases where > 1-index per vertex we process it to create 1-index per vertex from data
-
-                var updateSingleIndexTables =
-                    function updateSingleIndexTablesFn(surface, indicesPerVertex,
-                                                       verticesAsIndexLists,
-                                                       verticesAsIndexListTable)
-                {
-                    var faces = surface.faces;
-                    var numVerts = faces.length / indicesPerVertex;
-
-                    var singleIndices = new Array(numVerts);
-                    var thisVert = new Array(indicesPerVertex);
-
-                    var vertIdx = 0;
-                    var srcIdx = 0;
-                    var nextSrcIdx = indicesPerVertex;
-                    var numUniqueVertIndex = verticesAsIndexLists.length;
-                    var numUniqueVertices = ((numUniqueVertIndex / indicesPerVertex) | 0 );
-                    var n;
-
-                    while (srcIdx < faces.length)
-                    {
-                        n = 0;
-                        do
-                        {
-                            thisVert[n] = faces[srcIdx];
-                            n += 1;
-                            srcIdx += 1;
-                        }
-                        while (srcIdx < nextSrcIdx);
-
-                        var thisVertHash = thisVert.join(",");
-
-                        var thisVertIndex = verticesAsIndexListTable[thisVertHash];
-                        if (thisVertIndex === undefined)
-                        {
-                            // New index - add to tables
-                            thisVertIndex = numUniqueVertices;
-                            verticesAsIndexListTable[thisVertHash] = thisVertIndex;
-                            numUniqueVertices += 1;
-
-                            // Copy indices
-                            n = 0;
-                            do
-                            {
-                                verticesAsIndexLists[numUniqueVertIndex] = thisVert[n];
-                                numUniqueVertIndex += 1;
-                                n += 1;
-                            }
-                            while (n < indicesPerVertex);
-                        }
-
-                        singleIndices[vertIdx] = thisVertIndex;
-
-                        nextSrcIdx += indicesPerVertex;
-                        vertIdx += 1;
-                    }
-
-                    surface.faces = singleIndices;
-                };
-
                 if (indicesPerVertex > 1)
                 {
                     // [ [a,b,c], [d,e,f], ... ]
@@ -3997,10 +4011,10 @@ class Scene
                         if (shapeSurfaces.hasOwnProperty(s))
                         {
                             var shapeSurface = shapeSurfaces[s];
-                            updateSingleIndexTables(shapeSurface,
-                                                    indicesPerVertex,
-                                                    verticesAsIndexLists,
-                                                    verticesAsIndexListTable);
+                            this._updateSingleIndexTables(shapeSurface,
+                                                          indicesPerVertex,
+                                                          verticesAsIndexLists,
+                                                          verticesAsIndexListTable);
                         }
                     }
 
@@ -4128,20 +4142,6 @@ class Scene
                 vertexBuffer.setData(vertexData, baseIndex, totalNumVertices);
 
                 // Count total num indices
-                var isSequentialIndices = function isSequentialIndicesFn(indices, numIndices)
-                {
-                    var baseIndex = indices[0];
-                    var n;
-                    for (n = 1; n < numIndices; n += 1)
-                    {
-                        if (indices[n] !== (baseIndex + n))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-
                 var totalNumIndices = 0;
                 var numIndices;
 
@@ -4154,7 +4154,7 @@ class Scene
                         if (faces)
                         {
                             numIndices = faces.length;
-                            if (!isSequentialIndices(faces, numIndices))
+                            if (!this._isSequentialIndices(faces, numIndices))
                             {
                                 totalNumIndices += numIndices;
                             }
@@ -4212,7 +4212,7 @@ class Scene
                             numIndices = faces.length;
 
                             //See if they are all sequential, in which case we don't need an index buffer
-                            if (!isSequentialIndices(faces, numIndices))
+                            if (!this._isSequentialIndices(faces, numIndices))
                             {
                                 destSurface.indexBuffer = indexBuffer;
                                 destSurface.numIndices = numIndices;
