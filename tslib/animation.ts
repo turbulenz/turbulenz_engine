@@ -2633,12 +2633,12 @@ class SkinnedNode
         var bounds = skinController.inputController.bounds;
         var extents = this.scratchExtents;
         var matrix = this.node.getWorldTransform();
-        var h0 = bounds.halfExtent[0] * 0.5;
-        var h1 = bounds.halfExtent[1] * 0.5;
-        var h2 = bounds.halfExtent[2] * 0.5;
         var c0 = bounds.center[0];
-        var c1 = bounds.center[1] + h1;
+        var c1 = bounds.center[1];
         var c2 = bounds.center[2];
+        var h0 = bounds.halfExtent[0];
+        var h1 = bounds.halfExtent[1];
+        var h2 = bounds.halfExtent[2];
         if (matrix)
         {
             var abs = Math.abs;
