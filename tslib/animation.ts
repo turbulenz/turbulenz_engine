@@ -2561,6 +2561,58 @@ class SkinnedNode
         this.skinController.dirty = true;
     }
 
+    setNodeHierarchyBoneMatricesAndBounds(node, extents, skinController): boolean
+    {
+        var isFullySkinned = (!node.lightInstances || node.lightInstances.length === 0);
+
+        var renderables = node.renderables;
+        if (renderables)
+        {
+            var numRenderables = renderables.length;
+            for (var i = 0; i < numRenderables; i += 1)
+            {
+                var renderable = renderables[i];
+                if (renderable.isSkinned())
+                {
+                    renderable.skinController = skinController;
+                    renderable.addCustomWorldExtents(extents);
+                }
+                else
+                {
+                    isFullySkinned = false;
+                }
+            }
+        }
+
+        var children = node.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var c = 0; c < numChildren; c += 1)
+            {
+                var childSkinned = this.setNodeHierarchyBoneMatricesAndBounds(children[c], extents, skinController);
+                if (!childSkinned)
+                {
+                    isFullySkinned = false;
+                }
+            }
+        }
+
+        if (isFullySkinned)
+        {
+            node.addCustomWorldExtents(extents);
+        }
+        else
+        {
+            if (node.getCustomWorldExtents())
+            {
+                node.removeCustomWorldExtents();
+            }
+        }
+
+        return isFullySkinned;
+    }
+
     update(updateSkinController)
     {
         // update the skin controller
@@ -2577,68 +2629,16 @@ class SkinnedNode
             }
         }
 
-        function setNodeHierarchyBoneMatricesAndBoundsFn(node, extents, skinController)
-        {
-            var isFullySkinned = (!node.lightInstances || node.lightInstances.length === 0);
-
-            var renderables = node.renderables;
-            if (renderables)
-            {
-                var numRenderables = renderables.length;
-                for (var i = 0; i < numRenderables; i += 1)
-                {
-                    var renderable = renderables[i];
-                    if (renderable.isSkinned())
-                    {
-                        renderable.skinController = skinController;
-                        renderable.addCustomWorldExtents(extents);
-                    }
-                    else
-                    {
-                        isFullySkinned = false;
-                    }
-                }
-            }
-
-            var children = node.children;
-            if (children)
-            {
-                var numChildren = children.length;
-                for (var c = 0; c < numChildren; c += 1)
-                {
-                    var childSkinned = setNodeHierarchyBoneMatricesAndBoundsFn(children[c], extents, skinController);
-                    if (!childSkinned)
-                    {
-                        isFullySkinned = false;
-                    }
-                }
-            }
-
-            if (isFullySkinned)
-            {
-                node.addCustomWorldExtents(extents);
-            }
-            else
-            {
-                if (node.getCustomWorldExtents())
-                {
-                    node.removeCustomWorldExtents();
-                }
-            }
-
-            return isFullySkinned;
-        }
-
         // calculate the bounds in world space
         var bounds = skinController.inputController.bounds;
         var extents = this.scratchExtents;
         var matrix = this.node.getWorldTransform();
+        var h0 = bounds.halfExtent[0] * 0.5;
+        var h1 = bounds.halfExtent[1] * 0.5;
+        var h2 = bounds.halfExtent[2] * 0.5;
         var c0 = bounds.center[0];
-        var c1 = bounds.center[1];
+        var c1 = bounds.center[1] + h1;
         var c2 = bounds.center[2];
-        var h0 = bounds.halfExtent[0];
-        var h1 = bounds.halfExtent[1];
-        var h2 = bounds.halfExtent[2];
         if (matrix)
         {
             var abs = Math.abs;
@@ -2690,7 +2690,7 @@ class SkinnedNode
             extents[5] = (c2 + h2);
         }
 
-        setNodeHierarchyBoneMatricesAndBoundsFn(this.node, extents, skinController);
+        this.setNodeHierarchyBoneMatricesAndBounds(this.node, extents, skinController);
     }
 
     getJointIndex(jointName)
