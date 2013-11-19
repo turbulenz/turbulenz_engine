@@ -3624,61 +3624,69 @@ class Scene
     _updateSingleIndexTables(surface,
                              indicesPerVertex,
                              verticesAsIndexLists,
-                             verticesAsIndexListTable)
+                             verticesAsIndexListTable,
+                             numUniqueVertices)
     {
         var faces = surface.faces;
         var numIndices = faces.length;
-        var numVerts = ((numIndices / indicesPerVertex) | 0);
 
-        var singleIndices = new Array(numVerts);
-        var thisVert = new Array(indicesPerVertex);
+        var singleIndices = new Array(((numIndices / indicesPerVertex) | 0));
 
+        var numUniqueVertIndex = verticesAsIndexLists.length;
         var vertIdx = 0;
         var srcIdx = 0;
-        var nextSrcIdx = indicesPerVertex;
-        var numUniqueVertIndex = verticesAsIndexLists.length;
-        var numUniqueVertices = ((numUniqueVertIndex / indicesPerVertex) | 0 );
-        var n;
+        var n, maxn, index;
+        var currentLevel, nextLevel, thisVertIndex;
 
         while (srcIdx < numIndices)
         {
-            n = 0;
+            currentLevel = verticesAsIndexListTable;
+            n = srcIdx;
+            maxn = (srcIdx + (indicesPerVertex - 1));
             do
             {
-                thisVert[n] = faces[srcIdx];
+                index = faces[n];
+                nextLevel = currentLevel[index];
+                if (nextLevel === undefined)
+                {
+                    currentLevel[index] = nextLevel = {};
+                }
+                currentLevel = nextLevel;
                 n += 1;
-                srcIdx += 1;
             }
-            while (srcIdx < nextSrcIdx);
+            while (n < maxn);
 
-            var thisVertHash = thisVert.join(",");
-
-            var thisVertIndex = verticesAsIndexListTable[thisVertHash];
+            index = faces[n];
+            thisVertIndex = currentLevel[index];
             if (thisVertIndex === undefined)
             {
                 // New index - add to tables
-                thisVertIndex = numUniqueVertices;
-                verticesAsIndexListTable[thisVertHash] = thisVertIndex;
+                currentLevel[index] = thisVertIndex = numUniqueVertices;
                 numUniqueVertices += 1;
 
                 // Copy indices
-                n = 0;
+                n = srcIdx;
                 do
                 {
-                    verticesAsIndexLists[numUniqueVertIndex] = thisVert[n];
+                    verticesAsIndexLists[numUniqueVertIndex] = faces[n];
                     numUniqueVertIndex += 1;
                     n += 1;
                 }
-                while (n < indicesPerVertex);
+                while (n < maxn);
+
+                verticesAsIndexLists[numUniqueVertIndex] = index;
+                numUniqueVertIndex += 1;
             }
 
             singleIndices[vertIdx] = thisVertIndex;
-
-            nextSrcIdx += indicesPerVertex;
             vertIdx += 1;
+
+            srcIdx += indicesPerVertex;
         }
 
         surface.faces = singleIndices;
+
+        return numUniqueVertices;
     }
 
     _isSequentialIndices(indices, numIndices): boolean
@@ -4002,26 +4010,25 @@ class Scene
                 if (indicesPerVertex > 1)
                 {
                     // [ [a,b,c], [d,e,f], ... ]
+                    totalNumVertices = 0;
+
                     var verticesAsIndexLists = [];
                     var verticesAsIndexListTable = {};
-
                     var shapeSurfaces = shape.surfaces;
                     for (s in shapeSurfaces)
                     {
                         if (shapeSurfaces.hasOwnProperty(s))
                         {
                             var shapeSurface = shapeSurfaces[s];
-                            this._updateSingleIndexTables(shapeSurface,
-                                                          indicesPerVertex,
-                                                          verticesAsIndexLists,
-                                                          verticesAsIndexListTable);
+                            totalNumVertices = this._updateSingleIndexTables(shapeSurface,
+                                                                             indicesPerVertex,
+                                                                             verticesAsIndexLists,
+                                                                             verticesAsIndexListTable,
+                                                                             totalNumVertices);
                         }
                     }
 
                     verticesAsIndexListTable = null;
-
-                    // recalc totalNumVertices
-                    totalNumVertices = ((verticesAsIndexLists.length / indicesPerVertex) | 0);
 
                     // Recreate vertex buffer data on the vertexSources
                     for (vs = 0; vs < numVertexSources; vs += 1)
