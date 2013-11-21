@@ -2728,13 +2728,14 @@ var VMath : MathDevice =
 
     m33InverseTranspose : function m33InverseTransposeFn(m, dst?)
     {
-        if (dst === undefined)
+        var res = dst;
+        if (res === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            res = new VMathArrayConstructor(9);
         }
         debug.assert(debug.isMtx33(m) || debug.isMtx43(m));
-        debug.assert(debug.isMathType(dst) &&
-                     (debug.isMtx33(dst) || debug.isMtx43(dst)));
+        debug.assert(debug.isMathType(res) &&
+                     (debug.isMtx33(res) || debug.isMtx43(res)));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -2750,25 +2751,24 @@ var VMath : MathDevice =
                    m2 * (m3 * m7 - m4 * m6));
         if (det === 0.0)
         {
-            dst[0] = dst[1] = dst[2] = 0.0;
-            dst[3] = dst[4] = dst[5] = 0.0;
-            dst[6] = dst[7] = dst[8] = 0.0;
-            return dst;
+            res[0] = res[1] = res[2] = 0.0;
+            res[3] = res[4] = res[5] = 0.0;
+            res[6] = res[7] = res[8] = 0.0;
         }
         else
         {
             var detrecp = 1.0 / det;
-            dst[0] = ((m4 * m8 + m5 * (-m7)) * detrecp);
-            dst[3] = ((m7 * m2 + m8 * (-m1)) * detrecp);
-            dst[6] = ((m1 * m5 - m2 *   m4)  * detrecp);
-            dst[1] = ((m5 * m6 + m3 * (-m8)) * detrecp);
-            dst[4] = ((m8 * m0 + m6 * (-m2)) * detrecp);
-            dst[7] = ((m3 * m2 - m0 *   m5)  * detrecp);
-            dst[2] = ((m3 * m7 + m4 * (-m6)) * detrecp);
-            dst[5] = ((m6 * m1 + m7 * (-m0)) * detrecp);
-            dst[8] = ((m0 * m4 - m3 *   m1)  * detrecp);
-            return dst;
+            res[0] = ((m4 * m8 + m5 * (-m7)) * detrecp);
+            res[3] = ((m7 * m2 + m8 * (-m1)) * detrecp);
+            res[6] = ((m1 * m5 - m2 *   m4)  * detrecp);
+            res[1] = ((m5 * m6 + m3 * (-m8)) * detrecp);
+            res[4] = ((m8 * m0 + m6 * (-m2)) * detrecp);
+            res[7] = ((m3 * m2 - m0 *   m5)  * detrecp);
+            res[2] = ((m3 * m7 + m4 * (-m6)) * detrecp);
+            res[5] = ((m6 * m1 + m7 * (-m0)) * detrecp);
+            res[8] = ((m0 * m4 - m3 *   m1)  * detrecp);
         }
+        return res;
     },
 
     m33Mul : function m33MulFn(a, b, dst?)
