@@ -7117,6 +7117,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 var canvasParams = {
                     alpha: false,
+                    depth: true,
                     stencil: true,
                     antialias: false
                 };
@@ -7127,10 +7128,20 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     canvasParams.antialias = true;
                 }
 
-                var alpha = params.alpha ;
+                var alpha = params.alpha;
                 if (alpha)
                 {
                     canvasParams.alpha = true;
+                }
+
+                if (params.depth === false)
+                {
+                    canvasParams.depth = false;
+                }
+
+                if (params.stencil === false)
+                {
+                    canvasParams.stencil = false;
                 }
 
                 var numContexts = contextList.length, i;
