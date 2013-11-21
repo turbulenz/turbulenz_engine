@@ -2746,9 +2746,12 @@ var VMath : MathDevice =
         var m6 = m[6];
         var m7 = m[7];
         var m8 = m[8];
-        var det = (m0 * (m4 * m8 - m5 * m7) +
-                   m1 * (m5 * m6 - m3 * m8) +
-                   m2 * (m3 * m7 - m4 * m6));
+        var d4857 = (m4 * m8 - m5 * m7);
+        var d5638 = (m5 * m6 - m3 * m8);
+        var d3746 = (m3 * m7 - m4 * m6);
+        var det = (m0 * d4857 +
+                   m1 * d5638 +
+                   m2 * d3746);
         if (det === 0.0)
         {
             res[0] = res[1] = res[2] = 0.0;
@@ -2758,15 +2761,15 @@ var VMath : MathDevice =
         else
         {
             var detrecp = 1.0 / det;
-            res[0] = ((m4 * m8 + m5 * (-m7)) * detrecp);
-            res[3] = ((m7 * m2 + m8 * (-m1)) * detrecp);
-            res[6] = ((m1 * m5 - m2 *   m4)  * detrecp);
-            res[1] = ((m5 * m6 + m3 * (-m8)) * detrecp);
-            res[4] = ((m8 * m0 + m6 * (-m2)) * detrecp);
-            res[7] = ((m3 * m2 - m0 *   m5)  * detrecp);
-            res[2] = ((m3 * m7 + m4 * (-m6)) * detrecp);
-            res[5] = ((m6 * m1 + m7 * (-m0)) * detrecp);
-            res[8] = ((m0 * m4 - m3 *   m1)  * detrecp);
+            res[0] = (d4857 * detrecp);
+            res[3] = ((m7 * m2 - m8 * m1) * detrecp);
+            res[6] = ((m1 * m5 - m2 * m4) * detrecp);
+            res[1] = (d5638 * detrecp);
+            res[4] = ((m8 * m0 - m6 * m2) * detrecp);
+            res[7] = ((m3 * m2 - m0 * m5) * detrecp);
+            res[2] = (d3746 * detrecp);
+            res[5] = ((m6 * m1 - m7 * m0) * detrecp);
+            res[8] = ((m0 * m4 - m3 * m1) * detrecp);
         }
         return res;
     },
