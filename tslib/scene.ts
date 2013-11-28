@@ -3630,8 +3630,6 @@ class Scene
         var faces = surface.faces;
         var numIndices = faces.length;
 
-        var singleIndices = new Array(((numIndices / indicesPerVertex) | 0));
-
         var numUniqueVertIndex = verticesAsIndexLists.length;
         var vertIdx = 0;
         var srcIdx = 0;
@@ -3678,13 +3676,13 @@ class Scene
                 numUniqueVertIndex += 1;
             }
 
-            singleIndices[vertIdx] = thisVertIndex;
+            faces[vertIdx] = thisVertIndex;
             vertIdx += 1;
 
             srcIdx += indicesPerVertex;
         }
 
-        surface.faces = singleIndices;
+        surface.faces.length = vertIdx;
 
         return numUniqueVertices;
     }
