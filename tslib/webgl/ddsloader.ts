@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2012 Turbulenz Limited
+// Copyright (c) 2011-2013 Turbulenz Limited
 
 /*global TurbulenzEngine*/
 /*global Uint8Array*/
@@ -14,11 +14,22 @@ class DDSLoader
 {
     static version = 1;
 
+    static maxNumWorkers = (typeof Worker !== "undefined" &&
+                            typeof Blob !== "undefined" &&
+                            (typeof URL !== "undefined" || typeof window['webkitURL'] !== "undefined") ? 4 : 0);
+    static WorkerCommand = {
+        DXT1: 0,
+        DXT1A: 1,
+        DXT3: 2,
+        DXT5: 3
+    };
+    static workerQueues: DDSLoader[][] = null;
+    static workers: Worker[] = null;
+
     gd                      : any;
     onload                  : any;
     onerror                 : any;
     src                     : any;
-    data                    : any;
 
     width                   : number;
     height                  : number;
@@ -29,6 +40,7 @@ class DDSLoader
     numFaces                : number;
 
     private bytesPerPixel   : number;
+    private externalBuffer  : boolean;
 
     // On the prototype
 
@@ -102,13 +114,14 @@ class DDSLoader
     BGRPIXELFORMAT_B8G8R8A8 : number;
     BGRPIXELFORMAT_B8G8R8   : number;
 
-    processBytes(bytes: any[]): void;
-    processBytes(bytes: ArrayBufferView): void;
+    processBytes(bytes: any[], status: number): void;
+    processBytes(bytes: ArrayBufferView, status: number): void;
 
-    processBytes(bytes)
+    processBytes(bytes, status: number)
     {
         if (!this.isValidHeader(bytes))
         {
+            this.onerror(status);
             return;
         }
 
@@ -152,6 +165,7 @@ class DDSLoader
 
             if (numFaces !== 6 || this.width !== this.height)
             {
+                this.onerror(status);
                 return;
             }
 
@@ -259,6 +273,7 @@ class DDSLoader
                 break;
 
             default:
+                this.onerror(status);
                 return;
             }
         }
@@ -326,6 +341,7 @@ class DDSLoader
         }
         else
         {
+            this.onerror(status);
             return;
         }
 
@@ -348,6 +364,7 @@ class DDSLoader
 
         if (bytes.length < (offset + size))
         {
+            this.onerror(status);
             return;
         }
 
@@ -384,35 +401,270 @@ class DDSLoader
         {
             if (!gd.isSupported('TEXTURE_DXT1'))
             {
-                data = this.convertDXT1ToRGBA(data);
+                if (this.hasDXT1Alpha(data))
+                {
+                    this.format = gd.PIXELFORMAT_R5G5B5A1;
+                    DDSLoader.decodeInWorker(DDSLoader.WorkerCommand.DXT1A, data, this);
+                    return;
+                }
+                else
+                {
+                    this.format = gd.PIXELFORMAT_R5G6B5;
+                    DDSLoader.decodeInWorker(DDSLoader.WorkerCommand.DXT1, data, this);
+                    return;
+                }
             }
         }
         else if (this.format === gd.PIXELFORMAT_DXT3)
         {
             if (!gd.isSupported('TEXTURE_DXT3'))
             {
-                data = this.convertDXT3ToRGBA(data);
+                this.format = gd.PIXELFORMAT_R4G4B4A4;
+                DDSLoader.decodeInWorker(DDSLoader.WorkerCommand.DXT3, data, this);
+                return;
             }
         }
         else if (this.format === gd.PIXELFORMAT_DXT5)
         {
             if (!gd.isSupported('TEXTURE_DXT5'))
             {
-                data = this.convertDXT5ToRGBA(data);
+                this.format = gd.PIXELFORMAT_R4G4B4A4;
+                DDSLoader.decodeInWorker(DDSLoader.WorkerCommand.DXT5, data, this);
+                return;
             }
         }
 
-        this.data = data;
+        this.onload(data, this.width, this.height, this.format,
+                    this.numLevels, (this.numFaces > 1), this.depth,
+                    status);
+    }
+
+    static createWorker(index: number): Worker
+    {
+        var code = "var convertDXT1To565 = " + this.convertDXT1To565.toString() + ";\n" +
+           "var convertDXT1To5551 = " + this.convertDXT1To5551.toString() + ";\n" +
+           "var convertDXT3To4444 = " + this.convertDXT3To4444.toString() + ";\n" +
+           "var convertDXT5To4444 = " + this.convertDXT5To4444.toString() + ";\n" +
+           "var command, srcWidth, srcHeight, srcNumLevels, srcNumFaces, srcOffset;\n" +
+           "onmessage = function decoderOnMessage(event)\n" +
+           "{\n" +
+           "    var edata = event.data;\n" +
+           "    if (edata instanceof ArrayBuffer)\n" +
+           "    {\n" +
+           "        var data = new Uint8Array(edata, srcOffset);\n" +
+           "        switch (command)\n" +
+           "        {\n" +
+           "            case 0: // DXT1\n" +
+           "                data = convertDXT1To565(data, srcWidth, srcHeight, srcNumLevels, srcNumFaces);\n" +
+           "                break;\n" +
+           "            case 1: // DXT1A\n" +
+           "                data = convertDXT1To5551(data, srcWidth, srcHeight, srcNumLevels, srcNumFaces);\n" +
+           "                break;\n" +
+           "            case 2: // DXT3\n" +
+           "                data = convertDXT3To4444(data, srcWidth, srcHeight, srcNumLevels, srcNumFaces);\n" +
+           "                break;\n" +
+           "            case 3: // DXT4\n" +
+           "                data = convertDXT5To4444(data, srcWidth, srcHeight, srcNumLevels, srcNumFaces);\n" +
+           "                break;\n" +
+           "            default:\n" +
+           "                data = null;\n" +
+           "                break;\n" +
+           "        };\n" +
+           "        if (data)\n" +
+           "        {\n" +
+           "            postMessage(data.buffer, [data.buffer]);\n" +
+           "        }\n" +
+           "        else\n" +
+           "        {\n" +
+           "            postMessage(null);\n" +
+           "        }\n" +
+           "    }\n" +
+           "    else\n" +
+           "    {\n" +
+           "        command = edata.command;\n" +
+           "        srcWidth = edata.width;\n" +
+           "        srcHeight = edata.height;\n" +
+           "        srcNumLevels = edata.numLevels;\n" +
+           "        srcNumFaces = edata.numFaces;\n" +
+           "        srcOffset = edata.byteOffset;\n" +
+           "    }\n" +
+           "};";
+        var blob = new Blob([code], { type: "text/javascript" });
+
+        var url = (typeof URL !== "undefined" ? URL : window['webkitURL']);
+        var objectURL = url.createObjectURL(blob);
+
+        var worker = new Worker(objectURL);
+        if (worker)
+        {
+            var workerQueue = DDSLoader.workerQueues[index];
+            worker.onmessage = function (event)
+            {
+                var loader = workerQueue.shift();
+
+                worker['load'] -= ((((loader.width + 3) * (loader.height + 3)) >> 4) * loader.numLevels * loader.numFaces);
+
+                var data = event.data;
+                if (data)
+                {
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                }
+                else
+                {
+                    loader.onerror(200);
+                }
+            };
+            worker['load'] = 0;
+        }
+
+        url.revokeObjectURL(objectURL);
+
+        return worker;
+    }
+
+    static decodeInWorker(command: number, data: ArrayBufferView, loader: DDSLoader): void
+    {
+        var maxNumWorkers = this.maxNumWorkers;
+        if (maxNumWorkers)
+        {
+            var workerQueues = this.workerQueues;
+            var workers = this.workers;
+            var workerIndex = -1;
+            var n;
+            if (!workers)
+            {
+                this.workerQueues = workerQueues = [];
+                this.workers = workers = [];
+                workerIndex = 0;
+                for (n = 0; n < maxNumWorkers; n += 1)
+                {
+                    workerQueues[n] = [];
+                    workers[n] = this.createWorker(n);
+                    if (!workers[n])
+                    {
+                        workerIndex = -1;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                workerIndex = 0;
+                var minLoad = workers[0]['load'];
+                for (n = 1; n < maxNumWorkers; n += 1)
+                {
+                    var load = workers[n]['load'];
+                    if (minLoad > load)
+                    {
+                        minLoad = load;
+                        workerIndex = n;
+                    }
+                }
+            }
+
+            if (workerIndex !== -1)
+            {
+                var worker = workers[workerIndex];
+
+                worker['load'] += ((((loader.width + 3) * (loader.height + 3)) >> 4) * loader.numLevels * loader.numFaces);
+
+                //console.log(workerQueues[0].length, workerQueues[1].length, workerQueues[2].length, workerQueues[3].length);
+
+                workerQueues[workerIndex].push(loader);
+
+                var byteOffset = data.byteOffset;
+                var buffer;
+                if (loader.externalBuffer)
+                {
+                    buffer = data.buffer.slice(byteOffset, (byteOffset + data.byteLength));
+                    byteOffset = 0;
+                }
+                else
+                {
+                    buffer = data.buffer;
+                }
+
+                // First post the command (structural copy)
+                worker.postMessage({
+                    command: command,
+                    width: loader.width,
+                    height: loader.height,
+                    numLevels: loader.numLevels,
+                    numFaces: loader.numFaces,
+                    byteOffset: byteOffset
+                });
+
+                // Then post the data (ownership transfer)
+                worker.postMessage(buffer, [buffer]);
+
+                return;
+            }
+            else
+            {
+                this.maxNumWorkers = 0;
+            }
+        }
+
+        // Workers not available, use timeout
+        var decoder;
+        switch (command)
+        {
+            case DDSLoader.WorkerCommand.DXT1:
+                decoder = function() {
+                    data = DDSLoader.convertDXT1To565(data, loader.width, loader.height, loader.numLevels, loader.numFaces);
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                };
+                break;
+            case DDSLoader.WorkerCommand.DXT1A:
+                decoder = function() {
+                    data = DDSLoader.convertDXT1To5551(data, loader.width, loader.height, loader.numLevels, loader.numFaces);
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                };
+                break;
+            case DDSLoader.WorkerCommand.DXT3:
+                decoder = function() {
+                    data = DDSLoader.convertDXT3To4444(data, loader.width, loader.height, loader.numLevels, loader.numFaces);
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                };
+                break;
+            case DDSLoader.WorkerCommand.DXT5:
+                decoder = function() {
+                    data = DDSLoader.convertDXT5To4444(data, loader.width, loader.height, loader.numLevels, loader.numFaces);
+                    loader.onload(data, loader.width, loader.height, loader.format,
+                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
+                                  200);
+                };
+                break;
+            default:
+                decoder = null;
+                break;
+        };
+        if (decoder)
+        {
+            TurbulenzEngine.setTimeout(decoder, 0);
+        }
+        else
+        {
+            loader.onerror(200);
+        }
     }
 
     parseHeader(bytes, offset)
     {
         function readUInt32()
         {
-            var value = ((bytes[offset]) +
-                         (bytes[offset + 1] * 256) +
-                         (bytes[offset + 2] * 65536) +
-                         (bytes[offset + 3] * 16777216));
+            var value = ((bytes[offset]) |
+                         (bytes[offset + 1] << 8) |
+                         (bytes[offset + 2] << 16) |
+                         (bytes[offset + 3] << 24));
             offset += 4;
             return value;
         }
@@ -724,63 +976,6 @@ class DDSLoader
         /*jshint bitwise: true*/
     }
 
-    convertDXT1ToRGBA(data)
-    {
-        var decodeColor = this.decodeColor;
-
-        var scratchpad = { cache: [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-                           colorArray: new Array(4)
-                         };
-
-        var encode;
-        if (this.hasDXT1Alpha(data))
-        {
-            this.format = this.gd.PIXELFORMAT_R5G5B5A1;
-            encode = this.encodeR5G5B5A1;
-        }
-        else
-        {
-            this.format = this.gd.PIXELFORMAT_R5G6B5;
-            encode = this.encodeR5G6B5;
-        }
-
-        data = this.convertToRGBA16(data, function decodeDXT1(data, src, out) {
-            decodeColor(data, src, true, out, scratchpad);
-        }, encode, 8);
-        return data;
-    }
-
-    convertDXT3ToRGBA(data)
-    {
-        var decodeColor = this.decodeColor;
-        var decodeDXT3Alpha = this.decodeDXT3Alpha;
-        var scratchpad = { cache: [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-                           colorArray: new Array(4)
-                         };
-        data = this.convertToRGBA16(data, function decodeDXT3(data, src, out) {
-            decodeColor(data, (src + 8), false, out, scratchpad);
-            decodeDXT3Alpha(data, src, out);
-        }, this.encodeR4G4B4A4, 16);
-        this.format = this.gd.PIXELFORMAT_R4G4B4A4;
-        return data;
-    }
-
-    convertDXT5ToRGBA(data)
-    {
-        var decodeColor = this.decodeColor;
-        var decodeDXT5Alpha = this.decodeDXT5Alpha;
-        var scratchpad = { cache: [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
-                           colorArray: new Array(4),
-                           alphaArray: new Uint8Array(8)
-                         };
-        data = this.convertToRGBA16(data, function decodeDXT5(data, src, out) {
-            decodeColor(data, (src + 8), false, out, scratchpad);
-            decodeDXT5Alpha(data, src, out, scratchpad);
-        }, this.encodeR4G4B4A4, 16);
-        this.format = this.gd.PIXELFORMAT_R4G4B4A4;
-        return data;
-    }
-
     convertToRGBA32(data, decode, srcStride)
     {
         //var bpp = 4;
@@ -910,14 +1105,476 @@ class DDSLoader
                 ((rgba[0] & 0xf0) << 8));
     }
 
-    convertToRGBA16(data, decode, encode, srcStride)
+    static convertDXT1To565(srcBuffer, srcWidth, srcHeight, srcNumLevels, srcNumFaces)
     {
+        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+        var colorArray = new Array(4);
+
+        function decodeDXT1Color(data, src, out, cache, colorArray)
+        {
+            function decode565(value, color)
+            {
+                /*jshint bitwise: false*/
+                var r = ((value >> 11) & 31);
+                var g = ((value >> 5) & 63);
+                var b = ((value) & 31);
+                color[0] = ((r << 3) | (r >> 2));
+                color[1] = ((g << 2) | (g >> 4));
+                color[2] = ((b << 3) | (b >> 2));
+                color[3] = 255;
+                /*jshint bitwise: true*/
+                return color;
+            }
+
+            /*jshint bitwise: false*/
+            var col0 = ((data[src + 1] << 8) | data[src]);
+            src += 2;
+            var col1 = ((data[src + 1] << 8) | data[src]);
+            src += 2;
+
+            var c0, c1, c2, c3, i;
+            if (col0 !== col1)
+            {
+                c0 = decode565(col0, cache[0]);
+                c1 = decode565(col1, cache[1]);
+                c2 = cache[2];
+                c3 = cache[3];
+
+                if (col0 > col1)
+                {
+                    for (i = 0; i < 3; i += 1)
+                    {
+                        var c0i = c0[i];
+                        var c1i = c1[i];
+                        c2[i] = ((((c0i * 2) + c1i) / 3) | 0);
+                        c3[i] = (((c0i + (c1i * 2)) / 3) | 0);
+                    }
+                    c2[3] = 255;
+                    c3[3] = 255;
+                }
+                else
+                {
+                    for (i = 0; i < 3; i += 1)
+                    {
+                        c2[i] = ((c0[i] + c1[i]) >> 1);
+                        c3[i] = 0;
+                    }
+                    c2[3] = 255;
+                    c3[3] = 0;
+                }
+            }
+            else
+            {
+                c0 = decode565(col0, cache[0]);
+                c1 = c0;
+                c2 = c0;
+                c3 = cache[1];
+                for (i = 0; i < 4; i += 1)
+                {
+                    c3[i] = 0;
+                }
+            }
+
+            var c = colorArray;
+            c[0] = c0;
+            c[1] = c1;
+            c[2] = c2;
+            c[3] = c3;
+
+            // ((1 << 2) - 1) === 3;
+            var row, dest, color;
+            for (i = 0; i < 4; i += 1)
+            {
+                row = data[src + i];
+                dest = out[i];
+                dest[0] = c[(row)      & 3];
+                dest[1] = c[(row >> 2) & 3];
+                dest[2] = c[(row >> 4) & 3];
+                dest[3] = c[(row >> 6) & 3];
+            }
+            /*jshint bitwise: true*/
+        }
+
         //var bpp = 2;
         var level;
-        var width = this.width;
-        var height = this.height;
-        var numLevels = this.numLevels;
-        var numFaces = this.numFaces;
+        var width = srcWidth;
+        var height = srcHeight;
+        var numLevels = srcNumLevels;
+        var numFaces = srcNumFaces;
+
+        /*jshint bitwise: false*/
+        var numPixels = 0;
+        for (level = 0; level < numLevels; level += 1)
+        {
+            numPixels += (width * height);
+            width = (width > 1 ? (width >> 1) : 1);
+            height = (height > 1 ? (height >> 1) : 1);
+        }
+
+        var dst = new Uint16Array(numPixels * 1 * numFaces);
+
+        var src = 0, dest = 0;
+
+        var color = [[new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)]
+                ];
+        for (var face = 0; face < numFaces; face += 1)
+        {
+            width = srcWidth;
+            height = srcHeight;
+            for (var n = 0; n < numLevels; n += 1)
+            {
+                var numColumns = (width > 4 ? 4 : width);
+                var numLines = (height > 4 ? 4 : height);
+                var heightInBlocks = ((height + 3) >> 2);
+                var widthInBlocks = ((width + 3) >> 2);
+                var desinationStride = (width * 1);
+                var desinationLineStride = (numColumns * 1);
+                var desinationBlockStride = (desinationStride * (numLines - 1));
+                for (var y = 0; y < heightInBlocks; y += 1)
+                {
+                    for (var x = 0; x < widthInBlocks; x += 1)
+                    {
+                        decodeDXT1Color(srcBuffer, src, color, cache, colorArray);
+                        var destLine = dest;
+                        for (var line = 0; line < numLines; line += 1)
+                        {
+                            var colorLine = color[line];
+                            var destRGBA = destLine;
+                            for (var i = 0 ; i < numColumns; i += 1)
+                            {
+                                var rgba = colorLine[i];
+                                dst[destRGBA] = (((rgba[2] & 0xf8) >>> 3) |
+                                                 ((rgba[1] & 0xfc) << 3) |
+                                                 ((rgba[0] & 0xf8) << 8));
+                                destRGBA += 1;
+                            }
+                            destLine += desinationStride;
+                        }
+                        src += 8;
+                        dest += desinationLineStride;
+                    }
+                    dest += desinationBlockStride;
+                }
+
+                width = (width > 1 ? (width >> 1) : 1);
+                height = (height > 1 ? (height >> 1) : 1);
+            }
+        }
+        /*jshint bitwise: true*/
+
+        return dst;
+    }
+
+    static convertDXT1To5551(srcBuffer, srcWidth, srcHeight, srcNumLevels, srcNumFaces)
+    {
+        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+        var colorArray = new Array(4);
+
+        function decodeDXT1Color(data, src, out, cache, colorArray)
+        {
+            function decode565(value, color)
+            {
+                /*jshint bitwise: false*/
+                var r = ((value >> 11) & 31);
+                var g = ((value >> 5) & 63);
+                var b = ((value) & 31);
+                color[0] = ((r << 3) | (r >> 2));
+                color[1] = ((g << 2) | (g >> 4));
+                color[2] = ((b << 3) | (b >> 2));
+                color[3] = 255;
+                /*jshint bitwise: true*/
+                return color;
+            }
+
+            /*jshint bitwise: false*/
+            var col0 = ((data[src + 1] << 8) | data[src]);
+            src += 2;
+            var col1 = ((data[src + 1] << 8) | data[src]);
+            src += 2;
+
+            var c0, c1, c2, c3, i;
+            if (col0 !== col1)
+            {
+                c0 = decode565(col0, cache[0]);
+                c1 = decode565(col1, cache[1]);
+                c2 = cache[2];
+                c3 = cache[3];
+
+                if (col0 > col1)
+                {
+                    for (i = 0; i < 3; i += 1)
+                    {
+                        var c0i = c0[i];
+                        var c1i = c1[i];
+                        c2[i] = ((((c0i * 2) + c1i) / 3) | 0);
+                        c3[i] = (((c0i + (c1i * 2)) / 3) | 0);
+                    }
+                    c2[3] = 255;
+                    c3[3] = 255;
+                }
+                else
+                {
+                    for (i = 0; i < 3; i += 1)
+                    {
+                        c2[i] = ((c0[i] + c1[i]) >> 1);
+                        c3[i] = 0;
+                    }
+                    c2[3] = 255;
+                    c3[3] = 0;
+                }
+            }
+            else
+            {
+                c0 = decode565(col0, cache[0]);
+                c1 = c0;
+                c2 = c0;
+                c3 = cache[1];
+                for (i = 0; i < 4; i += 1)
+                {
+                    c3[i] = 0;
+                }
+            }
+
+            var c = colorArray;
+            c[0] = c0;
+            c[1] = c1;
+            c[2] = c2;
+            c[3] = c3;
+
+            // ((1 << 2) - 1) === 3;
+            var row, dest, color;
+            for (i = 0; i < 4; i += 1)
+            {
+                row = data[src + i];
+                dest = out[i];
+                dest[0] = c[(row)      & 3];
+                dest[1] = c[(row >> 2) & 3];
+                dest[2] = c[(row >> 4) & 3];
+                dest[3] = c[(row >> 6) & 3];
+            }
+            /*jshint bitwise: true*/
+        }
+
+        //var bpp = 2;
+        var level;
+        var width = srcWidth;
+        var height = srcHeight;
+        var numLevels = srcNumLevels;
+        var numFaces = srcNumFaces;
+
+        /*jshint bitwise: false*/
+        var numPixels = 0;
+        for (level = 0; level < numLevels; level += 1)
+        {
+            numPixels += (width * height);
+            width = (width > 1 ? (width >> 1) : 1);
+            height = (height > 1 ? (height >> 1) : 1);
+        }
+
+        var dst = new Uint16Array(numPixels * 1 * numFaces);
+
+        var src = 0, dest = 0;
+
+        var color = [[new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+            [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)]
+                ];
+        for (var face = 0; face < numFaces; face += 1)
+        {
+            width = srcWidth;
+            height = srcHeight;
+            for (var n = 0; n < numLevels; n += 1)
+            {
+                var numColumns = (width > 4 ? 4 : width);
+                var numLines = (height > 4 ? 4 : height);
+                var heightInBlocks = ((height + 3) >> 2);
+                var widthInBlocks = ((width + 3) >> 2);
+                var desinationStride = (width * 1);
+                var desinationLineStride = (numColumns * 1);
+                var desinationBlockStride = (desinationStride * (numLines - 1));
+                for (var y = 0; y < heightInBlocks; y += 1)
+                {
+                    for (var x = 0; x < widthInBlocks; x += 1)
+                    {
+                        decodeDXT1Color(srcBuffer, src, color, cache, colorArray);
+                        var destLine = dest;
+                        for (var line = 0; line < numLines; line += 1)
+                        {
+                            var colorLine = color[line];
+                            var destRGBA = destLine;
+                            for (var i = 0 ; i < numColumns; i += 1)
+                            {
+                                var rgba = colorLine[i];
+                                dst[destRGBA] = ((rgba[3] >>> 7) |
+                                                 ((rgba[2] & 0xf8) >>> 2) |
+                                                 ((rgba[1] & 0xf8) << 3) |
+                                                 ((rgba[0] & 0xf8) << 8));
+                                destRGBA += 1;
+                            }
+                            destLine += desinationStride;
+                        }
+                        src += 8;
+                        dest += desinationLineStride;
+                    }
+                    dest += desinationBlockStride;
+                }
+
+                width = (width > 1 ? (width >> 1) : 1);
+                height = (height > 1 ? (height >> 1) : 1);
+            }
+        }
+        /*jshint bitwise: true*/
+
+        return dst;
+    }
+
+    static convertDXT3To4444(srcBuffer, srcWidth, srcHeight, srcNumLevels, srcNumFaces)
+    {
+        function decodeDXT1Color(data, src, out, cache, colorArray)
+        {
+            function decode565(value, color)
+            {
+                /*jshint bitwise: false*/
+                var r = ((value >> 11) & 31);
+                var g = ((value >> 5) & 63);
+                var b = ((value) & 31);
+                color[0] = ((r << 3) | (r >> 2));
+                color[1] = ((g << 2) | (g >> 4));
+                color[2] = ((b << 3) | (b >> 2));
+                color[3] = 255;
+                /*jshint bitwise: true*/
+                return color;
+            }
+
+            /*jshint bitwise: false*/
+            var col0 = ((data[src + 1] << 8) | data[src]);
+            src += 2;
+            var col1 = ((data[src + 1] << 8) | data[src]);
+            src += 2;
+
+            var c0, c1, c2, c3, i;
+            if (col0 !== col1)
+            {
+                c0 = decode565(col0, cache[0]);
+                c1 = decode565(col1, cache[1]);
+                c2 = cache[2];
+                c3 = cache[3];
+
+                if (col0 > col1)
+                {
+                    for (i = 0; i < 3; i += 1)
+                    {
+                        var c0i = c0[i];
+                        var c1i = c1[i];
+                        c2[i] = ((((c0i * 2) + c1i) / 3) | 0);
+                        c3[i] = (((c0i + (c1i * 2)) / 3) | 0);
+                    }
+                    c2[3] = 255;
+                    c3[3] = 255;
+                }
+                else
+                {
+                    for (i = 0; i < 3; i += 1)
+                    {
+                        c2[i] = ((c0[i] + c1[i]) >> 1);
+                        c3[i] = 0;
+                    }
+                    c2[3] = 255;
+                    c3[3] = 0;
+                }
+            }
+            else
+            {
+                c0 = decode565(col0, cache[0]);
+                c1 = c0;
+                c2 = c0;
+                c3 = cache[1];
+                for (i = 0; i < 4; i += 1)
+                {
+                    c3[i] = 0;
+                }
+            }
+
+            var c = colorArray;
+            c[0] = c0;
+            c[1] = c1;
+            c[2] = c2;
+            c[3] = c3;
+
+            // ((1 << 2) - 1) === 3;
+            var row, dest, color;
+            for (i = 0; i < 4; i += 1)
+            {
+                row = data[src + i];
+                dest = out[i];
+
+                color = c[(row)      & 3];
+                dest[0][0] = color[0];
+                dest[0][1] = color[1];
+                dest[0][2] = color[2];
+                dest[0][3] = color[3];
+
+                color = c[(row >> 2) & 3];
+                dest[1][0] = color[0];
+                dest[1][1] = color[1];
+                dest[1][2] = color[2];
+                dest[1][3] = color[3];
+
+                color = c[(row >> 4) & 3];
+                dest[2][0] = color[0];
+                dest[2][1] = color[1];
+                dest[2][2] = color[2];
+                dest[2][3] = color[3];
+
+                color = c[(row >> 6) & 3];
+                dest[3][0] = color[0];
+                dest[3][1] = color[1];
+                dest[3][2] = color[2];
+                dest[3][3] = color[3];
+            }
+            /*jshint bitwise: true*/
+        }
+
+        function decodeDXT3Alpha(data, src, out)
+        {
+            /*jshint bitwise: false*/
+            // ((1 << 4) - 1) === 15;
+            for (var i = 0; i < 4; i += 1)
+            {
+                var row = ((data[src + 1] << 8) | data[src]);
+                src += 2;
+                var dest = out[i];
+                if (row)
+                {
+                    dest[0][3] = ((row)       & 15) * (255 / 15);
+                    dest[1][3] = ((row >> 4)  & 15) * (255 / 15);
+                    dest[2][3] = ((row >> 8)  & 15) * (255 / 15);
+                    dest[3][3] = ((row >> 12) & 15) * (255 / 15);
+                }
+                else
+                {
+                    dest[0][3] = 0;
+                    dest[1][3] = 0;
+                    dest[2][3] = 0;
+                    dest[3][3] = 0;
+                }
+            }
+            /*jshint bitwise: true*/
+        }
+
+        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+        var colorArray = new Array(4);
+
+        //var bpp = 2;
+        var level;
+        var width = srcWidth;
+        var height = srcHeight;
+        var numLevels = srcNumLevels;
+        var numFaces = srcNumFaces;
 
         /*jshint bitwise: false*/
         var numPixels = 0;
@@ -939,8 +1596,8 @@ class DDSLoader
                     ];
         for (var face = 0; face < numFaces; face += 1)
         {
-            width = this.width;
-            height = this.height;
+            width = srcWidth;
+            height = srcHeight;
             for (var n = 0; n < numLevels; n += 1)
             {
                 var numColumns = (width > 4 ? 4 : width);
@@ -954,7 +1611,8 @@ class DDSLoader
                 {
                     for (var x = 0; x < widthInBlocks; x += 1)
                     {
-                        decode(data, src, color);
+                        decodeDXT1Color(srcBuffer, (src + 8), color, cache, colorArray);
+                        decodeDXT3Alpha(srcBuffer, src, color);
                         var destLine = dest;
                         for (var line = 0; line < numLines; line += 1)
                         {
@@ -963,12 +1621,261 @@ class DDSLoader
                             for (var i = 0 ; i < numColumns; i += 1)
                             {
                                 var rgba = colorLine[i];
-                                dst[destRGBA] = encode(rgba);
+                                dst[destRGBA] = ((rgba[3] >>> 4) |
+                                                 (rgba[2] & 0xf0) |
+                                                 ((rgba[1] & 0xf0) << 4) |
+                                                 ((rgba[0] & 0xf0) << 8));
                                 destRGBA += 1;
                             }
                             destLine += desinationStride;
                         }
-                        src += srcStride;
+                        src += 16;
+                        dest += desinationLineStride;
+                    }
+                    dest += desinationBlockStride;
+                }
+
+                width = (width > 1 ? (width >> 1) : 1);
+                height = (height > 1 ? (height >> 1) : 1);
+            }
+        }
+        /*jshint bitwise: true*/
+
+        return dst;
+    }
+
+    static convertDXT5To4444(srcBuffer, srcWidth, srcHeight, srcNumLevels, srcNumFaces)
+    {
+        function decodeDXT1Color(data, src, out, cache, colorArray)
+        {
+            function decode565(value, color)
+            {
+                /*jshint bitwise: false*/
+                var r = ((value >> 11) & 31);
+                var g = ((value >> 5) & 63);
+                var b = ((value) & 31);
+                color[0] = ((r << 3) | (r >> 2));
+                color[1] = ((g << 2) | (g >> 4));
+                color[2] = ((b << 3) | (b >> 2));
+                color[3] = 255;
+                /*jshint bitwise: true*/
+                return color;
+            }
+
+            /*jshint bitwise: false*/
+            var col0 = ((data[src + 1] << 8) | data[src]);
+            src += 2;
+            var col1 = ((data[src + 1] << 8) | data[src]);
+            src += 2;
+
+            var c0, c1, c2, c3, i;
+            if (col0 !== col1)
+            {
+                c0 = decode565(col0, cache[0]);
+                c1 = decode565(col1, cache[1]);
+                c2 = cache[2];
+                c3 = cache[3];
+
+                if (col0 > col1)
+                {
+                    for (i = 0; i < 3; i += 1)
+                    {
+                        var c0i = c0[i];
+                        var c1i = c1[i];
+                        c2[i] = ((((c0i * 2) + c1i) / 3) | 0);
+                        c3[i] = (((c0i + (c1i * 2)) / 3) | 0);
+                    }
+                    c2[3] = 255;
+                    c3[3] = 255;
+                }
+                else
+                {
+                    for (i = 0; i < 3; i += 1)
+                    {
+                        c2[i] = ((c0[i] + c1[i]) >> 1);
+                        c3[i] = 0;
+                    }
+                    c2[3] = 255;
+                    c3[3] = 0;
+                }
+            }
+            else
+            {
+                c0 = decode565(col0, cache[0]);
+                c1 = c0;
+                c2 = c0;
+                c3 = cache[1];
+                for (i = 0; i < 4; i += 1)
+                {
+                    c3[i] = 0;
+                }
+            }
+
+            var c = colorArray;
+            c[0] = c0;
+            c[1] = c1;
+            c[2] = c2;
+            c[3] = c3;
+
+            // ((1 << 2) - 1) === 3;
+            var row, dest, color;
+            for (i = 0; i < 4; i += 1)
+            {
+                row = data[src + i];
+                dest = out[i];
+
+                color = c[(row)      & 3];
+                dest[0][0] = color[0];
+                dest[0][1] = color[1];
+                dest[0][2] = color[2];
+                dest[0][3] = color[3];
+
+                color = c[(row >> 2) & 3];
+                dest[1][0] = color[0];
+                dest[1][1] = color[1];
+                dest[1][2] = color[2];
+                dest[1][3] = color[3];
+
+                color = c[(row >> 4) & 3];
+                dest[2][0] = color[0];
+                dest[2][1] = color[1];
+                dest[2][2] = color[2];
+                dest[2][3] = color[3];
+
+                color = c[(row >> 6) & 3];
+                dest[3][0] = color[0];
+                dest[3][1] = color[1];
+                dest[3][2] = color[2];
+                dest[3][3] = color[3];
+            }
+            /*jshint bitwise: true*/
+        }
+
+        function decodeDXT5Alpha(data, src, out, alphaArray)
+        {
+            var a0 = data[src];
+            src += 1;
+            var a1 = data[src];
+            src += 1;
+
+            /*jshint bitwise: false*/
+            var a = alphaArray;
+
+            a[0] = a0;
+            a[1] = a1;
+            if (a0 > a1)
+            {
+                a[2] = ((((a0 * 6) + (a1 * 1)) / 7) | 0);
+                a[3] = ((((a0 * 5) + (a1 * 2)) / 7) | 0);
+                a[4] = ((((a0 * 4) + (a1 * 3)) / 7) | 0);
+                a[5] = ((((a0 * 3) + (a1 * 4)) / 7) | 0);
+                a[6] = ((((a0 * 2) + (a1 * 5)) / 7) | 0);
+                a[7] = ((((a0 * 1) + (a1 * 6)) / 7) | 0);
+            }
+            else if (a0 < a1)
+            {
+                a[2] = ((((a0 * 4) + (a1 * 1)) / 5) | 0);
+                a[3] = ((((a0 * 3) + (a1 * 2)) / 5) | 0);
+                a[4] = ((((a0 * 2) + (a1 * 3)) / 5) | 0);
+                a[5] = ((((a0 * 1) + (a1 * 4)) / 5) | 0);
+                a[6] = 0;
+                a[7] = 255;
+            }
+            else //if (a0 === a1)
+            {
+                a[2] = a0;
+                a[3] = a0;
+                a[4] = a0;
+                a[5] = a0;
+                a[6] = 0;
+                a[7] = 255;
+            }
+
+            // ((1 << 3) - 1) === 7
+            var dest;
+            for (var i = 0; i < 2; i += 1)
+            {
+                var value = (data[src] | (data[src + 1] << 8) | (data[src +  2] << 16));
+                src += 3;
+                dest = out[(i * 2)];
+                dest[0][3] = a[(value)      & 7];
+                dest[1][3] = a[(value >> 3) & 7];
+                dest[2][3] = a[(value >> 6) & 7];
+                dest[3][3] = a[(value >> 9) & 7];
+                dest = out[(i * 2) + 1];
+                dest[0][3] = a[(value >> 12) & 7];
+                dest[1][3] = a[(value >> 15) & 7];
+                dest[2][3] = a[(value >> 18) & 7];
+                dest[3][3] = a[(value >> 21) & 7];
+            }
+            /*jshint bitwise: true*/
+        }
+
+        var cache = [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)];
+        var colorArray = new Array(4);
+        var alphaArray = new Uint8Array(8);
+
+        //var bpp = 2;
+        var level;
+        var width = srcWidth;
+        var height = srcHeight;
+        var numLevels = srcNumLevels;
+        var numFaces = srcNumFaces;
+
+        /*jshint bitwise: false*/
+        var numPixels = 0;
+        for (level = 0; level < numLevels; level += 1)
+        {
+            numPixels += (width * height);
+            width = (width > 1 ? (width >> 1) : 1);
+            height = (height > 1 ? (height >> 1) : 1);
+        }
+
+        var dst = new Uint16Array(numPixels * 1 * numFaces);
+
+        var src = 0, dest = 0;
+
+        var color = [[new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+                     [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+                     [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)],
+                     [new Uint8Array(4), new Uint8Array(4), new Uint8Array(4), new Uint8Array(4)]
+                    ];
+        for (var face = 0; face < numFaces; face += 1)
+        {
+            width = srcWidth;
+            height = srcHeight;
+            for (var n = 0; n < numLevels; n += 1)
+            {
+                var numColumns = (width > 4 ? 4 : width);
+                var numLines = (height > 4 ? 4 : height);
+                var heightInBlocks = ((height + 3) >> 2);
+                var widthInBlocks = ((width + 3) >> 2);
+                var desinationStride = (width * 1);
+                var desinationLineStride = (numColumns * 1);
+                var desinationBlockStride = (desinationStride * (numLines - 1));
+                for (var y = 0; y < heightInBlocks; y += 1)
+                {
+                    for (var x = 0; x < widthInBlocks; x += 1)
+                    {
+                        decodeDXT1Color(srcBuffer, (src + 8), color, cache, colorArray);
+                        decodeDXT5Alpha(srcBuffer, src, color, alphaArray);
+                        var destLine = dest;
+                        for (var line = 0; line < numLines; line += 1)
+                        {
+                            var colorLine = color[line];
+                            var destRGBA = destLine;
+                            for (var i = 0 ; i < numColumns; i += 1)
+                            {
+                                var rgba = colorLine[i];
+                                dst[destRGBA] = ((rgba[3] >>> 4) |
+                                                 (rgba[2] & 0xf0) |
+                                                 ((rgba[1] & 0xf0) << 4) |
+                                                 ((rgba[0] & 0xf0) << 8));
+                                destRGBA += 1;
+                            }
+                            destLine += desinationStride;
+                        }
+                        src += 16;
                         dest += desinationLineStride;
                     }
                     dest += desinationBlockStride;
@@ -1100,23 +2007,8 @@ class DDSLoader
                                 /*jshint bitwise: true*/
                             }
 
-                            loader.processBytes(new Uint8Array(buffer));
-                            if (loader.data)
-                            {
-                                if (loader.onload)
-                                {
-                                    loader.onload(loader.data, loader.width, loader.height, loader.format,
-                                                  loader.numLevels, (loader.numFaces > 1), loader.depth,
-                                                  xhrStatus);
-                                }
-                            }
-                            else
-                            {
-                                if (loader.onerror)
-                                {
-                                    loader.onerror(xhrStatus);
-                                }
-                            }
+                            loader.externalBuffer = false;
+                            loader.processBytes(new Uint8Array(buffer), xhrStatus);
                         }
                         else
                         {
@@ -1148,25 +2040,30 @@ class DDSLoader
         }
         else
         {
-            loader.processBytes(<any[]>(params.data));
-            if (loader.data)
-            {
-                if (loader.onload)
-                {
-                    loader.onload(loader.data, loader.width, loader.height, loader.format,
-                                  loader.numLevels, (loader.numFaces > 1), loader.depth);
-                }
-            }
-            else
-            {
-                if (loader.onerror)
-                {
-                    loader.onerror(0);
-                }
-            }
+            loader.externalBuffer = true;
+            loader.processBytes(<any[]>(params.data), 0);
         }
 
         return loader;
+    }
+
+    static destroy(): void
+    {
+        var maxNumWorkers = this.maxNumWorkers;
+        if (maxNumWorkers)
+        {
+            this.workerQueues = null;
+            var workers = this.workers;
+            if (workers)
+            {
+                this.workers = null;
+                var n;
+                for (n = 0; n < maxNumWorkers; n += 1)
+                {
+                    workers[n].terminate();
+                }
+            }
+        }
     }
 }
 

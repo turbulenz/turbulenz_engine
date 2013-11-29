@@ -318,11 +318,26 @@ class ShadowMapping
             else // directional
             {
                 direction = light.direction;
-                var scaledDirection = md.v3Mul(direction, halfExtents);
-                md.m43TransformVector(matrix, scaledDirection, scaledDirection);
-                origin = md.v3Sub(nodePos, scaledDirection);
-                md.v3Add(nodePos, scaledDirection, target);
-                direction = md.m43TransformVector(matrix, direction);
+
+                var d0 = direction[0];
+                var d1 = direction[1];
+                var d2 = direction[2];
+
+                var p0 = halfExtents[0];
+                var p1 = halfExtents[1];
+                var p2 = halfExtents[2];
+
+                var n0 = -p0;
+                var n1 = -p1;
+                var n2 = -p2;
+
+                var maxDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)));
+                var minDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)));
+
+                direction = md.m43TransformVector(matrix, light.direction);
+                md.v3AddScalarMul(nodePos, direction, maxDistance, target);
+                origin = md.v3AddScalarMul(nodePos, direction, minDistance);
+
                 camera.parallel = true;
             }
 
