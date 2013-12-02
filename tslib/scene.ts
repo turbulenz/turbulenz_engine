@@ -4567,6 +4567,7 @@ class Scene
         var baseScene = loadParams.baseScene;
         var keepCameras = loadParams.keepCameras;
         var keepLights = loadParams.keepLights;
+        var optimizeHierarchy = loadParams.optimizeHierarchy;
         var disableNodes = loadParams.disabled;
 
         if (!loadParams.append)
@@ -4592,6 +4593,64 @@ class Scene
         var baseMatrix = loadParams.baseMatrix;
         var nodesNamePrefix = loadParams.nodesNamePrefix;
         var shapesNamePrefix = loadParams.shapesNamePrefix;
+
+        var matrixIsIdentity = function matrixIsIdentityFn(matrix)
+        {
+            var abs = Math.abs;
+            return (abs(1.0 - matrix[0]) < 1e-5 &&
+                    abs(0.0 - matrix[1]) < 1e-5 &&
+                    abs(0.0 - matrix[2]) < 1e-5 &&
+                    abs(0.0 - matrix[3]) < 1e-5 &&
+                    abs(1.0 - matrix[4]) < 1e-5 &&
+                    abs(0.0 - matrix[5]) < 1e-5 &&
+                    abs(0.0 - matrix[6]) < 1e-5 &&
+                    abs(0.0 - matrix[7]) < 1e-5 &&
+                    abs(1.0 - matrix[8]) < 1e-5 &&
+                    abs(0.0 - matrix[9]) < 1e-5 &&
+                    abs(0.0 - matrix[10]) < 1e-5 &&
+                    abs(0.0 - matrix[11]) < 1e-5);
+        };
+
+        var optimizeNode = function optimizeNodeFn(parent, child)
+        {
+            if ((!child.camera || !parent.camera) &&
+                child.disabled === parent.disabled &&
+                child.dynamic === parent.dynamic &&
+                child.kinematic === parent.kinematic &&
+                matrixIsIdentity(child.local))
+            {
+                if (child.renderables)
+                {
+                    parent.addRenderableArray(child.renderables);
+                }
+
+                if (child.lightInstances)
+                {
+                    parent.addLightInstanceArray(child.lightInstances);
+                }
+
+                if (child.camera)
+                {
+                    parent.camera = child.camera;
+                }
+
+                var grandChildren = child.children;
+                if (grandChildren)
+                {
+                    var n;
+                    var numGrandChildren = grandChildren;
+                    for (n = 0; n < numGrandChildren; n += 1)
+                    {
+                        if (!optimizeNode(parent, child))
+                        {
+                            parent.addChild(child);
+                        }
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
 
         var copyNode = function copyNodeFn(nodeName, parentNodePath,
                                            baseNode, materialSkin)
@@ -4770,7 +4829,6 @@ class Scene
             }
 
             var fileChildren = this.nodes;
-
             if (fileChildren)
             {
                 for (var c in fileChildren)
@@ -4784,7 +4842,11 @@ class Scene
                                 this.skin || materialSkin);
                             if (child)
                             {
-                                node.addChild(child);
+                                if (!optimizeHierarchy ||
+                                    !optimizeNode(node, child))
+                                {
+                                    node.addChild(child);
+                                }
                             }
                         }
                     }
