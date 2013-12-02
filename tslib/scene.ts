@@ -4397,15 +4397,6 @@ class Scene
         {
             if (fileShapes.hasOwnProperty(fileShapeName))
             {
-                // Early check whether a geometry of the same name is
-                // already scheduled to load.
-
-                if (shapesToLoad[fileShapeName] ||
-                    customShapesToLoad[fileShapeName])
-                {
-                    throw "Multiple geometries named '" + fileShapeName + "'";
-                }
-
                 var fileShape = fileShapes[fileShapeName];
                 if (fileShape.meta && fileShape.meta.graphics)
                 {
