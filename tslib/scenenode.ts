@@ -1388,7 +1388,7 @@ class SceneNode
     //
     //calculateHierarchyWorldExtents
     //
-    calculateHierarchyWorldExtents()
+    calculateHierarchyWorldExtents(dst?)
     {
         var calculateNodeExtents =
             function calculateNodeExtentsFn(sceneNode, totalExtents)
@@ -1421,7 +1421,11 @@ class SceneNode
         }
 
         var maxValue = Number.MAX_VALUE;
-        var totalExtents = new this.arrayConstructor(6);
+        var totalExtents = dst;
+        if (!totalExtents)
+        {
+            totalExtents = new this.arrayConstructor(6);
+        }
         totalExtents[0] = maxValue;
         totalExtents[1] = maxValue;
         totalExtents[2] = maxValue;
