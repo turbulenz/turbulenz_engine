@@ -117,9 +117,7 @@ class GeometryInstance implements Renderable
     techniqueParameters : TechniqueParameters;
     sharedMaterial      : Material;
     worldExtentsUpdate  : number;
-    worldUpdate         : number;
     disabled            : boolean;
-    sorting             : number; // TODO: can't see any ref to this in jslib.  Is it used?
 
     arrayConstructor: any; // array constructor
 
@@ -349,7 +347,6 @@ class GeometryInstance implements Renderable
         delete this.drawParameters;
         delete this.renderUpdate;
         delete this.rendererInfo;
-        delete this.sorting;
     }
 
     //
@@ -403,7 +400,6 @@ class GeometryInstance implements Renderable
         }
         instance.worldExtents = new instance.arrayConstructor(6);
         instance.worldExtentsUpdate = -1;
-        instance.worldUpdate = -1;
 
         instance.node = undefined;
         instance.renderUpdate = undefined;
