@@ -1815,8 +1815,10 @@ class WebGLRenderTarget implements RenderTarget
             }
         }
 
-        gd.setViewport.apply(gd, this.oldViewportBox);
-        gd.setScissor.apply(gd, this.oldScissorBox);
+        var box = this.oldViewportBox;
+        gd.setViewport(box[0], box[1], box[2], box[3]);
+        box = this.oldScissorBox;
+        gd.setScissor(box[0], box[1], box[2], box[3]);
 
         if (this.colorTexture0)
         {
