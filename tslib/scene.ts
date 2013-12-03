@@ -1861,7 +1861,7 @@ class Scene
         var maxExtent1 = extents[4];
         var maxExtent2 = extents[5];
 
-        var overlappingNodes = [];
+        var overlappingNodes = this.queryVisibleNodes;
 
         var node;
         var numNodes;
@@ -1873,8 +1873,7 @@ class Scene
         var renderableIndex;
         var renderableExtents;
 
-        tree.getOverlappingNodes(extents, overlappingNodes);
-        numNodes = overlappingNodes.length;
+        numNodes = tree.getOverlappingNodes(extents, overlappingNodes, 0);
         for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
         {
             node = overlappingNodes[nodeIndex];
@@ -1987,10 +1986,6 @@ class Scene
         var isInsidePlanesAABB = this.isInsidePlanesAABB;
 
         var queryVisibleNodes = this.queryVisibleNodes;
-        if (!queryVisibleNodes)
-        {
-            this.queryVisibleNodes = queryVisibleNodes = [];
-        }
         var numQueryVisibleNodes = this.staticSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes, 0);
         numQueryVisibleNodes += this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes, numQueryVisibleNodes);
 
@@ -3017,6 +3012,7 @@ class Scene
         this.staticNodesChangeCounter = 0;
         this.testExtents = this.md.aabbBuildEmpty();
         this.externalNodesStack = [];
+        this.queryVisibleNodes = [];
     }
 
     //
