@@ -3742,60 +3742,6 @@ class Scene
             }
         }
 
-        function similarMaterials(a, b): boolean
-        {
-            var atp = a.techniqueParameters;
-            var btp = b.techniqueParameters;
-            var p, av, bv, n, length;
-            for (p in atp)
-            {
-                if (atp.hasOwnProperty(p))
-                {
-                    if (btp.hasOwnProperty(p))
-                    {
-                        av = atp[p];
-                        bv = btp[p];
-                        if (av !== bv)
-                        {
-                            if (av && typeof av !== "nunber" &&
-                                bv && typeof bv !== "number" &&
-                                av.length === bv.length &&
-                                av.length)
-                            {
-                                length = av.length;
-                                for (n = 0; n < length; n += 1)
-                                {
-                                    if (av[n] !== bv[n])
-                                    {
-                                        return false;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            for (p in btp)
-            {
-                if (btp.hasOwnProperty(p))
-                {
-                    if (!atp.hasOwnProperty(p))
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
         function cloneSurface(surface: any): any
         {
             var clone = new surface.constructor();
@@ -3902,7 +3848,7 @@ class Scene
                                     if (sequenceIndicesEnd !== surface.first ||
                                         !lastMaterial ||
                                         (lastMaterial !== material &&
-                                         !similarMaterials(lastMaterial, material)))
+                                         !lastMaterial.isSimilar(material)))
                                     {
                                         if (0 < sequenceLength)
                                         {
