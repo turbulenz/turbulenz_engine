@@ -3697,6 +3697,304 @@ class Scene
         return true;
     }
 
+    // try to group sequential renderables into a single draw call
+    _optimizeRenderables(node: SceneNode, gd: GraphicsDevice): void
+    {
+        var renderables = node.renderables;
+        var numRenderables = renderables.length;
+        var triangles = gd.PRIMITIVE_TRIANGLES;
+        var vbMap = {};
+        var n, renderable, geometry, surface, vbid, ibMap, ibid, group;
+        var foundGroup = false;
+        for (n = 0; n < numRenderables; n += 1)
+        {
+            renderable = renderables[n];
+            surface = renderable.surface;
+            // we can only trivially group rigid triangle primitives
+            if (surface.primitive === triangles &&
+                renderable.geometryType === "rigid")
+            {
+                geometry = renderable.geometry;
+                vbid = geometry.vertexBuffer.id;
+                ibMap = vbMap[vbid];
+                if (ibMap === undefined)
+                {
+                    vbMap[vbid] = ibMap = {};
+                }
+                if (surface.indexBuffer)
+                {
+                    ibid = surface.indexBuffer.id;
+                }
+                else
+                {
+                    ibid = 'null';
+                }
+                group = ibMap[ibid];
+                if (group === undefined)
+                {
+                    ibMap[ibid] = [renderable];
+                }
+                else
+                {
+                    group.push(renderable);
+                    foundGroup = true;
+                }
+            }
+        }
+
+        function similarMaterials(a, b): boolean
+        {
+            var atp = a.techniqueParameters;
+            var btp = b.techniqueParameters;
+            var p, av, bv, n, length;
+            for (p in atp)
+            {
+                if (atp.hasOwnProperty(p))
+                {
+                    if (btp.hasOwnProperty(p))
+                    {
+                        av = atp[p];
+                        bv = btp[p];
+                        if (av !== bv)
+                        {
+                            if (av && typeof av !== "nunber" &&
+                                bv && typeof bv !== "number" &&
+                                av.length === bv.length &&
+                                av.length)
+                            {
+                                length = av.length;
+                                for (n = 0; n < length; n += 1)
+                                {
+                                    if (av[n] !== bv[n])
+                                    {
+                                        return false;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            for (p in btp)
+            {
+                if (btp.hasOwnProperty(p))
+                {
+                    if (!atp.hasOwnProperty(p))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function cloneSurface(surface: any): any
+        {
+            var clone = new surface.constructor();
+            var p;
+            for (p in surface)
+            {
+                if (surface.hasOwnProperty(p))
+                {
+                    clone[p] = surface[p];
+                }
+            }
+            return clone;
+        }
+
+        if (foundGroup)
+        {
+            var max = Math.max;
+            var min = Math.min;
+            var sequenceExtents = (this.float32ArrayConstructor ?
+                                   new this.float32ArrayConstructor(6) :
+                                   new Array(6));
+            var sequenceFirstRenderable, sequenceLength, sequenceIndicesEnd, sequenceNumVertices;
+            var groupSize, g, lastMaterial, material, center, halfExtents;
+
+            var flushSequence = function flushSequenceFn()
+            {
+                var surface = cloneSurface(sequenceFirstRenderable.surface);
+                sequenceFirstRenderable.surface = surface;
+                if (surface.indexBuffer)
+                {
+                    surface.numIndices = (sequenceIndicesEnd - surface.first);
+                    surface.numVertices = sequenceNumVertices;
+                }
+                else
+                {
+                    surface.numVertices = (sequenceIndicesEnd - surface.first);
+                }
+
+                var c0 = (sequenceExtents[3] + sequenceExtents[0]) * 0.5;
+                var c1 = (sequenceExtents[4] + sequenceExtents[1]) * 0.5;
+                var c2 = (sequenceExtents[5] + sequenceExtents[2]) * 0.5;
+                if (c0 !== 0 ||
+                    c1 !== 0 ||
+                    c2 !== 0)
+                {
+                    var center = (this.float32ArrayConstructor ?
+                                  new this.float32ArrayConstructor(3) :
+                                  new Array(3));
+                    sequenceFirstRenderable.center = center;
+                    center[0] = c0;
+                    center[1] = c1;
+                    center[2] = c2;
+                }
+                else
+                {
+                    sequenceFirstRenderable.center = null;
+                }
+
+                var halfExtents = (this.float32ArrayConstructor ?
+                                   new this.float32ArrayConstructor(3) :
+                                   new Array(3));
+                sequenceFirstRenderable.halfExtents = halfExtents;
+                halfExtents[0] = (sequenceExtents[3] - sequenceExtents[0]) * 0.5;
+                halfExtents[1] = (sequenceExtents[4] - sequenceExtents[1]) * 0.5;
+                halfExtents[2] = (sequenceExtents[5] - sequenceExtents[2]) * 0.5;
+            };
+
+            numRenderables = 0;
+            for (vbid in vbMap)
+            {
+                if (vbMap.hasOwnProperty(vbid))
+                {
+                    ibMap = vbMap[vbid];
+                    for (ibid in ibMap)
+                    {
+                        if (ibMap.hasOwnProperty(ibid))
+                        {
+                            group = ibMap[ibid];
+                            groupSize = group.length;
+                            if (groupSize === 1)
+                            {
+                                renderables[numRenderables] = group[0];
+                                numRenderables += 1;
+                            }
+                            else
+                            {
+                                group.sort(function (a, b) {
+                                    return (a.surface.first - b.surface.first);
+                                });
+
+                                g = 0;
+                                lastMaterial = null;
+                                sequenceFirstRenderable = null;
+                                sequenceNumVertices = 0;
+                                sequenceIndicesEnd = 0;
+                                sequenceLength = 0;
+                                do
+                                {
+                                    renderable = group[g];
+                                    surface = renderable.surface;
+                                    material = renderable.sharedMaterial;
+                                    center = renderable.center;
+                                    halfExtents = renderable.halfExtents;
+                                    if (sequenceIndicesEnd !== surface.first ||
+                                        !lastMaterial ||
+                                        (lastMaterial !== material &&
+                                         !similarMaterials(lastMaterial, material)))
+                                    {
+                                        if (0 < sequenceLength)
+                                        {
+                                            if (1 < sequenceLength)
+                                            {
+                                                flushSequence();
+                                            }
+
+                                            renderables[numRenderables] = sequenceFirstRenderable;
+                                            numRenderables += 1;
+                                        }
+
+                                        lastMaterial = material;
+                                        sequenceFirstRenderable = renderable;
+                                        sequenceNumVertices = 0;
+                                        sequenceLength = 1;
+
+                                        if (center)
+                                        {
+                                            sequenceExtents[0] = (center[0] - halfExtents[0]);
+                                            sequenceExtents[1] = (center[1] - halfExtents[1]);
+                                            sequenceExtents[2] = (center[2] - halfExtents[2]);
+                                            sequenceExtents[3] = (center[0] + halfExtents[0]);
+                                            sequenceExtents[4] = (center[1] + halfExtents[1]);
+                                            sequenceExtents[5] = (center[2] + halfExtents[2]);
+                                        }
+                                        else
+                                        {
+                                            sequenceExtents[0] = -halfExtents[0];
+                                            sequenceExtents[1] = -halfExtents[1];
+                                            sequenceExtents[2] = -halfExtents[2];
+                                            sequenceExtents[3] = halfExtents[0];
+                                            sequenceExtents[4] = halfExtents[1];
+                                            sequenceExtents[5] = halfExtents[2];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        sequenceLength += 1;
+
+                                        if (center)
+                                        {
+                                            sequenceExtents[0] = min(sequenceExtents[0], (center[0] - halfExtents[0]));
+                                            sequenceExtents[1] = min(sequenceExtents[1], (center[1] - halfExtents[1]));
+                                            sequenceExtents[2] = min(sequenceExtents[2], (center[2] - halfExtents[2]));
+                                            sequenceExtents[3] = max(sequenceExtents[3], (center[0] + halfExtents[0]));
+                                            sequenceExtents[4] = max(sequenceExtents[4], (center[1] + halfExtents[1]));
+                                            sequenceExtents[5] = max(sequenceExtents[5], (center[2] + halfExtents[2]));
+                                        }
+                                        else
+                                        {
+                                            sequenceExtents[0] = min(sequenceExtents[0], -halfExtents[0]);
+                                            sequenceExtents[1] = min(sequenceExtents[1], -halfExtents[1]);
+                                            sequenceExtents[2] = min(sequenceExtents[2], -halfExtents[2]);
+                                            sequenceExtents[3] = max(sequenceExtents[3], halfExtents[0]);
+                                            sequenceExtents[4] = max(sequenceExtents[4], halfExtents[1]);
+                                            sequenceExtents[5] = max(sequenceExtents[5], halfExtents[2]);
+                                        }
+                                    }
+
+                                    if (surface.indexBuffer)
+                                    {
+                                        sequenceIndicesEnd = (surface.first + surface.numIndices);
+                                        sequenceNumVertices += surface.numVertices;
+                                    }
+                                    else
+                                    {
+                                        sequenceIndicesEnd = (surface.first + surface.numVertices);
+                                    }
+
+                                    g += 1;
+                                }
+                                while (g < groupSize);
+
+                                debug.assert(0 < sequenceLength);
+
+                                if (1 < sequenceLength)
+                                {
+                                    flushSequence();
+                                }
+
+                                renderables[numRenderables] = sequenceFirstRenderable;
+                                numRenderables += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            renderables.length = numRenderables;
+        }
+    }
+
     //
     // loadShape
     //
@@ -4590,25 +4888,25 @@ class Scene
         var nodesNamePrefix = loadParams.nodesNamePrefix;
         var shapesNamePrefix = loadParams.shapesNamePrefix;
 
-        var matrixIsIdentity = function matrixIsIdentityFn(matrix)
+        function optimizeNode(parent, child)
         {
-            var abs = Math.abs;
-            return (abs(1.0 - matrix[0]) < 1e-5 &&
-                    abs(0.0 - matrix[1]) < 1e-5 &&
-                    abs(0.0 - matrix[2]) < 1e-5 &&
-                    abs(0.0 - matrix[3]) < 1e-5 &&
-                    abs(1.0 - matrix[4]) < 1e-5 &&
-                    abs(0.0 - matrix[5]) < 1e-5 &&
-                    abs(0.0 - matrix[6]) < 1e-5 &&
-                    abs(0.0 - matrix[7]) < 1e-5 &&
-                    abs(1.0 - matrix[8]) < 1e-5 &&
-                    abs(0.0 - matrix[9]) < 1e-5 &&
-                    abs(0.0 - matrix[10]) < 1e-5 &&
-                    abs(0.0 - matrix[11]) < 1e-5);
-        };
+            function matrixIsIdentity(matrix)
+            {
+                var abs = Math.abs;
+                return (abs(1.0 - matrix[0]) < 1e-5 &&
+                        abs(0.0 - matrix[1]) < 1e-5 &&
+                        abs(0.0 - matrix[2]) < 1e-5 &&
+                        abs(0.0 - matrix[3]) < 1e-5 &&
+                        abs(1.0 - matrix[4]) < 1e-5 &&
+                        abs(0.0 - matrix[5]) < 1e-5 &&
+                        abs(0.0 - matrix[6]) < 1e-5 &&
+                        abs(0.0 - matrix[7]) < 1e-5 &&
+                        abs(1.0 - matrix[8]) < 1e-5 &&
+                        abs(0.0 - matrix[9]) < 1e-5 &&
+                        abs(0.0 - matrix[10]) < 1e-5 &&
+                        abs(0.0 - matrix[11]) < 1e-5);
+            }
 
-        var optimizeNode = function optimizeNodeFn(parent, child)
-        {
             if ((!child.camera || !parent.camera) &&
                 child.disabled === parent.disabled &&
                 child.dynamic === parent.dynamic &&
@@ -4645,6 +4943,7 @@ class Scene
                 }
                 return true;
             }
+
             return false;
         }
 
@@ -4846,6 +5145,15 @@ class Scene
                             }
                         }
                     }
+                }
+            }
+
+            if (optimizeHierarchy)
+            {
+                if (node.renderables &&
+                    1 < node.renderables.length)
+                {
+                    currentScene._optimizeRenderables(node, gd);
                 }
             }
 
