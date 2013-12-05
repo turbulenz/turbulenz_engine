@@ -17,6 +17,7 @@ interface Renderable
     rendererInfo: any; // TODO?
     distance: number;
     drawParameters: DrawParameters[];
+    sharedMaterial: Material;
 
     skinController?: ControllerBaseClass;
 

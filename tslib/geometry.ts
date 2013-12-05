@@ -105,6 +105,7 @@ class GeometryInstance implements Renderable
     rendererInfo        : any;
     distance            : number;
     drawParameters      : DrawParameters[];
+    sharedMaterial      : Material;
 
     // GeometryInstance
     // TODO: Potentially some of these belong on Renderable too
@@ -115,7 +116,6 @@ class GeometryInstance implements Renderable
     worldExtents        : any; // new instance.arrayConstructor(6);
     semantics           : Semantics;
     techniqueParameters : TechniqueParameters;
-    sharedMaterial      : Material;
     worldExtentsUpdate  : number;
     disabled            : boolean;
 
