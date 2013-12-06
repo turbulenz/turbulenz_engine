@@ -36,6 +36,7 @@ class Geometry
     primitive              : number;
     semantics              : Semantics;
     vertexBuffer           : VertexBuffer;
+    vertexOffset           : number;
     //numVertices            : number;
     baseIndex              : number;
     indexBuffer            : IndexBuffer;
@@ -52,6 +53,17 @@ class Geometry
     vertexBufferManager    : VertexBufferManager;
     indexBufferAllocation  : any;
     indexBufferManager     : IndexBufferManager;
+
+    constructor()
+    {
+        this.semantics = null;
+        this.vertexBuffer = null;
+        this.vertexOffset = 0;
+        this.reference = Reference.create(this);
+        this.surfaces = {};
+        this.type = "rigid";
+        return this;
+    }
 
     destroy()
     {
@@ -80,11 +92,7 @@ class Geometry
 
     static create() : Geometry
     {
-        var geometry = new Geometry();
-        geometry.reference = Reference.create(geometry);
-        geometry.surfaces = {};
-        geometry.type = "rigid";
-        return geometry;
+        return new Geometry();
     }
 }
 
@@ -358,6 +366,7 @@ class GeometryInstance implements Renderable
         var geometry = this.geometry;
         drawParameters.setVertexBuffer(0, geometry.vertexBuffer);
         drawParameters.setSemantics(0, this.semantics);
+        drawParameters.setOffset(0, geometry.vertexOffset);
 
         drawParameters.primitive = surface.primitive;
 
