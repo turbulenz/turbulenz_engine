@@ -2818,7 +2818,8 @@ class Scene
             var currentSharedTechniqueParameters = null;
             var currentVertexBuffer = null;
             var currentSemantics = null;
-            var node, shape, sharedTechniqueParameters, techniqueParameters, vertexBuffer, semantics, surface, indexBuffer;
+            var currentOffset = -1;
+            var node, shape, sharedTechniqueParameters, techniqueParameters, vertexBuffer, semantics, offset, surface, indexBuffer;
             var renderables, renderable, numRenderables, i;
             var n = 0;
             setTechnique.call(gd, technique);
@@ -2838,6 +2839,7 @@ class Scene
 
                         shape = renderable.geometry;
                         vertexBuffer = shape.vertexBuffer;
+                        offset = shape.vertexOffset;
                         semantics = shape.semantics;
                         surface = renderable.surface;
                         sharedTechniqueParameters = renderable.sharedMaterial.techniqueParameters;
@@ -2854,11 +2856,13 @@ class Scene
                         }
 
                         if (currentVertexBuffer !== vertexBuffer ||
-                            currentSemantics !== semantics)
+                            currentSemantics !== semantics ||
+                            currentOffset !== offset)
                         {
                             currentVertexBuffer = vertexBuffer;
                             currentSemantics = semantics;
-                            setStream.call(gd, vertexBuffer, semantics);
+                            currentOffset = offset;
+                            setStream.call(gd, vertexBuffer, semantics, offset);
                         }
 
                         indexBuffer = surface.indexBuffer;
@@ -3763,7 +3767,7 @@ class Scene
             var sequenceExtents = (this.float32ArrayConstructor ?
                                    new this.float32ArrayConstructor(6) :
                                    new Array(6));
-            var sequenceFirstRenderable, sequenceLength, sequenceIndicesEnd, sequenceNumVertices;
+            var sequenceFirstRenderable, sequenceLength, sequenceVertexOffset, sequenceIndicesEnd, sequenceNumVertices;
             var groupSize, g, lastMaterial, material, center, halfExtents;
 
             var flushSequence = function flushSequenceFn()
@@ -3829,23 +3833,26 @@ class Scene
                             else
                             {
                                 group.sort(function (a, b) {
-                                    return (a.surface.first - b.surface.first);
+                                    return (a.geometry.vertexOffset - b.geometry.vertexOffset) || (a.surface.first - b.surface.first);
                                 });
 
                                 g = 0;
                                 lastMaterial = null;
                                 sequenceFirstRenderable = null;
                                 sequenceNumVertices = 0;
+                                sequenceVertexOffset = -1;
                                 sequenceIndicesEnd = 0;
                                 sequenceLength = 0;
                                 do
                                 {
                                     renderable = group[g];
+                                    geometry = renderable.geometry;
                                     surface = renderable.surface;
                                     material = renderable.sharedMaterial;
                                     center = renderable.center;
                                     halfExtents = renderable.halfExtents;
-                                    if (sequenceIndicesEnd !== surface.first ||
+                                    if (sequenceVertexOffset !== geometry.vertexOffset ||
+                                        sequenceIndicesEnd !== surface.first ||
                                         !lastMaterial ||
                                         (lastMaterial !== material &&
                                          !lastMaterial.isSimilar(material)))
@@ -3865,6 +3872,7 @@ class Scene
                                         sequenceFirstRenderable = renderable;
                                         sequenceNumVertices = 0;
                                         sequenceLength = 1;
+                                        sequenceVertexOffset = geometry.vertexOffset;
 
                                         if (center)
                                         {
@@ -4411,6 +4419,24 @@ class Scene
                 if (0 < totalNumIndices)
                 {
                     maxIndex = (baseIndex + totalNumVertices - 1);
+                    if (maxIndex >= 65536)
+                    {
+                        if (totalNumVertices <= 65536)
+                        {
+                            var blockBase = ((baseIndex >>> 16) << 16);
+                            baseIndex -= blockBase;
+                            maxIndex = (baseIndex + totalNumVertices - 1);
+                            shape.vertexOffset = blockBase;
+                        }
+                        else
+                        {
+                            shape.vertexOffset = 0;
+                        }
+                    }
+                    else
+                    {
+                        shape.vertexOffset = 0;
+                    }
 
                     indexBufferAllocation = indexBufferManager.allocate(totalNumIndices,
                                                                         (maxIndex < 65536 ? 'USHORT' : 'UINT'));
