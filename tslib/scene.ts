@@ -4423,9 +4423,19 @@ class Scene
                     {
                         if (totalNumVertices <= 65536)
                         {
+                            // Assign vertex offsets in blocks of 16bits so we can optimize renderables togheter
                             var blockBase = ((baseIndex >>> 16) << 16);
                             baseIndex -= blockBase;
-                            maxIndex = (baseIndex + totalNumVertices - 1);
+                            if ((baseIndex + totalNumVertices) > 65536)
+                            {
+                                blockBase += (baseIndex + totalNumVertices - 65536);
+                                baseIndex = (65536 - totalNumVertices);
+                                maxIndex = 65535;
+                            }
+                            else
+                            {
+                                maxIndex = (baseIndex + totalNumVertices - 1);
+                            }
                             shape.vertexOffset = blockBase;
                         }
                         else
