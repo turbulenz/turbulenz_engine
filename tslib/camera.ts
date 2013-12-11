@@ -188,7 +188,7 @@ class Camera
         return md.aabbIsFullyInsidePlanes(extents, this.frustumPlanes);
     }
 
-    getFrustumPoints(farPlane?) : any[]
+    getFrustumPoints(farPlane?, nearPlane?) : any[]
     {
         var viewOffsetX = this.viewOffsetX;
         var viewOffsetY = this.viewOffsetY;
@@ -199,7 +199,7 @@ class Camera
         var transform = this.matrix;
 
         var farClip  = farPlane || this.farPlane;
-        var nearClip = this.nearPlane;
+        var nearClip = (nearPlane !== undefined ? nearPlane : this.nearPlane);
 
         var frustumPoints = [];
 
@@ -378,9 +378,9 @@ class Camera
         return frustumPoints;
     }
 
-    getFrustumExtents(extents, farClip)
+    getFrustumExtents(extents, farClip, nearClip?)
     {
-        var frustumPoints = this.getFrustumPoints(farClip);
+        var frustumPoints = this.getFrustumPoints(farClip, nearClip);
         var frustumPoint = frustumPoints[0];
         var min0 = frustumPoint[0];
         var min1 = frustumPoint[1];
