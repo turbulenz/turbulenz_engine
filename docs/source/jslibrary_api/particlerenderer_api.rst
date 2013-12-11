@@ -9,6 +9,8 @@
 The ParticleRenderer Interface
 ==============================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 Encapsulates a replaceable element of a particle system responsible for rendering the particles in the system.
 
 This object may be shared amongst many :ref:`ParticleSystems <particlesystem>`.
@@ -130,7 +132,6 @@ This function should use the constructed archetype and other parameters to speci
 
 .. _defaultparticlerenderer:
 
-==================================
 The DefaultParticleRenderer Object
 ==================================
 
@@ -169,7 +170,7 @@ The `DefaultParticleRenderer` is assumed when using the :ref:`DefaultParticleEmi
 Additionally any particle animations must use the default system for :ref:`ParticleBuilder.compile <particlebuilder>` supporting animation of particles rotation, color and scale, and supporting flip-book animations of particle appearances.
 
 Methods
-=======
+-------
 
 .. index::
     pair: DefaultParticleRenderer; create
@@ -263,7 +264,7 @@ Set up extra shader parameters required to de-normalize attributes of the partic
 .. _defaultparticlerenderer_archetype:
 
 Parameters
-==========
+----------
 
 The list of technique parameters exposed by the `DefaultParticleRenderer`. Unless otherwise stated these are the same as the parameters supported by a :ref:`ParticleArchetype <particlearchetype>` using this renderer.
 

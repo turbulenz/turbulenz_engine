@@ -9,6 +9,8 @@
 The ParticleEmitter Interface
 =============================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 An emitter is added to a particular synchronizer to emit particles when the synchronizer synchronizes a particle system.
 
 .. note::
@@ -195,7 +197,6 @@ Whether this emitter is currently enabled.
 
 .. _defaultparticleemitter:
 
-=================================
 The DefaultParticleEmitter Object
 =================================
 
@@ -210,7 +211,7 @@ Particles will be emitted from within a random radius of a position in either a 
 This emitter will make use of the system updater's `predict` method so that particles can be emitted at exactly the rate specified, regardless of update time-steps. This also means that if the particle system was not updated for a period of time due to being outside the camera's view frustum, when made visible again it will appear as though the particle system was always being updated with particles retrospectively created.
 
 Methods
-=======
+-------
 
 .. index::
     pair: DefaultParticleEmitter; create
@@ -229,7 +230,7 @@ Create a new emitter.
 .. _defaultparticleemitter_archetype:
 
 Properties
-==========
+----------
 
 This list of properties is the same as the list of parameters supported by a :ref:`ParticleArchetype <particlearchetype>` using this synchronizer unless otherwise specified.
 

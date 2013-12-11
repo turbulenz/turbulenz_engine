@@ -9,6 +9,8 @@
 The ParticleBuilder Object
 ==========================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 ParticleBuilder provides methods for constructing the necessary textures required for animating particle appearances in a particle system.
 
 .. NOTE::
@@ -98,32 +100,36 @@ Any verification errors will be reported as late as possible, and any non-critic
 
         Each snapshot defines values that the animation should have at a particular time for system attributes, and the interpolation mode that should be used from that point forwards. Times are defined relative to the previous snapshot of the sequence and apart from the first snapshot which must have `time` of `0` (default), all times must be positive.
 
-        This sequence of snapshots is later discretised based on the fps using the defined interpolators to fill in the attributes. Note that each snapshot need not define every attribute and interpolator, for example: ::
+        This sequence of snapshots is later discretised based on the fps using the defined interpolators to fill in the attributes. Note that each snapshot need not define every attribute and interpolator, for example a complete particle definition may look like: ::
 
-            [
-                {
-                    scale: [0, 0],
-                    rotation: 0,
-                    "scale-interpolation": "catmull"
-                },
-                {
-                    time: 0.25,
-                    scale: [4, 4],
-                },
-                {
-                    time: 0.25,
-                    scale: [0.5, 0.5],
-                },
-                {
-                    time: 0.5
-                    scale: [1, 1]
-                },
-                {
-                    time: 2,
-                    scale: [0, 0],
-                    rotation: Math.PI * 2
-                }
-            ]
+            {
+                name: "example",
+                fps: 60,
+                animation: [
+                    {
+                        scale: [0, 0],
+                        rotation: 0,
+                        "scale-interpolation": "catmull"
+                    },
+                    {
+                        time: 0.25,
+                        scale: [4, 4],
+                    },
+                    {
+                        time: 0.25,
+                        scale: [0.5, 0.5],
+                    },
+                    {
+                        time: 0.5
+                        scale: [1, 1]
+                    },
+                    {
+                        time: 2,
+                        scale: [0, 0],
+                        rotation: Math.PI * 2
+                    }
+                ]
+            }
 
         Assuming the default system defined below, this defines an animation where the rotation of the particle moves linearly from 0 to Math.PI * 2 over the whole animation, whilst at the same time, there is a much more complex animation of the particles scale.
 
@@ -300,8 +306,10 @@ Restrictions on how textures can be packed means that if possible, you should in
     An Array of :ref:`Texture <texture>` objects to be packed on the GPU. These textures need not be mipmapped, and repetitions are permitted.
 
 ``borderShrink`` (Optional)
-    Default value 4. This parameter controls how much input textures are shrunk so as to retain a border around regions of the packed textures without requiring the total size of the packed texture to be increased.
+    Default value 4. This parameter controls how much input textures are shrunk (in pixels) so as to retain a border around regions of the packed textures without requiring the total size of the packed texture to be increased.
     This is used so that when packing a set of already power-of-two dimension textures, the resultant packed texture can be optimally sized without introducing bleeding effects during mip-mapping.
+
+    Textures will be sampled using `GL_NEAREST` filtering.
 
 The resultant object contains the following fields:
 
@@ -316,14 +324,13 @@ The resultant object contains the following fields:
 
 .. _builderror:
 
-=============================
 The ParticleBuildError Object
 =============================
 
 The ParticleBuildError object is used internally by the ParticleBuilder, and supplied to the parse functions for :ref:`ParticleEmitters <particleemitter>`, :ref:`ParticleSynchronizers <particlesynchronizer>`, :ref:`ParticleRenderers <particlerenderer>` and :ref:`ParticleUpdaters <particleupdater>` registerd in the high-level :ref:`ParticleManager <particlemanager>` object for purposes of reporting warnings and errors.
 
 Methods
-=======
+-------
 
 .. index::
     pair: ParticleBuildError; error

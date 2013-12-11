@@ -9,6 +9,8 @@
 The ParticleManager Object
 ==========================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 The ParticleManager is used to create and manage GPU based particle systems.
 
 The ParticleManager is data-driven, with particle systems represented entirely by an easily serializable :ref:`ParticleArchetype <particlearchetype>` description.
@@ -271,7 +273,7 @@ Register the set of functions required to create and work with a :ref:`ParticleE
 
 **Summary**
 
-Compute the amount of time covered by the given particle animation.
+Compute the amount of time covered by the given particle animation in seconds.
 
 **Syntax** ::
 

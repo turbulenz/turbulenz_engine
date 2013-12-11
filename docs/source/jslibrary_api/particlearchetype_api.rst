@@ -9,6 +9,8 @@
 The ParticleArchetype Object
 ============================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 The `ParticleArchetype` is used to fully describe a particle system for use with the :ref:`ParticleManager <particlemanager>`. An archetype is constructed from an easily serializable data description, whose format is described as below.
 
 Serialisation and Deserialisation of the archetypes should be done using the methods on :ref:`ParticleManager <particlemanager>` which will both serialise and compress the archetype description to reduce file sizes.

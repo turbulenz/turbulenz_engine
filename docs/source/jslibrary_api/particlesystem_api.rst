@@ -9,6 +9,8 @@
 The ParticleSystem Object
 =========================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 The ParticleSystem object encapsulates the core of a particle system, though most of its functionality is plug-in. It is responsible for enabling emitters to create particles, and to be able to update particle states, sort views and render views of a system. The ParticleSystem object is also responsible for CPU-side simulation of particles for tracked GPU particles, and path prediction for emitters.
 
 .. note::
@@ -333,7 +335,7 @@ Begin an update on the system. At this point particles which would be killed by 
     system.beginUpdate(deltaTime, shift);
 
 ``deltaTime``
-    The amount of time that will be simulated for this update.
+    The amount of time in seconds that will be simulated for this update.
 
 ``shift`` (Optional)
     A :ref:`Vector3 <v3object>` object specifying a local displacement to apply to all existing particles in the system to enable trails to form for moving systems. Default value is `[0, 0, 0]`.

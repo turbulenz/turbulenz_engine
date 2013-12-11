@@ -9,6 +9,8 @@
 The ParticleView Object
 =======================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 The `ParticleView` object is used to render a view onto a :ref:`ParticleSystem <particlesystem>`. If using the :ref:`ParticleRenderable <particlerenderable>` object, then views will be created automatically.
 
 .. note::

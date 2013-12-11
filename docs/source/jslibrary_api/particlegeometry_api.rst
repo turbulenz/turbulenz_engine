@@ -9,6 +9,8 @@
 The ParticleGeometry Object
 ===========================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 Represents the geometry used to render a particle system.
 
 .. note::

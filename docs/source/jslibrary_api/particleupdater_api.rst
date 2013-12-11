@@ -9,6 +9,8 @@
 The ParticleUpdater Interface
 =============================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 Encapsulates a replaceble element of a particle system responsible for updating the states of particles on both the CPU and GPU and aiding emitters in retrospective creation of particles through prediction.
 
 This object may be shared amongst many :ref:`ParticleSystems <particlesystem>`.
@@ -165,7 +167,6 @@ This function should use the constructed archetype and other parameters to speci
 
 .. _defaultparticleupdater:
 
-=================================
 The DefaultParticleUpdater Object
 =================================
 
@@ -188,7 +189,7 @@ The `DefaultParticleUpdater` is compatible with the :ref:`DefaultParticleRendere
 The `DefaultParticleUpdater` is assumed when using the :ref:`DefaultParticleEmitter <defaultparticleemitter>` object.
 
 Methods
-=======
+-------
 
 .. index::
     pair: DefaultParticleUpdater; create
@@ -235,7 +236,7 @@ Set up particles' `userData` storage for creation.
 .. _defaultparticleupdater_archetype:
 
 Parameters
-==========
+----------
 
 The list of technique parameters exposed by the `DefaultParticleUpdater`. Unless otherwise stated these are the same as the parameters supported by a :ref:`ParticleArchetype <particlearchetype>` using this updater.
 

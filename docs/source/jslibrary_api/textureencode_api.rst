@@ -9,14 +9,14 @@
 The TextureEncode Object
 ========================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 TextureEncode provides a set of utilities for encoding and decoding normalised floating point values and vectors into integer pixel values for storage in non-floating-point textures.
 
 Analogous functions exist in `assets/shaders/particles-common.cgh` for GPU side encoding and decoding compatible with this object's methods.
 
 .. note::
     This is a low-level particle system API.
-
-.. Added in :ref:`SDK x.x.x <added_sdk_0_27_1>`.
 
 Methods
 =======

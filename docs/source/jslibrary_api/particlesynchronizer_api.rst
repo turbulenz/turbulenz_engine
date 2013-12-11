@@ -9,6 +9,8 @@
 The ParticleSynchronizer Interface
 ==================================
 
+Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+
 Represents how a particle system is synchronized, including emitting new particles.
 
 .. note::
@@ -128,14 +130,13 @@ The :ref:`ParticleRenderable <particlerenderable>` to be tracked for formation o
 
 .. _defaultparticlesynchronizer:
 
-======================================
 The DefaultParticleSynchronizer Object
 ======================================
 
 An implementation of the :ref:`ParticleSynchronizer <particlesynchronizer>` interface supporting variable or fixed-time step synchronization, with particles emitted by a set of emitter objects supporting a time-ordered event queue for complex emitter effects.
 
 Methods
-=======
+-------
 
 .. index::
     pair: DefaultParticleSynchronizer; create
@@ -157,7 +158,7 @@ Create a new default synchronizer object.
     });
 
 ``fixedTimeStep`` (Optional)
-    A fixed time step to use for particle system updates, if unspecified then a variable time step will be used instead based on elapsed time.
+    A fixed time step in seconds to use for particle system updates, if unspecified then a variable time step will be used instead based on elapsed time.
 
 ``maxSubSteps`` (Optional)
     Default value `3`. The maximum amount of particle system updates to perform in any synchronization when using a fixed time step.If the number of fixed time steps required exceeds this amount, then the synchronizer will move to a variable time step for that synchronization event, performing exactly `maxSubSteps` updates.
@@ -213,7 +214,7 @@ Enqueue an event object to the synchronizer for processing.
 .. _defaultparticlesynchronizer_archetype:
 
 Properties
-==========
+----------
 
 These properties are the same as those parameters supported for a :ref:`ParticleArchetype <particlearchetype>` using this synchronizer unless otherwise specified.
 
