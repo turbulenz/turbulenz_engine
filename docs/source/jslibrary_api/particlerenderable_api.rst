@@ -32,6 +32,9 @@ A `ParticleRenderable` has its own local transform.
 If the renderable has `fixedOrientation` true, then the rotational and scaling components of any parent transforms are used only to compute the world position for the renderable, enforcing that only the rotation and scaling defined on the renderables local transform are used.
 If `fixedOrientation` is false, then a simple multiplication with the parent transform will be performed.
 
+.. note::
+    This is a low-level particle system API.
+
 Methods
 =======
 

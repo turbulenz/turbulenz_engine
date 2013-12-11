@@ -13,6 +13,9 @@ Encapsulates a replaceble element of a particle system responsible for updating 
 
 This object may be shared amongst many :ref:`ParticleSystems <particlesystem>`.
 
+.. note::
+    This is a low-level particle system API.
+
 Properties
 ==========
 

@@ -15,6 +15,9 @@ The context can be used to allocate new regions of the double-buffered renderabl
 
 This object does not expose any way of releasing previously allocated regions, as the underlying allocation algorithm (`OnlineTexturePacker`) does not support this. The intention is that these shared textures are used where systems are either permanent, or short-lived and recycled.
 
+.. note::
+    This is a low-level particle system API.
+
 Methods
 =======
 

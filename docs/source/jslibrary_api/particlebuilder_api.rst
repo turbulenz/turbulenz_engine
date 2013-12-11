@@ -11,6 +11,9 @@ The ParticleBuilder Object
 
 ParticleBuilder provides methods for constructing the necessary textures required for animating particle appearances in a particle system.
 
+.. NOTE::
+    This is a low-level particle system API.
+
 Methods
 =======
 
@@ -54,6 +57,8 @@ Any verification errors will be reported as late as possible, and any non-critic
 
 ``particles``
     An array of particle animation definition objects to be compiled into the resultant texture.
+
+.. _particleanimationdefinition:
 
     The particle animation definition must have the following structure ::
 
@@ -122,6 +127,8 @@ Any verification errors will be reported as late as possible, and any non-critic
 
         Assuming the default system defined below, this defines an animation where the rotation of the particle moves linearly from 0 to Math.PI * 2 over the whole animation, whilst at the same time, there is a much more complex animation of the particles scale.
 
+.. _particleanimationsystemdefinition:
+
 ``system`` (Optional)
     The system definition object to be used. If unspecified a default will be provided which will work against the default system updaters, renderers and emitters.
 
@@ -167,7 +174,7 @@ Any verification errors will be reported as late as possible, and any non-critic
 
 .. _defaultparticlesystem:
 
-    The default system is ::
+    The default animation system is ::
 
             [
                 {
@@ -303,3 +310,47 @@ The resultant object contains the following fields:
 
 ``uvMap``
     An Array of :ref:`Vector4 <v4object>` objects storing the uv-rectangle of each corresponding input texture in the format `[x, y, w, h]`
+
+.. index::
+    single: ParticleBuildError
+
+.. _builderror:
+
+=============================
+The ParticleBuildError Object
+=============================
+
+The ParticleBuildError object is used internally by the ParticleBuilder, and supplied to the parse functions for :ref:`ParticleEmitters <particleemitter>`, :ref:`ParticleSynchronizers <particlesynchronizer>`, :ref:`ParticleRenderers <particlerenderer>` and :ref:`ParticleUpdaters <particleupdater>` registerd in the high-level :ref:`ParticleManager <particlemanager>` object for purposes of reporting warnings and errors.
+
+Methods
+=======
+
+.. index::
+    pair: ParticleBuildError; error
+
+`error`
+-------
+
+**Summary**
+
+Report an error.
+
+**Syntax** ::
+
+    buildError.error(message);
+
+.. index::
+    pair: ParticleBuildError; warning
+
+`warning`
+---------
+
+**Summary**
+
+Report a warning.
+
+**Syntax** ::
+
+    buildError.warning(message);
+
+

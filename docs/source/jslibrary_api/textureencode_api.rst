@@ -13,6 +13,11 @@ TextureEncode provides a set of utilities for encoding and decoding normalised f
 
 Analogous functions exist in `assets/shaders/particles-common.cgh` for GPU side encoding and decoding compatible with this object's methods.
 
+.. note::
+    This is a low-level particle system API.
+
+.. Added in :ref:`SDK x.x.x <added_sdk_0_27_1>`.
+
 Methods
 =======
 

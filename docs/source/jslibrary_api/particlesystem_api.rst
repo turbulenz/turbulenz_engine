@@ -11,6 +11,9 @@ The ParticleSystem Object
 
 The ParticleSystem object encapsulates the core of a particle system, though most of its functionality is plug-in. It is responsible for enabling emitters to create particles, and to be able to update particle states, sort views and render views of a system. The ParticleSystem object is also responsible for CPU-side simulation of particles for tracked GPU particles, and path prediction for emitters.
 
+.. note::
+    This is a low-level particle system API.
+
 Methods
 =======
 

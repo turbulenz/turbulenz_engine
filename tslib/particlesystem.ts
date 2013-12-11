@@ -1321,10 +1321,7 @@ interface Interpolator
 
 //
 // Collects errors accumulated during parse/analysis of the input objects.
-// (private helper of ParticleBuilder)
-//
-// TODO, make private to this module somehow?
-class BuildError
+class ParticleBuildError
 {
     // print strings surrounded by "" to avoid confusing "10" with 10
     static wrap(x: any): string
@@ -1368,12 +1365,12 @@ class BuildError
     error(x: string): void
     {
         this.uncheckedErrorCount += 1;
-        this.log.push({ error: true, log: BuildError.ERROR + "::" + x });
+        this.log.push({ error: true, log: ParticleBuildError.ERROR + "::" + x });
     }
     warning(x: string): void
     {
         this.uncheckedWarningCount += 1;
-        this.log.push({ error: false, log: BuildError.WARNING + "::" + x });
+        this.log.push({ error: false, log: ParticleBuildError.WARNING + "::" + x });
     }
 
     private static ERROR = "ERROR";
@@ -1642,7 +1639,7 @@ class Parser {
     };
 
     // Check for any extra fields that should not be present
-    static extraFields(error: BuildError, obj: string, x: Object, excludes: Array<string>): void
+    static extraFields(error: ParticleBuildError, obj: string, x: Object, excludes: Array<string>): void
     {
         for (var f in x)
         {
@@ -1654,7 +1651,7 @@ class Parser {
     }
 
     // Return object field if it exists, otherwise error and return null
-    static field(error: BuildError, obj: string, x: Object, n: string): any
+    static field(error: ParticleBuildError, obj: string, x: Object, n: string): any
     {
         if (!x.hasOwnProperty(n))
         {
@@ -1668,12 +1665,12 @@ class Parser {
     }
 
     // Return object field as a string, if it does not exist (or not a string), error.
-    static stringField(error: BuildError, obj: string, x: Object, n: string): string
+    static stringField(error: ParticleBuildError, obj: string, x: Object, n: string): string
     {
         var ret: any = Parser.field(error, obj, x, n);
         if (x.hasOwnProperty(n) && !Types.isString(ret))
         {
-            error.error("Field '" + n + "' of " + obj + " is not a string (" + BuildError.wrap(ret) + ")");
+            error.error("Field '" + n + "' of " + obj + " is not a string (" + ParticleBuildError.wrap(ret) + ")");
             return null;
         }
         else
@@ -1683,17 +1680,17 @@ class Parser {
     }
 
     // Return object field as a number, if it does not exist (or not a number), error.
-    static numberField(error: BuildError, obj: string, x: Object, n: string): number
+    static numberField(error: ParticleBuildError, obj: string, x: Object, n: string): number
     {
         var ret: any = Parser.field(error, obj, x, n);
         if (x.hasOwnProperty(n) && !Types.isNumber(ret))
         {
-            error.error("Field '" + n + "' of " + obj + " is not a number (" + BuildError.wrap(ret) + ")");
+            error.error("Field '" + n + "' of " + obj + " is not a number (" + ParticleBuildError.wrap(ret) + ")");
             return null;
         }
         else if (!isFinite(ret))
         {
-            error.error("Field '" + n + "' of " + obj + " is nan or infinite (" + BuildError.wrap(ret) + ")");
+            error.error("Field '" + n + "' of " + obj + " is nan or infinite (" + ParticleBuildError.wrap(ret) + ")");
             return null;
         }
         else
@@ -1703,16 +1700,16 @@ class Parser {
     }
 
     // Check value is a number, and error otherwise.
-    static checkNumber(error: BuildError, obj: string, n: string, ret: any): number
+    static checkNumber(error: ParticleBuildError, obj: string, n: string, ret: any): number
     {
         if (!Types.isNumber(ret))
         {
-            error.error(n + " of " + obj + " is not a number (" + BuildError.wrap(ret) + ")");
+            error.error(n + " of " + obj + " is not a number (" + ParticleBuildError.wrap(ret) + ")");
             return null;
         }
         else if (!isFinite(ret))
         {
-            error.error(n + " of " + obj + " is nan or infinite (" + BuildError.wrap(ret) + ")");
+            error.error(n + " of " + obj + " is nan or infinite (" + ParticleBuildError.wrap(ret) + ")");
             return null;
         }
         else
@@ -1720,7 +1717,7 @@ class Parser {
             return (<number>ret);
         }
     }
-    static checkNullNumber(error: BuildError, obj: string, n: string, ret: any): number
+    static checkNullNumber(error: ParticleBuildError, obj: string, n: string, ret: any): number
     {
         if (Types.isNullUndefined(ret))
         {
@@ -1735,7 +1732,7 @@ class Parser {
         return (x.hasOwnProperty(n)) ? run(x[n]) : def();
     }
 
-    static runField<R>(error: BuildError, obj: string, x: Object, n: string, run: (field: any) => R): R
+    static runField<R>(error: ParticleBuildError, obj: string, x: Object, n: string, run: (field: any) => R): R
     {
         if (!x.hasOwnProperty(n))
         {
@@ -1789,7 +1786,7 @@ class Parser {
 
     // Check attribute value agaisnt type, and error if not compatible.
     // If acceptNull is true, then attribute (sub) values are permitted to be null.
-    static typeAttr(error: BuildError, obj: string, type: any, acceptNull: boolean, val: any): Array<number>
+    static typeAttr(error: ParticleBuildError, obj: string, type: any, acceptNull: boolean, val: any): Array<number>
     {
         if (type === null)
         {
@@ -1805,7 +1802,7 @@ class Parser {
         {
             if (!Types.isArray(val))
             {
-                error.error("Value '" + BuildError.wrap(val) + "' should be a float" + n + " for " + obj);
+                error.error("Value '" + ParticleBuildError.wrap(val) + "' should be a float" + n + " for " + obj);
                 return null;
             }
 
@@ -1813,7 +1810,7 @@ class Parser {
             var count = arr.length;
             if (count !== n)
             {
-                error.error("Value '" + BuildError.wrap(val) + "' should have " + n + " elements for float " + n + obj);
+                error.error("Value '" + ParticleBuildError.wrap(val) + "' should have " + n + " elements for float " + n + obj);
                 val = null;
             }
 
@@ -1822,8 +1819,8 @@ class Parser {
             {
                 if (!isNumber(arr[i]))
                 {
-                    error.error("Element " + i + " of value '" + BuildError.wrap(val) +
-                        "' should be a number (" + BuildError.wrap(arr[i]) + ") for " + obj);
+                    error.error("Element " + i + " of value '" + ParticleBuildError.wrap(val) +
+                        "' should be a number (" + ParticleBuildError.wrap(arr[i]) + ") for " + obj);
                     val = null;
                 }
             }
@@ -1839,7 +1836,7 @@ class Parser {
             default: // tTexture(n)
                 if (!isNumber(val))
                 {
-                    error.error("Value '" + BuildError.wrap(val) + "' should be a number for " + obj);
+                    error.error("Value '" + ParticleBuildError.wrap(val) + "' should be a number for " + obj);
                     return null;
                 }
                 return [<number>val];
@@ -1868,7 +1865,7 @@ class Parser {
     }
 
     // Parse a system definition object.
-    static parseSystem(error: BuildError, defn: any): Array<Attribute>
+    static parseSystem(error: ParticleBuildError, defn: any): Array<Attribute>
     {
         var attrs:Array<Attribute>;
         if (!Types.isArray(defn))
@@ -1933,7 +1930,7 @@ class Parser {
     }
 
     // Parse a system attribute definition.
-    static parseSystemAttribute(error: BuildError, defn: any): Attribute
+    static parseSystemAttribute(error: ParticleBuildError, defn: any): Attribute
     {
         var name = Parser.stringField(error, "system attribute", defn, "name");
         if (name !== null && name.length > 14 && name.substr(name.length - 14) === "-interpolation")
@@ -2083,7 +2080,7 @@ class Parser {
     }
 
     // Parse attribute interpolator definition
-    static parseInterpolator(error: BuildError, obj: string, defn: any): Interpolator
+    static parseInterpolator(error: ParticleBuildError, obj: string, defn: any): Interpolator
     {
         if (Types.isString(defn))
         {
@@ -2139,7 +2136,7 @@ class Parser {
         {
             error.error("Invalid interpolator for " + obj +
                         ". Should be an interpolator name, or complex interpolator definition, not " +
-                        BuildError.wrap(defn));
+                        ParticleBuildError.wrap(defn));
             return null;
         }
     }
@@ -2149,7 +2146,7 @@ class Parser {
     {
         return 0;
     }
-    static parseParticle(error: BuildError, defn: any): Particle
+    static parseParticle(error: ParticleBuildError, defn: any): Particle
     {
         if (defn === null)
         {
@@ -2333,7 +2330,7 @@ class Parser {
         }
     }
 
-    static parseAttributeValue(error: BuildError, obj: string, def: any): Array<number>
+    static parseAttributeValue(error: ParticleBuildError, obj: string, def: any): Array<number>
     {
         if (def === null)
         {
@@ -2610,7 +2607,7 @@ class ParticleBuilder
             failOnWarnings = true;
         }
 
-        var error = new BuildError();
+        var error = new ParticleBuildError();
         var sys, parts;
         var count = particles.length;
         var i;
@@ -2866,7 +2863,7 @@ class ParticleBuilder
         };
     }
 
-    private static checkAssignment(error: BuildError, objx: string, objt: string, value: Array<number>, type: any): void
+    private static checkAssignment(error: ParticleBuildError, objx: string, objt: string, value: Array<number>, type: any): void
     {
         if (type === null)
         {
@@ -2877,28 +2874,28 @@ class ParticleBuilder
             case "tFloat":
                 if (value.length !== 1)
                 {
-                    error.error("Cannot type " + BuildError.wrap(value) + " with type float for " +
+                    error.error("Cannot type " + ParticleBuildError.wrap(value) + " with type float for " +
                                 objt + " in " + objx);
                 }
                 break;
             case "tFloat2":
                 if (value.length !== 2)
                 {
-                    error.error("Cannot type " + BuildError.wrap(value) + " with type float2 for " +
+                    error.error("Cannot type " + ParticleBuildError.wrap(value) + " with type float2 for " +
                                 objt + " in " + objx);
                 }
                 break;
             case "tFloat4":
                 if (value.length !== 4)
                 {
-                    error.error("Cannot type " + BuildError.wrap(value) + " with type float4 for " +
+                    error.error("Cannot type " + ParticleBuildError.wrap(value) + " with type float4 for " +
                                 objt + " in " + objx);
                 }
                 break;
             default: // tTexture(n)
                 if (value.length !== 1)
                 {
-                    error.error("Cannot type " + BuildError.wrap(value) + " with type texture" + <number>type +
+                    error.error("Cannot type " + ParticleBuildError.wrap(value) + " with type texture" + <number>type +
                                 " for " + objt + " in " + objx);
                 }
         }
@@ -3417,7 +3414,7 @@ class ParticleBuilder
         particle.animation = disc;
     }
 
-    static checkAttributes(error: BuildError, particle: Particle, system: Array<Attribute>): void
+    static checkAttributes(error: ParticleBuildError, particle: Particle, system: Array<Attribute>): void
     {
         var sysAttr;
         var seq = particle.animation;
@@ -3964,7 +3961,7 @@ class DefaultParticleUpdater
         noiseTexture          : <string>null,
         randomizedAcceleration: [0, 0, 0]
     };
-    static load(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad, request): void
+    static load(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad): void
     {
         shaderLoad("shaders/particles-default-update.cgfx");
         if (archetype.noiseTexture)
@@ -3976,7 +3973,7 @@ class DefaultParticleUpdater
     {
         return ParticleManager.recordDelta(DefaultParticleUpdater.template, archetype);
     }
-    static parseArchetype(error: BuildError, delta: any): DefaultUpdaterArchetype
+    static parseArchetype(error: ParticleBuildError, delta: any): DefaultUpdaterArchetype
     {
         if (Types.isNullUndefined(delta))
         {
@@ -4273,7 +4270,7 @@ class DefaultParticleRenderer
     {
         return ParticleManager.recordDelta(DefaultParticleRenderer.template, archetype);
     }
-    static parseArchetype(error: BuildError, delta: any): DefaultRendererArchetype
+    static parseArchetype(error: ParticleBuildError, delta: any): DefaultRendererArchetype
     {
         if (Types.isNullUndefined(delta))
         {
@@ -4521,7 +4518,7 @@ class ParticleSystem
     {
         return ParticleManager.recordDelta(ParticleSystem.template, archetype);
     }
-    static parseArchetype(error: BuildError, delta: any): ParticleSystemArchetype
+    static parseArchetype(error: ParticleBuildError, delta: any): ParticleSystemArchetype
     {
         if (Types.isNullUndefined(delta))
         {
@@ -6395,7 +6392,7 @@ class DefaultParticleSynchronizer
     {
         return ParticleManager.recordDelta(DefaultParticleSynchronizer.template, archetype);
     }
-    static parseArchetype(error: BuildError, delta: any): DefaultSynchronizerArchetype
+    static parseArchetype(error: ParticleBuildError, delta: any): DefaultSynchronizerArchetype
     {
         if (Types.isNullUndefined(delta))
         {
@@ -6740,7 +6737,7 @@ class DefaultParticleEmitter
     {
         return ParticleManager.recordDelta(DefaultParticleEmitter.template, archetype);
     }
-    static parseArchetype(error: BuildError, delta: any, particles: { [name: string]: any }): DefaultEmitterArchetype
+    static parseArchetype(error: ParticleBuildError, delta: any, particles: { [name: string]: any }): DefaultEmitterArchetype
     {
         if (Types.isNullUndefined(delta))
         {
@@ -7336,7 +7333,7 @@ class DefaultParticleEmitter
     constructor() {}
     static createArchetype =
         DefaultParticleEmitter.parseArchetype(
-            null, // no errors generated, don't need a BuildError object
+            null, // no errors generated, don't need a ParticleBuildError object
             { particle: { name: "#", useAnimationLifeTime: false } },
             { "#": "" }
         );
@@ -7456,7 +7453,7 @@ class ParticleManager
     //   geometry (the geometry type used)
     //   value (cached) : () => ParticleRenderer | ParticleRenderer
     private renderers: { [name: string]: {
-                            parseArchetype   : (_: BuildError, def: any) => any;
+                            parseArchetype   : (_: ParticleBuildError, def: any) => any;
                             compressArchetype: (_: any) => any;
                             load             : (_: any, sm: ShaderManager, tm: TextureManager) => void;
                             value            : any;
@@ -7467,7 +7464,7 @@ class ParticleManager
     //   loader (load assets a parsed archetype uses)
     //   value (cached) : () => ParticleUpdater | ParticleUpdater
     private updaters: { [name: string]: {
-                          parseArchetype   : (_: BuildError, def: any) => any;
+                          parseArchetype   : (_: ParticleBuildError, def: any) => any;
                           compressArchetype: (_: any) => any;
                           load             : (_: any, sm: ShaderManager, tm: TextureManager) => void;
                           value            : any } };
@@ -7476,7 +7473,7 @@ class ParticleManager
     //   parseArchetype, compressArchetype definitions.
     //   value : () => ParticleSynchronizer
     private synchronizers: { [name: string]: {
-                               parseArchetype   : (_: BuildError, def: any) => any;
+                               parseArchetype   : (_: ParticleBuildError, def: any) => any;
                                compressArchetype: (_: any) => any;
                                value            : () => any;
                                pool             : Array<any> } };
@@ -7485,7 +7482,7 @@ class ParticleManager
     //   parseArchetype, compressArchetype definitions.
     //   value : () => ParticleEmitter
     private emitters: { [name: string]: {
-                        parseArchetype   : (_: BuildError, def: any, parts: { [name: string]: any }) => any;
+                        parseArchetype   : (_: ParticleBuildError, def: any, parts: { [name: string]: any }) => any;
                         compressArchetype: (_: any) => any;
                         value            : () => any;
                         pool             : Array<any> } };
@@ -7913,7 +7910,7 @@ class ParticleManager
     }
     registerAnimationSystem(name: string, definition: any): void
     {
-        var error = new BuildError();
+        var error = new ParticleBuildError();
         var parsed = Parser.parseSystem(error, definition);
         if (!error.empty(this.failOnWarnings))
         {
@@ -7941,7 +7938,7 @@ class ParticleManager
     }
     registerParticleAnimation(definition: any): void
     {
-        var error = new BuildError();
+        var error = new ParticleBuildError();
         var parsed = Parser.parseParticle(error, definition);
         if (!error.empty(this.failOnWarnings))
         {
@@ -8878,7 +8875,7 @@ class ParticleManager
             delete delta.synchronizer.name;
         }
 
-        var error = new BuildError();
+        var error = new ParticleBuildError();
         function checkString(n): (_: any) => string
         {
             return Parser.checkString.bind(null, error, "archetype", n);

@@ -11,7 +11,15 @@ The ParticleManager Object
 
 The ParticleManager is used to create and manage GPU based particle systems.
 
-The ParticleManager is data-driven, with particle systems represented entirely by an easily serializable :ref:`ParticleArchetype <particlearchetype>` object:
+The ParticleManager is data-driven, with particle systems represented entirely by an easily serializable :ref:`ParticleArchetype <particlearchetype>` description.
+
+.. WARNING::
+    GPU Particle system depends on having access to at least 4 vertex texture units. This is not a required feature for WebGL conformance and must be checked for on the :ref:`GraphicsDevice <graphicsdevice>`. ::
+
+        if (graphicsDevice.maxSupported("VERTEX_TEXTURE_UNITS") < 4)
+        {
+            // GPU Particle System cannot be used!
+        }
 
 Methods
 =======
@@ -28,7 +36,7 @@ Create a new ParticleManager
 
 **Syntax** ::
 
-    var manager = ParticleManager.create(graphicsDevice, textureManager, shaderManager);
+    var particleManager = ParticleManager.create(graphicsDevice, textureManager, shaderManager);
 
 ``graphicsDevice``
     The :ref:`GraphicsDevice <graphicsdevice>` object.
@@ -47,17 +55,19 @@ Create a new ParticleManager
 
 **Summary**
 
-Initialize the particle manager, this must be called before any particle systems are created using the manager.
+Initialize the particle manager, this must be called before any particle systems are created using the particleManager.
 
 **Syntax** ::
 
-    manager.initialize(scene, passIndex);
+    particleManager.initialize(scene, passIndex);
 
 ``scene``
     The :ref:`Scene <scene>` object the manager will work with.
 
 ``passIndex``
     The passIndex for `transparent` renderables defined by the renderer in use.
+
+    For example, if using the :ref:`DefaultRendering <defaultrendering>` object, this should be set to `renderer.passIndex.transparent`. The pass index is used to define the ordering of draw calls so that particle systems (as a generally transparent medium) will be rendererd after normal geometry, and will be z-sorted along with other transparent geometry in the :ref:`Scene <scene>`.
 
 .. index::
     pair: ParticleManager; registerParticleAnimation
@@ -67,16 +77,191 @@ Initialize the particle manager, this must be called before any particle systems
 
 **Summary**
 
-Register a particle animation object to be referenced by particle systems created by the manager.
+Register a particle animation object to be referenced by particle systems created by the particle manager.
 
 **Syntax** ::
 
-    manager.registerParticleAnimation(definition);
+    particleManager.registerParticleAnimation(definition);
 
 ``definition``
-    The particle animation definition.
+    The :ref:`particle animation definition <particleanimationdefinition>`.
 
     The name of the particle animation defined will be used to look up this definition when creating particle systems.
+
+.. index::
+    pair: ParticleManager; registerAnimationSystem
+
+`registerAnimationSystem`
+-------------------------
+
+**Summary**
+
+Register a particle animation system object to be referenced by particle systems created by the particle manager.
+
+**Syntax** ::
+
+    particleManager.registerAnimationSystem(name, definition);
+
+``name``
+    The name of the animation system defined will be used to look up this definition when creating particle systems.
+
+``definition``
+    The :ref:`particle animation system <particleanimationsystemdefinition>`.
+
+.. index::
+    pair: ParticleManager; registerGeometry
+
+`registerGeometry`
+------------------
+
+**Summary**
+
+Register a function to be used to create a :ref:`ParticleGeometry <particlegeometry>` object as required by the particle manager.
+
+**Syntax** ::
+
+    particleManager.registerGeometry(name, constructor)
+
+``name``
+    The name of the geometry to be referenced by renderers.
+
+``constructor``
+    Function to construct a shared geometry instance.
+
+    Function takes as parameters the :ref:`GraphicsDevice <graphicsdevice>` and an initial particle capacity for the geometry to be created with.
+
+.. index::
+    pair: ParticleManager; registerRenderer
+
+`registerRenderer`
+------------------
+
+**Summary**
+
+Register the set of functions required to create and work with a :ref:`ParticleRenderer <particlerenderer>` in the particle manager.
+
+**Syntax** ::
+
+    particleManager.registerRenderer(name, parser, compressor, loader, constructor, geometry);
+
+``name``
+    The name of the renderer to be referenced by particle archetypes.
+
+``parser``
+    A function taking as arguments a :ref:`ParticleParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed json object representing those values configurable for the renderer.
+
+    This function should verify the input json object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this renderer.
+
+``compressor``
+    A function taking as argument the complete set of configurable options for the renderer, and returning its minimal representation.
+
+   The parser and compressor should be inverses of eachother.
+
+``loader``
+    A function taking as arguments the complete set of configurable options for the renderer instance, a function to be used for loading shaders (accepting the shader path as argument) and a function to be used for loading textures (accepting the texture path as argument).
+
+    This function should invoke the provided loader functions for all shaders and textures required by the renderer, and for the specific input set of options. These functions will be processed asynchronously.
+
+``constructor``
+   A function to be called to construct an instance of this renderer. This function should take no arguments.
+
+``geometry``
+    The registered name of a :ref:`ParticleGeometry <particlegeometry>` compatible with this renderer.
+
+.. index::
+    pair: ParticleManager; registerUpdater
+
+`registerUpdater`
+------------------
+
+**Summary**
+
+Register the set of functions required to create and work with a :ref:`ParticleUpdater <particleupdater>` in the particle manager.
+
+**Syntax** ::
+
+    particleManager.registerUpdater(name, parser, compressor, loader, constructor);
+
+``name``
+    The name of the updater to be referenced by particle archetypes.
+
+``parser``
+    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed json object representing those values configurable for the updater.
+
+    This function should verify the input json object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this updater.
+
+``compressor``
+    A function taking as argument the complete set of configurable options for the updater, and returning its minimal representation.
+
+   The parser and compressor should be inverses of eachother.
+
+``loader``
+    A function taking as arguments the complete set of configurable options for the updater instance, a function to be used for loading shaders (accepting the shader path as argument) and a function to be used for loading textures (accepting the texture path as argument).
+
+    This function should invoke the provided loader functions for all shaders and textures required by the updater, and for the specific input set of options. These functions will be processed asynchronously.
+
+``constructor``
+   A function to be called to construct an instance of this updater. This function should take no arguments.
+
+.. index::
+    pair: ParticleManager; registerSynchronizer
+
+`registerSynchronizer`
+----------------------
+
+**Summary**
+
+Register the set of functions required to create and work with a :ref:`ParticleSynchronizer <particlesynchronizer>` in the particle manager.
+
+**Syntax** ::
+
+    particleManager.registerSynchronizer(name, parser, compressor, constructor);
+
+``name``
+    The name of the synchronizerr to be referenced by particle archetypes.
+
+``parser``
+    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed json object representing those values configurable for the synchronizerr.
+
+    This function should verify the input json object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this synchronizerr.
+
+``compressor``
+    A function taking as argument the complete set of configurable options for the synchronizerr, and returning its minimal representation.
+
+   The parser and compressor should be inverses of eachother.
+
+``constructor``
+   A function to be called to construct an instance of this synchronizerr. This function should take no arguments.
+
+.. index::
+    pair: ParticleManager; registerEmitter
+
+`registerEmitter`
+----------------------
+
+**Summary**
+
+Register the set of functions required to create and work with a :ref:`ParticleEmitter <particleemitter>` in the particle manager.
+
+**Syntax** ::
+
+    particleManager.registerEmitter(name, parser, compressor, constructor);
+
+``name``
+    The name of the emitter to be referenced by particle archetypes.
+
+``parser``
+    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed json object representing those values configurable for the emitter. A final argument to this function is the name of all particles defined for the system archetype currently being parsed so that this function may verify emitters reference only particles defined for the system.
+
+    This function should verify the input json object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this emitter.
+
+``compressor``
+    A function taking as argument the complete set of configurable options for the emitter, and returning its minimal representation.
+
+   The parser and compressor should be inverses of eachother.
+
+``constructor``
+   A function to be called to construct an instance of this emitter. This function should take no arguments.
 
 .. index::
     pair: ParticleManager; computeAnimationLifeTime
@@ -90,7 +275,7 @@ Compute the amount of time covered by the given particle animation.
 
 **Syntax** ::
 
-    var lifeTime = manager.computeAnimationLifeTime(particleAnimationName);
+    var lifeTime = particleManager.computeAnimationLifeTime(particleAnimationName);
 
 .. index::
     pair: ParticleManager; loadArchetype
@@ -106,7 +291,7 @@ This must be performed before creating a system from its archetype, and it is as
 
 **Syntax** ::
 
-    manager.loadArchetype(archetype, onload);
+    particleManager.loadArchetype(archetype, onload);
 
 ``archetype``
     The particle system archetype to be loaded.
@@ -124,11 +309,11 @@ This must be performed before creating a system from its archetype, and it is as
 
 Destroy all instances of an archetype, and any other generated data such as run-time packed textures and object pools. This has the effect of completely resetting the state of an archetype, so that when used to again create instances it will be as though it was never used in the past. This should be used to clean up an archetype that will no longer be used.
 
-Note that this does not actually 'destroy' the archetype, the archetype itself may be used again.
+Note that this does not actually `destroy` the archetype, the archetype itself may be used again.
 
 **Syntax** ::
 
-    manager.destroyArchetype(archetype);
+    particleManager.destroyArchetype(archetype);
 
 .. index::
     pair: ParticleManager; replaceArchetype
@@ -142,13 +327,13 @@ Re-build any existing particle instances making use of the provided archetype, w
 
 As some properties, such as particle system extents and particle capacities are immutable, this is the only way of easily effecting such changes for current systems in use.
 
-Existing references to particle instances will remain valid, with the existing particle isntance objects re-used for the replaced systems.
+Existing references to particle instances will remain valid, with the existing particle instance objects re-used for the replaced systems.
 
 Emitters of the new instance will all be enabled, this is not intended for use with short-lived effects that are already created.
 
 **Syntax** ::
 
-    manager.replaceArchetype(oldArchetype, newArchetype);
+    particleManager.replaceArchetype(oldArchetype, newArchetype);
 
 ``oldArchetype``
     The old particle archetype. All instances of this archetype will be modified in-place to make use of the new archetype.
@@ -174,7 +359,7 @@ The emitters of the system will be enabled automatically. If a timeout is specif
 
 **Syntax** ::
 
-    var instance = manager.createInstance(archetype, timeout);
+    var instance = particleManager.createInstance(archetype, timeout);
 
 ``archetype``
     The pre-loaded archetype to create instance from.
@@ -182,7 +367,7 @@ The emitters of the system will be enabled automatically. If a timeout is specif
 ``timeout`` (Optional)
     The amount of time this instance should exist for. Once this amount of time has passed, the instance will be automatically removed from the scene if necessary, and recycled.
 
-    This parameter should be specified for the creation of short-lived effects, the manager makes use of an internal optimized data structure for handling large numbers of short-lived effects in conjunction with the updates of the manager.
+    This parameter should be specified for the creation of short-lived effects, the manager makes use of an internal optimized data structure for handling large numbers of short-lived effects in conjunction with the updates of the particleManager.
 
 .. index::
     pair: ParticleManager; destroyInstance
@@ -196,7 +381,7 @@ Destroy a :ref:`ParticleInstance <particleinstance>`, removing it from the scene
 
 **Syntax** ::
 
-    manager.destroyInstance(instance);
+    particleManager.destroyInstance(instance);
 
 .. index::
     pair: ParticleManager; clear
@@ -206,11 +391,11 @@ Destroy a :ref:`ParticleInstance <particleinstance>`, removing it from the scene
 
 **Summary**
 
-Destroy every instance associated with the particle manager.
+Destroy every instance associated with the particle particleManager.
 
 **Syntax** ::
 
-    manager.clear(archetype);
+    particleManager.clear(archetype);
 
 ``archetype`` (Optional)
     If an archetype is specified, only instances of that archetype will be destroyed. This is not the same as `destroyArchetype`, as other generated state such as run-time packed textures and object pools will remain intact. If you are not intending on ever using this archetype again, you should use `destroyArchetype` instead.
@@ -223,13 +408,13 @@ Destroy every instance associated with the particle manager.
 
 **Summary**
 
-Destroy the particle manager. This will destroy all state associated with every archetype used with this manager including all existing particle instances, and will also destroy shared texture and render target states, and release any other allocated GPU memory, ensuring all memory allocated on the CPU is released for garbage collection.
+Destroy the particle particleManager. This will destroy all state associated with every archetype used with this manager including all existing particle instances, and will also destroy shared texture and render target states, and release any other allocated GPU memory, ensuring all memory allocated on the CPU is released for garbage collection.
 
 The manager nor any particle instance created with it may be used after this call.
 
 **Syntax** ::
 
-    manager.destroy();
+    particleManager.destroy();
 
 .. index::
     pair: ParticleManager; update
@@ -239,13 +424,13 @@ The manager nor any particle instance created with it may be used after this cal
 
 **Summary**
 
-Update the particle manager.
+Update the particle particleManager.
 
 This call will update the internal clock of the manager used by all created particle systems to track the passage of time, and will also be used to cull short-lived instances created in the manager automatically when required even if they are off-screen (or never made visible at all).
 
 **Syntax** ::
 
-    manager.update(timeStep);
+    particleManager.update(timeStep);
 
 ``timeStep``
     The amount of elapsed time to be added to the managers timer in seconds.
@@ -264,7 +449,7 @@ Add the provided :ref:`ParticleInstance <particleinstance>` as a child of the gi
 
 **Syntax** ::
 
-    manager.addInstanceToScene(instance, parent);
+    particleManager.addInstanceToScene(instance, parent);
 
 ``instance``
     The particle system instance created by the manager to be added to the scene.
@@ -284,7 +469,7 @@ Remove the provided :ref:`ParticleInstance <particleinstance>` from the scene.
 
 **Syntax** ::
 
-    manager.removeInstanceFromScene(instance);
+    particleManager.removeInstanceFromScene(instance);
 
 ``instance``
     The particle system instance created by the manager to be removed from the scene.
@@ -303,7 +488,7 @@ This can be used to save space when saving or transferring archetypes, and will 
 
 **Syntax** ::
 
-    var description = manager.compressArchetype(archetype);
+    var description = particleManager.compressArchetype(archetype);
 
 ``archetype``
     The particle system archetype to be compressed.
@@ -320,9 +505,13 @@ This can be used to save space when saving or transferring archetypes, and will 
 
 Parse a given archetype into a fully prepared object for use in manager, this allows an archetype to be specified with only those fields that are not equal to the defaults.
 
+If parsing fails for whatever reason, then an exception will be thrown containing all reported warnings and errors for parsing stages.
+
+To disable fail on warnings, set `failOnWarnings` to `false` on the particle manager.
+
 **Syntax** ::
 
-    var archetype = manager.parseArchetype(description);
+    var archetype = particleManager.parseArchetype(description);
 
 ``description``
     The archetype description to be parsed.
@@ -343,7 +532,7 @@ This method can be used as a cost-efficient way of saving archetypes to file.
 
 **Syntax** ::
 
-    var serializedString = manager.serializeArchetype(archetype);
+    var serializedString = particleManager.serializeArchetype(archetype);
 
 ``archetype``
     The archetype to be serialized.
@@ -358,11 +547,11 @@ This method can be used as a cost-efficient way of saving archetypes to file.
 
 **Summary**
 
-Deserializes an archetype from its compressed JSON representation, this method will parse the archetype description into a fully prepared archetype object for use in the manager.
+Deserializes an archetype from its compressed JSON representation, this method will parse the archetype description into a fully prepared archetype object for use in the particleManager.
 
 **Syntax** ::
 
-    var archetype = manager.deserializeArchetype(jsonString);
+    var archetype = particleManager.deserializeArchetype(jsonString);
 
 ``jsonString``
     The serialized representation of an archetype.
@@ -379,7 +568,7 @@ Gather metrics regarding the state of the particle manager and its memory usage.
 
 **Syntax** ::
 
-    var metrics = manager.gatherMetrics(archetype);
+    var metrics = particleManager.gatherMetrics(archetype);
 
 ``archetype`` (Optional)
     If an archetype is provided, then only metrics regarding instances of that particular archetype will be gathered.
@@ -399,7 +588,7 @@ The return object has fields:
  * numAllocatedInstances: `number of ParticleInstances that have had systems and views allocated, and occupy space on the CPU and GPU (Have been visible at least once).`
  * numInstances: `number of ParticleInstances that are alive as part of the Scene.`
 
-The total number of `ParticleInstances` created is the sum of `numInstances` and `numPooledInstances`. `numAllocatedInstances` is always less than or equal to `numInstances`, and `numActiveInstances` is always less than or equal to `numAllocatedInstances`.
+The total number of `ParticleInstances` created is the sum of `numInstances` and `numPooledInstances`. The `numAllocatedInstances` is always less than or equal to `numInstances`, and `numActiveInstances` is always less than or equal to `numAllocatedInstances`.
 
 .. index::
     pair: ParticleManager; gatherInstanceMetrics
@@ -413,7 +602,7 @@ Gather metrics about individual :ref:`ParticleInstances <particleinstance>`.
 
 **Syntax** ::
 
-    var metrics = manager.gatherInstanceMetrics(archetype);
+    var metrics = particleManager.gatherInstanceMetrics(archetype);
 
 ``archetype`` (Optional)
     If an archetype is provided, then only instances of that archetype will be gathered by this call.

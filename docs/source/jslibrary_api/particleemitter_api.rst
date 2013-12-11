@@ -11,6 +11,9 @@ The ParticleEmitter Interface
 
 An emitter is added to a particular synchronizer to emit particles when the synchronizer synchronizes a particle system.
 
+.. note::
+    This is a low-level particle system API.
+
 Methods
 =======
 

@@ -11,6 +11,9 @@ The ParticleView Object
 
 The `ParticleView` object is used to render a view onto a :ref:`ParticleSystem <particlesystem>`. If using the :ref:`ParticleRenderable <particlerenderable>` object, then views will be created automatically.
 
+.. note::
+    This is a low-level particle system API.
+
 Methods
 =======
 

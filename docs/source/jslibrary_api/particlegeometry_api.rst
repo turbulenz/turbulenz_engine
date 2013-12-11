@@ -11,6 +11,9 @@ The ParticleGeometry Object
 
 Represents the geometry used to render a particle system.
 
+.. note::
+    This is a low-level particle system API.
+
 Methods
 =======
 

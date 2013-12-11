@@ -11,9 +11,10 @@ The ParticleRenderer Interface
 
 Encapsulates a replaceable element of a particle system responsible for rendering the particles in the system.
 
-(TODO: CPU Fallback will require extra fields and logic to be provided by a renderer most likely as the present vertex shader logic would need to be replicated on the CPU wherever it relies on texture fetches. Additinoally there would be a second technique used for the CPU fallback which would have a different vertex shader at the very least).
-
 This object may be shared amongst many :ref:`ParticleSystems <particlesystem>`.
+
+.. note::
+    This is a low-level particle system API.
 
 Properties
 ==========
@@ -66,7 +67,7 @@ Methods
 
 **Summary**
 
-Create a `ParticleGeometry` object compatible with this renderer.
+Create a :ref:`ParticleGeometry <particlegeometry>` object compatible with this renderer.
 
 **Syntax** ::
 

@@ -11,6 +11,9 @@ The ParticleSynchronizer Interface
 
 Represents how a particle system is synchronized, including emitting new particles.
 
+.. note::
+    This is a low-level particle system API.
+
 Methods
 =======
 
