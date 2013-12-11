@@ -2101,10 +2101,10 @@ class DeferredRendering
                 var v32 = oldVertexData[brOff + 2];
                 oldVertexData = null;
 
-                var va01 = [(v00 + v10) * 0.5, (v01 + v11) * 0.5, (v02 + v12) * 0.5];
-                var va02 = [(v00 + v20) * 0.5, (v01 + v21) * 0.5, (v02 + v22) * 0.5];
-                var va13 = [(v10 + v30) * 0.5, (v11 + v31) * 0.5, (v12 + v32) * 0.5];
-                var va23 = [(v20 + v30) * 0.5, (v21 + v31) * 0.5, (v22 + v32) * 0.5];
+                var va01 = VMath.v3Build((v00 + v10) * 0.5, (v01 + v11) * 0.5, (v02 + v12) * 0.5);
+                var va02 = VMath.v3Build((v00 + v20) * 0.5, (v01 + v21) * 0.5, (v02 + v22) * 0.5);
+                var va13 = VMath.v3Build((v10 + v30) * 0.5, (v11 + v31) * 0.5, (v12 + v32) * 0.5);
+                var va23 = VMath.v3Build((v20 + v30) * 0.5, (v21 + v31) * 0.5, (v22 + v32) * 0.5);
 
                 var oldTop, oldBottom;
                 if (VMath.v3LengthSq(VMath.v3Sub(va01, va23)) > VMath.v3LengthSq(VMath.v3Sub(va02, va13)))
@@ -2118,8 +2118,8 @@ class DeferredRendering
                     oldBottom = va13;
                 }
 
-                var c10 = VMath.v3Normalize([(v10 - v00), (v11 - v01), (v12 - v02)]);
-                var c20 = VMath.v3Normalize([(v20 - v00), (v21 - v01), (v22 - v02)]);
+                var c10 = VMath.v3Normalize(VMath.v3Build((v10 - v00), (v11 - v01), (v12 - v02)));
+                var c20 = VMath.v3Normalize(VMath.v3Build((v20 - v00), (v21 - v01), (v22 - v02)));
                 var oldNormal = VMath.v3Cross(c10, c20);
 
                 var v3Build = md.v3Build;

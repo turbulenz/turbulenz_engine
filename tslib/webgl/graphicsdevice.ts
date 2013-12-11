@@ -6355,6 +6355,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 shaderType = gl.FRAGMENT_SHADER;
             }
 
+            if (!gl.getShaderPrecisionFormat)
+            {
+                return 0;
+            }
+
             var sp = gl.getShaderPrecisionFormat(shaderType, gl.HIGH_FLOAT);
             if (!sp || !sp.precision)
             {
@@ -6974,6 +6979,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
 
         delete this.gl;
+
+        if (typeof DDSLoader !== 'undefined')
+        {
+            DDSLoader.destroy();
+        }
     }
 
     static create(canvas, params) : WebGLGraphicsDevice

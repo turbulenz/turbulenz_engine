@@ -75,6 +75,7 @@ class Scene
     rootNodesMap: { [name: string]: SceneNode; };
     dirtyRoots: { [name: string]: SceneNode; };
     nodesToUpdate: SceneNode[];
+    numNodesToUpdate: number;
     queryVisibleNodes: SceneNode[];
 
     materials: { [name: string]: Material; };
@@ -239,10 +240,16 @@ class Scene
         debug.assert(rootNode.scene === this, "Root node is not in the scene");
         rootNode.removedFromScene(this);
 
-        var index = this.rootNodes.indexOf(rootNode);
+        var rootNodes = this.rootNodes;
+        var index = rootNodes.indexOf(rootNode);
         if (index !== -1)
         {
-            this.rootNodes.splice(index, 1);
+            var numRootNodes = (rootNodes.length - 1);
+            if (index < numRootNodes)
+            {
+                rootNodes[index] = rootNodes[numRootNodes];
+            }
+            rootNodes.length = numRootNodes;
         }
         delete this.rootNodesMap[name];
 
@@ -250,10 +257,22 @@ class Scene
         {
             delete this.dirtyRoots[name];
 
-            index = this.nodesToUpdate.indexOf(rootNode);
-            if (index !== -1)
+            // Can not use indexOf because it will search the whole array instead of just the active range
+            var nodesToUpdate = this.nodesToUpdate;
+            var numNodesToUpdate = this.numNodesToUpdate;
+            for (index = 0; index < numNodesToUpdate; index += 1)
             {
-                this.nodesToUpdate.splice(index, 1);
+                if (nodesToUpdate[index] === rootNode)
+                {
+                    numNodesToUpdate -= 1;
+                    if (index < numNodesToUpdate)
+                    {
+                        nodesToUpdate[index] = nodesToUpdate[numNodesToUpdate];
+                    }
+                    nodesToUpdate[numNodesToUpdate] = null;
+                    this.numNodesToUpdate = numNodesToUpdate;
+                    break;
+                }
             }
         }
 
@@ -2608,7 +2627,9 @@ class Scene
         if (dirtyRoots[name] !== rootNode)
         {
             dirtyRoots[name] = rootNode;
-            this.nodesToUpdate.push(rootNode);
+            var numNodesToUpdate = this.numNodesToUpdate;
+            this.nodesToUpdate[numNodesToUpdate] = rootNode;
+            this.numNodesToUpdate = (numNodesToUpdate + 1);
         }
     }
 
@@ -2617,10 +2638,10 @@ class Scene
     //
     updateNodes()
     {
-        var nodesToUpdate = this.nodesToUpdate;
-        var numNodesToUpdate = nodesToUpdate.length;
+        var numNodesToUpdate = this.numNodesToUpdate;
         if (0 < numNodesToUpdate)
         {
+            var nodesToUpdate = this.nodesToUpdate;
             var dirtyRoots = this.dirtyRoots;
             var n;
             for (n = 0; n < numNodesToUpdate; n += 1)
@@ -2628,9 +2649,9 @@ class Scene
                 dirtyRoots[nodesToUpdate[n].name] = null;
             }
 
-            SceneNode.prototype.updateHelper(this.md, this, nodesToUpdate);
+            SceneNode.updateNodes(this.md, this, nodesToUpdate, numNodesToUpdate);
 
-            nodesToUpdate.length = 0;
+            this.numNodesToUpdate = 0;
         }
     }
 
@@ -2727,7 +2748,7 @@ class Scene
     //
     getExtents()
     {
-        if (0 < this.nodesToUpdate.length)
+        if (0 < this.numNodesToUpdate)
         {
             this.updateNodes();
             this.staticSpatialMap.finalize();
@@ -2963,6 +2984,7 @@ class Scene
         this.rootNodesMap = {};
         this.dirtyRoots = {};
         this.nodesToUpdate = [];
+        this.numNodesToUpdate = 0;
     }
 
     //
@@ -2983,23 +3005,17 @@ class Scene
         this.frustumPlanes = [];
         this.animations = {};
         this.skeletons = {};
-        this.extents = (this.float32ArrayConstructor ?
-                        new this.float32ArrayConstructor(6) :
-                        new Array(6));
+        this.extents = this.md.aabbBuildEmpty();
         this.visibleNodes = [];
         this.visibleRenderables = [];
         this.visibleLights = [];
         this.cameraAreaIndex = -1;
-        this.cameraExtents = (this.float32ArrayConstructor ?
-                              new this.float32ArrayConstructor(6) :
-                              new Array(6));
+        this.cameraExtents = this.md.aabbBuildEmpty();
         this.visiblePortals = [];
         this.frameIndex = 0;
         this.queryCounter = 0;
         this.staticNodesChangeCounter = 0;
-        this.testExtents = (this.float32ArrayConstructor ?
-                            new this.float32ArrayConstructor(6) :
-                            new Array(6));
+        this.testExtents = this.md.aabbBuildEmpty();
         this.externalNodesStack = [];
     }
 

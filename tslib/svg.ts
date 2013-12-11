@@ -358,9 +358,8 @@ class SVGBaseNode implements SVGNode
             {
                 this.draw = this._drawShape;
             }
-            else if ((this.draw === this._drawStateChildren))
+            else if (this.draw === this._drawStateChildren)
             {
-                debug.assert;
                 this.draw = this._drawChildren;
             }
             else

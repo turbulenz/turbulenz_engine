@@ -14,6 +14,12 @@ interface IErrorStackResult
     stack: string;
 }
 
+declare var VMathArrayConstructor : Function;
+declare var TurbulenzEngine :
+{
+    onperformancewarning : { (msg: string):void; };
+}
+
 // The debug object is only available in debug modes.  The build tools
 // will automatically include it or prevent it from being included
 // based on the build mode.
@@ -39,7 +45,14 @@ interface TurbulenzDebug
     assert(condition: any, msg?: string): void
     log(msg: string): void;
 
+    /// Call the given function.  No returns values are propagated.
+    evaluate(fn: { ():void; }): void;
+
     isNumber(s: any): boolean;
+
+    /// Optionally call the performance warning callback
+    isMathType(v): boolean;
+
     isVec2(v): boolean;
     isVec3(v): boolean;
     isVec4(v): boolean;
@@ -122,9 +135,35 @@ var debug : TurbulenzDebug = {
         window.console.log(msg);
     },
 
+    evaluate : function debugEvaluateFn(fn: {():void;})
+    {
+        fn();
+    },
+
     isNumber : function debugIsNumber(s)
     {
         return "number" === typeof s;
+    },
+
+    isMathType : function isMathTypeFn(v)
+    {
+        if (v instanceof VMathArrayConstructor)
+        {
+            return true;
+        }
+
+        // For now, math type errors do not generate a full assert
+        // (hence we return true).  They just trigger the callback.
+
+        if (TurbulenzEngine.onperformancewarning)
+        {
+            TurbulenzEngine.onperformancewarning(
+                "Object is not of type " + VMathArrayConstructor.toString() +
+                ".  If this message appears frequently, performance of your" +
+                " game may be affected.");
+        }
+
+        return true;
     },
 
     isVec2 : function debugIsVec2Fn(v)

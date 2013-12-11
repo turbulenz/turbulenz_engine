@@ -74,6 +74,7 @@ class TicTacToeGame
                 }
                 else
                 {
+                    this.otherUser = username;
                     otherMovesLength += playerMoves.length;
                 }
             }
