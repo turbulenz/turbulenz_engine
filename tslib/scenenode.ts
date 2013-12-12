@@ -55,6 +55,7 @@ class SceneNode
 
     //Counter of number of times modified.
     worldUpdate                     : number;
+    frameVisible                    : number;
     rendererInfo                    : any; // TODO?
 
     local                           : any; // m43
@@ -143,6 +144,7 @@ class SceneNode
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
         this.worldUpdate = 0; //Counter of number of times modified.
+        this.frameVisible = -1;
 
         var local = params.local;
         if (local)
