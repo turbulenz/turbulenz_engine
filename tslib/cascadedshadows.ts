@@ -9,6 +9,7 @@ class CascadedShadowSplit
 {
     viewportX: number;
     viewportY: number;
+    distance: number;
 
     camera: Camera;
 
@@ -47,6 +48,7 @@ class CascadedShadowSplit
     {
         this.viewportX = x;
         this.viewportY = y;
+        this.distance = 0;
 
         this.camera = Camera.create(md);
 
@@ -88,6 +90,10 @@ class CascadedShadowSplit
 class CascadedShadowMapping
 {
     static version = 1;
+
+    static numSplits = 4;
+    // 1 + 4 + 9 + 16 = 30
+    static splitDistances = [1.0 / 30.0, 5.0 / 30.0, 14.0 / 30.0, 1.0];
 
     gd                  : GraphicsDevice;
     md                  : MathDevice;
@@ -166,10 +172,19 @@ class CascadedShadowMapping
             shadowSize: 0.0,
             invShadowSize: 0.0,
             shadowMapTexture: null,
-            worldShadowProjection: null,
-            viewShadowProjection: null,
-            viewShadowDepth: null,
-            shadowScaleOffset: null
+            shadowSplitDistances: md.v4BuildZero(),
+            worldShadowProjection0: null,
+            viewShadowProjection0: null,
+            shadowScaleOffset0: null,
+            worldShadowProjection1: null,
+            viewShadowProjection1: null,
+            shadowScaleOffset1: null,
+            worldShadowProjection2: null,
+            viewShadowProjection2: null,
+            shadowScaleOffset2: null,
+            worldShadowProjection3: null,
+            viewShadowProjection3: null,
+            shadowScaleOffset3: null
         });
 
         this.quadPrimitive = gd.PRIMITIVE_TRIANGLE_STRIP;
@@ -358,24 +373,64 @@ class CascadedShadowMapping
         return false;
     }
 
-    updateShadowMap(direction: any, camera: Camera, scene: Scene): boolean
+    updateShadowMap(direction: any, camera: Camera, scene: Scene, maxDistance: number): void
     {
         var floor = Math.floor;
         var ceil = Math.ceil;
 
         var extents = this.tempExtents;
-        camera.getFrustumExtents(extents, scene.maxDistance);
-        extents[0] = floor(extents[0]);
-        extents[1] = floor(extents[1]);
-        extents[2] = floor(extents[2]);
-        extents[3] = ceil(extents[3]);
-        extents[4] = ceil(extents[4]);
-        extents[5] = ceil(extents[5]);
 
-        return this._updateSplit(this.splits[0], direction, camera.matrix, extents, scene);
+        var splitDistances = CascadedShadowMapping.splitDistances;
+        var splits = this.splits;
+        var numSplits = splits.length;
+        var distance = camera.nearPlane;
+        var n, split, splitEnd;
+        for (n = 0; n < numSplits; n += 1)
+        {
+            split = splits[n];
+
+            splitEnd = maxDistance * splitDistances[n];
+
+            camera.getFrustumExtents(extents, distance, splitEnd);
+
+            extents[0] = floor(extents[0]);
+            extents[1] = floor(extents[1]);
+            extents[2] = floor(extents[2]);
+            extents[3] = ceil(extents[3]);
+            extents[4] = ceil(extents[4]);
+            extents[5] = ceil(extents[5]);
+
+            this._updateSplit(split, direction, camera.matrix, extents, scene);
+
+            split.distance = splitEnd;
+            distance = splitEnd;
+        }
+
+        var techniqueParameters = this.techniqueParameters;
+        techniqueParameters['shadowSplitDistances'] = this.md.v4Build(splits[0].distance,
+                                                                      splits[1].distance,
+                                                                      splits[2].distance,
+                                                                      splits[3].distance,
+                                                                      techniqueParameters['shadowSplitDistances']);
+        techniqueParameters['worldShadowProjection0'] = splits[0].worldShadowProjection;
+        techniqueParameters['viewShadowProjection0'] = splits[0].viewShadowProjection;
+        techniqueParameters['shadowScaleOffset0'] = splits[0].shadowScaleOffset;
+        techniqueParameters['worldShadowProjection1'] = splits[1].worldShadowProjection;
+        techniqueParameters['viewShadowProjection1'] = splits[1].viewShadowProjection;
+        techniqueParameters['shadowScaleOffset1'] = splits[1].shadowScaleOffset;
+        techniqueParameters['worldShadowProjection2'] = splits[2].worldShadowProjection;
+        techniqueParameters['viewShadowProjection2'] = splits[2].viewShadowProjection;
+        techniqueParameters['shadowScaleOffset2'] = splits[2].shadowScaleOffset;
+        techniqueParameters['worldShadowProjection3'] = splits[3].worldShadowProjection;
+        techniqueParameters['viewShadowProjection3'] = splits[3].viewShadowProjection;
+        techniqueParameters['shadowScaleOffset3'] = splits[3].shadowScaleOffset;
     }
 
-    private _updateSplit(split: CascadedShadowSplit, direction: any, cameraMatrix: any, extents: any, scene: Scene): boolean
+    private _updateSplit(split: CascadedShadowSplit,
+                         direction: any,
+                         cameraMatrix: any,
+                         extents: any,
+                         scene: Scene): void
     {
         var md = this.md;
 
@@ -636,8 +691,6 @@ class CascadedShadowMapping
         split.shadowDepthScale = -maxDepthReciprocal;
         split.shadowDepthOffset = -minLightDistance * maxDepthReciprocal;
 
-        var techniqueParameters = this.techniqueParameters;
-
         var worldShadowProjection = split.worldShadowProjection;
         worldShadowProjection[0] = shadowProjection[0];
         worldShadowProjection[1] = shadowProjection[4];
@@ -651,7 +704,6 @@ class CascadedShadowMapping
         worldShadowProjection[9] = -viewMatrix[5] * maxDepthReciprocal;
         worldShadowProjection[10] = -viewMatrix[8] * maxDepthReciprocal;
         worldShadowProjection[11] = (-viewMatrix[11] - minLightDistance) * maxDepthReciprocal;
-        techniqueParameters['worldShadowProjection'] = worldShadowProjection;
 
         var viewToShadowProjection = md.m43MulM44(cameraMatrix, shadowProjection, this.tempMatrix44);
         var viewToShadowMatrix = md.m43Mul(cameraMatrix, viewMatrix, this.tempMatrix43);
@@ -669,16 +721,12 @@ class CascadedShadowMapping
         viewShadowProjection[9] = -viewToShadowMatrix[5] * maxDepthReciprocal;
         viewShadowProjection[10] = -viewToShadowMatrix[8] * maxDepthReciprocal;
         viewShadowProjection[11] = (-viewToShadowMatrix[11] - minLightDistance) * maxDepthReciprocal;
-        techniqueParameters['viewShadowProjection'] = viewShadowProjection;
 
         var invSize = (1.0 / this.size);
         var shadowScaleOffset = split.shadowScaleOffset;
         shadowScaleOffset[1] = shadowScaleOffset[0] = 0.25;
         shadowScaleOffset[2] = (split.viewportX * invSize) + 0.25;
         shadowScaleOffset[3] = (split.viewportY * invSize) + 0.25;
-        techniqueParameters['shadowScaleOffset'] = shadowScaleOffset;
-
-        return (0 < occludersDrawArray.length);
     }
 
     private _sortNegative(a, b): number
