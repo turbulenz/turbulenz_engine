@@ -11,6 +11,7 @@ float4x4 shadowProjectionTranspose;
 float4 shadowDepth;
 
 
+float4 uvScaleOffset;
 float2 pixelOffset;
 
 sampler2D shadowMap = sampler_state
@@ -133,7 +134,7 @@ void vp_blur(in float4 INPosition : POSITION,
              out float2 OUTUV       : TEXCOORD0)
 {
     OUTPosition = INPosition;
-    OUTUV       = INUV;
+    OUTUV       = ((INUV * uvScaleOffset.xy) + uvScaleOffset.zw);
 }
 
 //

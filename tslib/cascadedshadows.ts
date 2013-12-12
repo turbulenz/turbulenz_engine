@@ -7,6 +7,9 @@
 
 class CascadedShadowSplit
 {
+    viewportX: number;
+    viewportY: number;
+
     camera: Camera;
 
     position: any; // v3
@@ -36,9 +39,15 @@ class CascadedShadowSplit
     occludersDrawArray: DrawParameters[];
     overlappingRenderables: Renderable[];
 
+    worldShadowProjection: any; // m34
+    viewShadowProjection: any; // m34
+    shadowScaleOffset: any; // v4
 
-    constructor(md)
+    constructor(md, x, y)
     {
+        this.viewportX = x;
+        this.viewportY = y;
+
         this.camera = Camera.create(md);
 
         this.position = md.v3BuildZero();
@@ -67,6 +76,10 @@ class CascadedShadowSplit
         this.occludersDrawArray = [];
         this.overlappingRenderables = [];
 
+        this.worldShadowProjection = md.m34BuildIdentity();
+        this.viewShadowProjection = md.m34BuildIdentity();
+        this.shadowScaleOffset = md.v4BuildZero();
+
         return this;
     }
 };
@@ -80,6 +93,7 @@ class CascadedShadowMapping
     md                  : MathDevice;
     clearColor          : any; // v4
     tempExtents         : any; // v6
+    tempMatrix44        : any; // m44
     tempMatrix43        : any; // m43
     tempV3Up            : any; // v3
     tempV3At            : any; // v3
@@ -95,6 +109,7 @@ class CascadedShadowMapping
     quadSemantics       : Semantics;
     quadVertexBuffer    : VertexBuffer;
 
+    uvScaleOffset       : any; // v4
     pixelOffsetH        : number[];
     pixelOffsetV        : number[];
 
@@ -137,6 +152,7 @@ class CascadedShadowMapping
         this.md = md;
         this.clearColor = md.v4Build(1, 1, 1, 1);
         this.tempExtents = new Float32Array(6);
+        this.tempMatrix44 = md.m44BuildIdentity();
         this.tempMatrix43 = md.m43BuildIdentity();
         this.tempV3Up = md.v3BuildZero();
         this.tempV3At = md.v3BuildZero();
@@ -146,7 +162,15 @@ class CascadedShadowMapping
         this.tempV3AxisY = md.v3BuildZero();
         this.tempV3AxisZ = md.v3BuildZero();
 
-        this.techniqueParameters = gd.createTechniqueParameters();
+        this.techniqueParameters = gd.createTechniqueParameters({
+            shadowSize: 0.0,
+            invShadowSize: 0.0,
+            shadowMapTexture: null,
+            worldShadowProjection: null,
+            viewShadowProjection: null,
+            viewShadowDepth: null,
+            shadowScaleOffset: null
+        });
 
         this.quadPrimitive = gd.PRIMITIVE_TRIANGLE_STRIP;
         this.quadSemantics = gd.createSemantics(['POSITION', 'TEXCOORD0']);
@@ -163,6 +187,7 @@ class CascadedShadowMapping
             ]
         });
 
+        this.uvScaleOffset = md.v4BuildZero();
         this.pixelOffsetH = [0, 0];
         this.pixelOffsetV = [0, 0];
 
@@ -173,10 +198,11 @@ class CascadedShadowMapping
         this.globalTechniqueParametersArray = [this.globalTechniqueParameters];
         this.shader = null;
 
-        this.splits = [new CascadedShadowSplit(md),
-                       new CascadedShadowSplit(md),
-                       new CascadedShadowSplit(md),
-                       new CascadedShadowSplit(md)];
+        var splitSize = (size >>> 1);
+        this.splits = [new CascadedShadowSplit(md, 0, 0),
+                       new CascadedShadowSplit(md, splitSize, 0),
+                       new CascadedShadowSplit(md, 0, splitSize),
+                       new CascadedShadowSplit(md, splitSize, splitSize)];
 
         this.updateBuffers(size);
 
@@ -271,6 +297,8 @@ class CascadedShadowMapping
             size = this.size;
         }
 
+        var splitSize = (size >>> 1);
+
         var gd = this.gd;
 
         this.destroyBuffers();
@@ -282,8 +310,8 @@ class CascadedShadowMapping
             });
 
         this.blurTexture = gd.createTexture({
-                width: size,
-                height: size,
+                width: splitSize,
+                height: splitSize,
                 format: "R5G6B5",
                 mipmaps: false,
                 renderable: true
@@ -313,6 +341,11 @@ class CascadedShadowMapping
                     });
                     if (this.renderTarget)
                     {
+                        var techniqueParameters = this.techniqueParameters;
+                        techniqueParameters['shadowSize'] = splitSize;
+                        techniqueParameters['invShadowSize'] = (1.0 / splitSize);
+                        techniqueParameters['shadowMapTexture'] = this.texture;
+
                         this.size = size;
                         return true;
                     }
@@ -342,7 +375,7 @@ class CascadedShadowMapping
         return this._updateSplit(this.splits[0], direction, camera.matrix, extents, scene);
     }
 
-    _updateSplit(split: CascadedShadowSplit, direction: any, cameraMatrix: any, extents: any, scene: Scene): boolean
+    private _updateSplit(split: CascadedShadowSplit, direction: any, cameraMatrix: any, extents: any, scene: Scene): boolean
     {
         var md = this.md;
 
@@ -605,28 +638,45 @@ class CascadedShadowMapping
 
         var techniqueParameters = this.techniqueParameters;
 
-        techniqueParameters['worldShadowProjection'] = md.m44Copy(shadowProjection,
-                                                                  techniqueParameters['worldShadowProjection']);
+        var worldShadowProjection = split.worldShadowProjection;
+        worldShadowProjection[0] = shadowProjection[0];
+        worldShadowProjection[1] = shadowProjection[4];
+        worldShadowProjection[2] = shadowProjection[8];
+        worldShadowProjection[3] = shadowProjection[12];
+        worldShadowProjection[4] = shadowProjection[1];
+        worldShadowProjection[5] = shadowProjection[5];
+        worldShadowProjection[6] = shadowProjection[9];
+        worldShadowProjection[7] = shadowProjection[13];
+        worldShadowProjection[8] = -viewMatrix[2] * maxDepthReciprocal;
+        worldShadowProjection[9] = -viewMatrix[5] * maxDepthReciprocal;
+        worldShadowProjection[10] = -viewMatrix[8] * maxDepthReciprocal;
+        worldShadowProjection[11] = (-viewMatrix[11] - minLightDistance) * maxDepthReciprocal;
+        techniqueParameters['worldShadowProjection'] = worldShadowProjection;
 
-        techniqueParameters['viewShadowProjection'] = md.m43MulM44(cameraMatrix,
-                                                                   shadowProjection,
-                                                                   techniqueParameters['viewShadowProjection']);
-
-        techniqueParameters['worldShadowDepth'] = md.v4Build(-viewMatrix[2] * maxDepthReciprocal,
-                                                             -viewMatrix[5] * maxDepthReciprocal,
-                                                             -viewMatrix[8] * maxDepthReciprocal,
-                                                             (-viewMatrix[11] - minLightDistance) * maxDepthReciprocal,
-                                                             techniqueParameters['worldShadowDepth']);
-
+        var viewToShadowProjection = md.m43MulM44(cameraMatrix, shadowProjection, this.tempMatrix44);
         var viewToShadowMatrix = md.m43Mul(cameraMatrix, viewMatrix, this.tempMatrix43);
-        techniqueParameters['viewShadowDepth'] = md.v4Build(-viewToShadowMatrix[2] * maxDepthReciprocal,
-                                                            -viewToShadowMatrix[5] * maxDepthReciprocal,
-                                                            -viewToShadowMatrix[8] * maxDepthReciprocal,
-                                                            (-viewToShadowMatrix[11] - minLightDistance) * maxDepthReciprocal,
-                                                            techniqueParameters['viewShadowDepth']);
-        techniqueParameters['shadowSize'] = shadowMapSize;
-        techniqueParameters['invShadowSize'] = (1.0 / shadowMapSize);
-        techniqueParameters['shadowMapTexture'] = this.texture;
+
+        var viewShadowProjection = split.viewShadowProjection;
+        viewShadowProjection[0] = viewToShadowProjection[0];
+        viewShadowProjection[1] = viewToShadowProjection[4];
+        viewShadowProjection[2] = viewToShadowProjection[8];
+        viewShadowProjection[3] = viewToShadowProjection[12];
+        viewShadowProjection[4] = viewToShadowProjection[1];
+        viewShadowProjection[5] = viewToShadowProjection[5];
+        viewShadowProjection[6] = viewToShadowProjection[9];
+        viewShadowProjection[7] = viewToShadowProjection[13];
+        viewShadowProjection[8] = -viewToShadowMatrix[2] * maxDepthReciprocal;
+        viewShadowProjection[9] = -viewToShadowMatrix[5] * maxDepthReciprocal;
+        viewShadowProjection[10] = -viewToShadowMatrix[8] * maxDepthReciprocal;
+        viewShadowProjection[11] = (-viewToShadowMatrix[11] - minLightDistance) * maxDepthReciprocal;
+        techniqueParameters['viewShadowProjection'] = viewShadowProjection;
+
+        var invSize = (1.0 / this.size);
+        var shadowScaleOffset = split.shadowScaleOffset;
+        shadowScaleOffset[1] = shadowScaleOffset[0] = 0.25;
+        shadowScaleOffset[2] = (split.viewportX * invSize) + 0.25;
+        shadowScaleOffset[3] = (split.viewportY * invSize) + 0.25;
+        techniqueParameters['shadowScaleOffset'] = shadowScaleOffset;
 
         return (0 < occludersDrawArray.length);
     }
@@ -634,46 +684,6 @@ class CascadedShadowMapping
     private _sortNegative(a, b): number
     {
         return (a.sortKey - b.sortKey);
-    }
-
-    drawShadowMap(): void
-    {
-        this._drawSplit(this.splits[0]);
-    }
-
-    _drawSplit(split: CascadedShadowSplit): void
-    {
-        if (split.needsRedraw)
-        {
-            split.needsRedraw = false;
-
-            var gd = this.gd;
-            var md = this.md;
-
-            if (!gd.beginRenderTarget(this.renderTarget))
-            {
-                return;
-            }
-
-            gd.clear(this.clearColor, 1.0, 0);
-
-            var splitCamera = split.camera;
-
-            var globalTechniqueParameters = this.globalTechniqueParameters;
-            globalTechniqueParameters['viewTranspose'] = md.m43Transpose(splitCamera.viewMatrix,
-                                                                         globalTechniqueParameters['viewTranspose']);
-            globalTechniqueParameters['shadowProjectionTranspose'] = md.m44Transpose(splitCamera.projectionMatrix,
-                                                                                     globalTechniqueParameters['shadowProjectionTranspose']);
-            globalTechniqueParameters['shadowDepth'] = md.v4Build(0,
-                                                                  0,
-                                                                  split.shadowDepthScale,
-                                                                  split.shadowDepthOffset,
-                                                                  globalTechniqueParameters['shadowDepth']);
-
-            gd.drawArray(split.occludersDrawArray, this.globalTechniqueParametersArray, 0);
-
-            gd.endRenderTarget();
-        }
     }
 
     private _filterOccluders(overlappingRenderables: any[],
@@ -846,6 +856,55 @@ class CascadedShadowMapping
         return numOccluders;
     }
 
+    drawShadowMap(): void
+    {
+        var globalTechniqueParametersArray = this.globalTechniqueParametersArray;
+        var globalTechniqueParameters = this.globalTechniqueParameters;
+        var renderTarget= this.renderTarget;
+        var clearColor = this.clearColor;
+        var gd = this.gd;
+        var md = this.md;
+
+        if (!gd.beginRenderTarget(renderTarget))
+        {
+            return;
+        }
+
+        var splitSize = (this.size >>> 1);
+        var splits = this.splits;
+        var numSplits = splits.length;
+        var n, split, splitCamera;
+        for (n = 0; n < numSplits; n += 1)
+        {
+            split = splits[n];
+            if (split.needsRedraw)
+            {
+                split.needsRedraw = false;
+
+                gd.setViewport(split.viewportX, split.viewportY, splitSize, splitSize);
+                gd.setScissor(split.viewportX, split.viewportY, splitSize, splitSize);
+
+                gd.clear(clearColor, 1.0, 0);
+
+                splitCamera = split.camera;
+
+                globalTechniqueParameters['viewTranspose'] = md.m43Transpose(splitCamera.viewMatrix,
+                                                                             globalTechniqueParameters['viewTranspose']);
+                globalTechniqueParameters['shadowProjectionTranspose'] = md.m44Transpose(splitCamera.projectionMatrix,
+                                                                                         globalTechniqueParameters['shadowProjectionTranspose']);
+                globalTechniqueParameters['shadowDepth'] = md.v4Build(0,
+                                                                      0,
+                                                                      split.shadowDepthScale,
+                                                                      split.shadowDepthOffset,
+                                                                      globalTechniqueParameters['shadowDepth']);
+
+                gd.drawArray(split.occludersDrawArray, globalTechniqueParametersArray, 0);
+            }
+        }
+
+        gd.endRenderTarget();
+    }
+
     blurShadowMap(): void
     {
         if (!this.blurEnabled)
@@ -862,12 +921,17 @@ class CascadedShadowMapping
 
         var quadPrimitive = this.quadPrimitive;
 
+        var uvScaleOffset = this.uvScaleOffset;
         var pixelOffsetH = this.pixelOffsetH;
         var pixelOffsetV = this.pixelOffsetV;
-        pixelOffsetV[1] = pixelOffsetH[0] = (1.0 / this.size);
 
-        var shadowMapBlurTexture = this.blurTexture;
-        var shadowMapBlurRenderTarget = this.blurRenderTarget;
+        var splitSize = (this.size >>> 1);
+        var invSize = (1.0 / this.size);
+        var uvScale = (splitSize - 4) * invSize;
+        pixelOffsetV[1] = pixelOffsetH[0] = invSize;
+
+        var blurTexture = this.blurTexture;
+        var blurRenderTarget = this.blurRenderTarget;
 
         var splits = this.splits;
         var numSplits = splits.length;
@@ -880,12 +944,18 @@ class CascadedShadowMapping
                 split.needsBlur = false;
 
                 // Horizontal
-                if (!gd.beginRenderTarget(shadowMapBlurRenderTarget))
+                if (!gd.beginRenderTarget(blurRenderTarget))
                 {
                     break;
                 }
 
+                // Avoid bluring the edges
+                uvScaleOffset[1] = uvScaleOffset[0] = uvScale;
+                uvScaleOffset[2] = (split.viewportX + 2) * invSize;
+                uvScaleOffset[3] = (split.viewportY + 2) * invSize;
+
                 shadowMappingBlurTechnique['shadowMap'] = this.texture;
+                shadowMappingBlurTechnique['uvScaleOffset'] = uvScaleOffset;
                 shadowMappingBlurTechnique['pixelOffset'] = pixelOffsetH;
                 gd.draw(quadPrimitive, 4);
 
@@ -897,7 +967,16 @@ class CascadedShadowMapping
                     break;
                 }
 
-                shadowMappingBlurTechnique['shadowMap'] = shadowMapBlurTexture;
+                gd.setViewport(split.viewportX, split.viewportY, splitSize, splitSize);
+                gd.setScissor(split.viewportX, split.viewportY, splitSize, splitSize);
+
+                uvScaleOffset[0] = 1.0;
+                uvScaleOffset[1] = 1.0;
+                uvScaleOffset[2] = 0.0;
+                uvScaleOffset[3] = 0.0;
+
+                shadowMappingBlurTechnique['shadowMap'] = blurTexture;
+                shadowMappingBlurTechnique['uvScaleOffset'] = uvScaleOffset;
                 shadowMappingBlurTechnique['pixelOffset'] = pixelOffsetV;
                 gd.draw(quadPrimitive, 4);
 
