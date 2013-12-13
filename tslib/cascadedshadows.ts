@@ -15,7 +15,8 @@ class CascadedShadowSplit
 
     center: any; // v3
     direction: any; // v3
-    halfExtent: number;
+    viewWindowX: number;
+    viewWindowY: number;
 
     minLightDistance: number;
     maxLightDistance: number;
@@ -55,7 +56,8 @@ class CascadedShadowSplit
 
         this.center = md.v3BuildZero();
         this.direction = md.v3BuildZero();
-        this.halfExtent = 0;
+        this.viewWindowX = 0;
+        this.viewWindowY = 0;
 
         this.minLightDistance = 0;
         this.maxLightDistance = 0;
@@ -102,6 +104,7 @@ class CascadedShadowMapping
     tempMatrix44        : any; // m44
     tempMatrix43        : any; // m43
     tempV3Direction     : any; // v3
+    tempV3Center        : any; // v3
     tempV3Up            : any; // v3
     tempV3At            : any; // v3
     tempV3Origin        : any; // v3
@@ -164,6 +167,7 @@ class CascadedShadowMapping
         this.tempMatrix44 = md.m44BuildIdentity();
         this.tempMatrix43 = md.m43BuildIdentity();
         this.tempV3Direction = md.v3BuildZero();
+        this.tempV3Center = md.v3BuildZero();
         this.tempV3Up = md.v3BuildZero();
         this.tempV3At = md.v3BuildZero();
         this.tempV3Origin = md.v3BuildZero();
@@ -382,9 +386,6 @@ class CascadedShadowMapping
 
     updateShadowMap(lightDirection: any, camera: Camera, scene: Scene, maxDistance: number): void
     {
-        var floor = Math.floor;
-        var ceil = Math.ceil;
-
         var md = this.md;
 
         var cameraMatrix = camera.matrix;
@@ -418,34 +419,17 @@ class CascadedShadowMapping
         var splits = this.splits;
         var numSplits = splits.length;
         var distance = camera.nearPlane;
-        var nearPoint = md.v3BuildZero();
-        var farPoint = md.v3BuildZero();
-        var center =  md.v3BuildZero();
         var n, split, splitEnd;
-        var fp, splitExtent;
+        var frustumPoints;
         for (n = 0; n < numSplits; n += 1)
         {
             split = splits[n];
 
             splitEnd = maxDistance * splitDistances[n];
 
-            fp = camera.getFrustumPoints(splitEnd, distance);
+            frustumPoints = camera.getFrustumPoints(splitEnd, distance);
 
-            nearPoint[0] = (fp[0][0] + fp[1][0] + fp[2][0] + fp[3][0]) / 4.0;
-            nearPoint[1] = (fp[0][1] + fp[1][1] + fp[2][1] + fp[3][1]) / 4.0;
-            nearPoint[2] = (fp[0][2] + fp[1][2] + fp[2][2] + fp[3][2]) / 4.0;
-
-            farPoint[0] = (fp[4][0] + fp[5][0] + fp[6][0] + fp[7][0]) / 4.0;
-            farPoint[1] = (fp[4][1] + fp[5][1] + fp[6][1] + fp[7][1]) / 4.0;
-            farPoint[2] = (fp[4][2] + fp[5][2] + fp[6][2] + fp[7][2]) / 4.0;
-
-            md.v3Sub(farPoint, nearPoint, center);
-            splitExtent = md.v3Length(center) / 2.0;
-
-            md.v3Add(farPoint, nearPoint, center);
-            md.v3ScalarMul(center, 0.5, center);
-
-            this._updateSplit(split, direction, xaxis, yaxis, zaxis, cameraMatrix, center, splitExtent, maxLightExtent, scene);
+            this._updateSplit(split, direction, xaxis, yaxis, zaxis, cameraMatrix, frustumPoints, maxLightExtent, scene);
 
             split.distance = splitEnd;
             distance = splitEnd;
@@ -562,12 +546,29 @@ class CascadedShadowMapping
                          yaxis: any,
                          zaxis: any,
                          cameraMatrix: any,
-                         center: any,
-                         splitExtent: number,
+                         frustumPoints: any[],
                          maxLightExtent: number,
                          scene: Scene): void
     {
         var md = this.md;
+
+        // Calculate center of split
+        var c0 = 0;
+        var c1 = 0;
+        var c2 = 0;
+        var n, p;
+        for (n = 0; n < 8; n += 1)
+        {
+            p = frustumPoints[n];
+            c0 += p[0];
+            c1 += p[1];
+            c2 += p[2];
+        }
+
+        var center = this.tempV3Center;
+        center[0] = c0 / 8.0;
+        center[1] = c1 / 8.0;
+        center[2] = c2 / 8.0;
 
         // Prepare camera to get split frustum planes
         var camera = split.camera;
@@ -578,20 +579,40 @@ class CascadedShadowMapping
 
         camera.updateViewMatrix();
 
+        // Find maximum split window apperture
         var viewMatrix = camera.viewMatrix;
-        var m0 = viewMatrix[0];
-        var m1 = viewMatrix[1];
-        var m3 = viewMatrix[3];
-        var m4 = viewMatrix[4];
-        var m6 = viewMatrix[6];
-        var m7 = viewMatrix[7];
+        var r0 = -viewMatrix[0];
+        var r1 = -viewMatrix[3];
+        var r2 = -viewMatrix[6];
+        var roffset = viewMatrix[9];
 
-        var lightViewWindowX = ((m0 < 0 ? -m0 : m0) * splitExtent + (m3 < 0 ? -m3 : m3) * splitExtent + (m6 < 0 ? -m6 : m6) * splitExtent);
-        var lightViewWindowY = ((m1 < 0 ? -m1 : m1) * splitExtent + (m4 < 0 ? -m4 : m4) * splitExtent + (m7 < 0 ? -m7 : m7) * splitExtent);
-        var lightDepth = (2.0 * maxLightExtent);
+        var u0 = -viewMatrix[1];
+        var u1 = -viewMatrix[4];
+        var u2 = -viewMatrix[7];
+        var uoffset = viewMatrix[10];
+
+        var lightViewWindowX = 0;
+        var lightViewWindowY = 0;
+
+        for (n = 0; n < 8; n += 1)
+        {
+            p = frustumPoints[n];
+            var dx = Math.abs((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]) - roffset);
+            var dy = Math.abs((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]) - uoffset);
+            if (lightViewWindowX < dx)
+            {
+                lightViewWindowX = dx;
+            }
+            if (lightViewWindowY < dy)
+            {
+                lightViewWindowY = dy;
+            }
+        }
 
         split.lightViewWindowX = lightViewWindowX;
         split.lightViewWindowY = lightViewWindowY;
+
+        var lightDepth = (2.0 * maxLightExtent);
         split.lightDepth = lightDepth;
 
         var distanceScale = (1.0 / 65536);
@@ -612,25 +633,39 @@ class CascadedShadowMapping
 
         var previousDirection = split.direction;
         var previousCenter = split.center;
-        var previousHalfExtent = split.halfExtent;
 
         var overlappingRenderables = split.overlappingRenderables;
 
         var staticNodesChangeCounter = scene.staticNodesChangeCounter;
 
-        var numOverlappingRenderables;
-        var numVisibleNodes;
+        var numOverlappingRenderables, numVisibleNodes;
         var node, renderables, numRenderables, renderable;
-        var n, i;
+        var i;
 
-        var extentsUpdated = false;
-        if (previousCenter[0] !== center[0] ||
+        var frustumUpdated = false;
+        if (previousDirection[0] !== direction[0] ||
+            previousDirection[1] !== direction[1] ||
+            previousDirection[2] !== direction[2] ||
+            previousCenter[0] !== center[0] ||
             previousCenter[1] !== center[1] ||
             previousCenter[2] !== center[2] ||
-            previousHalfExtent !== splitExtent ||
+            split.viewWindowX !== lightViewWindowX ||
+            split.viewWindowY !== lightViewWindowY ||
             split.staticNodesChangeCounter !== staticNodesChangeCounter)
         {
-            extentsUpdated = true;
+            previousDirection[0] = direction[0];
+            previousDirection[1] = direction[1];
+            previousDirection[2] = direction[2];
+
+            previousCenter[0] = center[0];
+            previousCenter[1] = center[1];
+            previousCenter[2] = center[2];
+
+            split.viewWindowX = lightViewWindowX;
+            split.viewWindowY = lightViewWindowY;
+            split.staticNodesChangeCounter = staticNodesChangeCounter;
+
+            frustumUpdated = true;
 
             overlappingRenderables.length = 0;
             numOverlappingRenderables = 0;
@@ -695,27 +730,13 @@ class CascadedShadowMapping
 
         overlappingRenderables.length = numOverlappingRenderables;
 
-
+        // Now prepare draw array
         var occludersDrawArray = split.occludersDrawArray;
         var numStaticOverlappingRenderables = split.numStaticOverlappingRenderables;
 
-        if (extentsUpdated ||
-            previousDirection[0] !== direction[0] ||
-            previousDirection[1] !== direction[1] ||
-            previousDirection[2] !== direction[2] ||
+        if (frustumUpdated ||
             numStaticOverlappingRenderables !== numOverlappingRenderables)
         {
-            previousDirection[0] = direction[0];
-            previousDirection[1] = direction[1];
-            previousDirection[2] = direction[2];
-
-            previousCenter[0] = center[0];
-            previousCenter[1] = center[1];
-            previousCenter[2] = center[2];
-
-            previousHalfExtent = splitExtent;
-
-            split.staticNodesChangeCounter = staticNodesChangeCounter;
             split.needsBlur = true;
 
             if (!split.needsRedraw)
@@ -1192,6 +1213,7 @@ class CascadedShadowMapping
         delete this.tempV3At;
         delete this.tempV3Up;
         delete this.tempV3Direction;
+        delete this.tempV3Center;
         delete this.tempMatrix43;
         delete this.clearColor;
 
