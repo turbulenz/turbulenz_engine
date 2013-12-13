@@ -13,10 +13,9 @@ class CascadedShadowSplit
 
     camera: Camera;
 
-    position: any; // v3
+    center: any; // v3
     direction: any; // v3
-    halfExtents: any; // v3
-    target: any; // v3
+    halfExtent: number;
 
     minLightDistance: number;
     maxLightDistance: number;
@@ -51,11 +50,12 @@ class CascadedShadowSplit
         this.distance = 0;
 
         this.camera = Camera.create(md);
+        this.camera.parallel = true;
+        this.camera.aspectRatio = 1;
 
-        this.position = md.v3BuildZero();
+        this.center = md.v3BuildZero();
         this.direction = md.v3BuildZero();
-        this.halfExtents = md.v3BuildZero();
-        this.target = md.v3BuildZero();
+        this.halfExtent = 0;
 
         this.minLightDistance = 0;
         this.maxLightDistance = 0;
@@ -101,9 +101,9 @@ class CascadedShadowMapping
     tempExtents         : any; // v6
     tempMatrix44        : any; // m44
     tempMatrix43        : any; // m43
+    tempV3Direction     : any; // v3
     tempV3Up            : any; // v3
     tempV3At            : any; // v3
-    tempV3Pos           : any; // v3
     tempV3Origin        : any; // v3
     tempV3AxisX         : any; // v3
     tempV3AxisY         : any; // v3
@@ -136,6 +136,8 @@ class CascadedShadowMapping
     depthBuffer         : RenderBuffer;
     blurRenderTarget    : RenderTarget;
 
+    frustumPlanes       : any[];
+    visibleNodes        : SceneNode[];
     occludersExtents    : any[];
 
     shadowMappingShader : Shader;
@@ -161,9 +163,9 @@ class CascadedShadowMapping
         this.tempExtents = new Float32Array(6);
         this.tempMatrix44 = md.m44BuildIdentity();
         this.tempMatrix43 = md.m43BuildIdentity();
+        this.tempV3Direction = md.v3BuildZero();
         this.tempV3Up = md.v3BuildZero();
         this.tempV3At = md.v3BuildZero();
-        this.tempV3Pos = md.v3BuildZero();
         this.tempV3Origin = md.v3BuildZero();
         this.tempV3AxisX = md.v3BuildZero();
         this.tempV3AxisY = md.v3BuildZero();
@@ -224,6 +226,8 @@ class CascadedShadowMapping
 
         this.updateBuffers(size);
 
+        this.frustumPlanes = [];
+        this.visibleNodes = [];
         this.occludersExtents = [];
 
         var precision = gd.maxSupported("FRAGMENT_SHADER_PRECISION");
@@ -376,7 +380,7 @@ class CascadedShadowMapping
         return false;
     }
 
-    updateShadowMap(direction: any, camera: Camera, scene: Scene, maxDistance: number): void
+    updateShadowMap(lightDirection: any, camera: Camera, scene: Scene, maxDistance: number): void
     {
         var floor = Math.floor;
         var ceil = Math.ceil;
@@ -387,6 +391,8 @@ class CascadedShadowMapping
         var axisY = md.m43Up(cameraMatrix, this.tempV3Up);
         var axisZ = md.m43At(cameraMatrix, this.tempV3At);
 
+        var direction = md.v3Normalize(lightDirection, this.tempV3Direction);
+
         var up;
         if (Math.abs(md.v3Dot(direction, axisZ)) < Math.abs(md.v3Dot(direction, axisY)))
         {
@@ -396,35 +402,50 @@ class CascadedShadowMapping
         {
             up = axisY;
         }
+        md.v3Normalize(up, up);
+
+        var zaxis = md.v3Neg(direction, this.tempV3AxisZ);
+        var xaxis = md.v3Cross(up, zaxis, this.tempV3AxisX);
+        md.v3Normalize(xaxis, xaxis);
+        var yaxis = md.v3Cross(zaxis, xaxis, this.tempV3AxisY);
 
         var sceneExtents = scene.extents;
-        var maxBackDistance = Math.max(((sceneExtents[3] - sceneExtents[0]) / 2.0),
-                                       ((sceneExtents[4] - sceneExtents[1]) / 2.0),
-                                       ((sceneExtents[5] - sceneExtents[2]) / 2.0));
-
-        var extents = this.tempExtents;
+        var maxLightExtent = Math.max(((sceneExtents[3] - sceneExtents[0]) / 2.0),
+                                      ((sceneExtents[4] - sceneExtents[1]) / 2.0),
+                                      ((sceneExtents[5] - sceneExtents[2]) / 2.0));
 
         var splitDistances = CascadedShadowMapping.splitDistances;
         var splits = this.splits;
         var numSplits = splits.length;
         var distance = camera.nearPlane;
+        var nearPoint = md.v3BuildZero();
+        var farPoint = md.v3BuildZero();
+        var center =  md.v3BuildZero();
         var n, split, splitEnd;
+        var fp, splitExtent;
         for (n = 0; n < numSplits; n += 1)
         {
             split = splits[n];
 
             splitEnd = maxDistance * splitDistances[n];
 
-            camera.getFrustumExtents(extents, splitEnd, distance);
+            fp = camera.getFrustumPoints(splitEnd, distance);
 
-            extents[0] = floor(extents[0]);
-            extents[1] = floor(extents[1]);
-            extents[2] = floor(extents[2]);
-            extents[3] = ceil(extents[3]);
-            extents[4] = ceil(extents[4]);
-            extents[5] = ceil(extents[5]);
+            nearPoint[0] = (fp[0][0] + fp[1][0] + fp[2][0] + fp[3][0]) / 4.0;
+            nearPoint[1] = (fp[0][1] + fp[1][1] + fp[2][1] + fp[3][1]) / 4.0;
+            nearPoint[2] = (fp[0][2] + fp[1][2] + fp[2][2] + fp[3][2]) / 4.0;
 
-            this._updateSplit(split, direction, up, cameraMatrix, extents, maxBackDistance, scene);
+            farPoint[0] = (fp[4][0] + fp[5][0] + fp[6][0] + fp[7][0]) / 4.0;
+            farPoint[1] = (fp[4][1] + fp[5][1] + fp[6][1] + fp[7][1]) / 4.0;
+            farPoint[2] = (fp[4][2] + fp[5][2] + fp[6][2] + fp[7][2]) / 4.0;
+
+            md.v3Sub(farPoint, nearPoint, center);
+            splitExtent = md.v3Length(center) / 2.0;
+
+            md.v3Add(farPoint, nearPoint, center);
+            md.v3ScalarMul(center, 0.5, center);
+
+            this._updateSplit(split, direction, xaxis, yaxis, zaxis, cameraMatrix, center, splitExtent, maxLightExtent, scene);
 
             split.distance = splitEnd;
             distance = splitEnd;
@@ -450,44 +471,163 @@ class CascadedShadowMapping
         techniqueParameters['shadowScaleOffset3'] = splits[3].shadowScaleOffset;
     }
 
+    private _planeNormalize(a, b, c, d, dst)
+    {
+        var res = dst;
+        if (!res)
+        {
+            res = new Float32Array(4);
+        }
+
+        var lsq = ((a * a) + (b * b) + (c * c));
+        if (lsq > 0.0)
+        {
+            var lr = 1.0 / Math.sqrt(lsq);
+            res[0] = (a * lr);
+            res[1] = (b * lr);
+            res[2] = (c * lr);
+            res[3] = (d * lr);
+        }
+        else
+        {
+            res[0] = 0;
+            res[1] = 0;
+            res[2] = 0;
+            res[3] = 0;
+        }
+
+        return res;
+    }
+
+    private _extractFrustumPlanes(camera: Camera) : any[]
+    {
+        var planeNormalize = this._planeNormalize;
+        var m = camera.viewProjectionMatrix;
+        var m0 = m[0];
+        var m1 = m[1];
+        var m2 = m[2];
+        var m3 = m[3];
+        var m4 = m[4];
+        var m5 = m[5];
+        var m6 = m[6];
+        var m7 = m[7];
+        var m8 = m[8];
+        var m9 = m[9];
+        var m10 = m[10];
+        var m11 = m[11];
+        var m12 = m[12];
+        var m13 = m[13];
+        var m14 = m[14];
+        var m15 = m[15];
+        var planes = this.frustumPlanes;
+
+        // Negate 'd' here to avoid doing it on the isVisible functions
+        planes[0] = planeNormalize((m3 + m0), (m7 + m4), (m11 + m8), -(m15 + m12), planes[0]); // left
+        planes[1] = planeNormalize((m3 - m0), (m7 - m4), (m11 - m8), -(m15 - m12), planes[1]); // right
+        planes[2] = planeNormalize((m3 - m1), (m7 - m5), (m11 - m9), -(m15 - m13), planes[2]); // top
+        planes[3] = planeNormalize((m3 + m1), (m7 + m5), (m11 + m9), -(m15 + m13), planes[3]); // bottom
+
+        return planes;
+    }
+
+    private _isInsidePlanesAABB(extents, planes) : boolean
+    {
+        var n0 = extents[0];
+        var n1 = extents[1];
+        var n2 = extents[2];
+        var p0 = extents[3];
+        var p1 = extents[4];
+        var p2 = extents[5];
+        var numPlanes = planes.length;
+        var n = 0;
+        do
+        {
+            var plane = planes[n];
+            var d0 = plane[0];
+            var d1 = plane[1];
+            var d2 = plane[2];
+            if ((d0 * (d0 < 0 ? n0 : p0) + d1 * (d1 < 0 ? n1 : p1) + d2 * (d2 < 0 ? n2 : p2)) < plane[3])
+            {
+                return false;
+            }
+            n += 1;
+        }
+        while (n < numPlanes);
+        return true;
+    }
+
     private _updateSplit(split: CascadedShadowSplit,
                          direction: any,
-                         up: any,
+                         xaxis: any,
+                         yaxis: any,
+                         zaxis: any,
                          cameraMatrix: any,
-                         extents: any,
-                         maxBackDistance: number,
+                         center: any,
+                         splitExtent: number,
+                         maxLightExtent: number,
                          scene: Scene): void
     {
         var md = this.md;
 
-        var position = this.tempV3Pos;
-        position[0] = ((extents[0] + extents[3]) / 2.0);
-        position[1] = ((extents[1] + extents[4]) / 2.0);
-        position[2] = ((extents[2] + extents[5]) / 2.0);
+        // Prepare camera to get split frustum planes
+        var camera = split.camera;
 
-        var halfExtents0 = ((extents[3] - extents[0]) / 2.0);
-        var halfExtents1 = ((extents[4] - extents[1]) / 2.0);
-        var halfExtents2 = ((extents[5] - extents[2]) / 2.0);
+        var origin = md.v3AddScalarMul(center, direction, -maxLightExtent, this.tempV3Origin);
+
+        camera.matrix = md.m43Build(xaxis, yaxis, zaxis, origin, camera.matrix);
+
+        camera.updateViewMatrix();
+
+        var viewMatrix = camera.viewMatrix;
+        var m0 = viewMatrix[0];
+        var m1 = viewMatrix[1];
+        var m3 = viewMatrix[3];
+        var m4 = viewMatrix[4];
+        var m6 = viewMatrix[6];
+        var m7 = viewMatrix[7];
+
+        var lightViewWindowX = ((m0 < 0 ? -m0 : m0) * splitExtent + (m3 < 0 ? -m3 : m3) * splitExtent + (m6 < 0 ? -m6 : m6) * splitExtent);
+        var lightViewWindowY = ((m1 < 0 ? -m1 : m1) * splitExtent + (m4 < 0 ? -m4 : m4) * splitExtent + (m7 < 0 ? -m7 : m7) * splitExtent);
+        var lightDepth = (2.0 * maxLightExtent);
+
+        split.lightViewWindowX = lightViewWindowX;
+        split.lightViewWindowY = lightViewWindowY;
+        split.lightDepth = lightDepth;
+
+        var distanceScale = (1.0 / 65536);
+        camera.nearPlane = (lightDepth * distanceScale);
+        camera.farPlane  = (lightDepth + distanceScale);
+        camera.recipViewWindowX = 1.0 / lightViewWindowX;
+        camera.recipViewWindowY = 1.0 / lightViewWindowY;
+        camera.viewOffsetX = 0;
+        camera.viewOffsetY = 0;
+
+        camera.updateProjectionMatrix();
+        camera.updateViewProjectionMatrix();
+
+        var frustumPlanes = this._extractFrustumPlanes(camera);
+
+        var _isInsidePlanesAABB = this._isInsidePlanesAABB;
+        var visibleNodes = this.visibleNodes;
 
         var previousDirection = split.direction;
-        var previousPosition = split.position;
-        var previousHalfExtents = split.halfExtents;
+        var previousCenter = split.center;
+        var previousHalfExtent = split.halfExtent;
 
         var overlappingRenderables = split.overlappingRenderables;
 
         var staticNodesChangeCounter = scene.staticNodesChangeCounter;
 
-        var numOverlapQueryRenderables, numOverlappingRenderables;
-        var renderable;
-        var n;
+        var numOverlappingRenderables;
+        var numVisibleNodes;
+        var node, renderables, numRenderables, renderable;
+        var n, i;
 
         var extentsUpdated = false;
-        if (previousPosition[0] !== position[0] ||
-            previousPosition[1] !== position[1] ||
-            previousPosition[2] !== position[2] ||
-            previousHalfExtents[0] !== halfExtents0 ||
-            previousHalfExtents[1] !== halfExtents1 ||
-            previousHalfExtents[2] !== halfExtents2 ||
+        if (previousCenter[0] !== center[0] ||
+            previousCenter[1] !== center[1] ||
+            previousCenter[2] !== center[2] ||
+            previousHalfExtent !== splitExtent ||
             split.staticNodesChangeCounter !== staticNodesChangeCounter)
         {
             extentsUpdated = true;
@@ -495,19 +635,27 @@ class CascadedShadowMapping
             overlappingRenderables.length = 0;
             numOverlappingRenderables = 0;
 
-            scene.findStaticOverlappingRenderables(extents, extents, overlappingRenderables);
-            numOverlapQueryRenderables = overlappingRenderables.length;
-            for (n = 0; n < numOverlapQueryRenderables; n += 1)
+            numVisibleNodes = scene.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, 0);
+
+            for (n = 0; n < numVisibleNodes; n += 1)
             {
-                renderable = overlappingRenderables[n];
-
-                if (renderable.shadowTechniqueParameters)
+                node = visibleNodes[n];
+                renderables = node.renderables;
+                if (renderables)
                 {
-                    overlappingRenderables[numOverlappingRenderables] = renderable;
-                    numOverlappingRenderables += 1;
-
-                    // Make sure the extents are calculated
-                    renderable.getWorldExtents();
+                    numRenderables = renderables.length;
+                    for (i = 0; i < numRenderables; i += 1)
+                    {
+                        renderable = renderables[i];
+                        if (renderable.shadowTechniqueParameters)
+                        {
+                            if (_isInsidePlanesAABB(renderable.getWorldExtents(), frustumPlanes))
+                            {
+                                overlappingRenderables[numOverlappingRenderables] = renderable;
+                                numOverlappingRenderables += 1;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -520,66 +668,35 @@ class CascadedShadowMapping
 
         overlappingRenderables.length = numOverlappingRenderables;
 
-        // Query the dynamic renderables from the scene and filter out non lit geometries
-        scene.findDynamicOverlappingRenderables(extents, extents, overlappingRenderables);
-        numOverlapQueryRenderables = overlappingRenderables.length;
-        for (n = numOverlappingRenderables; n < numOverlapQueryRenderables; n += 1)
-        {
-            renderable = overlappingRenderables[n];
+        // Query the dynamic renderables
+        numVisibleNodes = scene.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, 0);
 
-            if (renderable.shadowTechniqueParameters)
+        for (n = 0; n < numVisibleNodes; n += 1)
+        {
+            node = visibleNodes[n];
+            renderables = node.renderables;
+            if (renderables)
             {
-                overlappingRenderables[numOverlappingRenderables] = renderable;
-                numOverlappingRenderables += 1;
+                numRenderables = renderables.length;
+                for (i = 0; i < numRenderables; i += 1)
+                {
+                    renderable = renderables[i];
+                    if (renderable.shadowTechniqueParameters)
+                    {
+                        if (_isInsidePlanesAABB(renderable.getWorldExtents(), frustumPlanes))
+                        {
+                            overlappingRenderables[numOverlappingRenderables] = renderable;
+                            numOverlappingRenderables += 1;
+                        }
+                    }
+                }
             }
         }
 
         overlappingRenderables.length = numOverlappingRenderables;
 
+
         var occludersDrawArray = split.occludersDrawArray;
-
-        var camera = split.camera;
-        camera.parallel = true;
-
-        var target = split.target;
-
-        var d0 = direction[0];
-        var d1 = direction[1];
-        var d2 = direction[2];
-
-        var p0 = halfExtents0;
-        var p1 = halfExtents1;
-        var p2 = halfExtents2;
-
-        var n0 = -p0;
-        var n1 = -p1;
-        var n2 = -p2;
-
-        var maxDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)));
-
-        md.v3AddScalarMul(position, direction, maxDistance, target);
-        var origin = md.v3AddScalarMul(position, direction, -maxBackDistance, this.tempV3Origin);
-
-        this.lookAt(camera, target, up, origin);
-        camera.updateViewMatrix();
-        var viewMatrix = camera.viewMatrix;
-
-        var lightDepth, lightViewWindowX, lightViewWindowY;
-
-        var m0 = viewMatrix[0];
-        var m1 = viewMatrix[1];
-        var m3 = viewMatrix[3];
-        var m4 = viewMatrix[4];
-        var m6 = viewMatrix[6];
-        var m7 = viewMatrix[7];
-        lightViewWindowX = ((m0 < 0 ? -m0 : m0) * halfExtents0 + (m3 < 0 ? -m3 : m3) * halfExtents1 + (m6 < 0 ? -m6 : m6) * halfExtents2);
-        lightViewWindowY = ((m1 < 0 ? -m1 : m1) * halfExtents0 + (m4 < 0 ? -m4 : m4) * halfExtents1 + (m7 < 0 ? -m7 : m7) * halfExtents2);
-        lightDepth = md.v3Length(md.v3Sub(target, origin));
-
-        split.lightViewWindowX = lightViewWindowX;
-        split.lightViewWindowY = lightViewWindowY;
-        split.lightDepth = lightDepth;
-
         var numStaticOverlappingRenderables = split.numStaticOverlappingRenderables;
 
         if (extentsUpdated ||
@@ -592,13 +709,11 @@ class CascadedShadowMapping
             previousDirection[1] = direction[1];
             previousDirection[2] = direction[2];
 
-            previousPosition[0] = position[0];
-            previousPosition[1] = position[1];
-            previousPosition[2] = position[2];
+            previousCenter[0] = center[0];
+            previousCenter[1] = center[1];
+            previousCenter[2] = center[2];
 
-            previousHalfExtents[0] = halfExtents0;
-            previousHalfExtents[1] = halfExtents1;
-            previousHalfExtents[2] = halfExtents2;
+            previousHalfExtent = splitExtent;
 
             split.staticNodesChangeCounter = staticNodesChangeCounter;
             split.needsBlur = true;
@@ -634,7 +749,6 @@ class CascadedShadowMapping
         // Prepare rendering data
         var shadowMapSize = this.size;
 
-        var distanceScale = (1.0 / 65536);
         var minLightDistance = (split.minLightDistance - distanceScale); // Need padding to avoid culling near objects
         var maxLightDistance = (split.maxLightDistance + distanceScale); // Need padding to avoid encoding singularity at far plane
 
@@ -680,7 +794,6 @@ class CascadedShadowMapping
             }
         }
 
-        camera.aspectRatio = 1;
         camera.nearPlane = (lightDepth * distanceScale);
         camera.farPlane  = (lightDepth + distanceScale);
         camera.recipViewWindowX = 1.0 / lightViewWindowX;
@@ -1064,17 +1177,6 @@ class CascadedShadowMapping
         }
     }
 
-    lookAt(camera, lookAt, up, eyePosition): void
-    {
-        var md = this.md;
-        var zaxis = md.v3Sub(eyePosition, lookAt, this.tempV3AxisZ);
-        md.v3Normalize(zaxis, zaxis);
-        var xaxis = md.v3Cross(md.v3Normalize(up, up), zaxis, this.tempV3AxisX);
-        md.v3Normalize(xaxis, xaxis);
-        var yaxis = md.v3Cross(zaxis, xaxis, this.tempV3AxisY);
-        camera.matrix = md.m43Build(xaxis, yaxis, zaxis, eyePosition, camera.matrix);
-    }
-
     destroy(): void
     {
         delete this.shader;
@@ -1087,9 +1189,9 @@ class CascadedShadowMapping
         delete this.tempV3AxisZ;
         delete this.tempV3AxisY;
         delete this.tempV3AxisX;
-        delete this.tempV3Pos;
         delete this.tempV3At;
         delete this.tempV3Up;
+        delete this.tempV3Direction;
         delete this.tempMatrix43;
         delete this.clearColor;
 
