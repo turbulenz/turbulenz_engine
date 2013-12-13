@@ -381,6 +381,27 @@ class CascadedShadowMapping
         var floor = Math.floor;
         var ceil = Math.ceil;
 
+        var md = this.md;
+
+        var cameraMatrix = camera.matrix;
+        var axisY = md.m43Up(cameraMatrix, this.tempV3Up);
+        var axisZ = md.m43At(cameraMatrix, this.tempV3At);
+
+        var up;
+        if (Math.abs(md.v3Dot(direction, axisZ)) < Math.abs(md.v3Dot(direction, axisY)))
+        {
+            up = axisZ;
+        }
+        else
+        {
+            up = axisY;
+        }
+
+        var sceneExtents = scene.extents;
+        var maxBackDistance = Math.max(((sceneExtents[3] - sceneExtents[0]) / 2.0),
+                                       ((sceneExtents[4] - sceneExtents[1]) / 2.0),
+                                       ((sceneExtents[5] - sceneExtents[2]) / 2.0));
+
         var extents = this.tempExtents;
 
         var splitDistances = CascadedShadowMapping.splitDistances;
@@ -394,7 +415,7 @@ class CascadedShadowMapping
 
             splitEnd = maxDistance * splitDistances[n];
 
-            camera.getFrustumExtents(extents, distance, splitEnd);
+            camera.getFrustumExtents(extents, splitEnd, distance);
 
             extents[0] = floor(extents[0]);
             extents[1] = floor(extents[1]);
@@ -403,7 +424,7 @@ class CascadedShadowMapping
             extents[4] = ceil(extents[4]);
             extents[5] = ceil(extents[5]);
 
-            this._updateSplit(split, direction, camera.matrix, extents, scene);
+            this._updateSplit(split, direction, up, cameraMatrix, extents, maxBackDistance, scene);
 
             split.distance = splitEnd;
             distance = splitEnd;
@@ -431,8 +452,10 @@ class CascadedShadowMapping
 
     private _updateSplit(split: CascadedShadowSplit,
                          direction: any,
+                         up: any,
                          cameraMatrix: any,
                          extents: any,
+                         maxBackDistance: number,
                          scene: Scene): void
     {
         var md = this.md;
@@ -520,10 +543,6 @@ class CascadedShadowMapping
 
         var target = split.target;
 
-        var axisY = md.v3BuildYAxis(this.tempV3Up);
-        var axisZ = md.v3BuildZAxis(this.tempV3At);
-        var abs = Math.abs;
-
         var d0 = direction[0];
         var d1 = direction[1];
         var d2 = direction[2];
@@ -537,20 +556,9 @@ class CascadedShadowMapping
         var n2 = -p2;
 
         var maxDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)));
-        var minDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)));
 
         md.v3AddScalarMul(position, direction, maxDistance, target);
-        var origin = md.v3AddScalarMul(position, direction, minDistance, this.tempV3Origin);
-
-        var up;
-        if (abs(md.v3Dot(direction, axisZ)) < abs(md.v3Dot(direction, axisY)))
-        {
-            up = axisZ;
-        }
-        else
-        {
-            up = axisY;
-        }
+        var origin = md.v3AddScalarMul(position, direction, -maxBackDistance, this.tempV3Origin);
 
         this.lookAt(camera, target, up, origin);
         camera.updateViewMatrix();
@@ -624,7 +632,6 @@ class CascadedShadowMapping
         }
 
         // Prepare rendering data
-        var maxExtentSize = Math.max(halfExtents0, halfExtents1, halfExtents2);
         var shadowMapSize = this.size;
 
         var distanceScale = (1.0 / 65536);
