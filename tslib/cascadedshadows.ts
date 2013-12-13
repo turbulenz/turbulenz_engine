@@ -50,9 +50,12 @@ class CascadedShadowSplit
         this.viewportY = y;
         this.distance = 0;
 
-        this.camera = Camera.create(md);
-        this.camera.parallel = true;
-        this.camera.aspectRatio = 1;
+        var camera = Camera.create(md);
+        camera.parallel = true;
+        camera.aspectRatio = 1;
+        camera.viewOffsetX = 0;
+        camera.viewOffsetY = 0;
+        this.camera = camera;
 
         this.center = md.v3BuildZero();
         this.direction = md.v3BuildZero();
@@ -620,8 +623,6 @@ class CascadedShadowMapping
         camera.farPlane  = (lightDepth + distanceScale);
         camera.recipViewWindowX = 1.0 / lightViewWindowX;
         camera.recipViewWindowY = 1.0 / lightViewWindowY;
-        camera.viewOffsetX = 0;
-        camera.viewOffsetY = 0;
 
         camera.updateProjectionMatrix();
         camera.updateViewProjectionMatrix();
@@ -773,17 +774,13 @@ class CascadedShadowMapping
         var minLightDistance = (split.minLightDistance - distanceScale); // Need padding to avoid culling near objects
         var maxLightDistance = (split.maxLightDistance + distanceScale); // Need padding to avoid encoding singularity at far plane
 
-        var lightViewOffsetX = 0;
-        var lightViewOffsetY = 0;
-
         if (0 < minLightDistance)
         {
-            var borderPadding = (3 / shadowMapSize);
+            var borderPadding = (2 / shadowMapSize);
             var minLightDistanceX = split.minLightDistanceX;
             var maxLightDistanceX = split.maxLightDistanceX;
             var minLightDistanceY = split.minLightDistanceY;
             var maxLightDistanceY = split.maxLightDistanceY;
-            var minimalViewWindowX, minimalViewWindowY;
 
             if (minLightDistanceX < -lightViewWindowX)
             {
@@ -801,26 +798,46 @@ class CascadedShadowMapping
             {
                 maxLightDistanceY = lightViewWindowY;
             }
-            minimalViewWindowX = Math.max(Math.abs(maxLightDistanceX), Math.abs(minLightDistanceX));
-            minimalViewWindowX += 2 * borderPadding * minimalViewWindowX;
-            minimalViewWindowY = Math.max(Math.abs(maxLightDistanceY), Math.abs(minLightDistanceY));
-            minimalViewWindowY += 2 * borderPadding * minimalViewWindowY;
+
+            var minimalViewWindowX, minimalViewWindowY;
+            if (maxLightDistanceX !== -minLightDistanceX ||
+                maxLightDistanceY !== -minLightDistanceY)
+            {
+                // we can adjust the origin
+                var dX = (minLightDistanceX + maxLightDistanceX) / 2.0;
+                var dY = (minLightDistanceY + maxLightDistanceY) / 2.0;
+
+                origin[0] -= ((xaxis[0] * dX) + (yaxis[0] * dY));
+                origin[1] -= ((xaxis[1] * dX) + (yaxis[1] * dY));
+                origin[2] -= ((xaxis[2] * dX) + (yaxis[2] * dY));
+
+                camera.matrix = md.m43Build(xaxis, yaxis, zaxis, origin, camera.matrix);
+                camera.updateViewMatrix();
+
+                minimalViewWindowX = (maxLightDistanceX - minLightDistanceX) / 2.0;
+                minimalViewWindowY = (maxLightDistanceY - minLightDistanceY) / 2.0;
+            }
+            else
+            {
+                minimalViewWindowX = Math.max(Math.abs(maxLightDistanceX), Math.abs(minLightDistanceX));
+                minimalViewWindowY = Math.max(Math.abs(maxLightDistanceY), Math.abs(minLightDistanceY));
+            }
+
+            minimalViewWindowX += borderPadding * minimalViewWindowX;
             if (lightViewWindowX > minimalViewWindowX)
             {
                 lightViewWindowX = minimalViewWindowX;
             }
+
+            minimalViewWindowY += borderPadding * minimalViewWindowY;
             if (lightViewWindowY > minimalViewWindowY)
             {
                 lightViewWindowY = minimalViewWindowY;
             }
         }
 
-        camera.nearPlane = (lightDepth * distanceScale);
-        camera.farPlane  = (lightDepth + distanceScale);
         camera.recipViewWindowX = 1.0 / lightViewWindowX;
         camera.recipViewWindowY = 1.0 / lightViewWindowY;
-        camera.viewOffsetX = lightViewOffsetX;
-        camera.viewOffsetY = lightViewOffsetY;
 
         if (minLightDistance > camera.nearPlane)
         {
