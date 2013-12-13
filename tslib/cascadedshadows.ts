@@ -128,6 +128,7 @@ class CascadedShadowMapping
     splits              : CascadedShadowSplit[];
 
     size                : number;
+    numSplitsToRedraw   : number;
 
     texture             : Texture;
     renderTarget        : RenderTarget;
@@ -218,6 +219,8 @@ class CascadedShadowMapping
                        new CascadedShadowSplit(md, splitSize, 0),
                        new CascadedShadowSplit(md, 0, splitSize),
                        new CascadedShadowSplit(md, splitSize, splitSize)];
+
+        this.numSplitsToRedraw = 0;
 
         this.updateBuffers(size);
 
@@ -444,7 +447,7 @@ class CascadedShadowMapping
         var halfExtents2 = ((extents[5] - extents[2]) / 2.0);
 
         var previousDirection = split.direction;
-        var previousPosition = split.direction;
+        var previousPosition = split.position;
         var previousHalfExtents = split.halfExtents;
 
         var overlappingRenderables = split.overlappingRenderables;
@@ -590,8 +593,13 @@ class CascadedShadowMapping
             previousHalfExtents[2] = halfExtents2;
 
             split.staticNodesChangeCounter = staticNodesChangeCounter;
-            split.needsRedraw = true;
             split.needsBlur = true;
+
+            if (!split.needsRedraw)
+            {
+                split.needsRedraw = true;
+                this.numSplitsToRedraw += 1;
+            }
 
             var occludersExtents = this.occludersExtents;
             var numOccluders = this._filterOccluders(overlappingRenderables,
@@ -906,6 +914,11 @@ class CascadedShadowMapping
 
     drawShadowMap(): void
     {
+        if (this.numSplitsToRedraw === 0)
+        {
+            return;
+        }
+
         var globalTechniqueParametersArray = this.globalTechniqueParametersArray;
         var globalTechniqueParameters = this.globalTechniqueParameters;
         var renderTarget= this.renderTarget;
@@ -913,14 +926,20 @@ class CascadedShadowMapping
         var gd = this.gd;
         var md = this.md;
 
+        var splitSize = (this.size >>> 1);
+        var splits = this.splits;
+        var numSplits = splits.length;
+
         if (!gd.beginRenderTarget(renderTarget))
         {
             return;
         }
 
-        var splitSize = (this.size >>> 1);
-        var splits = this.splits;
-        var numSplits = splits.length;
+        if (this.numSplitsToRedraw === numSplits)
+        {
+            gd.clear(clearColor, 1.0, 0);
+        }
+
         var n, split, splitCamera;
         for (n = 0; n < numSplits; n += 1)
         {
@@ -932,7 +951,10 @@ class CascadedShadowMapping
                 gd.setViewport(split.viewportX, split.viewportY, splitSize, splitSize);
                 gd.setScissor(split.viewportX, split.viewportY, splitSize, splitSize);
 
-                gd.clear(clearColor, 1.0, 0);
+                if (this.numSplitsToRedraw !== numSplits)
+                {
+                    gd.clear(clearColor, 1.0, 0);
+                }
 
                 splitCamera = split.camera;
 
@@ -951,6 +973,8 @@ class CascadedShadowMapping
         }
 
         gd.endRenderTarget();
+
+        this.numSplitsToRedraw = 0;
     }
 
     blurShadowMap(): void
