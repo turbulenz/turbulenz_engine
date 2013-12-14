@@ -414,9 +414,11 @@ class CascadedShadowMapping
         var yaxis = md.v3Cross(zaxis, xaxis, this.tempV3AxisY);
 
         var sceneExtents = scene.extents;
-        var maxLightExtent = Math.max(((sceneExtents[3] - sceneExtents[0]) / 2.0),
-                                      ((sceneExtents[4] - sceneExtents[1]) / 2.0),
-                                      ((sceneExtents[5] - sceneExtents[2]) / 2.0));
+        var maxLightExtent = Math.max(camera.farPlane,
+                                      md.v3Length(md.v3Build(Math.max((cameraMatrix[9] - sceneExtents[0]), (sceneExtents[3] - cameraMatrix[9])),
+                                                             Math.max((cameraMatrix[10] - sceneExtents[1]), (sceneExtents[4] - cameraMatrix[10])),
+                                                             Math.max((cameraMatrix[11] - sceneExtents[2]), (sceneExtents[5] - cameraMatrix[11])),
+                                                             this.tempV3Center)));
 
         var splitDistances = CascadedShadowMapping.splitDistances;
         var splits = this.splits;
@@ -780,66 +782,65 @@ class CascadedShadowMapping
         var minLightDistance = (split.minLightDistance - distanceScale); // Need padding to avoid culling near objects
         var maxLightDistance = (split.maxLightDistance + distanceScale); // Need padding to avoid encoding singularity at far plane
 
-        if (0 < minLightDistance)
+        debug.assert(0 < minLightDistance);
+
+        var borderPadding = (2 / shadowMapSize);
+        var minLightDistanceX = split.minLightDistanceX;
+        var maxLightDistanceX = split.maxLightDistanceX;
+        var minLightDistanceY = split.minLightDistanceY;
+        var maxLightDistanceY = split.maxLightDistanceY;
+
+        if (minLightDistanceX < -lightViewWindowX)
         {
-            var borderPadding = (2 / shadowMapSize);
-            var minLightDistanceX = split.minLightDistanceX;
-            var maxLightDistanceX = split.maxLightDistanceX;
-            var minLightDistanceY = split.minLightDistanceY;
-            var maxLightDistanceY = split.maxLightDistanceY;
+            minLightDistanceX = -lightViewWindowX;
+        }
+        if (maxLightDistanceX > lightViewWindowX)
+        {
+            maxLightDistanceX = lightViewWindowX;
+        }
+        if (minLightDistanceY < -lightViewWindowY)
+        {
+            minLightDistanceY = -lightViewWindowY;
+        }
+        if (maxLightDistanceY > lightViewWindowY)
+        {
+            maxLightDistanceY = lightViewWindowY;
+        }
 
-            if (minLightDistanceX < -lightViewWindowX)
-            {
-                minLightDistanceX = -lightViewWindowX;
-            }
-            if (maxLightDistanceX > lightViewWindowX)
-            {
-                maxLightDistanceX = lightViewWindowX;
-            }
-            if (minLightDistanceY < -lightViewWindowY)
-            {
-                minLightDistanceY = -lightViewWindowY;
-            }
-            if (maxLightDistanceY > lightViewWindowY)
-            {
-                maxLightDistanceY = lightViewWindowY;
-            }
+        var minimalViewWindowX, minimalViewWindowY;
+        if (maxLightDistanceX !== -minLightDistanceX ||
+            maxLightDistanceY !== -minLightDistanceY)
+        {
+            // we can adjust the origin
+            var dX = (minLightDistanceX + maxLightDistanceX) / 2.0;
+            var dY = (minLightDistanceY + maxLightDistanceY) / 2.0;
 
-            var minimalViewWindowX, minimalViewWindowY;
-            if (maxLightDistanceX !== -minLightDistanceX ||
-                maxLightDistanceY !== -minLightDistanceY)
-            {
-                // we can adjust the origin
-                var dX = (minLightDistanceX + maxLightDistanceX) / 2.0;
-                var dY = (minLightDistanceY + maxLightDistanceY) / 2.0;
+            origin[0] -= ((xaxis[0] * dX) + (yaxis[0] * dY));
+            origin[1] -= ((xaxis[1] * dX) + (yaxis[1] * dY));
+            origin[2] -= ((xaxis[2] * dX) + (yaxis[2] * dY));
 
-                origin[0] -= ((xaxis[0] * dX) + (yaxis[0] * dY));
-                origin[1] -= ((xaxis[1] * dX) + (yaxis[1] * dY));
-                origin[2] -= ((xaxis[2] * dX) + (yaxis[2] * dY));
+            camera.matrix = md.m43Build(xaxis, yaxis, zaxis, origin, camera.matrix);
+            camera.updateViewMatrix();
 
-                camera.matrix = md.m43Build(xaxis, yaxis, zaxis, origin, camera.matrix);
-                camera.updateViewMatrix();
+            minimalViewWindowX = (maxLightDistanceX - minLightDistanceX) / 2.0;
+            minimalViewWindowY = (maxLightDistanceY - minLightDistanceY) / 2.0;
+        }
+        else
+        {
+            minimalViewWindowX = Math.max(Math.abs(maxLightDistanceX), Math.abs(minLightDistanceX));
+            minimalViewWindowY = Math.max(Math.abs(maxLightDistanceY), Math.abs(minLightDistanceY));
+        }
 
-                minimalViewWindowX = (maxLightDistanceX - minLightDistanceX) / 2.0;
-                minimalViewWindowY = (maxLightDistanceY - minLightDistanceY) / 2.0;
-            }
-            else
-            {
-                minimalViewWindowX = Math.max(Math.abs(maxLightDistanceX), Math.abs(minLightDistanceX));
-                minimalViewWindowY = Math.max(Math.abs(maxLightDistanceY), Math.abs(minLightDistanceY));
-            }
+        minimalViewWindowX += borderPadding * minimalViewWindowX;
+        if (lightViewWindowX > minimalViewWindowX)
+        {
+            lightViewWindowX = minimalViewWindowX;
+        }
 
-            minimalViewWindowX += borderPadding * minimalViewWindowX;
-            if (lightViewWindowX > minimalViewWindowX)
-            {
-                lightViewWindowX = minimalViewWindowX;
-            }
-
-            minimalViewWindowY += borderPadding * minimalViewWindowY;
-            if (lightViewWindowY > minimalViewWindowY)
-            {
-                lightViewWindowY = minimalViewWindowY;
-            }
+        minimalViewWindowY += borderPadding * minimalViewWindowY;
+        if (lightViewWindowY > minimalViewWindowY)
+        {
+            lightViewWindowY = minimalViewWindowY;
         }
 
         camera.recipViewWindowX = 1.0 / lightViewWindowX;
