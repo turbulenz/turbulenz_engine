@@ -101,7 +101,6 @@ class CascadedShadowMapping
     gd                  : GraphicsDevice;
     md                  : MathDevice;
     clearColor          : any; // v4
-    tempExtents         : any; // v6
     tempMatrix44        : any; // m44
     tempMatrix43        : any; // m43
     tempV3Direction     : any; // v3
@@ -164,7 +163,6 @@ class CascadedShadowMapping
         this.gd = gd;
         this.md = md;
         this.clearColor = md.v4Build(1, 1, 1, 1);
-        this.tempExtents = new Float32Array(6);
         this.tempMatrix44 = md.m44BuildIdentity();
         this.tempMatrix43 = md.m43BuildIdentity();
         this.tempV3Direction = md.v3BuildZero();
@@ -422,6 +420,7 @@ class CascadedShadowMapping
         var splits = this.splits;
         var numSplits = splits.length;
         var distance = camera.nearPlane;
+        var previousSplitPoints = [];
         var n, split, splitEnd;
         var frustumPoints;
         for (n = 0; n < numSplits; n += 1)
@@ -438,6 +437,7 @@ class CascadedShadowMapping
                               zaxis,
                               cameraMatrix,
                               frustumPoints,
+                              previousSplitPoints,
                               maxLightExtent,
                               scene);
 
@@ -550,6 +550,7 @@ class CascadedShadowMapping
                          zaxis: any,
                          cameraMatrix: any,
                          frustumPoints: any[],
+                         previousSplitPoints: any[],
                          maxLightExtent: number,
                          scene: Scene): void
     {
@@ -782,6 +783,74 @@ class CascadedShadowMapping
         var minLightDistanceY = split.minLightDistanceY;
         var maxLightDistanceY = split.maxLightDistanceY;
 
+        var numPreviousSplitPoints = previousSplitPoints.length;
+        if (numPreviousSplitPoints && occludersDrawArray.length)
+        {
+            // Calculate previous split window compared to current one
+            var previousMinWindowX = Number.MAX_VALUE;
+            var previousMaxWindowX = -Number.MAX_VALUE;
+            var previousMinWindowY = Number.MAX_VALUE;
+            var previousMaxWindowY = -Number.MAX_VALUE;
+            for (n = 0; n < numPreviousSplitPoints; n += 1)
+            {
+                p = previousSplitPoints[n];
+                var dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]) - roffset);
+                var dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]) - uoffset);
+                if (previousMinWindowX > dx)
+                {
+                    previousMinWindowX = dx;
+                }
+                if (previousMaxWindowX < dx)
+                {
+                    previousMaxWindowX = dx;
+                }
+                if (previousMinWindowY > dy)
+                {
+                    previousMinWindowY = dy;
+                }
+                if (previousMaxWindowY < dy)
+                {
+                    previousMaxWindowY = dy;
+                }
+            }
+
+            if (maxLightDistanceX >= previousMaxWindowX)
+            {
+                if (previousMinWindowY <= minLightDistanceY && maxLightDistanceY <= previousMaxWindowY)
+                {
+                    minLightDistanceX = Math.max(minLightDistanceX, previousMaxWindowX);
+                }
+            }
+            else
+            {
+                if (previousMinWindowY <= minLightDistanceY && maxLightDistanceY <= previousMaxWindowY)
+                {
+                    maxLightDistanceX = Math.min(maxLightDistanceX, previousMinWindowX);
+                }
+            }
+
+            if (maxLightDistanceY >= previousMaxWindowY)
+            {
+                if (previousMinWindowX <= minLightDistanceX && maxLightDistanceX <= previousMaxWindowX)
+                {
+                    minLightDistanceY = Math.max(minLightDistanceY, previousMaxWindowY);
+                }
+            }
+            else
+            {
+                if (previousMinWindowX <= minLightDistanceX && maxLightDistanceX <= previousMaxWindowX)
+                {
+                    maxLightDistanceY = Math.min(maxLightDistanceY, previousMinWindowY);
+                }
+            }
+
+            if (minLightDistanceX >= maxLightDistanceX ||
+                minLightDistanceY >= maxLightDistanceY)
+            {
+                occludersDrawArray.length = 0;
+            }
+        }
+
         if (minLightDistanceX < -lightViewWindowX)
         {
             minLightDistanceX = -lightViewWindowX;
@@ -892,6 +961,15 @@ class CascadedShadowMapping
         shadowScaleOffset[1] = shadowScaleOffset[0] = 0.25;
         shadowScaleOffset[2] = (split.viewportX * invSize) + 0.25;
         shadowScaleOffset[3] = (split.viewportY * invSize) + 0.25;
+
+        if (occludersDrawArray.length)
+        {
+            frustumPoints = split.camera.getFrustumPoints();
+            for (n = 0; n < 8; n += 1)
+            {
+                previousSplitPoints.push(frustumPoints[n]);
+            }
+        }
     }
 
     private _sortNegative(a, b): number
@@ -1102,7 +1180,7 @@ class CascadedShadowMapping
             gd.clear(clearColor, 1.0, 0);
         }
 
-        var n, split, splitCamera;
+        var n, split, splitCamera, occludersDrawArray;
         for (n = 0; n < numSplits; n += 1)
         {
             split = splits[n];
@@ -1120,17 +1198,21 @@ class CascadedShadowMapping
 
                 splitCamera = split.camera;
 
-                globalTechniqueParameters['viewTranspose'] = md.m43Transpose(splitCamera.viewMatrix,
-                                                                             globalTechniqueParameters['viewTranspose']);
-                globalTechniqueParameters['shadowProjectionTranspose'] = md.m44Transpose(splitCamera.projectionMatrix,
-                                                                                         globalTechniqueParameters['shadowProjectionTranspose']);
-                globalTechniqueParameters['shadowDepth'] = md.v4Build(0,
-                                                                      0,
-                                                                      split.shadowDepthScale,
-                                                                      split.shadowDepthOffset,
-                                                                      globalTechniqueParameters['shadowDepth']);
+                occludersDrawArray = split.occludersDrawArray;
+                if (occludersDrawArray.length)
+                {
+                    globalTechniqueParameters['viewTranspose'] = md.m43Transpose(splitCamera.viewMatrix,
+                                                                                 globalTechniqueParameters['viewTranspose']);
+                    globalTechniqueParameters['shadowProjectionTranspose'] = md.m44Transpose(splitCamera.projectionMatrix,
+                                                                                             globalTechniqueParameters['shadowProjectionTranspose']);
+                    globalTechniqueParameters['shadowDepth'] = md.v4Build(0,
+                                                                          0,
+                                                                          split.shadowDepthScale,
+                                                                          split.shadowDepthOffset,
+                                                                          globalTechniqueParameters['shadowDepth']);
 
-                gd.drawArray(split.occludersDrawArray, globalTechniqueParametersArray, 0);
+                    gd.drawArray(occludersDrawArray, globalTechniqueParametersArray, 0);
+                }
             }
         }
 
