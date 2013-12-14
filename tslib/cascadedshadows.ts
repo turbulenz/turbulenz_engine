@@ -9,7 +9,6 @@ class CascadedShadowSplit
 {
     viewportX: number;
     viewportY: number;
-    distance: number;
 
     camera: Camera;
 
@@ -48,7 +47,6 @@ class CascadedShadowSplit
     {
         this.viewportX = x;
         this.viewportY = y;
-        this.distance = 0;
 
         var camera = Camera.create(md);
         camera.parallel = true;
@@ -443,16 +441,10 @@ class CascadedShadowMapping
                               maxLightExtent,
                               scene);
 
-            split.distance = splitEnd;
             distance = splitEnd;
         }
 
         var techniqueParameters = this.techniqueParameters;
-        techniqueParameters['shadowSplitDistances'] = this.md.v4Build(splits[0].distance,
-                                                                      splits[1].distance,
-                                                                      splits[2].distance,
-                                                                      splits[3].distance,
-                                                                      techniqueParameters['shadowSplitDistances']);
         techniqueParameters['worldShadowProjection0'] = splits[0].worldShadowProjection;
         techniqueParameters['viewShadowProjection0'] = splits[0].viewShadowProjection;
         techniqueParameters['shadowScaleOffset0'] = splits[0].shadowScaleOffset;
