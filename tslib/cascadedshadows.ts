@@ -14,7 +14,7 @@ class CascadedShadowSplit
     camera: Camera;
 
     center: any; // v3
-    direction: any; // v3
+    at: any; // v3
     viewWindowX: number;
     viewWindowY: number;
 
@@ -58,7 +58,7 @@ class CascadedShadowSplit
         this.camera = camera;
 
         this.center = md.v3BuildZero();
-        this.direction = md.v3BuildZero();
+        this.at = md.v3BuildZero();
         this.viewWindowX = 0;
         this.viewWindowY = 0;
 
@@ -392,19 +392,19 @@ class CascadedShadowMapping
         var md = this.md;
 
         var cameraMatrix = camera.matrix;
-        var axisY = md.m43Up(cameraMatrix, this.tempV3Up);
-        var axisZ = md.m43At(cameraMatrix, this.tempV3At);
+        var cameraUp = md.m43Up(cameraMatrix, this.tempV3Up);
+        var cameraAt = md.m43At(cameraMatrix, this.tempV3At);
 
         var direction = md.v3Normalize(lightDirection, this.tempV3Direction);
 
         var up;
-        if (Math.abs(md.v3Dot(direction, axisZ)) < Math.abs(md.v3Dot(direction, axisY)))
+        if (Math.abs(md.v3Dot(direction, cameraAt)) < Math.abs(md.v3Dot(direction, cameraUp)))
         {
-            up = axisZ;
+            up = cameraAt;
         }
         else
         {
-            up = axisY;
+            up = cameraUp;
         }
         md.v3Normalize(up, up);
 
@@ -432,7 +432,14 @@ class CascadedShadowMapping
 
             frustumPoints = camera.getFrustumPoints(splitEnd, distance);
 
-            this._updateSplit(split, direction, xaxis, yaxis, zaxis, cameraMatrix, frustumPoints, maxLightExtent, scene);
+            this._updateSplit(split,
+                              xaxis,
+                              yaxis,
+                              zaxis,
+                              cameraMatrix,
+                              frustumPoints,
+                              maxLightExtent,
+                              scene);
 
             split.distance = splitEnd;
             distance = splitEnd;
@@ -544,7 +551,6 @@ class CascadedShadowMapping
     }
 
     private _updateSplit(split: CascadedShadowSplit,
-                         direction: any,
                          xaxis: any,
                          yaxis: any,
                          zaxis: any,
@@ -576,7 +582,7 @@ class CascadedShadowMapping
         // Prepare camera to get split frustum planes
         var camera = split.camera;
 
-        var origin = md.v3AddScalarMul(center, direction, -maxLightExtent, this.tempV3Origin);
+        var origin = md.v3AddScalarMul(center, zaxis, maxLightExtent, this.tempV3Origin);
 
         camera.matrix = md.m43Build(xaxis, yaxis, zaxis, origin, camera.matrix);
 
@@ -632,8 +638,8 @@ class CascadedShadowMapping
         var _isInsidePlanesAABB = this._isInsidePlanesAABB;
         var visibleNodes = this.visibleNodes;
 
-        var previousDirection = split.direction;
         var previousCenter = split.center;
+        var previousAt = split.at;
 
         var overlappingRenderables = split.overlappingRenderables;
 
@@ -644,9 +650,9 @@ class CascadedShadowMapping
         var i;
 
         var frustumUpdated = false;
-        if (previousDirection[0] !== direction[0] ||
-            previousDirection[1] !== direction[1] ||
-            previousDirection[2] !== direction[2] ||
+        if (previousAt[0] !== zaxis[0] ||
+            previousAt[1] !== zaxis[1] ||
+            previousAt[2] !== zaxis[2] ||
             previousCenter[0] !== center[0] ||
             previousCenter[1] !== center[1] ||
             previousCenter[2] !== center[2] ||
@@ -654,9 +660,9 @@ class CascadedShadowMapping
             split.viewWindowY !== lightViewWindowY ||
             split.staticNodesChangeCounter !== staticNodesChangeCounter)
         {
-            previousDirection[0] = direction[0];
-            previousDirection[1] = direction[1];
-            previousDirection[2] = direction[2];
+            previousAt[0] = zaxis[0];
+            previousAt[1] = zaxis[1];
+            previousAt[2] = zaxis[2];
 
             previousCenter[0] = center[0];
             previousCenter[1] = center[1];
@@ -1048,6 +1054,11 @@ class CascadedShadowMapping
                     break;
                 }
             }
+        }
+
+        if (numOccluders === 0)
+        {
+            return 0;
         }
 
         if (minLightDistance < 0)
