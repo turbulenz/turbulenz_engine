@@ -8525,7 +8525,9 @@ class ParticleManager
             this.queue.remove(instance);
             if (renderable.system)
             {
-                renderable.system.destroy();
+                var system = renderable.system;
+                renderable.setSystem(null);
+                system.destroy();
             }
         }
 
