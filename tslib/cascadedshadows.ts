@@ -752,15 +752,6 @@ class CascadedShadowMapping
         camera.updateViewMatrix();
 
         var viewMatrix = camera.viewMatrix;
-        r0 = -viewMatrix[0];
-        r1 = -viewMatrix[3];
-        r2 = -viewMatrix[6];
-        var roffset = viewMatrix[9];
-
-        u0 = -viewMatrix[1];
-        u1 = -viewMatrix[4];
-        u2 = -viewMatrix[7];
-        var uoffset = viewMatrix[10];
 
         split.lightViewWindowX = lightViewWindowX;
         split.lightViewWindowY = lightViewWindowY;
@@ -972,6 +963,8 @@ class CascadedShadowMapping
         if (numPreviousSplitPoints && occludersDrawArray.length)
         {
             // Calculate previous split window compared to current one
+            var roffset = viewMatrix[9];
+            var uoffset = viewMatrix[10];
             var previousMinWindowX = Number.MAX_VALUE;
             var previousMaxWindowX = -Number.MAX_VALUE;
             var previousMinWindowY = Number.MAX_VALUE;
