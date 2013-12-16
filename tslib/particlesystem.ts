@@ -4434,7 +4434,7 @@ class DefaultParticleRenderer
                              0, null,   2, null,   3, null],
             attributes    : [graphicsDevice.VERTEXFORMAT_USHORT2],
             stride        : 2,
-            semantics     : graphicsDevice.createSemantics([graphicsDevice.SEMANTIC_TEXCOORD]),
+            semantics     : graphicsDevice.createSemantics([graphicsDevice.SEMANTIC_POSITION]),
             primitive     : graphicsDevice.PRIMITIVE_TRIANGLES,
             shared        : shared
         });

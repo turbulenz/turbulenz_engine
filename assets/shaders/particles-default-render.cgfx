@@ -88,7 +88,7 @@ float getAlphaNoise(float2 uv, float t) {
 // -----------------------------------------------------------------------------
 
 float2 quadVertex[4] = {float2(-1,-1), float2(1,-1), float2(1,1), float2(-1,1)};
-void vp_render( in float2 inData     : TEXCOORD0,
+void vp_render( in float2 inData     : POSITION,
                out float4 outPosition: POSITION,
                out float2 outParticle: TEXCOORD0,
                out float2 outUV      : TEXCOORD1,
