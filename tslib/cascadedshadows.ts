@@ -648,23 +648,70 @@ class CascadedShadowMapping
     {
         var md = this.md;
 
-        // Calculate center of split
-        var c0 = 0;
-        var c1 = 0;
-        var c2 = 0;
+        // Calculate split window limits
+        var r0 = -xaxis[0];
+        var r1 = -xaxis[1];
+        var r2 = -xaxis[2];
+
+        var u0 = -yaxis[0];
+        var u1 = -yaxis[1];
+        var u2 = -yaxis[2];
+
+        var a0 = -zaxis[0];
+        var a1 = -zaxis[1];
+        var a2 = -zaxis[2];
+
+        var minWindowX = Number.MAX_VALUE;
+        var maxWindowX = -Number.MAX_VALUE;
+        var minWindowY = Number.MAX_VALUE;
+        var maxWindowY = -Number.MAX_VALUE;
+        var minWindowZ = Number.MAX_VALUE;
+        var maxWindowZ = -Number.MAX_VALUE;
         var n, p;
         for (n = 0; n < 8; n += 1)
         {
             p = frustumPoints[n];
-            c0 += p[0];
-            c1 += p[1];
-            c2 += p[2];
+            var dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]));
+            var dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]));
+            var dz = ((a0 * p[0]) + (a1 * p[1]) + (a2 * p[2]));
+            if (minWindowX > dx)
+            {
+                minWindowX = dx;
+            }
+            if (maxWindowX < dx)
+            {
+                maxWindowX = dx;
+            }
+            if (minWindowY > dy)
+            {
+                minWindowY = dy;
+            }
+            if (maxWindowY < dy)
+            {
+                maxWindowY = dy;
+            }
+            if (minWindowZ > dz)
+            {
+                minWindowZ = dz;
+            }
+            if (maxWindowZ < dz)
+            {
+                maxWindowZ = dz;
+            }
         }
 
+        // Calculate center of split
         var center = this.tempV3Center;
-        center[0] = c0 / 8.0;
-        center[1] = c1 / 8.0;
-        center[2] = c2 / 8.0;
+        var cx = (minWindowX + maxWindowX) / 2.0;
+        var cy = (minWindowY + maxWindowY) / 2.0;
+        var cz = (minWindowZ + maxWindowZ) / 2.0;
+        center[0] = cx * r0 + cy * u0 + cz * a0;
+        center[1] = cx * r1 + cy * u1 + cz * a1;
+        center[2] = cx * r2 + cy * u2 + cz * a2;
+
+        var lightViewWindowX = (maxWindowX - minWindowX) / 2.0;
+        var lightViewWindowY = (maxWindowY - minWindowY) / 2.0;
+        var lightDepth = (1.5 * maxLightExtent);
 
         // Prepare camera to get split frustum planes
         var camera = split.camera;
@@ -675,40 +722,19 @@ class CascadedShadowMapping
 
         camera.updateViewMatrix();
 
-        // Find maximum split window apperture
         var viewMatrix = camera.viewMatrix;
-        var r0 = -viewMatrix[0];
-        var r1 = -viewMatrix[3];
-        var r2 = -viewMatrix[6];
+        r0 = -viewMatrix[0];
+        r1 = -viewMatrix[3];
+        r2 = -viewMatrix[6];
         var roffset = viewMatrix[9];
 
-        var u0 = -viewMatrix[1];
-        var u1 = -viewMatrix[4];
-        var u2 = -viewMatrix[7];
+        u0 = -viewMatrix[1];
+        u1 = -viewMatrix[4];
+        u2 = -viewMatrix[7];
         var uoffset = viewMatrix[10];
-
-        var lightViewWindowX = 0;
-        var lightViewWindowY = 0;
-
-        for (n = 0; n < 8; n += 1)
-        {
-            p = frustumPoints[n];
-            var dx = Math.abs((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]) - roffset);
-            var dy = Math.abs((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]) - uoffset);
-            if (lightViewWindowX < dx)
-            {
-                lightViewWindowX = dx;
-            }
-            if (lightViewWindowY < dy)
-            {
-                lightViewWindowY = dy;
-            }
-        }
 
         split.lightViewWindowX = lightViewWindowX;
         split.lightViewWindowY = lightViewWindowY;
-
-        var lightDepth = (2.0 * maxLightExtent);
         split.lightDepth = lightDepth;
 
         var distanceScale = (1.0 / 65536);
