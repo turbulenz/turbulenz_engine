@@ -139,7 +139,10 @@ class CascadedShadowMapping
     depthBuffer         : RenderBuffer;
     blurRenderTarget    : RenderTarget;
 
-    frustumPlanes       : any[];
+    numMainFrustumPlanes: number;
+    mainFrustumPlanes   : any[];
+    numSplitFrustumPlanes: number;
+    splitFrustumPlanes  : any[];
     visibleNodes        : SceneNode[];
     occludersExtents    : any[];
 
@@ -229,7 +232,10 @@ class CascadedShadowMapping
 
         this.updateBuffers(size);
 
-        this.frustumPlanes = [];
+        this.numMainFrustumPlanes = 0;
+        this.mainFrustumPlanes = [];
+        this.numSplitFrustumPlanes = 0;
+        this.splitFrustumPlanes = [];
         this.visibleNodes = [];
         this.occludersExtents = [];
 
@@ -387,6 +393,8 @@ class CascadedShadowMapping
     {
         var md = this.md;
 
+        this._extractMainFrustumPlanes(camera, lightDirection);
+
         var cameraMatrix = camera.matrix;
         var cameraUp = md.m43Up(cameraMatrix, this.tempV3Up);
         var cameraAt = md.m43At(cameraMatrix, this.tempV3At);
@@ -487,7 +495,81 @@ class CascadedShadowMapping
         return res;
     }
 
-    private _extractFrustumPlanes(camera: Camera) : any[]
+    private _extractMainFrustumPlanes(camera: Camera, lightDirection: any): void
+    {
+        var planeNormalize = this._planeNormalize;
+        var m = camera.viewProjectionMatrix;
+        var m0  = m[0];
+        var m1  = m[1];
+        var m2  = m[2];
+        var m3  = m[3];
+        var m4  = m[4];
+        var m5  = m[5];
+        var m6  = m[6];
+        var m7  = m[7];
+        var m8  = m[8];
+        var m9  = m[9];
+        var m10 = m[10];
+        var m11 = m[11];
+        var m12 = m[12];
+        var m13 = m[13];
+        var m14 = m[14];
+        var m15 = m[15];
+        var planes = this.mainFrustumPlanes;
+        var numPlanes = 0;
+        var p;
+
+        var d0 = lightDirection[0];
+        var d1 = lightDirection[1];
+        var d2 = lightDirection[2];
+
+        // Negate 'd' here to avoid doing it on the isVisible functions
+        p = planeNormalize((m3 + m0), (m7 + m4), (m11 + m8), -(m15 + m12), planes[numPlanes]); // left
+        if ((d0 * p[0]) + (d1 * p[1]) + (d2 * p[2]) <= 0)
+        {
+            planes[numPlanes] = p;
+            numPlanes += 1;
+        }
+
+        p = planeNormalize((m3 - m0), (m7 - m4), (m11 - m8), -(m15 - m12), planes[numPlanes]); // right
+        if ((d0 * p[0]) + (d1 * p[1]) + (d2 * p[2]) <= 0)
+        {
+            planes[numPlanes] = p;
+            numPlanes += 1;
+        }
+
+        p = planeNormalize((m3 - m1), (m7 - m5), (m11 - m9), -(m15 - m13), planes[numPlanes]); // top
+        if ((d0 * p[0]) + (d1 * p[1]) + (d2 * p[2]) <= 0)
+        {
+            planes[numPlanes] = p;
+            numPlanes += 1;
+        }
+
+        p = planeNormalize((m3 + m1), (m7 + m5), (m11 + m9), -(m15 + m13), planes[numPlanes]); // bottom
+        if ((d0 * p[0]) + (d1 * p[1]) + (d2 * p[2]) <= 0)
+        {
+            planes[numPlanes] = p;
+            numPlanes += 1;
+        }
+
+        p = planeNormalize((m3 + m2), (m7 + m6), (m11 + m10), -(m15 + m14), planes[numPlanes]);  // near
+        if ((d0 * p[0]) + (d1 * p[1]) + (d2 * p[2]) <= 0)
+        {
+            planes[numPlanes] = p;
+            numPlanes += 1;
+        }
+
+        p = planeNormalize((m3 - m2), (m7 - m6), (m11 - m10), -(m15 - m14), planes[numPlanes]); // far
+        if ((d0 * p[0]) + (d1 * p[1]) + (d2 * p[2]) <= 0)
+        {
+            planes[numPlanes] = p;
+            numPlanes += 1;
+        }
+
+        this.numMainFrustumPlanes = numPlanes;
+    }
+
+    private _extractSplitFrustumPlanes(camera: Camera) : any[]
     {
         var planeNormalize = this._planeNormalize;
         var m = camera.viewProjectionMatrix;
@@ -507,13 +589,23 @@ class CascadedShadowMapping
         var m13 = m[13];
         var m14 = m[14];
         var m15 = m[15];
-        var planes = this.frustumPlanes;
+        var planes = this.splitFrustumPlanes;
 
         // Negate 'd' here to avoid doing it on the isVisible functions
         planes[0] = planeNormalize((m3 + m0), (m7 + m4), (m11 + m8), -(m15 + m12), planes[0]); // left
         planes[1] = planeNormalize((m3 - m0), (m7 - m4), (m11 - m8), -(m15 - m12), planes[1]); // right
         planes[2] = planeNormalize((m3 - m1), (m7 - m5), (m11 - m9), -(m15 - m13), planes[2]); // top
         planes[3] = planeNormalize((m3 + m1), (m7 + m5), (m11 + m9), -(m15 + m13), planes[3]); // bottom
+
+        var numMainFrustumPlanes = this.numMainFrustumPlanes;
+        var mainFrustumPlanes = this.mainFrustumPlanes;
+        var n;
+        for (n = 0; n < numMainFrustumPlanes; n += 1)
+        {
+            planes[4 + n] = mainFrustumPlanes[n];
+        }
+
+        this.numSplitFrustumPlanes = 4 + numMainFrustumPlanes;
 
         return planes;
     }
@@ -628,7 +720,7 @@ class CascadedShadowMapping
         camera.updateProjectionMatrix();
         camera.updateViewProjectionMatrix();
 
-        var frustumPlanes = this._extractFrustumPlanes(camera);
+        var frustumPlanes = this._extractSplitFrustumPlanes(camera);
 
         var _isInsidePlanesAABB = this._isInsidePlanesAABB;
         var visibleNodes = this.visibleNodes;
