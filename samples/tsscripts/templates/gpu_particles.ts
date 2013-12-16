@@ -974,7 +974,7 @@ TurbulenzEngine.onload = function onloadFn()
 
     htmlControls.addButtonControl({
         id: "button-destroy-1",
-        value: "Destroy (1)",
+        value: "Destroy 1",
         fn: function () {
             // destroy all state and instances associated with archetype1 (complete reset)
             manager.destroyArchetype(archetype1);
@@ -982,7 +982,7 @@ TurbulenzEngine.onload = function onloadFn()
     });
     htmlControls.addButtonControl({
         id: "button-destroy-2",
-        value: "Destroy (2)",
+        value: "Destroy 2",
         fn: function () {
             // destroy all state and instances associated with archetype2 (complete reset)
             manager.destroyArchetype(archetype2);
@@ -991,7 +991,7 @@ TurbulenzEngine.onload = function onloadFn()
 
     htmlControls.addButtonControl({
         id: "button-replace-1-2",
-        value: "Replace (1 with 2)",
+        value: "Replace 1 to 2",
         fn: function () {
             // replace all instances of archetype1 with ones of archetype2 in-place.
             manager.replaceArchetype(archetype1, archetype2);
@@ -999,7 +999,7 @@ TurbulenzEngine.onload = function onloadFn()
     });
     htmlControls.addButtonControl({
         id: "button-replace-2-1",
-        value: "Replace (2 with 1)",
+        value: "Replace 2 to 1",
         fn: function () {
             // replace all instances of archetype2 with ones of archetype1 in-place.
             manager.replaceArchetype(archetype2, archetype1);

@@ -12,6 +12,11 @@
 /*{% block tz_app_title_name %}*/GPU ParticleSystem/*{% endblock %}*/
 
 /*{% block tz_app_html_controls %}*/
+<style type="text/css">
+    #sidebar {
+        bottom: 85px;
+    }
+</style>
 <div class="html-control control-output-pair">Simulation Speed:
     <input type="text" id="speedSliderinput" size="4" value="0" class="control-textfield">
 </div>
@@ -45,30 +50,30 @@
 </div>
 
 <div class="html-control text">
-    Clear the scene of all instances of the two main archetypes.
+    Clear the scene of all instances.
 </div>
 <div class="html-control control-button">
     <input type="button" id="button-clear" value="Clear">
 </div>
 
 <div class="html-control text">
-    Destroy all state associated with archetype, not just clearing its instances.
+    Destroy all state associated with archetype.
 </div>
 <div class="html-control control-button">
-    <input type="button" id="button-destroy-1" value="Destroy (1)">
+    <input type="button" id="button-destroy-1" value="Destroy 1">
 </div>
 <div class="html-control control-button">
-    <input type="button" id="button-destroy-2" value="Destroy (2)">
+    <input type="button" id="button-destroy-2" value="Destroy 2">
 </div>
 
 <div class="html-control text">
     Replace archetype with another in-place.
 </div>
 <div class="html-control control-button">
-    <input type="button" id="button-replace-1-2" value="Replace (1 with 2)">
+    <input type="button" id="button-replace-1-2" value="Replace 1 to 2">
 </div>
 <div class="html-control control-button">
-    <input type="button" id="button-replace-2-1" value="Replace (2 with 1)">
+    <input type="button" id="button-replace-2-1" value="Replace 2 to 1">
 </div>
 
 <div class="engine-control">
