@@ -745,10 +745,13 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Display camera (xz) position on minimap also.
         var pos = mathDevice.m43Pos(mathDevice.m43Inverse(camera.viewMatrix));
-        ctx.strokeStyle = "#ffffff";
-        ctx.strokeRect(pos[0] * scaleX - 1.5, pos[2] * scaleY - 1.5, 3, 3);
-        ctx.endFrame();
+        if (pos[0] >= 0 && pos[2] >= 0 && pos[0] <= sceneWidth && pos[2] <= sceneHeight)
+        {
+            ctx.strokeStyle = "#ffffff";
+            ctx.strokeRect(pos[0] * scaleX - 1.5, pos[2] * scaleY - 1.5, 3, 3);
+        }
 
+        ctx.endFrame();
         graphicsDevice.endFrame();
     }
 
