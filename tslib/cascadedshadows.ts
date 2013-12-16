@@ -143,6 +143,7 @@ class CascadedShadowMapping
     mainFrustumPlanes   : any[];
     numSplitFrustumPlanes: number;
     splitFrustumPlanes  : any[];
+    intersectingPlanes  : any[];
     visibleNodes        : SceneNode[];
     occludersExtents    : any[];
 
@@ -236,6 +237,7 @@ class CascadedShadowMapping
         this.mainFrustumPlanes = [];
         this.numSplitFrustumPlanes = 0;
         this.splitFrustumPlanes = [];
+        this.intersectingPlanes = [];
         this.visibleNodes = [];
         this.occludersExtents = [];
 
@@ -610,7 +612,7 @@ class CascadedShadowMapping
         return planes;
     }
 
-    private _isInsidePlanesAABB(extents, planes) : boolean
+    private _isInsidePlanesAABB(extents: any, planes: any[], numPlanes: number): boolean
     {
         var n0 = extents[0];
         var n1 = extents[1];
@@ -618,7 +620,6 @@ class CascadedShadowMapping
         var p0 = extents[3];
         var p1 = extents[4];
         var p2 = extents[5];
-        var numPlanes = planes.length;
         var n = 0;
         do
         {
@@ -634,6 +635,34 @@ class CascadedShadowMapping
         }
         while (n < numPlanes);
         return true;
+    }
+
+    private _filterFullyInsidePlanes(extents: any, planes: any[], intersectingPlanes: any[]): number
+    {
+        var n0 = extents[0];
+        var n1 = extents[1];
+        var n2 = extents[2];
+        var p0 = extents[3];
+        var p1 = extents[4];
+        var p2 = extents[5];
+        var numPlanes = planes.length;
+        var numIntersectingPlanes = 0;
+        var n = 0;
+        do
+        {
+            var plane = planes[n];
+            var d0 = plane[0];
+            var d1 = plane[1];
+            var d2 = plane[2];
+            if ((d0 * (d0 > 0 ? n0 : p0) + d1 * (d1 > 0 ? n1 : p1) + d2 * (d2 > 0 ? n2 : p2)) < plane[3])
+            {
+                intersectingPlanes[numIntersectingPlanes] = plane;
+                numIntersectingPlanes += 1;
+            }
+            n += 1;
+        }
+        while (n < numPlanes);
+        return numIntersectingPlanes;
     }
 
     private _updateSplit(split: CascadedShadowSplit,
@@ -748,8 +777,12 @@ class CascadedShadowMapping
 
         var frustumPlanes = this._extractSplitFrustumPlanes(camera);
 
+        var _filterFullyInsidePlanes = this._filterFullyInsidePlanes;
         var _isInsidePlanesAABB = this._isInsidePlanesAABB;
         var visibleNodes = this.visibleNodes;
+
+        var intersectingPlanes = this.intersectingPlanes;
+        var numIntersectingPlanes;
 
         var previousCenter = split.center;
         var previousAt = split.at;
@@ -798,13 +831,30 @@ class CascadedShadowMapping
                 renderables = node.renderables;
                 if (renderables)
                 {
+                    numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(), frustumPlanes, intersectingPlanes);
+
                     numRenderables = renderables.length;
-                    for (i = 0; i < numRenderables; i += 1)
+                    if (0 < numIntersectingPlanes)
                     {
-                        renderable = renderables[i];
-                        if (renderable.shadowTechniqueParameters)
+                        for (i = 0; i < numRenderables; i += 1)
                         {
-                            if (_isInsidePlanesAABB(renderable.getWorldExtents(), frustumPlanes))
+                            renderable = renderables[i];
+                            if (renderable.shadowTechniqueParameters)
+                            {
+                                if (_isInsidePlanesAABB(renderable.getWorldExtents(), intersectingPlanes, numIntersectingPlanes))
+                                {
+                                    overlappingRenderables[numOverlappingRenderables] = renderable;
+                                    numOverlappingRenderables += 1;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (i = 0; i < numRenderables; i += 1)
+                        {
+                            renderable = renderables[i];
+                            if (renderable.shadowTechniqueParameters)
                             {
                                 overlappingRenderables[numOverlappingRenderables] = renderable;
                                 numOverlappingRenderables += 1;
@@ -832,13 +882,30 @@ class CascadedShadowMapping
             renderables = node.renderables;
             if (renderables)
             {
+                numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(), frustumPlanes, intersectingPlanes);
+
                 numRenderables = renderables.length;
-                for (i = 0; i < numRenderables; i += 1)
+                if (0 < numIntersectingPlanes)
                 {
-                    renderable = renderables[i];
-                    if (renderable.shadowTechniqueParameters)
+                    for (i = 0; i < numRenderables; i += 1)
                     {
-                        if (_isInsidePlanesAABB(renderable.getWorldExtents(), frustumPlanes))
+                        renderable = renderables[i];
+                        if (renderable.shadowTechniqueParameters)
+                        {
+                            if (_isInsidePlanesAABB(renderable.getWorldExtents(), intersectingPlanes, numIntersectingPlanes))
+                            {
+                                overlappingRenderables[numOverlappingRenderables] = renderable;
+                                numOverlappingRenderables += 1;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (i = 0; i < numRenderables; i += 1)
+                    {
+                        renderable = renderables[i];
+                        if (renderable.shadowTechniqueParameters)
                         {
                             overlappingRenderables[numOverlappingRenderables] = renderable;
                             numOverlappingRenderables += 1;
