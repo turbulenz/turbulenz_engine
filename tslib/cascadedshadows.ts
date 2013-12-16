@@ -669,7 +669,7 @@ class CascadedShadowMapping
                          xaxis: any,
                          yaxis: any,
                          zaxis: any,
-                         cameraMatrix: any,
+                         mainCameraMatrix: any,
                          frustumPoints: any[],
                          previousSplitPoints: any[],
                          maxLightExtent: number,
@@ -1117,8 +1117,8 @@ class CascadedShadowMapping
         worldShadowProjection[10] = -viewMatrix[8] * maxDepthReciprocal;
         worldShadowProjection[11] = (-viewMatrix[11] - minLightDistance) * maxDepthReciprocal;
 
-        var viewToShadowProjection = md.m43MulM44(cameraMatrix, shadowProjection, this.tempMatrix44);
-        var viewToShadowMatrix = md.m43Mul(cameraMatrix, viewMatrix, this.tempMatrix43);
+        var viewToShadowProjection = md.m43MulM44(mainCameraMatrix, shadowProjection, this.tempMatrix44);
+        var viewToShadowMatrix = md.m43Mul(mainCameraMatrix, viewMatrix, this.tempMatrix43);
 
         var viewShadowProjection = split.viewShadowProjection;
         viewShadowProjection[0] = viewToShadowProjection[0];
