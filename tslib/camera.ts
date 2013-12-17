@@ -303,14 +303,14 @@ class Camera
         return frustumPoints;
     }
 
-    getFrustumFarPoints()
+    getFrustumFarPoints(farPlane?)
     {
         var viewOffsetX = this.viewOffsetX;
         var viewOffsetY = this.viewOffsetY;
         var viewWindowX = 1.0 / this.recipViewWindowX;
         var viewWindowY = 1.0 / (this.recipViewWindowY * this.aspectRatio);
         var transform   = this.matrix;
-        var farClip     = this.farPlane;
+        var farClip     = farPlane || this.farPlane;
 
         var frustumPoints;
 
