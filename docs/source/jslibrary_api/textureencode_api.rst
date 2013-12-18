@@ -9,7 +9,7 @@
 The TextureEncode Object
 ========================
 
-Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+Added 2013-12-12 First BETA release (Open Source Only).
 
 TextureEncode provides a set of utilities for encoding and decoding normalised floating point values and vectors into integer pixel values for storage in non-floating-point textures.
 

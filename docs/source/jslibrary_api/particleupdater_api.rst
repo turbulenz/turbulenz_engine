@@ -9,7 +9,7 @@
 The ParticleUpdater Interface
 =============================
 
-Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+Added 2013-12-12 First BETA release (Open Source Only).
 
 Encapsulates a replaceble element of a particle system responsible for updating the states of particles on both the CPU and GPU and aiding emitters in retrospective creation of particles through prediction.
 

@@ -9,7 +9,7 @@
 The ParticleBuilder Object
 ==========================
 
-Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+Added 2013-12-12 First BETA release (Open Source Only).
 
 ParticleBuilder provides methods for constructing the necessary textures required for animating particle appearances in a particle system.
 

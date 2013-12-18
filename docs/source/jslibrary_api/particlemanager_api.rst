@@ -9,7 +9,7 @@
 The ParticleManager Object
 ==========================
 
-Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+Added 2013-12-12 First BETA release (Open Source Only).
 
 The ParticleManager is used to create and manage GPU based particle systems.
 
@@ -22,6 +22,8 @@ The ParticleManager is data-driven, with particle systems represented entirely b
         {
             // GPU Particle System cannot be used!
         }
+
+.. figure:: img/High-Level.png
 
 Methods
 =======

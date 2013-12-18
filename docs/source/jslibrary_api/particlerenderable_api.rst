@@ -9,7 +9,7 @@
 The ParticleRenderable Object
 =============================
 
-Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+Added 2013-12-12 First BETA release (Open Source Only).
 
 The `ParticleRenderable` object is used to provide the necessary glue between a :ref:`ParticleSystem <particlesystem>` and a :ref:`Scene <scene>`.
 The object provides a necessary subset of the :ref:`Renderable <renderable>` interface required to include :ref:`ParticleSystems <particlesystem>` into a :ref:`Scene <scene>` with minimal effort.
