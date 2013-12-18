@@ -954,140 +954,19 @@ class CascadedShadowMapping
             camera.farPlane  = (lightDepth + distanceScale);
         }
 
-        var _filterFullyInsidePlanes = this._filterFullyInsidePlanes;
-        var _isInsidePlanesAABB = this._isInsidePlanesAABB;
-        var visibleNodes = this.visibleNodes;
-
-        var intersectingPlanes = this.intersectingPlanes;
-        var numIntersectingPlanes;
-
-        var previousOrigin = split.origin;
-        var previousAt = split.at;
-
-        var overlappingRenderables = split.overlappingRenderables;
-
-        var staticNodesChangeCounter = scene.staticNodesChangeCounter;
-
-        var numOverlappingRenderables, numVisibleNodes;
-        var node, renderables, numRenderables, renderable;
-        var i;
-
-        var frustumUpdated = false;
-        if (previousAt[0] !== zaxis[0] ||
-            previousAt[1] !== zaxis[1] ||
-            previousAt[2] !== zaxis[2] ||
-            previousOrigin[0] !== origin[0] ||
-            previousOrigin[1] !== origin[1] ||
-            previousOrigin[2] !== origin[2] ||
-            split.viewWindowX !== lightViewWindowX ||
-            split.viewWindowY !== lightViewWindowY ||
-            split.staticNodesChangeCounter !== staticNodesChangeCounter)
-        {
-            previousAt[0] = zaxis[0];
-            previousAt[1] = zaxis[1];
-            previousAt[2] = zaxis[2];
-
-            previousOrigin[0] = origin[0];
-            previousOrigin[1] = origin[1];
-            previousOrigin[2] = origin[2];
-
-            split.viewWindowX = lightViewWindowX;
-            split.viewWindowY = lightViewWindowY;
-            split.staticNodesChangeCounter = staticNodesChangeCounter;
-
-            frustumUpdated = true;
-
-            overlappingRenderables.length = 0;
-            numOverlappingRenderables = 0;
-
-            numVisibleNodes = scene.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, 0);
-
-            for (n = 0; n < numVisibleNodes; n += 1)
-            {
-                node = visibleNodes[n];
-                renderables = node.renderables;
-                if (renderables)
-                {
-                    numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(), frustumPlanes, intersectingPlanes);
-
-                    numRenderables = renderables.length;
-                    if (0 < numIntersectingPlanes)
-                    {
-                        for (i = 0; i < numRenderables; i += 1)
-                        {
-                            renderable = renderables[i];
-                            if (_isInsidePlanesAABB(renderable.getWorldExtents(), intersectingPlanes, numIntersectingPlanes))
-                            {
-                                overlappingRenderables[numOverlappingRenderables] = renderable;
-                                numOverlappingRenderables += 1;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for (i = 0; i < numRenderables; i += 1)
-                        {
-                            renderable = renderables[i];
-                            overlappingRenderables[numOverlappingRenderables] = renderable;
-                            numOverlappingRenderables += 1;
-                        }
-                    }
-                }
-            }
-
-            split.numStaticOverlappingRenderables = numOverlappingRenderables;
-        }
-        else
-        {
-            numOverlappingRenderables = split.numStaticOverlappingRenderables;
-        }
-
-        overlappingRenderables.length = numOverlappingRenderables;
-
-        // Query the dynamic renderables
-        numVisibleNodes = scene.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, 0);
-
-        for (n = 0; n < numVisibleNodes; n += 1)
-        {
-            node = visibleNodes[n];
-            renderables = node.renderables;
-            if (renderables)
-            {
-                numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(), frustumPlanes, intersectingPlanes);
-
-                numRenderables = renderables.length;
-                if (0 < numIntersectingPlanes)
-                {
-                    for (i = 0; i < numRenderables; i += 1)
-                    {
-                        renderable = renderables[i];
-                        if (_isInsidePlanesAABB(renderable.getWorldExtents(), intersectingPlanes, numIntersectingPlanes))
-                        {
-                            overlappingRenderables[numOverlappingRenderables] = renderable;
-                            numOverlappingRenderables += 1;
-                        }
-                    }
-                }
-                else
-                {
-                    for (i = 0; i < numRenderables; i += 1)
-                    {
-                        renderable = renderables[i];
-                        overlappingRenderables[numOverlappingRenderables] = renderable;
-                        numOverlappingRenderables += 1;
-                    }
-                }
-            }
-        }
-
-        overlappingRenderables.length = numOverlappingRenderables;
+        var frustumUpdated = this._updateRenderables(split,
+                                                     zaxis,
+                                                     origin,
+                                                     frustumPlanes,
+                                                     scene);
 
         // Now prepare draw array
+        var overlappingRenderables = split.overlappingRenderables;
         var occludersDrawArray = split.occludersDrawArray;
         var numStaticOverlappingRenderables = split.numStaticOverlappingRenderables;
 
         if (frustumUpdated ||
-            numStaticOverlappingRenderables !== numOverlappingRenderables)
+            numStaticOverlappingRenderables !== overlappingRenderables.length)
         {
             split.needsBlur = true;
 
@@ -1332,6 +1211,143 @@ class CascadedShadowMapping
                 previousSplitPoints.push(frustumPoints[n]);
             }
         }
+    }
+
+    private _updateRenderables(split: CascadedShadowSplit,
+                               zaxis: any,
+                               origin: any,
+                               frustumPlanes: any[],
+                               scene: Scene): boolean
+    {
+        var _filterFullyInsidePlanes = this._filterFullyInsidePlanes;
+        var _isInsidePlanesAABB = this._isInsidePlanesAABB;
+        var visibleNodes = this.visibleNodes;
+
+        var intersectingPlanes = this.intersectingPlanes;
+        var numIntersectingPlanes;
+
+        var previousOrigin = split.origin;
+        var previousAt = split.at;
+
+        var overlappingRenderables = split.overlappingRenderables;
+
+        var staticNodesChangeCounter = scene.staticNodesChangeCounter;
+
+        var numOverlappingRenderables, numVisibleNodes;
+        var node, renderables, numRenderables, renderable;
+        var i, n;
+
+        var frustumUpdated = false;
+        if (previousAt[0] !== zaxis[0] ||
+            previousAt[1] !== zaxis[1] ||
+            previousAt[2] !== zaxis[2] ||
+            previousOrigin[0] !== origin[0] ||
+            previousOrigin[1] !== origin[1] ||
+            previousOrigin[2] !== origin[2] ||
+            split.viewWindowX !== split.lightViewWindowX ||
+            split.viewWindowY !== split.lightViewWindowY ||
+            split.staticNodesChangeCounter !== staticNodesChangeCounter)
+        {
+            previousAt[0] = zaxis[0];
+            previousAt[1] = zaxis[1];
+            previousAt[2] = zaxis[2];
+
+            previousOrigin[0] = origin[0];
+            previousOrigin[1] = origin[1];
+            previousOrigin[2] = origin[2];
+
+            split.viewWindowX = split.lightViewWindowX;
+            split.viewWindowY = split.lightViewWindowY;
+            split.staticNodesChangeCounter = staticNodesChangeCounter;
+
+            frustumUpdated = true;
+
+            overlappingRenderables.length = 0;
+            numOverlappingRenderables = 0;
+
+            numVisibleNodes = scene.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, 0);
+
+            for (n = 0; n < numVisibleNodes; n += 1)
+            {
+                node = visibleNodes[n];
+                renderables = node.renderables;
+                if (renderables)
+                {
+                    numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(), frustumPlanes, intersectingPlanes);
+
+                    numRenderables = renderables.length;
+                    if (0 < numIntersectingPlanes)
+                    {
+                        for (i = 0; i < numRenderables; i += 1)
+                        {
+                            renderable = renderables[i];
+                            if (_isInsidePlanesAABB(renderable.getWorldExtents(), intersectingPlanes, numIntersectingPlanes))
+                            {
+                                overlappingRenderables[numOverlappingRenderables] = renderable;
+                                numOverlappingRenderables += 1;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (i = 0; i < numRenderables; i += 1)
+                        {
+                            renderable = renderables[i];
+                            overlappingRenderables[numOverlappingRenderables] = renderable;
+                            numOverlappingRenderables += 1;
+                        }
+                    }
+                }
+            }
+
+            split.numStaticOverlappingRenderables = numOverlappingRenderables;
+        }
+        else
+        {
+            numOverlappingRenderables = split.numStaticOverlappingRenderables;
+        }
+
+        overlappingRenderables.length = numOverlappingRenderables;
+
+        // Query the dynamic renderables
+        numVisibleNodes = scene.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, 0);
+
+        for (n = 0; n < numVisibleNodes; n += 1)
+        {
+            node = visibleNodes[n];
+            renderables = node.renderables;
+            if (renderables)
+            {
+                numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(), frustumPlanes, intersectingPlanes);
+
+                numRenderables = renderables.length;
+                if (0 < numIntersectingPlanes)
+                {
+                    for (i = 0; i < numRenderables; i += 1)
+                    {
+                        renderable = renderables[i];
+                        if (_isInsidePlanesAABB(renderable.getWorldExtents(), intersectingPlanes, numIntersectingPlanes))
+                        {
+                            overlappingRenderables[numOverlappingRenderables] = renderable;
+                            numOverlappingRenderables += 1;
+                        }
+                    }
+                }
+                else
+                {
+                    for (i = 0; i < numRenderables; i += 1)
+                    {
+                        renderable = renderables[i];
+                        overlappingRenderables[numOverlappingRenderables] = renderable;
+                        numOverlappingRenderables += 1;
+                    }
+                }
+            }
+        }
+
+        overlappingRenderables.length = numOverlappingRenderables;
+
+        return frustumUpdated;
     }
 
     private _sortNegative(a, b): number
