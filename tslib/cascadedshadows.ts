@@ -154,6 +154,7 @@ class CascadedShadowMapping
     numSplitFrustumPlanes: number;
     splitFrustumPlanes  : any[];
     intersectingPlanes  : any[];
+    frustumPoints       : any[];
     visibleNodes        : SceneNode[];
     numOccludees        : number;
     occludeesExtents    : any[];
@@ -256,6 +257,7 @@ class CascadedShadowMapping
         this.numSplitFrustumPlanes = 0;
         this.splitFrustumPlanes = [];
         this.intersectingPlanes = [];
+        this.frustumPoints = [];
         this.visibleNodes = [];
         this.numOccludees = 0;
         this.occludeesExtents = [];
@@ -445,14 +447,14 @@ class CascadedShadowMapping
         var splitStart = camera.nearPlane;
         var previousSplitPoints = [];
         var n, split, splitEnd;
-        var frustumPoints;
+        var frustumPoints = this.frustumPoints;
         for (n = 0; n < numSplits; n += 1)
         {
             split = splits[n];
 
             splitEnd = maxDistance * splitDistances[n];
 
-            frustumPoints = camera.getFrustumPoints(splitEnd, splitStart);
+            frustumPoints = camera.getFrustumPoints(splitEnd, splitStart, frustumPoints);
 
             this._updateSplit(split,
                               xaxis,
@@ -1225,7 +1227,7 @@ class CascadedShadowMapping
 
         if (occludersDrawArray.length)
         {
-            frustumPoints = split.camera.getFrustumFarPoints();
+            frustumPoints = split.camera.getFrustumFarPoints(split.camera.farPlane, frustumPoints);
             for (n = 0; n < 4; n += 1)
             {
                 previousSplitPoints.push(frustumPoints[n]);
