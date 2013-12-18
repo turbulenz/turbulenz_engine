@@ -17,6 +17,8 @@ class CascadedShadowSplit
     viewWindowX: number;
     viewWindowY: number;
 
+    occludeeMinZ: number;
+
     minLightDistance: number;
     maxLightDistance: number;
     minLightDistanceX: number;
@@ -59,6 +61,8 @@ class CascadedShadowSplit
         this.at = md.v3BuildZero();
         this.viewWindowX = 0;
         this.viewWindowY = 0;
+
+        this.occludeeMinZ = 0;
 
         this.minLightDistance = 0;
         this.maxLightDistance = 0;
@@ -151,6 +155,8 @@ class CascadedShadowMapping
     splitFrustumPlanes  : any[];
     intersectingPlanes  : any[];
     visibleNodes        : SceneNode[];
+    numOccludees        : number;
+    occludeesExtents    : any[];
     occludersExtents    : any[];
 
     shadowMappingShader : Shader;
@@ -251,6 +257,8 @@ class CascadedShadowMapping
         this.splitFrustumPlanes = [];
         this.intersectingPlanes = [];
         this.visibleNodes = [];
+        this.numOccludees = 0;
+        this.occludeesExtents = [];
         this.occludersExtents = [];
 
         var precision = gd.maxSupported("FRAGMENT_SHADER_PRECISION");
@@ -976,12 +984,15 @@ class CascadedShadowMapping
                 this.numSplitsToRedraw += 1;
             }
 
+            var occludeesExtents = this.occludeesExtents;
             var occludersExtents = this.occludersExtents;
 
             var numOccluders = this._filterOccluders(overlappingRenderables,
                                                      numStaticOverlappingRenderables,
                                                      occludersDrawArray,
-                                                     occludersExtents);
+                                                     occludeesExtents,
+                                                     occludersExtents,
+                                                     (scene.frameIndex - 1));
 
             numOccluders = this._updateOccludersLimits(split,
                                                        viewMatrix,
@@ -991,9 +1002,18 @@ class CascadedShadowMapping
 
             occludersDrawArray.length = numOccluders;
 
-            if (1 < numOccluders)
+            if (0 < numOccluders)
             {
-                occludersDrawArray.sort(this._sortNegative);
+                this._updateOccludeesLimits(split,
+                                            viewMatrix,
+                                            occludeesExtents);
+
+                debug.assert(0 <= split.occludeeMinZ);
+
+                if (1 < numOccluders)
+                {
+                    occludersDrawArray.sort(this._sortNegative);
+                }
             }
         }
         else
@@ -1006,8 +1026,6 @@ class CascadedShadowMapping
 
         var minLightDistance = (split.minLightDistance - distanceScale); // Need padding to avoid culling near objects
         var maxLightDistance = (split.maxLightDistance + distanceScale); // Need padding to avoid encoding singularity at far plane
-
-        debug.assert(0 <= split.minLightDistance);
 
         var minLightDistanceX = split.minLightDistanceX;
         var maxLightDistanceX = split.maxLightDistanceX;
@@ -1161,10 +1179,12 @@ class CascadedShadowMapping
         camera.updateViewProjectionMatrix();
         var shadowProjection = camera.viewProjectionMatrix;
 
-        var maxDepthReciprocal = (1.0 / (maxLightDistance - minLightDistance));
+        var minDepth = (split.occludeeMinZ - distanceScale);
+        var maxDepth = (split.maxLightDistance + distanceScale);
+        var maxDepthReciprocal = (1.0 / (maxDepth - minDepth));
 
         split.shadowDepthScale = -maxDepthReciprocal;
-        split.shadowDepthOffset = -minLightDistance * maxDepthReciprocal;
+        split.shadowDepthOffset = -minDepth * maxDepthReciprocal;
 
         var worldShadowProjection = split.worldShadowProjection;
         worldShadowProjection[0] = shadowProjection[0];
@@ -1178,7 +1198,7 @@ class CascadedShadowMapping
         worldShadowProjection[8] = -viewMatrix[2] * maxDepthReciprocal;
         worldShadowProjection[9] = -viewMatrix[5] * maxDepthReciprocal;
         worldShadowProjection[10] = -viewMatrix[8] * maxDepthReciprocal;
-        worldShadowProjection[11] = (-viewMatrix[11] - minLightDistance) * maxDepthReciprocal;
+        worldShadowProjection[11] = (-viewMatrix[11] - minDepth) * maxDepthReciprocal;
 
         var viewToShadowProjection = md.m43MulM44(mainCameraMatrix, shadowProjection, this.tempMatrix44);
         var viewToShadowMatrix = md.m43Mul(mainCameraMatrix, viewMatrix, this.tempMatrix43);
@@ -1195,7 +1215,7 @@ class CascadedShadowMapping
         viewShadowProjection[8] = -viewToShadowMatrix[2] * maxDepthReciprocal;
         viewShadowProjection[9] = -viewToShadowMatrix[5] * maxDepthReciprocal;
         viewShadowProjection[10] = -viewToShadowMatrix[8] * maxDepthReciprocal;
-        viewShadowProjection[11] = (-viewToShadowMatrix[11] - minLightDistance) * maxDepthReciprocal;
+        viewShadowProjection[11] = (-viewToShadowMatrix[11] - minDepth) * maxDepthReciprocal;
 
         var invSize = (1.0 / this.size);
         var shadowScaleOffset = split.shadowScaleOffset;
@@ -1358,9 +1378,12 @@ class CascadedShadowMapping
     private _filterOccluders(overlappingRenderables: any[],
                              numStaticOverlappingRenderables: number,
                              occludersDrawArray: any[],
-                             occludersExtents: any[]): number
+                             occludeesExtents: any[],
+                             occludersExtents: any[],
+                             frameIndex: number): number
     {
         var numOverlappingRenderables = overlappingRenderables.length;
+        var numOccludees = 0;
         var numOccluders = 0;
         var n, renderable, worldExtents, rendererInfo;
         var drawParametersArray, numDrawParameters, drawParametersIndex;
@@ -1401,9 +1424,93 @@ class CascadedShadowMapping
                         }
                     }
                 }
+
+                if (frameIndex === renderable.frameVisible)
+                {
+                    if (n >= numStaticOverlappingRenderables)
+                    {
+                        worldExtents = renderable.getWorldExtents();
+                    }
+                    else
+                    {
+                        // We can use the property directly because as it is static it should not change!
+                        worldExtents = renderable.worldExtents;
+                    }
+                    occludeesExtents[numOccludees] = worldExtents;
+                    numOccludees += 1;
+                }
             }
         }
+        this.numOccludees = numOccludees;
         return numOccluders;
+    }
+
+    private _updateOccludeesLimits(split: CascadedShadowSplit,
+                                   viewMatrix: any,
+                                   occludeesExtents: any[]): number
+    {
+        var numOccludees = this.numOccludees;
+
+        var d0 = -viewMatrix[2];
+        var d1 = -viewMatrix[5];
+        var d2 = -viewMatrix[8];
+        var offset = viewMatrix[11];
+
+        var maxWindowZ = split.lightDepth;
+
+        var minLightDistance = split.maxLightDistance;
+
+        var n, extents, n0, n1, n2, p0, p1, p2, lightDistance;
+
+        for (n = 0; n < numOccludees; )
+        {
+            extents = occludeesExtents[n];
+            n0 = extents[0];
+            n1 = extents[1];
+            n2 = extents[2];
+            p0 = extents[3];
+            p1 = extents[4];
+            p2 = extents[5];
+
+            lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
+            if (minLightDistance < maxWindowZ)
+            {
+                if (lightDistance < minLightDistance)
+                {
+                    minLightDistance = lightDistance;
+                }
+
+                n += 1;
+            }
+            else
+            {
+                numOccludees -= 1;
+                if (n < numOccludees)
+                {
+                    occludeesExtents[n] = occludeesExtents[numOccludees];
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        if (minLightDistance < split.minLightDistance)
+        {
+            minLightDistance = split.minLightDistance;
+        }
+
+        if (0 < numOccludees)
+        {
+            split.occludeeMinZ = minLightDistance;
+        }
+        else
+        {
+            split.occludeeMinZ = split.minLightDistance;
+        }
+
+        return numOccludees;
     }
 
     private _updateOccludersLimits(split: CascadedShadowSplit,
@@ -1707,6 +1814,7 @@ class CascadedShadowMapping
         delete this.globalTechniqueParameters;
         delete this.globalTechniqueParametersArray;
         delete this.occludersExtents;
+        delete this.occludeesExtents;
         delete this.md;
         delete this.gd;
     }
