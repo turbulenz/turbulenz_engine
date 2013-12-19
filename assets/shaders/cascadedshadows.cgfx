@@ -28,25 +28,23 @@ sampler2D shadowMap = sampler_state
 
 float4 EncodeFloatRGBA32(float v)
 {
-    if (v < 1)
+    if (v >= 1.0)
     {
-        float4 enc = max(v, 0) * float4(1.0, 255.0, 65025.0, 16581375.0);
-        enc = frac(enc);
-        enc.xyz -= enc.yzw * float3(1.0/255.0, 1.0/255.0, 1.0/255.0);
-        return enc;
+        return float4(1.0, 1.0, 1.0, 1.0);
     }
     else
     {
-        return float4(1, 0, 0, 0);
+        float4 enc = frac(saturate(v) * float4(16777216.0, 65536.0, 256.0, 1.0)) * 256.0;
+        enc.yzw -= (enc.xyz / 256.0);
+        return (enc / 255.0);
     }
 }
 
 float DecodeFloatRGBA32(float4 rgba)
 {
-    return dot(rgba, float4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/16581375.0));
+    return saturate(dot(rgba, float4(255.0/4294967296.0, 255.0/16777216.0, 255.0/65536.0, 255.0/256.0)));
 }
 
-// The 16bit encoding is different because the 32bit one would waste 2048 values for the encoding of "1"
 float4 EncodeFloatRGB16(float v)
 {
     v = saturate(v);
@@ -142,18 +140,16 @@ void vp_blur(in float4 INPosition : POSITION,
 //
 float4 fp(in float INDepth : TEXCOORD0) : COLOR
 {
-    //return EncodeFloatRGBA32(Depth); //float4(Depth, Depth, Depth, 1.0);
-    //return EncodeFloatRGB16((INDepth.x / INDepth.y) * 0.5 + 0.5);
-    return EncodeFloatRGB16(INDepth);
+    return EncodeFloatRGBA32(INDepth);
 }
 
 float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
 {
-    float sample0 = DecodeFloatRGB16(tex2D(shadowMap, (UV - (2.0 * pixelOffset))));
-    float sample1 = DecodeFloatRGB16(tex2D(shadowMap, (UV - (1.0 * pixelOffset))));
-    float sample2 = DecodeFloatRGB16(tex2D(shadowMap,  UV));
-    float sample3 = DecodeFloatRGB16(tex2D(shadowMap, (UV + (1.0 * pixelOffset))));
-    float sample4 = DecodeFloatRGB16(tex2D(shadowMap, (UV + (2.0 * pixelOffset))));
+    float sample0 = DecodeFloatRGBA32(tex2D(shadowMap, (UV - (2.0 * pixelOffset))));
+    float sample1 = DecodeFloatRGBA32(tex2D(shadowMap, (UV - (1.0 * pixelOffset))));
+    float sample2 = DecodeFloatRGBA32(tex2D(shadowMap,  UV));
+    float sample3 = DecodeFloatRGBA32(tex2D(shadowMap, (UV + (1.0 * pixelOffset))));
+    float sample4 = DecodeFloatRGBA32(tex2D(shadowMap, (UV + (2.0 * pixelOffset))));
 
     const float c = (1.0 / 5.0);
 
@@ -162,7 +158,7 @@ float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
     accum = log_conv(1.0, accum, c, sample3);
     accum = log_conv(1.0, accum, c, sample4);
 
-    return EncodeFloatRGB16(accum);
+    return EncodeFloatRGBA32(accum);
 }
 
 //

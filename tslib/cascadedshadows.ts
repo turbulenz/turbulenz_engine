@@ -357,13 +357,13 @@ class CascadedShadowMapping
         this.depthBuffer = gd.createRenderBuffer({
                 width: size,
                 height: size,
-                format: "D16"
+                format: "D24S8"
             });
 
         this.blurTexture = gd.createTexture({
                 width: splitSize,
                 height: splitSize,
-                format: "R5G6B5",
+                format: "R8G8B8A8",
                 mipmaps: false,
                 renderable: true
             });
@@ -380,7 +380,7 @@ class CascadedShadowMapping
                 this.texture = gd.createTexture({
                     width: size,
                     height: size,
-                    format: "R5G6B5",
+                    format: "R8G8B8A8",
                     mipmaps: false,
                     renderable: true
                 });
