@@ -17,8 +17,6 @@ class CascadedShadowSplit
     viewWindowX: number;
     viewWindowY: number;
 
-    occludeeMinZ: number;
-
     minLightDistance: number;
     maxLightDistance: number;
     minLightDistanceX: number;
@@ -61,8 +59,6 @@ class CascadedShadowSplit
         this.at = md.v3BuildZero();
         this.viewWindowX = 0;
         this.viewWindowY = 0;
-
-        this.occludeeMinZ = 0;
 
         this.minLightDistance = 0;
         this.maxLightDistance = 0;
@@ -1010,8 +1006,6 @@ class CascadedShadowMapping
                                             viewMatrix,
                                             occludeesExtents);
 
-                debug.assert(0 <= split.occludeeMinZ);
-
                 if (1 < numOccluders)
                 {
                     occludersDrawArray.sort(this._sortNegative);
@@ -1181,12 +1175,8 @@ class CascadedShadowMapping
         camera.updateViewProjectionMatrix();
         var shadowProjection = camera.viewProjectionMatrix;
 
-        var minDepth = (split.occludeeMinZ - distanceScale);
-        var maxDepth = (split.maxLightDistance + distanceScale);
-        var maxDepthReciprocal = (1.0 / (maxDepth - minDepth));
-
-        split.shadowDepthScale = -maxDepthReciprocal;
-        split.shadowDepthOffset = -minDepth * maxDepthReciprocal;
+        var shadowDepthScale = split.shadowDepthScale;
+        var shadowDepthOffset = (shadowDepthScale ? split.shadowDepthOffset : 1.0);
 
         var worldShadowProjection = split.worldShadowProjection;
         worldShadowProjection[0] = shadowProjection[0];
@@ -1197,10 +1187,10 @@ class CascadedShadowMapping
         worldShadowProjection[5] = shadowProjection[5];
         worldShadowProjection[6] = shadowProjection[9];
         worldShadowProjection[7] = shadowProjection[13];
-        worldShadowProjection[8] = -viewMatrix[2] * maxDepthReciprocal;
-        worldShadowProjection[9] = -viewMatrix[5] * maxDepthReciprocal;
-        worldShadowProjection[10] = -viewMatrix[8] * maxDepthReciprocal;
-        worldShadowProjection[11] = (-viewMatrix[11] - minDepth) * maxDepthReciprocal;
+        worldShadowProjection[8] = viewMatrix[2] * shadowDepthScale;
+        worldShadowProjection[9] = viewMatrix[5] * shadowDepthScale;
+        worldShadowProjection[10] = viewMatrix[8] * shadowDepthScale;
+        worldShadowProjection[11] = (viewMatrix[11] * shadowDepthScale) + shadowDepthOffset;
 
         var viewToShadowProjection = md.m43MulM44(mainCameraMatrix, shadowProjection, this.tempMatrix44);
         var viewToShadowMatrix = md.m43Mul(mainCameraMatrix, viewMatrix, this.tempMatrix43);
@@ -1214,10 +1204,10 @@ class CascadedShadowMapping
         viewShadowProjection[5] = viewToShadowProjection[5];
         viewShadowProjection[6] = viewToShadowProjection[9];
         viewShadowProjection[7] = viewToShadowProjection[13];
-        viewShadowProjection[8] = -viewToShadowMatrix[2] * maxDepthReciprocal;
-        viewShadowProjection[9] = -viewToShadowMatrix[5] * maxDepthReciprocal;
-        viewShadowProjection[10] = -viewToShadowMatrix[8] * maxDepthReciprocal;
-        viewShadowProjection[11] = (-viewToShadowMatrix[11] - minDepth) * maxDepthReciprocal;
+        viewShadowProjection[8] = viewToShadowMatrix[2] * shadowDepthScale;
+        viewShadowProjection[9] = viewToShadowMatrix[5] * shadowDepthScale;
+        viewShadowProjection[10] = viewToShadowMatrix[8] * shadowDepthScale;
+        viewShadowProjection[11] = (viewToShadowMatrix[11] * shadowDepthScale) + shadowDepthOffset;
 
         var invSize = (1.0 / this.size);
         var shadowScaleOffset = split.shadowScaleOffset;
@@ -1449,7 +1439,7 @@ class CascadedShadowMapping
 
     private _updateOccludeesLimits(split: CascadedShadowSplit,
                                    viewMatrix: any,
-                                   occludeesExtents: any[]): number
+                                   occludeesExtents: any[]): void
     {
         var numOccludees = this.numOccludees;
 
@@ -1461,6 +1451,7 @@ class CascadedShadowMapping
         var maxWindowZ = split.lightDepth;
 
         var minLightDistance = split.maxLightDistance;
+        var maxLightDistance = split.minLightDistance;
 
         var n, extents, n0, n1, n2, p0, p1, p2, lightDistance;
 
@@ -1475,11 +1466,17 @@ class CascadedShadowMapping
             p2 = extents[5];
 
             lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
-            if (minLightDistance < maxWindowZ)
+            if (lightDistance < maxWindowZ)
             {
                 if (lightDistance < minLightDistance)
                 {
                     minLightDistance = lightDistance;
+                }
+
+                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)) - offset);
+                if (maxLightDistance < lightDistance)
+                {
+                    maxLightDistance = lightDistance;
                 }
 
                 n += 1;
@@ -1503,16 +1500,27 @@ class CascadedShadowMapping
             minLightDistance = split.minLightDistance;
         }
 
+        if (maxLightDistance > split.maxLightDistance)
+        {
+            maxLightDistance = split.maxLightDistance;
+        }
+
+        debug.assert(0 <= minLightDistance);
+
         if (0 < numOccludees)
         {
-            split.occludeeMinZ = minLightDistance;
+            var minDepth = minLightDistance;
+            var maxDepth = maxLightDistance;
+            var maxDepthReciprocal = (1.0 / (maxDepth - minDepth));
+
+            split.shadowDepthScale = -maxDepthReciprocal;
+            split.shadowDepthOffset = -minDepth * maxDepthReciprocal;
         }
         else
         {
-            split.occludeeMinZ = split.minLightDistance;
+            split.shadowDepthScale = 0;
+            split.shadowDepthOffset = 0;
         }
-
-        return numOccludees;
     }
 
     private _updateOccludersLimits(split: CascadedShadowSplit,
@@ -1558,13 +1566,13 @@ class CascadedShadowMapping
             p2 = extents[5];
 
             lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
-            if (lightDistance < minLightDistance)
+            if (lightDistance < maxWindowZ)
             {
-                minLightDistance = lightDistance;
-            }
+                if (lightDistance < minLightDistance)
+                {
+                    minLightDistance = lightDistance;
+                }
 
-            if (minLightDistance < maxWindowZ)
-            {
                 lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)) - offset);
                 if (maxLightDistance < lightDistance)
                 {
