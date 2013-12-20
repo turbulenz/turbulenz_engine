@@ -33,6 +33,7 @@ class CascadedShadowSplit
 
     staticNodesChangeCounter: number;
     numStaticOverlappingRenderables: number;
+    numOverlappingRenderables: number;
     needsRedraw: boolean;
     needsBlur: boolean;
 
@@ -75,6 +76,7 @@ class CascadedShadowSplit
         this.shadowDepthOffset = 0;
 
         this.staticNodesChangeCounter = -1;
+        this.numOverlappingRenderables = -1;
         this.numStaticOverlappingRenderables = -1;
         this.needsRedraw = false;
         this.needsBlur = false;
@@ -969,10 +971,11 @@ class CascadedShadowMapping
         // Now prepare draw array
         var overlappingRenderables = split.overlappingRenderables;
         var occludersDrawArray = split.occludersDrawArray;
+        var numOverlappingRenderables = split.numOverlappingRenderables;
         var numStaticOverlappingRenderables = split.numStaticOverlappingRenderables;
 
         if (frustumUpdated ||
-            numStaticOverlappingRenderables !== overlappingRenderables.length)
+            numStaticOverlappingRenderables !== numOverlappingRenderables)
         {
             split.needsBlur = true;
 
@@ -986,6 +989,7 @@ class CascadedShadowMapping
             var occludersExtents = this.occludersExtents;
 
             var numOccluders = this._filterOccluders(overlappingRenderables,
+                                                     numOverlappingRenderables,
                                                      numStaticOverlappingRenderables,
                                                      occludersDrawArray,
                                                      occludeesExtents,
@@ -1274,7 +1278,6 @@ class CascadedShadowMapping
 
             frustumUpdated = true;
 
-            overlappingRenderables.length = 0;
             numOverlappingRenderables = 0;
 
             numVisibleNodes = scene.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, 0);
@@ -1319,8 +1322,6 @@ class CascadedShadowMapping
             numOverlappingRenderables = split.numStaticOverlappingRenderables;
         }
 
-        overlappingRenderables.length = numOverlappingRenderables;
-
         // Query the dynamic renderables
         numVisibleNodes = scene.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, 0);
 
@@ -1357,7 +1358,7 @@ class CascadedShadowMapping
             }
         }
 
-        overlappingRenderables.length = numOverlappingRenderables;
+        split.numOverlappingRenderables = numOverlappingRenderables;
 
         return frustumUpdated;
     }
@@ -1368,13 +1369,13 @@ class CascadedShadowMapping
     }
 
     private _filterOccluders(overlappingRenderables: any[],
+                             numOverlappingRenderables: number,
                              numStaticOverlappingRenderables: number,
                              occludersDrawArray: any[],
                              occludeesExtents: any[],
                              occludersExtents: any[],
                              frameIndex: number): number
     {
-        var numOverlappingRenderables = overlappingRenderables.length;
         var numOccludees = 0;
         var numOccluders = 0;
         var n, renderable, worldExtents, rendererInfo;
