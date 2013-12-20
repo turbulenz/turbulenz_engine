@@ -38,6 +38,7 @@ class CascadedShadowSplit
     needsBlur: boolean;
 
     overlappingRenderables: Renderable[];
+    overlappingExtents: any[]; // AABB
     occludersDrawArray: DrawParameters[];
 
     worldShadowProjection: any; // m34
@@ -82,6 +83,7 @@ class CascadedShadowSplit
         this.needsBlur = false;
 
         this.overlappingRenderables = [];
+        this.overlappingExtents = [];
         this.occludersDrawArray = [];
 
         this.worldShadowProjection = md.m34BuildIdentity();
@@ -642,14 +644,20 @@ class CascadedShadowMapping
         return planes;
     }
 
-    private _isInsidePlanesAABB(extents: any, planes: any[], numPlanes: number): boolean
+    private _isInsidePlanesAABB(extents: any,
+                                planes: any[],
+                                numPlanes: number,
+                                overlappingExtents: any[],
+                                numOverlappingRenderables: number): boolean
     {
+        var abs = Math.abs;
         var n0 = extents[0];
         var n1 = extents[1];
         var n2 = extents[2];
         var p0 = extents[3];
         var p1 = extents[4];
         var p2 = extents[5];
+
         var n = 0;
         do
         {
@@ -657,13 +665,66 @@ class CascadedShadowMapping
             var d0 = plane[0];
             var d1 = plane[1];
             var d2 = plane[2];
-            if ((d0 * (d0 < 0 ? n0 : p0) + d1 * (d1 < 0 ? n1 : p1) + d2 * (d2 < 0 ? n2 : p2)) < plane[3])
+            var maxDistance = (d0 * (d0 < 0 ? n0 : p0) + d1 * (d1 < 0 ? n1 : p1) + d2 * (d2 < 0 ? n2 : p2) - plane[3]);
+            if (maxDistance < 0.001)
             {
                 return false;
             }
+            else
+            {
+                // Clamp extents to the part that is inside the plane
+                if (maxDistance < abs(d0) * (p0 - n0))
+                {
+                    if (d0 < 0)
+                    {
+                        p0 = n0 - (maxDistance / d0);
+                    }
+                    else
+                    {
+                        n0 = p0 - (maxDistance / d0);
+                    }
+                }
+                if (maxDistance < abs(d1) * (p1 - n1))
+                {
+                    if (d1 < 0)
+                    {
+                        p1 = n1 - (maxDistance / d1);
+                    }
+                    else
+                    {
+                        n1 = p1 - (maxDistance / d1);
+                    }
+                }
+                if (maxDistance < abs(d2) * (p2 - n2))
+                {
+                    if (d2 < 0)
+                    {
+                        p2 = n2 - (maxDistance / d2);
+                    }
+                    else
+                    {
+                        n2 = p2 - (maxDistance / d2);
+                    }
+                }
+            }
+
             n += 1;
         }
         while (n < numPlanes);
+
+        var res = overlappingExtents[numOverlappingRenderables];
+        if (!res)
+        {
+            res = new Float32Array(6);
+            overlappingExtents[numOverlappingRenderables] = res;
+        }
+        res[0] = n0;
+        res[1] = n1;
+        res[2] = n2;
+        res[3] = p0;
+        res[4] = p1;
+        res[5] = p2;
+
         return true;
     }
 
@@ -970,6 +1031,7 @@ class CascadedShadowMapping
 
         // Now prepare draw array
         var overlappingRenderables = split.overlappingRenderables;
+        var overlappingExtents = split.overlappingExtents;
         var occludersDrawArray = split.occludersDrawArray;
         var numOverlappingRenderables = split.numOverlappingRenderables;
         var numStaticOverlappingRenderables = split.numStaticOverlappingRenderables;
@@ -989,6 +1051,7 @@ class CascadedShadowMapping
             var occludersExtents = this.occludersExtents;
 
             var numOccluders = this._filterOccluders(overlappingRenderables,
+                                                     overlappingExtents,
                                                      numOverlappingRenderables,
                                                      numStaticOverlappingRenderables,
                                                      occludersDrawArray,
@@ -1246,12 +1309,13 @@ class CascadedShadowMapping
         var previousAt = split.at;
 
         var overlappingRenderables = split.overlappingRenderables;
+        var overlappingExtents = split.overlappingExtents;
 
         var staticNodesChangeCounter = scene.staticNodesChangeCounter;
 
         var numOverlappingRenderables, numVisibleNodes;
         var node, renderables, numRenderables, renderable;
-        var i, n;
+        var i, n, extents, extentsCopy;
 
         var frustumUpdated = false;
         if (previousAt[0] !== zaxis[0] ||
@@ -1296,7 +1360,12 @@ class CascadedShadowMapping
                         for (i = 0; i < numRenderables; i += 1)
                         {
                             renderable = renderables[i];
-                            if (_isInsidePlanesAABB(renderable.getWorldExtents(), intersectingPlanes, numIntersectingPlanes))
+                            extents = renderable.getWorldExtents();
+                            if (_isInsidePlanesAABB(extents,
+                                                    intersectingPlanes,
+                                                    numIntersectingPlanes,
+                                                    overlappingExtents,
+                                                    numOverlappingRenderables))
                             {
                                 overlappingRenderables[numOverlappingRenderables] = renderable;
                                 numOverlappingRenderables += 1;
@@ -1308,6 +1377,21 @@ class CascadedShadowMapping
                         for (i = 0; i < numRenderables; i += 1)
                         {
                             renderable = renderables[i];
+
+                            extents = renderable.getWorldExtents();
+                            extentsCopy = overlappingExtents[numOverlappingRenderables];
+                            if (!extentsCopy)
+                            {
+                                extentsCopy = new Float32Array(6);
+                                overlappingExtents[numOverlappingRenderables] = extentsCopy;
+                            }
+                            extentsCopy[0] = extents[0];
+                            extentsCopy[1] = extents[1];
+                            extentsCopy[2] = extents[2];
+                            extentsCopy[3] = extents[3];
+                            extentsCopy[4] = extents[4];
+                            extentsCopy[5] = extents[5];
+
                             overlappingRenderables[numOverlappingRenderables] = renderable;
                             numOverlappingRenderables += 1;
                         }
@@ -1339,7 +1423,12 @@ class CascadedShadowMapping
                     for (i = 0; i < numRenderables; i += 1)
                     {
                         renderable = renderables[i];
-                        if (_isInsidePlanesAABB(renderable.getWorldExtents(), intersectingPlanes, numIntersectingPlanes))
+                        extents = renderable.getWorldExtents();
+                        if (_isInsidePlanesAABB(extents,
+                                                intersectingPlanes,
+                                                numIntersectingPlanes,
+                                                overlappingExtents,
+                                                numOverlappingRenderables))
                         {
                             overlappingRenderables[numOverlappingRenderables] = renderable;
                             numOverlappingRenderables += 1;
@@ -1351,6 +1440,21 @@ class CascadedShadowMapping
                     for (i = 0; i < numRenderables; i += 1)
                     {
                         renderable = renderables[i];
+
+                        extents = renderable.getWorldExtents();
+                        extentsCopy = overlappingExtents[numOverlappingRenderables];
+                        if (!extentsCopy)
+                        {
+                            extentsCopy = new Float32Array(6);
+                            overlappingExtents[numOverlappingRenderables] = extentsCopy;
+                        }
+                        extentsCopy[0] = extents[0];
+                        extentsCopy[1] = extents[1];
+                        extentsCopy[2] = extents[2];
+                        extentsCopy[3] = extents[3];
+                        extentsCopy[4] = extents[4];
+                        extentsCopy[5] = extents[5];
+
                         overlappingRenderables[numOverlappingRenderables] = renderable;
                         numOverlappingRenderables += 1;
                     }
@@ -1369,6 +1473,7 @@ class CascadedShadowMapping
     }
 
     private _filterOccluders(overlappingRenderables: Renderable[],
+                             overlappingExtents: any[],
                              numOverlappingRenderables: number,
                              numStaticOverlappingRenderables: number,
                              occludersDrawArray: DrawParameters[],
@@ -1378,7 +1483,7 @@ class CascadedShadowMapping
     {
         var numOccludees = 0;
         var numOccluders = 0;
-        var n, renderable, worldExtents, rendererInfo;
+        var n, renderable, extents, rendererInfo, shadowMappingUpdate;
         var drawParametersArray, numDrawParameters, drawParametersIndex;
         for (n = 0; n < numOverlappingRenderables; n += 1)
         {
@@ -1393,26 +1498,19 @@ class CascadedShadowMapping
                         rendererInfo = renderingCommonCreateRendererInfoFn(renderable);
                     }
 
-                    if (rendererInfo.shadowMappingUpdate)
+                    shadowMappingUpdate = rendererInfo.shadowMappingUpdate;
+                    if (shadowMappingUpdate)
                     {
-                        rendererInfo.shadowMappingUpdate.call(renderable);
+                        shadowMappingUpdate.call(renderable);
 
-                        if (n >= numStaticOverlappingRenderables)
-                        {
-                            worldExtents = renderable.getWorldExtents();
-                        }
-                        else
-                        {
-                            // We can use the property directly because as it is static it should not change!
-                            worldExtents = renderable.worldExtents;
-                        }
+                        extents = overlappingExtents[n];
 
                         drawParametersArray = renderable.shadowMappingDrawParameters;
                         numDrawParameters = drawParametersArray.length;
                         for (drawParametersIndex = 0; drawParametersIndex < numDrawParameters; drawParametersIndex += 1)
                         {
                             occludersDrawArray[numOccluders] = drawParametersArray[drawParametersIndex];
-                            occludersExtents[numOccluders] = worldExtents;
+                            occludersExtents[numOccluders] = extents;
                             numOccluders += 1;
                         }
                     }
@@ -1420,16 +1518,7 @@ class CascadedShadowMapping
 
                 if (frameIndex === renderable.frameVisible)
                 {
-                    if (n >= numStaticOverlappingRenderables)
-                    {
-                        worldExtents = renderable.getWorldExtents();
-                    }
-                    else
-                    {
-                        // We can use the property directly because as it is static it should not change!
-                        worldExtents = renderable.worldExtents;
-                    }
-                    occludeesExtents[numOccludees] = worldExtents;
+                    occludeesExtents[numOccludees] = overlappingExtents[n];
                     numOccludees += 1;
                 }
             }
