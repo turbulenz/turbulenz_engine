@@ -73,7 +73,7 @@ class CascadedShadowSplit
         this.lightViewWindowY = 0;
         this.lightDepth = 0;
 
-        this.shadowDepthScale = 1;
+        this.shadowDepthScale = 0;
         this.shadowDepthOffset = 0;
 
         this.staticNodesChangeCounter = -1;
@@ -1224,6 +1224,13 @@ class CascadedShadowMapping
         if (lightViewWindowY > minimalViewWindowY)
         {
             lightViewWindowY = minimalViewWindowY;
+        }
+
+        if (lightViewWindowX === 0 ||
+            lightViewWindowY === 0)
+        {
+            lightViewWindowX = 0.001;
+            lightViewWindowY = 0.001;
         }
 
         camera.recipViewWindowX = 1.0 / lightViewWindowX;
