@@ -30,6 +30,7 @@ interface Renderable
 
     clone(): Renderable;
     isSkinned(): boolean;
+    getWorldExtents();
     hasCustomWorldExtents(): boolean;
     addCustomWorldExtents(extents: any);
     setNode(node: SceneNode);
