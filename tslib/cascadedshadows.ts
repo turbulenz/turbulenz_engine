@@ -1368,10 +1368,10 @@ class CascadedShadowMapping
         return (a.sortKey - b.sortKey);
     }
 
-    private _filterOccluders(overlappingRenderables: any[],
+    private _filterOccluders(overlappingRenderables: Renderable[],
                              numOverlappingRenderables: number,
                              numStaticOverlappingRenderables: number,
-                             occludersDrawArray: any[],
+                             occludersDrawArray: DrawParameters[],
                              occludeesExtents: any[],
                              occludersExtents: any[],
                              frameIndex: number): number
