@@ -397,8 +397,8 @@ class CascadedShadowMapping
                     if (this.renderTarget)
                     {
                         var techniqueParameters = this.techniqueParameters;
-                        techniqueParameters['shadowSize'] = splitSize;
-                        techniqueParameters['invShadowSize'] = (1.0 / splitSize);
+                        techniqueParameters['shadowSize'] = size;
+                        techniqueParameters['invShadowSize'] = (1.0 / size);
                         techniqueParameters['shadowMapTexture'] = this.texture;
 
                         this.size = size;
@@ -1212,7 +1212,7 @@ class CascadedShadowMapping
             minimalViewWindowY = Math.max(Math.abs(maxLightDistanceY), Math.abs(minLightDistanceY));
         }
 
-        var borderPadding = (0.0 / shadowMapSize);
+        var borderPadding = (2.0 / shadowMapSize);
 
         minimalViewWindowX += borderPadding * minimalViewWindowX;
         if (lightViewWindowX > minimalViewWindowX)
