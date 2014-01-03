@@ -10,10 +10,21 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2013-12-16
+
+- Updated documentation about developer clients
+
+2013-11-11
+
+- Deprecated the *plugin-debug* build.  Sample apps no longer ship in
+  this configuration.
+- Fixed tools build under clang 3.3
+
 2013-11-07
 
 - Changed default materialColor and uvTransform setting behaviour in the renderers to set on the sharedMaterial
   instead of each renderable
+
 
 Version 1.2
 -----------
