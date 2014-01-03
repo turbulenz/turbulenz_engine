@@ -1754,6 +1754,10 @@ class CascadedShadowMapping
         var d2 = -viewMatrix[8];
         var offset = viewMatrix[11];
 
+        var maxWindowX = split.lightViewWindowX;
+        var minWindowX = -maxWindowX;
+        var maxWindowY = split.lightViewWindowY;
+        var minWindowY = -maxWindowY;
         var maxWindowZ = split.lightDepth;
 
         var minLightDistance = Number.MAX_VALUE;
@@ -1790,43 +1794,55 @@ class CascadedShadowMapping
                 }
 
                 lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
-                if (lightDistance < minLightDistanceX)
+                if (lightDistance < maxWindowX)
                 {
-                    minLightDistanceX = lightDistance;
-                }
+                    if (lightDistance < minLightDistanceX)
+                    {
+                        minLightDistanceX = lightDistance;
+                    }
 
-                lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
-                if (maxLightDistanceX < lightDistance)
-                {
-                    maxLightDistanceX = lightDistance;
-                }
+                    lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
+                    if (lightDistance > minWindowX)
+                    {
+                        if (maxLightDistanceX < lightDistance)
+                        {
+                            maxLightDistanceX = lightDistance;
+                        }
 
-                lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
-                if (lightDistance < minLightDistanceY)
-                {
-                    minLightDistanceY = lightDistance;
-                }
+                        lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
+                        if (lightDistance < maxWindowY)
+                        {
+                            if (lightDistance < minLightDistanceY)
+                            {
+                                minLightDistanceY = lightDistance;
+                            }
 
-                lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
-                if (maxLightDistanceY < lightDistance)
-                {
-                    maxLightDistanceY = lightDistance;
-                }
+                            lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
+                            if (lightDistance > minWindowY)
+                            {
+                                if (maxLightDistanceY < lightDistance)
+                                {
+                                    maxLightDistanceY = lightDistance;
+                                }
 
-                n += 1;
+                                n += 1;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // if we reach this code is because the occluder is out of bounds
+            numOccluders -= 1;
+            if (n < numOccluders)
+            {
+                occludersDrawArray[n] = occludersDrawArray[numOccluders];
+                occludersExtents[n] = occludersExtents[numOccluders];
             }
             else
             {
-                numOccluders -= 1;
-                if (n < numOccluders)
-                {
-                    occludersDrawArray[n] = occludersDrawArray[numOccluders];
-                    occludersExtents[n] = occludersExtents[numOccluders];
-                }
-                else
-                {
-                    break;
-                }
+                break;
             }
         }
 
