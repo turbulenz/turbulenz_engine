@@ -1718,14 +1718,13 @@ class CascadedShadowMapping
 
         debug.assert(0 <= minLightDistance);
 
-        if (0 < numOccludees)
+        var distanceRange = (maxLightDistance - minLightDistance);
+        if (0.001 < distanceRange)
         {
-            var minDepth = minLightDistance;
-            var maxDepth = maxLightDistance;
-            var maxDepthReciprocal = (1.0 / (maxDepth - minDepth));
+            var maxDepthReciprocal = (1.0 / distanceRange);
 
             split.shadowDepthScale = -maxDepthReciprocal;
-            split.shadowDepthOffset = -minDepth * maxDepthReciprocal;
+            split.shadowDepthOffset = -minLightDistance * maxDepthReciprocal;
         }
         else
         {
