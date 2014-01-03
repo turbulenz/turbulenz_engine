@@ -11,7 +11,7 @@ deploy_files:
 - img/leaderboards/*.png
 - staticmax/*
 deployed: Never
-engine_version: '0.27'
+engine_version: '0.28'
 is_multiplayer: true
 is_temp: false
 mapping_table: mapping_table.json

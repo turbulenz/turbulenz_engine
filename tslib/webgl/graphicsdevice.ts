@@ -149,6 +149,99 @@ class TZWebGLTexture implements Texture
         return true;
     }
 
+    convertDataToRGBA(gl, data, internalFormat, gltype, srcStep)
+    {
+        var numPixels = (data.length / srcStep);
+        var rgbaData = new Uint8Array(numPixels * 4);
+        var offset = 0;
+        var n, value, r, g, b, a;
+        if (internalFormat === gl.LUMINANCE)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                r = data[n];
+                rgbaData[offset    ] = r;
+                rgbaData[offset + 1] = r;
+                rgbaData[offset + 2] = r;
+                rgbaData[offset + 3] = 0xff;
+            }
+        }
+        else if (internalFormat === gl.ALPHA)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                a = data[n];
+                rgbaData[offset    ] = 0xff
+                rgbaData[offset + 1] = 0xff;
+                rgbaData[offset + 2] = 0xff;
+                rgbaData[offset + 3] = a;
+            }
+        }
+        else if (internalFormat === gl.LUMINANCE_ALPHA)
+        {
+            debug.assert(srcStep === 2);
+            for (n = 0; n < numPixels; n += 2, offset += 4)
+            {
+                r = data[n];
+                a = data[n + 1];
+                rgbaData[offset    ] = r
+                rgbaData[offset + 1] = r;
+                rgbaData[offset + 2] = r;
+                rgbaData[offset + 3] = a;
+            }
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_5_6_5)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 11) & 31);
+                g = ((value >> 5) & 63);
+                b = ((value) & 31);
+                rgbaData[offset    ] = ((r << 3) | (r >> 2));
+                rgbaData[offset + 1] = ((g << 2) | (g >> 4));
+                rgbaData[offset + 2] = ((b << 3) | (b >> 2));
+                rgbaData[offset + 3] = 0xff;
+            }
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_5_5_5_1)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 11) & 31);
+                g = ((value >> 6) & 31);
+                b = ((value >> 1) & 31);
+                a = ((value) & 1);
+                rgbaData[offset    ] = ((r << 3) | (r >> 2));
+                rgbaData[offset + 1] = ((g << 3) | (g >> 2));
+                rgbaData[offset + 2] = ((b << 3) | (b >> 2));
+                rgbaData[offset + 3] = (a ? 0xff : 0);
+            }
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_4_4_4_4)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 12) & 15);
+                g = ((value >> 8) & 15);
+                b = ((value >> 4) & 15);
+                a = ((value) & 15);
+                rgbaData[offset    ] = ((r << 4) | r);
+                rgbaData[offset + 1] = ((g << 4) | g);
+                rgbaData[offset + 2] = ((b << 4) | b);
+                rgbaData[offset + 3] = ((a << 4) | a);
+            }
+        }
+        return rgbaData;
+    }
+
     updateData(data)
     {
         var gd = this.gd;
@@ -389,6 +482,19 @@ class TZWebGLTexture implements Texture
             return;   //unknown/unsupported format
         }
 
+        if (gd.fixIE &&
+            ((internalFormat !== gl.RGBA && internalFormat !== gl.RGB) ||
+             (gltype !== gl.UNSIGNED_BYTE && gltype !== gl.FLOAT)))
+        {
+            if (bufferData)
+            {
+                bufferData = this.convertDataToRGBA(gl, bufferData, internalFormat, gltype, srcStep);
+            }
+            internalFormat = gl.RGBA;
+            gltype = gl.UNSIGNED_BYTE;
+            srcStep = 4;
+        }
+
         var numLevels = (data && 0 < this.numDataLevels ? this.numDataLevels : 1);
         var w = this.width, h = this.height, offset = 0, target, n, levelSize, levelData;
         if (this.cubemap)
@@ -410,14 +516,7 @@ class TZWebGLTexture implements Texture
                         levelSize = (Math.floor((w + 3) / 4) * Math.floor((h + 3) / 4) * srcStep);
                         if (bufferData)
                         {
-                            if (numLevels === 1)
-                            {
-                                levelData = bufferData;
-                            }
-                            else
-                            {
-                                levelData = bufferData.subarray(offset, (offset + levelSize));
-                            }
+                            levelData = bufferData.subarray(offset, (offset + levelSize));
                         }
                         else
                         {
@@ -439,14 +538,7 @@ class TZWebGLTexture implements Texture
                         levelSize = (w * h * srcStep);
                         if (bufferData)
                         {
-                            if (numLevels === 1)
-                            {
-                                levelData = bufferData;
-                            }
-                            else
-                            {
-                                levelData = bufferData.subarray(offset, (offset + levelSize));
-                            }
+                            levelData = bufferData.subarray(offset, (offset + levelSize));
                             gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
                         }
                         else if (data)
@@ -1096,6 +1188,7 @@ class TZWebGLTexture implements Texture
                     {
                         imageLoaded();
                         URL.revokeObjectURL(img.src);
+                        dataBlob = null;
                     };
                     src = URL.createObjectURL(dataBlob);
                 }
@@ -1146,12 +1239,14 @@ class TZWebGLTexture implements Texture
                             {
                                 if (xhrStatus === 200 || xhrStatus === 0)
                                 {
+                                    var blob = xhr.response;
                                     img.onload = function blobImageLoadedFn()
                                     {
                                         imageLoaded();
                                         URL.revokeObjectURL(img.src);
+                                        blob = null;
                                     };
-                                    img.src = URL.createObjectURL(xhr.response);
+                                    img.src = URL.createObjectURL(blob);
                                 }
                                 else
                                 {
@@ -1575,7 +1670,7 @@ class WebGLRenderBuffer implements RenderBuffer
             internalFormat = gl.DEPTH_COMPONENT16;
             attachment = gl.DEPTH_ATTACHMENT;
         }
-        else //if (gd.PIXELFORMAT_D24S8 === format)
+        else // if (gd.PIXELFORMAT_D24S8 === format)
         {
             internalFormat = gl.DEPTH_STENCIL;
             attachment = gl.DEPTH_STENCIL_ATTACHMENT;
@@ -1583,6 +1678,7 @@ class WebGLRenderBuffer implements RenderBuffer
         // else if (gd.PIXELFORMAT_S8 === format)
         // {
         //     internalFormat = gl.STENCIL_INDEX8;
+        //     attachment = gl.STENCIL_ATTACHMENT;
         // }
 
         gl.renderbufferStorage(gl.RENDERBUFFER, internalFormat, width, height);
@@ -1719,8 +1815,10 @@ class WebGLRenderTarget implements RenderTarget
             }
         }
 
-        gd.setViewport.apply(gd, this.oldViewportBox);
-        gd.setScissor.apply(gd, this.oldScissorBox);
+        var box = this.oldViewportBox;
+        gd.setViewport(box[0], box[1], box[2], box[3]);
+        box = this.oldScissorBox;
+        gd.setScissor(box[0], box[1], box[2], box[3]);
 
         if (this.colorTexture0)
         {
@@ -4118,7 +4216,19 @@ class TZWebGLShader implements Shader
                 }
                 var glShader = gl.createShader(glShaderType);
 
-                gl.shaderSource(glShader, program.code);
+                var code = program.code;
+
+                if (gd.fixIE)
+                {
+                    code = code.replace(/#.*\n/g, '');
+                    code = code.replace(/TZ_LOWP/g, '');
+                    if (-1 !== code.indexOf('texture2DProj'))
+                    {
+                        code = 'vec4 texture2DProj(sampler2D s, vec3 uv){ return texture2D(s, uv.xy / uv.z); }\n' + code;
+                    }
+                }
+
+                gl.shaderSource(glShader, code);
 
                 gl.compileShader(glShader);
 
@@ -4739,11 +4849,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
     width: number;
     height: number;
     extensions: string;
-    shadingLanguageVersion: number;
+    shadingLanguageVersion: string;
 
     fullscreen: boolean;
 
-    rendererVersion: number;
+    rendererVersion: string;
     renderer: string;
     vendor: string;
     videoRam: number;
@@ -4787,6 +4897,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     metrics: WebGLMetrics;
 
     counters: WebGLCreationCounters;
+
+    fixIE: boolean;
 
     drawIndexed(primitive: number, numIndices: number, first?: number)
     {
@@ -6516,6 +6628,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 canvas.mozRequestFullScreen();
             }
+            else if (canvas.msRequestFullscreen)
+            {
+                canvas.msRequestFullscreen();
+            }
             else if (canvas.requestFullScreen)
             {
                 canvas.requestFullScreen();
@@ -6530,6 +6646,14 @@ class WebGLGraphicsDevice implements GraphicsDevice
             if (document.webkitCancelFullScreen)
             {
                 document.webkitCancelFullScreen();
+            }
+            else if (document['mozCancelFullScreen'])
+            {
+                document['mozCancelFullScreen']();
+            }
+            else if (document.msExitFullscreen)
+            {
+                document.msExitFullscreen();
             }
             else if (document.cancelFullScreen)
             {
@@ -6995,6 +7119,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 var canvasParams = {
                     alpha: false,
+                    depth: true,
                     stencil: true,
                     antialias: false
                 };
@@ -7005,10 +7130,20 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     canvasParams.antialias = true;
                 }
 
-                var alpha = params.alpha ;
+                var alpha = params.alpha;
                 if (alpha)
                 {
                     canvasParams.alpha = true;
+                }
+
+                if (params.depth === false)
+                {
+                    canvasParams.depth = false;
+                }
+
+                if (params.stencil === false)
+                {
+                    canvasParams.stencil = false;
                 }
 
                 var numContexts = contextList.length, i;
@@ -7137,6 +7272,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.INDEXFORMAT_USHORT = gl.UNSIGNED_SHORT;
         gd.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
 
+        // Detect IE11 partial WebGL implementation...
+        gd.fixIE = (gd.vendor === 'Microsoft' && -1 !== gd.rendererVersion.indexOf('0.9'));
+
         var getNormalizationScale = function getNormalizationScaleFn(format)
         {
             if (format === gl.BYTE)
@@ -7260,22 +7398,44 @@ class WebGLGraphicsDevice implements GraphicsDevice
             return attributeFormat;
         }
 
-        gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
-        gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
-        gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
-        gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
-        gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
-        gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
-        gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
-        gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
-        gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
-        gd.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
-        gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
-        gd.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
-        gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-        gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-        gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-        gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+        if (gd.fixIE)
+        {
+            gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
+            gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
+            gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4');
+            gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
+            gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2');
+            gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2N');
+            gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4');
+            gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
+            gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2');
+            gd.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2N');
+            gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4');
+            gd.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
+            gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+            gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+            gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+            gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+        }
+        else
+        {
+            gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
+            gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
+            gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
+            gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
+            gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
+            gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
+            gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
+            gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
+            gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
+            gd.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
+            gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
+            gd.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
+            gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+            gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+            gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+            gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+        }
 
         gd.DEFAULT_SAMPLER = {
             minFilter : gl.LINEAR_MIPMAP_LINEAR,
@@ -8074,7 +8234,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
         addStateHandler("StencilOp", setStencilOp, resetStencilOp, parseEnum3, [defaultStencilOp, defaultStencilOp, defaultStencilOp]);
         addStateHandler("PolygonOffsetFillEnable", setPolygonOffsetFillEnable, resetPolygonOffsetFillEnable, parseBoolean, [false]);
         addStateHandler("PolygonOffset", setPolygonOffset, resetPolygonOffset, parseFloat2, [0, 0]);
-        addStateHandler("LineWidth", setLineWidth, resetLineWidth, parseFloat, [1]);
+        if (!gd.fixIE)
+        {
+            addStateHandler("LineWidth", setLineWidth, resetLineWidth, parseFloat, [1]);
+        }
         gd.stateHandlers = stateHandlers;
 
         gd.syncState();
@@ -8087,10 +8250,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             Object.defineProperty(gd, "fullscreen", {
                 get : function getFullscreenFn() {
-                    return (document.fullscreenEnabled ||
-                            document.mozFullScreen ||
-                            document.webkitIsFullScreen ||
-                            false);
+                    return (document.fullscreenElement ||
+                            document.webkitFullscreenElement ||
+                            document.mozFullScreenElement ||
+                            document.msFullscreenElement ?
+                            true : false);
                 },
                 set : function setFullscreenFn(newFullscreen) {
                     gd.requestFullScreen(newFullscreen);
@@ -8208,3 +8372,4 @@ WebGLGraphicsDevice.prototype.PIXELFORMAT_D16 = 9;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT1 = 10;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT3 = 11;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT5 = 12;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_S8 = 13;

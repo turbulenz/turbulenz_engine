@@ -1861,7 +1861,7 @@ class Scene
         var maxExtent1 = extents[4];
         var maxExtent2 = extents[5];
 
-        var overlappingNodes = [];
+        var overlappingNodes = this.queryVisibleNodes;
 
         var node;
         var numNodes;
@@ -1873,8 +1873,7 @@ class Scene
         var renderableIndex;
         var renderableExtents;
 
-        tree.getOverlappingNodes(extents, overlappingNodes);
-        numNodes = overlappingNodes.length;
+        numNodes = tree.getOverlappingNodes(extents, overlappingNodes, 0);
         for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
         {
             node = overlappingNodes[nodeIndex];
@@ -1987,10 +1986,6 @@ class Scene
         var isInsidePlanesAABB = this.isInsidePlanesAABB;
 
         var queryVisibleNodes = this.queryVisibleNodes;
-        if (!queryVisibleNodes)
-        {
-            this.queryVisibleNodes = queryVisibleNodes = [];
-        }
         var numQueryVisibleNodes = this.staticSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes, 0);
         numQueryVisibleNodes += this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes, numQueryVisibleNodes);
 
@@ -2823,7 +2818,8 @@ class Scene
             var currentSharedTechniqueParameters = null;
             var currentVertexBuffer = null;
             var currentSemantics = null;
-            var node, shape, sharedTechniqueParameters, techniqueParameters, vertexBuffer, semantics, surface, indexBuffer;
+            var currentOffset = -1;
+            var node, shape, sharedTechniqueParameters, techniqueParameters, vertexBuffer, semantics, offset, surface, indexBuffer;
             var renderables, renderable, numRenderables, i;
             var n = 0;
             setTechnique.call(gd, technique);
@@ -2843,6 +2839,7 @@ class Scene
 
                         shape = renderable.geometry;
                         vertexBuffer = shape.vertexBuffer;
+                        offset = shape.vertexOffset;
                         semantics = shape.semantics;
                         surface = renderable.surface;
                         sharedTechniqueParameters = renderable.sharedMaterial.techniqueParameters;
@@ -2859,11 +2856,13 @@ class Scene
                         }
 
                         if (currentVertexBuffer !== vertexBuffer ||
-                            currentSemantics !== semantics)
+                            currentSemantics !== semantics ||
+                            currentOffset !== offset)
                         {
                             currentVertexBuffer = vertexBuffer;
                             currentSemantics = semantics;
-                            setStream.call(gd, vertexBuffer, semantics);
+                            currentOffset = offset;
+                            setStream.call(gd, vertexBuffer, semantics, offset);
                         }
 
                         indexBuffer = surface.indexBuffer;
@@ -3017,6 +3016,7 @@ class Scene
         this.staticNodesChangeCounter = 0;
         this.testExtents = this.md.aabbBuildEmpty();
         this.externalNodesStack = [];
+        this.queryVisibleNodes = [];
     }
 
     //
@@ -3620,6 +3620,335 @@ class Scene
         }
     }
 
+    // For cases where > 1-index per vertex we process it to create 1-index per vertex from data
+    _updateSingleIndexTables(surface,
+                             indicesPerVertex,
+                             verticesAsIndexLists,
+                             verticesAsIndexListTable,
+                             numUniqueVertices)
+    {
+        var faces = surface.faces;
+        var numIndices = faces.length;
+
+        var numUniqueVertIndex = verticesAsIndexLists.length;
+        var vertIdx = 0;
+        var srcIdx = 0;
+        var n, maxn, index;
+        var currentLevel, nextLevel, thisVertIndex;
+
+        while (srcIdx < numIndices)
+        {
+            currentLevel = verticesAsIndexListTable;
+            n = srcIdx;
+            maxn = (srcIdx + (indicesPerVertex - 1));
+            do
+            {
+                index = faces[n];
+                nextLevel = currentLevel[index];
+                if (nextLevel === undefined)
+                {
+                    currentLevel[index] = nextLevel = {};
+                }
+                currentLevel = nextLevel;
+                n += 1;
+            }
+            while (n < maxn);
+
+            index = faces[n];
+            thisVertIndex = currentLevel[index];
+            if (thisVertIndex === undefined)
+            {
+                // New index - add to tables
+                currentLevel[index] = thisVertIndex = numUniqueVertices;
+                numUniqueVertices += 1;
+
+                // Copy indices
+                n = srcIdx;
+                do
+                {
+                    verticesAsIndexLists[numUniqueVertIndex] = faces[n];
+                    numUniqueVertIndex += 1;
+                    n += 1;
+                }
+                while (n < maxn);
+
+                verticesAsIndexLists[numUniqueVertIndex] = index;
+                numUniqueVertIndex += 1;
+            }
+
+            faces[vertIdx] = thisVertIndex;
+            vertIdx += 1;
+
+            srcIdx += indicesPerVertex;
+        }
+
+        surface.faces.length = vertIdx;
+
+        return numUniqueVertices;
+    }
+
+    _isSequentialIndices(indices, numIndices): boolean
+    {
+        var baseIndex = indices[0];
+        var n;
+        for (n = 1; n < numIndices; n += 1)
+        {
+            if (indices[n] !== (baseIndex + n))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // try to group sequential renderables into a single draw call
+    _optimizeRenderables(node: SceneNode, gd: GraphicsDevice): void
+    {
+        var renderables = node.renderables;
+        var numRenderables = renderables.length;
+        var triangles = gd.PRIMITIVE_TRIANGLES;
+        var vbMap = {};
+        var n, renderable, geometry, surface, vbid, ibMap, ibid, group;
+        var foundGroup = false;
+        for (n = 0; n < numRenderables; n += 1)
+        {
+            renderable = renderables[n];
+            surface = renderable.surface;
+            // we can only trivially group rigid triangle primitives
+            if (surface.primitive === triangles &&
+                renderable.geometryType === "rigid")
+            {
+                geometry = renderable.geometry;
+                vbid = geometry.vertexBuffer.id;
+                ibMap = vbMap[vbid];
+                if (ibMap === undefined)
+                {
+                    vbMap[vbid] = ibMap = {};
+                }
+                if (surface.indexBuffer)
+                {
+                    ibid = surface.indexBuffer.id;
+                }
+                else
+                {
+                    ibid = 'null';
+                }
+                group = ibMap[ibid];
+                if (group === undefined)
+                {
+                    ibMap[ibid] = [renderable];
+                }
+                else
+                {
+                    group.push(renderable);
+                    foundGroup = true;
+                }
+            }
+        }
+
+        function cloneSurface(surface: any): any
+        {
+            var clone = new surface.constructor();
+            var p;
+            for (p in surface)
+            {
+                if (surface.hasOwnProperty(p))
+                {
+                    clone[p] = surface[p];
+                }
+            }
+            return clone;
+        }
+
+        if (foundGroup)
+        {
+            var max = Math.max;
+            var min = Math.min;
+            var sequenceExtents = (this.float32ArrayConstructor ?
+                                   new this.float32ArrayConstructor(6) :
+                                   new Array(6));
+            var sequenceFirstRenderable, sequenceLength, sequenceVertexOffset, sequenceIndicesEnd, sequenceNumVertices;
+            var groupSize, g, lastMaterial, material, center, halfExtents;
+
+            var flushSequence = function flushSequenceFn()
+            {
+                var surface = cloneSurface(sequenceFirstRenderable.surface);
+                sequenceFirstRenderable.surface = surface;
+                if (surface.indexBuffer)
+                {
+                    surface.numIndices = (sequenceIndicesEnd - surface.first);
+                    surface.numVertices = sequenceNumVertices;
+                }
+                else
+                {
+                    surface.numVertices = (sequenceIndicesEnd - surface.first);
+                }
+
+                var c0 = (sequenceExtents[3] + sequenceExtents[0]) * 0.5;
+                var c1 = (sequenceExtents[4] + sequenceExtents[1]) * 0.5;
+                var c2 = (sequenceExtents[5] + sequenceExtents[2]) * 0.5;
+                if (c0 !== 0 ||
+                    c1 !== 0 ||
+                    c2 !== 0)
+                {
+                    var center = (this.float32ArrayConstructor ?
+                                  new this.float32ArrayConstructor(3) :
+                                  new Array(3));
+                    sequenceFirstRenderable.center = center;
+                    center[0] = c0;
+                    center[1] = c1;
+                    center[2] = c2;
+                }
+                else
+                {
+                    sequenceFirstRenderable.center = null;
+                }
+
+                var halfExtents = (this.float32ArrayConstructor ?
+                                   new this.float32ArrayConstructor(3) :
+                                   new Array(3));
+                sequenceFirstRenderable.halfExtents = halfExtents;
+                halfExtents[0] = (sequenceExtents[3] - sequenceExtents[0]) * 0.5;
+                halfExtents[1] = (sequenceExtents[4] - sequenceExtents[1]) * 0.5;
+                halfExtents[2] = (sequenceExtents[5] - sequenceExtents[2]) * 0.5;
+            };
+
+            numRenderables = 0;
+            for (vbid in vbMap)
+            {
+                if (vbMap.hasOwnProperty(vbid))
+                {
+                    ibMap = vbMap[vbid];
+                    for (ibid in ibMap)
+                    {
+                        if (ibMap.hasOwnProperty(ibid))
+                        {
+                            group = ibMap[ibid];
+                            groupSize = group.length;
+                            if (groupSize === 1)
+                            {
+                                renderables[numRenderables] = group[0];
+                                numRenderables += 1;
+                            }
+                            else
+                            {
+                                group.sort(function (a, b) {
+                                    return (a.geometry.vertexOffset - b.geometry.vertexOffset) || (a.surface.first - b.surface.first);
+                                });
+
+                                g = 0;
+                                lastMaterial = null;
+                                sequenceFirstRenderable = null;
+                                sequenceNumVertices = 0;
+                                sequenceVertexOffset = -1;
+                                sequenceIndicesEnd = 0;
+                                sequenceLength = 0;
+                                do
+                                {
+                                    renderable = group[g];
+                                    geometry = renderable.geometry;
+                                    surface = renderable.surface;
+                                    material = renderable.sharedMaterial;
+                                    center = renderable.center;
+                                    halfExtents = renderable.halfExtents;
+                                    if (sequenceVertexOffset !== geometry.vertexOffset ||
+                                        sequenceIndicesEnd !== surface.first ||
+                                        !lastMaterial ||
+                                        (lastMaterial !== material &&
+                                         !lastMaterial.isSimilar(material)))
+                                    {
+                                        if (0 < sequenceLength)
+                                        {
+                                            if (1 < sequenceLength)
+                                            {
+                                                flushSequence();
+                                            }
+
+                                            renderables[numRenderables] = sequenceFirstRenderable;
+                                            numRenderables += 1;
+                                        }
+
+                                        lastMaterial = material;
+                                        sequenceFirstRenderable = renderable;
+                                        sequenceNumVertices = 0;
+                                        sequenceLength = 1;
+                                        sequenceVertexOffset = geometry.vertexOffset;
+
+                                        if (center)
+                                        {
+                                            sequenceExtents[0] = (center[0] - halfExtents[0]);
+                                            sequenceExtents[1] = (center[1] - halfExtents[1]);
+                                            sequenceExtents[2] = (center[2] - halfExtents[2]);
+                                            sequenceExtents[3] = (center[0] + halfExtents[0]);
+                                            sequenceExtents[4] = (center[1] + halfExtents[1]);
+                                            sequenceExtents[5] = (center[2] + halfExtents[2]);
+                                        }
+                                        else
+                                        {
+                                            sequenceExtents[0] = -halfExtents[0];
+                                            sequenceExtents[1] = -halfExtents[1];
+                                            sequenceExtents[2] = -halfExtents[2];
+                                            sequenceExtents[3] = halfExtents[0];
+                                            sequenceExtents[4] = halfExtents[1];
+                                            sequenceExtents[5] = halfExtents[2];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        sequenceLength += 1;
+
+                                        if (center)
+                                        {
+                                            sequenceExtents[0] = min(sequenceExtents[0], (center[0] - halfExtents[0]));
+                                            sequenceExtents[1] = min(sequenceExtents[1], (center[1] - halfExtents[1]));
+                                            sequenceExtents[2] = min(sequenceExtents[2], (center[2] - halfExtents[2]));
+                                            sequenceExtents[3] = max(sequenceExtents[3], (center[0] + halfExtents[0]));
+                                            sequenceExtents[4] = max(sequenceExtents[4], (center[1] + halfExtents[1]));
+                                            sequenceExtents[5] = max(sequenceExtents[5], (center[2] + halfExtents[2]));
+                                        }
+                                        else
+                                        {
+                                            sequenceExtents[0] = min(sequenceExtents[0], -halfExtents[0]);
+                                            sequenceExtents[1] = min(sequenceExtents[1], -halfExtents[1]);
+                                            sequenceExtents[2] = min(sequenceExtents[2], -halfExtents[2]);
+                                            sequenceExtents[3] = max(sequenceExtents[3], halfExtents[0]);
+                                            sequenceExtents[4] = max(sequenceExtents[4], halfExtents[1]);
+                                            sequenceExtents[5] = max(sequenceExtents[5], halfExtents[2]);
+                                        }
+                                    }
+
+                                    if (surface.indexBuffer)
+                                    {
+                                        sequenceIndicesEnd = (surface.first + surface.numIndices);
+                                        sequenceNumVertices += surface.numVertices;
+                                    }
+                                    else
+                                    {
+                                        sequenceIndicesEnd = (surface.first + surface.numVertices);
+                                    }
+
+                                    g += 1;
+                                }
+                                while (g < groupSize);
+
+                                debug.assert(0 < sequenceLength);
+
+                                if (1 < sequenceLength)
+                                {
+                                    flushSequence();
+                                }
+
+                                renderables[numRenderables] = sequenceFirstRenderable;
+                                numRenderables += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            renderables.length = numRenderables;
+        }
+    }
+
     //
     // loadShape
     //
@@ -3924,90 +4253,28 @@ class Scene
                     }
                 }
 
-                // For cases where > 1-index per vertex we process it to create 1-index per vertex from data
-
-                var updateSingleIndexTables =
-                    function updateSingleIndexTablesFn(surface, indicesPerVertex,
-                                                       verticesAsIndexLists,
-                                                       verticesAsIndexListTable)
-                {
-                    var faces = surface.faces;
-                    var numVerts = faces.length / indicesPerVertex;
-
-                    var singleIndices = new Array(numVerts);
-                    var thisVert = new Array(indicesPerVertex);
-
-                    var vertIdx = 0;
-                    var srcIdx = 0;
-                    var nextSrcIdx = indicesPerVertex;
-                    var numUniqueVertIndex = verticesAsIndexLists.length;
-                    var numUniqueVertices = ((numUniqueVertIndex / indicesPerVertex) | 0 );
-                    var n;
-
-                    while (srcIdx < faces.length)
-                    {
-                        n = 0;
-                        do
-                        {
-                            thisVert[n] = faces[srcIdx];
-                            n += 1;
-                            srcIdx += 1;
-                        }
-                        while (srcIdx < nextSrcIdx);
-
-                        var thisVertHash = thisVert.join(",");
-
-                        var thisVertIndex = verticesAsIndexListTable[thisVertHash];
-                        if (thisVertIndex === undefined)
-                        {
-                            // New index - add to tables
-                            thisVertIndex = numUniqueVertices;
-                            verticesAsIndexListTable[thisVertHash] = thisVertIndex;
-                            numUniqueVertices += 1;
-
-                            // Copy indices
-                            n = 0;
-                            do
-                            {
-                                verticesAsIndexLists[numUniqueVertIndex] = thisVert[n];
-                                numUniqueVertIndex += 1;
-                                n += 1;
-                            }
-                            while (n < indicesPerVertex);
-                        }
-
-                        singleIndices[vertIdx] = thisVertIndex;
-
-                        nextSrcIdx += indicesPerVertex;
-                        vertIdx += 1;
-                    }
-
-                    surface.faces = singleIndices;
-                };
-
                 if (indicesPerVertex > 1)
                 {
                     // [ [a,b,c], [d,e,f], ... ]
+                    totalNumVertices = 0;
+
                     var verticesAsIndexLists = [];
                     var verticesAsIndexListTable = {};
-
                     var shapeSurfaces = shape.surfaces;
                     for (s in shapeSurfaces)
                     {
                         if (shapeSurfaces.hasOwnProperty(s))
                         {
                             var shapeSurface = shapeSurfaces[s];
-                            updateSingleIndexTables(shapeSurface,
-                                                    indicesPerVertex,
-                                                    verticesAsIndexLists,
-                                                    verticesAsIndexListTable);
+                            totalNumVertices = this._updateSingleIndexTables(shapeSurface,
+                                                                             indicesPerVertex,
+                                                                             verticesAsIndexLists,
+                                                                             verticesAsIndexListTable,
+                                                                             totalNumVertices);
                         }
                     }
 
                     verticesAsIndexListTable = null;
-
-                    // recalc totalNumVertices
-                    totalNumVertices = ((verticesAsIndexLists.length / indicesPerVertex) | 0);
 
                     // Recreate vertex buffer data on the vertexSources
                     for (vs = 0; vs < numVertexSources; vs += 1)
@@ -4128,20 +4395,6 @@ class Scene
                 vertexBuffer.setData(vertexData, baseIndex, totalNumVertices);
 
                 // Count total num indices
-                var isSequentialIndices = function isSequentialIndicesFn(indices, numIndices)
-                {
-                    var baseIndex = indices[0];
-                    var n;
-                    for (n = 1; n < numIndices; n += 1)
-                    {
-                        if (indices[n] !== (baseIndex + n))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-
                 var totalNumIndices = 0;
                 var numIndices;
 
@@ -4154,7 +4407,7 @@ class Scene
                         if (faces)
                         {
                             numIndices = faces.length;
-                            if (!isSequentialIndices(faces, numIndices))
+                            if (!this._isSequentialIndices(faces, numIndices))
                             {
                                 totalNumIndices += numIndices;
                             }
@@ -4166,6 +4419,34 @@ class Scene
                 if (0 < totalNumIndices)
                 {
                     maxIndex = (baseIndex + totalNumVertices - 1);
+                    if (maxIndex >= 65536)
+                    {
+                        if (totalNumVertices <= 65536)
+                        {
+                            // Assign vertex offsets in blocks of 16bits so we can optimize renderables togheter
+                            var blockBase = ((baseIndex >>> 16) << 16);
+                            baseIndex -= blockBase;
+                            if ((baseIndex + totalNumVertices) > 65536)
+                            {
+                                blockBase += (baseIndex + totalNumVertices - 65536);
+                                baseIndex = (65536 - totalNumVertices);
+                                maxIndex = 65535;
+                            }
+                            else
+                            {
+                                maxIndex = (baseIndex + totalNumVertices - 1);
+                            }
+                            shape.vertexOffset = blockBase;
+                        }
+                        else
+                        {
+                            shape.vertexOffset = 0;
+                        }
+                    }
+                    else
+                    {
+                        shape.vertexOffset = 0;
+                    }
 
                     indexBufferAllocation = indexBufferManager.allocate(totalNumIndices,
                                                                         (maxIndex < 65536 ? 'USHORT' : 'UINT'));
@@ -4212,7 +4493,7 @@ class Scene
                             numIndices = faces.length;
 
                             //See if they are all sequential, in which case we don't need an index buffer
-                            if (!isSequentialIndices(faces, numIndices))
+                            if (!this._isSequentialIndices(faces, numIndices))
                             {
                                 destSurface.indexBuffer = indexBuffer;
                                 destSurface.numIndices = numIndices;
@@ -4392,15 +4673,6 @@ class Scene
         {
             if (fileShapes.hasOwnProperty(fileShapeName))
             {
-                // Early check whether a geometry of the same name is
-                // already scheduled to load.
-
-                if (shapesToLoad[fileShapeName] ||
-                    customShapesToLoad[fileShapeName])
-                {
-                    throw "Multiple geometries named '" + fileShapeName + "'";
-                }
-
                 var fileShape = fileShapes[fileShapeName];
                 if (fileShape.meta && fileShape.meta.graphics)
                 {
@@ -4571,6 +4843,7 @@ class Scene
         var baseScene = loadParams.baseScene;
         var keepCameras = loadParams.keepCameras;
         var keepLights = loadParams.keepLights;
+        var optimizeHierarchy = loadParams.optimizeHierarchy;
         var disableNodes = loadParams.disabled;
 
         if (!loadParams.append)
@@ -4596,6 +4869,65 @@ class Scene
         var baseMatrix = loadParams.baseMatrix;
         var nodesNamePrefix = loadParams.nodesNamePrefix;
         var shapesNamePrefix = loadParams.shapesNamePrefix;
+
+        function optimizeNode(parent, child)
+        {
+            function matrixIsIdentity(matrix)
+            {
+                var abs = Math.abs;
+                return (abs(1.0 - matrix[0]) < 1e-5 &&
+                        abs(0.0 - matrix[1]) < 1e-5 &&
+                        abs(0.0 - matrix[2]) < 1e-5 &&
+                        abs(0.0 - matrix[3]) < 1e-5 &&
+                        abs(1.0 - matrix[4]) < 1e-5 &&
+                        abs(0.0 - matrix[5]) < 1e-5 &&
+                        abs(0.0 - matrix[6]) < 1e-5 &&
+                        abs(0.0 - matrix[7]) < 1e-5 &&
+                        abs(1.0 - matrix[8]) < 1e-5 &&
+                        abs(0.0 - matrix[9]) < 1e-5 &&
+                        abs(0.0 - matrix[10]) < 1e-5 &&
+                        abs(0.0 - matrix[11]) < 1e-5);
+            }
+
+            if ((!child.camera || !parent.camera) &&
+                child.disabled === parent.disabled &&
+                child.dynamic === parent.dynamic &&
+                child.kinematic === parent.kinematic &&
+                matrixIsIdentity(child.local))
+            {
+                if (child.renderables)
+                {
+                    parent.addRenderableArray(child.renderables);
+                }
+
+                if (child.lightInstances)
+                {
+                    parent.addLightInstanceArray(child.lightInstances);
+                }
+
+                if (child.camera)
+                {
+                    parent.camera = child.camera;
+                }
+
+                var grandChildren = child.children;
+                if (grandChildren)
+                {
+                    var n;
+                    var numGrandChildren = grandChildren;
+                    for (n = 0; n < numGrandChildren; n += 1)
+                    {
+                        if (!optimizeNode(parent, child))
+                        {
+                            parent.addChild(child);
+                        }
+                    }
+                }
+                return true;
+            }
+
+            return false;
+        }
 
         var copyNode = function copyNodeFn(nodeName, parentNodePath,
                                            baseNode, materialSkin)
@@ -4774,7 +5106,6 @@ class Scene
             }
 
             var fileChildren = this.nodes;
-
             if (fileChildren)
             {
                 for (var c in fileChildren)
@@ -4788,10 +5119,23 @@ class Scene
                                 this.skin || materialSkin);
                             if (child)
                             {
-                                node.addChild(child);
+                                if (!optimizeHierarchy ||
+                                    !optimizeNode(node, child))
+                                {
+                                    node.addChild(child);
+                                }
                             }
                         }
                     }
+                }
+            }
+
+            if (optimizeHierarchy)
+            {
+                if (node.renderables &&
+                    1 < node.renderables.length)
+                {
+                    currentScene._optimizeRenderables(node, gd);
                 }
             }
 

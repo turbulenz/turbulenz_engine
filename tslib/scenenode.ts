@@ -17,6 +17,7 @@ interface Renderable
     rendererInfo: any; // TODO?
     distance: number;
     drawParameters: DrawParameters[];
+    sharedMaterial: Material;
 
     skinController?: ControllerBaseClass;
 
@@ -29,6 +30,7 @@ interface Renderable
 
     clone(): Renderable;
     isSkinned(): boolean;
+    getWorldExtents();
     hasCustomWorldExtents(): boolean;
     addCustomWorldExtents(extents: any);
     setNode(node: SceneNode);
@@ -54,6 +56,7 @@ class SceneNode
 
     //Counter of number of times modified.
     worldUpdate                     : number;
+    frameVisible                    : number;
     rendererInfo                    : any; // TODO?
 
     local                           : any; // m43
@@ -142,6 +145,7 @@ class SceneNode
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
         this.worldUpdate = 0; //Counter of number of times modified.
+        this.frameVisible = -1;
 
         var local = params.local;
         if (local)
@@ -748,6 +752,7 @@ class SceneNode
 
     static updateNodes(mathDevice, scene, nodes, numNodes)
     {
+        var dynamicSpatialMap = scene.dynamicSpatialMap;
         var node, parent, index, worldExtents;
         do
         {
@@ -819,7 +824,7 @@ class SceneNode
                 {
                     if (node.dynamic)
                     {
-                        scene.dynamicSpatialMap.update(node, worldExtents);
+                        dynamicSpatialMap.update(node, worldExtents);
                     }
                     else
                     {
@@ -837,7 +842,7 @@ class SceneNode
                 {
                     if (node.dynamic)
                     {
-                        scene.dynamicSpatialMap.remove(node);
+                        dynamicSpatialMap.remove(node);
                     }
                     else
                     {
@@ -1387,40 +1392,14 @@ class SceneNode
     //
     //calculateHierarchyWorldExtents
     //
-    calculateHierarchyWorldExtents()
+    calculateHierarchyWorldExtents(dst?)
     {
-        var calculateNodeExtents =
-            function calculateNodeExtentsFn(sceneNode, totalExtents)
-        {
-            var valid = false;
-
-            var worldExtents = sceneNode.getWorldExtents();
-            if (worldExtents)
-            {
-                totalExtents[0] = (totalExtents[0] < worldExtents[0] ? totalExtents[0] : worldExtents[0]);
-                totalExtents[1] = (totalExtents[1] < worldExtents[1] ? totalExtents[1] : worldExtents[1]);
-                totalExtents[2] = (totalExtents[2] < worldExtents[2] ? totalExtents[2] : worldExtents[2]);
-                totalExtents[3] = (totalExtents[3] > worldExtents[3] ? totalExtents[3] : worldExtents[3]);
-                totalExtents[4] = (totalExtents[4] > worldExtents[4] ? totalExtents[4] : worldExtents[4]);
-                totalExtents[5] = (totalExtents[5] > worldExtents[5] ? totalExtents[5] : worldExtents[5]);
-                valid = true;
-            }
-
-            var children = sceneNode.children;
-            if (children)
-            {
-                var numChildren = children.length;
-                for (var n = 0; n < numChildren; n += 1)
-                {
-                    valid = (calculateNodeExtents(children[n], totalExtents) || valid);
-                }
-            }
-
-            return valid;
-        }
-
         var maxValue = Number.MAX_VALUE;
-        var totalExtents = new this.arrayConstructor(6);
+        var totalExtents = dst;
+        if (!totalExtents)
+        {
+            totalExtents = new this.arrayConstructor(6);
+        }
         totalExtents[0] = maxValue;
         totalExtents[1] = maxValue;
         totalExtents[2] = maxValue;
@@ -1428,7 +1407,7 @@ class SceneNode
         totalExtents[4] = -maxValue;
         totalExtents[5] = -maxValue;
 
-        if (calculateNodeExtents(this, totalExtents))
+        if (this._calculateNodeExtents(totalExtents))
         {
             return totalExtents;
         }
@@ -1436,6 +1415,38 @@ class SceneNode
         {
             return undefined;
         }
+    }
+
+    private _calculateNodeExtents(totalExtents): boolean
+    {
+        var valid = false;
+
+        var worldExtents = this.getWorldExtents();
+        if (worldExtents)
+        {
+            totalExtents[0] = (totalExtents[0] < worldExtents[0] ? totalExtents[0] : worldExtents[0]);
+            totalExtents[1] = (totalExtents[1] < worldExtents[1] ? totalExtents[1] : worldExtents[1]);
+            totalExtents[2] = (totalExtents[2] < worldExtents[2] ? totalExtents[2] : worldExtents[2]);
+            totalExtents[3] = (totalExtents[3] > worldExtents[3] ? totalExtents[3] : worldExtents[3]);
+            totalExtents[4] = (totalExtents[4] > worldExtents[4] ? totalExtents[4] : worldExtents[4]);
+            totalExtents[5] = (totalExtents[5] > worldExtents[5] ? totalExtents[5] : worldExtents[5]);
+            valid = true;
+        }
+
+        var children = this.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var n = 0; n < numChildren; n += 1)
+            {
+                if (children[n]._calculateNodeExtents(totalExtents))
+                {
+                    valid = true;
+                }
+            }
+        }
+
+        return valid;
     }
 
     //

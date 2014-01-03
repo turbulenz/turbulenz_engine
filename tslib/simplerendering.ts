@@ -14,6 +14,7 @@ class SimpleRendering
 
     static numPasses = 3;
     static passIndex = { opaque: 0, decal: 1, transparent: 2 };
+    static v4One = new Float32Array([1.0, 1.0, 1.0, 1.0]);
     static identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
 
     md                        : MathDevice;
@@ -130,7 +131,7 @@ class SimpleRendering
         this.scene = scene;
     }
 
-    updateBuffers(/* gd, deviceWidth, deviceHeight */) : boolean
+    updateBuffers(gd?, deviceWidth?, deviceHeight?) : boolean
     {
         return true;
     }
@@ -264,10 +265,16 @@ class SimpleRendering
         // TODO: any cast
         drawParameters.sortKey = renderingCommonSortKeyFn((<any>this).techniqueIndex, sharedMaterial.meta.materialIndex);
 
+        if (!geometryInstance.sharedMaterial.techniqueParameters.materialColor &&
+            !geometryInstance.techniqueParameters.materialColor)
+        {
+            geometryInstance.sharedMaterial.techniqueParameters.materialColor = SimpleRendering.v4One;
+        }
+
         if (!geometryInstance.sharedMaterial.techniqueParameters.uvTransform &&
             !geometryInstance.techniqueParameters.uvTransform)
         {
-            geometryInstance.techniqueParameters.uvTransform = SimpleRendering.identityUVTransform;
+            geometryInstance.sharedMaterial.techniqueParameters.uvTransform = SimpleRendering.identityUVTransform;
         }
 
         // TODO: any cast

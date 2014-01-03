@@ -20,15 +20,14 @@ Web Browser & Debugger
 The web browser is the focus point for development.  Games developed
 using Turbulenz are run, debugged and profiled from the web browser.
 Although performance of the browsers in release mode is relatively
-consistent.  The choice for debug mode, depends on the performance of
-the browser and the tools available for it.  Most JavaScript debuggers
-are either integrated into the browser or add-ons.  These debuggers
-allow developers to pause execution, step through code, inspect
-variables and execute functions via the console.
+consistent.  Most JavaScript debuggers are either integrated into the
+browser or add-ons.  These debuggers allow developers to pause
+execution, step through code, inspect variables and execute functions
+via the console.
 
 Supported Development Platforms:
     :Windows: XP/Vista/7
-    :Mac: 10.6/10.7/10.8
+    :Mac: 10.7 and above
     :Linux: (Alpha) Ubuntu 12 (64 bit)
 
 Turbulenz recommends for debugging in debug mode:
@@ -40,17 +39,6 @@ For canvas configurations: **Chrome with Developer Tools (built-in)**
 - Alternative(s)
     :Windows: Firefox with the latest Firebug
     :Mac: Safari 5.1, 6.0 with Web Inspector (built-in)
-
-For plugin configurations: **Firefox with Firebug**
-
-- Firefox is recommended in debug mode. For good performance it
-  requires the browsers to be configured to run plugins in-process.
-  See :ref:`Running in-process <running_in_process>`.
-
-.. NOTE::
-
-    Performance of plugin configurations in release mode is unaffected by being in or out of process.
-    This is true across all supported browsers.
 
 
 Code Verification
@@ -184,7 +172,7 @@ TypeScript:
    number of browsers.
  * A build step is always required after changes are made to source
    files.  With JavaScript alone, code changes are reflected
-   immediately in *debug* and *canvas-debug* builds.
+   immediately in *canvas-debug* builds.
  * Not all editing environments that support JavaScript provide the
    same level of functionality for TypeScript.
  * Some TypeScript language features introduce extra code into the

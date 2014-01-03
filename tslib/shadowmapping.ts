@@ -470,9 +470,19 @@ class ShadowMapping
                                                                numOccluders);
             occludersDrawArray.length = numOccluders;
             shadowMapInfo.staticNodesChangeCounter = staticNodesChangeCounter;
+
+            if (1 < numOccluders)
+            {
+                occludersDrawArray.sort(this._sortNegative);
+            }
         }
 
         return (0 < occludersDrawArray.length);
+    }
+
+    private _sortNegative(a, b)
+    {
+        return (a.sortKey - b.sortKey);
     }
 
     drawShadowMap(cameraMatrix, minExtentsHigh, lightInstance)
@@ -809,7 +819,7 @@ class ShadowMapping
                        -minLightDistance * maxDepthReciprocal,
                        shadowMapTechniqueParameters['shadowDepth']);
 
-        gd.drawArray(occludersDrawArray, [shadowMapTechniqueParameters], 1);
+        gd.drawArray(occludersDrawArray, [shadowMapTechniqueParameters], 0);
 
         gd.endRenderTarget();
     }

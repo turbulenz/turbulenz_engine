@@ -1177,19 +1177,7 @@ class CanvasContext
         /*jshint newcap: false*/
         this.matrix = new floatArrayConstructor(6);
         /*jshint newcap: true*/
-        this.matrix[0] = 1;
-        this.matrix[1] = 0;
-        this.matrix[2] = 0;
-        this.matrix[3] = 0;
-        this.matrix[4] = 1;
-        this.matrix[5] = 0;
-
-        this.scale = this.scaleIdentity;
-        this.translate = this.translateIdentity;
-        this.transform = this.setTransformIdentity;
-        this.setTransform = this.setTransformIdentity;
-        this.transformPoint = this.transformPointIdentity;
-        this.transformRect = this.transformRectIdentity;
+        this.resetTransform();
 
         //
         // Clipping
@@ -1303,6 +1291,24 @@ class CanvasContext
         m[3] = b;
         m[4] = d;
         m[5] = f;
+    }
+
+    resetTransform(): void
+    {
+        var matrix = this.matrix;
+        matrix[0] = 1;
+        matrix[1] = 0;
+        matrix[2] = 0;
+        matrix[3] = 0;
+        matrix[4] = 1;
+        matrix[5] = 0;
+
+        this.scale = this.scaleIdentity;
+        this.translate = this.translateIdentity;
+        this.transform = this.setTransformIdentity;
+        this.setTransform = this.setTransformIdentity;
+        this.transformPoint = this.transformPointIdentity;
+        this.transformRect = this.transformRectIdentity;
     }
 
     createLinearGradient(x0, y0, x1, y1): CanvasLinearGradient

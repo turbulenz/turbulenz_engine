@@ -721,8 +721,6 @@ class WebGLInputDevice implements InputDevice
         var keyCode = event.keyCode;
         keyCode = this.keyMap[keyCode];
 
-        var keyLocation = event.keyLocation || event.location;
-
         if (undefined !== keyCode &&
            (keyCodes.ESCAPE !== keyCode))
         {
@@ -734,6 +732,7 @@ class WebGLInputDevice implements InputDevice
             //   DOM_KEY_LOCATION_MOBILE   = 0x04;
             //   DOM_KEY_LOCATION_JOYSTICK = 0x05;
 
+            var keyLocation = (typeof event.location === "number" ? event.location : event.keyLocation);
             if (2 === keyLocation)
             {
                 // The Turbulenz KeyCodes are such that CTRL, SHIFT
@@ -761,14 +760,15 @@ class WebGLInputDevice implements InputDevice
         var keyCode = event.keyCode;
         keyCode = this.keyMap[keyCode];
 
-        var keyLocation = event.keyLocation || event.location;
-
         if (keyCode === keyCodes.ESCAPE)
         {
             this.unlockMouse();
 
             // Some apps environments will not exit fullscreen automatically on ESCAPE
-            if (document.fullscreenEnabled || document.mozFullScreen || document.webkitIsFullScreen)
+            if (document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement)
             {
                 if (document.webkitCancelFullScreen)
                 {
@@ -777,6 +777,14 @@ class WebGLInputDevice implements InputDevice
                 else if (document.cancelFullScreen)
                 {
                     document.cancelFullScreen();
+                }
+                else if (document['mozCancelFullScreen'])
+                {
+                    document['mozCancelFullScreen']();
+                }
+                else if (document.msExitFullscreen)
+                {
+                    document.msExitFullscreen();
                 }
                 else if (document.exitFullscreen)
                 {
@@ -788,6 +796,7 @@ class WebGLInputDevice implements InputDevice
         {
             // Handle LEFT / RIGHT.  (See OnKeyDown)
 
+            var keyLocation = (typeof event.location === "number" ? event.location : event.keyLocation);
             if (2 === keyLocation)
             {
                 keyCode = keyCode + 1;
@@ -1070,7 +1079,10 @@ class WebGLInputDevice implements InputDevice
     {
         if (this.isMouseLocked)
         {
-            if (document.fullscreenEnabled || document.mozFullScreen || document.webkitIsFullScreen)
+            if (document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement)
             {
                 this.ignoreNextMouseMoves = 2; // Some browsers will send 2 mouse events with a massive delta
                 this.requestBrowserLock();
@@ -1138,13 +1150,14 @@ class WebGLInputDevice implements InputDevice
         this.addInternalEventListener(document, 'fullscreenchange', this.onFullscreenChanged);
         this.addInternalEventListener(document, 'mozfullscreenchange', this.onFullscreenChanged);
         this.addInternalEventListener(document, 'webkitfullscreenchange', this.onFullscreenChanged);
+        this.addInternalEventListener(document, 'MSFullscreenChange', this.onFullscreenChanged);
     }
 
     setEventHandlersUnlock()
     {
         this.removeInternalEventListener(document, 'webkitfullscreenchange', this.onFullscreenChanged);
         this.removeInternalEventListener(document, 'mozfullscreenchange', this.onFullscreenChanged);
-        this.removeInternalEventListener(document, 'fullscreenchange', this.onFullscreenChanged);
+        this.removeInternalEventListener(document, 'MSFullscreenChange', this.onFullscreenChanged);
 
         this.removeInternalEventListener(window, 'mousemove', this.onMouseMove);
 

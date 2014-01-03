@@ -113,7 +113,8 @@ jsengine_src := $(addprefix $(TS_SRC_DIR)/, \
   animation.ts animationmanager.ts defaultrendering.ts loadingscreen.ts \
   effectmanager.ts material.ts floor.ts geometry.ts \
   light.ts mouseforces.ts physicsmanager.ts posteffects.ts renderingcommon.ts \
-  resourceloader.ts scene.ts scenenode.ts shadowmapping.ts textureeffects.ts  \
+  resourceloader.ts scene.ts scenenode.ts shadowmapping.ts cascadedshadows.ts \
+  textureeffects.ts  \
 )
 jsengine_deps := services aabbtree jsengine_base
 

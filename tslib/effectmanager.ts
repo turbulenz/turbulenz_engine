@@ -60,9 +60,27 @@ class Effect
             hashArray.sort();
             return hashArray.join(',');
         }
-        else
+        else if (0 < numTextures)
         {
             return hashArray[0];
+        }
+        else
+        {
+            var materialColor = material.techniqueParameters['materialColor'];
+            if (materialColor)
+            {
+                var length = materialColor.length;
+                var n;
+                for (n = 0; n < length; n += 1)
+                {
+                    hashArray[n] = materialColor[n].toFixed(3).replace('.000', '');
+                }
+                return hashArray.join(',');
+            }
+            else
+            {
+                return material.name;
+            }
         }
     }
 

@@ -18,6 +18,7 @@ interface Hierarchy
 interface Skeleton extends Hierarchy
 {
     invBoneLTMs: any[]; // m43[]
+    bindPoses?: any[]; // m43[]
 };
 
 // TODO: There is more we can add to this.  It can also be turned into
@@ -337,7 +338,15 @@ class InterpolatorController implements ControllerBaseClass
                         return;
                     }
                 }
-                this.currentTime -= animLength;
+                if (0 !== animLength)
+                {
+                    this.currentTime -= animLength;
+                }
+                else
+                {
+                    this.currentTime = 0;
+                    break;
+                }
             }
             else
             {
@@ -349,6 +358,7 @@ class InterpolatorController implements ControllerBaseClass
                     }
                 }
                 this.currentTime = animLength;
+                break;
             }
         }
 
@@ -2551,6 +2561,58 @@ class SkinnedNode
         this.skinController.dirty = true;
     }
 
+    setNodeHierarchyBoneMatricesAndBounds(node, extents, skinController): boolean
+    {
+        var isFullySkinned = (!node.lightInstances || node.lightInstances.length === 0);
+
+        var renderables = node.renderables;
+        if (renderables)
+        {
+            var numRenderables = renderables.length;
+            for (var i = 0; i < numRenderables; i += 1)
+            {
+                var renderable = renderables[i];
+                if (renderable.isSkinned())
+                {
+                    renderable.skinController = skinController;
+                    renderable.addCustomWorldExtents(extents);
+                }
+                else
+                {
+                    isFullySkinned = false;
+                }
+            }
+        }
+
+        var children = node.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var c = 0; c < numChildren; c += 1)
+            {
+                var childSkinned = this.setNodeHierarchyBoneMatricesAndBounds(children[c], extents, skinController);
+                if (!childSkinned)
+                {
+                    isFullySkinned = false;
+                }
+            }
+        }
+
+        if (isFullySkinned)
+        {
+            node.addCustomWorldExtents(extents);
+        }
+        else
+        {
+            if (node.getCustomWorldExtents())
+            {
+                node.removeCustomWorldExtents();
+            }
+        }
+
+        return isFullySkinned;
+    }
+
     update(updateSkinController)
     {
         // update the skin controller
@@ -2565,58 +2627,6 @@ class SkinnedNode
             {
                 this.input.updateBounds();
             }
-        }
-
-        function setNodeHierarchyBoneMatricesAndBoundsFn(node, extents, skinController)
-        {
-            var isFullySkinned = (!node.lightInstances || node.lightInstances.length === 0);
-
-            var renderables = node.renderables;
-            if (renderables)
-            {
-                var numRenderables = renderables.length;
-                for (var i = 0; i < numRenderables; i += 1)
-                {
-                    var renderable = renderables[i];
-                    if (renderable.isSkinned())
-                    {
-                        renderable.skinController = skinController;
-                        renderable.addCustomWorldExtents(extents);
-                    }
-                    else
-                    {
-                        isFullySkinned = false;
-                    }
-                }
-            }
-
-            var children = node.children;
-            if (children)
-            {
-                var numChildren = children.length;
-                for (var c = 0; c < numChildren; c += 1)
-                {
-                    var childSkinned = setNodeHierarchyBoneMatricesAndBoundsFn(children[c], extents, skinController);
-                    if (!childSkinned)
-                    {
-                        isFullySkinned = false;
-                    }
-                }
-            }
-
-            if (isFullySkinned)
-            {
-                node.addCustomWorldExtents(extents);
-            }
-            else
-            {
-                if (node.getCustomWorldExtents())
-                {
-                    node.removeCustomWorldExtents();
-                }
-            }
-
-            return isFullySkinned;
         }
 
         // calculate the bounds in world space
@@ -2680,7 +2690,7 @@ class SkinnedNode
             extents[5] = (c2 + h2);
         }
 
-        setNodeHierarchyBoneMatricesAndBoundsFn(this.node, extents, skinController);
+        this.setNodeHierarchyBoneMatricesAndBounds(this.node, extents, skinController);
     }
 
     getJointIndex(jointName)

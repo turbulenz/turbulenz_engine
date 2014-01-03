@@ -715,11 +715,11 @@ interface GraphicsDevice
     width: number;
     height: number;
     extensions: string;
-    shadingLanguageVersion: number;
+    shadingLanguageVersion: string;
 
     fullscreen: boolean;
 
-    rendererVersion: number;
+    rendererVersion: string;
     renderer: string;
     vendor: string;
     videoRam: number;

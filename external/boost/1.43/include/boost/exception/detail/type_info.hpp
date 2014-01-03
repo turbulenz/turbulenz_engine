@@ -53,11 +53,17 @@ boost
         struct
         type_info_
             {
-            detail::sp_typeinfo const & type_;
+            // 2013/11/11 (dtebbs) tweaked this use pointer instead of
+            // reference.  Fixes error in clang3.3:
+            //
+            // type_info.hpp:53:9: error: cannot define the implicit default assignment operator for
+            // 'boost::exception_detail::type_info_', because non-static reference member 'type_' can't use default assignment operator
+
+            detail::sp_typeinfo const * type_;
 
             explicit
             type_info_( detail::sp_typeinfo const & type ):
-                type_(type)
+                type_(&type)
                 {
                 }
 
@@ -65,7 +71,7 @@ boost
             bool
             operator<( type_info_ const & a, type_info_ const & b )
                 {
-                return 0!=(a.type_.before(b.type_));
+                return 0!=(a.type_->before(*b.type_));
                 }
             };
         }

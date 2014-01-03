@@ -45,7 +45,7 @@ declare var WebGLPhysicsDevice : WebGLPhysicsDeviceConstructor;
 
 class WebGLTurbulenzEngine implements TurbulenzEngine
 {
-    version = '0.27.0.0';
+    version = '0.28.0.0';
 
     time               : number;
 
@@ -83,6 +83,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     resizeCanvas: { (): void; };
     base64Encode: { (bytes: any): string; };
+    handleZeroTimeoutMessages: { (event): void; };
 
     setInterval(f, t): any
     {
@@ -435,6 +436,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         if (this.resizeCanvas)
         {
             window.removeEventListener('resize', this.resizeCanvas, false);
+            delete this.resizeCanvas;
+        }
+        if (this.handleZeroTimeoutMessages)
+        {
+            window.removeEventListener("message", this.handleZeroTimeoutMessages, true);
+            delete this.handleZeroTimeoutMessages;
         }
     }
 
@@ -612,7 +619,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
             var clearZeroTimeout = function clearZeroTimeoutFn(timeout)
             {
-                var id = timeout;
+                var id = timeout.id;
                 var numTimeouts = timeouts.length;
                 for (var n = 0; n < numTimeouts; n += 1)
                 {
@@ -639,6 +646,9 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                     }
                 }
             };
+
+            tz.handleZeroTimeoutMessages = handleZeroTimeoutMessages;
+
             window.addEventListener("message", handleZeroTimeoutMessages, true);
 
             tz.setTimeout = function (f, t)
@@ -777,7 +787,8 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             {
                 if (document.fullscreenElement === canvas ||
                     document.mozFullScreenElement === canvas ||
-                    document.webkitFullscreenElement === canvas)
+                    document.webkitFullscreenElement === canvas ||
+                    document.msFullscreenElement === canvas)
                 {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;

@@ -43,6 +43,7 @@ class DefaultRendering
     static nextRenderinfoID = 0;
     static nextSkinID = 0;
 
+    static v4One = new Float32Array([1.0, 1.0, 1.0, 1.0]);
     static identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
 
     md                        : MathDevice;
@@ -181,7 +182,7 @@ class DefaultRendering
         this.scene = scene;
     }
 
-    updateBuffers(/* gd, deviceWidth, deviceHeight */): boolean
+    updateBuffers(gd?, deviceWidth?, deviceHeight?): boolean
     {
         return true;
     }
@@ -294,10 +295,16 @@ class DefaultRendering
         var sharedMaterial = geometryInstance.sharedMaterial;
         var techniqueParameters = geometryInstance.techniqueParameters;
 
+        if (!sharedMaterial.techniqueParameters.materialColor &&
+            !techniqueParameters.materialColor)
+        {
+            sharedMaterial.techniqueParameters.materialColor = DefaultRendering.v4One;
+        }
+
         if (!sharedMaterial.techniqueParameters.uvTransform &&
             !techniqueParameters.uvTransform)
         {
-            techniqueParameters.uvTransform = DefaultRendering.identityUVTransform;
+            sharedMaterial.techniqueParameters.uvTransform = DefaultRendering.identityUVTransform;
         }
 
         // NOTE: the way this functions is called, 'this' is an
