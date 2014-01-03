@@ -16,6 +16,8 @@ The ParticleSystem object encapsulates the core of a particle system, though mos
 .. note::
     This is a low-level particle system API.
 
+.. figure:: img/Low-Level.png
+
 Methods
 =======
 
@@ -133,7 +135,7 @@ Create a new particle system.
 
     If unspecified then a per-system set of textures and render targets will be created isntead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
 
-
+.. figure:: img/Interactions.png
 
 .. index::
     pair: ParticleSystem; destroy

@@ -23,6 +23,8 @@ The ParticleManager is data-driven, with particle systems represented entirely b
             // GPU Particle System cannot be used!
         }
 
+.. figure:: img/High-Level.png
+
 Methods
 =======
 
