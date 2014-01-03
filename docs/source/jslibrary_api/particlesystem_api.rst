@@ -9,7 +9,7 @@
 The ParticleSystem Object
 =========================
 
-Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+**Added SDK 0.28.0**
 
 The ParticleSystem object encapsulates the core of a particle system, though most of its functionality is plug-in. It is responsible for enabling emitters to create particles, and to be able to update particle states, sort views and render views of a system. The ParticleSystem object is also responsible for CPU-side simulation of particles for tracked GPU particles, and path prediction for emitters.
 

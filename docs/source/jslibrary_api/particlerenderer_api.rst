@@ -9,7 +9,7 @@
 The ParticleRenderer Interface
 ==============================
 
-Added in :ref:`SDK 0.27.1 <added_sdk_0_27_1>`.
+**Added SDK 0.28.0**
 
 Encapsulates a replaceable element of a particle system responsible for rendering the particles in the system.
 
