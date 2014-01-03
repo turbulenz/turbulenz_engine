@@ -217,7 +217,7 @@ class CascadedShadowMapping
 
         this.gd = gd;
         this.md = md;
-        this.clearColor = md.v4Build(1, 1, 1, 1);
+        this.clearColor = md.v4Build(1, 1, 1, 0);
         this.tempMatrix44 = md.m44BuildIdentity();
         this.tempMatrix43 = md.m43BuildIdentity();
         this.tempMatrix33 = md.m33BuildIdentity();
