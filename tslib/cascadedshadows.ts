@@ -92,6 +92,43 @@ class CascadedShadowSplit
 
         return this;
     }
+
+    setAsDummy()
+    {
+        var m = this.worldShadowProjection;
+        m[0] = 0.0;
+        m[1] = 0.0;
+        m[2] = 0.0;
+        m[3] = 1.0;
+        m[4] = 0.0;
+        m[5] = 0.0;
+        m[6] = 0.0;
+        m[7] = 1.0;
+        m[8] = 0.0;
+        m[9] = 0.0;
+        m[10] = 0.0;
+        m[11] = 1.0;
+
+        m = this.viewShadowProjection;
+        m[0] = 0.0;
+        m[1] = 0.0;
+        m[2] = 0.0;
+        m[3] = 1.0;
+        m[4] = 0.0;
+        m[5] = 0.0;
+        m[6] = 0.0;
+        m[7] = 1.0;
+        m[8] = 0.0;
+        m[9] = 0.0;
+        m[10] = 0.0;
+        m[11] = 1.0;
+
+        var v = this.shadowScaleOffset;
+        v[0] = 0.0;
+        v[1] = 0.0;
+        v[2] = 0.0;
+        v[3] = 0.0;
+    }
 };
 
 
@@ -137,6 +174,7 @@ class CascadedShadowMapping
     globalTechniqueParametersArray : TechniqueParameters[];
     shader              : Shader;
     splits              : CascadedShadowSplit[];
+    dummySplit          : CascadedShadowSplit;
 
     size                : number;
     numSplitsToRedraw   : number;
@@ -245,6 +283,9 @@ class CascadedShadowMapping
                        new CascadedShadowSplit(md, splitSize, 0),
                        new CascadedShadowSplit(md, 0, splitSize),
                        new CascadedShadowSplit(md, splitSize, splitSize)];
+
+        this.dummySplit = new CascadedShadowSplit(md, 0, 0);
+        this.dummySplit.setAsDummy();
 
         this.numSplitsToRedraw = 0;
 
@@ -470,18 +511,71 @@ class CascadedShadowMapping
         }
 
         var techniqueParameters = this.techniqueParameters;
-        techniqueParameters['worldShadowProjection0'] = splits[0].worldShadowProjection;
-        techniqueParameters['viewShadowProjection0'] = splits[0].viewShadowProjection;
-        techniqueParameters['shadowScaleOffset0'] = splits[0].shadowScaleOffset;
-        techniqueParameters['worldShadowProjection1'] = splits[1].worldShadowProjection;
-        techniqueParameters['viewShadowProjection1'] = splits[1].viewShadowProjection;
-        techniqueParameters['shadowScaleOffset1'] = splits[1].shadowScaleOffset;
-        techniqueParameters['worldShadowProjection2'] = splits[2].worldShadowProjection;
-        techniqueParameters['viewShadowProjection2'] = splits[2].viewShadowProjection;
-        techniqueParameters['shadowScaleOffset2'] = splits[2].shadowScaleOffset;
-        techniqueParameters['worldShadowProjection3'] = splits[3].worldShadowProjection;
-        techniqueParameters['viewShadowProjection3'] = splits[3].viewShadowProjection;
-        techniqueParameters['shadowScaleOffset3'] = splits[3].shadowScaleOffset;
+        n = -1;
+
+        do
+        {
+            n += 1;
+            if (n >= numSplits)
+            {
+                split = this.dummySplit;
+                break;
+            }
+            split = splits[n];
+        }
+        while (0 === split.occludersDrawArray.length);
+
+        techniqueParameters['worldShadowProjection0'] = split.worldShadowProjection;
+        techniqueParameters['viewShadowProjection0'] = split.viewShadowProjection;
+        techniqueParameters['shadowScaleOffset0'] = split.shadowScaleOffset;
+
+        do
+        {
+            n += 1;
+            if (n >= numSplits)
+            {
+                split = this.dummySplit;
+                break;
+            }
+            split = splits[n];
+        }
+        while (0 === split.occludersDrawArray.length);
+
+        techniqueParameters['worldShadowProjection1'] = split.worldShadowProjection;
+        techniqueParameters['viewShadowProjection1'] = split.viewShadowProjection;
+        techniqueParameters['shadowScaleOffset1'] = split.shadowScaleOffset;
+
+        do
+        {
+            n += 1;
+            if (n >= numSplits)
+            {
+                split = this.dummySplit;
+                break;
+            }
+            split = splits[n];
+        }
+        while (0 === split.occludersDrawArray.length);
+
+        techniqueParameters['worldShadowProjection2'] = split.worldShadowProjection;
+        techniqueParameters['viewShadowProjection2'] = split.viewShadowProjection;
+        techniqueParameters['shadowScaleOffset2'] = split.shadowScaleOffset;
+
+        do
+        {
+            n += 1;
+            if (n >= numSplits)
+            {
+                split = this.dummySplit;
+                break;
+            }
+            split = splits[n];
+        }
+        while (0 === split.occludersDrawArray.length);
+
+        techniqueParameters['worldShadowProjection3'] = split.worldShadowProjection;
+        techniqueParameters['viewShadowProjection3'] = split.viewShadowProjection;
+        techniqueParameters['shadowScaleOffset3'] = split.shadowScaleOffset;
     }
 
     private _planeNormalize(a, b, c, d, dst)
