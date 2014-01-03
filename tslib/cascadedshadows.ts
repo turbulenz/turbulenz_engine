@@ -1654,11 +1654,25 @@ class CascadedShadowMapping
     {
         var numOccludees = this.numOccludees;
 
+        var r0 = -viewMatrix[0];
+        var r1 = -viewMatrix[3];
+        var r2 = -viewMatrix[6];
+        var roffset = viewMatrix[9];
+
+        var u0 = -viewMatrix[1];
+        var u1 = -viewMatrix[4];
+        var u2 = -viewMatrix[7];
+        var uoffset = viewMatrix[10];
+
         var d0 = -viewMatrix[2];
         var d1 = -viewMatrix[5];
         var d2 = -viewMatrix[8];
         var offset = viewMatrix[11];
 
+        var maxWindowX = split.lightViewWindowX;
+        var minWindowX = -maxWindowX;
+        var maxWindowY = split.lightViewWindowY;
+        var minWindowY = -maxWindowY;
         var maxWindowZ = split.lightDepth;
 
         var minLightDistance = split.maxLightDistance;
@@ -1676,33 +1690,48 @@ class CascadedShadowMapping
             p1 = extents[4];
             p2 = extents[5];
 
-            lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
-            if (lightDistance < maxWindowZ)
+            lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
+            if (lightDistance < maxWindowX)
             {
-                if (lightDistance < minLightDistance)
+                lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
+                if (lightDistance > minWindowX)
                 {
-                    minLightDistance = lightDistance;
-                }
+                    lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
+                    if (lightDistance < maxWindowY)
+                    {
+                        lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
+                        if (lightDistance > minWindowY)
+                        {
+                            lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
+                            if (lightDistance < maxWindowZ)
+                            {
+                                if (lightDistance < minLightDistance)
+                                {
+                                    minLightDistance = lightDistance;
+                                }
 
-                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)) - offset);
-                if (maxLightDistance < lightDistance)
-                {
-                    maxLightDistance = lightDistance;
-                }
+                                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)) - offset);
+                                if (maxLightDistance < lightDistance)
+                                {
+                                    maxLightDistance = lightDistance;
+                                }
 
-                n += 1;
+                                n += 1;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+
+            numOccludees -= 1;
+            if (n < numOccludees)
+            {
+                occludeesExtents[n] = occludeesExtents[numOccludees];
             }
             else
             {
-                numOccludees -= 1;
-                if (n < numOccludees)
-                {
-                    occludeesExtents[n] = occludeesExtents[numOccludees];
-                }
-                else
-                {
-                    break;
-                }
+                break;
             }
         }
 
