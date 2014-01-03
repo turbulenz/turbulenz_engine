@@ -1119,7 +1119,7 @@ class CascadedShadowMapping
         split.lightViewWindowY = lightViewWindowY;
         split.lightDepth = lightDepth;
 
-        var distanceScale = (1.0 / 65536);
+        var distanceScale = (1.0 / (256 * 256 * 256));
         camera.nearPlane = (lightDepth * distanceScale);
         camera.farPlane  = (lightDepth + distanceScale);
         camera.recipViewWindowX = 1.0 / lightViewWindowX;
