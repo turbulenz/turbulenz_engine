@@ -1796,7 +1796,8 @@ class CascadedShadowMapping
         var minLightDistanceY = minLightDistance;
         var maxLightDistanceY = -minLightDistance;
 
-        var n, extents, n0, n1, n2, p0, p1, p2, lightDistance;
+        var n, extents, n0, n1, n2, p0, p1, p2;
+        var minX, maxX, minY, maxY, minZ, maxZ;
 
         for (n = 0; n < numOccluders; )
         {
@@ -1808,50 +1809,51 @@ class CascadedShadowMapping
             p1 = extents[4];
             p2 = extents[5];
 
-            lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
-            if (lightDistance < maxWindowZ)
+            minX = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
+            if (minX < maxWindowX)
             {
-                if (lightDistance < minLightDistance)
+                maxX = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
+                if (maxX > minWindowX)
                 {
-                    minLightDistance = lightDistance;
-                }
-
-                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)) - offset);
-                if (maxLightDistance < lightDistance)
-                {
-                    maxLightDistance = lightDistance;
-                }
-
-                lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
-                if (lightDistance < maxWindowX)
-                {
-                    if (lightDistance < minLightDistanceX)
+                    minY = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
+                    if (minY < maxWindowY)
                     {
-                        minLightDistanceX = lightDistance;
-                    }
-
-                    lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
-                    if (lightDistance > minWindowX)
-                    {
-                        if (maxLightDistanceX < lightDistance)
+                        maxY = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
+                        if (maxY > minWindowY)
                         {
-                            maxLightDistanceX = lightDistance;
-                        }
-
-                        lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
-                        if (lightDistance < maxWindowY)
-                        {
-                            if (lightDistance < minLightDistanceY)
+                            minZ = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
+                            if (minZ < maxWindowZ)
                             {
-                                minLightDistanceY = lightDistance;
-                            }
+                                maxZ = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)) - offset);
 
-                            lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
-                            if (lightDistance > minWindowY)
-                            {
-                                if (maxLightDistanceY < lightDistance)
+                                if (minZ < minLightDistance)
                                 {
-                                    maxLightDistanceY = lightDistance;
+                                    minLightDistance = minZ;
+                                }
+
+                                if (maxLightDistance < maxZ)
+                                {
+                                    maxLightDistance = maxZ;
+                                }
+
+                                if (minX < minLightDistanceX)
+                                {
+                                    minLightDistanceX = minX;
+                                }
+
+                                if (maxLightDistanceX < maxX)
+                                {
+                                    maxLightDistanceX = maxX;
+                                }
+
+                                if (minY < minLightDistanceY)
+                                {
+                                    minLightDistanceY = minY;
+                                }
+
+                                if (maxLightDistanceY < maxY)
+                                {
+                                    maxLightDistanceY = maxY;
                                 }
 
                                 n += 1;
