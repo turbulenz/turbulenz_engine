@@ -508,6 +508,26 @@ class CascadedShadowMapping
                               maxDistance);
 
             splitStart = splitEnd;
+
+            if (0 === split.occludersDrawArray.length &&
+                (n + 1) < numSplits)
+            {
+                splitEnd = (splitEnd + (maxDistance * splitDistances[n + 1])) / 2.0;
+
+                frustumPoints = camera.getFrustumPoints(splitEnd, splitStart, frustumPoints);
+
+                this._updateSplit(split,
+                                  xaxis,
+                                  yaxis,
+                                  zaxis,
+                                  cameraMatrix,
+                                  frustumPoints,
+                                  previousSplitPoints,
+                                  scene,
+                                  maxDistance);
+
+                splitStart = splitEnd;
+            }
         }
 
         var techniqueParameters = this.techniqueParameters;
