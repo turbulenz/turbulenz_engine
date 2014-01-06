@@ -23,7 +23,13 @@ The ParticleManager is data-driven, with particle systems represented entirely b
             // GPU Particle System cannot be used!
         }
 
-.. figure:: img/High-Level.png
+.. figure:: img/gpu-particles-high-level-diagram.png
+    :width: 512 px
+    :scale: 100 %
+    :alt: High Level Structure of GPU Particle System
+    :align: center
+
+    This diagram shows the structure of the High Level GPU Particle System and its components.
 
 Methods
 =======

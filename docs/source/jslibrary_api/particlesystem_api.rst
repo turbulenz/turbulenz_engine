@@ -16,7 +16,21 @@ The ParticleSystem object encapsulates the core of a particle system, though mos
 .. note::
     This is a low-level particle system API.
 
-.. figure:: img/Low-Level.png
+.. figure:: img/gpu-particles-low-level-diagram.png
+    :width: 512 px
+    :scale: 100 %
+    :alt: Low Level Structure of GPU Particle System
+    :align: center
+
+    This diagram shows the structure of the Low Level GPU Particle System and its components.
+
+.. figure:: img/gpu-particles-interactions-diagram.png
+    :width: 512 px
+    :scale: 100 %
+    :alt: Low Level Interactions of GPU Particle System
+    :align: center
+
+    This diagram shows the interactions between the different components of the Low Level GPU Particle System.
 
 Methods
 =======
@@ -135,8 +149,6 @@ Create a new particle system.
 
     If unspecified then a per-system set of textures and render targets will be created isntead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
 
-.. figure:: img/Interactions.png
-
 .. index::
     pair: ParticleSystem; destroy
 
@@ -222,7 +234,7 @@ The return value is the integer `id` corresponding to the particle slot used to 
 
 If the particle was not able to be created, then it is guaranteed that no further attempt to create a particle without `forceCreation` set to `true` will succeed until a system update has been perfomed.
 
-    Note that tracked particles will `not` be killed when their life is exhausted, and must be removed manually. This is to enable particle attributes to be queried even after death to determine final position/velocities.
+Note that tracked particles will `not` be killed when their life is exhausted, and must be removed manually. This is to enable particle attributes to be queried even after death to determine final position/velocities.
 
 .. index::
     ParticleSystem; updateParticle
