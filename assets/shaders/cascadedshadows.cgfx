@@ -26,23 +26,30 @@ sampler2D shadowMap = sampler_state
 // Utils
 //
 
-float4 EncodeFloatRGBA32(float v)
+float3 EncodeFloatRGB24(float v)
 {
     if (v >= 1.0)
     {
-        return float4(1.0, 1.0, 1.0, 1.0);
+        return float3(1.0, 1.0, 1.0);
     }
     else
     {
-        float4 enc = frac(saturate(v) * float4(16777216.0, 65536.0, 256.0, 1.0)) * 256.0;
-        enc.yzw -= (enc.xyz / 256.0);
-        return (enc / 255.0);
+        float3 enc = frac(saturate(v) * float3(65536.0, 256.0, 1.0)) * 256.0;
+        enc.yz -= (enc.xy / 256.0);
+        return float3(enc / 255.0);
     }
 }
 
 float DecodeFloatRGBA32(float4 rgba)
 {
-    return saturate(dot(rgba, float4(255.0/4294967296.0, 255.0/16777216.0, 255.0/65536.0, 255.0/256.0)));
+    if (rgba.w > (1.0 / 255.0))
+    {
+        return saturate(dot(rgba.xyz, float3(255.0/16777216.0, 255.0/65536.0, 255.0/256.0)));
+    }
+    else
+    {
+        return 1.0;
+    }
 }
 
 float4 EncodeFloatRGB16(float v)
@@ -140,25 +147,37 @@ void vp_blur(in float4 INPosition : POSITION,
 //
 float4 fp(in float INDepth : TEXCOORD0) : COLOR
 {
-    return EncodeFloatRGBA32(INDepth);
+    return float4(EncodeFloatRGB24(INDepth), 1.0);
 }
 
 float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
 {
-    float sample0 = DecodeFloatRGBA32(tex2D(shadowMap, (UV - (2.0 * pixelOffset))));
-    float sample1 = DecodeFloatRGBA32(tex2D(shadowMap, (UV - (1.0 * pixelOffset))));
-    float sample2 = DecodeFloatRGBA32(tex2D(shadowMap,  UV));
-    float sample3 = DecodeFloatRGBA32(tex2D(shadowMap, (UV + (1.0 * pixelOffset))));
-    float sample4 = DecodeFloatRGBA32(tex2D(shadowMap, (UV + (2.0 * pixelOffset))));
+    float4 sample0 = tex2D(shadowMap, (UV - (2.0 * pixelOffset)));
+    float4 sample1 = tex2D(shadowMap, (UV - (1.0 * pixelOffset)));
+    float4 sample2 = tex2D(shadowMap,  UV);
+    float4 sample3 = tex2D(shadowMap, (UV + (1.0 * pixelOffset)));
+    float4 sample4 = tex2D(shadowMap, (UV + (2.0 * pixelOffset)));
 
     const float c = (1.0 / 5.0);
 
-    float accum = log_conv(c, sample0, c, sample1);
-    accum = log_conv(1.0, accum, c, sample2);
-    accum = log_conv(1.0, accum, c, sample3);
-    accum = log_conv(1.0, accum, c, sample4);
+    float alpha = (sample0.w + sample1.w + sample2.w + sample3.w + sample4.w) * c;
+    if (alpha < (1.0 / 255.0))
+    {
+        return float4(1.0, 1.0, 1.0, 0.0);
+    }
 
-    return EncodeFloatRGBA32(accum);
+    float value0 = DecodeFloatRGBA32(sample0);
+    float value1 = DecodeFloatRGBA32(sample1);
+    float value2 = DecodeFloatRGBA32(sample2);
+    float value3 = DecodeFloatRGBA32(sample3);
+    float value4 = DecodeFloatRGBA32(sample4);
+
+    float accum = log_conv(c, value0, c, value1);
+    accum = log_conv(1.0, accum, c, value2);
+    accum = log_conv(1.0, accum, c, value3);
+    accum = log_conv(1.0, accum, c, value4);
+
+    return float4(EncodeFloatRGB24(accum), alpha);
 }
 
 //
