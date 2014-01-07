@@ -152,12 +152,12 @@ TurbulenzEngine.onload = function onloadFn()
     // Particle Systems
     //==========================================================================
 
-    var manager = ParticleManager.create(graphicsDevice, textureManager, shaderManager);
+    var particleManager = ParticleManager.create(graphicsDevice, textureManager, shaderManager);
 
-    manager.registerParticleAnimation({
+    particleManager.registerParticleAnimation({
         name: "fire",
-        // define a texture-size to normalize uv-coordinates with.
-        // this avoid needing to use fractional values, especcialy if texture
+        // Define a texture-size to normalize uv-coordinates with.
+        // This avoids needing to use fractional values, especially if texture
         // may be changed in future.
         //
         // In this case the actual texture is 512x512, but we map the particle animation
@@ -193,7 +193,7 @@ TurbulenzEngine.onload = function onloadFn()
         }]
     });
 
-    manager.registerParticleAnimation({
+    particleManager.registerParticleAnimation({
         name: "smoke",
         // smoke is similarly mapped as "fire" particle above, but to bottom of packed texture.
         "texture0-size": [4, 2],
@@ -215,7 +215,7 @@ TurbulenzEngine.onload = function onloadFn()
             time: 0.8,
             color: [1, 0.5, 0.5, 1]
         }, {
-            // after another 1.4 seconds, we fade out.
+            // after another 0.5 seconds, we fade out.
             time: 0.5,
             // want to be 'just past' the last frame.
             // so all frames of animation have equal screen presence.
@@ -224,7 +224,7 @@ TurbulenzEngine.onload = function onloadFn()
         }]
     });
 
-    manager.registerParticleAnimation({
+    particleManager.registerParticleAnimation({
         name: "portal",
         animation: [{
             scale: [1, 1],
@@ -260,7 +260,7 @@ TurbulenzEngine.onload = function onloadFn()
             randomizedAcceleration: [10, 10, 10]
         },
         renderer: {
-            // use default renderer with aditive blend mode
+            // use default renderer with additive blend mode
             name: "additive",
             // set noise texture to use for randomizations.
             noiseTexture: "textures/noise.dds",
@@ -439,7 +439,7 @@ TurbulenzEngine.onload = function onloadFn()
         },
         particles: {
             // Define two particles to be used in this system.
-            // As these define their own textures, textures will be packed at runtime by the manager.
+            // As these define their own textures, textures will be packed at runtime by the particleManager.
             spark: {
                 animation: "portal",
                 // define animation tweaks to be applied for this particle.
@@ -534,8 +534,8 @@ TurbulenzEngine.onload = function onloadFn()
     // Produce ParticleArchetype objects based on these descriptions.
     //   These calls will verify the input descriptions for correctness, and fill in all missing parameters
     //   with the default values defined by the individual components of a particle system.
-    var archetype1 = manager.parseArchetype(description1);
-    var archetype2 = manager.parseArchetype(description2);
+    var archetype1 = particleManager.parseArchetype(description1);
+    var archetype2 = particleManager.parseArchetype(description2);
 
     //==========================================================================
     // Main loop
@@ -559,15 +559,15 @@ TurbulenzEngine.onload = function onloadFn()
             {}
         );
 
-        // manager is initialized with the Scene to be worked with.
+        // particleManager is initialized with the Scene to be worked with.
         // and the transparent pass index of the renderer, so that particle systems
         // created will be sorted with other transparent renderable elements of the Scene.
-        manager.initialize(scene, renderer.passIndex.transparent);
+        particleManager.initialize(scene, renderer.passIndex.transparent);
 
         previousFrameTime = TurbulenzEngine.time;
     }
 
-    // All systems are added as childs of this node so we can shuffle them around
+    // All systems are added as children of this node so we can shuffle them around
     // in space, demonstrating trails.
     var particleNode = SceneNode.create({
         name   : "particleNode",
@@ -607,10 +607,10 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Update ParticleManager object with elapsed time.
         // This will add the deltaTime to the managers internal clock used by systems when synchronizing
-        // and will also remove any expired ParticleInstance objects created in the manager.
-        manager.update(deltaTime);
+        // and will also remove any expired ParticleInstance objects created in the particleManager.
+        particleManager.update(deltaTime);
 
-        // Create new ParticleInstances in manager.
+        // Create new ParticleInstances in particleManager.
         lastGen += deltaTime;
         var limit = 0;
         while (lastGen > 1 / generationSpeed && limit < 100)
@@ -620,7 +620,7 @@ TurbulenzEngine.onload = function onloadFn()
 
             var instance, x, z, s, timeout;
             timeout = 2 + 2 * Math.random();
-            instance = manager.createInstance(archetype1, timeout);
+            instance = particleManager.createInstance(archetype1, timeout);
             x = Math.random() * (sceneWidth - radius * 2) + radius;
             z = Math.random() * (sceneHeight - radius * 2) + radius;
             s = 1 + Math.random() * 2;
@@ -629,10 +629,10 @@ TurbulenzEngine.onload = function onloadFn()
                 0, s, 0,
                 0, 0, s,
                 x, 0, z));
-            manager.addInstanceToScene(instance, particleNode);
+            particleManager.addInstanceToScene(instance, particleNode);
 
             timeout = 2 + 2 * Math.random();
-            instance = manager.createInstance(archetype2, timeout);
+            instance = particleManager.createInstance(archetype2, timeout);
             x = Math.random() * (sceneWidth - radius * 2) + radius;
             z = Math.random() * (sceneHeight - radius * 2) + radius;
             s = 1 + Math.random() * 2;
@@ -641,7 +641,7 @@ TurbulenzEngine.onload = function onloadFn()
                 0, s, 0,
                 0, 0, s,
                 x, 0, z));
-            manager.addInstanceToScene(instance, particleNode);
+            particleManager.addInstanceToScene(instance, particleNode);
         }
         lastGen %= (1 / generationSpeed);
 
@@ -669,19 +669,19 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Update renderer, this will as a side-effect of particle instances becoming visible to the camera
         //   cause particle systems if required to be lazily created along with any views onto a particle system
-        //   the low-level particle system will deal with this itself the way it is used by the particle manager.
+        //   the low-level particle system will deal with this itself the way it is used by the particleManager.
         renderer.update(graphicsDevice, camera, scene, currentTime);
 
         // Render scene including all particle systems.
         renderer.draw(graphicsDevice, clearColor, extraDrawCallback);
 
-        // Gather metrics about object usages in the manager, and display on the screen.
+        // Gather metrics about object usages in the particleManager, and display on the screen.
         graphicsDevice.setTechnique(fontTechnique);
         mathDevice.v4Build(2 / graphicsDevice.width, -2 / graphicsDevice.height, -1, 1,
                            fontTechniqueParameters.clipSpace);
         graphicsDevice.setTechniqueParameters(fontTechniqueParameters);
 
-        var metrics = manager.gatherMetrics();
+        var metrics = particleManager.gatherMetrics();
         var text = "ParticleManager Metrics:\n";
         for (var f in metrics)
         {
@@ -714,7 +714,7 @@ TurbulenzEngine.onload = function onloadFn()
 
         var width  = sceneWidth  * scaleX;
         var height = sceneHeight * scaleY;
-        var viewport = VMath.v4Build(
+        var viewport = mathDevice.v4Build(
             canvas.width - width - 2,
             canvas.height - 2,
             width,
@@ -728,7 +728,7 @@ TurbulenzEngine.onload = function onloadFn()
         ctx.strokeStyle = "#ffffff";
         ctx.strokeRect(0, 0, sceneWidth * scaleX, sceneHeight * scaleY);
 
-        var instanceMetrics = manager.gatherInstanceMetrics();
+        var instanceMetrics = particleManager.gatherInstanceMetrics();
         var count = instanceMetrics.length;
         var i;
         for (i = 0; i < count; i += 1)
@@ -785,16 +785,16 @@ TurbulenzEngine.onload = function onloadFn()
         fontManager.load('fonts/hero.fnt');
 
         // Load all assets required to create and work with the particle system archetypes we're using.
-        manager.loadArchetype(archetype1);
-        manager.loadArchetype(archetype2);
+        particleManager.loadArchetype(archetype1);
+        particleManager.loadArchetype(archetype2);
 
         intervalID = TurbulenzEngine.setInterval(loadingLoop, 10);
     }
     function mappingTableReceived(table)
     {
         textureManager.setPathRemapping(table.urlMapping, table.assetPrefix);
-        shaderManager .setPathRemapping(table.urlMapping, table.assetPrefix);
-        fontManager   .setPathRemapping(table.urlMapping, table.assetPrefix);
+        shaderManager.setPathRemapping(table.urlMapping, table.assetPrefix);
+        fontManager.setPathRemapping(table.urlMapping, table.assetPrefix);
 
         loadAssets();
     }
@@ -842,10 +842,10 @@ TurbulenzEngine.onload = function onloadFn()
             renderer.destroy();
             renderer = null;
         }
-        if (manager)
+        if (particleManager)
         {
-            manager.destroy();
-            manager = null;
+            particleManager.destroy();
+            particleManager = null;
         }
 
         effectManager = null;
@@ -907,9 +907,9 @@ TurbulenzEngine.onload = function onloadFn()
         // build new archetype from modified description.
         // replacing all instances of old with new.
         // and destroying the old.
-        var newArchetype = manager.parseArchetype(description);
-        manager.replaceArchetype(archetype, newArchetype);
-        manager.destroyArchetype(archetype);
+        var newArchetype = particleManager.parseArchetype(description);
+        particleManager.replaceArchetype(archetype, newArchetype);
+        particleManager.destroyArchetype(archetype);
         return newArchetype;
     }
     htmlControls.addButtonControl({
@@ -967,8 +967,8 @@ TurbulenzEngine.onload = function onloadFn()
         fn: function () {
             // remove all instances of both archetypes, retaining other state like object
             // pools and allocated memory on gpu.
-            manager.clear(archetype1);
-            manager.clear(archetype2);
+            particleManager.clear(archetype1);
+            particleManager.clear(archetype2);
         }
     });
 
@@ -977,7 +977,7 @@ TurbulenzEngine.onload = function onloadFn()
         value: "Destroy 1",
         fn: function () {
             // destroy all state and instances associated with archetype1 (complete reset)
-            manager.destroyArchetype(archetype1);
+            particleManager.destroyArchetype(archetype1);
         }
     });
     htmlControls.addButtonControl({
@@ -985,7 +985,7 @@ TurbulenzEngine.onload = function onloadFn()
         value: "Destroy 2",
         fn: function () {
             // destroy all state and instances associated with archetype2 (complete reset)
-            manager.destroyArchetype(archetype2);
+            particleManager.destroyArchetype(archetype2);
         }
     });
 
@@ -994,7 +994,7 @@ TurbulenzEngine.onload = function onloadFn()
         value: "Replace 1 to 2",
         fn: function () {
             // replace all instances of archetype1 with ones of archetype2 in-place.
-            manager.replaceArchetype(archetype1, archetype2);
+            particleManager.replaceArchetype(archetype1, archetype2);
         }
     });
     htmlControls.addButtonControl({
@@ -1002,7 +1002,7 @@ TurbulenzEngine.onload = function onloadFn()
         value: "Replace 2 to 1",
         fn: function () {
             // replace all instances of archetype2 with ones of archetype1 in-place.
-            manager.replaceArchetype(archetype2, archetype1);
+            particleManager.replaceArchetype(archetype2, archetype1);
         }
     });
 
