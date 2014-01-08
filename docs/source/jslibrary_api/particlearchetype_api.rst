@@ -13,7 +13,7 @@ The ParticleArchetype Object
 
 The `ParticleArchetype` is used to fully describe a particle system for use with the :ref:`ParticleManager <particlemanager>`. An archetype is constructed from an easily serializable data description, whose format is described as below.
 
-Serialisation and Deserialisation of the archetypes should be done using the methods on :ref:`ParticleManager <particlemanager>` which will both serialise and compress the archetype description to reduce file sizes.
+Serialization and deserialization of the archetypes should be done using the methods on :ref:`ParticleManager <particlemanager>` which will both serialize and compress the archetype description to reduce file sizes.
 
 ::
 
@@ -160,7 +160,7 @@ The values shown above, are the basic default values for an archetype descriptio
     * `"default"`
         A :ref:`DefaultParticleSynchronizer <defaultparticlesynchronizer>`.
 
-    The parameters supporte for the archetype by this synchronizer are listed and described :ref:`here <defaultparticlesynchronizer_archetype>`.
+    The parameters supported for the archetype by this synchronizer are listed and described :ref:`here <defaultparticlesynchronizer_archetype>`.
 
 ``animationSystem`` (Default `"default"`)
     The animation system used by particle animations in the archetype.

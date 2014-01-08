@@ -37,7 +37,7 @@ Additionally, verification will be performed between the system and particle def
 
 This verification applies also to any uv-remapping or per-particle attribute tweaks applied.
 
-Any verification errors will be reported as late as possible, and any non-critical errors reported seperately as warnings.
+Any verification errors will be reported as late as possible, and any non-critical errors reported separately as warnings.
 
 **Syntax** ::
 
@@ -91,16 +91,19 @@ Any verification errors will be reported as late as possible, and any non-critic
         Default value 30. Specifies the frames per second that will be compiled into the texture for this particle. A higher fps means that the animation when used in a particle system will appear smoother, at the expense of a large texture being created to store the animation.
 
     `texture#` (Optional)
-        Provides a set of uv-rectangles of the form `[x, y, w, h]` defining the frames of a flip-book animation. These uv-rectangles must be normalised, but may be specified in pixel coordinates as long as an appropriate `texture#-size` field is defined to enable the compiler to normalise them for you.
+        Provides a set of uv-rectangles of the form `[x, y, w, h]` defining the frames of a flip-book animation. These uv-rectangles must be normalized, taking into account any corresponding `texture#-size` definition.
 
         These fields should match the system defined attributes. If the system has defined an attribute using `texture0`, and a particle has not defined uv-rectangles for `texture0`, then a default value of `[[0, 0, 1, 1]]` will be used.
+
+    `texture#-size` (Optional)
+        Defines the size of the numbered texture to be used in normalizing the uv-rectangles. By default the texture size will be assumed to be `[1, 1]` implying that the uv-rectangles should already have been normalized.
 
     `animation`
         Specifies a sequence of snapshots defining the animation.
 
         Each snapshot defines values that the animation should have at a particular time for system attributes, and the interpolation mode that should be used from that point forwards. Times are defined relative to the previous snapshot of the sequence and apart from the first snapshot which must have `time` of `0` (default), all times must be positive.
 
-        This sequence of snapshots is later discretised based on the fps using the defined interpolators to fill in the attributes. Note that each snapshot need not define every attribute and interpolator, for example a complete particle definition may look like: ::
+        This sequence of snapshots is later discretized based on the fps using the defined interpolators to fill in the attributes. Note that each snapshot need not define every attribute and interpolator, for example a complete particle definition may look like: ::
 
             {
                 name: "example",
@@ -112,26 +115,26 @@ Any verification errors will be reported as late as possible, and any non-critic
                         "scale-interpolation": "catmull"
                     },
                     {
-                        time: 0.25,
+                        time: 0.25, // 0.25 seconds after previous snapshot
                         scale: [4, 4],
                     },
                     {
-                        time: 0.25,
+                        time: 0.25, // 0.25 seconds after previous snapshot
                         scale: [0.5, 0.5],
                     },
                     {
-                        time: 0.5
+                        time: 0.5, // 0.5 seconds after previous snapshot
                         scale: [1, 1]
                     },
                     {
-                        time: 2,
+                        time: 2, // 2 seconds after previous snapshot
                         scale: [0, 0],
                         rotation: Math.PI * 2
                     }
                 ]
             }
 
-        Assuming the default system defined below, this defines an animation where the rotation of the particle moves linearly from 0 to Math.PI * 2 over the whole animation, whilst at the same time, there is a much more complex animation of the particles scale.
+        Assuming the :ref:`default system<defaultparticlesystem>` defined below, this defines an animation where the rotation of the particle moves linearly from 0 to Math.PI * 2 over the whole animation, whilst at the same time, there is a much more complex animation of the particles scale.
 
 .. _particleanimationsystemdefinition:
 
@@ -153,7 +156,7 @@ Any verification errors will be reported as late as possible, and any non-critic
             ?default-interpolation: Interpolator
         }
 
-    Where each attribute value is either a `number` for `float` and `texture#` types, or an `Array` of `numbers` of the appropariate length for `float2` and `float4` types.
+    Where each attribute value is either a `number` for `float` and `texture#` types, or an `Array` of `numbers` of the appropriate length for `float2` and `float4` types.
 
     ``default``
         The attribute default value if unspecified is all `0`.
@@ -164,7 +167,7 @@ Any verification errors will be reported as late as possible, and any non-critic
     ``storage``
         `"direct"` storage indicates that values will be encoded into the texture without any remapping, and thus will only handle values between `0` and `1`.
 
-        `"normalized"` storage indicates that values will be remapped to be between `0` and `1` based on the system-wide minimum, and maximum values attained after interpolation and discretisation to animation frames.
+        `"normalized"` storage indicates that values will be remapped to be between `0` and `1` based on the system-wide minimum, and maximum values attained after interpolation and discretization to animation frames.
 
     ``compress``
         `"none"` compression indicates that `float2` values will occupy two rows of the output texture, and `float4` values will occupy four rows of the output texture.
@@ -218,7 +221,7 @@ Any verification errors will be reported as late as possible, and any non-critic
             ]
         };
 
-    uv-maps are declared by a :ref:`Vector4 <v4object>` object of the form `[x, y, w, h]` in normalised texture coordinates.
+    uv-maps are declared by a :ref:`Vector4 <v4object>` object of the form `[x, y, w, h]` in normalized texture coordinates.
 
     Use of this parameter enables re-use of particle animations amongst many systems as each individual particle animation can assume use of a full texture instead of requiring foresight into how its texture is packed together with others later on.
 
@@ -242,10 +245,10 @@ Any verification errors will be reported as late as possible, and any non-critic
 
     These tweaks are applied before any interpolation or normalization occurs.
 
-    Use of this parameter enables re-use of a basic particle animation amongst many systems with slightly different behaviours.
+    Use of this parameter enables re-use of a basic particle animation amongst many systems with slightly different behaviors.
 
 ``failOnWarnings`` (Optional)
-    Default value true. If true, then the compilation will fail if any warnings occur, even if no errors have occured. Warnings indicate things that may well be a bug in your code, though they are not critical in causing the compilation to fail.
+    Default value true. If true, then the compilation will fail if any warnings occur, even if no errors have occurred. Warnings indicate things that may well be a bug in your code, though they are not critical in causing the compilation to fail.
 
 The resultant object contains the following fields:
 
@@ -262,7 +265,7 @@ The resultant object contains the following fields:
         The total life time of the particles animation.
 
     ``animationRange``
-        A `Vector2` object whose values are the normalised texture columns representing the start and end of this particles animation in the texture. This is used when creating particles in the system to match the created particle to its animation in the texture.
+        A `Vector2` object whose values are the normalized texture columns representing the start and end of this particles animation in the texture. This is used when creating particles in the system to match the created particle to its animation in the texture.
 
 ``attribute``
     A dictionary of normalized attribute properties to be passed to the shaders, each normalized system attribute will be represented in the dictionary as an object with the following fields:
@@ -327,7 +330,7 @@ The resultant object contains the following fields:
 The ParticleBuildError Object
 =============================
 
-The ParticleBuildError object is used internally by the ParticleBuilder, and supplied to the parse functions for :ref:`ParticleEmitters <particleemitter>`, :ref:`ParticleSynchronizers <particlesynchronizer>`, :ref:`ParticleRenderers <particlerenderer>` and :ref:`ParticleUpdaters <particleupdater>` registerd in the high-level :ref:`ParticleManager <particlemanager>` object for purposes of reporting warnings and errors.
+The ParticleBuildError object is used internally by the ParticleBuilder, and supplied to the parse functions for :ref:`ParticleEmitters <particleemitter>`, :ref:`ParticleSynchronizers <particlesynchronizer>`, :ref:`ParticleRenderers <particlerenderer>` and :ref:`ParticleUpdaters <particleupdater>` registered in the high-level :ref:`ParticleManager <particlemanager>` object for purposes of reporting warnings and errors.
 
 Methods
 -------

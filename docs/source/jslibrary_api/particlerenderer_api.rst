@@ -35,7 +35,7 @@ The `Technique` to be used for rendering particle states on the GPU.
 `parameters`
 ------------
 
-An object definining the parameters required by this specific renderer with their default values.
+An object defining the parameters required by this specific renderer with their default values.
 
 The :ref:`ParticleSystem <particlesystem>` will produce a copy of this object with additional fields added defined in `particles-common.cgh` which should not be used by this object.
 
@@ -151,17 +151,17 @@ Orientation of particle is controlled with bits `[30,32)` as a 2-bit integer wit
 
 Custom orientations are specified with bits `[0,8)` and `[8,16)` specifying two normalized, spherical angles: theta in the high 8 bits representing values `[0,pi)` and phi in the low 8 bits representing values `[0,2pi)`.
 
-To randomise the rotation of particles, bit `29` should be set.
+To randomize the rotation of particles, bit `29` should be set.
 
-To randomise the scale of particles, bit `28` should be set.
+To randomize the scale of particles, bit `28` should be set.
 
-To randomise the orientation of particles, bit `27` should be set.
+To randomize the orientation of particles, bit `27` should be set.
 
-To randomise the alpha of particles, bit `26` should be set.
+To randomize the alpha of particles, bit `26` should be set.
 
 Bits `[16,24)` specifies an 8-bit integer seed used to select a path in the noise texture.
 
-**Compatiblity**
+**Compatibility**
 
 The `DefaultParticleRenderer` is compatible with the :ref:`DefaultParticleUpdater <defaultparticleupdater>` in the sense that their usages of each particles `userData` does not conflict.
 
@@ -239,7 +239,7 @@ Set up particles' `userData` storage for creation.
 ``seed`` (Default `0`)
     The 8-bit integer seed to write to the `userData`.
 
-.. note:: The seed parameter should be ignored when creating userData values for ParticleArchetypes, as it is the responsibility of the emitter to initialise the seed to a random value for each emitted particle.
+.. note:: The seed parameter should be ignored when creating userData values for ParticleArchetypes, as it is the responsibility of the emitter to initialize the seed to a random value for each emitted particle.
 
 .. index::
     pair: DefaultParticleRenderer; setAnimationParameters
@@ -270,53 +270,53 @@ The list of technique parameters exposed by the `DefaultParticleRenderer`. Unles
 
 ``noiseTexture``
 
-    The noise :ref:`Texture <texture>` to be used for randomising appearance of particles. This noise texture should be a 4-channel smooth noise such as `textures/noise.dds` present in the SDK.
+    The noise :ref:`Texture <texture>` to be used for randomizing appearance of particles. This noise texture should be a 4-channel smooth noise such as `textures/noise.dds` present in the SDK.
 
-    The particles current age will be used to look up randomised values in the texture along a pseudo-random path, therefore a higher frequency noise texture will produce higher frequency fluctuations in the randomised values used to alter the particles appearances.
+    The particles current age will be used to look up randomized values in the texture along a pseudo-random path, therefore a higher frequency noise texture will produce higher frequency fluctuations in the randomized values used to alter the particles appearances.
 
     Vectors are extracted from the noise texture based on treating channels as encoded signed floats (As-per :ref:`TextureEncode.encodeSignedFloat <textureencode>`).
 
-    Default value is a procedural texture defined so that no randomisation will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
+    Default value is a procedural texture defined so that no randomization will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
 
 .. note :: For a ParticleArchetype, this field should be a string path to the texture to be retrieved from the TextureManager rather than a real Texture object.
 
 ``randomizedOrientation`` (Default `[0, 0]`)
 
-    A :ref:`Vector2 <v2object>` defining the maximum amount of randomisation applied to particles orientations in spherical coordinates.
+    A :ref:`Vector2 <v2object>` defining the maximum amount of randomization applied to particles orientations in spherical coordinates.
 
 ``randomizedScale`` (Default `[0, 0]`)
 
-    A :ref:`Vector2 <v2object>` defining the maximum amount of randomisation applied to particles scale (width/height).
+    A :ref:`Vector2 <v2object>` defining the maximum amount of randomization applied to particles scale (width/height).
 
 ``randomizedRotation`` (Default `0`)
 
-    A number defining the maximum amount of randomisation applied to particles spin-rotation.
+    A number defining the maximum amount of randomization applied to particles spin-rotation.
 
 ``randomizedAlpha`` (Default `0`)
 
-    A number defining the maximum amount of randomisation applied to particles alpha.
+    A number defining the maximum amount of randomization applied to particles alpha.
 
 ``animatedOrientation`` (Default `false`)
 
-    A boolean flag defining whether the randomisation of particle orientations is fixed, or animated over time.
+    A boolean flag defining whether the randomization of particle orientations is fixed, or animated over time.
 
     If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 
 ``animatedScale`` (Default `false`)
 
-    A boolean flag defining whether the randomisation of particle scales is fixed, or animated over time.
+    A boolean flag defining whether the randomization of particle scales is fixed, or animated over time.
 
     If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 
 ``animatedRotation`` (Default `false`)
 
-    A boolean flag defining whether the randomisation of particle rotations is fixed, or animated over time.
+    A boolean flag defining whether the randomization of particle rotations is fixed, or animated over time.
 
     If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 
 ``animatedAlpha`` (Default `false`)
 
-    A boolean flag defining whether the randomisation of particle alphas is fixed, or animated over time.
+    A boolean flag defining whether the randomization of particle alphas is fixed, or animated over time.
 
     If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 

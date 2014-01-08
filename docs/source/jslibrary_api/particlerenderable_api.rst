@@ -26,7 +26,7 @@ A similar API permits lazy allocation of :ref:`ParticleViews <particleview>` ins
 * Cloning (clone)
 * Custom Materials (setMaterial)
 
-Additionaly, it is assumed that a `ParticleRenderable` should also be used as a `transparent` renderable, being sorted along side other transparent renderables in a :ref:`Scene <scene>`.
+Additionally, it is assumed that a `ParticleRenderable` should also be used as a `transparent` renderable, being sorted along side other transparent renderables in a :ref:`Scene <scene>`.
 
 **Transformation**
 
@@ -86,7 +86,7 @@ Set the :ref:`ParticleSystem <particlesystem>` to be rendered by this renderable
     renderable.setSystem(system);
 
 ``system``
-    The :ref:`ParticleSystem <particlesystem>` to be rendered, setting to null is permissable in which case it is assumed that either another non-null system will be assigned, or `setLazySystem` called before the renderable is added to a :ref:`Scene <scene>`.
+    The :ref:`ParticleSystem <particlesystem>` to be rendered, setting to null is permissible in which case it is assumed that either another non-null system will be assigned, or `setLazySystem` called before the renderable is added to a :ref:`Scene <scene>`.
 
 .. index::
     pair: ParticleRenderable; setLazySystem

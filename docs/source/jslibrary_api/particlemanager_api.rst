@@ -77,7 +77,7 @@ Initialize the particle manager, this must be called before any particle systems
 ``passIndex``
     The passIndex for `transparent` renderables defined by the renderer in use.
 
-    For example, if using the :ref:`DefaultRendering <defaultrendering>` object, this should be set to `renderer.passIndex.transparent`. The pass index is used to define the ordering of draw calls so that particle systems (as a generally transparent medium) will be rendererd after normal geometry, and will be z-sorted along with other transparent geometry in the :ref:`Scene <scene>`.
+    For example, if using the :ref:`DefaultRendering <defaultrendering>` object, this should be set to `renderer.passIndex.transparent`. The pass index is used to define the ordering of draw calls so that particle systems (as a generally transparent medium) will be rendered after normal geometry, and will be z-sorted along with other transparent geometry in the :ref:`Scene <scene>`.
 
 .. index::
     pair: ParticleManager; registerParticleAnimation
@@ -158,14 +158,14 @@ Register the set of functions required to create and work with a :ref:`ParticleR
     The name of the renderer to be referenced by particle archetypes.
 
 ``parser``
-    A function taking as arguments a :ref:`ParticleParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed json object representing those values configurable for the renderer.
+    A function taking as arguments a :ref:`ParticleParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed JSON object representing those values configurable for the renderer.
 
-    This function should verify the input json object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this renderer.
+    This function should verify the input JSON object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this renderer.
 
 ``compressor``
     A function taking as argument the complete set of configurable options for the renderer, and returning its minimal representation.
 
-   The parser and compressor should be inverses of eachother.
+   The parser and compressor should be inverses of each-other.
 
 ``loader``
     A function taking as arguments the complete set of configurable options for the renderer instance, a function to be used for loading shaders (accepting the shader path as argument) and a function to be used for loading textures (accepting the texture path as argument).
@@ -196,14 +196,14 @@ Register the set of functions required to create and work with a :ref:`ParticleU
     The name of the updater to be referenced by particle archetypes.
 
 ``parser``
-    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed json object representing those values configurable for the updater.
+    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed JSON object representing those values configurable for the updater.
 
-    This function should verify the input json object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this updater.
+    This function should verify the input JSON object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this updater.
 
 ``compressor``
     A function taking as argument the complete set of configurable options for the updater, and returning its minimal representation.
 
-   The parser and compressor should be inverses of eachother.
+   The parser and compressor should be inverses of each-other.
 
 ``loader``
     A function taking as arguments the complete set of configurable options for the updater instance, a function to be used for loading shaders (accepting the shader path as argument) and a function to be used for loading textures (accepting the texture path as argument).
@@ -231,17 +231,17 @@ Register the set of functions required to create and work with a :ref:`ParticleS
     The name of the synchronizerr to be referenced by particle archetypes.
 
 ``parser``
-    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed json object representing those values configurable for the synchronizerr.
+    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed JSON object representing those values configurable for the synchronizer.
 
-    This function should verify the input json object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this synchronizerr.
+    This function should verify the input JSON object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this synchronizer.
 
 ``compressor``
-    A function taking as argument the complete set of configurable options for the synchronizerr, and returning its minimal representation.
+    A function taking as argument the complete set of configurable options for the synchronizer, and returning its minimal representation.
 
-   The parser and compressor should be inverses of eachother.
+   The parser and compressor should be inverses of each-other.
 
 ``constructor``
-   A function to be called to construct an instance of this synchronizerr. This function should take no arguments.
+   A function to be called to construct an instance of this synchronizer. This function should take no arguments.
 
 .. index::
     pair: ParticleManager; registerEmitter
@@ -261,14 +261,14 @@ Register the set of functions required to create and work with a :ref:`ParticleE
     The name of the emitter to be referenced by particle archetypes.
 
 ``parser``
-    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed json object representing those values configurable for the emitter. A final argument to this function is the name of all particles defined for the system archetype currently being parsed so that this function may verify emitters reference only particles defined for the system.
+    A function taking as arguments a :ref:`ParticleBuildError <builderror>` object for reporting warnings and parse errors, and the compressed JSON object representing those values configurable for the emitter. A final argument to this function is the name of all particles defined for the system archetype currently being parsed so that this function may verify emitters reference only particles defined for the system.
 
-    This function should verify the input json object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this emitter.
+    This function should verify the input JSON object for correctness, reporting warnings and errors as necessary and return the complete set of configurable options (including defaults if necessary) to be applied to an instance of this emitter.
 
 ``compressor``
     A function taking as argument the complete set of configurable options for the emitter, and returning its minimal representation.
 
-   The parser and compressor should be inverses of eachother.
+   The parser and compressor should be inverses of each-other.
 
 ``constructor``
    A function to be called to construct an instance of this emitter. This function should take no arguments.
@@ -494,7 +494,7 @@ Remove the provided :ref:`ParticleInstance <particleinstance>` from the scene.
 
 Compress the provided archetype, returning a minimal description from which the archetype can be recovered.
 
-This can be used to save space when saving or transferring archetypes, and will be used when serialising an archetype.
+This can be used to save space when saving or transferring archetypes, and will be used when serializing an archetype.
 
 **Syntax** ::
 
@@ -666,7 +666,7 @@ This renderable should not be added or removed from a :ref:`Scene <scene>` manua
 
 **Summary**
 
-The :ref:`ParticleSynchronizer <particlesynchronizer>` created for this instance. This property will always be defined, and may be used to add and remove emitters at runtime for a particular instance.
+The :ref:`ParticleSynchronizer <particlesynchronizer>` created for this instance. This property will always be defined, and may be used to add and remove emitters at run-time for a particular instance.
 
 .. note :: Read Only
 

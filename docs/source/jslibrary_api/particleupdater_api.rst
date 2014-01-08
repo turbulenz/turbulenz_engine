@@ -11,7 +11,7 @@ The ParticleUpdater Interface
 
 **Added SDK 0.28.0**
 
-Encapsulates a replaceble element of a particle system responsible for updating the states of particles on both the CPU and GPU and aiding emitters in retrospective creation of particles through prediction.
+Encapsulates a replaceable element of a particle system responsible for updating the states of particles on both the CPU and GPU and aiding emitters in retrospective creation of particles through prediction.
 
 This object may be shared amongst many :ref:`ParticleSystems <particlesystem>`.
 
@@ -84,7 +84,7 @@ As this is such a low-level element of the particle system, there is little in t
     A `Uint32Array` containing another view of the state of all particles in the system.
 
 ``tracked``
-    A `Uint16Array` containing the list of particle indexes for particles of the statem that are both alive and tracked.
+    A `Uint16Array` containing the list of particle indexes for particles of the system that are both alive and tracked.
 
 ``numTracked``
     The number of elements of the `tracked` array to be considered.
@@ -174,13 +174,13 @@ Implementation of a :ref:`ParticleUpdater <particleupdater>`.
 
 Performs simulation of the particles with positions and velocities as standard euclidean vectors, supporting a uniform acceleration and drag to apply to all particles.
 
-Additionally, supports a noise-randomised acceleration applied per-particle from a noise texture controlled by a noise seed, and activation flag in the particles' `userData` storage.
+Additionally, supports a noise-randomized acceleration applied per-particle from a noise texture controlled by a noise seed, and activation flag in the particles' `userData` storage.
 
-`DefaultParticleUpdater` implements both the `update` and `predict` functions with the restriction that neither may make use of noise-randomised acceleration.
+`DefaultParticleUpdater` implements both the `update` and `predict` functions with the restriction that neither may make use of noise-randomized acceleration.
 
 **Particle userData storage used**
 
-To randomise the acceleration of a particle, bit `24` of the userData field should be set, with bits `[16,24)` specifying an 8-bit integer seed used to select a path in the noise texture.
+To randomize the acceleration of a particle, bit `24` of the userData field should be set, with bits `[16,24)` specifying an 8-bit integer seed used to select a path in the noise texture.
 
 **Compatibility**
 
@@ -231,7 +231,7 @@ Set up particles' `userData` storage for creation.
 ``seed`` (Default `0`)
     The 8-bit integer seed to write to the `userData`.
 
-.. note:: The seed parameter should be ignored when creating userData values for ParticleArchetypes, as it is the responsibility of the emitter to initialise the seed to a random value for each emitted particle.
+.. note:: The seed parameter should be ignored when creating userData values for ParticleArchetypes, as it is the responsibility of the emitter to initialize the seed to a random value for each emitted particle.
 
 .. _defaultparticleupdater_archetype:
 
@@ -254,18 +254,18 @@ The list of technique parameters exposed by the `DefaultParticleUpdater`. Unless
 
 ``noiseTexture``
 
-    The noise :ref:`Texture <texture>` to be used for randomising appearance of particles. This noise texture should be a 4-channel smooth noise such as `textures/noise.dds` present in the SDK.
+    The noise :ref:`Texture <texture>` to be used for randomizing appearance of particles. This noise texture should be a 4-channel smooth noise such as `textures/noise.dds` present in the SDK.
 
-    The particles current age will be used to look up randomised values in the texture along a pseudo-random path, therefore a higher frequency noise texture will produce higher frequency fluctuations in the randomised values used to alter the particles appearances.
+    The particles current age will be used to look up randomized values in the texture along a pseudo-random path, therefore a higher frequency noise texture will produce higher frequency fluctuations in the randomized values used to alter the particles appearances.
 
     Vectors are extracted from the noise texture based on treating channels as encoded signed floats (As-per :ref:`TextureEncode.encodeSignedFloat <textureencode>`).
 
-    Default value is a procedural texture defined so that no randomisation will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
+    Default value is a procedural texture defined so that no randomization will occur (:ref:`ParticleSystem.getDefaultNoiseTexture <particlesystem>`)
 
 .. note :: For a ParticleArchetype, this field should be a string path to the texture to be retrieved from the TextureManager rather than a real Texture object.
 
 ``randomizedAcceleration`` (Default `[0, 0, 0]`)
 
-    A :ref:`Vector3 <v3object>` defining the maximum amount of randomised acceleration applicable to the particles.
+    A :ref:`Vector3 <v3object>` defining the maximum amount of randomized acceleration applicable to the particles.
 
     This :ref:`Vector3 <v3object>` will be multiplied with the vector extracted from the noise texture.

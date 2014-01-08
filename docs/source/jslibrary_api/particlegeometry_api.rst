@@ -35,7 +35,7 @@ Create a new `ParticleGeometry` object.
     //
     // Geometry is a single quad rendered as 2 GL_TRIANGLES where the indices in the template correspond to which vertex of the quad is being rendered.
     // The default render shader expects a float2 as vertex data input, hence the choice of attributes
-    // And it expectes that float2 to be a TEXCOORD.
+    // And it expects that float2 to be a POSITION.
     var geometry = ParticleGeometry.create({
         graphicsDevice: graphicsDevice,
         maxParticles: 1024,
@@ -43,7 +43,7 @@ Create a new `ParticleGeometry` object.
                    0, null,  2, null,  3, null],
         attributes: [graphicsDevice.VERTEXFORMAT_USHORT2],
         stride: 2,
-        semantics: graphicsDevice.createSemantics([graphicsDevice.SEMANTIC_TEXCOORD]),
+        semantics: graphicsDevice.createSemantics([graphicsDevice.SEMANTIC_POSITION]),
         primitive: graphicsDevice.PRIMITIVE_TRIANGLES,
         shared: true
     });
@@ -78,7 +78,7 @@ Create a new `ParticleGeometry` object.
 ``semantics``
     The `Semantics` object for rendering the geometry.
 
-``primtive`` (Optional)
+``primitive`` (Optional)
     The `GraphicsDevice` primitive type for rendering the geometry, by default this is `graphicsDevice.PRIMITIVE_TRIANGLES`.
 
 ``shared`` (Optional)

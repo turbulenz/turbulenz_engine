@@ -145,7 +145,7 @@ Apply emitter specific archetype parameters to this emitter. This is used by the
 
 **Summary**
 
-Get the maximum life time required to fully support the intended behaviour of this emitter.
+Get the maximum life time required to fully support the intended behavior of this emitter.
 
 **Syntax** ::
 
@@ -159,7 +159,7 @@ Get the maximum life time required to fully support the intended behaviour of th
 
 **Summary**
 
-Get the maximum amount of particles required to fully support the intended behaviour of this emitter.
+Get the maximum amount of particles required to fully support the intended behavior of this emitter.
 
 **Syntax** ::
 
@@ -173,7 +173,7 @@ Get the maximum amount of particles required to fully support the intended behav
 
 **Summary**
 
-Get the maximum speed required for particles to fully support the intended behaviour of this emitter.
+Get the maximum speed required for particles to fully support the intended behavior of this emitter.
 
 **Syntax** ::
 
@@ -204,7 +204,7 @@ An emitter, compatible with the `DefaultParticleSynchronizer` and assuming usage
 
 This emitter will emit continuous streams of particles with a set rate, with particles emitted in a specific direction in an optional combination of a flat angular spread, and a conical spread using either a uniform or normal distribution.
 
-Particles will be emitted from within a random radius of a position in either a flat disc or spherical spread with some distribution, with randomised lifetimes and speeds.
+Particles will be emitted from within a random radius of a position in either a flat disc or spherical spread with some distribution, with randomized lifetimes and speeds.
 
 **Prediction**
 
@@ -250,7 +250,7 @@ Default value is `false`.
 `usePrediction`
 ---------------
 
-If true, then particles will have their position and velocity predicted using the system updater, this enables (at a small overhead) more accurate creation of particles whose creation time does not exactly overlap with system updates, and to improve behaviour when looking back onto a previously invisible particle system.
+If true, then particles will have their position and velocity predicted using the system updater, this enables (at a small overhead) more accurate creation of particles whose creation time does not exactly overlap with system updates, and to improve behavior when looking back onto a previously invisible particle system.
 
 Default value is `true`.
 
@@ -274,7 +274,7 @@ Parameters controlling the emittance of particles.
     The minimum amount of particles emitted at each emittance event.
 
 ``burstMax`` (Default `1`)
-    The maximum amount of particles emitted at each event. The actual amount emitted varies uniformnly between the min and max values.
+    The maximum amount of particles emitted at each event. The actual amount emitted varies uniformly between the min and max values.
 
 .. index::
     pair: DefaultParticleEmitter; particle
@@ -282,7 +282,7 @@ Parameters controlling the emittance of particles.
 `particle`
 ----------
 
-Parameters about the particles appearances and life times. This object is vastly different for the :ref:`ParticleArchetype <particlearchetype>` and is described seperately.
+Parameters about the particles appearances and life times. This object is vastly different for the :ref:`ParticleArchetype <particlearchetype>` and is described separately.
 
 **Object Fields**
 
@@ -293,7 +293,7 @@ Parameters about the particles appearances and life times. This object is vastly
     The minimum life time of the emitted particles.
 
 ``lifeTimeMax`` (Default `1`)
-    The maximum life time of the emitted particles. The actual life time varies uniformnly between the min and max values.
+    The maximum life time of the emitted particles. The actual life time varies uniformly between the min and max values.
 
 ``userData`` (Default `0`)
     The `userData` applied when creating particles from this emitter.
@@ -383,7 +383,7 @@ Parameters about the spawn velocities of particles in this emitter.
     The minimum speed to emit particles with.
 
 ``speedMax`` (Default `1`)
-    The maximum speed to emit particles with. The actual speed will vary uniformnly between the min and max values.
+    The maximum speed to emit particles with. The actual speed will vary uniformly between the min and max values.
 
 ``flatSpread`` (Default `0`)
     The flat spread angle about the target direction to emit particles in. `Math.PI` radians would specify the flat spread is a full circle.

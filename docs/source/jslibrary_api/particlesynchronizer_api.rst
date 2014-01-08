@@ -240,5 +240,5 @@ The maximum amount of sub-steps to make when updating the system if using a fixe
 `trailFollow`
 -------------
 
-The number specifying how trails form, with `1` specifying a standard trail, and `0` specifying that already emitted particles will follow the movements of the system without trails forming. Any value is permited, though values between `0` and `1` are 'expected'.
+The number specifying how trails form, with `1` specifying a standard trail, and `0` specifying that already emitted particles will follow the movements of the system without trails forming. Any value is permitted, though values between `0` and `1` are 'expected'.
 

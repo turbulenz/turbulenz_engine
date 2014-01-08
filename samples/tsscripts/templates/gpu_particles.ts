@@ -209,7 +209,12 @@ TurbulenzEngine.onload = function onloadFn()
             [3, 1,  1, 1], // frame 7
         ],
         animation: [{
-            frame: 0
+            // these are values applied by default to the first snapshot in animation
+            // we could omit them here if we wished.
+            frame: 0,
+            "frame-interpolation": "linear",
+            color: [1, 1, 1, 1],
+            "color-interpolation": "linear"
         }, {
             // after 0.8 seconds
             time: 0.8,
@@ -227,7 +232,6 @@ TurbulenzEngine.onload = function onloadFn()
     particleManager.registerParticleAnimation({
         name: "portal",
         animation: [{
-            scale: [1, 1],
             "scale-interpolation": "catmull",
             color: [0, 1, 0, 1]
         },
@@ -247,7 +251,8 @@ TurbulenzEngine.onload = function onloadFn()
 
     var description1 = {
         system: {
-            // define local system extents
+            // define local system extents, particles will be clamped against these extents when reached.
+            //
             // We make extents a little larger than necessary so that in movement of system
             // particles will not push up against the edges of extents so easily.
             center      : [0, 6, 0],
@@ -294,6 +299,8 @@ TurbulenzEngine.onload = function onloadFn()
                 // and double the size.
                 tweaks: {
                     "scale-scale": [2, 2],
+                    // The animation we're using has 8 frames, we want to use the second
+                    // half of the flip-book animation, so we scale by 0.5 and offset by 4.
                     "frame-scale": 0.5,
                     "frame-offset": 4
                 }
@@ -335,6 +342,11 @@ TurbulenzEngine.onload = function onloadFn()
                 // with a normal (gaussian) distribution to focus on centre.
                 radiusMax: 1,
                 radiusDistribution: "normal"
+            },
+            velocity: {
+                // spherical angles defining direction to emit particles in.
+                // the default [0,0] means to emit particles straight up the y-axis.
+                direction: [0, 0]
             }
         }, {
             particle: {
@@ -624,6 +636,9 @@ TurbulenzEngine.onload = function onloadFn()
             x = Math.random() * (sceneWidth - radius * 2) + radius;
             z = Math.random() * (sceneHeight - radius * 2) + radius;
             s = 1 + Math.random() * 2;
+            // this local transform will be applied to the entire system
+            // allowing us to re-use the same particle archetype around the
+            // scene at different positions and scales.
             instance.renderable.setLocalTransform(mathDevice.m43Build(
                 s, 0, 0,
                 0, s, 0,

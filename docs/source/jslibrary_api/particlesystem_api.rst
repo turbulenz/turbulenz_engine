@@ -92,7 +92,7 @@ Create a new particle system.
     Default value `[0, 0, 0]`. The center of the local particle extents.
 
 ``halfExtents``
-    The local half-extents of the particle system. Together with `center` this defines a region of spcae in local coordinates which absolutely contains the particle system. Particles will not be able to escape the extents, and the extents will be used for :ref:`ParticleRenderables <particlerenderable>` for :ref:`Scene <scene>` culling.
+    The local half-extents of the particle system. Together with `center` this defines a region of space in local coordinates which absolutely contains the particle system. Particles will not be able to escape the extents, and the extents will be used for :ref:`ParticleRenderables <particlerenderable>` for :ref:`Scene <scene>` culling.
 
 ``maxSpeed```
     The maximum speed achievable for particles in the system, required to normalize velocities.
@@ -107,7 +107,7 @@ Create a new particle system.
     The specific sorting algorithm used permits partial sorts of a view onto the system so that you may spread the cost of sorting over a period of time for better performance. The actual number of steps used depends on maxParticles, but this will place an upper bound on that number. By default a view will be completely sorted at every rendering.
 
 ``maxLifeTime``
-    The maximum life permissable for any particle in the system, it will not be possible to created a particle whose life-time is greater than this value.
+    The maximum life permissible for any particle in the system, it will not be possible to created a particle whose life-time is greater than this value.
 
 ``animation`` (Optional)
     The animation :ref:`Texture <texture>` created by the :ref:`ParticleBuilder <particlebuilder>` object representing the animations of all particles to be created in this system, used by a compatible rendering shader.
@@ -147,7 +147,7 @@ Create a new particle system.
 ``sharedRenderContext`` (Optional)
     A :ref:`SharedRenderContext <sharedrendercontext>` object from which to allocate texture regions for particle states on the GPU.
 
-    If unspecified then a per-system set of textures and render targets will be created isntead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
+    If unspecified then a per-system set of textures and render targets will be created instead and destroyed along with the system. Otherwise on destruction of the system the allocated region will be released back to the shared render context.
 
 .. index::
     pair: ParticleSystem; destroy
@@ -223,7 +223,7 @@ Note that this particle will be created at the end of the current update, and so
     The 32-bit signed integer to use for this particles `userData` field. Default `0`.
 
 ``forceCreation`` (Optional)
-    Defalut value is `false`. If `true`, then this particle will be created, even when there is no space remaining in the system. Under such circumstances, the live particle closest to death will be replaced by the newly created particle.
+    Default value is `false`. If `true`, then this particle will be created, even when there is no space remaining in the system. Under such circumstances, the live particle closest to death will be replaced by the newly created particle.
 
     Note that tracked particles are excluded from such replacement, so that even with `forceCreation` as `true`, in the rare event that the system is saturated with tracked particles, the creation will still fail.
 
@@ -232,7 +232,7 @@ Note that this particle will be created at the end of the current update, and so
 
 The return value is the integer `id` corresponding to the particle slot used to create this particle. If the particle could not be created, then this `id` will be equal to `null`. If the particle is tracked, then this `id` can be used to query the particles attributes throughout its life.
 
-If the particle was not able to be created, then it is guaranteed that no further attempt to create a particle without `forceCreation` set to `true` will succeed until a system update has been perfomed.
+If the particle was not able to be created, then it is guaranteed that no further attempt to create a particle without `forceCreation` set to `true` will succeed until a system update has been performed.
 
 Note that tracked particles will `not` be killed when their life is exhausted, and must be removed manually. This is to enable particle attributes to be queried even after death to determine final position/velocities.
 
@@ -319,7 +319,7 @@ Remove all particles from the system by force.
 
 **Summary**
 
-Synchronise the system. This method is called by any :ref:`ParticleRenderable <particlerenderable>` visible in a :ref:`Scene <scene>` making use of this system, and may also be called manually if required.
+Synchronize the system. This method is called by any :ref:`ParticleRenderable <particlerenderable>` visible in a :ref:`Scene <scene>` making use of this system, and may also be called manually if required.
 
 This method will invoke the systems synchronizer method, providing it with the frame and time delta (as determined by the system's `timer`).
 
