@@ -129,13 +129,19 @@ Apply emitter specific archetype parameters to this emitter. This is used by the
 
 **Syntax** ::
 
-    emitter.applyArchetype(archetype, particleDefn);
+    emitter.applyArchetype(archetype, particleDefn, renderer, updater);
 
 ``archetype``
     The emitter specific archetype parameters to be applied.
 
 ``particle``
     The definition objects for the particles in an archetype. This is the dictionary returned by :ref:`ParticleBuilder.compile <particlebuilder>`.
+
+``renderer``
+    The :ref:`ParticleRenderer <particlerenderer>` this emitter will be used with to be used to convert userData object property of archetype to its integer value.
+
+``updater``
+    The :ref:`ParticleUpdater <particleupdater>` this emitter will be used with to be used to convert userData object property of archetype to its integer value.
 
 .. index::
     pair: ParticleEmitter; getMaxLifeTime
@@ -320,10 +326,11 @@ Parameters about the particles appearances and life times. This object is vastly
 ``lifeTimeMax`` (Default `1`)
     The maximum life time of the emitted particles when `useAnimationLifeTime` is false.
 
-``userData`` (Default `0`)
-    The `userData` applied when creating particles from this emitter.
+``renderUserData`` (Default `{}`)
+    An object with fields and values matching those expected by the :ref:`ParticleRenderer <particlerenderer>` createUserData method in use for the archetype.
 
-.. note :: This field should not contain randomized seed values, as these will be added automatically by the emitters.
+``updateUserData`` (Default `{}`)
+    An object with fields and values matching those expected by the :ref:`ParticleUpdater <particleupdater>` createUserData method in use for the archetype.
 
 .. index::
     pair: DefaultParticleEmitter; position

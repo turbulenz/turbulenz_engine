@@ -3935,6 +3935,7 @@ interface ParticleUpdater
              userData  : number,
              time      : number): number;
     createUserDataSeed(): number;
+    createUserData    (params: { [name: string]: any }): number;
     applyArchetype(textureManager: TextureManager,
                    system        : ParticleSystem,
                    archetype     : ParticleArchetype): void;
@@ -4030,9 +4031,13 @@ class DefaultParticleUpdater
     {
         return (Math.random() * 0xff) << 16;
     }
-    static createUserData(randomizeAcceleration = false, seed = 0)
+    createUserData(params: {
+        randomizeAcceleration?: boolean;
+        seed?                 : number;
+    })
     {
-        return ((<any>randomizeAcceleration) << 24) | (seed << 16);
+        return ((params.randomizeAcceleration !== undefined ? <any>params.randomizeAcceleration : 0) << 24) |
+               ((params.seed !== undefined ? params.seed : 0) << 16);
     }
 
     predict(
@@ -4220,6 +4225,7 @@ interface ParticleRenderer
         definition: { attribute: { [name: string]: AttributeRange } }
     ): void;
     createUserDataSeed(): number;
+    createUserData    (params: { [name: string]: any }): number;
     applyArchetype(textureManager: TextureManager,
                    system        : ParticleSystem,
                    archetype     : ParticleArchetype,
@@ -4345,7 +4351,7 @@ class DefaultParticleRenderer
     {
         return (Math.random() * 0xff) << 16;
     }
-    static createUserData(params: {
+    createUserData(params: {
         facing?              : string;
         randomizeOrientation?: boolean;
         randomizeScale?      : boolean;
@@ -6338,7 +6344,7 @@ interface ParticleEmitter
     burst  (count?) : void;
     timeout(timeout): void;
 
-    applyArchetype(archetype: any, particleDef: { [name: string]: ParticleDefn }): void;
+    applyArchetype(archetype: any, particleDef: { [name: string]: ParticleDefn }, renderer: ParticleRenderer, updater: ParticleUpdater): void;
 
     getMaxLifeTime (): number;
     getMaxParticles(): number;
@@ -6595,7 +6601,8 @@ interface DefaultEmitterArchetype
         useAnimationLifeTime: boolean;
         lifeTimeScaleMin    : number;
         lifeTimeScaleMax    : number;
-        userData            : number;
+        renderUserData      : { [name: string]: any };
+        updateUserData      : { [name: string]: any };
     };
     position: {
         position          : FloatArray;
@@ -6708,7 +6715,8 @@ class DefaultParticleEmitter
             useAnimationLifeTime: true,
             lifeTimeScaleMin    : 1,
             lifeTimeScaleMax    : 1,
-            userData            : 0
+            renderUserData      : {},
+            updateUserData      : {}
         },
         position: {
             position          : [0, 0, 0],
@@ -6839,9 +6847,20 @@ class DefaultParticleEmitter
                 {
                     return checkBoolean(n, " particle");
                 }
+                function checkObject(n): (_: any) => any
+                {
+                    return function (val)
+                    {
+                        if (!Types.isObject(val))
+                        {
+                            error.error("default emitter archetype " + n + " should be an object");
+                        }
+                        return val;
+                    }
+                }
 
                 Parser.extraFields(error, "default emitter archetype particle", delta,
-                    ["lifeTimeMin", "lifeTimeMax", "userData", "useAnimationLifeTime",
+                    ["lifeTimeMin", "lifeTimeMax", "renderUserData", "updateUserData", "useAnimationLifeTime",
                      "lifeTimeScaleMin", "lifeTimeScaleMax", "name"]);
 
                 var name = Parser.stringField(error, "default emitter archetype particle", delta, "name");
@@ -6857,7 +6876,8 @@ class DefaultParticleEmitter
                     useAnimationLifeTime: maybe(delta, "useAnimationLifeTime", checkBool, val(true)),
                     lifeTimeScaleMin    : maybe(delta, "lifeTimeScaleMin"    , checkNum , val(1)),
                     lifeTimeScaleMax    : maybe(delta, "lifeTimeScaleMax"    , checkNum , val(1)),
-                    userData            : maybe(delta, "userData"            , checkNum , val(0))
+                    renderUserData      : maybe(delta, "renderUserData"      , checkObject, val({})),
+                    updateUserData      : maybe(delta, "updateUserData"      , checkObject, val({})),
                 };
                 return ret;
             }),
@@ -6932,22 +6952,22 @@ class DefaultParticleEmitter
                      "conicalSpreadSigma"]);
 
                 return {
-                    theta              : maybe(delta, "theta"              , checkNum , val(0)),
-                    phi                : maybe(delta, "phi"                , checkNum , val(0)),
-                    speedMin           : maybe(delta, "speedMin"           , checkNum , val(1)),
-                    speedMax           : maybe(delta, "speedMax"           , checkNum , val(1)),
-                    flatSpread         : maybe(delta, "flatSpread"         , checkNum , val(0)),
-                    flatSpreadAngle    : maybe(delta, "flatSpreadAngle"    , checkNum , val(0)),
-                    flatDistribution   : maybe(delta, "flatDistribution"   , checkDist, val("uniform")),
-                    flatSigma          : maybe(delta, "flatSigma"          , checkNum , val(0.25)),
-                    conicalSpread      : maybe(delta, "conicalSpread"      , checkNum , val(0)),
-                    conicalDistribution: maybe(delta, "conicalDistribution", checkDist, val("uniform")),
-                    conicalSigma       : maybe(delta, "conicalSigma"       , checkNum , val(0.25))
+                    theta                    : maybe(delta, "theta"                    , checkNum , val(0)),
+                    phi                      : maybe(delta, "phi"                      , checkNum , val(0)),
+                    speedMin                 : maybe(delta, "speedMin"                 , checkNum , val(1)),
+                    speedMax                 : maybe(delta, "speedMax"                 , checkNum , val(1)),
+                    flatSpread               : maybe(delta, "flatSpread"               , checkNum , val(0)),
+                    flatSpreadAngle          : maybe(delta, "flatSpreadAngle"          , checkNum , val(0)),
+                    flatSpreadDistribution   : maybe(delta, "flatSpreadDistribution"   , checkDist, val("uniform")),
+                    flatSpreadSigma          : maybe(delta, "flatSpreadSigma"          , checkNum , val(0.25)),
+                    conicalSpread            : maybe(delta, "conicalSpread"            , checkNum , val(0)),
+                    conicalSpreadDistribution: maybe(delta, "conicalSpreadDistribution", checkDist, val("uniform")),
+                    conicalSpreadSigma       : maybe(delta, "conicalSpreadSigma"       , checkNum , val(0.25))
                 };
             }, Types.copy.bind(null, DefaultParticleEmitter.template.velocity))
         };
     }
-    applyArchetype(archetype, particleDefns)
+    applyArchetype(archetype, particleDefns, renderer: ParticleRenderer, updater: ParticleUpdater)
     {
         // This function is used to simplify constructor also.
         // so can't assume that we're initialized already.
@@ -6978,7 +6998,14 @@ class DefaultParticleEmitter
         this.particle = thisParticle;
 
         thisParticle.animationRange = VMath.v2Copy(particleDefn.animationRange, thisParticle.animationRange);
-        thisParticle.userData = particle.userData;
+        if (particle.userData !== undefined)
+        {
+            thisParticle.userData = particle.userData;
+        }
+        else if (renderer && updater)
+        {
+            thisParticle.userData = renderer.createUserData(particle.renderUserData) | updater.createUserData(particle.updateUserData);
+        }
         thisParticle.lifeTimeMin = min;
         thisParticle.lifeTimeMax = max;
     }
@@ -7341,7 +7368,7 @@ class DefaultParticleEmitter
     static create()
     {
         var ret = new DefaultParticleEmitter();
-        ret.applyArchetype(DefaultParticleEmitter.createArchetype, DefaultParticleEmitter.createParticleDefns);
+        ret.applyArchetype(DefaultParticleEmitter.createArchetype, DefaultParticleEmitter.createParticleDefns, null, null);
         ret.enabled = false;
         ret.bursting = null;
 
@@ -8629,7 +8656,7 @@ class ParticleManager
         {
             template = archetypes[i];
             var emitter = this.getEmitter(template.name);
-            emitter.applyArchetype(template, context.particleDefns);
+            emitter.applyArchetype(template, context.particleDefns, context.renderer, context.updater);
             emitter.enable();
             synchronizer.addEmitter(emitter);
 
@@ -8661,9 +8688,29 @@ class ParticleManager
         instance.synchronizer = synchronizer;
     }
 
+    // Replace typed array with standard JS array of values for JSON serialization
+    private static JSONreplacer(key: any, value: any): any
+    {
+        if (Types.isTypedArray(value))
+        {
+            var vals = [];
+            var i;
+            var count = value.length;
+            for (i = 0; i < count; i += 1)
+            {
+                vals.push(value[i]);
+            }
+            return vals;
+        }
+        else
+        {
+            return value;
+        }
+    }
+
     serializeArchetype(archetype: ParticleArchetype): string
     {
-        return JSON.stringify(this.compressArchetype(archetype));
+        return JSON.stringify(this.compressArchetype(archetype), ParticleManager.JSONreplacer);
     }
 
     deserializeArchetype(archetype: string): ParticleArchetype
@@ -9232,6 +9279,7 @@ class ParticleManager
                 if (obj.hasOwnProperty(f) && !template.hasOwnProperty(f))
                 {
                     delta[f] = obj[f];
+                    allZero = false;
                 }
             }
         }

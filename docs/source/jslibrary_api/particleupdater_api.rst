@@ -127,6 +127,21 @@ This function should only ever be called for particles, who at the end of the si
 Function must return the predicted `userData` of the particle - should updating of the particle make use of a subset of the `userData` field for additional logic.
 
 .. index::
+    pair: ParticleUpdater; createUserData
+
+`createUserData`
+----------------
+
+**Summary**
+
+This function will be called by :ref:`ParticleEmitters <particleemitter>` when used in conjunction with the high level :ref:`ParticleManager <particlemanager>` to transform archetype userData objects
+into the real userData integer value.
+
+**Syntax** ::
+
+    var userData = updater.createUserData(parameters);
+
+.. index::
     pair: ParticleUpdater; createUserDataSeed
 
 `createUserDataSeed`

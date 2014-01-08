@@ -323,11 +323,11 @@ TurbulenzEngine.onload = function onloadFn()
                 lifeTimeScaleMax: 1.2,
                 // set userData so that its orientation will be randomized, and will have a
                 // also define scale should be randomized.
-                userData: DefaultParticleRenderer.createUserData({
-                              facing              : "billboard",
-                              randomizeOrientation: true,
-                              randomizeScale      : true
-                          })
+                renderUserData: {
+                    facing              : "billboard",
+                    randomizeOrientation: true,
+                    randomizeScale      : true
+                }
             },
             emittance: {
                 // emit particles 10 times per second. With 0 - 2 particles emitted each time.
@@ -345,8 +345,9 @@ TurbulenzEngine.onload = function onloadFn()
             },
             velocity: {
                 // spherical angles defining direction to emit particles in.
-                // the default [0,0] means to emit particles straight up the y-axis.
-                direction: [0, 0]
+                // the default 0, 0 means to emit particles straight up the y-axis.
+                theta: 0,
+                phi: 0
             }
         }, {
             particle: {
@@ -355,10 +356,12 @@ TurbulenzEngine.onload = function onloadFn()
                 lifeTimeMin: 0.2,
                 lifeTimeMax: 0.6,
                 // set userData so that acceleration will be randomized and also orientation.
-                userData: DefaultParticleUpdater.createUserData(true) |
-                          DefaultParticleRenderer.createUserData({
-                              randomizeOrientation: true
-                          })
+                updateUserData: {
+                    randomizeAcceleration: true
+                },
+                renderUserData: {
+                    randomizeOrientation: true
+                }
             },
             emittance: {
                 // emit particles 3 times per second. With 0 - 15 particles emitted each time.
@@ -387,7 +390,9 @@ TurbulenzEngine.onload = function onloadFn()
             particle: {
                 name: "smoke",
                 // set userData so that acceleration will be randomized.
-                userData: DefaultParticleUpdater.createUserData(true)
+                updateUserData: {
+                    randomizeAcceleration: true
+                }
             },
             emittance: {
                 // emit particles 20 times per second, with 0 - 3 every time.
@@ -489,13 +494,15 @@ TurbulenzEngine.onload = function onloadFn()
                 // We define that we want particles emitted by this emitter to have their acceleration randomize
                 //    and also their alpha, orientation and rotation. We specify particle quad should be aligned
                 //    with the particles velocity vector.
-                userData: DefaultParticleUpdater.createUserData(true) |
-                          DefaultParticleRenderer.createUserData({
-                              facing              : "velocity",
-                              randomizeAlpha      : true,
-                              randomizeOrientation: true,
-                              randomizeRotation   : true
-                          })
+                updateUserData: {
+                    randomizeAcceleration: true
+                },
+                renderUserData: {
+                    facing              : "velocity",
+                    randomizeAlpha      : true,
+                    randomizeOrientation: true,
+                    randomizeRotation   : true
+                }
             },
             velocity: {
                 // Particles will be emitted with local speeds between these values.
@@ -525,7 +532,9 @@ TurbulenzEngine.onload = function onloadFn()
             particle: {
                 name: "smoke",
                 // Particles of this emitter will have their quads billboarded to face camera.
-                userData: DefaultParticleRenderer.createUserData({ facing: "billboard" }),
+                renderUserData: {
+                    facing: "billboard"
+                },
                 // Particles will live for between these amounts of time in seconds.
                 useAnimationLifeTime: false,
                 lifeTimeMin: 0.5,

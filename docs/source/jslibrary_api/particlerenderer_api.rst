@@ -89,6 +89,21 @@ Create a :ref:`ParticleGeometry <particlegeometry>` object compatible with this 
     Whether this geometry is going to be shared amongst many particle systems or not.
 
 .. index::
+    pair: ParticleRenderer; createUserData
+
+`createUserData`
+----------------
+
+**Summary**
+
+This function will be called by :ref:`ParticleEmitters <particleemitter>` when used in conjunction with the high level :ref:`ParticleManager <particlemanager>` to transform archetype userData objects
+into the real userData integer value.
+
+**Syntax** ::
+
+    var userData = renderer.createUserData(parameters);
+
+.. index::
     pair: ParticleRenderer; createUserDataSeed
 
 `createUserDataSeed`
