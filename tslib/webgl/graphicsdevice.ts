@@ -2173,7 +2173,7 @@ class WebGLIndexBuffer implements IndexBuffer
         }
     }
 
-    setData(data, offset, numIndices)
+    setData(data, offset?, numIndices?)
     {
         if (offset === undefined)
         {
@@ -2183,6 +2183,9 @@ class WebGLIndexBuffer implements IndexBuffer
         {
             numIndices = this.numIndices;
         }
+        debug.assert(offset + numIndices <= this.numIndices,
+                     "IndexBuffer.setData: invalid 'offset' and/or " +
+                     "'numIndices' arguments");
 
         var gd = this.gd;
         var gl = gd.gl;
