@@ -35,7 +35,7 @@ Physics2D World and other Physics2D objects.
 
 **Syntax** ::
 
-    var debug = Physics2DDebugDraw({
+    var debug = Physics2DDebugDraw.create({
         graphicsDevice : gd
     });
 
