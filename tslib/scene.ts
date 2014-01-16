@@ -4844,6 +4844,7 @@ class Scene
         var keepCameras = loadParams.keepCameras;
         var keepLights = loadParams.keepLights;
         var optimizeHierarchy = loadParams.optimizeHierarchy;
+        var optimizeRenderables = loadParams.optimizeRenderables;
         var disableNodes = loadParams.disabled;
 
         if (!loadParams.append)
@@ -5130,7 +5131,7 @@ class Scene
                 }
             }
 
-            if (optimizeHierarchy)
+            if (optimizeRenderables)
             {
                 if (node.renderables &&
                     1 < node.renderables.length)
