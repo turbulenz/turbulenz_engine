@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 Turbulenz Limited
+// Copyright (c) 2011-2014 Turbulenz Limited
 /*global TurbulenzEngine: false*/
 /*global SoundTARLoader: false*/
 /*global Audio: false*/
@@ -1121,9 +1121,9 @@ class WebGLSoundSource implements SoundSource
         source.playing = false;
         source.paused = false;
 
-        source._position = (params.position ? VMath.v3Copy(params.position) : VMath.v3BuildZero());
-        source._velocity = (params.velocity ? VMath.v3Copy(params.velocity) : VMath.v3BuildZero());
-        source._direction = (params.direction ? VMath.v3Copy(params.direction) : VMath.v3BuildZero());
+        source._position = VMath.v3BuildZero();
+        source._velocity = VMath.v3BuildZero();
+        source._direction = VMath.v3BuildZero();
 
         var gain = (typeof params.gain === "number" ? params.gain : 1);
         var looping = (params.looping || false);
@@ -1175,7 +1175,7 @@ class WebGLSoundSource implements SoundSource
                 },
                 set : function setPositionFn(newPosition) {
                     this._position = VMath.v3Copy(newPosition, this._position);
-                    if (!source.relative)
+                    if (!this.relative)
                     {
                         this.pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
                     }
@@ -1498,6 +1498,19 @@ class WebGLSoundSource implements SoundSource
         source.minDistance = (params.minDistance || 1);
         source.maxDistance = (params.maxDistance || 3.402823466e+38);
         source.rollOff = (params.rollOff || 1);
+
+        if (params.position)
+        {
+            source.position = params.position;
+        }
+        if (params.velocity)
+        {
+            source.velocity = params.velocity;
+        }
+        if (params.direction)
+        {
+            source.direction = params.direction;
+        }
 
         return source;
     }
