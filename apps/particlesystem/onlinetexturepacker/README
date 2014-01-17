@@ -1,9 +1,0 @@
-Application serves as a test bed for the OnlineTexturePacker to improve hueristics and verify function at an overview compared to the engine tests that work more generally verifying constraints of the underlying data structures.
-
-R : Reset
-A : Allocate single quad (repeatedly) of a single size
-S : Allocate 5 quads (repeatedly) of a single size
-D : Allocate 25 quads (single) of a single size
-F : Allocate 125 quads (single) of a single size
-
-Allocated texture bins are rendered along side eachother, with allocated areas for packed regions rendered in red, with free (wasted) regions rendered in blue with a cross-hatch.
