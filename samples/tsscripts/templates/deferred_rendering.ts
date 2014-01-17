@@ -604,7 +604,7 @@ TurbulenzEngine.onload = function onloadFn()
             if (numSupportedRenderTargetColorTextures < 4)
             {
                 errorMessage += "\nThis device does not support the required number of RENDERTARGET_COLOR_TEXTURES.\n" +
-                                "Requires >= 4 but supports " +
+                                "Requires >= 4 but the device only supports " +
                                 numSupportedRenderTargetColorTextures + ".";
             }
 
