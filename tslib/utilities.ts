@@ -163,7 +163,15 @@ var Utilities : Utilities = {
 
             var response;
 
-            response = JSON.parse(xhrResponseText);
+            try
+            {
+                response = JSON.parse(xhrResponseText);
+            }
+            catch (e)
+            {
+                response = {};
+            }
+
             if (encrypted)
             {
                 var sig = xhr.getResponseHeader("X-TZ-Signature");
