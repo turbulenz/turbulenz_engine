@@ -1855,7 +1855,6 @@ class WebGLSoundDevice implements SoundDevice
                 var listenerPosition2 = listenerTransform[11];
 
                 var playingSources = this.playingSources;
-                var stopped = [];
                 var id;
 
                 for (id in playingSources)
@@ -1881,7 +1880,7 @@ class WebGLSoundDevice implements SoundDevice
                                     source.playing = false;
                                     source.sound = null;
                                     source.bufferNode = null;
-                                    stopped[stopped.length] = id;
+                                    delete playingSources[id];
                                     continue;
                                 }
                             }
@@ -1894,13 +1893,6 @@ class WebGLSoundDevice implements SoundDevice
                                                           listenerPosition2);
                         }
                     }
-                }
-
-                var numStopped = stopped.length;
-                var n;
-                for (n = 0; n < numStopped; n += 1)
-                {
-                    delete playingSources[stopped[n]];
                 }
             };
         }
