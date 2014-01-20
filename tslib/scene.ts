@@ -3037,8 +3037,17 @@ class Scene
     //
     initializeNodes()
     {
-        this.updateNodes();
+        var numNodesToUpdate = this.numNodesToUpdate;
+        if (0 < numNodesToUpdate)
+        {
+            this.numNodesToUpdate = 0;
+            this.dirtyRoots = {};
+
+            SceneNode.updateNodes(this.md, this, this.nodesToUpdate, numNodesToUpdate);
+        }
+
         this.staticSpatialMap.finalize();
+
         this.updateExtents();
     }
 
