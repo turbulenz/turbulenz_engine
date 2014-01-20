@@ -1144,6 +1144,7 @@ class WebGLSoundSource implements SoundSource
             pannerNode.connect(masterGainNode);
 
             var gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
+            gainNode.gain.value = gain;
             source.gainNode = gainNode;
 
             if (sd.linearDistance)
