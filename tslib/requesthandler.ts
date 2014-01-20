@@ -170,7 +170,8 @@ class RequestHandler
             // 408 Request Timeout
             // 429 Too Many Requests
             // 480 Temporarily Unavailable
-            if (status === 0 || status === 408 || status === 429 || status === 480)
+            // 504 Gateway timeout
+            if (status === 0 || status === 408 || status === 429 || status === 480 || status === 504)
             {
                 that.retryExponential(callContext, makeRequest, status);
                 return;
