@@ -1050,8 +1050,6 @@ class WebGLSoundSource implements SoundSource
 
     createBufferNode(sound: WebGLSound): any
     {
-        var gainNode = this.gainNode;
-
         var buffer = sound.buffer;
 
         var bufferNode = this.audioContext.createBufferSource();
@@ -1061,10 +1059,7 @@ class WebGLSoundSource implements SoundSource
         {
             bufferNode.playbackRate.value = this.pitch;
         }
-        bufferNode.connect(gainNode);
-
-        gainNode.disconnect();
-        gainNode.connect(this.pannerNode);
+        bufferNode.connect(this.gainNode);
 
         // Backwards compatibility
         if (!bufferNode.start)
@@ -1097,13 +1092,8 @@ class WebGLSoundSource implements SoundSource
 
     createMediaNode(sound: WebGLSound, audio: HTMLAudioElement): void
     {
-        var gainNode = this.gainNode;
-
         var mediaNode = this.audioContext.createMediaElementSource(audio);
-        mediaNode.connect(gainNode);
-
-        gainNode.disconnect();
-        gainNode.connect(this.pannerNode);
+        mediaNode.connect(this.gainNode);
 
         this.mediaNode = mediaNode;
     }
@@ -1146,6 +1136,7 @@ class WebGLSoundSource implements SoundSource
             var gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
             gainNode.gain.value = gain;
             source.gainNode = gainNode;
+            gainNode.connect(pannerNode);
 
             if (sd.linearDistance)
             {
