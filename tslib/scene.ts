@@ -924,7 +924,6 @@ class Scene
                     nodes = area.externalNodes;
                     if (nodes)
                     {
-                        nodes.length = 0;
                         externalNodesStack.push(nodes);
                         area.externalNodes = null;
                     }
@@ -970,10 +969,9 @@ class Scene
                     combinedExtents[4] = (areaMaxExtent1 > cameraMaxExtent1 ? cameraMaxExtent1 : areaMaxExtent1);
                     combinedExtents[5] = (areaMaxExtent2 > cameraMaxExtent2 ? cameraMaxExtent2 : areaMaxExtent2);
 
-                    tree.getOverlappingNodes(combinedExtents, nodes);
+                    numNodes = tree.getOverlappingNodes(combinedExtents, nodes, 0);
 
                     // Check which ones actually belong to the area
-                    numNodes = nodes.length;
                     for (n = 0; n < numNodes; n += 1)
                     {
                         node = nodes[n];
@@ -1058,10 +1056,9 @@ class Scene
                         combinedExtents[4] = (areaMaxExtent1 > cameraMaxExtent1 ? cameraMaxExtent1 : areaMaxExtent1);
                         combinedExtents[5] = (areaMaxExtent2 > cameraMaxExtent2 ? cameraMaxExtent2 : areaMaxExtent2);
 
-                        tree.getOverlappingNodes(combinedExtents, nodes);
+                        numNodes = tree.getOverlappingNodes(combinedExtents, nodes, 0);
 
                         // Check which ones actually belong to the area
-                        numNodes = nodes.length;
                         for (n = 0; n < numNodes; n += 1)
                         {
                             node = nodes[n];
@@ -1377,7 +1374,6 @@ class Scene
             nodes = area.externalNodes;
             if (nodes)
             {
-                nodes.length = 0;
                 externalNodesStack.push(nodes);
                 area.externalNodes = null;
             }
@@ -1427,7 +1423,7 @@ class Scene
         testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
         testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
-        tree.getOverlappingNodes(testExtents, nodes);
+        nodes.length = tree.getOverlappingNodes(testExtents, nodes, 0);
 
         numNodes = nodes.length;
         for (n = 0; n < numNodes; n += 1)
@@ -1471,7 +1467,7 @@ class Scene
                 testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
                 testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
-                tree.getOverlappingNodes(testExtents, nodes);
+                nodes.length = tree.getOverlappingNodes(testExtents, nodes, 0);
             }
 
             numNodes = nodes.length;
@@ -1571,7 +1567,6 @@ class Scene
             nodes = area.externalNodes;
             if (nodes)
             {
-                nodes.length = 0;
                 externalNodesStack.push(nodes);
                 area.externalNodes = null;
             }
@@ -1615,7 +1610,7 @@ class Scene
         testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
         testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
-        tree.getOverlappingNodes(testExtents, nodes);
+        nodes.length = tree.getOverlappingNodes(testExtents, nodes, 0);
 
         numNodes = nodes.length;
         for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
@@ -1703,7 +1698,7 @@ class Scene
                 testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
                 testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
-                tree.getOverlappingNodes(testExtents, nodes);
+                nodes.length = tree.getOverlappingNodes(testExtents, nodes, 0);
             }
 
             numNodes = nodes.length;
