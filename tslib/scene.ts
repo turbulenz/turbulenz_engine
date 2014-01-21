@@ -4403,6 +4403,13 @@ class Scene
                 }
                 vertexBuffer.setData(vertexData, baseIndex, totalNumVertices);
 
+                if (keepVertexData &&
+                    !useFloatArray &&
+                    this.float32ArrayConstructor)
+                {
+                    vertexData = new this.float32ArrayConstructor(vertexData);
+                }
+
                 // Count total num indices
                 var totalNumIndices = 0;
                 var numIndices;
