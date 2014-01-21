@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 Turbulenz Limited
+// Copyright (c) 2011-2014 Turbulenz Limited
 /*global TurbulenzEngine: false*/
 /*global SoundTARLoader: false*/
 /*global Audio: false*/
@@ -1050,8 +1050,6 @@ class WebGLSoundSource implements SoundSource
 
     createBufferNode(sound: WebGLSound): any
     {
-        var gainNode = this.gainNode;
-
         var buffer = sound.buffer;
 
         var bufferNode = this.audioContext.createBufferSource();
@@ -1061,10 +1059,7 @@ class WebGLSoundSource implements SoundSource
         {
             bufferNode.playbackRate.value = this.pitch;
         }
-        bufferNode.connect(gainNode);
-
-        gainNode.disconnect();
-        gainNode.connect(this.pannerNode);
+        bufferNode.connect(this.gainNode);
 
         // Backwards compatibility
         if (!bufferNode.start)
@@ -1097,13 +1092,8 @@ class WebGLSoundSource implements SoundSource
 
     createMediaNode(sound: WebGLSound, audio: HTMLAudioElement): void
     {
-        var gainNode = this.gainNode;
-
         var mediaNode = this.audioContext.createMediaElementSource(audio);
-        mediaNode.connect(gainNode);
-
-        gainNode.disconnect();
-        gainNode.connect(this.pannerNode);
+        mediaNode.connect(this.gainNode);
 
         this.mediaNode = mediaNode;
     }
@@ -1121,9 +1111,9 @@ class WebGLSoundSource implements SoundSource
         source.playing = false;
         source.paused = false;
 
-        source._position = (params.position ? VMath.v3Copy(params.position) : VMath.v3BuildZero());
-        source._velocity = (params.velocity ? VMath.v3Copy(params.velocity) : VMath.v3BuildZero());
-        source._direction = (params.direction ? VMath.v3Copy(params.direction) : VMath.v3BuildZero());
+        source._position = VMath.v3BuildZero();
+        source._velocity = VMath.v3BuildZero();
+        source._direction = VMath.v3BuildZero();
 
         var gain = (typeof params.gain === "number" ? params.gain : 1);
         var looping = (params.looping || false);
@@ -1144,7 +1134,9 @@ class WebGLSoundSource implements SoundSource
             pannerNode.connect(masterGainNode);
 
             var gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
+            gainNode.gain.value = gain;
             source.gainNode = gainNode;
+            gainNode.connect(pannerNode);
 
             if (sd.linearDistance)
             {
@@ -1175,7 +1167,7 @@ class WebGLSoundSource implements SoundSource
                 },
                 set : function setPositionFn(newPosition) {
                     this._position = VMath.v3Copy(newPosition, this._position);
-                    if (!source.relative)
+                    if (!this.relative)
                     {
                         this.pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
                     }
@@ -1498,6 +1490,19 @@ class WebGLSoundSource implements SoundSource
         source.minDistance = (params.minDistance || 1);
         source.maxDistance = (params.maxDistance || 3.402823466e+38);
         source.rollOff = (params.rollOff || 1);
+
+        if (params.position)
+        {
+            source.position = params.position;
+        }
+        if (params.velocity)
+        {
+            source.velocity = params.velocity;
+        }
+        if (params.direction)
+        {
+            source.direction = params.direction;
+        }
 
         return source;
     }
@@ -1850,7 +1855,6 @@ class WebGLSoundDevice implements SoundDevice
                 var listenerPosition2 = listenerTransform[11];
 
                 var playingSources = this.playingSources;
-                var stopped = [];
                 var id;
 
                 for (id in playingSources)
@@ -1876,7 +1880,7 @@ class WebGLSoundDevice implements SoundDevice
                                     source.playing = false;
                                     source.sound = null;
                                     source.bufferNode = null;
-                                    stopped[stopped.length] = id;
+                                    delete playingSources[id];
                                     continue;
                                 }
                             }
@@ -1889,13 +1893,6 @@ class WebGLSoundDevice implements SoundDevice
                                                           listenerPosition2);
                         }
                     }
-                }
-
-                var numStopped = stopped.length;
-                var n;
-                for (n = 0; n < numStopped; n += 1)
-                {
-                    delete playingSources[stopped[n]];
                 }
             };
         }
