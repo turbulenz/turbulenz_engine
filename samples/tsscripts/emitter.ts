@@ -3,7 +3,7 @@
 /*global Geometry: false*/
 /*global GeometryInstance: false*/
 
-interface Particle
+interface EmitterParticle
 {
     velocity    : any; // v3
     position    : any; // v3
@@ -14,9 +14,9 @@ interface Particle
 };
 
 //
-//  ParticleSystem Object
+//  EmitterParticleSystem Object
 //
-class ParticleSystem
+class EmitterParticleSystem
 {
     static version = 1;
 
@@ -24,7 +24,7 @@ class ParticleSystem
     numActiveParticles : number;
     spawnNextParticle  : number;
     worldPosition      : any; // v3
-    particles          : Particle[];
+    particles          : EmitterParticle[];
     dirtyWorldExtents  : boolean;
     colorList          : any[]; // v4[]
     v3temp             : any; // v3
@@ -99,7 +99,7 @@ class ParticleSystem
 
         for (var i = 0; i < maxParticles; i += 1)
         {
-            particles[i] = <Particle> {
+            particles[i] = <EmitterParticle> {
                 velocity : v3Zero.slice(),
                 position : v3Zero.slice(),
                 color : v4One.slice()
@@ -248,11 +248,11 @@ class ParticleSystem
     destroy()
     {}
 
-    // ParticleSystem Constructor function
+    // EmitterParticleSystem Constructor function
     static create(md: MathDevice, gd: GraphicsDevice,
-                  parameters): ParticleSystem
+                  parameters): EmitterParticleSystem
     {
-        var p = new ParticleSystem();
+        var p = new EmitterParticleSystem();
 
         p.md = md;
         p.numActiveParticles = 0;
@@ -333,7 +333,7 @@ class ParticleSystem
 
         var numIndexBufferIndices = 6 * maxParticles;
 
-        if (!ParticleSystem.prototype.indexBuffer || (ParticleSystem.prototype.indexBuffer.numIndices < numIndexBufferIndices))
+        if (!EmitterParticleSystem.prototype.indexBuffer || (EmitterParticleSystem.prototype.indexBuffer.numIndices < numIndexBufferIndices))
         {
             var indexData = new Uint16Array(numIndexBufferIndices);
 
@@ -362,7 +362,7 @@ class ParticleSystem
             var indexBuffer =
                 gd.createIndexBuffer(indexBufferParameters);
 
-            ParticleSystem.prototype.indexBuffer = indexBuffer;
+            EmitterParticleSystem.prototype.indexBuffer = indexBuffer;
         }
 
         p.initialize();
@@ -371,12 +371,12 @@ class ParticleSystem
     }
 }
 
-ParticleSystem.prototype.indexBuffer = null;
+EmitterParticleSystem.prototype.indexBuffer = null;
 
 //
-//  ParticleSystemRenderer Object
+//  EmitterParticleSystemRenderer Object
 //
-class ParticleSystemRenderer
+class EmitterParticleSystemRenderer
 {
     static version = 1;
 
@@ -564,10 +564,10 @@ class ParticleSystemRenderer
         }
     }
 
-    // ParticleSystemRenderer Constructor function
-    static create(gd: GraphicsDevice, md: MathDevice): ParticleSystemRenderer
+    // EmitterParticleSystemRenderer Constructor function
+    static create(gd: GraphicsDevice, md: MathDevice): EmitterParticleSystemRenderer
     {
-        var p = new ParticleSystemRenderer();
+        var p = new EmitterParticleSystemRenderer();
         p.gd = gd;
         p.md = md;
         return p;
@@ -583,8 +583,8 @@ class Emitter
 
     gd                     : GraphicsDevice;
     md                     : MathDevice;
-    particleSystem         : ParticleSystem;
-    particleSystemRenderer : ParticleSystemRenderer;
+    particleSystem         : EmitterParticleSystem;
+    particleSystemRenderer : EmitterParticleSystemRenderer;
     material               : Material;
     node                   : SceneNode;
     updateExtentsTime      : number;
@@ -636,8 +636,8 @@ class Emitter
         var e = new Emitter();
         e.gd = gd;
         e.md = md;
-        e.particleSystem = ParticleSystem.create(md, gd, parameters);
-        e.particleSystemRenderer = ParticleSystemRenderer.create(gd, md);
+        e.particleSystem = EmitterParticleSystem.create(md, gd, parameters);
+        e.particleSystemRenderer = EmitterParticleSystemRenderer.create(gd, md);
         e.material = material;
         e.node = node;
         e.updateExtentsTime = 0;

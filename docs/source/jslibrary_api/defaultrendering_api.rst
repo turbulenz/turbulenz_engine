@@ -3,6 +3,8 @@
 
 .. highlight:: javascript
 
+.. _defaultrendering:
+
 ---------------------------
 The DefaultRendering Object
 ---------------------------
@@ -400,6 +402,9 @@ The version number of the DefaultRendering implementation.
 **Syntax** ::
 
     var versionNumber = DefaultRendering.version;
+
+.. index::
+    pair: DefaultRenderer; passIndex
 
 `passIndex`
 -----------

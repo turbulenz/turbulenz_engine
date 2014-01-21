@@ -93,6 +93,10 @@ particles_src := tsscripts/templates/particles.ts
 particles_deps := motion sceneloader emitter htmlcontrols
 TSAPPS += particles
 
+gpu_particles_src := tsscripts/templates/gpu_particles.ts
+gpu_particles_deps := htmlcontrols
+TSAPPS += gpu_particles
+
 payments_src := tsscripts/templates/payments.ts
 payments_deps := htmlcontrols simplebuttons
 TSAPPS += payments

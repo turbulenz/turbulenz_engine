@@ -621,7 +621,7 @@ Pre-requisites for building the tools cgfx2json and NvTriStrip via ``python mana
 
 - OpenGL development libraries, these are included on Windows and Mac OSX with the compiler toolchains. For
   debian based linux distributions the libgl1-mesa-dev package will provide the required files (e.g. ``sudo
-  apt-get install libg1-mesa-dev``), for other linux distributions find the package supplying GL/gl.h and libGL.so
+  apt-get install libgl1-mesa-dev``), for other linux distributions find the package supplying GL/gl.h and libGL.so
 
 
 Setup Guide

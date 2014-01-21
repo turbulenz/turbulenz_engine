@@ -3407,7 +3407,7 @@ class CanvasContext
     //
     // Public Turbulenz Canvas Context API
     //
-    beginFrame(target, viewportRect?): boolean
+    beginFrame(target?, viewportRect?): boolean
     {
         if (this.target)
         {
