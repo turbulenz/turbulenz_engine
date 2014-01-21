@@ -10,6 +10,38 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-01-21
+
+- Fixed the handling of gamesession create to treat 404s as if services are unavailable
+- Request handler now retries if 504 responses are encountered instead of failing immediately
+- Improved handling of non-JSON responses to API requests
+- Added support for tar files to deps.yaml and build process
+- General improvements to the soundDevice for stability and the process of incorrectly loaded files
+- Performance improvements to asset loading, especially for large files
+- Work-around fixes to support IE11 for incomplete WebGL specification
+- New feature: GPU-based particle system for high-performance particles simulated on the graphics card
+
+  * High level particle system API for managing the creation and destruction of particles systems from particle archetypes
+  * Low level particle system API for controlling the updating of the particles on the GPU
+  * Plug-in architecture allowing high level of customization to the particle simulation
+  * A sample demonstrating the features of the GPU particle system
+  * Comprehensive documentation explaining the API and architecture including diagrams
+
+- Various documentation corrections
+- Added support to the Camera for specifying the near/far plane to getFrustumFarPoints, getFrustumPoints, getFrustumExtents query
+- Payment support for iOS/Android
+- Fix for jointMax being infinity in Physics2D Debug Draw
+- Updated device_initialization to output to console for fullscreen apps
+- Exposed the ability for the Graphics Device to be created with disabled stencil and depth buffers
+- Fixed an animation issue in addTime() for animations with zero length
+- Fixed an processing issue for cubemaps with a single mipmap level
+- Added scene extents to the viewer scene metrics
+- Improvements to fullscreen implementation (also supports IE11)
+- Improvements to DDS loader image processing
+- Removed usage of deprecated event property "event.keyLocation" in the Input Device
+- Added check when using Workers for processing DDS textures on unsupported platforms
+- Added support for proposed canvas API resetTransform to canvas.js
+
 2013-12-16
 
 - Updated documentation about developer clients

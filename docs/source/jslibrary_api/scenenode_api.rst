@@ -481,7 +481,10 @@ Maybe undefined.
 
 **Syntax** ::
 
-    var extents = node.calculateHierarchyWorldExtents();
+    var extents = node.calculateHierarchyWorldExtents(destination);
+
+``destination`` (Optional)
+    The :ref:`extents <extents>` array to use as the destination for the world extents of the node.
 
 .. index::
     pair: SceneNode; setDynamic
