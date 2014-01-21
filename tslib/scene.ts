@@ -353,6 +353,7 @@ class Scene
     //
     buildPortalPlanes(points, planes, cX, cY, cZ, frustumPlanes) : boolean
     {
+        var md = this.md;
         var numPoints = points.length;
         var numFrustumPlanes = frustumPlanes.length;
         var numPlanes = 0;
@@ -401,7 +402,7 @@ class Scene
             }
             else if (numVisiblePointsPlane < numPoints)
             {
-                planes[numPlanes] = plane;
+                planes[numPlanes] = md.v4Copy(plane, planes[numPlanes]);
                 numPlanes += 1;
             }
             n += 1;
@@ -478,7 +479,7 @@ class Scene
             // d = dot(n, c)
             var d = ((nX * cX) + (nY * cY) + (nZ * cZ));
 
-            planes[numPlanes] = [nX, nY, nZ, d];
+            planes[numPlanes] = md.v4Build(nX, nY, nZ, d, planes[numPlanes]);
             numPlanes += 1;
 
             np += 1;
@@ -588,7 +589,6 @@ class Scene
     //
     findVisiblePortals(areaIndex, cX, cY, cZ)
     {
-        var buildPortalPlanes = this.buildPortalPlanes;
         var visiblePortals = this.visiblePortals;
         var oldNumVisiblePortals = visiblePortals.length;
         var frustumPlanes = this.frustumPlanes;
@@ -604,7 +604,10 @@ class Scene
         var nearPlane0 = nearPlane[0];
         var nearPlane1 = nearPlane[1];
         var nearPlane2 = nearPlane[2];
-        frustumPlanes[numFrustumPlanes] = [nearPlane0, nearPlane1, nearPlane2, ((nearPlane0 * cX) + (nearPlane1 * cY) + (nearPlane2 * cZ))];
+        frustumPlanes[numFrustumPlanes] = this.md.v4Build(nearPlane0,
+                                                          nearPlane1,
+                                                          nearPlane2,
+                                                          ((nearPlane0 * cX) + (nearPlane1 * cY) + (nearPlane2 * cZ)));
 
         area = areas[areaIndex];
         portals = area.portals;
@@ -629,7 +632,7 @@ class Scene
                 {
                     portalPlanes = [];
                 }
-                buildPortalPlanes(portal.points, portalPlanes, cX, cY, cZ, frustumPlanes);
+                this.buildPortalPlanes(portal.points, portalPlanes, cX, cY, cZ, frustumPlanes);
                 if (0 < portalPlanes.length)
                 {
                     if (numVisiblePortals < oldNumVisiblePortals)
@@ -694,7 +697,7 @@ class Scene
                             {
                                 planes = [];
                             }
-                            allPointsVisible = buildPortalPlanes(portal.points, planes, cX, cY, cZ, portalPlanes);
+                            allPointsVisible = this.buildPortalPlanes(portal.points, planes, cX, cY, cZ, portalPlanes);
                             if (0 < planes.length)
                             {
                                 if (allPointsVisible)
