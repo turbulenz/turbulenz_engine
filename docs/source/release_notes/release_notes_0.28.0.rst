@@ -25,7 +25,20 @@ Change List
 New Features
 ------------
 
-* Placeholder
+* (**BETA**) Added an API for particle effects running on the GPU.
+  Includes a :ref:`high-level <highlevelparticles_api>`, data-driven API
+  exposed through the :ref:`ParticleManager <particlemanager>`
+  object with verified data-input reporting semantic errors.
+  The GPU particle API has support (for adventurous coders) to plug-in new
+  modules to customize
+  rendering, simulation and emittance of particles using the
+  :ref:`low-level <lowlevelparticles_api>` API. See :ref:`Particle System
+  <particlesystem>` for more information.
+  The GPU particle API Works together with existing :ref:`Scene <scene>`
+  and rendering objects.
+
+* Added a sample *gpu_particles* demonstrating the high-level usage of the
+  GPU particle API.
 
 Changes
 -------
@@ -52,7 +65,12 @@ Known Issues
 New
 ---
 
-* Placeholder
+* The GPU particle API depends on non-standard WebGL feature
+  (MAX_VERTEX_TEXTURE_IMAGE_UNITS)
+  to be available. It is supported on most devices (with the exception of iOS).
+  In order to use the GPU particle API, check if
+  *graphicsDevice.maxSupported("VERTEX_TEXTURE_UNITS") >= 4*.
+  There is currently no fallback available for unsupported platforms.
 
 Unchanged
 ---------
