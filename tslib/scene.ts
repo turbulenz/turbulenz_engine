@@ -485,6 +485,7 @@ class Scene
         }
         while (np < numPoints);
 
+        planes.length = numPlanes;
         return allPointsVisible;
     }
 
@@ -623,7 +624,6 @@ class Scene
                 {
                     portalItem = visiblePortals[numVisiblePortals];
                     portalPlanes = portalItem.planes;
-                    portalPlanes.length = 0;
                 }
                 else
                 {
@@ -689,7 +689,6 @@ class Scene
                             {
                                 portalItem = visiblePortals[numVisiblePortals];
                                 planes = portalItem.planes;
-                                planes.length = 0;
                             }
                             else
                             {
