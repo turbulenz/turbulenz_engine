@@ -27,6 +27,7 @@ class ForwardRendering
 
     numPasses: number;
     passes: Pass[][];
+    passesSize: number[];
 
     lightingScale: number;
     diffuseQueue: DrawParameters[];
@@ -208,11 +209,12 @@ class ForwardRendering
     prepareRenderables(camera, scene)
     {
         var passIndex;
+        var passesSize = this.passesSize;
         var passes = this.passes;
         var numPasses = this.numPasses;
         for (passIndex = 0; passIndex < numPasses; passIndex += 1)
         {
-            passes[passIndex].length = 0;
+            passesSize[passIndex] = 0;
         }
 
         var visibleRenderables = scene.getCurrentVisibleRenderables();
@@ -220,7 +222,7 @@ class ForwardRendering
         var numVisibleRenderables = visibleRenderables.length;
         if (numVisibleRenderables > 0)
         {
-            var n, renderable, rendererInfo, pass;
+            var n, renderable, rendererInfo, passSize;
             var drawParametersArray, numDrawParameters, drawParametersIndex, drawParameters, sortDistance;
             var transparentPassIndex = this.passIndex.transparent;
             var ambientPassIndex = this.passIndex.ambient;
@@ -280,8 +282,9 @@ class ForwardRendering
                     {
                         drawParameters.sortKey = sortDistance;
                     }
-                    pass = passes[passIndex];
-                    pass[pass.length] = drawParameters;
+                    passSize = passesSize[passIndex];
+                    passes[passIndex][passSize] = drawParameters;
+                    passesSize[passIndex] = (passSize + 1);
                 }
 
                 drawParametersArray = renderable.diffuseDrawParameters;
@@ -309,6 +312,11 @@ class ForwardRendering
                 n += 1;
             }
             while (n < numVisibleRenderables);
+        }
+
+        for (passIndex = 0; passIndex < numPasses; passIndex += 1)
+        {
+            passes[passIndex].length = passesSize[passIndex];
         }
     }
 
@@ -1259,6 +1267,7 @@ class ForwardRendering
     {
         delete this.globalTechniqueParameters;
         delete this.ambientTechniqueParameters;
+        delete this.passesSize;
         delete this.passes;
         delete this.passIndex;
 
@@ -1367,6 +1376,8 @@ class ForwardRendering
         {
             passes[index] = [];
         }
+
+        fr.passesSize = [];
 
         fr.lightingScale = 2.0;
 
