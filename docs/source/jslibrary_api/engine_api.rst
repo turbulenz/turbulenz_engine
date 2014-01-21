@@ -69,6 +69,26 @@ If you call this function again it will fail. To get the previously created devi
     .. note::
         This option is only supported in canvas mode.
 
+``stencil``
+    Setting this option to false disables the availability of the stencil buffer.
+    This can potentially save graphics memory if not required.
+    If this option is set to false, do not attempt to make calls that act on the stencil buffer.
+    It is recommended to disable both the stencil and depth buffer together.
+    Defaults to true.
+
+    .. note::
+        This option is only supported in canvas mode.
+
+``depth``
+    Setting this option to false disables the availability of the depth buffer.
+    This can potentially save graphics memory if not required.
+    If this option is set to false, do not attempt to make calls that act on the depth buffer.
+    It is recommended to disable both the stencil and depth buffer together.
+    Defaults to true.
+
+    .. note::
+        This option is only supported in canvas mode.
+
 
 .. index::
     pair: TurbulenzEngine; getGraphicsDevice
