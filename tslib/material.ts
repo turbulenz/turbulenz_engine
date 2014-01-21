@@ -266,7 +266,7 @@ class Material
                     bv = btp[p];
                     if (av !== bv)
                     {
-                        if (av && typeof av !== "nunber" &&
+                        if (av && typeof av !== "number" &&
                             bv && typeof bv !== "number" &&
                             av.length === bv.length &&
                             av.length)
