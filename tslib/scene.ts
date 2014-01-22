@@ -98,6 +98,7 @@ class Scene
     staticNodesChangeCounter: number;
     testExtents: any; // Array or Float32Array(6)
     externalNodesStack: SceneNode[];
+    overlappingPortals: any[];
 
     vertexBufferManager: VertexBufferManager;
     indexBufferManager: IndexBufferManager;
@@ -1128,6 +1129,7 @@ class Scene
     //
     buildPortalPlanesNoFrustum(points, cX, cY, cZ) : any[] // v4[]
     {
+        var md = this.md;
         var numPoints = points.length;
         var planes = [];
         var numPlanes = 0;
@@ -1165,8 +1167,7 @@ class Scene
             var lnsq = ((nX * nX) + (nY * nY) + (nZ * nZ));
             if (lnsq === 0)
             {
-                // TODO: Surely this is wrong?
-                return <any[]><any>false;
+                return null;
             }
             var lnrcp = 1.0 / sqrt(lnsq);
             nX *= lnrcp;
@@ -1176,7 +1177,7 @@ class Scene
             // d = dot(n, c)
             var d = ((nX * cX) + (nY * cY) + (nZ * cZ));
 
-            planes[numPlanes] = [nX, nY, nZ, d];
+            planes[numPlanes] = md.v4Build(nX, nY, nZ, d);
             numPlanes += 1;
 
             np += 1;
@@ -1189,10 +1190,9 @@ class Scene
     //
     // findOverlappingPortals
     //
-    findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals)
+    findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals): number
     {
         var portals, numPortals, n, portal, plane, d0, d1, d2, offset, area, portalExtents, planes;
-        var buildPortalPlanesNoFrustum = this.buildPortalPlanesNoFrustum;
         var queryCounter = this.getQueryCounter();
         var areas = this.areas;
         var numOverlappingPortals = 0;
@@ -1233,7 +1233,7 @@ class Scene
                 if (((d0 * cX) + (d1 * cY) + (d2 * cZ)) < offset &&
                     (d0 * (d0 < 0 ? min0 : max0) + d1 * (d1 < 0 ? min1 : max1) + d2 * (d2 < 0 ? min2 : max2)) >= offset)
                 {
-                    planes = buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
+                    planes = this.buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
                     if (planes)
                     {
                         overlappingPortals[numOverlappingPortals] = {
@@ -1286,7 +1286,7 @@ class Scene
                             if (((d0 * cX) + (d1 * cY) + (d2 * cZ)) < offset &&
                                 (d0 * (d0 < 0 ? min0 : max0) + d1 * (d1 < 0 ? min1 : max1) + d2 * (d2 < 0 ? min2 : max2)) >= offset)
                             {
-                                planes = buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
+                                planes = this.buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
                                 if (planes)
                                 {
                                     portal.queryCounter = queryCounter;
@@ -1312,6 +1312,8 @@ class Scene
             }
             while (currentPortalIndex < numOverlappingPortals);
         }
+
+        return numOverlappingPortals;
     }
 
     //
@@ -1395,12 +1397,11 @@ class Scene
         var testMaxExtent1 = areaExtents[4];
         var testMaxExtent2 = areaExtents[5];
 
-        var overlappingPortals = [];
-        this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
+        var overlappingPortals = this.overlappingPortals;
+        var numOverlappingPortals = this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
 
         var isInsidePlanesAABB = this.isInsidePlanesAABB;
         var queryCounter = this.getQueryCounter();
-        var numOverlappingPortals = overlappingPortals.length;
         var numOverlappingNodes = overlappingNodes.length;
         var portalPlanes;
         var n, node, np, portalItem;
@@ -1581,13 +1582,12 @@ class Scene
         var testMaxExtent1 = areaExtents[4];
         var testMaxExtent2 = areaExtents[5];
 
-        var overlappingPortals = [];
-        this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
+        var overlappingPortals = this.overlappingPortals;
+        var numOverlappingPortals = this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
 
         var isInsidePlanesAABB = this.isInsidePlanesAABB;
         var isFullyInsidePlanesAABB = this.isFullyInsidePlanesAABB;
         var queryCounter = this.getQueryCounter();
-        var numOverlappingPortals = overlappingPortals.length;
         var portalPlanes;
         var n, np, portalItem;
         var allVisible;
@@ -3013,6 +3013,7 @@ class Scene
         this.staticNodesChangeCounter = 0;
         this.testExtents = this.md.aabbBuildEmpty();
         this.externalNodesStack = [];
+        this.overlappingPortals = [];
         this.queryVisibleNodes = [];
     }
 
