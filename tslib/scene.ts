@@ -98,7 +98,8 @@ class Scene
     staticNodesChangeCounter: number;
     testExtents: any; // Array or Float32Array(6)
     externalNodesStack: SceneNode[];
-    overlappingPortals: any[];
+    overlappingPortals: any[]; // PortalItem[]
+    newPoints: any[]; // v3[]
 
     vertexBufferManager: VertexBufferManager;
     indexBufferManager: IndexBufferManager;
@@ -412,13 +413,12 @@ class Scene
 
         var allPointsVisible = (numPlanes === 0);
 
-        var newPoints = [];
-        newPoints.length = numPoints;
+        var newPoints = this.newPoints;
         np = 0;
         do
         {
             p = points[np];
-            newPoints[np] = [(p[0] - cX), (p[1] - cY), (p[2] - cZ)];
+            newPoints[np] = md.v3Build((p[0] - cX), (p[1] - cY), (p[2] - cZ), newPoints[np]);
             np += 1;
         }
         while (np < numPoints);
@@ -1133,15 +1133,14 @@ class Scene
         var numPoints = points.length;
         var planes = [];
         var numPlanes = 0;
-        var newPoints = [];
+        var newPoints = this.newPoints;
         var np, p;
 
-        newPoints.length = numPoints;
         np = 0;
         do
         {
             p = points[np];
-            newPoints[np] = [(p[0] - cX), (p[1] - cY), (p[2] - cZ)];
+            newPoints[np] = md.v3Build((p[0] - cX), (p[1] - cY), (p[2] - cZ), newPoints[np]);
             np += 1;
         }
         while (np < numPoints);
@@ -3035,6 +3034,7 @@ class Scene
         this.testExtents = this.md.aabbBuildEmpty();
         this.externalNodesStack = [];
         this.overlappingPortals = [];
+        this.newPoints = [];
         this.queryVisibleNodes = [];
     }
 
