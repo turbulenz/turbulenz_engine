@@ -38,7 +38,6 @@
 /*{{ javascript("scripts/motion.js") }}*/
 
 /*global RequestHandler: false */
-/*global renderingCommonGetTechniqueIndexFn: false */
 /*global TurbulenzEngine: true */
 /*global DefaultRendering: false */
 /*global TurbulenzServices: false */
@@ -452,7 +451,7 @@ TurbulenzEngine.onload = function onloadFn()
         {
             that.shader = shader;
             that.technique = shader.getTechnique(that.techniqueName);
-            that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+            that.techniqueIndex = that.technique.id;
         };
         shaderManager.load(this.shaderName, callback);
     }

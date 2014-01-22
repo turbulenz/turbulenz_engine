@@ -22,18 +22,6 @@
 
 // Main app entry point
 
-/// <reference path="../../../../external/definitelytyped/jquery/jquery-1.8.d.ts" />
-
-/// <reference path="../../../../jslib-modular/turbulenz.d.ts" />
-/// <reference path="../../../../jslib-modular/fontmanager.d.ts" />
-/// <reference path="../../../../jslib-modular/canvas.d.ts" />
-/// <reference path="../../../../jslib-modular/utilities.d.ts" />
-/// <reference path="../../../../jslib-modular/servicedatatypes.d.ts" />
-/// <reference path="../../../../jslib-modular/services.d.ts" />
-
-/// <reference path="../../scripts/htmlcontrols.d.ts" />
-/// <reference path="../../scripts/inputapplib.d.ts" />
-
 TurbulenzEngine.onload = function onloadFn()
 {
     var application = Application.create(null);

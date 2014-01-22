@@ -3,8 +3,6 @@
 /*global TurbulenzEngine*/
 /*global Observer*/
 
-/// <reference path="utilities.ts" />
-
 interface RequestFn
 {
     (src: string, responseCallback, callContext: RequestHandlerCallContext)
@@ -19,7 +17,7 @@ interface RequestOwner
 interface RequestHandlerResponseFilter
 {
     (callContext: RequestHandlerCallContext, makeRequest: { (): void; },
-     responseAsset: string, status: number): bool;
+     responseAsset: string, status: number): boolean;
 };
 
 interface RequestHandlerCallContext
@@ -37,14 +35,14 @@ class RequestHandler
     notifyTime: number;
     maxRetryTime: number;
 
-    notifiedConnectionLost: bool;
-    connected: bool;
+    notifiedConnectionLost: boolean;
+    connected: boolean;
     reconnectedObserver: Observer;
     reconnectTest: any;
 
     connectionLostTime: number;
 
-    destroyed: bool;
+    destroyed: boolean;
 
     onReconnected: { (reason: number, reconnectTest: any): void; };
     onRequestTimeout: { (reason: number,
@@ -126,7 +124,7 @@ class RequestHandler
             callContext.retries = 1;
         }
         TurbulenzEngine.setTimeout(requestFn, callContext.expTime);
-    };
+    }
 
     retryAfter(callContext, retryAfter, requestFn, status)
     {
@@ -151,7 +149,7 @@ class RequestHandler
         }
 
         TurbulenzEngine.setTimeout(requestFn, retryAfter * 1000);
-    };
+    }
 
     request(callContext: RequestHandlerCallContext)
     {
@@ -172,7 +170,8 @@ class RequestHandler
             // 408 Request Timeout
             // 429 Too Many Requests
             // 480 Temporarily Unavailable
-            if (status === 0 || status === 408 || status === 429 || status === 480)
+            // 504 Gateway timeout
+            if (status === 0 || status === 408 || status === 429 || status === 480 || status === 504)
             {
                 that.retryExponential(callContext, makeRequest, status);
                 return;
@@ -220,7 +219,7 @@ class RequestHandler
                 callContext.onload = null;
             }
             callContext = null;
-        };
+        }
 
         makeRequest = function makeRequestFn()
         {
@@ -248,10 +247,10 @@ class RequestHandler
             {
                 TurbulenzEngine.request(callContext.src, responseCallback);
             }
-        };
+        }
 
         makeRequest();
-    };
+    }
 
     addEventListener(eventType, eventListener)
     {
@@ -279,7 +278,7 @@ class RequestHandler
                 eventHandlers.push(eventListener);
             }
         }
-    };
+    }
 
     removeEventListener(eventType, eventListener)
     {
@@ -304,7 +303,7 @@ class RequestHandler
                 }
             }
         }
-    };
+    }
 
     sendEventToHandlers(eventHandlers, arg0)
     {
@@ -318,7 +317,7 @@ class RequestHandler
                 eventHandlers[i](arg0);
             }
         }
-    };
+    }
 
     destroy()
     {
@@ -326,7 +325,7 @@ class RequestHandler
         this.handlers = null;
         this.onReconnected = null;
         this.onRequestTimeout = null;
-    };
+    }
 
     static create(params: any)
     {
@@ -347,5 +346,5 @@ class RequestHandler
         rh.handlers = handlers;
 
         return rh;
-    };
-};
+    }
+}

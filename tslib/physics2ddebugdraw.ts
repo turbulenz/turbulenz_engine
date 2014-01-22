@@ -1,5 +1,3 @@
-// Complains in various parts about use of (/*NAME*/value) constants.
-
 // Copyright (c) 2012 Turbulenz Limited
 
 /*global
@@ -13,10 +11,8 @@ Physics2DAngleConstraint: false
 Physics2DLineConstraint: false
 Physics2DPulleyConstraint: false
 */
-"use strict";
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="physics2ddevice.ts" />
+"use strict";
 
 //
 // Physics2D DebugDraw
@@ -27,13 +23,13 @@ class Physics2DDebugDraw
 
     private _width: number;
     private _height: number;
-    private _invalidated: bool;
+    private _invalidated: boolean;
 
     private _graphicsDevice: GraphicsDevice;
     private _screenPort: any; // new Physics2DDevice.prototype.floatArray(4);
-    private _screenPortEnabled: bool;
+    private _screenPortEnabled: boolean;
     private _physics2DPort: any; // new Physics2DDevice.prototype.floatArray(4);
-    private _physics2DPortEnabled: bool;
+    private _physics2DPortEnabled: boolean;
 
     physics2DToScreen: number;
     screenToPhysics2D: number;
@@ -49,7 +45,7 @@ class Physics2DDebugDraw
 
     minSpringLength: number;
 
-    showConstraints: bool;
+    showConstraints: boolean;
     constraintAnchorRadius: number;
     constraintSpringRadius: number;
     constraintSpringNumCoils: number;
@@ -73,8 +69,8 @@ class Physics2DDebugDraw
     constraintErrorColorD: any; // v4
     constraintErrorSleepingColorD: any; // v4
 
-    showContacts: bool;
-    showContactImpulses: bool;
+    showContacts: boolean;
+    showContactImpulses: boolean;
     contactRadius: number;
     contactImpulseScale: number;
     dynamicContactColor: any; // v4
@@ -82,11 +78,11 @@ class Physics2DDebugDraw
     normalImpulseColor: any; // v4
     frictionImpulseColor: any; // v4
 
-    showRigidBodies: bool;
-    showColliderShapes: bool;
-    showSensorsShapes: bool;
-    showBodyDetail: bool;
-    showShapeDetail: bool;
+    showRigidBodies: boolean;
+    showColliderShapes: boolean;
+    showSensorsShapes: boolean;
+    showBodyDetail: boolean;
+    showShapeDetail: boolean;
     bodyPositionRadius: number;
     circleOriginRadius: number;
     bodyDetailColor: any; // v4
@@ -124,7 +120,7 @@ class Physics2DDebugDraw
             this._physics2DPortEnabled = false;
         }
         this._invalidated = true;
-    };
+    }
 
     setScreenViewport(viewport: any)
     {
@@ -142,7 +138,7 @@ class Physics2DDebugDraw
             this._screenPortEnabled = false;
         }
         this._invalidated = true;
-    };
+    }
 
     drawLine(x1, y1, x2, y2, color)
     {
@@ -164,7 +160,7 @@ class Physics2DDebugDraw
         data = this._indexData;
         data[iindex]     = numVertices;
         data[iindex + 1] = (numVertices + 1);
-    };
+    }
 
     drawLinearSpring(x1, y1, x2, y2, numCoils, radius, color)
     {
@@ -219,14 +215,14 @@ class Physics2DDebugDraw
             x1 = x2;
             y1 = y2;
         }
-    };
+    }
 
     _drawAngleIndicator(x, y, ang, rad, size, color)
     {
         var cos = Math.cos(ang);
         var sin = Math.sin(ang);
         this._drawAnchor(x + (rad * cos), y + (rad * sin), size, color);
-    };
+    }
 
     _drawAnchor(x, y, rad, color)
     {
@@ -235,7 +231,7 @@ class Physics2DDebugDraw
         this.drawCircle(x, y, rad * 0.75, color);
         this.drawCircle(x, y, rad * 0.5,  color);
         this.drawCircle(x, y, rad * 0.25, color);
-    };
+    }
 
     drawSpiral(x, y, ang1, ang2, rad1, rad2, color)
     {
@@ -327,7 +323,7 @@ class Physics2DDebugDraw
             x1 = x2;
             y1 = y2;
         }
-    };
+    }
 
     // We render a spiral 'spring' in the same way we do a spiral.
     // Only that the expressions for point on spring, and gradient at point
@@ -434,7 +430,7 @@ class Physics2DDebugDraw
             x1 = x2;
             y1 = y2;
         }
-    };
+    }
 
     drawCurve(x1, y1, cx, cy, x2, y2, color)
     {
@@ -519,7 +515,7 @@ class Physics2DDebugDraw
         }
 
         verts.length = 0;
-    };
+    }
 
     drawRectangle(x1, y1, x2, y2, color)
     {
@@ -543,7 +539,7 @@ class Physics2DDebugDraw
         idata[iindex + 1] = idata[iindex + 2] = (numVertices + 1);
         idata[iindex + 3] = idata[iindex + 4] = (numVertices + 2);
         idata[iindex + 5] = idata[iindex + 6] = (numVertices + 3);
-    };
+    }
 
     drawCircle(x, y, radius, color)
     {
@@ -613,7 +609,7 @@ class Physics2DDebugDraw
             idata[iindex + 1] = (numVertices + ((i + 1) % vCount));
             iindex += 2;
         }
-    };
+    }
 
     drawRigidBody(body)
     {
@@ -636,7 +632,7 @@ class Physics2DDebugDraw
                           data[(/*BODY_POS*/2)], data[(/*BODY_POS*/2) + 1],
                           this.bodyDetailColor);
         }
-    };
+    }
 
     drawConstraint(con)
     {
@@ -644,7 +640,7 @@ class Physics2DDebugDraw
         {
             con._draw(this, con._stiff);
         }
-    };
+    }
 
     drawWorld(world)
     {
@@ -679,7 +675,7 @@ class Physics2DDebugDraw
                 }
             }
         }
-    };
+    }
 
     _drawArbiters(arbiters)
     {
@@ -745,7 +741,7 @@ class Physics2DDebugDraw
                 this.drawLine(x1 - nx, y1 - ny, x2 - nx, y2 - ny, color);
             }
         }
-    };
+    }
 
     // Assumption that shape was updated by a body before call.
     _drawShape(shape)
@@ -782,7 +778,7 @@ class Physics2DDebugDraw
                 this.shapeDetailColor
             );
         }
-    };
+    }
 
     _drawCircleShape(circle, color)
     {
@@ -808,7 +804,7 @@ class Physics2DDebugDraw
                             this.screenToPhysics2D * this.circleOriginRadius,
                             this.shapeDetailColor);
         }
-    };
+    }
 
     _drawPolygonShape(polygon, color)
     {
@@ -845,7 +841,7 @@ class Physics2DDebugDraw
             idata[iindex + 1] = (numVertices + ((i + 1) % vCount));
             iindex += 2;
         }
-    };
+    }
 
     // =========================================================================
 
@@ -911,12 +907,12 @@ class Physics2DDebugDraw
         gd.setScissor(screenX, height - screenY - screenH, screenW, screenH);
         gd.setTechnique(this._technique);
         gd.setTechniqueParameters(this._techniqueParams);
-    };
+    }
 
     end()
     {
         this._dispatch();
-    };
+    }
 
     // =========================================================================
 
@@ -957,7 +953,7 @@ class Physics2DDebugDraw
             }
         }
         this._numLines += numLines;
-    };
+    }
 
     _bufferSizeAlgorithm(target)
     {
@@ -974,7 +970,7 @@ class Physics2DDebugDraw
         // Additionally ensure that we always take a multiple of of the stride
         // to avoid wasted bytes that could never be used.
         return (6 * Math.ceil(size / 6));
-    };
+    }
 
     _dispatch()
     {
@@ -1021,7 +1017,7 @@ class Physics2DDebugDraw
 
         this._numVertices = 0;
         this._numLines = 0;
-    };
+    }
 
     destroy()
     {
@@ -1032,7 +1028,7 @@ class Physics2DDebugDraw
 
         this._vertexBuffer.destroy();
         this._indexBuffer.destroy();
-    };
+    }
 
     static create(params) : Physics2DDebugDraw
     {
@@ -1215,8 +1211,8 @@ class Physics2DDebugDraw
         o._numLines = 0;
 
         return o;
-    };
-};
+    }
+}
 
 // =========================================================================
 // PULLEY CONSTRAINT
@@ -1291,14 +1287,19 @@ Physics2DPulleyConstraint.prototype._drawLink = function _drawLinkFn(debug, x1, 
         var minY1 = (midY - (ny * (jointMin * 0.5)));
         var minX2 = (midX + (nx * (jointMin * 0.5)));
         var minY2 = (midY + (ny * (jointMin * 0.5)));
-        var maxX1 = (midX - (nx * (jointMax * 0.5)));
-        var maxY1 = (midY - (ny * (jointMax * 0.5)));
-        var maxX2 = (midX + (nx * (jointMax * 0.5)));
-        var maxY2 = (midY + (ny * (jointMax * 0.5)));
 
         debug.drawLine(minX1, minY1, minX2, minY2, colSA);
-        debug.drawLine(maxX1, maxY1, minX1, minY1, colSB);
-        debug.drawLine(maxX2, maxY2, minX2, minY2, colSB);
+
+        if (isFinite(jointMax))
+        {
+            var maxX1 = (midX - (nx * (jointMax * 0.5)));
+            var maxY1 = (midY - (ny * (jointMax * 0.5)));
+            var maxX2 = (midX + (nx * (jointMax * 0.5)));
+            var maxY2 = (midY + (ny * (jointMax * 0.5)));
+
+            debug.drawLine(maxX1, maxY1, minX1, minY1, colSB);
+            debug.drawLine(maxX2, maxY2, minX2, minY2, colSB);
+        }
 
         if (!this._stiff)
         {
@@ -1425,14 +1426,19 @@ Physics2DDistanceConstraint.prototype._draw = function distanceDrawFn(debug)
         var minY1 = (midY - (ny * (jointMin * 0.5)));
         var minX2 = (midX + (nx * (jointMin * 0.5)));
         var minY2 = (midY + (ny * (jointMin * 0.5)));
-        var maxX1 = (midX - (nx * (jointMax * 0.5)));
-        var maxY1 = (midY - (ny * (jointMax * 0.5)));
-        var maxX2 = (midX + (nx * (jointMax * 0.5)));
-        var maxY2 = (midY + (ny * (jointMax * 0.5)));
 
         debug.drawLine(minX1, minY1, minX2, minY2, colSA);
-        debug.drawLine(maxX1, maxY1, minX1, minY1, colSB);
-        debug.drawLine(maxX2, maxY2, minX2, minY2, colSB);
+
+        if (isFinite(jointMax))
+        {
+            var maxX1 = (midX - (nx * (jointMax * 0.5)));
+            var maxY1 = (midY - (ny * (jointMax * 0.5)));
+            var maxX2 = (midX + (nx * (jointMax * 0.5)));
+            var maxY2 = (midY + (ny * (jointMax * 0.5)));
+
+            debug.drawLine(maxX1, maxY1, minX1, minY1, colSB);
+            debug.drawLine(maxX2, maxY2, minX2, minY2, colSB);
+        }
 
         if (!this._stiff)
         {

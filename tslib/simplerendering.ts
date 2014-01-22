@@ -3,17 +3,10 @@
 //
 // SimpleRendering
 //
-/*global renderingCommonCreateRendererInfoFn: false,  renderingCommonGetTechniqueIndexFn: false
+/*global renderingCommonCreateRendererInfoFn: false,
          renderingCommonSortKeyFn: false */
 /*global TurbulenzEngine: false */
 /*global Effect: false */
-
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="camera.ts" />
-/// <reference path="geometry.ts" />
-/// <reference path="shadermanager.ts" />
-/// <reference path="effectmanager.ts" />
-/// <reference path="renderingcommon.ts" />
 
 class SimpleRendering
 {
@@ -21,13 +14,14 @@ class SimpleRendering
 
     static numPasses = 3;
     static passIndex = { opaque: 0, decal: 1, transparent: 2 };
+    static v4One = new Float32Array([1.0, 1.0, 1.0, 1.0]);
     static identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
 
     md                        : MathDevice;
     sm                        : ShaderManager;
-    lightPositionUpdated      : bool;
+    lightPositionUpdated      : boolean;
     lightPosition             : any; // v3
-    eyePositionUpdated        : bool;
+    eyePositionUpdated        : boolean;
     eyePosition               : any; // v3
     globalTechniqueParameters : TechniqueParameters;
     passes                    : DrawParameters[][];
@@ -35,17 +29,18 @@ class SimpleRendering
     camera                    : Camera;
     scene                     : Scene;
 
-    wireframe                 : bool;
+    wireframe                 : boolean;
     wireframeInfo             : any; // TODO
 
     simplePrepare             : { (geometryInstance: GeometryInstance): void; };
     simpleUpdate              : { (camera: Camera): void; };
+    simpleSkinnedUpdate       : { (camera: Camera): void; };
 
     // Methods
 
     updateShader(sm: ShaderManager)
     {
-    };
+    }
 
     sortRenderablesAndLights(camera, scene)
     {
@@ -109,7 +104,7 @@ class SimpleRendering
             while (n < numVisibleRenderables);
 
         }
-    };
+    }
 
     update(gd, camera, scene, currentTime)
     {
@@ -134,12 +129,12 @@ class SimpleRendering
         this.globalTechniqueParameters['time'] = currentTime;
         this.camera = camera;
         this.scene = scene;
-    };
+    }
 
-    updateBuffers(/* gd, deviceWidth, deviceHeight */) : bool
+    updateBuffers(gd?, deviceWidth?, deviceHeight?) : boolean
     {
         return true;
-    };
+    }
 
     draw(gd: GraphicsDevice,
          clearColor: any,
@@ -192,7 +187,7 @@ class SimpleRendering
         }
 
         this.lightPositionUpdated = false;
-    };
+    }
 
     setGlobalLightPosition(pos)
     {
@@ -200,33 +195,33 @@ class SimpleRendering
         this.lightPosition[0] = pos[0];
         this.lightPosition[1] = pos[1];
         this.lightPosition[2] = pos[2];
-    };
+    }
 
     setGlobalLightColor(color)
     {
         this.globalTechniqueParameters['lightColor'] = color;
-    };
+    }
 
     setAmbientColor(color)
     {
         this.globalTechniqueParameters['ambientColor'] = color;
-    };
+    }
 
     setDefaultTexture(tex)
     {
         this.globalTechniqueParameters['diffuse'] = tex;
-    };
+    }
 
     setWireframe(wireframeEnabled, wireframeInfo)
     {
         this.wireframeInfo = wireframeInfo;
         this.wireframe = wireframeEnabled;
-    };
+    }
 
     getDefaultSkinBufferSize() : number
     {
         return this.defaultSkinBufferSize;
-    };
+    }
 
     destroy()
     {
@@ -234,7 +229,7 @@ class SimpleRendering
         delete this.lightPosition;
         delete this.eyePosition;
         delete this.passes;
-    };
+    }
 
     //
     // simplePrepare
@@ -248,7 +243,8 @@ class SimpleRendering
 
         var sharedMaterial = geometryInstance.sharedMaterial;
 
-        drawParameters.technique = this.technique;
+        // TODO:
+        drawParameters.technique = (<any>this).technique;
 
         drawParameters.setTechniqueParameters(0, sharedMaterial.techniqueParameters);
         drawParameters.setTechniqueParameters(1, geometryInstance.techniqueParameters);
@@ -266,16 +262,24 @@ class SimpleRendering
             drawParameters.userData.passIndex = SimpleRendering.passIndex.opaque;
         }
 
-        drawParameters.sortKey = renderingCommonSortKeyFn(this.techniqueIndex, sharedMaterial.meta.materialIndex);
+        // TODO: any cast
+        drawParameters.sortKey = renderingCommonSortKeyFn((<any>this).techniqueIndex, sharedMaterial.meta.materialIndex);
+
+        if (!geometryInstance.sharedMaterial.techniqueParameters.materialColor &&
+            !geometryInstance.techniqueParameters.materialColor)
+        {
+            geometryInstance.sharedMaterial.techniqueParameters.materialColor = SimpleRendering.v4One;
+        }
 
         if (!geometryInstance.sharedMaterial.techniqueParameters.uvTransform &&
             !geometryInstance.techniqueParameters.uvTransform)
         {
-            geometryInstance.techniqueParameters.uvTransform = SimpleRendering.identityUVTransform;
+            geometryInstance.sharedMaterial.techniqueParameters.uvTransform = SimpleRendering.identityUVTransform;
         }
 
-        geometryInstance.renderUpdate = this.update;
-    };
+        // TODO: any cast
+        geometryInstance.renderUpdate = (<any>this).update;
+    }
 
     //
     // Constructor function
@@ -573,13 +577,14 @@ class SimpleRendering
             {
                 that.shader = shader;
                 that.technique = shader.getTechnique(that.techniqueName);
-                that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+                that.techniqueIndex = (that.technique ? that.technique.id : 0);
             };
             shaderManager.load(this.shaderName, callback);
         };
 
         dr.simplePrepare = simplePrepare;
         dr.simpleUpdate = simpleUpdate;
+        dr.simpleSkinnedUpdate = simpleSkinnedUpdate;
 
         var effect;
         var effectTypeData;
@@ -1329,5 +1334,5 @@ class SimpleRendering
         effect.add(rigid, effectTypeData);
 
         return dr;
-    };
-};
+    }
+}

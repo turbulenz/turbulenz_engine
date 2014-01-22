@@ -1,8 +1,5 @@
 // Copyright (c) 2010-2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-
 interface IndexBufferPoolChunk
 {
     baseIndex: number;
@@ -41,7 +38,7 @@ class IndexBufferManager
     indexBuffersPools: IndexBuffersPool[];  //Array keyed-off attribute
     debugCreatedIndexBuffers: number;
     graphicsDevice: GraphicsDevice;
-    dynamicIndexBuffers: bool;
+    dynamicIndexBuffers: boolean;
 
     //
     // bucket
@@ -88,7 +85,7 @@ class IndexBufferManager
             return 8;
         }
         return 9;
-    };
+    }
 
     //
     // makeBuckets
@@ -102,7 +99,7 @@ class IndexBufferManager
             result.push({headChunk: null});
         }
         return result;
-    };
+    }
 
     //
     // allocate
@@ -251,7 +248,7 @@ class IndexBufferManager
             length: numIndices,
             poolIndex: poolIndex
         };
-    };
+    }
 
     //
     // free
@@ -407,7 +404,7 @@ class IndexBufferManager
             indexBufferData.bucket.length = 0;
             indexBufferData.bucket = null;
         }
-    };
+    }
 
     //
     // destroy
@@ -451,13 +448,13 @@ class IndexBufferManager
         }
 
         this.graphicsDevice = null;
-    };
+    }
 
     //
     // create
     //
     static create(graphicsDevice: GraphicsDevice,
-                  dynamicIndexBuffers?: bool) : IndexBufferManager
+                  dynamicIndexBuffers?: boolean) : IndexBufferManager
     {
         var manager = new IndexBufferManager();
 
@@ -467,6 +464,5 @@ class IndexBufferManager
         manager.dynamicIndexBuffers = dynamicIndexBuffers ? true : false;
 
         return manager;
-    };
-
-};
+    }
+}

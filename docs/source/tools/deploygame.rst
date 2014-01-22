@@ -60,6 +60,12 @@ Options
 
     Hub project version to deploy to.
 
+.. cmdoption:: --projectversiontitle=PROJECTVERSIONTITLE
+
+    Project version title to deploy with,
+    for existing project versions this will overwrite the existing title if supplied.
+    For new versions this defaults to the project version.
+
 .. cmdoption:: --cache=CACHE, -c CACHE
 
     Folder to be used for caching deployment information. Recommended to use the same one used for Local located at ``devserver\localdata\deploycache``.

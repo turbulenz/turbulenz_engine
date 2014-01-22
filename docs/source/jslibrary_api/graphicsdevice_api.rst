@@ -1154,6 +1154,10 @@ See also :ref:`isSupported <graphicsdevice_issupported>`.
 * "3D_TEXTURE_SIZE" : in texels. 0 means unsupported.
 * "RENDERTARGET_COLOR_TEXTURES" : 1 or 4. See :ref:`RenderTarget <rendertarget>`.
 * "RENDERBUFFER_SIZE" : in pixels.
+* "TEXTURE_UNITS" : maximum number of textures that can be accessed simultaneously from the pixel shader.
+* "VERTEX_TEXTURE_UNITS" : maximum number of textures that can be accessed simultaneously from the vertex shader.
+* "VERTEX_SHADER_PRECISION" : maximum number of bits for mantissa resolution on floating-point numbers on the vertex shader.
+* "FRAGMENT_SHADER_PRECISION" : maximum number of bits for mantissa resolution on floating-point numbers on the fragment shader.
 
 Returns an integer.
 

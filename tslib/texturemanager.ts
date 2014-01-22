@@ -1,14 +1,10 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
-"use strict";
-
 /*global Reference: false*/
 /*global Observer: false*/
 /*global TurbulenzEngine: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="observer.ts" />
-/// <reference path="requesthandler.ts" />
+"use strict";
 
 class TextureInstance
 {
@@ -29,7 +25,7 @@ class TextureInstance
         {
             this.textureChangedObserver.notify(this);
         }
-    };
+    }
 
     //
     // getTexture
@@ -37,7 +33,7 @@ class TextureInstance
     getTexture(): Texture
     {
         return this.texture;
-    };
+    }
 
     //
     // subscribeTextureChanged
@@ -49,7 +45,7 @@ class TextureInstance
             this.textureChangedObserver = Observer.create();
         }
         this.textureChangedObserver.subscribe(observerFunction);
-    };
+    }
 
     //
     // usubscribeTextureChanged
@@ -57,7 +53,7 @@ class TextureInstance
     unsubscribeTextureChanged(observerFunction)
     {
         this.textureChangedObserver.unsubscribe(observerFunction);
-    };
+    }
 
     //
     // destroy
@@ -70,7 +66,7 @@ class TextureInstance
         }
         delete this.texture;
         delete this.textureChangedObserver;
-    };
+    }
 
     //
     // TextureInstance.create
@@ -83,19 +79,19 @@ class TextureInstance
         textureInstance.reference = Reference.create(textureInstance);
 
         return textureInstance;
-    };
-};
+    }
+}
 
 interface TextureManagerDelayedTexture
 {
-    nomipmaps: bool;
+    nomipmaps: boolean;
     onload: { (texture: Texture): void; };
-};
+}
 
 interface TextureManagerArchive
 {
     textures: { [path: string]: Texture; };
-};
+}
 
 /**
   @class  Texture manager
@@ -108,7 +104,7 @@ class TextureManager
     static version = 1;
 
     textureInstances: { [idx: string]: TextureInstance; };
-    loadingTexture: { [idx: string]: bool; };
+    loadingTexture: { [idx: string]: boolean; };
     loadedTextureObservers: { [idx: string]: Observer; };
     delayedTextures: { [idx: string]: TextureManagerDelayedTexture; };
     numLoadingTextures: number;
@@ -118,7 +114,7 @@ class TextureManager
     loadedArchiveObservers: { [path: string]: Observer; };
     numLoadingArchives: number;
 
-    internalTexture: { [path: string]: bool; };
+    internalTexture: { [path: string]: boolean; };
     pathRemapping: { [path: string]: string; };
     pathPrefix: string;
 
@@ -145,7 +141,7 @@ class TextureManager
       @param {string} name Name of the texture
       @param {Texture} texture Texture
     */
-    add(name, texture, internal)
+    add(name, texture, internal?: boolean)
     {
         var textureInstance = this.textureInstances[name];
         if (!textureInstance)
@@ -163,7 +159,7 @@ class TextureManager
             this.internalTexture[name] = true;
             this.textureInstances[name].reference.add();
         }
-    };
+    }
 
     /**
       Get texture created from a given file or with the given name
@@ -185,7 +181,7 @@ class TextureManager
             return this.defaultTexture;
         }
         return instance.getTexture();
-    };
+    }
 
     //
     // getInstanceFn
@@ -193,7 +189,7 @@ class TextureManager
     getInstance(path): TextureInstance
     {
         return this.textureInstances[path];
-    };
+    }
 
     /**
       Creates texture from an image file
@@ -312,7 +308,7 @@ class TextureManager
             }
             return texture;
         }
-    };
+    }
 
     /**
       Alias one texture to another name
@@ -337,7 +333,7 @@ class TextureManager
             this.textureInstances[dst].setTexture(this.textureInstances[src].getTexture());
         }
         this.internalTexture[dst] = true;
-    };
+    }
 
     /**
       Removes a texture from the manager
@@ -359,7 +355,7 @@ class TextureManager
                 delete this.textureInstances[path];
             }
         }
-    };
+    }
 
     /**
       Loads a textures archive
@@ -521,7 +517,7 @@ class TextureManager
                 }
             }
         }
-    };
+    }
 
     /**
       Check if an archive is not pending
@@ -535,10 +531,10 @@ class TextureManager
 
       @return {boolean}
     */
-    isArchiveLoaded(path): bool
+    isArchiveLoaded(path): boolean
     {
         return path in this.archivesLoaded;
-    };
+    }
 
     /**
       Removes a textures archive and all the textures it references.
@@ -565,7 +561,7 @@ class TextureManager
             }
             delete this.archivesLoaded[path];
         }
-    };
+    }
 
     /**
       Get object containing all loaded textures
@@ -580,7 +576,7 @@ class TextureManager
     getAll(): { [path: string]: TextureInstance; }
     {
         return this.textureInstances;
-    };
+    }
 
     /**
       Get number of textures pending
@@ -595,7 +591,7 @@ class TextureManager
     getNumPendingTextures(): number
     {
         return (this.numLoadingTextures + this.numLoadingArchives);
-    };
+    }
 
     /**
       Check if a texture is not pending
@@ -609,10 +605,10 @@ class TextureManager
 
       @return {boolean}
     */
-    isTextureLoaded(path): bool
+    isTextureLoaded(path): boolean
     {
         return (!(path in this.loadingTexture) && !(path in this.delayedTextures));
-    };
+    }
 
     /**
       Check if a texture is missing
@@ -626,10 +622,10 @@ class TextureManager
 
       @return {boolean}
     */
-    isTextureMissing(path): bool
+    isTextureMissing(path): boolean
     {
         return !(path in this.textureInstances);
-    };
+    }
 
     /**
       Set path remapping dictionary
@@ -646,7 +642,7 @@ class TextureManager
     {
         this.pathRemapping = prm;
         this.pathPrefix = assetUrl;
-    };
+    }
 
     addProceduralTexture(params)
     {
@@ -660,7 +656,7 @@ class TextureManager
         {
             this.add(name, procTexture, true);
         }
-    };
+    }
 
     destroy()
     {
@@ -700,7 +696,7 @@ class TextureManager
         this.pathPrefix = null;
         this.requestHandler = null;
         this.graphicsDevice = null;
-    };
+    }
 
     /**
       @constructs Constructs a TextureManager object.
@@ -787,55 +783,61 @@ class TextureManager
             textureManager.add = function addTextureLogFn(name, tex)
             {
                 log.innerHTML += "TextureManager.add:&nbsp;'" + name + "'";
-                return textureManager.prototype.add(name, tex);
+                return TextureManager.prototype.add.call(textureManager,
+                                                         name, tex);
             };
 
             textureManager.load = function loadTextureLogFn(path, nomipmaps?)
             {
                 log.innerHTML += "TextureManager.load:&nbsp;'" + path + "'";
-                return textureManager.prototype.load(path, nomipmaps);
+                return TextureManager.prototype.load.call(textureManager,
+                                                          path, nomipmaps);
             };
 
             textureManager.loadArchive = function loadArchiveLogFn(path, nomipmaps)
             {
                 log.innerHTML += "TextureManager.loadArchive:&nbsp;'" + path + "'";
-                return textureManager.prototype.loadArchive(path, nomipmaps);
+                return TextureManager.prototype.loadArchive.call
+                (textureManager, path, nomipmaps);
             };
 
             textureManager.isArchiveLoaded = function isArchiveLoadedLogFn(path)
             {
                 log.innerHTML += "TextureManager.isArchiveLoaded:&nbsp;'" + path + "'";
-                return textureManager.prototype.isArchiveLoaded(path);
+                return TextureManager.prototype.isArchiveLoaded.call
+                (textureManager, path);
             };
 
             textureManager.removeArchive = function removeArchiveLogFn(path)
             {
                 log.innerHTML += "TextureManager.removeArchive:&nbsp;'" + path + "'";
-                return textureManager.prototype.removeArchive(path);
+                return TextureManager.prototype.removeArchive.call
+                (textureManager, path);
             };
 
             textureManager.map = function mapTextureLogFn(dst, src)
             {
                 log.innerHTML += "TextureManager.map:&nbsp;'" + src + "' -> '" + dst + "'";
-                textureManager.prototype.map(dst, src);
+                TextureManager.prototype.map.call(textureManager, dst, src);
             };
 
             textureManager.get = function getTextureLogFn(path)
             {
                 log.innerHTML += "TextureManager.get:&nbsp;'" + path + "'";
-                return textureManager.prototype.get(path);
+                return TextureManager.prototype.get.call(textureManager, path);
             };
 
             textureManager.getInstance = function getTextureInstanceLogFn(path)
             {
                 log.innerHTML += "TextureManager.getInstance:&nbsp;'" + path + "'";
-                return textureManager.prototype.getInstance(path);
+                return TextureManager.prototype.getInstance.call
+                (textureManager, path);
             };
 
             textureManager.remove = function removeTextureLogFn(path)
             {
                 log.innerHTML += "TextureManager.remove:&nbsp;'" + path + "'";
-                textureManager.prototype.remove(path);
+                TextureManager.prototype.remove.call(textureManager, path);
             };
         }
 
@@ -948,5 +950,5 @@ class TextureManager
         nofalloffData = null;
 
         return textureManager;
-    };
-};
+    }
+}

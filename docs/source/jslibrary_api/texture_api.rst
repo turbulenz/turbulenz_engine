@@ -31,7 +31,7 @@ Methods
 
 Set the data by passing in an array of numbers.
 
-Pixel data of the top-level of the texture, it consists of an array of
+Pixel data consists of an array of
 numbers, one value for each component of every pixel.  The number of
 components per pixel depends on the pixel format.
 
@@ -60,6 +60,14 @@ When Typed Arrays are available, the following is also valid ::
                                     0, 255, 0, 255,
                                     0, 255, 0, 255,
                                     0, 0, 255, 255]));
+
+To only update a region of the texture ::
+
+    texture.setData(pixelData, face, level, x, y, width, height);
+
+Where `face` should be zero except for cubemap textures and `level`
+refers to the mipmap level to be updated.
+
 
 .. index::
     pair: Texture; destroy
@@ -93,6 +101,23 @@ usually the path to the image file that provided the pixel data.
 **Syntax** ::
 
     var textureName = texture.name;
+
+.. note:: Read Only
+
+
+.. index::
+    pair: Texture; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the Texture object.
+
+**Syntax** ::
+
+    var textureId = texture.id;
 
 .. note:: Read Only
 

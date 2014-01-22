@@ -1,12 +1,13 @@
 // Copyright (c) 2011-2012 Turbulenz Limited
+
 /*global TurbulenzEngine*/
 /*global Uint8Array*/
 /*global window*/
+
 "use strict";
 
-/// <reference path="sounddevice.ts" />
-
-// Some old browsers had a broken implementation of ArrayBuffer without a "slice" method
+// Some old browsers had a broken implementation of ArrayBuffer
+// without a "slice" method
 if ((typeof ArrayBuffer !== "undefined") &&
     (ArrayBuffer.prototype !== undefined) &&
     (ArrayBuffer.prototype.slice === undefined))
@@ -48,33 +49,19 @@ if ((typeof ArrayBuffer !== "undefined") &&
 //
 // SoundTARLoader
 //
-interface SoundTARLoader
+class SoundTARLoader
 {
+    static version = 1;
+
     sd: WebGLSoundDevice;
-    uncompress: bool;
+    uncompress: boolean;
     onsoundload: { (sound: WebGLSound): void; };
-    onload: { (result: bool, status: number): void; };
-    onerror: { (): void; };
+    onload: { (result: boolean, status: number): void; };
+    onerror: { (status: number): void; };
     soundsLoading: number;
     src: string;
 
-    processBytes : { (bytes: Uint8Array): bool; };
-
-};
-declare var SoundTARLoader :
-{
-    new(): SoundTARLoader;
-    prototype: any;
-    create(params: any): SoundTARLoader;
-};
-
-
-function SoundTARLoader() { return this; }
-SoundTARLoader.prototype = {
-
-    version : 1,
-
-    processBytes : function processBytesFn(bytes)
+    processBytes(bytes)
     {
         var offset = 0;
         var totalSize = bytes.length;
@@ -239,154 +226,180 @@ SoundTARLoader.prototype = {
         bytes = null;
 
         return result;
-    },
+    }
 
-    isValidHeader : function isValidHeaderFn(/* header */)
+    isValidHeader(header)
     {
         return true;
     }
-};
 
-// Constructor function
-SoundTARLoader.create = function tgaLoaderFn(params)
-{
-    var loader = new SoundTARLoader();
-    loader.sd = params.sd;
-    loader.uncompress = params.uncompress;
-    loader.onsoundload = params.onsoundload;
-    loader.onload = params.onload;
-    loader.onerror = params.onerror;
-    loader.soundsLoading = 0;
-
-    var src = params.src;
-    if (src)
+    static create(params: any): SoundTARLoader
     {
-        loader.src = src;
-        var xhr;
-        if (window.XMLHttpRequest)
+        var loader = new SoundTARLoader();
+        loader.sd = params.sd;
+        loader.uncompress = params.uncompress;
+        loader.onsoundload = params.onsoundload;
+        loader.onload = params.onload;
+        loader.onerror = params.onerror;
+        loader.soundsLoading = 0;
+
+        var src = params.src;
+        if (src)
         {
-            xhr = new window.XMLHttpRequest();
-        }
-        else if (window.ActiveXObject)
-        {
-            xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
-        }
-        else
-        {
-            if (params.onerror)
+            loader.src = src;
+            var xhr;
+            if (window.XMLHttpRequest)
             {
-                params.onerror("No XMLHTTPRequest object could be created");
+                xhr = new window.XMLHttpRequest();
             }
-            return null;
-        }
-
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4)
+            else if (window.ActiveXObject)
             {
-                if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
+            }
+            else
+            {
+                if (params.onerror)
                 {
-                    var xhrStatus = xhr.status;
-                    var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
+                    params.onerror(0);
+                }
+                return null;
+            }
 
-                    // Sometimes the browser sets status to 200 OK when the connection is closed
-                    // before the message is sent (weird!).
-                    // In order to address this we fail any completely empty responses.
-                    // Hopefully, nobody will get a valid response with no headers and no body!
-                    if (xhr.getAllResponseHeaders() === "" && xhr.responseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4)
+                {
+                    if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
                     {
-                        loader.onload(false, 0);
-                        return;
-                    }
+                        var xhrStatus = xhr.status;
+                        var xhrStatusText = xhr.status !== 0 && xhr.statusText || 'No connection';
 
-                    if (xhrStatus === 200 || xhrStatus === 0)
-                    {
-                        var buffer;
-                        if (xhr.responseType === "arraybuffer")
-                        {
-                            buffer = xhr.response;
-                        }
-                        else if (xhr.mozResponseArrayBuffer)
-                        {
-                            buffer = xhr.mozResponseArrayBuffer;
-                        }
-                        else //if (xhr.responseText !== null)
-                        {
-                            /*jshint bitwise: false*/
-                            var text = xhr.responseText;
-                            var numChars = text.length;
-                            var i;
-                            buffer = [];
-                            buffer.length = numChars;
-                            for (i = 0; i < numChars; i += 1)
-                            {
-                                buffer[i] = (text.charCodeAt(i) & 0xff);
-                            }
-                            /*jshint bitwise: true*/
-                        }
 
                         // Fix for loading from file
-                        if (xhrStatus === 0 && window.location.protocol === "file:")
+                        if (xhrStatus === 0 &&
+                            (window.location.protocol === "file:" ||
+                             window.location.protocol === "chrome-extension:"))
                         {
                             xhrStatus = 200;
                         }
 
-                        // processBytes returns false if any of the
-                        // entries in the archive was not supported or
-                        // couldn't be loaded as a sound.
-
-                        var archiveResult =
-                            loader.processBytes(new Uint8Array(buffer));
-
-                        // Wait until all sounds have been loaded (or
-                        // failed) and return the result.
-
-                        if (loader.onload)
+                        // Sometimes the browser sets status to 200 OK when the connection is closed
+                        // before the message is sent (weird!).
+                        // In order to address this we fail any completely empty responses.
+                        // Hopefully, nobody will get a valid response with no headers and no body!
+                        if (xhr.getAllResponseHeaders() === "")
                         {
-                            var callOnload = function callOnloadFn()
+                            var noBody;
+                            if (xhr.responseType === "arraybuffer")
                             {
-                                if (0 < loader.soundsLoading)
+                                noBody = !xhr.response;
+                            }
+                            else if (xhr.mozResponseArrayBuffer)
+                            {
+                                noBody = !xhr.mozResponseArrayBuffer;
+                            }
+                            else
+                            {
+                                noBody = !xhr.responseText;
+                            }
+                            if (noBody)
+                            {
+                                if (loader.onerror)
                                 {
-                                    if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
-                                    {
-                                        window.setTimeout(callOnload, 100);
-                                    }
+                                    loader.onerror(0);
                                 }
-                                else
-                                {
-                                    loader.onload(archiveResult, xhrStatus);
-                                }
-                            };
-                            callOnload();
-                        }
-                    }
-                    else
-                    {
-                        if (loader.onerror)
-                        {
-                            loader.onerror();
-                        }
-                    }
-                }
-                // break circular reference
-                xhr.onreadystatechange = null;
-                xhr = null;
-            }
-        };
-        xhr.open("GET", params.src, true);
-        if (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType"))
-        {
-            xhr.responseType = "arraybuffer";
-        }
-        else if (xhr.overrideMimeType)
-        {
-            xhr.overrideMimeType("text/plain; charset=x-user-defined");
-        }
-        else
-        {
-            xhr.setRequestHeader("Content-Type", "text/plain; charset=x-user-defined");
-        }
-        xhr.send(null);
-    }
 
-    return loader;
-};
+                                // break circular reference
+                                xhr.onreadystatechange = null;
+                                xhr = null;
+                                return;
+                            }
+                        }
+
+                        if (xhrStatus === 200 || xhrStatus === 0)
+                        {
+                            var buffer;
+                            if (xhr.responseType === "arraybuffer")
+                            {
+                                buffer = xhr.response;
+                            }
+                            else if (xhr.mozResponseArrayBuffer)
+                            {
+                                buffer = xhr.mozResponseArrayBuffer;
+                            }
+                            else //if (xhr.responseText !== null)
+                            {
+                                /*jshint bitwise: false*/
+                                var text = xhr.responseText;
+                                var numChars = text.length;
+                                var i;
+                                buffer = [];
+                                buffer.length = numChars;
+                                for (i = 0; i < numChars; i += 1)
+                                {
+                                    buffer[i] = (text.charCodeAt(i) & 0xff);
+                                }
+                                /*jshint bitwise: true*/
+                            }
+
+                            // processBytes returns false if any of the
+                            // entries in the archive was not supported or
+                            // couldn't be loaded as a sound.
+
+                            var archiveResult =
+                                loader.processBytes(new Uint8Array(buffer));
+
+                            // Wait until all sounds have been loaded (or
+                            // failed) and return the result.
+
+                            if (loader.onload)
+                            {
+                                var callOnload = function callOnloadFn()
+                                {
+                                    if (0 < loader.soundsLoading)
+                                    {
+                                        if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
+                                        {
+                                            window.setTimeout(callOnload, 100);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        loader.onload(archiveResult, xhrStatus);
+                                    }
+                                };
+                                callOnload();
+                            }
+                        }
+                        else
+                        {
+                            if (loader.onerror)
+                            {
+                                loader.onerror(xhrStatus);
+                            }
+                        }
+                    }
+                    // break circular reference
+                    xhr.onreadystatechange = null;
+                    xhr = null;
+                }
+            };
+            xhr.open("GET", params.src, true);
+            if (typeof xhr.responseType === "string" ||
+                (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType")))
+            {
+                xhr.responseType = "arraybuffer";
+            }
+            else if (xhr.overrideMimeType)
+            {
+                xhr.overrideMimeType("text/plain; charset=x-user-defined");
+            }
+            else
+            {
+                xhr.setRequestHeader("Content-Type", "text/plain; charset=x-user-defined");
+            }
+            xhr.send(null);
+        }
+
+        return loader;
+    }
+}

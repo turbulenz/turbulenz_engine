@@ -1,7 +1,5 @@
 // Copyright (c) 2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-
 interface TextureEffect
 {
     technique   : Technique;
@@ -54,7 +52,7 @@ class TextureEffects
         dst[8] = 0.0722;
         dst[9] = dst[10] = dst[11] = 0;
         return dst;
-    };
+    }
 
     sepiaMatrix(dst)
     {
@@ -73,7 +71,7 @@ class TextureEffects
         dst[8] = 0.131;
         dst[9] = dst[10] = dst[11] = 0;
         return dst;
-    };
+    }
 
     negativeMatrix(dst)
     {
@@ -85,7 +83,7 @@ class TextureEffects
         dst[1] = dst[2] = dst[3] = dst[5] = dst[6] = dst[7] = 0;
         dst[9] = dst[10] = dst[11] = 1;
         return dst;
-    };
+    }
 
     saturationMatrix(saturationScale, dst)
     {
@@ -105,7 +103,7 @@ class TextureEffects
         dst[8] = (is * 0.0722) + saturationScale;
         dst[9] = dst[10] = dst[11] = 0;
         return dst;
-    };
+    }
 
     hueMatrix(angle, dst)
     {
@@ -174,7 +172,7 @@ class TextureEffects
         dst[9] = dst[10] = dst[11] = 0;
 
         return dst;
-    };
+    }
 
     brightnessMatrix(brightnessOffset, dst)
     {
@@ -188,7 +186,22 @@ class TextureEffects
         dst[9] = dst[10] = dst[11] = brightnessOffset;
 
         return dst;
-    };
+    }
+
+    additiveMatrix(additiveRGB, dst)
+    {
+        if (dst === undefined) {
+            dst = this.mathDevice.m43BuildIdentity();
+        }
+
+        dst[0] = dst[4] = dst[8] = 1;
+        dst[1] = dst[2] = dst[3] = dst[5] = dst[6] = dst[7] = 0;
+        dst[9] = additiveRGB[0];
+        dst[10] = additiveRGB[1];
+        dst[11] = additiveRGB[2];
+
+        return dst;
+    }
 
     contrastMatrix(contrastScale, dst)
     {
@@ -202,9 +215,9 @@ class TextureEffects
         dst[9] = dst[10] = dst[11] = 0.5 * (1 - contrastScale);
 
         return dst;
-    };
+    }
 
-    applyBloom(params): bool
+    applyBloom(params): boolean
     {
         var source = params.source;
         var blur1 = params.blurTarget1;
@@ -265,9 +278,9 @@ class TextureEffects
         this.applyEffect(effectParams);
 
         return true;
-    };
+    }
 
-    applyGaussianBlur(params): bool
+    applyGaussianBlur(params): boolean
     {
         var source = params.source;
         var blur = params.blurTarget;
@@ -299,9 +312,9 @@ class TextureEffects
         this.applyEffect(effectParams);
 
         return true;
-    };
+    }
 
-    applyColorMatrix(params): bool
+    applyColorMatrix(params): boolean
     {
         var source = params.source;
         var dest = params.destination;
@@ -337,9 +350,9 @@ class TextureEffects
         this.applyEffect(effectParams);
 
         return true;
-    };
+    }
 
-    applyDistort(params): bool
+    applyDistort(params): boolean
     {
         var source = params.source;
         var dest = params.destination;
@@ -412,7 +425,7 @@ class TextureEffects
         this.applyEffect(effectParams);
 
         return true;
-    };
+    }
 
     applyEffect(effect)
     {
@@ -429,7 +442,7 @@ class TextureEffects
 
             graphicsDevice.endRenderTarget();
         }
-    };
+    }
 
     destroy()
     {
@@ -437,7 +450,7 @@ class TextureEffects
 
         delete this.graphicsDevice;
         delete this.mathDevice;
-    };
+    }
 
     static create(params) : TextureEffects
     {
@@ -752,5 +765,5 @@ class TextureEffects
         e.gaussianBlurTechnique = shader.getTechnique("gaussianBlur");
 
         return e;
-    };
-};
+    }
+}

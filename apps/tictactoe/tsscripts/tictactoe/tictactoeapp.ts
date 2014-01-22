@@ -17,10 +17,10 @@ class Application
     notificationsManager: NotificationsManager;
     userProfile: UserProfile;
 
-    setButtons: bool;
-    invalidateButtons: bool;
+    setButtons: boolean;
+    invalidateButtons: boolean;
     intervalID: number;
-    hasShutdown: bool;
+    hasShutdown: boolean;
 
     currentDataShare: DataShare;
     joinedDataShares: DataShare[];
@@ -146,7 +146,7 @@ class Application
         this.gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreated);
 
         this.intervalID = TurbulenzEngine.setInterval(this.loadingUpdate.bind(this), 100);
-    };
+    }
 
     createGame()
     {
@@ -161,7 +161,7 @@ class Application
             this.invalidateButtons = true;
         }
         this.dataShareManager.createDataShare(dataShareCreated);
-    };
+    }
 
     findDataShares()
     {
@@ -254,7 +254,7 @@ class Application
         }
         // find any joinable datashares
         this.dataShareManager.findDataShares({callback: foundDataSharesCallback});
-    };
+    }
 
     playerJoined(notification)
     {
@@ -265,7 +265,7 @@ class Application
             // has moved
             this.readMoves();
         }
-    };
+    }
 
     yourTurn(notification)
     {
@@ -273,7 +273,7 @@ class Application
         {
             this.readMoves();
         }
-    };
+    }
 
     leaveGame()
     {
@@ -288,19 +288,19 @@ class Application
             this.findDataShares();
         }
         this.currentDataShare.leave(dataShareLeft);
-    };
+    }
 
     toLobby()
     {
         this.currentDataShare = null;
         this.currentGame = null;
         this.findDataShares();
-    };
+    }
 
     forfeitGame()
     {
         var currentGame = this.currentGame;
-        var gameStateSet = (wasSet: bool, reason?: string) =>
+        var gameStateSet = (wasSet: boolean, reason?: string) =>
         {
             if (wasSet)
             {
@@ -348,7 +348,7 @@ class Application
                     callback: gameStateSet
                 });
         }
-    };
+    }
 
     getPlayGameFn(dataShare: DataShare): { (): void; }
     {
@@ -358,7 +358,7 @@ class Application
             this.currentGame = this.joinedGames[dataShare.id];
             this.readMoves();
         }
-    };
+    }
 
     readMoves(callback?: { (): void; }): void
     {
@@ -377,13 +377,13 @@ class Application
             }
         }
         this.currentDataShare.get('game-state', getMovesCallback);
-    };
+    }
 
     getJoinGameFn(dataShare: DataShare): { (): void; }
     {
         return () =>
         {
-            var joinedDataShare = (success: bool) =>
+            var joinedDataShare = (success: boolean) =>
             {
                 if (success)
                 {
@@ -430,14 +430,14 @@ class Application
             }
             dataShare.join(joinedDataShare);
         }
-    };
+    }
 
     getOnClickFn(x: number, y: number): { (): void; }
     {
         return () =>
         {
             var currentGame = this.currentGame;
-            var gameStateSet = (wasSet: bool, reason?: string) =>
+            var gameStateSet = (wasSet: boolean, reason?: string) =>
             {
                 if (wasSet)
                 {
@@ -445,13 +445,30 @@ class Application
                     var otherUser = currentGame.otherUser;
                     if (otherUser)
                     {
+                        var msgText = 'It\'s your turn';
+                        var roundEnd = currentGame.roundEnd;
+                        if (roundEnd)
+                        {
+                            if (roundEnd.winner)
+                            {
+                                msgText = 'You\'ve lost the game';
+                            }
+                            if (roundEnd.forfeit)
+                            {
+                                msgText = 'You\'ve won the game';
+                            }
+                            if (roundEnd.draw)
+                            {
+                                msgText = 'The game is a draw';
+                            }
+                        }
                         this.notificationsManager.sendInstantNotification({
                             key: 'your-turn',
                             msg: {
                                 data: {
                                     dataShareId: this.currentDataShare.id
                                 },
-                                text: 'It\'s your turn'
+                                text: msgText
                             },
                             recipient: otherUser
                         });
@@ -497,7 +514,7 @@ class Application
                 this.readMoves();
             }
         }
-    };
+    }
 
     segmentFont(x: number, y: number, text: string, clickCallback?, id?: string)
     {
@@ -547,23 +564,30 @@ class Application
             spacing : 0,
             alignment : 0
         });
-    };
+    }
 
     renderGame()
     {
         this.graphicsDevice.setTechnique(this.fontTechnique);
         var currentGame = this.currentGame;
 
+        var currentUsername = this.userProfile.username;
+        this.segmentFont(0, 0, 'Hello ' + currentUsername);
+
+        var textSpacingY = this.textSpacingY;
+        var offsetY = textSpacingY;
+
         var roundEnd = currentGame.roundEnd;
         if (roundEnd)
         {
-            this.segmentFont(0, 0, 'Leave', this.leaveGame.bind(this), 'leave');
+            this.segmentFont(0, offsetY, 'Leave', this.leaveGame.bind(this), 'leave');
         }
         else
         {
-            this.segmentFont(0, 0, 'Back to lobby', this.toLobby.bind(this), 'toLobby');
-            this.segmentFont(20, 0, 'Forfeit', this.forfeitGame.bind(this), 'forfeitGame');
+            this.segmentFont(0, offsetY, 'Back to lobby', this.toLobby.bind(this), 'toLobby');
+            this.segmentFont(20, offsetY, 'Forfeit', this.forfeitGame.bind(this), 'forfeitGame');
         }
+        offsetY += textSpacingY;
 
         var users = currentGame.getUsers();
         var usersLength = users.length;
@@ -573,7 +597,6 @@ class Application
         var boardOffsetY = this.boardOffsetY;
         var boardSizeX = this.boardSizeX;
         var boardSizeY = this.boardSizeY;
-        var textSpacingY = this.textSpacingY;
 
         var offsetY = boardOffsetY + boardSizeY + textSpacingY * 2;
         for (usersIndex = 0; usersIndex < usersLength; usersIndex += 1)
@@ -671,7 +694,7 @@ class Application
 
             draw2D.end();
         }
-    };
+    }
 
     renderLobby()
     {
@@ -681,9 +704,14 @@ class Application
         var textSpacingY = this.textSpacingY;
 
         var joinedDataShares = this.joinedDataShares;
+
+        var currentUsername = this.userProfile.username;
+        this.segmentFont(0, 0, 'Hello ' + currentUsername);
+        offsetY += textSpacingY;
+
         if (joinedDataShares && joinedDataShares.length > 0)
         {
-            this.segmentFont(0, 0, 'Playing:');
+            this.segmentFont(0, offsetY, 'Playing:');
             offsetY += textSpacingY;
 
             var joinedDataSharesIndex;
@@ -753,7 +781,7 @@ class Application
         this.segmentFont(0, offsetY, 'Refresh', this.findDataShares.bind(this), 'refresh');
         this.segmentFont(20, offsetY, 'Create new game', this.createGame.bind(this), 'create');
         offsetY += textSpacingY;
-    };
+    }
 
     update()
     {
@@ -793,7 +821,7 @@ class Application
         }
 
         graphicsDevice.endFrame();
-    };
+    }
 
     loadingUpdate()
     {
@@ -879,7 +907,7 @@ class Application
             TurbulenzEngine.clearInterval(this.intervalID);
             this.intervalID = TurbulenzEngine.setInterval(this.update.bind(this), 1000 / 60);
         }
-    };
+    }
 
     // Attempts to free memory - called from onbeforeunload and/or
     // TurbulenzEngine.onUnload
@@ -888,6 +916,11 @@ class Application
         if (!this.hasShutdown)
         {
             this.hasShutdown = true;
+
+            if (this.gameSession)
+            {
+                this.gameSession.destroy();
+            }
 
             TurbulenzEngine.clearInterval(this.intervalID);
 
@@ -898,12 +931,12 @@ class Application
             this.mathDevice      = null;
             this.graphicsDevice  = null;
         }
-    };
+    }
 
     errorCallback(message)
     {
         Utilities.log(message);
-    };
+    }
 
     // Application constructor function
     static create()
@@ -966,5 +999,5 @@ class Application
         application.oldHeight = 0;
 
         return application;
-    };
-};
+    }
+}

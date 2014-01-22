@@ -6,6 +6,9 @@ Known Issues
 
 The following is a list of the changes to the known issues in this SDK.
 
+* Importing tools/local server directly from Python has changed. Previously you could import them using 'turbulenz.tools.*' and 'turbulenz.devserver.*', now you must invoke them via 'turbulenz_tools.tools.*' and 'turbulenz_local.*'.
+* Any manual changes to release.ini configuration files have to be manually applied to the release.ini, after first running the local server command for the first time, since the file needs to be generated.
+* The default list of games in the local server flows onto the next page. You must click the arrow to scroll to the second page to see all applications.
 * The Linux SDK does not include a browser plugin.  Developers can
   build and deploy plugin versions of their games, but only run the
   canvas versions.
@@ -68,6 +71,5 @@ The following is a list of the changes to the known issues in this SDK.
   To allow the local server to be accessed over a local network, please manually update the Windows Firewall rule.
 * When using the InputDevice, certain browsers can take a little longer to release the mouse pointer when pressing ESC.
   Try holding ESC for a longer period of time, or alternatively use alt-tab to navigate to a different window (windows only) or end the process if the browser stops responding.
-* The middle mouse button does not send click events in Firefox on Mac OS 10.6
 * In canvas mode, some browsers do not correctly distinguish between
   left and right version of some modifyer keys (CONTROL, ALT, etc).

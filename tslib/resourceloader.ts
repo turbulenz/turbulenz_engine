@@ -2,10 +2,6 @@
 /*global TurbulenzEngine:false*/
 /*global VMath:false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="requesthandler.ts" />
-/// <reference path="vmath.ts" />
-
 interface LoadParameters
 {
     nodesNamePrefix?: string;
@@ -15,7 +11,7 @@ interface LoadParameters
     nodes: SceneNodeParameters[];
     parentNode: any; // TODO: SceneNode / SceneNodeParameters;
     requestHandler?: RequestHandler;
-    isReference: bool;
+    isReference: boolean;
 
     data: any; // TODO: SceneData?
 
@@ -23,7 +19,7 @@ interface LoadParameters
 
 interface SceneParameters extends LoadParameters
 {
-    append: bool;
+    append: boolean;
     skin: any; // TODO:
 };
 
@@ -36,7 +32,7 @@ interface SceneNodeParameters // extends SceneNode
 {
     reference?: string;
     geometryinstances?: { [name: string]: GeometryInstanceParameters; };
-    inplace: bool;
+    inplace: boolean;
     skin: any; // ?
     nodes: { [name: string]: SceneNodeParameters; };
     matrix: number[];
@@ -52,7 +48,7 @@ class ResourceLoader
     nodesMap             : { [name: string]: SceneNodeParameters; };
     referencesPending    : { [name: string]: any[]; }; // TODO
     numReferencesPending : number;
-    animationsPending    : { [name: string]: bool; };
+    animationsPending    : { [name: string]: boolean; };
     skeletonNames        : { [name: string]: string; };
     data                 : any;
 
@@ -65,7 +61,7 @@ class ResourceLoader
         this.referencesPending = {};
         this.numReferencesPending = 0;
         this.animationsPending = {};
-    };
+    }
 
     //
     // endLoading
@@ -79,7 +75,7 @@ class ResourceLoader
         {
             onload(this.data);
         }
-    };
+    }
 
     resolveShapes(loadParams)
     {
@@ -130,7 +126,7 @@ class ResourceLoader
                 }
             }
         }
-    };
+    }
 
     resolveSkeletons(loadParams)
     {
@@ -154,7 +150,7 @@ class ResourceLoader
                 targetSkeletons[targetSkeletonName] = fileSkeleton;
             }
         }
-    };
+    }
 
     //
     // Resolve animations
@@ -228,7 +224,7 @@ class ResourceLoader
                 }
             }
         }
-    };
+    }
 
     //
     // resolveNodes
@@ -465,7 +461,7 @@ class ResourceLoader
 
         this.numReferencesPending += numReferences;
         //Utilities.log("total refs now " + this.numReferencesPending);
-    };
+    }
 
     //
     // loadPhysicsNodes
@@ -550,7 +546,7 @@ class ResourceLoader
                 }
             }
         }
-    };
+    }
 
     //
     // loadAreas
@@ -591,7 +587,7 @@ class ResourceLoader
             }
             targetAreas.push(fileArea);
         }
-    };
+    }
 
     //
     // resolve
@@ -660,7 +656,7 @@ class ResourceLoader
             this.endLoading(loadParams.onload);
         }
 
-    };
+    }
 
     //
     // load
@@ -686,7 +682,7 @@ class ResourceLoader
                 requestOwner: loadParams.request ? loadParams : TurbulenzEngine,
                 onload: dataReceived
             });
-    };
+    }
 
     // Constructor function
     static create() : ResourceLoader
@@ -697,5 +693,5 @@ class ResourceLoader
         rl.skeletonNames = {};
 
         return rl;
-    };
-};
+    }
+}

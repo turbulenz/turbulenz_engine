@@ -1038,6 +1038,7 @@ Plays the given sound. Returns a :ref:`SoundWrapper <soundwrapper>` object used 
 
 ``background`` (Optional)
     A boolean indicating the sound to be played is a background sound. If set to true, the ``v3Position``, ``minDistance``, ``maxDistance`` and ``rollOff`` properties should not be set.
+    Stereo sounds are supported as background sounds.
 
     Defaults to ``false`` ::
 
@@ -1048,6 +1049,7 @@ Plays the given sound. Returns a :ref:`SoundWrapper <soundwrapper>` object used 
              pitch : 1,
              looping : true
         });
+
 
 Returns a :ref:`SoundWrapper <soundwrapper>` object used to control the playback of the sound.
 

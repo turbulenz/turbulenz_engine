@@ -39,6 +39,23 @@ Releases the RenderBuffer resources, the object will be invalid after the method
 Properties
 ==========
 
+.. index
+    pair: RenderBuffer; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the RenderBuffer object.
+
+**Syntax** ::
+
+    var renderBufferId = renderBuffer.id;
+
+.. note:: Read Only
+
+
 .. index::
     pair: RenderBuffer; width
 

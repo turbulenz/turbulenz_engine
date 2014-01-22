@@ -39,11 +39,11 @@ def echo(message=''):
 def log(message):
     echo(' >> ' + message)
 
-COLORED_OUTPUT = sys.stdout.isatty() and SYSNAME != 'Windows'
+COLORED_OUTPUT = sys.stdout.isatty() and (SYSNAME != 'Windows' or 'ANSICON' in os.environ)
 
 def error(message):
     if COLORED_OUTPUT:
-        log('\033[31m[ERROR]\033[0m   - %s' % message)
+        log('\033[1m\033[31m[ERROR]\033[0m   - %s' % message)
     else:
         log('[ERROR]   - %s' % message)
 
@@ -195,7 +195,7 @@ def check_documentation_links(build_path):
         for f in filenames:
             if os.path.splitext(f)[1] == '.html':
                 file_path = os.path.join(dirpath, f)
-                html_file = open(file_path, 'rt')
+                html_file = open(file_path, 'r')
                 html = html_file.read()
 
                 for regex in bad_link_regex:

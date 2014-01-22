@@ -3,12 +3,12 @@
 interface ArrayBuffer
 {
     slice(begin: number, end?: number): ArrayBuffer;
-};
+}
 
 // Uint8ClampedArray
 interface Uint8ClampedArray extends Uint8Array
 {
-};
+}
 declare var Uint8ClampedArray:
 {
     prototype: Uint8Array;
@@ -17,21 +17,21 @@ declare var Uint8ClampedArray:
     new (array: number[]): Uint8Array;
     new (buffer: ArrayBuffer, byteOffset?: number, length?: number): Uint8Array;
     BYTES_PER_ELEMENT: number;
-};
+}
 
 interface Float32Array
 {
     slice(s: number, e: number): Float32Array; // defined in vmath
     map(offset: number, numFloats: number): void;
-    unmap(): void;
+    unmap(writer: any): void;
     setData(data, offset?: number, numFloats?: number): void;
-};
+}
 
 // HTMLImageElement
-interface HTMLImageElement
-{
-    crossOrigin: string;
-};
+// interface HTMLImageElement
+// {
+//     crossOrigin: string;
+// }
 
 // Window
 interface Window
@@ -76,8 +76,18 @@ interface Window
     AudioContext: any;
     webkitAudioContext: any;
 
-    opera: bool;
-};
+    opera: boolean;
+
+    webkitRequestAnimationFrame: any;
+    oRequestAnimationFrame: any;
+    mozRequestAnimationFrame: any;
+
+}
+
+interface WebSocket
+{
+    destroy?: () => void;
+}
 
 // Document
 interface Document
@@ -86,9 +96,13 @@ interface Document
     cancelFullScreen?: { (): void; };
     exitFullscreen?: { (): void; };
 
-    fullscreenEnabled?: bool;
-    mozFullScreen?: bool;
-    webkitIsFullScreen?: bool;
+    fullscreenEnabled?: boolean;
+    mozFullScreen?: boolean;
+    webkitIsFullScreen?: boolean;
+
+    fullscreenElement?: any;
+    mozFullScreenElement?: any;
+    webkitFullscreenElement?: any;
 
     pointerLockElement?: any;
     mozPointerLockElement?: any;
@@ -102,7 +116,7 @@ interface Document
     mozExitPointerLock?: { (element?: any) : void; };
     webkitExitPointerLock?: { (element?: any) : void; };
 
-};
+}
 
 // Navigator
 interface Navigator
@@ -113,34 +127,34 @@ interface Navigator
 
     pointer: // TODO: Where is this type documented?
     {
-        isLocked: bool;
+        isLocked: boolean;
         lock(any): void;
         unlock(): void;
     };
     webkitPointer:
     {
-        isLocked: bool;
+        isLocked: boolean;
         lock(any): void;
         unlock(): void;
     };
 
     language: string;
-};
+}
 
 interface HTMLVideoElement
 {
     webkitDecodedFrameCount: number;
     crossorigin: string;
 
-    //canPlayType(type: string): bool
-};
+    //canPlayType(type: string): boolean
+}
 
 interface HTMLAudioElement
 {
     mozSetup(channels: number, sampleRate: number);
-};
+}
 
-interface WebGLVideo
+interface HTMLCanvasElement
 {
-    elementAdded: bool;
-};
+
+}

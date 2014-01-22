@@ -1,0 +1,104 @@
+// Copyright (c) 2013-2014 Turbulenz Limited
+
+#include "particles-common.cgh"
+
+float3 acceleration;
+float drag;
+
+sampler2D noiseTexture = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    magFilter = Linear;
+    WrapS = Wrap;
+    WrapT = Wrap;
+};
+
+// strength of randomisation
+float3 randomizedAcceleration;
+
+float3 getAccelerationNoise(float2 uv, float t)
+{
+    // constants are randomised values as are choice of noise channels.
+    return (2.0 * tex2D(noiseTexture, uv + float2(0.97303011314943430, 0.19842534395866096) * t
+                                         + float2(0.84200346702709790, 0.59638088289648291)).zyx - 1.0
+           ) * randomizedAcceleration;
+}
+
+// --------------------------------------------------------------
+
+float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
+{
+    float2 particle = inParticle * regionSize;
+    float2 index = floor(particle / PARTICLE_DIM) * PARTICLE_DIM;
+    if (createdParticle(index))
+    {
+        // Newly created particle, no simulation to be performed.
+        return tex2D(creationState, inParticle * creationScale);
+    }
+
+    float2 pIndex = index * invRegionSize;
+    if (getLife(previousState, particleRegionMap(pIndex), invTextureSize) <= 0)
+    {
+        // Dead particle, skip simulation
+        return tex2D(previousState, particleRegionMap(inParticle));
+    }
+
+    float2 slot = getSlot(particle);
+    if (slot.x <= 1)
+    {
+        // position
+        float p = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
+        float2 vt = inParticle + float2(invRegionSize.x, 0);
+        float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(vt)));
+        return encodeSignedFloat(p + (v * timeStep * maxSpeed / halfExtents[slot.y]) + shift[slot.y]);
+    }
+    else if (slot.x <= 2)
+    {
+        // velocity
+        float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
+        float a = acceleration[slot.y];
+        float4 data = getData(previousState, particleRegionMap(pIndex), invTextureSize);
+        if (bitSet(data.w, BIT1))
+        {
+            float2 noiseUV = decodeByteUnsignedFloat2(data.z);
+
+            float animTime = getAnimationTime(previousState, particleRegionMap(pIndex), invTextureSize,
+                                              getLifePair(previousState, particleRegionMap(pIndex), invTextureSize));
+
+            a += getAccelerationNoise(noiseUV, animTime)[slot.y];
+        }
+        float d = 1.0 - min(1.0, timeStep * drag);
+        return encodeSignedFloat(d * (v + a * timeStep / maxSpeed));
+    }
+    else
+    {
+        if (slot.y <= 1)
+        {
+            // life
+            float4 pix = tex2D(previousState, particleRegionMap(inParticle));
+            float life = decodeHalfUnsignedFloat(pix.zw);
+            return float4(pix.xy, encodeHalfUnsignedFloat(life - lifeStep));
+        }
+        else
+        {
+            // user store.
+            return tex2D(previousState, particleRegionMap(inParticle));
+        }
+    }
+}
+
+// --------------------------------------------------------------
+
+technique update
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_update();
+        FragmentProgram = compile latest fp_update_state();
+    }
+}
+

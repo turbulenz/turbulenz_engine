@@ -21,7 +21,7 @@ class Observer
         }
 
         subscribers.push(subscriber);
-    };
+    }
 
     unsubscribe(subscriber)
     {
@@ -35,12 +35,12 @@ class Observer
                 break;
             }
         }
-    };
+    }
 
     unsubscribeAll(/* subscriber */)
     {
         this.subscribers.length = 0;
-    };
+    }
 
     // this function can take any number of arguments
     // they are passed on to the subscribers
@@ -67,12 +67,12 @@ class Observer
                 length = subscribers.length;
             }
         }
-    };
+    }
 
     static create(): Observer
     {
         var observer = new Observer();
         observer.subscribers = [];
         return observer;
-    };
-};
+    }
+}

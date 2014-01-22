@@ -1,7 +1,5 @@
 // Copyright (c) 2013 Turbulenz Limited
 
-/// <reference path="base.d.ts" />
-
 // -----------------------------------------------------------------------------
 // MathDevice
 // -----------------------------------------------------------------------------
@@ -321,7 +319,7 @@ interface MathDevice
     isInsidePlanesSphere(c, r, planes);
     isInsidePlanesBox(c, h, planes);
     extractIntersectingPlanes(extents, planes);
-};
+}
 
 // -----------------------------------------------------------------------------
 // GraphicsDevice
@@ -331,11 +329,12 @@ interface Pass
 {
     name: string;
     parameters: any;
-};
+}
 
 interface Technique
 {
-    initialized: bool;
+    id: number;
+    initialized: boolean;
     shader: Shader;
     name: string;
 
@@ -344,7 +343,7 @@ interface Technique
 
     numParameters: number;
     device: any;
-};
+}
 
 interface ShaderParameter
 {
@@ -352,36 +351,27 @@ interface ShaderParameter
     type    : string;
     rows    : number;
     columns : number;
-};
+}
 
 interface Shader
 {
-    gd             : GraphicsDevice;
+    id             : number;
     name           : string;
-    initialized    : bool;
-    programs       : any;
-    linkedPrograms : any;
-
     numTechniques  : number;
-    techniques     : {}; // Technique[];
-
     numParameters  : number;
-    parameters     : any;
-
-    samplers       : any;
 
     // Methods
 
     getTechnique(name: any): Technique;
-    setTechnique(technique: Technique): void;
     getParameter(index: number): ShaderParameter;
     getParameter(name: string): ShaderParameter;
-};
+    destroy();
+}
 
 interface TechniqueParameters
 {
     [paramName: string]: any;
-};
+}
 
 interface ParameterWriteIterator
 {
@@ -392,17 +382,18 @@ interface ParameterWriteIterator
 interface TechniqueParameterBuffer
 {
     numFloats: number;
-    dynamic: bool;
+    dynamic: boolean;
     data: number[];
 
     map(firstValueToMap?: number,
         numValuesToMap?: number): ParameterWriteIterator;
     unmap(writer: ParameterWriteIterator): void;
     setData(data: any, offset: number, numVertices: number): void;
-};
+}
 
 interface RenderBuffer
 {
+    id     : number;
     width  : number;
     height : number;
     format : number;
@@ -410,7 +401,7 @@ interface RenderBuffer
     // Methods
 
     destroy();
-};
+}
 
 interface TextureParameters
 {
@@ -423,32 +414,33 @@ interface TextureParameters
 
     name?: string;
     depth?: number;
-    mipmaps?: bool;
-    cubemap?: bool;
-    renderable?: bool;
-    dynamic?: bool;
+    mipmaps?: boolean;
+    cubemap?: boolean;
+    renderable?: boolean;
+    dynamic?: boolean;
     data?: any;
-};
+}
 
 interface Texture
 {
+    id: number;
     name: string;
     width: number;
     height: number;
     depth: number;
     format: number;
     numDataLevels: number;
-    mipmaps: bool;
-    cubemap: bool;
-    dynamic: bool;
-    renderable: bool;
+    mipmaps: boolean;
+    cubemap: boolean;
+    dynamic: boolean;
+    renderable: boolean;
 
     // Methods
 
-    setData(data: any);
+    setData(data: any, face?: number, level?: number, x?:number, y?:number, w?:number, h?:number);
     typedArrayIsValid(array: any);
     destroy();
-};
+}
 
 interface RenderTargetParameters
 {
@@ -458,10 +450,12 @@ interface RenderTargetParameters
     colorTexture3? : Texture;
     depthBuffer?   : RenderBuffer;
     depthTexture?  : RenderBuffer;
-};
+    face?          : number;
+}
 
 interface RenderTarget
 {
+    id            : number;
     width         : number;
     height        : number;
     face          : number;
@@ -475,54 +469,61 @@ interface RenderTarget
     // Methods
 
     destroy();
-};
+}
 
 interface Semantics
 {
     length: number;
     [index: number]: any;
-};
+}
+
+interface VertexAttribute
+{
+    stride: number;
+    numComponents: number;
+    format: any;
+}
 
 interface VertexBufferParameters
 {
     numVertices : number;
     attributes  : any[];
 
-    dynamic?    : bool;
-    transient?  : bool;
+    dynamic?    : boolean;
+    transient?  : boolean;
     data?       : any; // ArrayBufferView or Array
-};
+}
 
 interface VertexWriteIterator
 {
     (... data: any[]): void;
-    write(... data: any[]): void;
-};
+    write: (... data: any[]) => void;
+}
 
 interface VertexBuffer
 {
+    id          : number;
     numVertices : number;
     usage       : number;
     stride      : number;
-    transient   : bool;
-    dynamic     : bool;
+    transient   : boolean;
+    dynamic     : boolean;
 
     // Methods
 
     setData(data: any, offset: number, numVertices: number): void;
-    setAttributes(attributes: number[]): number; // Returns stride
     map(offset?: number, count?: number): VertexWriteIterator;
     unmap(writer: VertexWriteIterator): void;
     destroy(): void;
-};
+}
 
 interface IndexBufferParameters
 {
     numIndices : number;
     format     : any; // gd.INDEXFORMAT_USHORT (number) or 'USHORT' (string)
 
-    dynamic?   : bool;
-    transient? : bool;
+    dynamic?   : boolean;
+    transient? : boolean;
     data?      : any; // ArrayBufferView or Array
 }
 
@@ -531,15 +532,16 @@ interface IndexWriteIterator
 {
     (... data: any[]): void;
     write(... data: any[]): void;
-};
+}
 
 interface IndexBuffer
 {
+    id         : number;
     numIndices : number;
     format     : number;
     stride     : number;
     length     : number;
-    dynamic    : bool;
+    dynamic    : boolean;
     usage      : number;
 
     // Methods
@@ -549,7 +551,7 @@ interface IndexBuffer
     unmap(writer: IndexWriteIterator): void;
 
     destroy(): void;
-};
+}
 
 interface DrawParameters
 {
@@ -560,7 +562,7 @@ interface DrawParameters
     firstIndex      : number;
     sortKey         : number;
     userData        : any;
-    [index: number] : any; // TODO
+    [idx: number]   : any; // TODO
 
     // Methods
 
@@ -573,33 +575,33 @@ interface DrawParameters
     getVertexBuffer(index: number): VertexBuffer;
     getSemantics(index: number): Semantics;
     getOffset(index: number): number;
-};
+}
 
 interface OcclusionQuery
 {
-};
+}
 
 interface VideoParameters
 {
     src: string;
-    looping?: bool;
+    looping?: boolean;
     onload: { (v: Video): void; };
-};
+}
 
 interface Video
 {
-    looping : bool;
-    playing : bool;
-    paused  : bool;
+    looping : boolean;
+    playing : boolean;
+    paused  : boolean;
     tell    : number;
 
     // Methods
 
-    play(position?: number): bool;
-    stop(): bool;
-    pause(): bool;
-    resume(position?: number): bool;
-    rewind(): bool;
+    play(position?: number): boolean;
+    stop(): boolean;
+    pause(): boolean;
+    resume(position?: number): boolean;
+    rewind(): boolean;
     destroy(): void;
 }
 
@@ -611,6 +613,7 @@ interface GraphicsDevice
     PIXELFORMAT_L8A8         : number;
     PIXELFORMAT_R5G5B5A1     : number;
     PIXELFORMAT_R5G6B5       : number;
+    PIXELFORMAT_R4G4B4A4     : number;
     PIXELFORMAT_R8G8B8A8     : number;
     PIXELFORMAT_R8G8B8       : number;
     PIXELFORMAT_D24S8        : number;
@@ -712,11 +715,11 @@ interface GraphicsDevice
     width: number;
     height: number;
     extensions: string;
-    shadingLanguageVersion: number;
+    shadingLanguageVersion: string;
 
-    fullscreen: bool;
+    fullscreen: boolean;
 
-    rendererVersion: number;
+    rendererVersion: string;
     renderer: string;
     vendor: string;
     videoRam: number;
@@ -739,18 +742,18 @@ interface GraphicsDevice
     createOcclusionQuery(): OcclusionQuery;
     createVideo(params: VideoParameters): Video;
 
-    isSupported(feature: string): bool;
+    isSupported(feature: string): boolean;
     maxSupported(feature: string): number;
 
-    requestFullScreen(fullscreen: bool): bool;
+    requestFullScreen(fullscreen: boolean): boolean;
 
-    beginFrame(): bool;
+    beginFrame(): boolean;
     endFrame(): void;
 
-    beginRenderTarget(renderTarget: RenderTarget): bool;
+    beginRenderTarget(renderTarget: RenderTarget): boolean;
     endRenderTarget(): void;
 
-    beginOcclusionQuery(occlusionQuery: OcclusionQuery): bool;
+    beginOcclusionQuery(occlusionQuery: OcclusionQuery): boolean;
     endOcclusionQuery(): void;
 
     clear(clearColor: number[], clearDepth?: number,
@@ -774,9 +777,12 @@ interface GraphicsDevice
     endDraw(writer: VertexWriteIterator): void;
 
     loadTexturesArchive(params: any): void;
-    getScreenshot(compress: bool, x?: number, y?: number,
-                  width?: number, height?: number): number[];
-};
+
+    // Returns 'any', since the output may be a data url (string) in
+    // the case of compressed images, or number[].
+    getScreenshot(compress: boolean, x?: number, y?: number,
+                  width?: number, height?: number): any;
+}
 
 // -----------------------------------------------------------------------------
 // PhysicsDevice
@@ -784,18 +790,18 @@ interface GraphicsDevice
 
 interface PhysicsShape
 {
+    type: string;
     margin: number;
     radius: number;
     halfExtents: any; // v3
     inertia: any; // v3
-    type: string;
-};
+}
 
 interface PhysicsTriangleArray
 {
     vertices : Float32Array; // getter for _private.vertices
     indices  : any;          // Uint16Array / Uint32Array
-};
+}
 
 interface PhysicsCollisionObject
 {
@@ -806,14 +812,14 @@ interface PhysicsCollisionObject
     userData    : any;
     friction    : number;
     restitution : number;
-    kinematic   : bool;
+    kinematic   : boolean;
 
     calculateTransform(transfrom: any, // m43
                        origin: any // v3 / v4
                       ): void;
-    calculateExtents(): void;
+    calculateExtents(extents: any): void;
     clone(): PhysicsCollisionObject;
-};
+}
 
 interface PhysicsRigidBody extends PhysicsCollisionObject
 {
@@ -821,20 +827,20 @@ interface PhysicsRigidBody extends PhysicsCollisionObject
     angularVelocity : any; // v3
     linearDamping   : number;
     angularDamping  : number;
-    active          : bool;
+    active          : boolean;
     mass            : number;
     inertia         : any; // v3
 
     clone(): PhysicsRigidBody;
-};
+}
 
 interface PhysicsCharacter
 {
     velocity      : any; // v3
     position      : any; // v3
-    onGround      : bool;
-    crouch        : bool;
-    dead          : bool;
+    onGround      : boolean;
+    crouch        : boolean;
+    dead          : boolean;
     maxJumpHeight : number;
     userData      : any;
 
@@ -843,7 +849,7 @@ interface PhysicsCharacter
                       )          : any; // m43
     calculateExtents(extents: any /* array?  typed array? */): void;
     jump(): void;
-};
+}
 
 interface PhysicsConstraint
 {
@@ -852,7 +858,7 @@ interface PhysicsConstraint
     transformA: any; // m43
     transformB: any; // m43
     type: string;
-};
+}
 
 interface PhysicsPoint2PointConstraint extends PhysicsConstraint
 {
@@ -867,7 +873,7 @@ interface PhysicsHingeConstraint extends PhysicsConstraint
 {
     low: number;
     high: number;
-};
+}
 
 interface PhysicsConeTwistConstraint extends PhysicsConstraint
 {
@@ -875,7 +881,7 @@ interface PhysicsConeTwistConstraint extends PhysicsConstraint
     swingSpan2: number;
     twistSpan: number;
     twistAngle: number;
-};
+}
 
 interface Physics6DOFConstraint extends PhysicsConstraint
 {
@@ -883,7 +889,7 @@ interface Physics6DOFConstraint extends PhysicsConstraint
     linearUpperLimit: any; // v3
     angularLowerLimit: any; // v3
     angularUpperLimit: any; // v3
-};
+}
 
 interface PhysicsSliderConstraint extends PhysicsConstraint
 {
@@ -891,7 +897,7 @@ interface PhysicsSliderConstraint extends PhysicsConstraint
     linearUpperLimit: number;
     angularLowerLimit: number;
     angularUpperLimit: number;
-};
+}
 
 interface RayTestParameters
 {
@@ -900,12 +906,12 @@ interface RayTestParameters
     group?: number;
     mask?: number;
     exclude?: PhysicsCollisionObject;
-};
+}
 
 interface ConvexSweepTestParameters extends RayTestParameters
 {
     shape: PhysicsShape;
-};
+}
 
 interface RayHit
 {
@@ -913,7 +919,7 @@ interface RayHit
     body            : PhysicsRigidBody;
     hitPoint        : any; // v3
     hitNormal       : any; // v3
-};
+}
 
 interface PhysicsWorld
 {
@@ -975,7 +981,7 @@ interface PhysicsDevice
     create6DOFConstraint(params) : Physics6DOFConstraint;
     createSliderConstraint(params) : PhysicsSliderConstraint;
     createCharacter(params) : PhysicsCharacter;
-};
+}
 
 // -----------------------------------------------------------------------------
 // SoundDevice
@@ -985,12 +991,12 @@ interface PhysicsDevice
 
 // Should return an Array or ArrayBufferView
 interface SoundDataFn { (amplitude: number, frequency: number,
-                         wavefrequency: number, length: number): any; };
+                         wavefrequency: number, length: number): any; }
 
 interface SoundParameters
 {
     src?        : string;
-    uncompress? : bool;
+    uncompress? : boolean;
 
     name?       : string;
     data?       : SoundDataFn;
@@ -998,7 +1004,7 @@ interface SoundParameters
     frequency?  : number;
 
     onload?     : { (sound: Sound): void; };
-};
+}
 
 interface Sound
 {
@@ -1007,11 +1013,10 @@ interface Sound
     channels   : number;
     bitrate    : number;
     length     : number;
-    compressed : bool;
-
+    compressed : boolean;
 
     destroy(): void;
-};
+}
 
 // SoundEffect
 
@@ -1041,7 +1046,7 @@ interface SoundEffectParameters
     roomRollOffFactor?   : number;
     airAbsorptionGainHF? : number;
     decayHFLimit?        : number;
-};
+}
 
 interface SoundEffect
 {
@@ -1059,13 +1064,13 @@ interface SoundEffect
     lateReverbDelay: number;
     roomRollOffFactor: number;
     airAbsorptionGainHF: number;
-    decayHFLimit: bool;
+    decayHFLimit: boolean;
     delay: number;
     lrdelay: number;
     damping: number;
     feedback: number;
     spread: number;
-};
+}
 
 // SoundEffectSlot
 
@@ -1073,14 +1078,14 @@ interface SoundEffectSlotParameters
 {
     effect : SoundEffect;
     gain   : number;
-};
+}
 
 interface SoundEffectSlot
 {
     effect            : SoundEffect;
     gain              : number;
-    auxiliarySendAuto : bool;
-};
+    auxiliarySendAuto : boolean;
+}
 
 // SoundFilter
 
@@ -1092,7 +1097,7 @@ interface SoundFilterParameters
     // Lowpass
     gain?   : number;
     gainHF? : number;
-};
+}
 
 interface SoundFilter
 {
@@ -1100,7 +1105,7 @@ interface SoundFilter
     type: string;
     gain: number;
     gainHF: number;
-};
+}
 
 // SoundSource
 
@@ -1114,10 +1119,10 @@ interface SoundSourceParameters
     minDistance? : number;
     maxDistance? : number;
     rollOff?     : number;
-    relative?    : bool;
-    looping?     : bool;
+    relative?    : boolean;
+    looping?     : boolean;
     pitch?       : number;
-};
+}
 
 interface SoundSource
 {
@@ -1128,26 +1133,26 @@ interface SoundSource
     minDistance : number;
     maxDistance : number;
     rollOff     : number;
-    relative    : bool;
-    looping     : bool;
+    relative    : boolean;
+    looping     : boolean;
     pitch       : number;
-    playing     : bool;
-    paused      : bool;
+    playing     : boolean;
+    paused      : boolean;
     tell        : number;
 
-    play(sound: Sound, position?: number): bool;
+    play(sound: Sound, position?: number): boolean;
     stop(): void;
     pause(): void;
-    resume(position?: number): bool;
-    rewind(): bool;
-    seek(seek: number): bool;
+    resume(position?: number): boolean;
+    rewind(): boolean;
+    seek(seek: number): boolean;
     clear(): void;
     setAuxiliarySendFilter(index: number,
                            effectSlot: SoundEffectSlot,
-                           filter: SoundFilter): bool;
-    setDirectFilter(filter: SoundFilter): bool;
+                           filter: SoundFilter): boolean;
+    setDirectFilter(filter: SoundFilter): boolean;
     destroy(): void;
-};
+}
 
 // SoundArchiveParameters
 
@@ -1155,9 +1160,9 @@ interface SoundArchiveParameters
 {
     src         : string;
     onsoundload : { (sound: Sound): void; };
-    onload      : { (success: bool, status: number): void; };
-    uncompress  : bool;
-};
+    onload      : { (success: boolean, status: number): void; };
+    uncompress  : boolean;
+}
 
 // SoundDevice
 
@@ -1187,8 +1192,8 @@ interface SoundDevice
     createEffectSlot(params: SoundEffectSlotParameters): SoundEffectSlot;
     createFilter(params: SoundFilterParameters): SoundFilter;
     update(): void;
-    isSupported(feature: string): bool;
-};
+    isSupported(feature: string): boolean;
+}
 
 // -----------------------------------------------------------------------------
 // NetworkDevice
@@ -1196,9 +1201,9 @@ interface SoundDevice
 
 interface NetworkDevice
 {
-    createWebSocket(url: string): WebSocket;
+    createWebSocket(url: string, protocol?: string): WebSocket;
     update(): void;
-};
+}
 
 // -----------------------------------------------------------------------------
 // InputDevice
@@ -1209,34 +1214,43 @@ interface TouchEvent
     gameTouches: any[];
     touches: any[];
     changedTouches: any;
-};
+}
 
 interface InputDeviceEventListener
 {
     (...arg0: any[]): void; //?, arg1?, arg2?, arg3?, arg4?, arg5?): void;
-};
+}
+
+interface InputDeviceUnicodeResult
+{
+    [keyCode: number]: string;
+}
 
 interface InputDevice
 {
-    keyCodes   : any; // { [keyName: string]: number; };
-    mouseCodes : any; // { [keyName: string]: number; };
-    padCodes   : any; // { [keyName: string]: number; };
+    // These maps are 'any' so that application code can do any do
+    // keyCodes.A or keyCodes['A'].  The string indexer doesn't allow
+    // the first style.
+
+    keyCodes   : any; // { [keyName: string]: number; }
+    mouseCodes : any; // { [keyName: string]: number; }
+    padCodes   : any; // { [keyName: string]: number; }
 
     update(): void;
     addEventListener(eventType: string,
                      eventListener: InputDeviceEventListener): void;
     removeEventListener(eventType: string,
                         eventListener: InputDeviceEventListener): void;
-    lockMouse(): bool;
-    unlockMouse(): bool;
-    isLocked(): bool;
-    hideMouse(): bool;
-    showMouse(): bool;
-    isHidden(): bool;
-    isFocused(): bool;
-    convertToUnicode(keyCodes: number[]): string[];
-    isSupported(feature: string): bool;
-};
+    lockMouse(): boolean;
+    unlockMouse(): boolean;
+    isLocked(): boolean;
+    hideMouse(): boolean;
+    showMouse(): boolean;
+    isHidden(): boolean;
+    isFocused(): boolean;
+    convertToUnicode(keyCodes: number[]): InputDeviceUnicodeResult;
+    isSupported(feature: string): boolean;
+}
 
 // -----------------------------------------------------------------------------
 // TurbulenzEngine
@@ -1260,27 +1274,28 @@ interface SystemInfo
     platformProfile   : string;
 
     userLocale        : string;
-};
+}
 
 interface TurbulenzRequestCallback
 {
     (asset: any, status: number): void;
-};
+}
 
 interface TurbulenzEngine
 {
-    version            : string;
-    time               : number;
+    version              : string;
+    time                 : number;
 
-    onload             : { (engine: TurbulenzEngine): void; };
-    onunload           : { (): void; };
-    onerror            : { (msg: string): void; };
-    onwarning          : { (msg: string): void; };
+    onload               : { (engine: TurbulenzEngine): void; };
+    onunload             : { (): void; };
+    onerror              : { (msg: string): void; };
+    onwarning            : { (msg: string): void; };
+    onperformancewarning : { (msg: string): void; };
 
-    canvas?            : any;
-    VMath?             : any;
+    canvas?              : any;
+    VMath?               : any;
 
-    encryptionEnabled? : bool;
+    encryptionEnabled?   : boolean;
 
     // Methods
 
@@ -1299,7 +1314,7 @@ interface TurbulenzEngine
     encrypt(plainText: string): string;
     decrypt(encrypted: string): string;
     generateSignature(str: string): string;
-    verifySignature(originalStr: string, originalSignature: string): bool;
+    verifySignature(originalStr: string, originalSignature: string): boolean;
 
     getSystemInfo(): SystemInfo;
 
@@ -1330,7 +1345,7 @@ interface TurbulenzEngine
 
     unload(): void;
     isUnloading(): void;
-};
+}
 
 // -----------------------------------------------------------------------------
 // TurbulenzEngine global

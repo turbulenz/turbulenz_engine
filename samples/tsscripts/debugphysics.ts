@@ -471,5 +471,5 @@ class DebugConstraint
         };
 
         return debug;
-    };
-};
+    }
+}

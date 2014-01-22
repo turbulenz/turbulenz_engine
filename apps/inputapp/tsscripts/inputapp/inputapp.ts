@@ -13,22 +13,9 @@
 /*global Canvas: false*/
 /*global HTMLControls: false*/
 
-/// <reference path="../../../../jslib-modular/turbulenz.d.ts" />
-/// <reference path="../../../../jslib-modular/fontmanager.d.ts" />
-/// <reference path="../../../../jslib-modular/canvas.d.ts" />
-/// <reference path="../../../../jslib-modular/utilities.d.ts" />
-/// <reference path="../../../../jslib-modular/servicedatatypes.d.ts" />
-/// <reference path="../../../../jslib-modular/services.d.ts" />
-
-/// <reference path="../../../../external/definitelytyped/jquery/jquery-1.8.d.ts" />
-/// <reference path="../../scripts/htmlcontrols.d.ts" />
-
-/// <reference path="point.ts" />
-
 class Application
 {
     inputDevice: InputDevice;
-    mathDevice: MathDevice;
     graphicsDevice: GraphicsDevice;
     canvas: Canvas;
     canvas2dContext: CanvasContext;
@@ -36,16 +23,16 @@ class Application
     mappingTable: any;
     fps: number;
 
-    isHovering: bool;
-    isFocused: bool;
-    isClicking: bool;
-    isMouseOver: bool;
-    isMouseMove: bool;
-    isMouseWheel: bool;
-    isPadMove: bool;
-    isCanvas: bool;
-    hasPadSupport: bool;
-    hasShutDown: bool;
+    isHovering: boolean;
+    isFocused: boolean;
+    isClicking: boolean;
+    isMouseOver: boolean;
+    isMouseMove: boolean;
+    isMouseWheel: boolean;
+    isPadMove: boolean;
+    isCanvas: boolean;
+    hasPadSupport: boolean;
+    hasShutDown: boolean;
 
     // Text
     textSize                = "32px";
@@ -110,13 +97,13 @@ class Application
 
         // Logging and control related vars
     htmlControls: HTMLControls;
-    logKeyboardInput: bool;
-    logMouseButtonInput: bool;
-    logMouseOverInput: bool;
-    logMouseMoveInput: bool;
-    logMouseWheelInput: bool;
-    logPadButtonInput: bool;
-    logPadMoveInput: bool;
+    logKeyboardInput: boolean;
+    logMouseButtonInput: boolean;
+    logMouseOverInput: boolean;
+    logMouseMoveInput: boolean;
+    logMouseWheelInput: boolean;
+    logPadButtonInput: boolean;
+    logPadMoveInput: boolean;
 
     // Colors
     defaultTextColor        = "#FFFFFF";
@@ -172,7 +159,7 @@ class Application
 
     gameSession: GameSession;
     intervalID: number;
-    hasShutdown: bool;
+    hasShutdown: boolean;
 
     // Initialize the application
     init()
@@ -201,13 +188,13 @@ class Application
         ];
 
         this.enterCallbackChain(this, creationFunctions);
-    };
+    }
 
     // Update function called in main loop
     update()
     {
         this.inputDevice.update();
-    };
+    }
 
     // Render function called in main loop
     render()
@@ -232,7 +219,7 @@ class Application
             // End frame
             graphicsDevice.endFrame();
         }
-    };
+    }
 
     renderCanvas()
     {
@@ -271,7 +258,7 @@ class Application
         this.drawCursor();
 
         this.drawTouches();
-    };
+    }
 
     drawText(text: string, xCoord: number, yCoord: number, color?)
     {
@@ -284,7 +271,7 @@ class Application
 
         canvas2dContext.fillStyle = color;
         canvas2dContext.fillText(text, xCoord, yCoord);
-    };
+    }
 
     drawEventText()
     {
@@ -395,7 +382,7 @@ class Application
         this.drawText((this.touchesDetectedText + numberOfTouches),
                       this.touchesTextOffset.x,
                       this.touchesTextOffset.y);
-    };
+    }
 
     drawFocusBorder()
     {
@@ -413,7 +400,7 @@ class Application
         canvas2dContext.lineTo(0, 0);
         canvas2dContext.closePath();
         canvas2dContext.stroke();
-    };
+    }
 
     drawPadMove()
     {
@@ -499,7 +486,7 @@ class Application
                                  (rightTriggerPosition.y - rightTriggerHeight),
                                  triggerWidth, rightTriggerHeight);
         canvas2dContext.closePath();
-    };
+    }
 
     drawCursor()
     {
@@ -541,7 +528,7 @@ class Application
                                       (cursorImage.height * cursorScalar));
             canvas2dContext.restore();
         }
-    };
+    }
 
     drawTouches()
     {
@@ -559,7 +546,7 @@ class Application
             touchColor = this.getTouchColor(touch.identifier);
             this.drawTouch(touch, touchColor);
         }
-    };
+    }
 
     getTouchColor(touchIndex)
     {
@@ -573,7 +560,7 @@ class Application
         {
             return '#' + ('000000' + Math.floor((1 / touchIndex) * 0xFFFFFF).toString(16)).substr(-6);
         }
-    };
+    }
 
     drawTouch(touch, color)
     {
@@ -603,7 +590,7 @@ class Application
             canvas2dContext.stroke();
         }
         canvas2dContext.restore();
-    };
+    }
 
     drawLockButton()
     {
@@ -631,7 +618,7 @@ class Application
         this.drawText(buttonText, textPositionX, textPositionY);
 
         canvas2dContext.textBaseline = oldVaseline;
-    };
+    }
 
     // Creates and registers the html controls
     setupHtmlControls()
@@ -758,7 +745,7 @@ class Application
         }
 
         htmlControls.register();
-    };
+    }
 
     // Writes text to element specified
     writeTextContent(element, value)
@@ -784,7 +771,7 @@ class Application
                 element.innerText = value;
             }
         }
-    };
+    }
 
     // Outputs the user's locale to the page
     writeLocale()
@@ -800,22 +787,19 @@ class Application
 
             this.writeTextContent(localeDiv, "Locale: " + locale);
         }
-    };
+    }
 
     // Create the device interfaces required
     createDevices(canvas)
     {
         var graphicsDevice;
-        var mathDevice;
         var inputDevice;
-        var mathDeviceParameters        = {};
         var inputDeviceParameters       = {};
         var graphicsDeviceParameters    =
         {
             multisample : 4
         };
 
-        mathDevice = TurbulenzEngine.createMathDevice(mathDeviceParameters);
         inputDevice = TurbulenzEngine.createInputDevice(inputDeviceParameters);
 
         if (!this.isCanvas)
@@ -829,7 +813,7 @@ class Application
                 return false;
             }
 
-            this.canvas             = Canvas.create(graphicsDevice, mathDevice);
+            this.canvas             = Canvas.create(graphicsDevice);
             this.canvas2dContext    = this.canvas.getContext('2d');
         }
         else
@@ -840,14 +824,13 @@ class Application
 
         this.graphicsDevice = graphicsDevice;
         this.inputDevice    = inputDevice;
-        this.mathDevice     = mathDevice;
 
         this.keyCodes   = inputDevice.keyCodes;
         this.mouseCodes = inputDevice.mouseCodes;
         this.padCodes   = inputDevice.padCodes;
 
         return true;
-    };
+    }
 
     // Creates the reverse control code maps used for console output
     createReverseControlCodeMaps()
@@ -885,17 +868,17 @@ class Application
                 intToPadCode[padCodes[padCode]] = padCode;
             }
         }
-    };
+    }
 
     // Checks for xbox 360 gamepad support
-    getPadSupport(): bool
+    getPadSupport(): boolean
     {
         var systemInfo      = TurbulenzEngine.getSystemInfo();
         var isWindows       = (-1 !== systemInfo.osName.indexOf("Windows"));
         var hasPadSupport   = (isWindows);
 
         return hasPadSupport;
-    };
+    }
 
     // Adds onKeyDown functions to inputDevice
     createInputCallbacks()
@@ -927,7 +910,7 @@ class Application
         inputDevice.addEventListener('touchleave', this.onTouchLeave.bind(this));
         inputDevice.addEventListener('touchmove', this.onTouchMove.bind(this));
         inputDevice.addEventListener('touchcancel', this.onTouchCancel.bind(this));
-    };
+    }
 
     onKeyDown(controlCode)
     {
@@ -946,7 +929,7 @@ class Application
         }
 
         this.key = keyCode;
-    };
+    }
 
     onKeyUp(controlCode)
     {
@@ -1004,7 +987,7 @@ class Application
         {
             this.key = "";
         }
-    };
+    }
 
     onMouseDown(controlCode, x, y)
     {
@@ -1022,7 +1005,7 @@ class Application
 
         this.mouseButton = controlCode;
         this.isClicking = true;
-    };
+    }
 
     onMouseUp(controlCode, x, y)
     {
@@ -1055,7 +1038,7 @@ class Application
 
         this.mouseButton = "";
         this.isClicking = false;
-    };
+    }
 
     onMouseOver(x, y)
     {
@@ -1070,7 +1053,7 @@ class Application
         this.mousePosition.y = y;
 
         this.isMouseOver = true;
-    };
+    }
 
     onMouseMove(deltaX, deltaY)
     {
@@ -1085,7 +1068,7 @@ class Application
         this.mouseDelta.y = deltaY;
 
         this.isMouseMove = true;
-    };
+    }
 
     onMouseWheel(delta)
     {
@@ -1096,7 +1079,7 @@ class Application
 
         this.mouseWheelDelta = delta;
         this.isMouseWheel   = true;
-    };
+    }
 
     onPadDown(controlCode)
     {
@@ -1112,7 +1095,7 @@ class Application
 
         this.padButton = padCode;
         this.isClicking = true;
-    };
+    }
 
     onPadUp(controlCode)
     {
@@ -1126,7 +1109,7 @@ class Application
 
         this.padButton  = "";
         this.isClicking = false;
-    };
+    }
 
     onPadMove(lX, lY, lZ, rX, rY, rZ)
     {
@@ -1157,7 +1140,7 @@ class Application
         this.padMoveTextRZ  = "rZ = " + rZ;
 
         this.isPadMove = true;
-    };
+    }
 
     onMouseEnter()
     {
@@ -1165,31 +1148,31 @@ class Application
         this.inputDevice.hideMouse();
 
         Utilities.log("MouseEnter Event!");
-    };
+    }
 
     onMouseLeave()
     {
         this.isHovering = false;
         Utilities.log("MouseLeave Event!");
-    };
+    }
 
     onFocus()
     {
         Utilities.log("Focus Event!");
         this.isFocused = true;
-    };
+    }
 
     onBlur()
     {
         Utilities.log("Blur Event!");
         this.isFocused = false;
-    };
+    }
 
     onMouseLockLost()
     {
         Utilities.log("MouseLockLost Event!");
         this.inputDevice.hideMouse();
-    };
+    }
 
     onTouchStart(event)
     {
@@ -1208,7 +1191,7 @@ class Application
 
             ongoingTouches.push(touch);
         }
-    };
+    }
 
     onTouchEnd(event)
     {
@@ -1232,7 +1215,7 @@ class Application
 
             ongoingTouches.splice(touchIndex, 1);
         }
-    };
+    }
 
     onTouchEnter(event)
     {
@@ -1260,12 +1243,12 @@ class Application
                 ongoingTouches.push(touch);
             }
         }
-    };
+    }
 
     onTouchLeave(/* event */)
     {
         Utilities.log("TouchLeave event!");
-    };
+    }
 
     onTouchMove(event)
     {
@@ -1289,7 +1272,7 @@ class Application
 
             ongoingTouches.splice(touchIndex, 1, changedTouches[i]);
         }
-    };
+    }
 
     onTouchCancel(event)
     {
@@ -1313,7 +1296,7 @@ class Application
 
             ongoingTouches.splice(touchIndex, 1);
         }
-    };
+    }
 
     getTouchIndexFromId(id)
     {
@@ -1336,7 +1319,7 @@ class Application
         }
 
         return -1;
-    };
+    }
 
     // Calls functions in order
     enterCallbackChain(context, functions)
@@ -1377,13 +1360,13 @@ class Application
 
         // Start the async callback chain
         callNextFunction();
-    };
+    }
 
     // Create game session
     createGameSession(callback)
     {
         this.gameSession = TurbulenzServices.createGameSession(this.requestHandler, callback, this.errorCallback);
-    };
+    }
 
     createMappingTable(callback)
     {
@@ -1397,7 +1380,7 @@ class Application
 
         this.mappingTable = TurbulenzServices.createMappingTable(this.requestHandler, this.gameSession,
                                                                  callback, defaultMappingSettings, this.errorCallback);
-    };
+    }
 
     loadCursorImages(callback)
     {
@@ -1444,7 +1427,7 @@ class Application
                             }
                         });
 
-    };
+    }
 
     loadImage(imagePath, callback)
     {
@@ -1470,7 +1453,7 @@ class Application
             };
             imageLoading.src = this.mappingTable.getURL(imagePath);
         }
-    };
+    }
 
     postSetup()
     {
@@ -1496,7 +1479,7 @@ class Application
         }
 
         this.intervalID = TurbulenzEngine.setInterval(localMainStateLoop, (1000 / this.fps));
-    };
+    }
 
     mainStateLoop()
     {
@@ -1512,7 +1495,7 @@ class Application
         }
 
         this.resetState();
-    };
+    }
 
     // Attempts to free memory - called from onbeforeunload and/or
     // TurbulenzEngine.onUnload
@@ -1531,10 +1514,9 @@ class Application
             TurbulenzEngine.flush();
 
             this.inputDevice     = null;
-            this.mathDevice      = null;
             this.graphicsDevice  = null;
         }
-    };
+    }
 
     isOverLockButton(x, y)
     {
@@ -1543,7 +1525,7 @@ class Application
                  (x > this.lockButtonOffset.x + this.lockButtonWidth) ||
                  (y > this.lockButtonOffset.y + this.lockButtonHeight));
 
-    };
+    }
 
     resetState()
     {
@@ -1561,12 +1543,12 @@ class Application
         this.padRightThumbstick.x   = 0;
         this.padRightThumbstick.y   = 0;
         this.padRightTrigger        = 0;
-    };
+    }
 
     errorCallback(message)
     {
         Utilities.log(message);
-    };
+    }
 
     // Application constructor function
     static create(canvas)
@@ -1575,7 +1557,6 @@ class Application
 
         // Devices and canvas
         application.inputDevice     = null;
-        application.mathDevice      = null;
         application.graphicsDevice  = null;
         application.canvas          = canvas;
         application.canvas2dContext = null;
@@ -1694,7 +1675,7 @@ class Application
         application.logMouseMoveInput       = true;
         application.logMouseWheelInput      = true;
         application.logPadButtonInput       = true;
-        application.logPadMoveInput         = false;
+        application.logPadMoveInput         = true;
 
         // Colors
         application.defaultTextColor        = "#FFFFFF";
@@ -1748,5 +1729,5 @@ class Application
         application.cursorImageLocked   = null;
 
         return application;
-    };
-};
+    }
+}

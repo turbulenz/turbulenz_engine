@@ -163,6 +163,23 @@ Properties
 ==========
 
 .. index::
+    pair: VertexBuffer; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the VertexBuffer object.
+
+**Syntax** ::
+
+    var vertexBufferId = vertexBuffer.id;
+
+.. note:: Read Only
+
+
+.. index::
     pair: VertexBuffer; numVertices
 
 `numVertices`

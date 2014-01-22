@@ -156,6 +156,9 @@ Once you have installed the SDK on your computer:
         4) Navigate to `http://127.0.0.1:8070 <http://127.0.0.1:8070>`_ using your browser.
         5) You should see a page entitled 'local.turbulenz'.
 
+If you are using the Turbulenz open source repository the local server can be started by following the
+`setup instructions <https://github.com/turbulenz/turbulenz_local#installationsetup>`_.
+
 Playing an existing game/app
 ----------------------------
 The local server comes with preloaded content of samples and apps for you to explore.

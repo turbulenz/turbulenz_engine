@@ -1,18 +1,11 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="camera.ts" />
-/// <reference path="scene.ts" />
-/// <reference path="renderingcommon.ts" />
-/// <reference path="shadermanager.ts" />
-
 //
 // DefaultRendering
 //
 
 /*global TurbulenzEngine: false*/
 /*global renderingCommonCreateRendererInfoFn: false*/
-/*global renderingCommonGetTechniqueIndexFn: false*/
 /*global renderingCommonSortKeyFn: false*/
 /*global Effect: false*/
 
@@ -50,13 +43,14 @@ class DefaultRendering
     static nextRenderinfoID = 0;
     static nextSkinID = 0;
 
+    static v4One = new Float32Array([1.0, 1.0, 1.0, 1.0]);
     static identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
 
     md                        : MathDevice;
     sm                        : ShaderManager;
-    lightPositionUpdated      : bool;
+    lightPositionUpdated      : boolean;
     lightPosition             : any; // v3
-    eyePositionUpdated        : bool;
+    eyePositionUpdated        : boolean;
     eyePosition               : any; // v3
     globalTechniqueParameters : TechniqueParameters;
     globalTechniqueParametersArray : TechniqueParameters[];
@@ -66,14 +60,17 @@ class DefaultRendering
     scene                     : Scene;
 
     wireframeInfo             : any; // TODO
-    wireframe                 : bool;
+    wireframe                 : boolean;
 
     defaultPrepareFn          : { (geometryInstance: Geometry): void; };
     defaultUpdateFn           : { (camera: Camera): void; };
+    defaultSkinnedUpdateFn    : { (camera: Camera): void; };
+
+    loadTechniquesFn          : { (shaderManager: ShaderManager): void; };
 
     updateShader(/* sm */)
     {
-    };
+    }
 
     sortRenderablesAndLights(camera, scene)
     {
@@ -158,7 +155,7 @@ class DefaultRendering
         opaquePass.length = numOpaque;
         decalPass.length = numDecal;
         transparentPass.length = numTransparent;
-    };
+    }
 
     update(gd, camera, scene, currentTime)
     {
@@ -183,12 +180,12 @@ class DefaultRendering
         this.globalTechniqueParameters['time'] = currentTime;
         this.camera = camera;
         this.scene = scene;
-    };
+    }
 
-    updateBuffers(/* gd, deviceWidth, deviceHeight */): bool
+    updateBuffers(gd?, deviceWidth?, deviceHeight?): boolean
     {
         return true;
-    };
+    }
 
     draw(gd,
          clearColor,
@@ -240,7 +237,7 @@ class DefaultRendering
         }
 
         this.lightPositionUpdated = false;
-    };
+    }
 
     setGlobalLightPosition(pos)
     {
@@ -248,33 +245,33 @@ class DefaultRendering
         this.lightPosition[0] = pos[0];
         this.lightPosition[1] = pos[1];
         this.lightPosition[2] = pos[2];
-    };
+    }
 
     setGlobalLightColor(color)
     {
         this.globalTechniqueParameters['lightColor'] = color;
-    };
+    }
 
     setAmbientColor(color)
     {
         this.globalTechniqueParameters['ambientColor'] = color;
-    };
+    }
 
     setDefaultTexture(tex)
     {
         this.globalTechniqueParameters['diffuse'] = tex;
-    };
+    }
 
     setWireframe(wireframeEnabled, wireframeInfo)
     {
         this.wireframeInfo = wireframeInfo;
         this.wireframe = wireframeEnabled;
-    };
+    }
 
     getDefaultSkinBufferSize(): number
     {
         return this.defaultSkinBufferSize;
-    };
+    }
 
     destroy()
     {
@@ -283,7 +280,7 @@ class DefaultRendering
         delete this.lightPosition;
         delete this.eyePosition;
         delete this.passes;
-    };
+    }
 
     //
     // defaultPrepareFn
@@ -298,13 +295,22 @@ class DefaultRendering
         var sharedMaterial = geometryInstance.sharedMaterial;
         var techniqueParameters = geometryInstance.techniqueParameters;
 
+        if (!sharedMaterial.techniqueParameters.materialColor &&
+            !techniqueParameters.materialColor)
+        {
+            sharedMaterial.techniqueParameters.materialColor = DefaultRendering.v4One;
+        }
+
         if (!sharedMaterial.techniqueParameters.uvTransform &&
             !techniqueParameters.uvTransform)
         {
-            techniqueParameters.uvTransform = DefaultRendering.identityUVTransform;
+            sharedMaterial.techniqueParameters.uvTransform = DefaultRendering.identityUVTransform;
         }
 
-        drawParameters.technique = this.technique;
+        // NOTE: the way this functions is called, 'this' is an
+        // EffectPrepareObject.
+
+        drawParameters.technique = (<EffectPrepareObject><any>this).technique;
 
         drawParameters.setTechniqueParameters(0, sharedMaterial.techniqueParameters);
         drawParameters.setTechniqueParameters(1, techniqueParameters);
@@ -343,7 +349,7 @@ class DefaultRendering
         techniqueParameters.worldViewProjection = rendererInfo.worldViewProjection;
         techniqueParameters.lightPosition = rendererInfo.lightPosition;
 
-        var techniqueName = this.technique.name;
+        var techniqueName = (<EffectPrepareObject><any>this).technique.name;
         if (techniqueName.indexOf("flat") === -1 &&
             techniqueName.indexOf("lambert") === -1)
         {
@@ -359,19 +365,21 @@ class DefaultRendering
                 skinController.index = DefaultRendering.nextSkinID;
                 DefaultRendering.nextSkinID += 1;
             }
-            drawParameters.sortKey = -renderingCommonSortKeyFn(this.techniqueIndex,
-                                                               skinController.index,
-                                                               sharedMaterial.meta.materialIndex);
+            drawParameters.sortKey =
+                -renderingCommonSortKeyFn((<EffectPrepareObject><any>this).techniqueIndex,
+                                          skinController.index,
+                                          sharedMaterial.meta.materialIndex);
         }
         else
         {
-            drawParameters.sortKey = renderingCommonSortKeyFn(this.techniqueIndex,
-                                                              sharedMaterial.meta.materialIndex,
-                                                              rendererInfo.id);
+            drawParameters.sortKey =
+                renderingCommonSortKeyFn((<EffectPrepareObject><any>this).techniqueIndex,
+                                         sharedMaterial.meta.materialIndex,
+                                         rendererInfo.id);
         }
 
-        geometryInstance.renderUpdate = this.update;
-    };
+        geometryInstance.renderUpdate = (<EffectPrepareObject><any>this).update;
+    }
 
     //
     // Constructor function
@@ -586,7 +594,7 @@ class DefaultRendering
             }
         };
 
-        var loadTechniques = function loadTechniquesFn(shaderManager)
+        var loadTechniques = function loadTechniquesFn(shaderManager: ShaderManager): void
         {
             var that = this;
 
@@ -594,13 +602,15 @@ class DefaultRendering
             {
                 that.shader = shader;
                 that.technique = shader.getTechnique(that.techniqueName);
-                that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+                that.techniqueIndex = that.technique.id;
             };
             shaderManager.load(this.shaderName, callback);
         };
 
         dr.defaultPrepareFn = defaultPrepare;
         dr.defaultUpdateFn = defaultUpdate;
+        dr.defaultSkinnedUpdateFn = defaultSkinnedUpdate;
+        dr.loadTechniquesFn = loadTechniques;
 
         var effect;
         var effectTypeData;
@@ -1372,5 +1382,5 @@ class DefaultRendering
         effect.add(rigid, effectTypeData);
 
         return dr;
-    };
-};
+    }
+}

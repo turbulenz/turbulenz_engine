@@ -3,7 +3,7 @@
 /*global Geometry: false*/
 /*global GeometryInstance: false*/
 
-interface Particle
+interface EmitterParticle
 {
     velocity    : any; // v3
     position    : any; // v3
@@ -14,9 +14,9 @@ interface Particle
 };
 
 //
-//  ParticleSystem Object
+//  EmitterParticleSystem Object
 //
-class ParticleSystem
+class EmitterParticleSystem
 {
     static version = 1;
 
@@ -24,8 +24,8 @@ class ParticleSystem
     numActiveParticles : number;
     spawnNextParticle  : number;
     worldPosition      : any; // v3
-    particles          : Particle[];
-    dirtyWorldExtents  : bool;
+    particles          : EmitterParticle[];
+    dirtyWorldExtents  : boolean;
     colorList          : any[]; // v4[]
     v3temp             : any; // v3
     extents            : Float32Array;
@@ -51,7 +51,7 @@ class ParticleSystem
     setWorldPosition(worldPosition)
     {
         this.worldPosition = worldPosition;
-    };
+    }
 
     createParticle(particle)
     {
@@ -86,7 +86,7 @@ class ParticleSystem
 
         // Set the next particle spawn time
         this.spawnNextParticle = spawnTime + this.minSpawnTime + (random() * this.diffSpawnTime);
-    };
+    }
 
     initialize()
     {
@@ -99,13 +99,13 @@ class ParticleSystem
 
         for (var i = 0; i < maxParticles; i += 1)
         {
-            particles[i] = <Particle> {
+            particles[i] = <EmitterParticle> {
                 velocity : v3Zero.slice(),
                 position : v3Zero.slice(),
                 color : v4One.slice()
             };
         }
-    };
+    }
 
     update(currentTime, deltaTime)
     {
@@ -186,7 +186,7 @@ class ParticleSystem
 
         this.numActiveParticles = numActiveParticles;
         this.dirtyWorldExtents = dirtyWorldExtents;
-    };
+    }
 
     getWorldExtents()
     {
@@ -243,16 +243,16 @@ class ParticleSystem
         extents[4] = yMax + halfSize;
         extents[5] = zMax + halfSize;
         return extents;
-    };
+    }
 
     destroy()
     {}
 
-    // ParticleSystem Constructor function
+    // EmitterParticleSystem Constructor function
     static create(md: MathDevice, gd: GraphicsDevice,
-                  parameters): ParticleSystem
+                  parameters): EmitterParticleSystem
     {
-        var p = new ParticleSystem();
+        var p = new EmitterParticleSystem();
 
         p.md = md;
         p.numActiveParticles = 0;
@@ -333,7 +333,7 @@ class ParticleSystem
 
         var numIndexBufferIndices = 6 * maxParticles;
 
-        if (!ParticleSystem.prototype.indexBuffer || (ParticleSystem.prototype.indexBuffer.numIndices < numIndexBufferIndices))
+        if (!EmitterParticleSystem.prototype.indexBuffer || (EmitterParticleSystem.prototype.indexBuffer.numIndices < numIndexBufferIndices))
         {
             var indexData = new Uint16Array(numIndexBufferIndices);
 
@@ -362,21 +362,21 @@ class ParticleSystem
             var indexBuffer =
                 gd.createIndexBuffer(indexBufferParameters);
 
-            ParticleSystem.prototype.indexBuffer = indexBuffer;
+            EmitterParticleSystem.prototype.indexBuffer = indexBuffer;
         }
 
         p.initialize();
 
         return p;
-    };
-};
+    }
+}
 
-ParticleSystem.prototype.indexBuffer = null;
+EmitterParticleSystem.prototype.indexBuffer = null;
 
 //
-//  ParticleSystemRenderer Object
+//  EmitterParticleSystemRenderer Object
 //
-class ParticleSystemRenderer
+class EmitterParticleSystemRenderer
 {
     static version = 1;
 
@@ -482,7 +482,7 @@ class ParticleSystemRenderer
         }
 
         vertexBuffer.setData(vertexData, 0, numVerticesChanged);
-    };
+    }
 
     updateRenderableWorldExtents(particleSystem)
     {
@@ -494,7 +494,7 @@ class ParticleSystemRenderer
             geometryInstance.addCustomWorldExtents(worldExtents);
             particleSystem.dirtyWorldExtents = false;
         }
-    };
+    }
 
     initialize(particleSystem, material, node)
     {
@@ -545,7 +545,7 @@ class ParticleSystemRenderer
         particleSystem.node = node;
         particleSystem.extents = new Float32Array(6);
         particleSystem.vertexData = new Float32Array(numVertexBufferVertices * (3 + 2 + 4));
-    };
+    }
 
     destroy(particleSystems)
     {
@@ -562,17 +562,17 @@ class ParticleSystemRenderer
             ps.geometryInstance.destroy();
             delete ps.geometryInstance;
         }
-    };
+    }
 
-    // ParticleSystemRenderer Constructor function
-    static create(gd: GraphicsDevice, md: MathDevice): ParticleSystemRenderer
+    // EmitterParticleSystemRenderer Constructor function
+    static create(gd: GraphicsDevice, md: MathDevice): EmitterParticleSystemRenderer
     {
-        var p = new ParticleSystemRenderer();
+        var p = new EmitterParticleSystemRenderer();
         p.gd = gd;
         p.md = md;
         return p;
-    };
-};
+    }
+}
 
 //
 //  Emitter Object
@@ -583,8 +583,8 @@ class Emitter
 
     gd                     : GraphicsDevice;
     md                     : MathDevice;
-    particleSystem         : ParticleSystem;
-    particleSystemRenderer : ParticleSystemRenderer;
+    particleSystem         : EmitterParticleSystem;
+    particleSystemRenderer : EmitterParticleSystemRenderer;
     material               : Material;
     node                   : SceneNode;
     updateExtentsTime      : number;
@@ -601,7 +601,7 @@ class Emitter
         particleSystemRenderer.update(particleSystem, camera);
 
         particleSystemRenderer.updateRenderableWorldExtents(particleSystem);
-    };
+    }
 
     setMaterial(material)
     {
@@ -609,25 +609,25 @@ class Emitter
         var geometryInstance = particleSystem.geometryInstance;
 
         geometryInstance.setMaterial(material);
-    };
+    }
 
     setParticleColors(colorList)
     {
         var particleSystem = this.particleSystem;
         particleSystem.colorList = colorList;
-    };
+    }
 
     getNumActiveParticles()
     {
         return this.particleSystem.numActiveParticles;
-    };
+    }
 
     destroy()
     {
         // Must destroy renderer first
         this.particleSystemRenderer.destroy([this.particleSystem]);
         this.particleSystem.destroy();
-    };
+    }
 
     // Emitter Constructor function
     static create(gd: GraphicsDevice, md: MathDevice, material, node,
@@ -636,8 +636,8 @@ class Emitter
         var e = new Emitter();
         e.gd = gd;
         e.md = md;
-        e.particleSystem = ParticleSystem.create(md, gd, parameters);
-        e.particleSystemRenderer = ParticleSystemRenderer.create(gd, md);
+        e.particleSystem = EmitterParticleSystem.create(md, gd, parameters);
+        e.particleSystemRenderer = EmitterParticleSystemRenderer.create(gd, md);
         e.material = material;
         e.node = node;
         e.updateExtentsTime = 0;
@@ -645,5 +645,5 @@ class Emitter
         e.particleSystemRenderer.initialize(e.particleSystem, material, node);
 
         return e;
-    };
-};
+    }
+}

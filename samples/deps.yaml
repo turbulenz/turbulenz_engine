@@ -65,6 +65,9 @@
 - textures/nought.png
 - textures/cross.png
 - textures/tictactoeboard.png
+- textures/noise.dds
+- textures/smoke.dds
+- textures/flamesmokesequence.png
 
 - path: textures/boy_10.png
   logical_path: boy_10.png
@@ -94,6 +97,8 @@
 - shaders/morph.cgfx
 - shaders/font.cgfx
 - shaders/video.cgfx
+- shaders/particles-default-render.cgfx
+- shaders/particles-default-update.cgfx
 
 - fonts/hero.fnt
 

@@ -501,19 +501,9 @@ TurbulenzEngine.onload = function onloadFn()
                 linearVelocity : mathDevice.v3Build(0, -genStartSpeed, 0)
             });
 
-        var physicsNode = {
-            body: rigidBody,
-            target: sceneNode,
-            dynamic: true
-        };
-
         scene.addRootNode(sceneNode);
-        sceneNode.physicsNodes = [physicsNode];
-        sceneNode.setDynamic();
 
-        physicsManager.physicsNodes.push(physicsNode);
-        physicsManager.dynamicPhysicsNodes.push(physicsNode);
-        physicsManager.enableHierarchy(sceneNode, true);
+        physicsManager.addNode(sceneNode, rigidBody);
 
         physicsObjects.push(rigidBody);
     };
@@ -719,25 +709,13 @@ TurbulenzEngine.onload = function onloadFn()
         var bowlSceneNode = SceneNode.create({
                 name: "Bowl",
                 local: bowlObject.transform,
-                dynamic: false,
+                dynamic: true,
                 disabled: false
             });
 
-        var bowlPhysicsNode : PhysicsNode = {
-            body : bowlObject,
-            target : bowlSceneNode,
-            dynamic : false,
-            triangleArray : bowlTriangleArray
-        };
-
         scene.addRootNode(bowlSceneNode);
-        bowlSceneNode.physicsNodes = [bowlPhysicsNode];
-        // TODO: should be setStatic?  setDynamic takes no args.
-        //bowlSceneNode.setDynamic(false);
-        bowlSceneNode.setDynamic();
 
-        physicsManager.physicsNodes.push(bowlPhysicsNode);
-        physicsManager.enableHierarchy(bowlSceneNode, true);
+        physicsManager.addNode(bowlSceneNode, bowlObject, null, bowlTriangleArray);
     };
 
     var numShadersToLoad = 2;
@@ -788,6 +766,12 @@ TurbulenzEngine.onload = function onloadFn()
         TurbulenzEngine.clearInterval(intervalID);
         clearColor = null;
 
+        if (physicsManager)
+        {
+            physicsManager.clear();
+            physicsManager = null;
+        }
+
         if (scene)
         {
             scene.destroy();
@@ -814,7 +798,6 @@ TurbulenzEngine.onload = function onloadFn()
         graphicsDevice = null;
         mathDevice = null;
         physicsDevice = null;
-        physicsManager = null;
         dynamicsWorld = null;
         mouseCodes = null;
         keyCodes = null;

@@ -1,8 +1,8 @@
 
 TZROOT := ../..
-TS_BASE_FILES :=                                                 \
-  $(TZROOT)/external/definitelytyped/jquery/jquery-1.8.d.ts      \
-  $(TZROOT)/external/definitelytyped/jqueryui/jqueryui-1.9.d.ts
+TS_BASE_FILES :=                                               \
+  $(TZROOT)/external/definitelytyped/jquery/jquery.d.ts        \
+  $(TZROOT)/external/definitelytyped/jqueryui/jqueryui.d.ts
 
 # tzbuild settings
 

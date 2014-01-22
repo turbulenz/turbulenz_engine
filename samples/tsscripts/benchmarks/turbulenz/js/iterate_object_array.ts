@@ -2,8 +2,6 @@
 
 /*global BF: false*/
 
-declare var BF;
-
 //
 //  Iterate over Array vs Iterate over Object
 //
@@ -20,7 +18,7 @@ class IterateObjectToAccess
     sum()
     {
         return (this.a + this.b);
-    };
+    }
 
     // Constructor function
     static create()
@@ -30,8 +28,8 @@ class IterateObjectToAccess
         o.b = 987654321;
         o.result = 0;
         return o;
-    };
-};
+    }
+}
 
 //
 //  IterateObject: Iterate over objects stored as properties on an object
@@ -52,7 +50,7 @@ class IterateObject
             object[i] = IterateObjectToAccess.create();
         }
         this.object = object;
-    };
+    }
 
     run()
     {
@@ -65,7 +63,7 @@ class IterateObject
                 obj.result = obj.sum();
             }
         }
-    };
+    }
 
     destroy()
     {
@@ -78,7 +76,7 @@ class IterateObject
             }
         }
         delete this.object;
-    };
+    }
 
     // Constructor function
     static create()
@@ -86,8 +84,8 @@ class IterateObject
         var i = new IterateObject();
         i.object = {};
         return i;
-    };
-};
+    }
+}
 
 //
 //  IterateArray: Iterate over objects stored as items in an array
@@ -108,7 +106,7 @@ class IterateArray
             array[i] = IterateObjectToAccess.create();
         }
         this.array = array;
-    };
+    }
 
     run()
     {
@@ -119,7 +117,7 @@ class IterateArray
             var obj = array[i];
             obj.result = obj.sum();
         }
-    };
+    }
 
     destroy()
     {
@@ -130,7 +128,7 @@ class IterateArray
             delete (array[i]);
         }
         delete this.array;
-    };
+    }
 
     // Constructor function
     static create()
@@ -138,8 +136,8 @@ class IterateArray
         var i = new IterateArray();
         i.array = [];
         return i;
-    };
-};
+    }
+}
 
 var iterateArray = IterateArray.create();
 var iterateObject = IterateObject.create();

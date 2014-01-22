@@ -15,17 +15,17 @@ class GameBadges
     achievedBadges: { [name: string]: Badge; };
 
     // Stores badges that will be awarded irrespective of current progress
-    awardedBadges: { [name: string]: bool; };
-    hasChanged: bool;
+    awardedBadges: { [name: string]: boolean; };
+    hasChanged: boolean;
 
     // Used to know when to write html output
-    hasChangedData: bool;
+    hasChangedData: boolean;
 
     // True only if we have a leaderboard manager, and we are initialised
-    isActive: bool;
+    isActive: boolean;
 
     // Vars to manage situation where connection to badges server is lost
-    hasConnection: bool;
+    hasConnection: boolean;
     updateInterval: number;
     maxInterval: number;
     lastUpdateTime: number;
@@ -47,14 +47,14 @@ class GameBadges
 
         // Store and categorise badges
         this.badgesManager.listBadges(localInitialiseBadges, localErrorCallback);
-    };
+    }
 
     // Error function when we fail to list & initialise badges
     initialiseBadgesErrorCallback(msg, status)
     {
         this.isActive = false;
         this.onInitialization();
-    };
+    }
 
     // Add all badges to unachieved badge dictionary
     initialiseBadges(badges)
@@ -88,7 +88,7 @@ class GameBadges
 
         // Add user badges to badges dictionary
         this.badgesManager.listUserBadges(localInitialiseUserBadges, localErrorCallback);
-    };
+    }
 
     // Add user badges to unachieved and achieved badge dictionaries
     initialiseUserBadges(badges)
@@ -126,7 +126,7 @@ class GameBadges
 
         this.isActive = true;
         this.onInitialization();
-    };
+    }
 
     // Adds a user badge (with how much they have achieved towards it)
     addBadge(badgeName)
@@ -151,7 +151,7 @@ class GameBadges
                 this.hasChanged = true;
             }
         }
-    };
+    }
 
     // Awards a user badge no matter what the current progress
     awardBadge(badgeName)
@@ -162,7 +162,7 @@ class GameBadges
             this.awardedBadges[badgeName] = true;
             this.hasChanged = true;
         }
-    };
+    }
 
     // Updates the state of all badges
     refresh()
@@ -223,7 +223,7 @@ class GameBadges
                 }
             }
         }
-    };
+    }
 
     // Callback when user badge has been added
     updateUserBadgeProgressCallback(badge)
@@ -245,7 +245,7 @@ class GameBadges
             this.achievedBadges[badgeName] = unachievedBadges[badgeName];
             delete unachievedBadges[badgeName];
         }
-    };
+    }
 
     // Error callback when user badge failed to add
     updateUserBadgeErrorCallback(msg, status, badgeData)
@@ -257,7 +257,7 @@ class GameBadges
         this.hasChanged = true;
 
         unachievedBadge.onUnsuccessfulSet();
-    };
+    }
 
     // Callback when user badge has been awarded
     awardUserBadgeCallback(badge)
@@ -270,7 +270,7 @@ class GameBadges
 
         this.hasConnection = true;
         this.hasChangedData = true;
-    };
+    }
 
     // Callback when user badge has been awarded
     awardUserBadgeErrorCallback(msg, status, badgeData)
@@ -281,7 +281,7 @@ class GameBadges
         this.hasChanged = true;
 
         this.unachievedBadges[badgeName].onUnsuccessfulSet();
-    };
+    }
 
     // Update function called in main loop
     update(currentTime)
@@ -307,7 +307,7 @@ class GameBadges
                 this.refresh();
             }
         }
-    };
+    }
 
     static create(badgesManager, onInitialization): GameBadges
     {
@@ -346,5 +346,5 @@ class GameBadges
         }
 
         return gameBadges;
-    };
-};
+    }
+}

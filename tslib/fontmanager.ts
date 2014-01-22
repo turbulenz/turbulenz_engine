@@ -6,18 +6,39 @@
 
 "use strict";
 
-/// <reference path="debug.ts" />
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="requesthandler.ts" />
-/// <reference path="observer.ts" />
-
 interface FontDimensions
 {
-    width: number;
-    height: number;
-    numGlyphs: number;
-    linesWidth: number[];
-};
+    width      : number;
+    height     : number;
+    numGlyphs  : number;
+    linesWidth : number[];
+}
+
+interface FontGlyph
+{
+    width   : number;
+    height  : number;
+    awidth  : number;
+    xoffset : number;
+    yoffset : number;
+    left    : number;
+    top     : number;
+    right   : number;
+    bottom  : number;
+    page    : number;
+}
+
+// A FontKerning is a map from character code to spacing values.
+interface FontKerning
+{
+    [charcode: number]: number;
+}
+
+// Map from character code to the corresponding kerning values.
+interface FontKerningMap
+{
+    [charcode: number]: FontKerning;
+}
 
 /**
    @class  Font
@@ -29,17 +50,17 @@ class Font
 {
     static version = 1;
 
-    bold: bool;
-    italic: bool;
+    bold: boolean;
+    italic: boolean;
     pageWidth: number;
     pageHeight: number;
     baseline: any; // TODO
-    glyphs: any; // TODO
+    glyphs: FontGlyph[];
     numGlyphs: number;
     minGlyphIndex: number;
     lineHeight: number;
     pages: number;
-    kernings: any; // TODO
+    kernings: FontKerningMap;
     texture: Texture;
 
     gd: GraphicsDevice;
@@ -62,7 +83,7 @@ class Font
         this.pages = null;
         this.kernings = null;
         this.texture = null;
-    };
+    }
 
     calculateTextDimensions(text, scale, spacing)
     {
@@ -127,7 +148,7 @@ class Font
             numGlyphs: numGlyphs,
             linesWidth: linesWidth
         };
-    };
+    }
 
     generateTextVertices(text, params)
     {
@@ -267,16 +288,19 @@ class Font
         }
 
         return vertices;
-    };
+    }
 
     drawTextRect(text, params)
     {
         var vertices = this.generateTextVertices(text, params);
-        if (!vertices)
+        if (vertices)
         {
-            return;
+            this.drawTextVertices(vertices, true);
         }
+    }
 
+    drawTextVertices(vertices, reuseVertices?)
+    {
         /*jshint bitwise: false*/
         var numGlyphs = (vertices.length >> 4);
         /*jshint bitwise: true*/
@@ -284,7 +308,10 @@ class Font
         var gd = this.gd;
         var fm = this.fm;
 
-        fm.reusableArrays[numGlyphs] = vertices;
+        if (reuseVertices)
+        {
+            fm.reusableArrays[numGlyphs] = vertices;
+        }
 
         var numVertices = (numGlyphs * 4);
         var sharedVertexBuffer = fm.sharedVertexBuffer;
@@ -310,9 +337,9 @@ class Font
 
         if (4 < numVertices)
         {
-            var numIndicies = (numGlyphs * 6);
+            var numIndices = (numGlyphs * 6);
             var sharedIndexBuffer = fm.sharedIndexBuffer;
-            if (!sharedIndexBuffer || numIndicies > sharedIndexBuffer.numIndices)
+            if (!sharedIndexBuffer || numIndices > sharedIndexBuffer.numIndices)
             {
                 if (sharedIndexBuffer)
                 {
@@ -323,13 +350,13 @@ class Font
             }
 
             gd.setIndexBuffer(sharedIndexBuffer);
-            gd.drawIndexed(fm.primitive, numIndicies, 0);
+            gd.drawIndexed(fm.primitive, numIndices, 0);
         }
         else
         {
             gd.draw(fm.primitiveFan, 4, 0);
         }
-    };
+    }
 
     createIndexBuffer(maxGlyphs)
     {
@@ -359,7 +386,7 @@ class Font
         }
 
         return indexBuffer;
-    };
+    }
 
     createVertexBuffer(maxGlyphs)
     {
@@ -368,8 +395,8 @@ class Font
             attributes: [gd.VERTEXFORMAT_FLOAT2, gd.VERTEXFORMAT_FLOAT2],
             dynamic: true,
             'transient': true});
-    };
-};
+    }
+}
 
 /**
   @class  Font manager
@@ -386,12 +413,12 @@ class FontManager
     load: { (path: string, onFontLoaded?: { (font): void; }): Font; };
     map: { (dst: string, src: string): void; };
     remove: { (path: string): void; };
-    get(path: string): Font { debug.abort("empty method"); return undefined; };
+    get(path: string): Font { debug.abort("empty method"); return undefined; }
     getAll: { (): { [name: string]: Font; }; };
 
     getNumPendingFonts: { (): number; };
-    isFontLoaded: { (path: string): bool; };
-    isFontMissing: { (path: string): bool; };
+    isFontLoaded: { (path: string): boolean; };
+    isFontMissing: { (path: string): boolean; };
     setPathRemapping: { (prm, assetUrl: string): void; };
     calculateTextDimensions: { (path: string, text: string, scale: number,
                                 spacing: number): FontDimensions; };
@@ -816,6 +843,10 @@ class FontManager
                             delete loadingPages[path];
                             delete loadingFont[path];
                             numLoadingFonts -= 1;
+                            if (status === 404)
+                            {
+                                fonts[path] = defaultFont;
+                            }
                             return;
                         }
 
@@ -1208,5 +1239,5 @@ class FontManager
         };
 
         return fm;
-    };
-};
+    }
+}

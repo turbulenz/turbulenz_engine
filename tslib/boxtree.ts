@@ -27,7 +27,7 @@ class BoxTreeNode
     static version = 1;
 
     escapeNodeOffset: number;
-    externalNode: any; // TODO
+    externalNode: {};
     extents: number[];
 
     constructor(extents, escapeNodeOffset, externalNode)
@@ -37,10 +37,10 @@ class BoxTreeNode
         this.extents = extents;
     }
 
-    isLeaf(): bool
+    isLeaf(): boolean
     {
         return !!this.externalNode;
-    };
+    }
 
     reset(minX, minY, maxX, maxY, escapeNodeOffset, externalNode?)
     {
@@ -51,7 +51,7 @@ class BoxTreeNode
         oldExtents[1] = minY;
         oldExtents[2] = maxX;
         oldExtents[3] = maxY;
-    };
+    }
 
     clear()
     {
@@ -63,15 +63,15 @@ class BoxTreeNode
         oldExtents[1] = maxNumber;
         oldExtents[2] = -maxNumber;
         oldExtents[3] = -maxNumber;
-    };
+    }
 
     // Constructor function
 
     static create(extents, escapeNodeOffset, externalNode?): BoxTreeNode
     {
         return new BoxTreeNode(extents, escapeNodeOffset, externalNode);
-    };
-};
+    }
+}
 
 //
 // BoxTree
@@ -82,21 +82,21 @@ class BoxTree
 
     nodes: BoxTreeNode[];
     endNode: number;
-    needsRebuild: bool;
-    needsRebound: bool;
+    needsRebuild: boolean;
+    needsRebound: boolean;
     numAdds: number;
     numUpdates: number;
     numExternalNodes: number;
     startUpdate: number;
     endUpdate: number;
-    highQuality: bool;
+    highQuality: boolean;
 
     numNodesLeaf = 4;
 
     // prototype
     arrayConstructor: any;
 
-    constructor(highQuality: bool)
+    constructor(highQuality: boolean)
     {
         this.nodes = [];
         this.endNode = 0;
@@ -124,7 +124,7 @@ class BoxTree
         this.needsRebuild = true;
         this.numAdds += 1;
         this.numExternalNodes += 1;
-    };
+    }
 
     remove(externalNode)
     {
@@ -157,9 +157,9 @@ class BoxTree
                 this.clear();
             }
 
-            delete externalNode.boxTreeIndex;
+            externalNode.boxTreeIndex = undefined;
         }
-    };
+    }
 
     findParent(nodeIndex)
     {
@@ -175,7 +175,7 @@ class BoxTree
         }
         while (parent.escapeNodeOffset <= nodeDist);
         return parent;
-    };
+    }
 
     update(externalNode, extents)
     {
@@ -254,12 +254,12 @@ class BoxTree
         {
             this.add(externalNode, extents);
         }
-    };
+    }
 
-    needsFinalize(): bool
+    needsFinalize(): boolean
     {
         return (this.needsRebuild || this.needsRebound);
-    };
+    }
 
     finalize()
     {
@@ -271,7 +271,7 @@ class BoxTree
         {
             this.rebound();
         }
-    };
+    }
 
     rebound()
     {
@@ -365,7 +365,7 @@ class BoxTree
         //this.numUpdates = 0;
         this.startUpdate = 0x7FFFFFFF;
         this.endUpdate = -0x7FFFFFFF;
-    };
+    }
 
     rebuild()
     {
@@ -445,7 +445,7 @@ class BoxTree
         this.numUpdates = 0;
         this.startUpdate = 0x7FFFFFFF;
         this.endUpdate = -0x7FFFFFFF;
-    };
+    }
 
     sortNodes(nodes)
     {
@@ -537,7 +537,7 @@ class BoxTree
         };
 
         sortNodesRecursive(nodes, 0, numNodes);
-    };
+    }
 
     sortNodesHighQuality(nodes)
     {
@@ -678,7 +678,7 @@ class BoxTree
         };
 
         sortNodesHighQualityRecursive(nodes, 0, numNodes);
-    };
+    }
 
     calculateSAH(buildNodes, startIndex, endIndex)
     {
@@ -702,7 +702,7 @@ class BoxTree
         }
 
         return ((maxX - minX) + (maxY - minY));
-    };
+    }
 
     nthElement(nodes, first, nth, last, getkey)
     {
@@ -809,7 +809,7 @@ class BoxTree
         }
 
         insertionSortFn(nodes, first, last, getkey);
-    };
+    }
 
     recursiveBuild(buildNodes, startIndex, endIndex, lastNodeIndex)
     {
@@ -909,7 +909,7 @@ class BoxTree
             nodes[nodeIndex] = BoxTreeNode.create(parentExtents,
                                                   (lastNodeIndex + lastNode.escapeNodeOffset - nodeIndex));
         }
-    };
+    }
 
     getVisibleNodes(planes, visibleNodes)
     {
@@ -1014,7 +1014,7 @@ class BoxTree
                 }
             }
         }
-    };
+    }
 
     getOverlappingNodes(queryExtents, overlappingNodes, startIndex)
     {
@@ -1101,7 +1101,7 @@ class BoxTree
         {
             return 0;
         }
-    };
+    }
 
     getCircleOverlappingNodes(center, radius, overlappingNodes)
     {
@@ -1167,7 +1167,7 @@ class BoxTree
                 }
             }
         }
-    };
+    }
 
     getOverlappingPairs(overlappingPairs, startIndex)
     {
@@ -1242,22 +1242,22 @@ class BoxTree
         {
             return 0;
         }
-    };
+    }
 
     getRootNode(): BoxTreeNode
     {
         return this.nodes[0];
-    };
+    }
 
     getNodes()
     {
         return this.nodes;
-    };
+    }
 
     getEndNodeIndex(): number
     {
         return this.endNode;
-    };
+    }
 
     clear()
     {
@@ -1270,7 +1270,7 @@ class BoxTree
         this.numExternalNodes = 0;
         this.startUpdate = 0x7FFFFFFF;
         this.endUpdate = -0x7FFFFFFF;
-    };
+    }
 
     static rayTest(trees: BoxTree[], ray: BoxTreeRay,
                    callback: BoxTreeRayTestCallback): BoxTreeRayTestResult
@@ -1453,14 +1453,14 @@ class BoxTree
         }
 
         return minimumResult;
-    };
+    }
 
     // Constructor function
     static create(highQuality)
     {
         return new BoxTree(highQuality);
-    };
-};
+    }
+}
 
 // Detect correct typed arrays
 (function () {

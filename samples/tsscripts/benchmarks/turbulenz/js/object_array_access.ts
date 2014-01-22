@@ -2,8 +2,6 @@
 
 /*global BF: false*/
 
-declare var BF;
-
 //
 //  Access Array Index vs Access Object Property
 //
@@ -31,7 +29,7 @@ class ArrayAccess
         }
         this.array = array;
         this.results = [];
-    };
+    }
 
     run()
     {
@@ -52,12 +50,12 @@ class ArrayAccess
                                arr[8] +
                                arr[6]);
         }
-    };
+    }
 
     destroy()
     {
         this.array = [];
-    };
+    }
 
     // Constructor function
     static create()
@@ -66,8 +64,8 @@ class ArrayAccess
         a.array = [];
         a.results = [];
         return a;
-    };
-};
+    }
+}
 
 //
 //  ArrayUnknownAccess: Access an array by an unknown index
@@ -95,7 +93,7 @@ class ArrayUnknownAccess
         this.indices = [ 5, 9, 7, 2, 1, 0, 4, 3, 8, 6 ];
         this.array = array;
         this.results = [];
-    };
+    }
 
     run()
     {
@@ -117,14 +115,14 @@ class ArrayUnknownAccess
                                arr[indices[8]] +
                                arr[indices[9]]);
         }
-    };
+    }
 
     destroy()
     {
         this.indices = [];
         this.array = [];
         this.results = [];
-    };
+    }
 
     // Constructor function
     static create()
@@ -134,8 +132,8 @@ class ArrayUnknownAccess
         a.indices = [];
         a.results = [];
         return a;
-    };
-};
+    }
+}
 
 //
 //  ObjectAccess: Access an object by property
@@ -171,7 +169,7 @@ class ObjectAccess
         }
         this.array = array;
         this.results = [];
-    };
+    }
 
     run()
     {
@@ -192,13 +190,13 @@ class ObjectAccess
                             obj.i +
                             obj.g);
         }
-    };
+    }
 
     destroy()
     {
         this.array = [];
         this.results = [];
-    };
+    }
 
     // Constructor function
     static create()
@@ -207,8 +205,8 @@ class ObjectAccess
         a.array = [];
         a.results = [];
         return a;
-    };
-};
+    }
+}
 
 //
 //  ObjectAccessAlt: Access an object by property using []
@@ -244,7 +242,7 @@ class ObjectAccessAlt
         }
         this.array = array;
         this.results = [];
-    };
+    }
 
     run()
     {
@@ -267,13 +265,13 @@ class ObjectAccessAlt
                                obj['g']);
             /*jslint sub: false */
         }
-    };
+    }
 
     destroy()
     {
         this.array = [];
         this.results = [];
-    };
+    }
 
     // Constructor function
     static create()
@@ -282,8 +280,8 @@ class ObjectAccessAlt
         a.array = [];
         a.results = [];
         return a;
-    };
-};
+    }
+}
 
 //
 //  ObjectUnknownAccess: Access an object by unknown property
@@ -321,7 +319,7 @@ class ObjectUnknownAccess
         this.properties = ['f', 'j', 'h', 'c', 'b', 'a', 'e', 'd', 'i', 'g'];
         this.array = array;
         this.results = [];
-    };
+    }
 
     run()
     {
@@ -343,14 +341,14 @@ class ObjectUnknownAccess
                                obj[properties[8]] +
                                obj[properties[9]]);
         }
-    };
+    }
 
     destroy()
     {
         this.properties = [];
         this.array = [];
         this.results = [];
-    };
+    }
 
     // Constructor function
     static create()
@@ -360,8 +358,8 @@ class ObjectUnknownAccess
         a.results = [];
         a.properties = [];
         return a;
-    };
-};
+    }
+}
 
 var objectAccess = ObjectAccess.create();
 var objectAccessAlt = ObjectAccessAlt.create();

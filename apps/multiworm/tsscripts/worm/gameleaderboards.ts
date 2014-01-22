@@ -12,16 +12,16 @@ class GameLeaderboards
     onInitialization: { (): void; };
 
     leaderboards: { [name: string]: Leaderboard; };
-    hasChanged: bool;
+    hasChanged: boolean;
 
     // Used to know when to write html output
-    hasChangedData: bool;
+    hasChangedData: boolean;
 
     // True only if we have a leaderboard manager, and we are initialised
-    isActive: bool;
+    isActive: boolean;
 
     // Vars to manage situation where connection to badges server is lost
-    hasConnection: bool;
+    hasConnection: boolean;
     updateInterval: number;
     maxInterval: number;
     lastUpdateTime: number;
@@ -59,14 +59,14 @@ class GameLeaderboards
 
         // Add leaderboards to leaderboards dictionary
         this.leaderboardManager.getOverview(spec, initialiseLeaderboards, localErrorCallback);
-    };
+    }
 
     // Error function when we fail to list & initialise badges
     initialiseLeaderboardsErrorCallback(msg, status)
     {
         this.isActive = false;
         this.onInitialization();
-    };
+    }
 
     // Setup the dictionary to current leaderboard states
     initialiseLeaderboards(leaderboardArray)
@@ -93,7 +93,7 @@ class GameLeaderboards
 
         this.isActive = true;
         this.onInitialization();
-    };
+    }
 
     // Updates the specified leaderboard with the new score provided
     setScore(leaderboardName, score)
@@ -104,7 +104,7 @@ class GameLeaderboards
             leaderboard.setScore(score);
             this.hasChanged = true;
         }
-    };
+    }
 
     // Sends all new leaderboard data
     refresh()
@@ -129,7 +129,7 @@ class GameLeaderboards
                 }
             }
         }
-    };
+    }
 
     // Sends the data for the specified leaderboard
     refreshLeaderboard(leaderboardName, score)
@@ -147,7 +147,7 @@ class GameLeaderboards
         }
 
         this.leaderboardManager.set(leaderboardName, score, localSetLeaderboardCallback, localSetErrorCallback);
-    };
+    }
 
     // Update function called in main loop
     update(currentTime)
@@ -173,7 +173,7 @@ class GameLeaderboards
                 this.refresh();
             }
         }
-    };
+    }
 
     // After successful leaderboard set
     setLeaderboardCallback(key, score, newBest, bestScore)
@@ -185,7 +185,7 @@ class GameLeaderboards
         this.hasChangedData = true;
 
         this.hasConnection = true;
-    };
+    }
 
     // Error callback - uses window alert
     setErrorCallback(msg, status, setFunction, leaderboardData)
@@ -197,7 +197,7 @@ class GameLeaderboards
 
         this.hasConnection = false;
         this.hasChanged = true;
-    };
+    }
 
     static create(leaderboardManager, onInitialization)
     {
@@ -232,5 +232,5 @@ class GameLeaderboards
         }
 
         return gameLeaderboards;
-    };
-};
+    }
+}

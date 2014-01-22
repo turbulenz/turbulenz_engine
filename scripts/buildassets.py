@@ -4,8 +4,8 @@
 from sys import argv, stdout
 from json import loads as load_json, dumps as dump_json
 from yaml import load as load_yaml
-from os.path import join as path_join, exists as path_exists, splitext, basename, normpath, getmtime
-from os import makedirs, listdir, unlink as remove_file, getenv as os_getenv
+from os.path import join as path_join, exists as path_exists, splitext, basename, normpath, getmtime, dirname
+from os import makedirs, listdir, environ, unlink as remove_file, getenv as os_getenv, walk as os_walk, rmdir
 from shutil import copy2 as copy_file
 from hashlib import md5
 from base64 import urlsafe_b64encode
@@ -15,9 +15,10 @@ from threading import Thread, Lock
 from time import sleep
 import multiprocessing
 import argparse
+import errno
 
 import platform
-COLORED_OUTPUT = stdout.isatty() and platform.system() != 'Windows'
+COLORED_OUTPUT = stdout.isatty() and (platform.system() != 'Windows' or 'ANSICON' in environ)
 
 def warning(message):
     if COLORED_OUTPUT:
@@ -27,7 +28,7 @@ def warning(message):
 
 def error(message):
     if COLORED_OUTPUT:
-        print ' >> \033[31m[ERROR]\033[0m   - %s' % message
+        print '\033[1m\033[31m[ERROR]\033[0m   - %s' % message
     else:
         print ' >> [ERROR]   - %s' % message
 
@@ -78,7 +79,7 @@ def get_file_hash(path):
     digest = m.digest()
     return urlsafe_b64encode(digest).rstrip('=')
 
-class Source():
+class Source(object):
     def __init__(self, path, assets_paths, old_hash=None):
         self.path = path
         for p in assets_paths:
@@ -110,7 +111,7 @@ class Source():
     def calculate_hash(self):
         return get_file_hash(self.asset_path)
 
-class SourceList():
+class SourceList(object):
     def __init__(self, source_hashes, assets_paths):
         self.assets_paths = assets_paths
         source_list = {}
@@ -138,7 +139,7 @@ class Tool(object):
     def check_version(self, build_path, verbose=False):
         version_file_path = path_join(build_path, self.name + '.version')
         try:
-            with open(version_file_path, 'rt') as f:
+            with open(version_file_path, 'r') as f:
                 old_version = f.read()
         except IOError:
             old_version = None
@@ -203,7 +204,7 @@ class Tga2Json(Tool):
             warning('could not launch ImageMagick, TGA support will not be available')
             return None
         version = version_string.splitlines()[0]
-        with open(version_file_path, 'wt') as f:
+        with open(version_file_path, 'w') as f:
             f.write(version)
         return version
 
@@ -259,7 +260,7 @@ class Cgfx2JsonTool(Tool):
         except CalledProcessError:
             error('could not launch cgfx2json, CGFX support will be unavailable.')
             return None
-        with open(version_file_path, 'wt') as f:
+        with open(version_file_path, 'w') as f:
             f.write(version)
         return version
 
@@ -333,7 +334,6 @@ class Tools(object):
         bmfont2json.check_version(build_path, verbose)
         cgfx2json.check_version(build_path, verbose)
 
-
         self.asset_tool_map = {
             '.png': copy,
             '.dds': copy,
@@ -343,6 +343,8 @@ class Tools(object):
             '.mp3': copy,
             '.mp4': copy,
             '.webm': copy,
+            '.json': copy,
+            '.tar': copy,
             '.tga': tga2png,
             '.dae': dae2json,
             '.obj': obj2json,
@@ -405,6 +407,8 @@ def build_asset(asset_info, source_list, tools, build_path, verbose):
     dst_path = path_join(build_path, tools.get_asset_destination(src))
     asset_info.build_path = dst_path
 
+    create_dir(dirname(dst_path))
+
     source = source_list.get_source(src)
     deps = [ source_list.get_source(path) for path in asset_info.deps ]
     if any([dep.has_changed() for dep in deps]) or asset_tool.has_changed() or not path_exists(dst_path) \
@@ -449,10 +453,21 @@ def install(install_asset_info, install_path):
 
     return mapping
 
-def remove_old_build_files(build_asset_info, build_paths):
+def remove_old_build_files(build_asset_info, build_path):
     old_build_files = []
-    for path in build_paths:
-        old_build_files.extend(path_join(path, filename) for filename in listdir(path))
+    exludes = [
+        path_join(build_path, 'sourcehashes.json'),
+        path_join(build_path, 'cgfx2json.version'),
+        path_join(build_path, 'json2json.version'),
+        path_join(build_path, 'obj2json.version'),
+        path_join(build_path, 'tga2png.version'),
+        path_join(build_path, 'bmfont2json.version'),
+        path_join(build_path, 'dae2json.version'),
+        path_join(build_path, 'material2json.version')
+    ]
+    for base, _, files in os_walk(build_path):
+        dir_files = [path_join(base, filename) for filename in files]
+        old_build_files.extend(f for f in dir_files if f not in exludes)
 
     for asset_info in build_asset_info:
         try:
@@ -464,14 +479,20 @@ def remove_old_build_files(build_asset_info, build_paths):
         print 'Removing old build file ' + path
         remove_file(path)
 
-def create_dir(path):
-    if path_exists(path) is False:
+    for base, _, _ in os_walk(build_path, topdown=False):
         try:
-            makedirs(path)
-        except IOError as e:
-            print("Failed creating: %s" % str(e))
+            rmdir(base)
+        except OSError:
+            pass
         else:
-            print("Created: %s" % path)
+            print 'Removed old build directory ' + base
+
+def create_dir(path):
+    try:
+        makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 def main():
     parser = argparse.ArgumentParser()
@@ -492,24 +513,12 @@ def main():
 
     assets_paths = [ normpath(p) for p in args.assets_path ]
     base_build_path = normpath(args.build_path)
-    build_paths = [
-        path_join(base_build_path, 'textures'),
-        path_join(base_build_path, 'models'),
-        path_join(base_build_path, 'sounds'),
-        path_join(base_build_path, 'materials'),
-        path_join(base_build_path, 'shaders'),
-        path_join(base_build_path, 'fonts'),
-        path_join(base_build_path, 'videos'),
-    ]
     create_dir(base_build_path)
-    for path in build_paths:
-        create_dir(path)
-
     create_dir(args.install_path)
 
     tools = Tools(args, base_build_path)
 
-    with open('deps.yaml', 'rt') as f:
+    with open('deps.yaml', 'r') as f:
         asset_build_info = load_yaml(f.read())
         if asset_build_info:
             asset_build_info = [AssetInfo(asset_info) for asset_info in asset_build_info]
@@ -517,7 +526,7 @@ def main():
             asset_build_info = []
 
     try:
-        with open(path_join(base_build_path, 'sourcehashes.json'), 'rt') as f:
+        with open(path_join(base_build_path, 'sourcehashes.json'), 'r') as f:
             source_list = SourceList(load_json(f.read()), assets_paths)
     except IOError:
         if args.verbose:
@@ -613,7 +622,7 @@ def main():
         assets_rebuilt += asset_threads[t].assets_rebuilt
 
     # Dump the state of the build for partial rebuilds
-    with open(path_join(base_build_path, 'sourcehashes.json'), 'wt') as f:
+    with open(path_join(base_build_path, 'sourcehashes.json'), 'w') as f:
         f.write(dump_json(source_list.get_hashes()))
 
     # Check if any build threads failed and if so exit with an error
@@ -625,13 +634,13 @@ def main():
     # Dump the mapping table for the built assets
     print 'Installing assets and building mapping table...'
     mapping = install(asset_build_info, args.install_path)
-    with open('mapping_table.json', 'wt') as f:
+    with open('mapping_table.json', 'w') as f:
         f.write(dump_json({
                 'urnmapping': mapping
             }))
 
     # Cleanup any built files no longer referenced by the new mapping table
-    remove_old_build_files(asset_build_info, build_paths)
+    remove_old_build_files(asset_build_info, base_build_path)
 
     print '%d assets rebuilt' % assets_rebuilt
     print 'Assets build complete'

@@ -5,8 +5,6 @@
 /*global TurbulenzBridge: false*/
 /*global Utilities: false*/
 
-/// <reference path="turbulenzservices.ts" />
-
 //
 // API
 //
@@ -46,7 +44,7 @@ class MultiPlayerSession
         {
             this.queue.push(packet);
         }
-    };
+    }
 
     sendToGroup(destinationIDs, messageType, messageData)
     {
@@ -65,7 +63,7 @@ class MultiPlayerSession
         {
             this.queue.push(packet);
         }
-    };
+    }
 
     sendToAll(messageType, messageData?)
     {
@@ -84,7 +82,7 @@ class MultiPlayerSession
         {
             this.queue.push(packet);
         }
-    };
+    }
 
     makePublic(callbackFn)
     {
@@ -103,7 +101,7 @@ class MultiPlayerSession
             },
             requestHandler: this.requestHandler
         });
-    };
+    }
 
     destroy(callbackFn?)
     {
@@ -160,12 +158,12 @@ class MultiPlayerSession
                 TurbulenzEngine.setTimeout(callbackFn, 0);
             }
         }
-    };
+    }
 
-    connected(): bool
+    connected(): boolean
     {
         return (!!this.socket);
-    };
+    }
 
     // Private API
     private flushQueue()
@@ -177,7 +175,7 @@ class MultiPlayerSession
         {
             socket.send(queue[n]);
         }
-    };
+    }
     //
     // Constructor
     //
@@ -333,5 +331,5 @@ class MultiPlayerSession
         multiPlayerConnect();
 
         return ms;
-    };
-};
+    }
+}

@@ -1,13 +1,6 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 /*global Utilities: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="shadermanager.ts" />
-/// <reference path="material.ts" />
-/// <reference path="geometry.ts" />
-/// <reference path="utilities.ts" />
-
-
 "use strict";
 
 //
@@ -18,6 +11,9 @@ interface EffectPrepareObject
     prepare(renderable: Renderable);
     shaderName: string;
     techniqueName: string;
+    shader?: Shader;
+    technique?: Technique;
+    techniqueIndex?: number;
     update(camera: Camera);
     loadTechniques(shaderManager: ShaderManager);
 };
@@ -44,7 +40,7 @@ class Effect
         effect.materialsMap = {};
 
         return effect;
-    };
+    }
 
     hashMaterial(material: Material)
     {
@@ -64,11 +60,29 @@ class Effect
             hashArray.sort();
             return hashArray.join(',');
         }
-        else
+        else if (0 < numTextures)
         {
             return hashArray[0];
         }
-    };
+        else
+        {
+            var materialColor = material.techniqueParameters['materialColor'];
+            if (materialColor)
+            {
+                var length = materialColor.length;
+                var n;
+                for (n = 0; n < length; n += 1)
+                {
+                    hashArray[n] = materialColor[n].toFixed(3).replace('.000', '');
+                }
+                return hashArray.join(',');
+            }
+            else
+            {
+                return material.name;
+            }
+        }
+    }
 
     prepareMaterial(material: Material)
     {
@@ -82,17 +96,17 @@ class Effect
         }
         material.meta.materialIndex = index;
         material.effect = this;
-    };
+    }
 
     add(geometryType: string, prepareObject)
     {
         this.geometryType[geometryType] = prepareObject;
-    };
+    }
 
     remove(geometryType: string)
     {
         delete this.geometryType[geometryType];
-    };
+    }
 
     get(geometryType: string): EffectPrepareObject
     {
@@ -110,8 +124,8 @@ class Effect
         {
             debug.abort("Unsupported or missing geometryType");
         }
-    };
-};
+    }
+}
 
 //
 // EffectManager
@@ -127,23 +141,23 @@ class EffectManager
         var effectManager = new EffectManager();
         effectManager.effects = {};
         return effectManager;
-    };
+    }
 
     add(effect: Effect)
     {
         debug.assert(this.effects[effect.name] === undefined);
         this.effects[effect.name] = effect;
-    };
+    }
 
     remove(name: string)
     {
         delete this.effects[name];
-    };
+    }
 
     map(destination: string, source: string)
     {
         this.effects[destination] = this.effects[source];
-    };
+    }
 
     get(name: string): Effect
     {
@@ -153,5 +167,5 @@ class EffectManager
             return this.effects["default"];
         }
         return effect;
-    };
-};
+    }
+}

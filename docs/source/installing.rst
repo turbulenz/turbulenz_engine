@@ -66,7 +66,7 @@ Installation steps
         If you are using a 64bit version of Python you **must** have
         installed a 64bit version of the Visual Studio compilers.
 
-**Mac OS X 10.6 and above**
+**Mac OS X 10.7 (and above)**
 
     The Turbulenz SDK for Mac OS X is now available to developers in
     beta from https://hub.turbulenz.com as a self-extracting shell
@@ -87,31 +87,17 @@ Installation steps
     * Cg Toolkit - http://developer.nvidia.com/cg-toolkit - Required
       to compile shaders using the cgfx2json tool.
 
-    *Mac OS X 10.6*
-
-    * Xcode 3.2.6+ - This MUST be installed before running the
-      script so that Python can compile certain modules.
+    * Xcode Command Line Tools for Xcode (February 2012 or later)
 
         .. NOTE::
 
-            Only the command line development tools are required from
-            Xcode and the iOS SDK is NOT required.
+            If you don't already have Xcode installed, only the
+            command line tools are required (significantly smaller
+            download than the full Xcode installer).
 
-    *Mac OS X 10.7 and above*
-
-    * Xcode 4.3.2+ Command Line Tools for Xcode (February 2012 or later)
-
-        .. NOTE::
-
-            If you DON'T already have Xcode installed, Turbulenz
-            recommend the command line tools only, which is the
-            minimum required for Turbulenz development.
-
-            If you DO already have Xcode installed, go to the "Downloads"
-            preference pane in Xcode and under the "components" tab you
-            can select to install the "Command Line Tools".
-
-
+            If you already have Xcode installed, go to the "Downloads"
+            preference pane in Xcode and under the "components" tab
+            you can select to install the "Command Line Tools".
 
     After installing the essential software, install the SDK:
 

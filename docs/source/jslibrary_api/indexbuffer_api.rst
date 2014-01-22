@@ -48,10 +48,17 @@ index data at runtime.
     An array of numbers.
 
 ``offset`` (Optional)
-    Offset in indicies from the beginning of the buffer. Optional, assumed to be 0 if omitted.
+
+    Offset in indicies from the beginning of the buffer. Optional,
+    assumed to be 0 if omitted.
 
 ``count`` (Optional)
-    The number of elements to write, normally indexData.length. Optional, assumed to be IndexBuffer.numIndices if omitted.
+
+    The number of elements to write, normally
+    indexData.length. Optional, assumed to be IndexBuffer.numIndices
+    if omitted.  Since it is an error to pass parameters that would
+    write past the end of the IndexBuffer, callers should generally
+    specify neither or both ``offset`` and ``count``.
 
 .. index::
     pair: IndexBuffer; map
@@ -136,6 +143,23 @@ Releases the IndexBuffer resources; the object will be invalid after the method 
 
 Properties
 ==========
+
+.. index::
+    pair: IndexBuffer; id
+
+`id`
+----
+
+**Summary**
+
+The unique identification number of the IndexBuffer object.
+
+**Syntax** ::
+
+    var indexBufferId = indexBuffer.id;
+
+.. note:: Read Only
+
 
 .. index::
     pair: IndexBuffer; numIndices

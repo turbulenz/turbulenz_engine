@@ -1,8 +1,5 @@
 // Copyright (c) 2010-2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-
 interface VertexBuffersBucketChunk
 {
     length: number;
@@ -47,7 +44,7 @@ class VertexBufferManager
     vertexBuffersPools: VertexBuffersPool[];  //Array keyed-off attribute
     debugCreatedVertexBuffers: number;
     graphicsDevice: GraphicsDevice;
-    dynamicVertexBuffers: bool;
+    dynamicVertexBuffers: boolean;
 
     //
     // bucket
@@ -94,7 +91,7 @@ class VertexBufferManager
             return 8;
         }
         return 9;
-    };
+    }
 
     //
     // makeBuckets
@@ -108,7 +105,7 @@ class VertexBufferManager
             result.push({headChunk: null});
         }
         return result;
-    };
+    }
 
     //
     // allocate
@@ -273,7 +270,7 @@ class VertexBufferManager
             length: numVertices,
             poolIndex: poolIndex
         };
-    };
+    }
 
     //
     // free
@@ -427,7 +424,7 @@ class VertexBufferManager
             vertexBufferData.bucket.length = 0;
             vertexBufferData.bucket = null;
         }
-    };
+    }
 
     //
     // destroy
@@ -471,13 +468,13 @@ class VertexBufferManager
         }
 
         this.graphicsDevice = null;
-    };
+    }
 
     //
     // create
     //
     static create(graphicsDevice: GraphicsDevice,
-                  dynamicVertexBuffers?: bool) : VertexBufferManager
+                  dynamicVertexBuffers?: boolean) : VertexBufferManager
     {
         var manager = new VertexBufferManager();
 
@@ -487,6 +484,5 @@ class VertexBufferManager
         manager.dynamicVertexBuffers = dynamicVertexBuffers ? true : false;
 
         return manager;
-    };
-
-};
+    }
+}

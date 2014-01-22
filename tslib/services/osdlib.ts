@@ -25,7 +25,7 @@ class OSD
             }
         }
         catch (exception) {}
-    };
+    }
 
     startSaving()
     {
@@ -38,7 +38,7 @@ class OSD
             }
         }
         catch (exception) {}
-    };
+    }
 
     stopLoading()
     {
@@ -51,7 +51,7 @@ class OSD
             }
         }
         catch (exception) {}
-    };
+    }
 
     stopSaving()
     {
@@ -64,7 +64,7 @@ class OSD
             }
         }
         catch (exception) {}
-    };
+    }
 
     // Constructor function
     static create(/* args */): OSD
@@ -80,5 +80,5 @@ class OSD
         }
         osdObject.topLevelDocument = <OSDDocument>(topLevelWindow.document);
         return osdObject;
-    };
-};
+    }
+}

@@ -5,13 +5,9 @@
 /*global TurbulenzEngine: false*/
 /*exported MathDeviceConvert*/
 
-/// <reference path="turbulenz.d.ts" />
-
-/// <reference path="observer.ts" />
-
 interface Utilities
 {
-    skipAsserts: bool;
+    skipAsserts: boolean;
     assert: { (test: any, msg?: string): void; };
     beget: { (o: any): any; };
     log: { (... arguments: any[]): void; };
@@ -165,49 +161,58 @@ var Utilities : Utilities = {
             this.xhr.onreadystatechange = null;
             this.xhr = null;
 
-            var response;
-
-            response = JSON.parse(xhrResponseText);
-            if (encrypted)
+            if (xhr.getResponseHeader("Content-Type") !== "application/json; charset=utf-8")
             {
-                var sig = xhr.getResponseHeader("X-TZ-Signature");
-                var validSignature = TurbulenzEngine.verifySignature(xhrResponseText, sig);
-                xhrResponseText = null;
-
                 TurbulenzEngine.setTimeout(function () {
-                    var receivedUrl = response.requestUrl;
-
-                    if (validSignature)
-                    {
-                        if (!TurbulenzEngine.encryptionEnabled || receivedUrl === url)
-                        {
-                            callbackFn(response, xhrStatus);
-                            callbackFn = null;
-                            return;
-                        }
-                    }
-
-                    // If it was a server-side verification fail then pass through the actual message
-                    if (xhrStatus === 400)
-                    {
-                        callbackFn(response, xhrStatus, "Verification Failed");
-                    }
-                    else
-                    {
-                        // Else drop reply
-                        callbackFn({msg: "Verification failed", ok: false}, 400, "Verification Failed");
-                    }
+                    callbackFn({msg : 'HttpStatus ' + xhrStatus + ' ' + Utilities.ajaxStatusCodes[xhrStatus]}, xhrStatus);
                     callbackFn = null;
                 }, 0);
             }
             else
             {
-                xhrResponseText = null;
+                var response = JSON.parse(xhrResponseText);
 
-                TurbulenzEngine.setTimeout(function () {
-                    callbackFn(response, xhrStatus);
-                    callbackFn = null;
-                }, 0);
+                if (encrypted)
+                {
+                    var sig = xhr.getResponseHeader("X-TZ-Signature");
+                    var validSignature = TurbulenzEngine.verifySignature(xhrResponseText, sig);
+                    xhrResponseText = null;
+
+                    TurbulenzEngine.setTimeout(function () {
+                        var receivedUrl = response.requestUrl;
+
+                        if (validSignature)
+                        {
+                            if (!TurbulenzEngine.encryptionEnabled || receivedUrl === url)
+                            {
+                                callbackFn(response, xhrStatus);
+                                callbackFn = null;
+                                return;
+                            }
+                        }
+
+                        // If it was a server-side verification fail then pass through the actual message
+                        if (xhrStatus === 400)
+                        {
+                            callbackFn(response, xhrStatus, "Verification Failed");
+                        }
+                        else
+                        {
+                            // Else drop reply
+                            callbackFn({msg: "Verification failed", ok: false}, 400, "Verification Failed");
+                        }
+                        callbackFn = null;
+                    }, 0);
+                }
+                else
+                {
+                    xhrResponseText = null;
+
+                    TurbulenzEngine.setTimeout(function () {
+                        callbackFn(response, xhrStatus);
+                        callbackFn = null;
+                    }, 0);
+                }
             }
         };
 
@@ -489,7 +494,7 @@ class Reference
     add()
     {
         this.referenceCount += 1;
-    };
+    }
 
     //
     // remove
@@ -506,7 +511,7 @@ class Reference
             this.object.destroy();
             this.object = null;
         }
-    };
+    }
 
     //
     //subscribeDestroyed
@@ -518,7 +523,7 @@ class Reference
             this.destroyedObserver = Observer.create();
         }
         this.destroyedObserver.subscribe(observerFunction);
-    };
+    }
 
     //
     //unsubscribeDestroyed
@@ -526,7 +531,7 @@ class Reference
     unsubscribeDestroyed(observerFunction)
     {
         this.destroyedObserver.unsubscribe(observerFunction);
-    };
+    }
 
     //
     // create
@@ -537,8 +542,8 @@ class Reference
         result.object = object;
         result.referenceCount = 0;
         return result;
-    };
-};
+    }
+}
 
 //
 // Profile
@@ -594,7 +599,7 @@ var Profile =
     //
     reset: function profileResetFn()
     {
-        this.profiles = {};
+        this.profiles = {}
     },
 
     //
@@ -685,18 +690,18 @@ var Profile =
         }
         return text;
     }
-};
+}
 
 //
 // Utilities to use with TurbulenzEngine.stopProfiling() object.
 //
-declare var JSProfiling :
+interface JSProfiling
 {
     createArray(rootNode: any): any[];
-    sort(array: any[], propertyName: string, descending: bool): void;
-}
+    sort(array: any[], propertyName: string, descending: boolean): void;
+};
 
-var JSProfiling = {};
+var JSProfiling = <JSProfiling>{};
 
 //
 // createArray

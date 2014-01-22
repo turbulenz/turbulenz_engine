@@ -3,10 +3,6 @@
 /*global Utilities: false*/
 /*global Observer: false*/
 
-/// <reference path="scene.ts" />
-/// <reference path="debug.ts" />
-/// <reference path="animation.ts" />
-
 //
 // Renderable
 //
@@ -21,6 +17,7 @@ interface Renderable
     rendererInfo: any; // TODO?
     distance: number;
     drawParameters: DrawParameters[];
+    sharedMaterial: Material;
 
     skinController?: ControllerBaseClass;
 
@@ -32,8 +29,9 @@ interface Renderable
     // Methods
 
     clone(): Renderable;
-    isSkinned(): bool;
-    hasCustomWorldExtents(): bool;
+    isSkinned(): boolean;
+    getWorldExtents();
+    hasCustomWorldExtents(): boolean;
     addCustomWorldExtents(extents: any);
     setNode(node: SceneNode);
     destroy();
@@ -46,17 +44,19 @@ class SceneNode
 {
     static version = 1;
 
-    name                            : string;
-    mathDevice                      : MathDevice;
-    dynamic                         : bool;
-    disabled                        : bool;
+    static _tempDirtyNodes: SceneNode[] = [];
 
-    dirtyWorld                      : bool;
-    dirtyWorldExtents               : bool;
-    dirtyLocalExtents               : bool;
+    name                            : string;
+    dynamic                         : boolean;
+    disabled                        : boolean;
+
+    dirtyWorld                      : boolean;
+    dirtyWorldExtents               : boolean;
+    dirtyLocalExtents               : boolean;
 
     //Counter of number of times modified.
     worldUpdate                     : number;
+    frameVisible                    : number;
     rendererInfo                    : any; // TODO?
 
     local                           : any; // m43
@@ -68,16 +68,16 @@ class SceneNode
     customLocalExtents              : any; //
 
     worldExtents                    : any; //
-    worldExtentsUpdate              : bool;
+    worldExtentsUpdate              : boolean;
     customWorldExtents              : any; //
     numCustomRenderableWorldExtents : number;
 
-    aabbTreeIndex                   : number;
+    spatialIndex                   : number;
 
     camera                          : Camera;
 
     parent                          : SceneNode;
-    notifiedParent                  : bool;
+    notifiedParent                  : boolean;
     scene                           : Scene;
     children                        : SceneNode[];
     childNeedsUpdateCount           : number;
@@ -94,18 +94,20 @@ class SceneNode
 
     // Physics
     physicsNodes                    : PhysicsNode[];
-    kinematic: bool;
+    kinematic: boolean;
 
     // Geometry
     geometryinstances               : { [name: string]: GeometryInstance; };
 
     // // During loading
     // reference: string;
-    // inplace: bool;
-
-    arrayConstructor: any; // on prototype
+    // inplace: boolean;
 
     renderables: Renderable[];
+
+    // On prototype
+    mathDevice: MathDevice;
+    arrayConstructor: any;
 
     //
     //SceneNode.makePath
@@ -113,7 +115,7 @@ class SceneNode
     static makePath(parentPath, childName)
     {
         return parentPath + "/" + childName;
-    };
+    }
 
     //
     //SceneNode.invalidSetLocalTransform
@@ -121,7 +123,7 @@ class SceneNode
     static invalidSetLocalTransform()
     {
         debug.abort("setLocalTransform can not be called on static nodes.");
-    };
+    }
 
     //
     // SceneNode
@@ -130,8 +132,12 @@ class SceneNode
     {
         this.name = params.name;
 
-        var md = TurbulenzEngine.getMathDevice();
-        this.mathDevice = md;
+        var md = this.mathDevice;
+        if (!md)
+        {
+            md = TurbulenzEngine.getMathDevice();
+            SceneNode.prototype.mathDevice = md;
+        }
 
         this.dynamic = params.dynamic || false;
         this.disabled = params.disabled || false;
@@ -139,6 +145,7 @@ class SceneNode
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
         this.worldUpdate = 0; //Counter of number of times modified.
+        this.frameVisible = -1;
 
         var local = params.local;
         if (local)
@@ -151,7 +158,7 @@ class SceneNode
         }
         local = this.local;
         this.world = md.m43Copy(local);
-    };
+    }
 
     //
     //getName
@@ -159,7 +166,7 @@ class SceneNode
     getName() : string
     {
         return this.name;
-    };
+    }
 
     //
     //getPath
@@ -171,7 +178,7 @@ class SceneNode
             return SceneNode.makePath(this.parent.getPath(), this.name);
         }
         return this.name;
-    };
+    }
 
     //
     //getParent
@@ -179,7 +186,7 @@ class SceneNode
     getParent() : SceneNode
     {
         return this.parent;
-    };
+    }
 
     //
     //setParentHelper
@@ -191,7 +198,7 @@ class SceneNode
         this.notifiedParent = false;
         this.dirtyWorld = false;
         this._setDirtyWorldTransform();
-    };
+    }
 
     //
     //addChild
@@ -223,7 +230,7 @@ class SceneNode
         {
             child.setDynamic();
         }
-    };
+    }
 
     //
     //removeChild
@@ -254,7 +261,7 @@ class SceneNode
             }
         }
         debug.abort("Invalid child");
-    };
+    }
 
     //
     //findChild
@@ -274,7 +281,7 @@ class SceneNode
             }
         }
         return undefined;
-    };
+    }
 
     //
     // clone
@@ -328,7 +335,7 @@ class SceneNode
         }
 
         return newNode;
-    };
+    }
 
     //
     //getRoot
@@ -341,19 +348,19 @@ class SceneNode
             result = result.parent;
         }
         return result;
-    };
+    }
 
     //
     // isInScene
     //
-    isInScene(): bool
+    isInScene(): boolean
     {
         if (this.getRoot().scene)
         {
             return true;
         }
         return false;
-    };
+    }
 
     //
     //removedFromScene
@@ -362,7 +369,7 @@ class SceneNode
     {
         //private function
 
-        if (this.aabbTreeIndex !== undefined)
+        if (this.spatialIndex !== undefined)
         {
             if (this.dynamic)
             {
@@ -384,7 +391,7 @@ class SceneNode
                 children[childIndex].removedFromScene(scene);
             }
         }
-    };
+    }
 
     //
     //setLocalTransform
@@ -400,7 +407,7 @@ class SceneNode
         {
             this._setDirtyWorldTransform();
         }
-    };
+    }
 
     //
     //getLocalTransform
@@ -408,7 +415,7 @@ class SceneNode
     getLocalTransform()
     {
         return this.local;
-    };
+    }
 
     //
     //_setDirtyWorldTransform
@@ -439,8 +446,9 @@ class SceneNode
         }
 
         //Notify children
-        var nodes = [this];
-        var numRemainingNodes = nodes.length;
+        var nodes = SceneNode._tempDirtyNodes;
+        nodes[0] = this;
+        var numRemainingNodes = 1;
         var node, index, child;
         do
         {
@@ -494,12 +502,24 @@ class SceneNode
             }
         }
         while (0 < numRemainingNodes);
-    };
+    }
 
     //
     //getWorldTransform
     //
     getWorldTransform()
+    {
+        if (this.dirtyWorld)
+        {
+            this.updateWorldTransform();
+        }
+        return this.world;
+    }
+
+    //
+    //updateWorldTransform
+    //
+    updateWorldTransform()
     {
         if (this.dirtyWorld)
         {
@@ -526,8 +546,7 @@ class SceneNode
                 this.world =  this.mathDevice.m43Copy(local, this.world);
             }
         }
-        return this.world;
-    };
+    }
 
     //
     //setDynamic
@@ -536,16 +555,16 @@ class SceneNode
     {
         if (!this.dynamic)
         {
-            if (this.aabbTreeIndex !== undefined)
+            if (this.spatialIndex !== undefined)
             {
                 var scene = this.getRoot().scene;
                 scene.staticSpatialMap.remove(this);
                 scene.staticNodesChangeCounter += 1;
-                delete this.aabbTreeIndex;
+                delete this.spatialIndex;
             }
             delete this.setLocalTransform; //Allowed to move again.
 
-            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an aabbTreeIndex it may no longer.
+            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
             if (worldExtents)
             {
                 this.getRoot().scene.dynamicSpatialMap.update(this, worldExtents);
@@ -562,7 +581,7 @@ class SceneNode
                 children[n].setDynamic();
             }
         }
-    };
+    }
 
     //
     //setStatic
@@ -571,15 +590,15 @@ class SceneNode
     {
         if (this.dynamic)
         {
-            if (this.aabbTreeIndex !== undefined)
+            if (this.spatialIndex !== undefined)
             {
                 this.getRoot().scene.dynamicSpatialMap.remove(this);
-                delete this.aabbTreeIndex;
+                delete this.spatialIndex;
             }
 
             this.setLocalTransform = SceneNode.invalidSetLocalTransform;
 
-            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an aabbTreeIndex it may no longer.
+            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
             if (worldExtents)
             {
                 var scene = this.getRoot().scene;
@@ -606,7 +625,7 @@ class SceneNode
                 children[n].setStatic();
             }
         }
-    };
+    }
 
     //
     //setDisabled
@@ -621,15 +640,15 @@ class SceneNode
         {
             this.disabled = false;
         }
-    };
+    }
 
     //
     //getDisabled
     //
-    getDisabled(): bool
+    getDisabled(): boolean
     {
         return this.disabled;
-    };
+    }
 
     //
     //enableHierarchy
@@ -647,7 +666,7 @@ class SceneNode
                 children[c].enableHierarchy(enabled);
             }
         }
-    };
+    }
 
     //
     //childUpdated
@@ -665,7 +684,7 @@ class SceneNode
                 this.notifiedParent = false;
             }
         }
-    };
+    }
 
     //
     //childNeedsUpdate
@@ -675,7 +694,7 @@ class SceneNode
         //Private function
         this.updateRequired();        //propagate to the root node.
         this.childNeedsUpdateCount += 1;
-    };
+    }
 
     //
     //updateRequired
@@ -701,7 +720,7 @@ class SceneNode
                 scene.addRootNodeToUpdate(this, this.name);
             }
         }
-    };
+    }
 
     //
     //checkUpdateRequired
@@ -719,22 +738,22 @@ class SceneNode
                 this.notifiedParent = false;
             }
         }
-    };
+    }
 
     //
     //update
     //
     update(scene)
     {
-        this.updateHelper(this.mathDevice, (scene || this.scene), [this]);
-    };
+        var nodes = SceneNode._tempDirtyNodes;
+        nodes[0] = this;
+        SceneNode.updateNodes(this.mathDevice, (scene || this.scene), nodes, 1);
+    }
 
-    // TODO: Marked as private, but Scene accesses it
-    // PRIVATE
-    /* private */ updateHelper(mathDevice, scene, nodes)
+    static updateNodes(mathDevice, scene, nodes, numNodes)
     {
+        var dynamicSpatialMap = scene.dynamicSpatialMap;
         var node, parent, index, worldExtents;
-        var numNodes = nodes.length;
         do
         {
             numNodes -= 1;
@@ -805,7 +824,7 @@ class SceneNode
                 {
                     if (node.dynamic)
                     {
-                        scene.dynamicSpatialMap.update(node, worldExtents);
+                        dynamicSpatialMap.update(node, worldExtents);
                     }
                     else
                     {
@@ -819,11 +838,11 @@ class SceneNode
                         delete node.notifiedParent;
                     }
                 }
-                else if (node.aabbTreeIndex !== undefined)
+                else if (node.spatialIndex !== undefined)
                 {
                     if (node.dynamic)
                     {
-                        scene.dynamicSpatialMap.remove(node);
+                        dynamicSpatialMap.remove(node);
                     }
                     else
                     {
@@ -853,13 +872,10 @@ class SceneNode
                 }
             }
 
-            if (node.notifiedParent)
-            {
-                node.notifiedParent = false;
-            }
+            node.notifiedParent = false;
         }
         while (0 < numNodes);
-    };
+    }
 
     //
     //updateLocalExtents
@@ -1011,7 +1027,7 @@ class SceneNode
         }
 
         this.dirtyLocalExtents = false;
-    };
+    }
 
     //
     //getLocalExtents
@@ -1023,13 +1039,18 @@ class SceneNode
             this.updateLocalExtents();
         }
         return this.localExtents; //Can be undefined if no local extents. These are not transformed by the local transform matrix.
-    };
+    }
 
     //
     //updateWorldExtents
     //
     updateWorldExtents()
     {
+        if (this.dirtyWorld)
+        {
+            this.updateWorldTransform();
+        }
+
         if (this.dirtyWorldExtents)
         {
             if (this.customWorldExtents)
@@ -1063,7 +1084,7 @@ class SceneNode
 
             this.checkUpdateRequired();
         }
-    };
+    }
 
     //
     //updateCustomRenderableWorldExtents
@@ -1147,7 +1168,7 @@ class SceneNode
             worldExtents[4] = maxY;
             worldExtents[5] = maxZ;
         }
-    };
+    }
 
     //
     //recalculateWorldExtents
@@ -1202,7 +1223,7 @@ class SceneNode
         worldExtents[3] = (ct0 + ht0);
         worldExtents[4] = (ct1 + ht1);
         worldExtents[5] = (ct2 + ht2);
-    };
+    }
 
     //
     //getWorldExtents
@@ -1214,31 +1235,49 @@ class SceneNode
             this.updateWorldExtents();
         }
         return this.worldExtents;
-    };
+    }
 
     //
     //addCustomLocalExtents
     //
     addCustomLocalExtents(localExtents)
     {
-        var customWorldExtents = this.customWorldExtents;
-        if (!customWorldExtents)
+        var customLocalExtents = this.customLocalExtents;
+        if (!customLocalExtents)
         {
-            this.customWorldExtents = localExtents.slice();
+            this.customLocalExtents = customLocalExtents = new this.arrayConstructor(6);
+            customLocalExtents[0] = localExtents[0];
+            customLocalExtents[1] = localExtents[1];
+            customLocalExtents[2] = localExtents[2];
+            customLocalExtents[3] = localExtents[3];
+            customLocalExtents[4] = localExtents[4];
+            customLocalExtents[5] = localExtents[5];
+            this.dirtyLocalExtents = true;
         }
         else
         {
-            customWorldExtents[0] = localExtents[0];
-            customWorldExtents[1] = localExtents[1];
-            customWorldExtents[2] = localExtents[2];
-            customWorldExtents[3] = localExtents[3];
-            customWorldExtents[4] = localExtents[4];
-            customWorldExtents[5] = localExtents[5];
+            if (customLocalExtents[0] !== localExtents[0] ||
+                customLocalExtents[1] !== localExtents[1] ||
+                customLocalExtents[2] !== localExtents[2] ||
+                customLocalExtents[3] !== localExtents[3] ||
+                customLocalExtents[4] !== localExtents[4] ||
+                customLocalExtents[5] !== localExtents[5])
+            {
+                customLocalExtents[0] = localExtents[0];
+                customLocalExtents[1] = localExtents[1];
+                customLocalExtents[2] = localExtents[2];
+                customLocalExtents[3] = localExtents[3];
+                customLocalExtents[4] = localExtents[4];
+                customLocalExtents[5] = localExtents[5];
+                this.dirtyLocalExtents = true;
+            }
         }
-        this.dirtyWorldExtents = true;
-        this.dirtyLocalExtents = true;
-        this.updateRequired();
-    };
+        if (this.dirtyLocalExtents)
+        {
+            this.dirtyWorldExtents = true;
+            this.updateRequired();
+        }
+    }
 
     //
     //removeCustomLocalExtents
@@ -1249,7 +1288,7 @@ class SceneNode
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
         this.updateRequired();
-    };
+    }
 
     //
     //getCustomLocalExtents
@@ -1257,7 +1296,7 @@ class SceneNode
     getCustomLocalExtents()
     {
         return this.customLocalExtents;
-    };
+    }
 
     //
     //addCustomWorldExtents
@@ -1267,20 +1306,38 @@ class SceneNode
         var customWorldExtents = this.customWorldExtents;
         if (!customWorldExtents)
         {
-            this.customWorldExtents = worldExtents.slice();
-        }
-        else
-        {
+            this.customWorldExtents = customWorldExtents = new this.arrayConstructor(6);
             customWorldExtents[0] = worldExtents[0];
             customWorldExtents[1] = worldExtents[1];
             customWorldExtents[2] = worldExtents[2];
             customWorldExtents[3] = worldExtents[3];
             customWorldExtents[4] = worldExtents[4];
             customWorldExtents[5] = worldExtents[5];
+            this.dirtyWorldExtents = true;
         }
-        this.dirtyWorldExtents = true;
-        this.updateRequired();
-    };
+        else
+        {
+            if (customWorldExtents[0] !== worldExtents[0] ||
+                customWorldExtents[1] !== worldExtents[1] ||
+                customWorldExtents[2] !== worldExtents[2] ||
+                customWorldExtents[3] !== worldExtents[3] ||
+                customWorldExtents[4] !== worldExtents[4] ||
+                customWorldExtents[5] !== worldExtents[5])
+            {
+                customWorldExtents[0] = worldExtents[0];
+                customWorldExtents[1] = worldExtents[1];
+                customWorldExtents[2] = worldExtents[2];
+                customWorldExtents[3] = worldExtents[3];
+                customWorldExtents[4] = worldExtents[4];
+                customWorldExtents[5] = worldExtents[5];
+                this.dirtyWorldExtents = true;
+            }
+        }
+        if (this.dirtyWorldExtents)
+        {
+            this.updateRequired();
+        }
+    }
 
     //
     //removeCustomWorldExtents
@@ -1290,7 +1347,7 @@ class SceneNode
         delete this.customWorldExtents;
         this.dirtyWorldExtents = true;
         this.updateRequired();
-    };
+    }
 
     //
     //getCustomWorldExtents
@@ -1298,7 +1355,7 @@ class SceneNode
     getCustomWorldExtents()
     {
         return this.customWorldExtents;
-    };
+    }
 
     //
     //renderableWorldExtentsUpdated
@@ -1316,7 +1373,7 @@ class SceneNode
             this.dirtyLocalExtents = true;
             this.numCustomRenderableWorldExtents = this.numCustomRenderableWorldExtents ? this.numCustomRenderableWorldExtents + 1 : 1;
         }
-    };
+    }
 
     //
     //renderableWorldExtentsRemoved
@@ -1330,45 +1387,19 @@ class SceneNode
         }
         this.dirtyLocalExtents = true;
         this.numCustomRenderableWorldExtents -= 1;
-    };
+    }
 
     //
     //calculateHierarchyWorldExtents
     //
-    calculateHierarchyWorldExtents()
+    calculateHierarchyWorldExtents(dst?)
     {
-        var calculateNodeExtents =
-            function calculateNodeExtentsFn(sceneNode, totalExtents)
-        {
-            var valid = false;
-
-            var worldExtents = sceneNode.getWorldExtents();
-            if (worldExtents)
-            {
-                totalExtents[0] = (totalExtents[0] < worldExtents[0] ? totalExtents[0] : worldExtents[0]);
-                totalExtents[1] = (totalExtents[1] < worldExtents[1] ? totalExtents[1] : worldExtents[1]);
-                totalExtents[2] = (totalExtents[2] < worldExtents[2] ? totalExtents[2] : worldExtents[2]);
-                totalExtents[3] = (totalExtents[3] > worldExtents[3] ? totalExtents[3] : worldExtents[3]);
-                totalExtents[4] = (totalExtents[4] > worldExtents[4] ? totalExtents[4] : worldExtents[4]);
-                totalExtents[5] = (totalExtents[5] > worldExtents[5] ? totalExtents[5] : worldExtents[5]);
-                valid = true;
-            }
-
-            var children = sceneNode.children;
-            if (children)
-            {
-                var numChildren = children.length;
-                for (var n = 0; n < numChildren; n += 1)
-                {
-                    valid = (calculateNodeExtents(children[n], totalExtents) || valid);
-                }
-            }
-
-            return valid;
-        }
-
         var maxValue = Number.MAX_VALUE;
-        var totalExtents = new this.arrayConstructor(6);
+        var totalExtents = dst;
+        if (!totalExtents)
+        {
+            totalExtents = new this.arrayConstructor(6);
+        }
         totalExtents[0] = maxValue;
         totalExtents[1] = maxValue;
         totalExtents[2] = maxValue;
@@ -1376,7 +1407,7 @@ class SceneNode
         totalExtents[4] = -maxValue;
         totalExtents[5] = -maxValue;
 
-        if (calculateNodeExtents(this, totalExtents))
+        if (this._calculateNodeExtents(totalExtents))
         {
             return totalExtents;
         }
@@ -1384,7 +1415,39 @@ class SceneNode
         {
             return undefined;
         }
-    };
+    }
+
+    private _calculateNodeExtents(totalExtents): boolean
+    {
+        var valid = false;
+
+        var worldExtents = this.getWorldExtents();
+        if (worldExtents)
+        {
+            totalExtents[0] = (totalExtents[0] < worldExtents[0] ? totalExtents[0] : worldExtents[0]);
+            totalExtents[1] = (totalExtents[1] < worldExtents[1] ? totalExtents[1] : worldExtents[1]);
+            totalExtents[2] = (totalExtents[2] < worldExtents[2] ? totalExtents[2] : worldExtents[2]);
+            totalExtents[3] = (totalExtents[3] > worldExtents[3] ? totalExtents[3] : worldExtents[3]);
+            totalExtents[4] = (totalExtents[4] > worldExtents[4] ? totalExtents[4] : worldExtents[4]);
+            totalExtents[5] = (totalExtents[5] > worldExtents[5] ? totalExtents[5] : worldExtents[5]);
+            valid = true;
+        }
+
+        var children = this.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var n = 0; n < numChildren; n += 1)
+            {
+                if (children[n]._calculateNodeExtents(totalExtents))
+                {
+                    valid = true;
+                }
+            }
+        }
+
+        return valid;
+    }
 
     //
     //addRenderable
@@ -1400,7 +1463,7 @@ class SceneNode
         this.renderables.push(renderable);
         renderable.setNode(this);
         this.dirtyLocalExtents = true;
-    };
+    }
 
     //
     //addRenderableArray
@@ -1421,7 +1484,7 @@ class SceneNode
             additionalRenderables[index].setNode(this);
         }
         this.dirtyLocalExtents = true;
-    };
+    }
 
     //
     //removeRenderable
@@ -1443,15 +1506,15 @@ class SceneNode
             }
         }
         debug.abort("Invalid renderable");
-    };
+    }
 
     //
     //hasRenderables
     //
-    hasRenderables() : bool
+    hasRenderables() : boolean
     {
         return (this.renderables && this.renderables.length) ? true : false;
-    };
+    }
 
     //
     //addLightInstance
@@ -1467,7 +1530,7 @@ class SceneNode
         this.lightInstances.push(lightInstance);
         lightInstance.setNode(this);
         this.dirtyLocalExtents = true;
-    };
+    }
 
     //
     //addLightInstanceArray
@@ -1490,7 +1553,7 @@ class SceneNode
         }
 
         this.dirtyLocalExtents = true;
-    };
+    }
 
     //
     //removeLightInstance
@@ -1512,15 +1575,15 @@ class SceneNode
             }
         }
         debug.abort("Invalid light");
-    };
+    }
 
     //
     //hasLightInstances
     //
-    hasLightInstances(): bool
+    hasLightInstances(): boolean
     {
-        return <bool><any>(this.lightInstances && this.lightInstances.length);
-    };
+        return <boolean><any>(this.lightInstances && this.lightInstances.length);
+    }
 
     //
     //destroy
@@ -1568,7 +1631,16 @@ class SceneNode
         }
 
         delete this.scene;
-    };
+
+        // Make sure there are no references to any nodes
+        var nodes = SceneNode._tempDirtyNodes;
+        var numNodes = nodes.length;
+        var n;
+        for (n = 0; n < numNodes; n += 1)
+        {
+            nodes[n] = null;
+        }
+    }
 
     //
     //subscribeCloned
@@ -1580,7 +1652,7 @@ class SceneNode
             this.clonedObserver = Observer.create();
         }
         this.clonedObserver.subscribe(observerFunction);
-    };
+    }
 
     //
     //unsubscribeCloned
@@ -1588,7 +1660,7 @@ class SceneNode
     unsubscribeCloned(observerFunction)
     {
         this.clonedObserver.unsubscribe(observerFunction);
-    };
+    }
 
     //
     //subscribeDestroyed
@@ -1600,7 +1672,7 @@ class SceneNode
             this.destroyedObserver = Observer.create();
         }
         this.destroyedObserver.subscribe(observerFunction);
-    };
+    }
 
     //
     //unsubscribeDestroyed
@@ -1608,7 +1680,7 @@ class SceneNode
     unsubscribeDestroyed(observerFunction)
     {
         this.destroyedObserver.unsubscribe(observerFunction);
-    };
+    }
 
     //
     //SceneNode.create
@@ -1616,8 +1688,10 @@ class SceneNode
     static create(params) : SceneNode
     {
         return new SceneNode(params);
-    };
-};
+    }
+}
+
+SceneNode.prototype.mathDevice = null;
 
 // Detect correct typed arrays
 (function () {

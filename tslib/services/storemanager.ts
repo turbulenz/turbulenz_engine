@@ -6,10 +6,6 @@
 /*global SessionToken: false*/
 /*global debug: false*/
 
-/// <reference path="turbulenzservices.ts" />
-
-/// <reference path="sessiontoken.ts" />
-
 //
 // UserItem - A record of an Item owned by the user
 //
@@ -68,7 +64,7 @@ class StoreManager
     basketUpdateRequestToken: SessionToken;
     userItemsRequestToken   : SessionToken;
     consumeRequestToken     : SessionToken;
-    ready                   : bool;
+    ready                   : boolean;
     currency                : string;
     offerings               : StoreOfferingList;
     resources               : StoreResourceList;
@@ -124,12 +120,12 @@ class StoreManager
                 requestHandler: this.requestHandler,
                 encrypt: true
             });
-    };
+    }
 
     getUserItems(): UserItemList
     {
         return this.userItems;
-    };
+    }
 
     getItemsSortedDict(items: StoreItemList): StoreItemList
     {
@@ -158,17 +154,17 @@ class StoreManager
         }
 
         return sortedItemsDict;
-    };
+    }
 
     getOfferings(): StoreOfferingList
     {
         return <StoreOfferingList> this.getItemsSortedDict(this.offerings);
-    };
+    }
 
     getResources(): StoreResourceList
     {
         return <StoreResourceList> this.getItemsSortedDict(this.resources);
-    };
+    }
 
     // backwards compatibility
     getItems(): any
@@ -192,9 +188,9 @@ class StoreManager
                     token: token
                 }));
             }, 0);
-    };
+    }
 
-    addToBasket(key: string, amount: number): bool
+    addToBasket(key: string, amount: number): boolean
     {
         var offering = this.offerings[key];
         if (!offering ||
@@ -206,7 +202,7 @@ class StoreManager
         }
 
         var resources = this.resources;
-        function isOwnOffering(offering: StoreOffering) : bool
+        function isOwnOffering(offering: StoreOffering) : boolean
         {
             var outputKey;
             var output = offering.output;
@@ -224,7 +220,7 @@ class StoreManager
         }
 
         var userItems = this.userItems;
-        function allOutputOwned(offering: StoreOffering) : bool
+        function allOutputOwned(offering: StoreOffering) : boolean
         {
             var outputKey;
             var output = offering.output;
@@ -270,9 +266,9 @@ class StoreManager
 
         basketItems[key] = {amount: newBasketAmount};
         return true;
-    };
+    }
 
-    removeFromBasket(key: string, amount: number): bool
+    removeFromBasket(key: string, amount: number): boolean
     {
         if (!this.offerings[key] ||
             Math.floor(amount) !== amount ||
@@ -296,14 +292,14 @@ class StoreManager
             this.basket.items[key] = {amount: newAmount};
         }
         return true;
-    };
+    }
 
     emptyBasket()
     {
         this.basket.items = {};
-    };
+    }
 
-    isBasketEmpty(): bool
+    isBasketEmpty(): boolean
     {
         var key;
         var basketItems = this.basket.items;
@@ -315,9 +311,9 @@ class StoreManager
             }
         }
         return true;
-    };
+    }
 
-    showConfirmPurchase(): bool
+    showConfirmPurchase(): boolean
     {
         if (this.isBasketEmpty())
         {
@@ -328,7 +324,7 @@ class StoreManager
                 TurbulenzBridge.triggerShowConfirmPurchase();
             });
         return true;
-    };
+    }
 
     consume(key, consumeAmount, callbackFn, errorCallbackFn)
     {
@@ -375,7 +371,7 @@ class StoreManager
                 requestHandler: this.requestHandler,
                 encrypt: true
             });
-    };
+    }
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
@@ -500,5 +496,5 @@ class StoreManager
         TurbulenzBridge.setOnPurchaseRejected(onSitePurchaseRejected);
 
         return storeManager;
-    };
-};
+    }
+}

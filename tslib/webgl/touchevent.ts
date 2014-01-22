@@ -1,9 +1,5 @@
 // Copyright (c) 2012 Turbulenz Limited
 
-/// <reference path="../turbulenz.d.ts" />
-
-/// <reference path="touch.ts" />
-
 class WebGLTouchEvent implements TouchEvent
 {
     gameTouches    : any[];
@@ -19,5 +15,5 @@ class WebGLTouchEvent implements TouchEvent
         touchEvent.touches          = params.touches;
 
         return touchEvent;
-    };
-};
+    }
+}

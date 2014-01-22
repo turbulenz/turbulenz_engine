@@ -5,7 +5,7 @@ interface CachedAsset
 {
     cacheHit: number;
     asset: any;
-    isLoading: bool;
+    isLoading: boolean;
 };
 
 interface AssetCacheOnLoadFn { (key: string,
@@ -33,9 +33,9 @@ class AssetCache
     exists(key)
     {
         return this.cache.hasOwnProperty(key);
-    };
+    }
 
-    isLoading(key): bool
+    isLoading(key): boolean
     {
         var cachedAsset = this.cache[key];
         if (cachedAsset)
@@ -43,7 +43,7 @@ class AssetCache
             return cachedAsset.isLoading;
         }
         return false;
-    };
+    }
 
     request(key, params?): any
     {
@@ -103,7 +103,7 @@ class AssetCache
                     that.hitCounter += 1;
                 });
         return null;
-    };
+    }
 
     // Constructor function
     static create(cacheParams: any): AssetCache
@@ -119,5 +119,5 @@ class AssetCache
         assetCache.cache = {};
 
         return assetCache;
-    };
-};
+    }
+}

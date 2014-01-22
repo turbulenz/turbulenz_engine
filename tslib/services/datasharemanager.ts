@@ -5,8 +5,6 @@
 /*global TurbulenzBridge: false*/
 /*global debug: false*/
 
-/// <reference path="turbulenzservices.ts" />
-
 interface DataShareManagerCreateDataShareCB
 {
     (datashare: DataShare): void;
@@ -20,7 +18,7 @@ interface DataShareManagerErrorCB
 interface DataShareManagerFindDataSharesCB
 {
     user?: string;
-    friendsOnly?: bool;
+    friendsOnly?: boolean;
     callback: {
         (dataShares: DataShare[]): void;
     };
@@ -29,7 +27,7 @@ interface DataShareManagerFindDataSharesCB
 
 interface DataShareJoinCB
 {
-    (success: bool): void;
+    (success: boolean): void;
 };
 
 interface DataShareGetCBData
@@ -61,7 +59,7 @@ interface DataShareCompareAndSetParams
     value: string;
     access?: number;
     callback?: {
-        (wasSet: bool, reason?: string): void; // reason - either 'changed' or 'read_only'
+        (wasSet: boolean, reason?: string): void; // reason - either 'changed' or 'read_only'
     };
     errorCallback?: DataShareManagerErrorCB;
 };
@@ -72,7 +70,7 @@ interface DataShareCreateParams
     created: number;
     owner: string;
     users: string[];
-    joinable: bool;
+    joinable: boolean;
 };
 
 //
@@ -106,7 +104,7 @@ class DataShare
     created: number;
     owner: string;
     users: string[];
-    joinable: bool;
+    joinable: boolean;
 
     validateKey(key: string): void
     {
@@ -134,9 +132,9 @@ class DataShare
             throw new Error('Key missing from parameters');
         }
         return key;
-    };
+    }
 
-    getAccess(params: any): bool
+    getAccess(params: any): boolean
     {
         var access;
         if (params.hasOwnProperty('access'))
@@ -152,9 +150,9 @@ class DataShare
             access = null; // default value is set server-side
         }
         return access;
-    };
+    }
 
-    isJoined(username: string): bool
+    isJoined(username: string): boolean
     {
         var users = this.users;
         var usersLength = users.length;
@@ -169,7 +167,7 @@ class DataShare
             }
         }
         return false;
-    };
+    }
 
     join(callbackFn?: DataShareJoinCB, errorCallbackFn?: DataShareManagerErrorCB): void
     {
@@ -211,7 +209,7 @@ class DataShare
                 callback: dataShareJoinCallback,
                 requestHandler: this.requestHandler
             });
-    };
+    }
 
     setJoinable(joinable, callbackFn?: {(): void;}, errorCallbackFn?: DataShareManagerErrorCB): void
     {
@@ -255,7 +253,7 @@ class DataShare
                 callback: dataShareSetJoinableCallback,
                 requestHandler: this.requestHandler
             });
-    };
+    }
 
     leave(callbackFn?: {(): void;}, errorCallbackFn?: DataShareManagerErrorCB): void
     {
@@ -289,7 +287,7 @@ class DataShare
                 callback: dataShareLeaveCallback,
                 requestHandler: this.requestHandler
             });
-    };
+    }
 
     getKeys(callbackFn: DataShareGetKeysCB, errorCallbackFn?: DataShareManagerErrorCB): void
     {
@@ -324,7 +322,7 @@ class DataShare
                 requestHandler: this.requestHandler,
                 encrypt: true
             });
-    };
+    }
 
     get(key: string, callbackFn: DataShareGetCB, errorCallbackFn?: DataShareManagerErrorCB): void
     {
@@ -369,7 +367,7 @@ class DataShare
                 requestHandler: this.requestHandler,
                 encrypt: true
             });
-    };
+    }
 
     checkUnauthoizedError(jsonResponse: any, status: number): string
     {
@@ -386,7 +384,7 @@ class DataShare
             }
         }
         return null;
-    };
+    }
 
     set(params: DataShareCompareAndSetParams): void
     {
@@ -449,7 +447,7 @@ class DataShare
                 requestHandler: this.requestHandler,
                 encrypt: true
             });
-    };
+    }
 
     compareAndSet(params: DataShareCompareAndSetParams): void
     {
@@ -524,7 +522,7 @@ class DataShare
                 requestHandler: this.requestHandler,
                 encrypt: true
             });
-    };
+    }
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
@@ -562,7 +560,7 @@ class DataShare
         dataShare.tokens = {};
 
         return dataShare;
-    };
+    }
 }
 
 //
@@ -618,7 +616,7 @@ class DataShareManager
                 callback: createDataShareCallback,
                 requestHandler: this.requestHandler
             });
-    };
+    }
 
     findDataShares(params: DataShareManagerFindDataSharesCB)
     {
@@ -678,7 +676,7 @@ class DataShareManager
                 callback: findDataSharesCallback,
                 requestHandler: this.requestHandler
             });
-    };
+    }
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession,
@@ -707,5 +705,5 @@ class DataShareManager
         dataShareManager.requestHandler = requestHandler;
 
         return dataShareManager;
-    };
-};
+    }
+}

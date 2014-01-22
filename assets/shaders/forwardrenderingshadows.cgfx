@@ -63,10 +63,12 @@ float ApplyShadowAttenuation(float3 position)
     return shadowAttenuation;
 }
 
-float4 fp_flat_shadows(FP_FLAT_IN IN) : COLOR
+float4 fp_flat_shadows(in float4 INColor        : COLOR,
+                       in float3 INViewNormal   : TEXCOORD1,
+                       in float3 INViewPosition : TEXCOORD2) : COLOR
 {
-    float3 Nn = normalize(IN.ViewNormal);
-    float3 position = IN.ViewPosition;
+    float3 Nn = normalize(INViewNormal);
+    float3 position = INViewPosition;
 
     float4 position4 = float4(position, 1.0);
     float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
@@ -81,21 +83,24 @@ float4 fp_flat_shadows(FP_FLAT_IN IN) : COLOR
         discard;
     }
 
-    diffContrib *= ApplyShadowAttenuation(IN.ViewPosition);
-    return float4(IN.Color.xyz * diffContrib, IN.Color.w);
+    diffContrib *= ApplyShadowAttenuation(INViewPosition);
+    return float4(INColor.xyz * diffContrib, INColor.w);
 }
 
-float4 fp_blinn_shadows(FP_BLINN_IN IN) : COLOR
+float4 fp_blinn_shadows(in float4 INColor    : COLOR,
+                        in float2 INUV       : TEXCOORD0,
+                        in float3 INViewNormal   : TEXCOORD1,
+                        in float3 INViewPosition : TEXCOORD2) : COLOR
 {
-    float3 Nn = normalize(IN.ViewNormal);
-    float3 position = IN.ViewPosition;
+    float3 Nn = normalize(INViewNormal);
+    float3 position = INViewPosition;
 
     float4 position4 = float4(position, 1.0);
     float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
 
     float3 Ln = normalize(lightOrigin - position);
     float3 diffContrib = dot(Ln, Nn) * lightColor;
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
+    float4 diffuseColor = tex2D(diffuse, INUV);
     float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
                          tex2D(lightfalloff, float2(projection.w, 0.5)).y;
     diffContrib *= attenuation;
@@ -104,215 +109,352 @@ float4 fp_blinn_shadows(FP_BLINN_IN IN) : COLOR
         discard;
     }
 
-    diffContrib *= ApplyShadowAttenuation(IN.ViewPosition);
+    diffContrib *= ApplyShadowAttenuation(INViewPosition);
     float3 result = (diffuseColor.xyz * diffContrib);
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_shadows(in float4 INColor   : COLOR,
+                            in float2 INUV      : TEXCOORD0,
+                            in float3 INViewNormal   : TEXCOORD1,
+                            in float3 INViewTangent  : TEXCOORD2,
+                            in float3 INViewBinormal : TEXCOORD3,
+                            in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float3 Nn = SampleNormalMap(IN.UV);
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
+    float3 Nn = SampleNormalMap(INUV);
+    float4 diffuseColor = tex2D(diffuse, INUV);
 
     float3 diffContrib;
-    light_contribution(IN, Nn, diffContrib);
+    light_contribution(INViewNormal,
+                       INViewTangent,
+                       INViewBinormal,
+                       INViewPosition,
+                       Nn,
+                       diffContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = (diffuseColor.xyz * diffContrib) * attenuation;
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_alphatest_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_alphatest_shadows(in float4 INColor   : COLOR,
+                                      in float2 INUV      : TEXCOORD0,
+                                      in float3 INViewNormal   : TEXCOORD1,
+                                      in float3 INViewTangent  : TEXCOORD2,
+                                      in float3 INViewBinormal : TEXCOORD3,
+                                      in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
-    if (IN.Color.w * diffuseColor.w < alphaRef)
+    float4 diffuseColor = tex2D(diffuse, INUV);
+    if (INColor.w * diffuseColor.w < alphaRef)
     {
         discard;
     }
 
-    float3 Nn = SampleNormalMap(IN.UV);
+    float3 Nn = SampleNormalMap(INUV);
 
     float3 diffContrib;
-    light_contribution(IN, Nn, diffContrib);
+    light_contribution(INViewNormal,
+                       INViewTangent,
+                       INViewBinormal,
+                       INViewPosition,
+                       Nn,
+                       diffContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = (diffuseColor.xyz * diffContrib) * attenuation;
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_specularmap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_specularmap_shadows(in float4 INColor   : COLOR,
+                                        in float2 INUV      : TEXCOORD0,
+                                        in float3 INViewNormal   : TEXCOORD1,
+                                        in float3 INViewTangent  : TEXCOORD2,
+                                        in float3 INViewBinormal : TEXCOORD3,
+                                        in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float3 Nn = SampleNormalMap(IN.UV);
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
-    float3 specularColor = tex2D(specular_map, IN.UV).xyz;
+    float3 Nn = SampleNormalMap(INUV);
+    float4 diffuseColor = tex2D(diffuse, INUV);
+    float3 specularColor = tex2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
-    light_contribution_specular(IN, Nn, diffContrib, specContrib);
+    light_contribution_specular(INViewNormal,
+                                INViewTangent,
+                                INViewBinormal,
+                                INViewPosition,
+                                Nn,
+                                diffContrib,
+                                specContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = ((specularColor * specContrib) + (diffuseColor.xyz * diffContrib)) * attenuation;
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_specularmap_alphatest_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_specularmap_alphatest_shadows(in float4 INColor   : COLOR,
+                                                  in float2 INUV      : TEXCOORD0,
+                                                  in float3 INViewNormal   : TEXCOORD1,
+                                                  in float3 INViewTangent  : TEXCOORD2,
+                                                  in float3 INViewBinormal : TEXCOORD3,
+                                                  in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
-    if (IN.Color.w * diffuseColor.w < alphaRef)
+    float4 diffuseColor = tex2D(diffuse, INUV);
+    if (INColor.w * diffuseColor.w < alphaRef)
     {
         discard;
     }
 
-    float3 Nn = SampleNormalMap(IN.UV);
-    float3 specularColor = tex2D(specular_map, IN.UV).xyz;
+    float3 Nn = SampleNormalMap(INUV);
+    float3 specularColor = tex2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
-    light_contribution_specular(IN, Nn, diffContrib, specContrib);
+    light_contribution_specular(INViewNormal,
+                                INViewTangent,
+                                INViewBinormal,
+                                INViewPosition,
+                                Nn,
+                                diffContrib,
+                                specContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = ((specularColor * specContrib) + (diffuseColor.xyz * diffContrib)) * attenuation;
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_normalmap_specularmap_alphamap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_specularmap_alphamap_shadows(in float4 INColor   : COLOR,
+                                                 in float2 INUV      : TEXCOORD0,
+                                                 in float3 INViewNormal   : TEXCOORD1,
+                                                 in float3 INViewTangent  : TEXCOORD2,
+                                                 in float3 INViewBinormal : TEXCOORD3,
+                                                 in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float alpha = tex2D(alpha_map, IN.UV).a;
-    if (IN.Color.w * alpha < alphaRef)
+    float alpha = tex2D(alpha_map, INUV).a;
+    if (INColor.w * alpha < alphaRef)
     {
         discard;
     }
 
-    float3 Nn = SampleNormalMap(IN.UV);
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
-    float3 specularColor = tex2D(specular_map, IN.UV).xyz;
+    float3 Nn = SampleNormalMap(INUV);
+    float4 diffuseColor = tex2D(diffuse, INUV);
+    float3 specularColor = tex2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
-    light_contribution_specular(IN, Nn, diffContrib, specContrib);
+    light_contribution_specular(INViewNormal,
+                                INViewTangent,
+                                INViewBinormal,
+                                INViewPosition,
+                                Nn,
+                                diffContrib,
+                                specContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = ((specularColor * specContrib) + (diffuseColor.xyz * diffContrib)) * attenuation;
-    return IN.Color * float4(result, alpha);
+    return INColor * float4(result, alpha);
 }
 
-float4 fp_normalmap_glowmap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_glowmap_shadows(in float4 INColor   : COLOR,
+                                    in float2 INUV      : TEXCOORD0,
+                                    in float3 INViewNormal   : TEXCOORD1,
+                                    in float3 INViewTangent  : TEXCOORD2,
+                                    in float3 INViewBinormal : TEXCOORD3,
+                                    in float3 INViewPosition : TEXCOORD4) : COLOR
 {
     // glowmap is applied on ambient pass
-    float3 Nn = SampleNormalMap(IN.UV);
-    float3 diffuseColor = tex2D(diffuse, IN.UV).xyz;
+    float3 Nn = SampleNormalMap(INUV);
+    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
 
     float3 diffContrib;
-    light_contribution(IN, Nn, diffContrib);
+    light_contribution(INViewNormal,
+                       INViewTangent,
+                       INViewBinormal,
+                       INViewPosition,
+                       Nn,
+                       diffContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = (diffuseColor * diffContrib) * attenuation;
-    return float4(result, IN.Color.w);
+    return float4(result, INColor.w);
 }
 
-float4 fp_normalmap_specularmap_glowmap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_normalmap_specularmap_glowmap_shadows(in float4 INColor   : COLOR,
+                                                in float2 INUV      : TEXCOORD0,
+                                                in float3 INViewNormal   : TEXCOORD1,
+                                                in float3 INViewTangent  : TEXCOORD2,
+                                                in float3 INViewBinormal : TEXCOORD3,
+                                                in float3 INViewPosition : TEXCOORD4) : COLOR
 {
     // glowmap is applied on ambient pass
-    float3 Nn = SampleNormalMap(IN.UV);
-    float3 diffuseColor = tex2D(diffuse, IN.UV).xyz;
-    float3 specularColor = tex2D(specular_map, IN.UV).xyz;
+    float3 Nn = SampleNormalMap(INUV);
+    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
+    float3 specularColor = tex2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
-    light_contribution_specular(IN, Nn, diffContrib, specContrib);
+    light_contribution_specular(INViewNormal,
+                                INViewTangent,
+                                INViewBinormal,
+                                INViewPosition,
+                                Nn,
+                                diffContrib,
+                                specContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = ((specularColor * specContrib) + (diffuseColor * diffContrib)) * attenuation;
-    return float4(result, IN.Color.w);
+    return float4(result, INColor.w);
 }
 
-float4 fp_rxgb_normalmap_specularmap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_specularmap_shadows(in float4 INColor   : COLOR,
+                                             in float2 INUV      : TEXCOORD0,
+                                             in float3 INViewNormal   : TEXCOORD1,
+                                             in float3 INViewTangent  : TEXCOORD2,
+                                             in float3 INViewBinormal : TEXCOORD3,
+                                             in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
-    float3 specularColor = tex2D(specular_map, IN.UV).xyz;
+    float3 Nn = SampleNormalMapRXGB(INUV);
+    float4 diffuseColor = tex2D(diffuse, INUV);
+    float3 specularColor = tex2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
-    light_contribution_specular(IN, Nn, diffContrib, specContrib);
+    light_contribution_specular(INViewNormal,
+                                INViewTangent,
+                                INViewBinormal,
+                                INViewPosition,
+                                Nn,
+                                diffContrib,
+                                specContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = ((specularColor * specContrib) + (diffuseColor.xyz * diffContrib)) * attenuation;
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_rxgb_normalmap_specularmap_alphatest_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_specularmap_alphatest_shadows(in float4 INColor   : COLOR,
+                                                       in float2 INUV      : TEXCOORD0,
+                                                       in float3 INViewNormal   : TEXCOORD1,
+                                                       in float3 INViewTangent  : TEXCOORD2,
+                                                       in float3 INViewBinormal : TEXCOORD3,
+                                                       in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
-    if (IN.Color.w * diffuseColor.w < alphaRef)
+    float4 diffuseColor = tex2D(diffuse, INUV);
+    if (INColor.w * diffuseColor.w < alphaRef)
     {
         discard;
     }
 
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
-    float3 specularColor = tex2D(specular_map, IN.UV).xyz;
+    float3 Nn = SampleNormalMapRXGB(INUV);
+    float3 specularColor = tex2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
-    light_contribution_specular(IN, Nn, diffContrib, specContrib);
+    light_contribution_specular(INViewNormal,
+                                INViewTangent,
+                                INViewBinormal,
+                                INViewPosition,
+                                Nn,
+                                diffContrib,
+                                specContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = ((specularColor * specContrib) + (diffuseColor.xyz * diffContrib)) * attenuation;
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_rxgb_normalmap_glowmap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_glowmap_shadows(in float4 INColor   : COLOR,
+                                         in float2 INUV      : TEXCOORD0,
+                                         in float3 INViewNormal   : TEXCOORD1,
+                                         in float3 INViewTangent  : TEXCOORD2,
+                                         in float3 INViewBinormal : TEXCOORD3,
+                                         in float3 INViewPosition : TEXCOORD4) : COLOR
 {
     // glowmap is applied on ambient pass with the material color
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
-    float3 diffuseColor = tex2D(diffuse, IN.UV).xyz;
+    float3 Nn = SampleNormalMapRXGB(INUV);
+    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
 
     float3 diffContrib;
-    light_contribution(IN, Nn, diffContrib);
+    light_contribution(INViewNormal,
+                       INViewTangent,
+                       INViewBinormal,
+                       INViewPosition,
+                       Nn,
+                       diffContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = (diffuseColor * diffContrib) * attenuation;
-    return float4(result, IN.Color.w);
+    return float4(result, INColor.w);
 }
 
-float4 fp_rxgb_normalmap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_shadows(in float4 INColor   : COLOR,
+                                 in float2 INUV      : TEXCOORD0,
+                                 in float3 INViewNormal   : TEXCOORD1,
+                                 in float3 INViewTangent  : TEXCOORD2,
+                                 in float3 INViewBinormal : TEXCOORD3,
+                                 in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
+    float3 Nn = SampleNormalMapRXGB(INUV);
+    float4 diffuseColor = tex2D(diffuse, INUV);
 
     float3 diffContrib;
-    light_contribution(IN, Nn, diffContrib);
+    light_contribution(INViewNormal,
+                       INViewTangent,
+                       INViewBinormal,
+                       INViewPosition,
+                       Nn,
+                       diffContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = (diffuseColor.xyz * diffContrib) * attenuation;
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_rxgb_normalmap_alphatest_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_alphatest_shadows(in float4 INColor   : COLOR,
+                                           in float2 INUV      : TEXCOORD0,
+                                           in float3 INViewNormal   : TEXCOORD1,
+                                           in float3 INViewTangent  : TEXCOORD2,
+                                           in float3 INViewBinormal : TEXCOORD3,
+                                           in float3 INViewPosition : TEXCOORD4) : COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, IN.UV);
-    if (IN.Color.w * diffuseColor.w < alphaRef)
+    float4 diffuseColor = tex2D(diffuse, INUV);
+    if (INColor.w * diffuseColor.w < alphaRef)
     {
         discard;
     }
 
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
+    float3 Nn = SampleNormalMapRXGB(INUV);
 
     float3 diffContrib;
-    light_contribution(IN, Nn, diffContrib);
+    light_contribution(INViewNormal,
+                       INViewTangent,
+                       INViewBinormal,
+                       INViewPosition,
+                       Nn,
+                       diffContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = (diffuseColor.xyz * diffContrib) * attenuation;
-    return IN.Color * float4(result, diffuseColor.w);
+    return INColor * float4(result, diffuseColor.w);
 }
 
-float4 fp_rxgb_normalmap_specularmap_glowmap_shadows(FP_NORMALMAP_IN IN) : COLOR
+float4 fp_rxgb_normalmap_specularmap_glowmap_shadows(in float4 INColor   : COLOR,
+                                                     in float2 INUV      : TEXCOORD0,
+                                                     in float3 INViewNormal   : TEXCOORD1,
+                                                     in float3 INViewTangent  : TEXCOORD2,
+                                                     in float3 INViewBinormal : TEXCOORD3,
+                                                     in float3 INViewPosition : TEXCOORD4) : COLOR
 {
     // glowmap is applied on ambient pass with the material color
-    float3 Nn = SampleNormalMapRXGB(IN.UV);
-    float3 diffuseColor = tex2D(diffuse, IN.UV).xyz;
-    float3 specularColor = tex2D(specular_map, IN.UV).xyz;
+    float3 Nn = SampleNormalMapRXGB(INUV);
+    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
+    float3 specularColor = tex2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
-    light_contribution_specular(IN, Nn, diffContrib, specContrib);
+    light_contribution_specular(INViewNormal,
+                                INViewTangent,
+                                INViewBinormal,
+                                INViewPosition,
+                                Nn,
+                                diffContrib,
+                                specContrib);
 
-    float attenuation = ApplyShadowAttenuation(IN.ViewPosition);
+    float attenuation = ApplyShadowAttenuation(INViewPosition);
     float3 result = ((specularColor * specContrib) + (diffuseColor * diffContrib)) * attenuation;
-    return float4(result, IN.Color.w);
+    return float4(result, INColor.w);
 }
 
 technique blinn_shadows
@@ -549,7 +691,7 @@ technique normalmap_specularmap_alphatest_shadows
     }
 }
 
-technique normalmap_specularmap_alphatest_shadows_skinned
+technique normalmap_specularmap_alphatest_skinned_shadows
 {
     pass
     {
@@ -580,6 +722,23 @@ technique normalmap_specularmap_skinned_shadows
 
         VertexProgram   = compile latest vp_normalmap_skinned();
         FragmentProgram = compile latest fp_normalmap_specularmap_shadows();
+    }
+}
+
+technique normalmap_specularmap_alphamap_skinned_shadows
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = false;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = true;
+        BlendFunc       = int2(One, One);
+
+        VertexProgram   = compile glslv vp_normalmap_skinned();
+        FragmentProgram = compile glslf fp_normalmap_specularmap_alphamap_shadows();
     }
 }
 

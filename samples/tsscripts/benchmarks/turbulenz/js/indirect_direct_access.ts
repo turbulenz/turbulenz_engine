@@ -2,8 +2,6 @@
 
 /*global BF: false*/
 
-declare var BF;
-
 //
 //  Access functions directly from an object vs Access functions indirectly from an object
 //
@@ -29,7 +27,7 @@ class DirectAccess
             angles[i] = pi2 * (i / n);
         }
         this.angles = angles;
-    };
+    }
 
     run()
     {
@@ -41,7 +39,7 @@ class DirectAccess
             result = Math.sin(angles[i]);
         }
         this.result = result;
-    };
+    }
 
     destroy()
     {
@@ -53,7 +51,7 @@ class DirectAccess
             delete angles[i];
         }
         delete this.angles;
-    };
+    }
 
     // Constructor function
     static create()
@@ -62,8 +60,8 @@ class DirectAccess
         d.angles = [];
         d.result = 0;
         return d;
-    };
-};
+    }
+}
 
 //
 //  IndirectAccess: Tests accessing an assigned value of sin
@@ -86,7 +84,7 @@ class IndirectAccess
             angles[i] = pi2 * (i / n);
         }
         this.angles = angles;
-    };
+    }
 
     run()
     {
@@ -99,7 +97,7 @@ class IndirectAccess
             result = sin(angles[i]);
         }
         this.result = result;
-    };
+    }
 
     destroy()
     {
@@ -111,7 +109,7 @@ class IndirectAccess
             delete angles[i];
         }
         delete this.angles;
-    };
+    }
 
     // Constructor function
     static create()
@@ -120,8 +118,8 @@ class IndirectAccess
         i.angles = [];
         i.result = 0;
         return i;
-    };
-};
+    }
+}
 
 var directAccess = DirectAccess.create();
 var indirectAccess = IndirectAccess.create();

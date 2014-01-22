@@ -613,17 +613,16 @@ to load and run the game.  The tools support several build 'modes':
     file, since it must be loaded and run by the browsers own
     JavaScript engine.
 
-**plugin-debug** and **canvas-debug**
+**canvas-debug**
 
-    Intended for debugging during development, corresponding to
-    *debug* versions of *plugin* and *canvas* respectively.  In these
-    modes there is very little transformation of the JavaScript code.
-    A single command (using the :ref:`makehtml` tool) takes a .js
-    :ref:`template file <templating>`, and optionally a .html file, as input and produces a .html
-    file that loads the game.  In these modes the code always runs
-    using the browsers JavaScript engine, allowing standard web
-    development tools to be used to debug the code (see
-    :ref:`debugging`).
+    Intended for debugging during development.  In these modes there
+    is very little transformation of the JavaScript code.  A single
+    command (using the :ref:`makehtml` tool) takes a .js
+    :ref:`template file <templating>`, and optionally a .html file, as
+    input and produces a .html file that loads the game.  In these
+    modes the code always runs using the browsers JavaScript engine,
+    allowing standard web development tools to be used to debug the
+    code (see :ref:`debugging`).
 
 .. _getting_started_local_development_server:
 
@@ -632,11 +631,12 @@ The Local Development Server
 
 .. TODO: Going to need maintenance if/when devserver role changes.
 
-The Turbulenz SDK comes with a small server (referred to as
-the :ref:`local development server <local_introduction>`), intended to be run on the developer's
-machine.  This *local development server* is capable of serving files,
-emulating the Turbulenz online services, recording metrics about the
-game code and data as well as managing and deploying game projects.
+The Turbulenz SDK comes with a small server (referred to as the
+:ref:`local development server <local_introduction>`), intended to be
+run on the developer's machine.  This *local development server* is
+capable of serving files, emulating the Turbulenz online services,
+recording metrics about the game code and data as well as managing and
+deploying game projects.
 
 While it is sometimes possible to launch games directly from the file
 system, we recommend that developers use the local development server
@@ -702,17 +702,17 @@ With the local server still running:
 
 5. Open a Turbulenz Environment prompt and change directory to your
    new folder.  Enter the following command to build an html page that
-   runs your app in *plugin-debug* mode::
+   runs your app in *canvas-debug* mode::
 
-     makehtml --mode plugin-debug -t . myfirstapp.js -o myfirstapp.debug.html
+     makehtml --mode canvas-debug -t . myfirstapp.js -o myfirstapp.canvas.debug.html
 
-   A file ``myfirstapp.debug.html`` should have been created in the
+   A file ``myfirstapp.canvas.debug.html`` should have been created in the
    current directory.
 
    .. NOTE::
 
-     On Linux, the SDK only supports running in canvas mode.  Use the
-     command for canvas-debug below in order to run the app.
+     On Linux, the SDK only supports running in canvas mode. Use the command
+     for canvas-debug below in order to run the app on Linux browsers.
 
 6. Back in your browser, click on the *Play* button for your newly
    created project.  The page should list the file just created
@@ -726,7 +726,7 @@ components represent Red, Green, Blue and Alpha values).  Re-run the
 build step (5) and click *reload* in the browser.
 
 This example shows the :ref:`makehtml` tool being used to build the
-application in *plugin-debug* mode referred to above.  The other modes
+application in *canvas-debug* mode referred to above.  The other modes
 can be built as follows.
 
 **plugin**
@@ -745,12 +745,6 @@ to a .js file (since the browser will load it directly)::
 
     maketzjs --mode canvas -t . -o myfirstapp.canvas.js myfirstapp.js
     makehtml --mode canvas -t . -o myfirstapp.canvas.html --code myfirstapp.canvas.js myfirstapp.js
-
-**canvas-debug**
-
-Similar to *plugin-debug* mode.  A single command creates the HTML page::
-
-    makehtml --mode canvas-debug -t . myfirstapp.js -o myfirstapp.canvas.debug.html
 
 This application simply clears the screen each frame, but it
 illustrates the process of building and running code with the
@@ -826,11 +820,11 @@ system.
 
 JavaScript library code referenced using the technique above is
 handled in one of two ways depending on the build mode.  In
-*plugin-debug* and *canvas-debug* modes, the html created by
-:ref:`makehtml` contains ``<script>`` tags that cause the code to be
-loaded directly into the page.  When using *plugin* and *canvas*
-modes, the .js files are concatenated into one self-contained file
-that can be loaded with a single request to the server.
+*canvas-debug* mode, the html created by :ref:`makehtml` contains
+``<script>`` tags that cause the code to be loaded directly into the
+page.  When using *plugin* and *canvas* modes, the .js files are
+concatenated into one self-contained file that can be loaded with a
+single request to the server.
 
 .. _getting_started_shutdown:
 
@@ -1431,11 +1425,6 @@ Assumed variables:
     maketzjs --mode canvas -t templates -t . -o SAMPLENAME.canvas.js SAMPLENAME.js -u ../external/uglifyjs/bin/uglifyjs
     makehtml --mode canvas -t templates -t . --code SAMPLENAME.canvas.js -o SAMPLENAME.canvas.release.html SAMPLENAME.js SAMPLENAME.html
 
-  **Plugin-Debug**
-  ::
-
-    makehtml --mode plugin-debug -t templates -t . -o SAMPLENAME.debug.html SAMPLENAME.js SAMPLENAME.html
-
   **Plugin-Release**
   ::
 
@@ -1506,11 +1495,6 @@ Assumed variables:
     maketzjs --mode canvas -t templates -t . -o APPNAME.canvas.js APPNAME.js -u ../../external/uglifyjs/bin/uglifyjs
     makehtml --mode canvas -t templates -t . --code APPNAME.canvas.js -o APPNAME.canvas.release.html APPNAME.js APPNAME.html
 
-  **Plugin-Debug**
-  ::
-
-    makehtml --mode plugin-debug -t templates -t . -o APPNAME.debug.html APPNAME.js APPNAME.html
-
   **Plugin-Release**
   ::
 
@@ -1524,7 +1508,3 @@ Assumed variables:
   .. NOTE::
 
       Apps that use the default template should omit the APPNAME.html for each makehtml command.
-
-
-
-

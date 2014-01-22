@@ -3,10 +3,6 @@
 /*global TurbulenzEngine: false*/
 /*global Reference: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="material.ts" />
-/// <reference path="animation.ts" />
-
 //
 // Surface
 //
@@ -40,6 +36,7 @@ class Geometry
     primitive              : number;
     semantics              : Semantics;
     vertexBuffer           : VertexBuffer;
+    vertexOffset           : number;
     //numVertices            : number;
     baseIndex              : number;
     indexBuffer            : IndexBuffer;
@@ -56,6 +53,17 @@ class Geometry
     vertexBufferManager    : VertexBufferManager;
     indexBufferAllocation  : any;
     indexBufferManager     : IndexBufferManager;
+
+    constructor()
+    {
+        this.semantics = null;
+        this.vertexBuffer = null;
+        this.vertexOffset = 0;
+        this.reference = Reference.create(this);
+        this.surfaces = {};
+        this.type = "rigid";
+        return this;
+    }
 
     destroy()
     {
@@ -80,17 +88,13 @@ class Geometry
         delete this.halfExtents;
         delete this.reference;
         delete this.surfaces;
-    };
+    }
 
     static create() : Geometry
     {
-        var geometry = new Geometry();
-        geometry.reference = Reference.create(geometry);
-        geometry.surfaces = {};
-        geometry.type = "rigid";
-        return geometry;
-    };
-};
+        return new Geometry();
+    }
+}
 
 //
 // GeometryInstance
@@ -98,7 +102,7 @@ class Geometry
 class GeometryInstance implements Renderable
 {
     static version = 1;
-    maxUpdateValue = Number.MAX_VALUE;
+    static maxUpdateValue = Number.MAX_VALUE;
 
     // Renderable
     geometry            : Geometry;
@@ -109,6 +113,7 @@ class GeometryInstance implements Renderable
     rendererInfo        : any;
     distance            : number;
     drawParameters      : DrawParameters[];
+    sharedMaterial      : Material;
 
     // GeometryInstance
     // TODO: Potentially some of these belong on Renderable too
@@ -119,11 +124,8 @@ class GeometryInstance implements Renderable
     worldExtents        : any; // new instance.arrayConstructor(6);
     semantics           : Semantics;
     techniqueParameters : TechniqueParameters;
-    sharedMaterial      : Material;
     worldExtentsUpdate  : number;
-    worldUpdate         : number;
-    disabled            : bool;
-    sorting             : number; // TODO: can't see any ref to this in jslib.  Is it used?
+    disabled            : boolean;
 
     arrayConstructor: any; // array constructor
 
@@ -142,19 +144,19 @@ class GeometryInstance implements Renderable
         }
 
         return newInstance;
-    };
+    }
 
     //
     // isSkinned
     //
-    isSkinned() : bool
+    isSkinned() : boolean
     {
         if (this.geometry.skeleton)
         {
             return true;
         }
         return false;
-    };
+    }
 
     //
     // setNode
@@ -179,7 +181,7 @@ class GeometryInstance implements Renderable
             }
         }
         this.worldExtentsUpdate = -1;
-    };
+    }
 
     //
     // getNode
@@ -187,7 +189,7 @@ class GeometryInstance implements Renderable
     getNode(): SceneNode
     {
         return this.node;
-    };
+    }
 
     //
     // setMaterial
@@ -201,7 +203,7 @@ class GeometryInstance implements Renderable
 
         this.renderUpdate = undefined;
         this.rendererInfo = undefined;
-    };
+    }
 
     //
     // getMaterial
@@ -209,7 +211,7 @@ class GeometryInstance implements Renderable
     getMaterial() : Material
     {
         return this.sharedMaterial;
-    };
+    }
 
     //
     // getWorldExtents
@@ -224,7 +226,7 @@ class GeometryInstance implements Renderable
             this.updateWorldExtents(node.world);
         }
         return this.worldExtents;
-    };
+    }
 
     //
     // updateWorldExtents
@@ -271,24 +273,33 @@ class GeometryInstance implements Renderable
         worldExtents[3] = (ct0 + ht0);
         worldExtents[4] = (ct1 + ht1);
         worldExtents[5] = (ct2 + ht2);
-    };
+    }
 
     //
     // addCustomWorldExtents
     //
     addCustomWorldExtents(customWorldExtents)
     {
+        var alreadyHadCustomExtents = (this.worldExtentsUpdate === GeometryInstance.maxUpdateValue);
         var worldExtents = this.worldExtents;
-        worldExtents[0] = customWorldExtents[0];
-        worldExtents[1] = customWorldExtents[1];
-        worldExtents[2] = customWorldExtents[2];
-        worldExtents[3] = customWorldExtents[3];
-        worldExtents[4] = customWorldExtents[4];
-        worldExtents[5] = customWorldExtents[5];
-        var alreadyHadCustomExtents = (this.worldExtentsUpdate === this.maxUpdateValue);
-        this.worldExtentsUpdate = this.maxUpdateValue;
-        this.node.renderableWorldExtentsUpdated(alreadyHadCustomExtents);
-    };
+        if (!alreadyHadCustomExtents ||
+            customWorldExtents[0] !== worldExtents[0] ||
+            customWorldExtents[1] !== worldExtents[1] ||
+            customWorldExtents[2] !== worldExtents[2] ||
+            customWorldExtents[3] !== worldExtents[3] ||
+            customWorldExtents[4] !== worldExtents[4] ||
+            customWorldExtents[5] !== worldExtents[5])
+        {
+            this.worldExtentsUpdate = GeometryInstance.maxUpdateValue;
+            worldExtents[0] = customWorldExtents[0];
+            worldExtents[1] = customWorldExtents[1];
+            worldExtents[2] = customWorldExtents[2];
+            worldExtents[3] = customWorldExtents[3];
+            worldExtents[4] = customWorldExtents[4];
+            worldExtents[5] = customWorldExtents[5];
+            this.node.renderableWorldExtentsUpdated(alreadyHadCustomExtents);
+        }
+    }
 
     //
     // removeCustomWorldExtents
@@ -297,27 +308,27 @@ class GeometryInstance implements Renderable
     {
         this.worldExtentsUpdate = -1;
         this.node.renderableWorldExtentsRemoved();
-    };
+    }
 
     //
     // getCustomWorldExtents
     //
     getCustomWorldExtents()
     {
-        if (this.worldExtentsUpdate === this.maxUpdateValue)
+        if (this.worldExtentsUpdate === GeometryInstance.maxUpdateValue)
         {
             return this.worldExtents;
         }
         return undefined;
-    };
+    }
 
     //
     // hasCustomWorldExtents
     //
-    hasCustomWorldExtents() : bool
+    hasCustomWorldExtents() : boolean
     {
-        return this.worldExtentsUpdate === this.maxUpdateValue;
-    };
+        return this.worldExtentsUpdate === GeometryInstance.maxUpdateValue;
+    }
 
     //
     // destroy
@@ -344,8 +355,7 @@ class GeometryInstance implements Renderable
         delete this.drawParameters;
         delete this.renderUpdate;
         delete this.rendererInfo;
-        delete this.sorting;
-    };
+    }
 
     //
     // prepareDrawParameters
@@ -356,6 +366,7 @@ class GeometryInstance implements Renderable
         var geometry = this.geometry;
         drawParameters.setVertexBuffer(0, geometry.vertexBuffer);
         drawParameters.setSemantics(0, this.semantics);
+        drawParameters.setOffset(0, geometry.vertexOffset);
 
         drawParameters.primitive = surface.primitive;
 
@@ -370,7 +381,7 @@ class GeometryInstance implements Renderable
         {
             drawParameters.count = surface.numVertices;
         }
-    };
+    }
 
     //
     // Constructor function
@@ -398,15 +409,14 @@ class GeometryInstance implements Renderable
         }
         instance.worldExtents = new instance.arrayConstructor(6);
         instance.worldExtentsUpdate = -1;
-        instance.worldUpdate = -1;
 
         instance.node = undefined;
         instance.renderUpdate = undefined;
         instance.rendererInfo = undefined;
 
         return instance;
-    };
-};
+    }
+}
 
 // Detect correct typed arrays
 (function () {

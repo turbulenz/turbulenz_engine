@@ -1,37 +1,22 @@
 // Copyright (c) 2011-2012 Turbulenz Limited
-/*global window*/
-"use strict";
 
-/// <reference path="../turbulenz.d.ts" />
+"use strict";
 
 //
 // WebGLNetworkDevice
 //
-interface WebGLNetworkDevice extends NetworkDevice
+class WebGLNetworkDevice implements NetworkDevice
 {
+    static version = 1;
 
-};
+    WebSocketConstructor: any;  // prototype
 
-declare var WebGLNetworkDevice :
-{
-    new(): WebGLNetworkDevice;
-    prototype: any;
-    create(): WebGLNetworkDevice;
-};
-
-function WebGLNetworkDevice() { return this; }
-WebGLNetworkDevice.prototype = {
-
-    version : 1,
-
-    WebSocketConstructor : (window.WebSocket ? window.WebSocket : window.MozWebSocket),
-
-    createWebSocket : function createWebSocketdFn(url, protocol)
+    createWebSocket(url:string, protocol?: string): WebSocket
     {
         var WebSocketConstructor = this.WebSocketConstructor;
         if (WebSocketConstructor)
         {
-            var ws;
+            var ws : WebSocket;
             if (protocol)
             {
                 ws = new WebSocketConstructor(url, protocol);
@@ -55,17 +40,20 @@ WebGLNetworkDevice.prototype = {
         }
         else
         {
-            return null;
+            return <WebSocket>null;
         }
-    },
+    }
 
-    update : function networkDeviceUpdateFn()
+    update()
     {
     }
-};
 
-WebGLNetworkDevice.create = function networkDeviceCreateFn(/* params */)
-{
-    var nd = new WebGLNetworkDevice();
-    return nd;
-};
+    static create(params: any): WebGLNetworkDevice
+    {
+        var nd = new WebGLNetworkDevice();
+        return nd;
+    }
+}
+
+WebGLNetworkDevice.prototype.WebSocketConstructor =
+    (window.WebSocket ? window.WebSocket : window.MozWebSocket);

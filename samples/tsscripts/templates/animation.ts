@@ -591,8 +591,6 @@ TurbulenzEngine.onload = function onloadFn()
         var numNodes = sceneNodes.length;
         scene.skinnedNodes = [];
 
-        GPUSkinController.setDefaultBufferSize(renderer.getDefaultSkinBufferSize());
-
         // For each node find which ones have skeletons
         for (n = 0; n < numNodes; n += 1)
         {

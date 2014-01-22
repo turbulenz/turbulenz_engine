@@ -304,6 +304,70 @@ This function has no effect when `sensor` is true.
 
     arbiter.setRollingFrictionFromShapes();
 
+.. index::
+    pair: Arbiter; isStateAccepted
+
+`isStateAccepted`
+-----------------
+
+**Summary**
+
+Query whether this Arbiter's interaction has been accepted for computation in the time step.
+
+This function always returns false when `sensor` is true.
+
+**Syntax** ::
+
+    var accepted = arbiter.isStateAccepted();
+
+.. index::
+    pair: Arbiter; isStatePersistent
+
+`isStatePersistent`
+-------------------
+
+**Summary**
+
+Query whether the choice of accepting/ignoring this Arbiter's interaction for computation in this time step is to persist until Arbiter death instead of only for a single step.
+
+This function always returns false when `sensor` is true.
+
+**Syntax** ::
+
+    var persistent = arbiter.isStatePersistent();
+
+.. index::
+    pair: Arbiter; setAcceptedState
+
+`setAcceptedState`
+------------------
+
+**Summary**
+
+Set whether to accept this Arbiter's interaction for the current time step.
+
+This function has no effect when `sensor` is true.
+
+**Syntax** ::
+
+    arbiter.setAcceptedState(false);
+
+.. index::
+    pair: Arbiter; setAcceptedState
+
+`setPersistentState`
+--------------------
+
+**Summary**
+
+Set whether the decision to accept this Arbiter's interaction for the current time step, should persist until Arbiter death instead of only for a single step.
+
+This function has no effect when `sensor` is true.
+
+**Syntax** ::
+
+    arbiter.setPersistentState(true);
+
 Properties
 ==========
 

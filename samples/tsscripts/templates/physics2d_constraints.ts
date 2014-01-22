@@ -152,7 +152,7 @@ TurbulenzEngine.onload = function onloadFn()
 
         world.addRigidBody(border);
 
-        function circle(x: number, y: number, radius: number, pinned?: bool)
+        function circle(x: number, y: number, radius: number, pinned?: boolean)
         {
             var body = phys2D.createRigidBody({
                 shapes : [

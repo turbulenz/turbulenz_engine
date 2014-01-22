@@ -1324,6 +1324,33 @@ Protolib.prototype =
         var rollOff = params.rollOff || 1;
         var background = params.background || false;
 
+        if (background)
+        {
+            if (params.v3Position !== undefined)
+            {
+                protolib.utils.error("playSound: background is not compatible with v3Position");
+                return null;
+            }
+
+            if (params.minDistance !== undefined)
+            {
+                protolib.utils.error("playSound: background is not compatible with minDistance");
+                return null;
+            }
+
+            if (params.maxDistance !== undefined)
+            {
+                protolib.utils.error("playSound: background is not compatible with maxDistance");
+                return null;
+            }
+
+            if (params.rollOff !== undefined)
+            {
+                protolib.utils.error("playSound: background is not compatible with rollOff");
+                return null;
+            }
+        }
+
         var soundWrapper = null;
         var soundSource = null;
 
@@ -1363,10 +1390,22 @@ Protolib.prototype =
         soundWrapper = new SoundWrapper(protolib, token, soundSourceManager, volume);
 
         soundSourceManager.setSoundSourceLoading(token, true);
-        soundManager.load(soundPath, null, function (sound) {
+        soundManager.load(soundPath, false, function (sound) {
                 if (soundSource)
                 {
-                    soundSource.play(sound);
+                    var playSound = true;
+                    if (sound.channels > 1)
+                    {
+                        if (!background)
+                        {
+                            protolib.utils.error(soundPath + ": Non-background sounds do not support multiple channels");
+                            playSound = false;
+                        }
+                    }
+                    if (playSound)
+                    {
+                        soundSource.play(sound);
+                    }
                 }
                 soundSourceManager.setSoundSourceLoading(token, false);
             });
@@ -1669,7 +1708,6 @@ function SoundWrapper(protolib, token, soundSourceManager, volume)
     this.mathDevice = protolib.globals.mathDevice;
     this.token = token;
     this.soundSource = soundSourceManager.getSoundSource(token);
-    this.soundSource.relative = false;
     this.volume = volume;
     this.soundSource.gain = volume * protolib.globals.settings.volume;
     this.valid = true;

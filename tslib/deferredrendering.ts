@@ -6,11 +6,6 @@
 // DeferredEffectTypeData
 //
 
-/// <reference path="scene.ts" />
-/// <reference path="shadowmapping.ts" />
-/// <reference path="renderingcommon.ts" />
-/// <reference path="shadermanager.ts" />
-
 interface DeferredEffectTypeData extends EffectPrepareObject
 {
 
@@ -28,14 +23,12 @@ interface DeferredEffectTypeData extends EffectPrepareObject
 // DeferredRendering
 //
 /*global ShadowMapping: false, VMath: false, Effect: false,
-         renderingCommonCreateRendererInfoFn: false,  renderingCommonGetTechniqueIndexFn: false,
+         renderingCommonCreateRendererInfoFn: false,
          renderingCommonSortKeyFn: false*/
 
 class DeferredRendering
 {
     static version = 1;
-
-    static nextNodeID: number = 0;
 
     minPixelCount = 256;
 
@@ -120,6 +113,14 @@ class DeferredRendering
     ft: number; // TODO: Where is this set?  Not mentioned in the docs.
     sm: number; // TODO: Where is this set?  Not mentioned in the docs.
 
+    defaultUpdateFn: { (camera: Camera): void; };
+    defaultSkinnedUpdateFn: { (camera: Camera): void; };
+    defaultPrepareFn: { (geometryInstance: GeometryInstance): void; };
+    defaultShadowMappingUpdateFn: { (camera: Camera): void; };
+    defaultShadowMappingSkinnedUpdateFn: { (camera: Camera): void; };
+
+    loadTechniquesFn: { (shaderManager: ShaderManager): void; };
+
     updateShader(sm)
     {
         var shader = sm.get("shaders/deferredlights.cgfx");
@@ -148,7 +149,7 @@ class DeferredRendering
         {
             shadowMaps.updateShader(sm);
         }
-    };
+    }
 
     sortRenderablesAndLights(camera, scene)
     {
@@ -280,7 +281,7 @@ class DeferredRendering
             // Sort fog lights back to front
             fogLights.sort(distanceReverseCompareFn);
         }
-    };
+    }
 
     update(gd, camera, scene, currentTime)
     {
@@ -452,9 +453,8 @@ class DeferredRendering
         var numSpotInstances = spotInstances.length;
         if (numSpotInstances)
         {
-            var lightView, lightViewInverse, lightProjection, lightViewInverseProjection;
-
-            lightProjection = md.m43Copy(this.lightProjection);
+            var lightProjection = this.lightProjection;
+            var lightView, lightViewInverse, lightViewInverseProjection;
 
             l = 0;
             do
@@ -578,9 +578,9 @@ class DeferredRendering
             }
             while (l < numFogInstances);
         }
-    };
+    }
 
-    lightFindVisibleRenderables(lightInstance, scene) : bool
+    lightFindVisibleRenderables(lightInstance, scene) : boolean
     {
         var origin, overlappingRenderables, numOverlappingRenderables;
         var overlapQueryRenderables, numOverlapQueryRenderables, renderable;
@@ -689,7 +689,7 @@ class DeferredRendering
         }
 
         return false;
-    };
+    }
 
     destroyBuffers()
     {
@@ -748,9 +748,9 @@ class DeferredRendering
             this.albedoTexture.destroy();
             this.albedoTexture = null;
         }
-    };
+    }
 
-    updateBuffers(gd, deviceWidth, deviceHeight) : bool
+    updateBuffers(gd, deviceWidth, deviceHeight) : boolean
     {
         if (this.bufferWidth === deviceWidth && this.bufferHeight === deviceHeight)
         {
@@ -882,12 +882,12 @@ class DeferredRendering
         this.bufferHeight = 0;
         this.destroyBuffers();
         return false;
-    };
+    }
 
     pixelCountCompare(nodeA, nodeB)
     {
         return (nodeB.pixelCount - nodeA.pixelCount);
-    };
+    }
 
     draw(gd, clearColor, drawDecalsFn, drawTransparentFn, drawDebugFn,
          postFXsetupFn)
@@ -1554,17 +1554,17 @@ class DeferredRendering
         gd.setStream(quadVertexBuffer, quadSemantics);
 
         gd.draw(quadPrimitive, 4);
-    };
+    }
 
     setLightingScale(scale)
     {
         this.mixTechniqueParameters['lightingScale'] = scale;
-    };
+    }
 
     getDefaultSkinBufferSize(): number
     {
         return this.defaultSkinBufferSize;
-    };
+    }
 
     destroy()
     {
@@ -1635,7 +1635,7 @@ class DeferredRendering
 
         delete this.black;
         delete this.md;
-    };
+    }
 
     static create(gd, md, shaderManager, effectManager, settings)
     {
@@ -1750,11 +1750,14 @@ class DeferredRendering
             dr.shadowMaps = shadowMaps;
             shadowMappingUpdateFn = shadowMaps.update;
             shadowMappingSkinnedUpdateFn = shadowMaps.skinnedUpdate;
+            dr.defaultShadowMappingUpdateFn = shadowMappingUpdateFn;
+            dr.defaultShadowMappingSkinnedUpdateFn = shadowMappingSkinnedUpdateFn;
         }
 
+        var v4One = new Float32Array([1.0, 1.0, 1.0, 1.0]);
         var identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
+        var flareIndexBuffer, flareSemantics, flareVertexData, flareMatrix;
         var worldView; // Temp variable for reused matrix
-        var flareIndexBuffer, flareSemantics;
 
         // Version of m33Mul that can be applied to just the 3x3 part of 2
         // M43 matrices, resulting in an M33.
@@ -1870,10 +1873,16 @@ class DeferredRendering
                 drawParameters.userData.passIndex = dr.passIndex.opaque;
             }
 
+            if (!geometryInstance.sharedMaterial.techniqueParameters.materialColor &&
+                !geometryInstance.techniqueParameters.materialColor)
+            {
+                geometryInstance.sharedMaterial.techniqueParameters.materialColor = v4One;
+            }
+
             if (!geometryInstance.sharedMaterial.techniqueParameters.uvTransform &&
                 !geometryInstance.techniqueParameters.uvTransform)
             {
-                geometryInstance.techniqueParameters.uvTransform = identityUVTransform;
+                geometryInstance.sharedMaterial.techniqueParameters.uvTransform = identityUVTransform;
             }
 
             drawParameters.sortKey = renderingCommonSortKeyFn(this.techniqueIndex, meta.materialIndex);
@@ -1883,15 +1892,6 @@ class DeferredRendering
             drawParameters.technique = this.technique;
 
             geometryInstance.renderUpdate = this.update;
-
-            var node = geometryInstance.node;
-            if (!node.rendererInfo)
-            {
-                node.rendererInfo = {
-                    id: DeferredRendering.nextNodeID
-                };
-                DeferredRendering.nextNodeID += 1;
-            }
 
             //
             // shadows
@@ -1913,7 +1913,7 @@ class DeferredRendering
                     drawParameters.technique = this.shadowTechnique;
 
                     drawParameters.sortKey = renderingCommonSortKeyFn(this.shadowTechniqueIndex,
-                                                                      node.rendererInfo.id);
+                                                                      geometryInstance.geometry.vertexBuffer.id);
 
                     var shadowTechniqueParameters = gd.createTechniqueParameters();
                     geometryInstance.shadowTechniqueParameters = shadowTechniqueParameters;
@@ -2010,6 +2010,10 @@ class DeferredRendering
                     });
 
                     flareSemantics = gd.createSemantics(['POSITION', 'TEXCOORD']);
+
+                    flareVertexData = new Float32Array(6 * (3 + 2));
+
+                    flareMatrix = md.m43BuildIdentity();
                 }
 
                 var oldGeometry = geometryInstance.geometry;
@@ -2104,10 +2108,10 @@ class DeferredRendering
                 var v32 = oldVertexData[brOff + 2];
                 oldVertexData = null;
 
-                var va01 = [(v00 + v10) * 0.5, (v01 + v11) * 0.5, (v02 + v12) * 0.5];
-                var va02 = [(v00 + v20) * 0.5, (v01 + v21) * 0.5, (v02 + v22) * 0.5];
-                var va13 = [(v10 + v30) * 0.5, (v11 + v31) * 0.5, (v12 + v32) * 0.5];
-                var va23 = [(v20 + v30) * 0.5, (v21 + v31) * 0.5, (v22 + v32) * 0.5];
+                var va01 = VMath.v3Build((v00 + v10) * 0.5, (v01 + v11) * 0.5, (v02 + v12) * 0.5);
+                var va02 = VMath.v3Build((v00 + v20) * 0.5, (v01 + v21) * 0.5, (v02 + v22) * 0.5);
+                var va13 = VMath.v3Build((v10 + v30) * 0.5, (v11 + v31) * 0.5, (v12 + v32) * 0.5);
+                var va23 = VMath.v3Build((v20 + v30) * 0.5, (v21 + v31) * 0.5, (v22 + v32) * 0.5);
 
                 var oldTop, oldBottom;
                 if (VMath.v3LengthSq(VMath.v3Sub(va01, va23)) > VMath.v3LengthSq(VMath.v3Sub(va02, va13)))
@@ -2121,8 +2125,8 @@ class DeferredRendering
                     oldBottom = va13;
                 }
 
-                var c10 = VMath.v3Normalize([(v10 - v00), (v11 - v01), (v12 - v02)]);
-                var c20 = VMath.v3Normalize([(v20 - v00), (v21 - v01), (v22 - v02)]);
+                var c10 = VMath.v3Normalize(VMath.v3Build((v10 - v00), (v11 - v01), (v12 - v02)));
+                var c20 = VMath.v3Normalize(VMath.v3Build((v20 - v00), (v21 - v01), (v22 - v02)));
                 var oldNormal = VMath.v3Cross(c10, c20);
 
                 var v3Build = md.v3Build;
@@ -2148,7 +2152,7 @@ class DeferredRendering
             {
                 this.techniqueParametersUpdated = worldUpdate;
                 var matrix = node.world;
-                this.techniqueParameters.world = md.m43BuildIdentity();
+                this.techniqueParameters.world = flareMatrix;
                 var sourceVertices = geometry.sourceVertices;
                 top    = md.m43TransformPoint(matrix, sourceVertices[0], geometry.top);
                 bottom = md.m43TransformPoint(matrix, sourceVertices[1], geometry.bottom);
@@ -2210,7 +2214,6 @@ class DeferredRendering
             var cameraToBottom0 = (bottom0 - cameraMatrix[9]);
             var cameraToBottom1 = (bottom1 - cameraMatrix[10]);
             var cameraToBottom2 = (bottom2 - cameraMatrix[11]);
-            var writer;
             if (((normal0 * cameraToBottom0) + (normal1 * cameraToBottom1) + (normal2 * cameraToBottom2)) < 0)
             {
                 geometry.lastTimeVisible = true;
@@ -2247,47 +2250,49 @@ class DeferredRendering
                 var flareAt1 = (cameraToBottom1 * atScale);
                 var flareAt2 = (cameraToBottom2 * atScale);
 
-                var tl0 = (top0    - flareRight0 + flareUp0 + flareAt0);
-                var tl1 = (top1    - flareRight1 + flareUp1 + flareAt1);
-                var tl2 = (top2    - flareRight2 + flareUp2 + flareAt2);
-                var tr0 = (top0    + flareRight0 + flareUp0 + flareAt0);
-                var tr1 = (top1    + flareRight1 + flareUp1 + flareAt1);
-                var tr2 = (top2    + flareRight2 + flareUp2 + flareAt2);
-                var bl0 = (bottom0 - flareRight0 - flareUp0 + flareAt0);
-                var bl1 = (bottom1 - flareRight1 - flareUp1 + flareAt1);
-                var bl2 = (bottom2 - flareRight2 - flareUp2 + flareAt2);
-                var br0 = (bottom0 + flareRight0 - flareUp0 + flareAt0);
-                var br1 = (bottom1 + flareRight1 - flareUp1 + flareAt1);
-                var br2 = (bottom2 + flareRight2 - flareUp2 + flareAt2);
-
-                writer = vertexBuffer.map();
-                if (writer)
-                {
-                    writer(tl0,     tl1,     tl2,     1.0, 0.0);
-                    writer(tr0,     tr1,     tr2,     1.0, 1.0);
-                    writer(top0,    top1,    top2,    0.5, 0.0);
-                    writer(br0,     br1,     br2,     1.0, 0.0);
-                    writer(bottom0, bottom1, bottom2, 0.5, 1.0);
-                    writer(bl0,     bl1,     bl2,     1.0, 1.0);
-                    vertexBuffer.unmap(writer);
-                }
+                var data = flareVertexData;
+                data[0] = (top0    - flareRight0 + flareUp0 + flareAt0);
+                data[1] = (top1    - flareRight1 + flareUp1 + flareAt1);
+                data[2] = (top2    - flareRight2 + flareUp2 + flareAt2);
+                data[3] = 1.0;
+                data[4] = 0.0;
+                data[5] = (top0    + flareRight0 + flareUp0 + flareAt0);
+                data[6] = (top1    + flareRight1 + flareUp1 + flareAt1);
+                data[7] = (top2    + flareRight2 + flareUp2 + flareAt2);
+                data[8] = 1.0;
+                data[9] = 1.0;
+                data[10] = top0;
+                data[11] = top1;
+                data[12] = top2;
+                data[13] = 0.5;
+                data[14] = 0.0;
+                data[15] = (bottom0 + flareRight0 - flareUp0 + flareAt0);
+                data[16] = (bottom1 + flareRight1 - flareUp1 + flareAt1);
+                data[17] = (bottom2 + flareRight2 - flareUp2 + flareAt2);
+                data[18] = 1.0;
+                data[19] = 0.0;
+                data[20] = bottom0;
+                data[21] = bottom1;
+                data[22] = bottom2;
+                data[23] = 0.5;
+                data[24] = 1.0;
+                data[25] = (bottom0 - flareRight0 - flareUp0 + flareAt0);
+                data[26] = (bottom1 - flareRight1 - flareUp1 + flareAt1);
+                data[27] = (bottom2 - flareRight2 - flareUp2 + flareAt2);
+                data[28] = 1.0;
+                data[29] = 1.0;
+                vertexBuffer.setData(data, 0, 6);
             }
             else
             {
                 if (geometry.lastTimeVisible)
                 {
                     geometry.lastTimeVisible = false;
-                    writer = vertexBuffer.map();
-                    if (writer)
+                    for (var n = 0; n < 30; n += 1)
                     {
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        writer(0, 0, 0, 0, 0);
-                        vertexBuffer.unmap(writer);
+                        flareVertexData[n] = 0;
                     }
+                    vertexBuffer.setData(flareVertexData, 0, 6);
                 }
             }
         }
@@ -2303,7 +2308,7 @@ class DeferredRendering
             }
         }
 
-        var loadTechniques = function loadTechniquesFn(shaderManager)
+        var loadTechniques = function loadTechniquesFn(shaderManager: ShaderManager): void
         {
             var that = this;
 
@@ -2311,7 +2316,7 @@ class DeferredRendering
             {
                 that.shader = shader;
                 that.technique = shader.getTechnique(that.techniqueName);
-                that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+                that.techniqueIndex =  that.technique.id;
             };
             shaderManager.load(this.shaderName, callback);
 
@@ -2321,11 +2326,16 @@ class DeferredRendering
                 {
                     that.shadowShader = shader;
                     that.shadowTechnique = shader.getTechnique(that.shadowMappingTechniqueName);
-                    that.shadowTechniqueIndex =  renderingCommonGetTechniqueIndexFn(that.shadowMappingTechniqueName);
+                    that.shadowTechniqueIndex =  that.shadowTechnique.id;
                 };
                 shaderManager.load(this.shadowMappingShaderName, shadowCallback);
             }
         }
+
+        dr.defaultUpdateFn = deferredUpdate;
+        dr.defaultSkinnedUpdateFn = deferredSkinnedUpdate;
+        dr.defaultPrepareFn = deferredPrepare;
+        dr.loadTechniquesFn = loadTechniques;
 
         var effect;
         var effectTypeData : DeferredEffectTypeData;
@@ -3044,5 +3054,5 @@ class DeferredRendering
         effect.add(skinned, effectTypeData);
 
         return dr;
-    };
-};
+    }
+}

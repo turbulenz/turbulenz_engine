@@ -7,31 +7,31 @@ class Leaderboard
 {
     sortBy: number;
     title: string;
-    isUpdating: bool;
+    isUpdating: boolean;
     newScore: number;
 
     currentScore: number;
     setScore: { (score: number): void; };
-    hasImprovedScore: () =>bool;
+    hasImprovedScore: () =>boolean;
 
     // Before the leaderboard set call is made
     onBeforeSet()
     {
         this.isUpdating = true;
-    };
+    }
 
     // When leaderboard set callback is made
     onSuccessfulSet(bestScore)
     {
         this.currentScore = bestScore;
         this.isUpdating = false;
-    };
+    }
 
     // When leaderboard set failed
     onUnsuccessfulSet()
     {
         this.isUpdating = false;
-    };
+    }
 
     static create(sortBy, title)
     {
@@ -95,5 +95,5 @@ class Leaderboard
         }
 
         return leaderboard;
-    };
-};
+    }
+}

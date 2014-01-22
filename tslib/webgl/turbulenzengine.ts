@@ -8,12 +8,8 @@
 /*global Float32Array*/
 /*global console*/
 /*global window*/
-//"use strict";
 
-/// <reference path="networkdevice.ts" />
-/// <reference path="inputdevice.ts" />
-/// <reference path="sounddevice.ts" />
-/// <reference path="graphicsdevice.ts" />
+"use strict";
 
 interface Window
 {
@@ -49,7 +45,7 @@ declare var WebGLPhysicsDevice : WebGLPhysicsDeviceConstructor;
 
 class WebGLTurbulenzEngine implements TurbulenzEngine
 {
-    version = '0.26.1.0';
+    version = '0.28.0.0';
 
     time               : number;
 
@@ -58,7 +54,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     //VMath?             : any;
 
-    encryptionEnabled : bool;
+    encryptionEnabled : boolean;
 
     pluginId: string;
     plugin: any; // TODO:
@@ -76,7 +72,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     // Internal
 
-    private unloading: bool;
+    private unloading: boolean;
     private networkDevice: WebGLNetworkDevice;
     private inputDevice: WebGLInputDevice;
     private physicsDevice: WebGLPhysicsDevice;
@@ -87,8 +83,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     resizeCanvas: { (): void; };
     base64Encode: { (bytes: any): string; };
-
-    callOnError(msg: string): void;
+    handleZeroTimeoutMessages: { (event): void; };
 
     setInterval(f, t): any
     {
@@ -97,12 +92,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 that.updateTime();
                 f();
             }, t);
-    };
+    }
 
     clearInterval(i)
     {
-        return window.clearInterval(i);
-    };
+        window.clearInterval(i);
+    }
 
     createGraphicsDevice(params): WebGLGraphicsDevice
     {
@@ -117,7 +112,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.graphicsDevice = graphicsDevice;
             return graphicsDevice;
         }
-    };
+    }
 
     createPhysicsDevice(params): WebGLPhysicsDevice
     {
@@ -141,7 +136,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.physicsDevice = physicsDevice;
             return physicsDevice;
         }
-    };
+    }
 
     createSoundDevice(params): WebGLSoundDevice
     {
@@ -165,7 +160,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.soundDevice = soundDevice;
             return soundDevice;
         }
-    };
+    }
 
     createInputDevice(params): WebGLInputDevice
     {
@@ -180,7 +175,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.inputDevice = inputDevice;
             return inputDevice;
         }
-    };
+    }
 
     createNetworkDevice(params): WebGLNetworkDevice
     {
@@ -190,11 +185,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
         else
         {
-            var networkDevice = WebGLNetworkDevice.create(/* params */);
+            var networkDevice = WebGLNetworkDevice.create(params);
             this.networkDevice = networkDevice;
             return networkDevice;
         }
-    };
+    }
 
     createMathDevice(params): MathDevice
     {
@@ -213,13 +208,13 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         {
         }
 
-        return VMath;
-    };
+        return WebGLMathDevice;
+    }
 
     createNativeMathDevice(params): MathDevice
     {
-        return VMath;
-    };
+        return WebGLMathDevice;
+    }
 
     getGraphicsDevice(): WebGLGraphicsDevice
     {
@@ -229,87 +224,91 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.callOnError("GraphicsDevice not created yet.");
         }
         return graphicsDevice;
-    };
+    }
 
     getPhysicsDevice(): WebGLPhysicsDevice
     {
         return this.physicsDevice;
-    };
+    }
 
     getSoundDevice(): WebGLSoundDevice
     {
         return this.soundDevice;
-    };
+    }
 
     getInputDevice(): WebGLInputDevice
     {
         return this.inputDevice;
-    };
+    }
 
     getNetworkDevice(): WebGLNetworkDevice
     {
         return this.networkDevice;
-    };
+    }
 
     getMathDevice(): MathDevice
     {
-        return VMath;
-    };
+        return WebGLMathDevice;
+    }
 
     getNativeMathDevice(): MathDevice
     {
-        return VMath;
-    };
+        return WebGLMathDevice;
+    }
 
     getObjectStats()
     {
         return null;
-    };
+    }
 
     flush()
     {
 
-    };
+    }
 
     run()
     {
 
-    };
+    }
 
     encrypt(msg: string): string
     {
         return msg;
-    };
+    }
 
     decrypt(msg: string): string
     {
         return msg;
-    };
+    }
 
     generateSignature(msg: string): string
     {
         return null;
-    };
+    }
 
-    verifySignature(msg: string, sig: string): bool
+    verifySignature(msg: string, sig: string): boolean
     {
         return true;
-    };
+    }
 
     onerror(msg)
     {
         console.error(msg);
-    };
+    }
 
     onwarning(msg)
     {
         console.warn(msg);
-    };
+    }
+
+    onperformancewarning(msg)
+    {
+    }
 
     getSystemInfo()
     {
         return this.systemInfo;
-    };
+    }
 
     request(url, callback)
     {
@@ -330,7 +329,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             return;
         }
 
-        function httpRequestCallback()
+        var httpRequestCallback = function httpRequestCallbackFn()
         {
             if (xhr.readyState === 4) /* 4 == complete */
             {
@@ -391,7 +390,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 xhr = null;
                 callback = null;
             }
-        }
+        };
 
         xhr.open('GET', url, true);
         if (callback)
@@ -399,7 +398,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             xhr.onreadystatechange = httpRequestCallback;
         }
         xhr.send();
-    };
+    }
 
     // Internals
     private destroy()
@@ -437,8 +436,14 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         if (this.resizeCanvas)
         {
             window.removeEventListener('resize', this.resizeCanvas, false);
+            delete this.resizeCanvas;
         }
-    };
+        if (this.handleZeroTimeoutMessages)
+        {
+            window.removeEventListener("message", this.handleZeroTimeoutMessages, true);
+            delete this.handleZeroTimeoutMessages;
+        }
+    }
 
     getPluginObject()
     {
@@ -448,7 +453,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             this.plugin = document.getElementById(this.pluginId);
         }
         return this.plugin;
-    };
+    }
 
     unload()
     {
@@ -464,16 +469,16 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 this.destroy();
             }
         }
-    };
+    }
 
-    isUnloading()
+    isUnloading(): boolean
     {
         return this.unloading;
-    };
+    }
 
     enableProfiling()
     {
-    };
+    }
 
     startProfiling()
     {
@@ -481,7 +486,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         {
             console.profile("turbulenz");
         }
-    };
+    }
 
     stopProfiling()
     {
@@ -497,7 +502,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
 
         return result;
-    };
+    }
 
     callOnError(msg)
     {
@@ -506,7 +511,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         {
             onerror(msg);
         }
-    };
+    }
 
     static create(params): WebGLTurbulenzEngine
     {
@@ -534,11 +539,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                     return performance.now();
                 };
             }
-            else if (performance.webkitNow)
+            else if ((<any>performance).webkitNow)
             {
                 getTime = function getTimeFn()
                 {
-                    return performance.webkitNow();
+                    return (<any>performance).webkitNow();
                 };
             }
         }
@@ -614,7 +619,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
             var clearZeroTimeout = function clearZeroTimeoutFn(timeout)
             {
-                var id = timeout;
+                var id = timeout.id;
                 var numTimeouts = timeouts.length;
                 for (var n = 0; n < numTimeouts; n += 1)
                 {
@@ -641,6 +646,9 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                     }
                 }
             };
+
+            tz.handleZeroTimeoutMessages = handleZeroTimeoutMessages;
+
             window.addEventListener("message", handleZeroTimeoutMessages, true);
 
             tz.setTimeout = function (f, t)
@@ -777,8 +785,20 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             // Resize canvas to fill parent
             tz.resizeCanvas = function ()
             {
-                canvas.width = canvas.parentNode.clientWidth;
-                canvas.height = canvas.parentNode.clientHeight;
+                if (document.fullscreenElement === canvas ||
+                    document.mozFullScreenElement === canvas ||
+                    document.webkitFullscreenElement === canvas ||
+                    document.msFullscreenElement === canvas)
+                {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                else
+                {
+                    var parentNode = canvas.parentNode;
+                    canvas.width = parentNode.clientWidth;
+                    canvas.height = parentNode.clientHeight;
+                }
             };
 
             tz.resizeCanvas();
@@ -786,15 +806,22 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             window.addEventListener('resize', tz.resizeCanvas, false);
         }
 
-        var previousOnBeforeUnload = window.onbeforeunload;
-        window.onbeforeunload = function ()
+        try
         {
-            tz.unload();
-
-            if (previousOnBeforeUnload)
+            var previousOnBeforeUnload = window.onbeforeunload;
+            window.onbeforeunload = function ()
             {
-                previousOnBeforeUnload.call(this);
-            }
+                tz.unload();
+
+                if (previousOnBeforeUnload)
+                {
+                    previousOnBeforeUnload.call(this);
+                }
+            };
+        }
+        catch (e)
+        {
+            // If the game is running as a CWS packaged app then onbeforeunload is not available
         };
 
         tz.time = 0;
@@ -816,7 +843,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             userLocale: (navigator.language || navigator.userLanguage).replace('-', '_')
         };
 
-        var looksLikeNetbook = function looksLikeNetbookFn(): bool
+        var looksLikeNetbook = function looksLikeNetbookFn(): boolean
         {
             var minScreenDim =
                 Math.min(window.screen.height, window.screen.width)
@@ -846,7 +873,10 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             if (looksLikeNetbook())
             {
                 systemInfo.platformProfile = "tablet";
-                debug.log("Setting platformProfile to 'tablet'");
+                if (debug)
+                {
+                    debug.log("Setting platformProfile to 'tablet'");
+                }
             }
         }
         else
@@ -881,7 +911,10 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                     if (looksLikeNetbook())
                     {
                         systemInfo.platformProfile = "tablet";
-                        debug.log("Setting platformProfile to 'tablet'");
+                        if (debug)
+                        {
+                            debug.log("Setting platformProfile to 'tablet'");
+                        }
                     }
                 }
                 else
@@ -985,7 +1018,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         };
 
         return tz;
-    };
-};
+    }
+}
 
 window.WebGLTurbulenzEngine = WebGLTurbulenzEngine;

@@ -3,11 +3,6 @@
 /*global Observer: false*/
 /*global TurbulenzEngine: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="debug.ts" />
-/// <reference path="requesthandler.ts" />
-/// <reference path="observer.ts" />
-
 "use strict";
 
 //
@@ -19,14 +14,14 @@ class ShaderManager
 
     load: (path: string, callback?: { (shader: Shader): void; }) => Shader;
     map: (dst: string, src: string) => void;
-    get(path: string) : Shader { debug.abort("abstract method"); return null; };
+    get(path: string) : Shader { debug.abort("abstract method"); return null; }
     getAll: () => { [path: string]: Shader; };
     remove: (path: string) => void;
     reload: (path: string, callback: { (shader: Shader): void; }) => void;
     reloadAll: () => void;
     getNumPendingShaders: () => number;
-    isShaderLoaded: (path: string) => bool;
-    isShaderMissing: (path: string) => bool;
+    isShaderLoaded: (path: string) => boolean;
+    isShaderMissing: (path: string) => boolean;
     setPathRemapping: (prm, assetUrl) => void;
     setAutomaticParameterResize: (name: string, size: number) => void;
     destroy: () => void;
@@ -529,5 +524,5 @@ class ShaderManager
         };
 
         return sm;
-    };
-};
+    }
+}

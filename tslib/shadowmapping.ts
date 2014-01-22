@@ -1,12 +1,9 @@
-// Copyright (c) 2010-2012 Turbulenz Limited
+// Copyright (c) 2010-2013 Turbulenz Limited
 
 //
 // ShadowMapping
 //
 /*global renderingCommonCreateRendererInfoFn: false, Camera: false*/
-
-/// <reference path="scene.ts" />
-/// <reference path="renderingcommon.ts" />
 
 interface ShadowMap
 {
@@ -24,6 +21,7 @@ class ShadowMapping
 
     defaultSizeLow = 512;
     defaultSizeHigh = 1024;
+    blurEnabled = true;
 
     gd                  : GraphicsDevice;
     md                  : MathDevice;
@@ -89,12 +87,12 @@ class ShadowMapping
             this.skinnedTechnique = shader.getTechnique("skinned");
             this.blurTechnique = shader.getTechnique("blur");
         }
-    };
+    }
 
     update()
     {
         this.shadowTechniqueParameters['world'] = this.node.world;
-    };
+    }
 
     skinnedUpdate()
     {
@@ -107,7 +105,7 @@ class ShadowMapping
             techniqueParameters['skinBones'] = skinController.output;
             skinController.update();
         }
-    };
+    }
 
     destroyBuffers()
     {
@@ -193,9 +191,9 @@ class ShadowMapping
             this.depthBufferHigh.destroy();
             this.depthBufferHigh = null;
         }
-    };
+    }
 
-    updateBuffers(sizeLow, sizeHigh): bool
+    updateBuffers(sizeLow, sizeHigh): boolean
     {
         if (this.sizeLow === sizeLow &&
             this.sizeHigh === sizeHigh)
@@ -268,9 +266,9 @@ class ShadowMapping
         this.sizeHigh = 0;
         this.destroyBuffers();
         return false;
-    };
+    }
 
-    findVisibleRenderables(lightInstance): bool
+    findVisibleRenderables(lightInstance): boolean
     {
         var md = this.md;
 
@@ -320,11 +318,26 @@ class ShadowMapping
             else // directional
             {
                 direction = light.direction;
-                var scaledDirection = md.v3Mul(direction, halfExtents);
-                md.m43TransformVector(matrix, scaledDirection, scaledDirection);
-                origin = md.v3Sub(nodePos, scaledDirection);
-                md.v3Add(nodePos, scaledDirection, target);
-                direction = md.m43TransformVector(matrix, direction);
+
+                var d0 = direction[0];
+                var d1 = direction[1];
+                var d2 = direction[2];
+
+                var p0 = halfExtents[0];
+                var p1 = halfExtents[1];
+                var p2 = halfExtents[2];
+
+                var n0 = -p0;
+                var n1 = -p1;
+                var n2 = -p2;
+
+                var maxDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)));
+                var minDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)));
+
+                direction = md.m43TransformVector(matrix, light.direction);
+                md.v3AddScalarMul(nodePos, direction, maxDistance, target);
+                origin = md.v3AddScalarMul(nodePos, direction, minDistance);
+
                 camera.parallel = true;
             }
 
@@ -457,10 +470,20 @@ class ShadowMapping
                                                                numOccluders);
             occludersDrawArray.length = numOccluders;
             shadowMapInfo.staticNodesChangeCounter = staticNodesChangeCounter;
+
+            if (1 < numOccluders)
+            {
+                occludersDrawArray.sort(this._sortNegative);
+            }
         }
 
         return (0 < occludersDrawArray.length);
-    };
+    }
+
+    private _sortNegative(a, b)
+    {
+        return (a.sortKey - b.sortKey);
+    }
 
     drawShadowMap(cameraMatrix, minExtentsHigh, lightInstance)
     {
@@ -769,14 +792,14 @@ class ShadowMapping
                 shadowMap.lightNode = node;
                 shadowMap.frameUpdated = frameUpdated;
                 shadowMap.frameVisible = frameUpdated;
-                shadowMap.needsBlur = true;
+                shadowMap.needsBlur = this.blurEnabled;
             }
         }
         else
         {
             shadowMap.numRenderables = numOccluders;
             shadowMap.frameVisible = frameUpdated;
-            shadowMap.needsBlur = true;
+            shadowMap.needsBlur = this.blurEnabled;
         }
 
         if (!gd.beginRenderTarget(shadowMapRenderTarget))
@@ -796,10 +819,10 @@ class ShadowMapping
                        -minLightDistance * maxDepthReciprocal,
                        shadowMapTechniqueParameters['shadowDepth']);
 
-        gd.drawArray(occludersDrawArray, [shadowMapTechniqueParameters], 1);
+        gd.drawArray(occludersDrawArray, [shadowMapTechniqueParameters], 0);
 
         gd.endRenderTarget();
-    };
+    }
 
     private _filterOccluders(overlappingRenderables: any[],
                              numStaticOverlappingRenderables: number,
@@ -847,7 +870,7 @@ class ShadowMapping
             }
         }
         return numOccluders;
-    };
+    }
 
     private _updateOccludersLimits(lightInstance: any,
                                    viewMatrix: any,
@@ -969,7 +992,7 @@ class ShadowMapping
         lightInstance.maxLightDistanceY = maxLightDistanceY;
 
         return numOccluders;
-    };
+    }
 
     blurShadowMaps()
     {
@@ -1065,7 +1088,7 @@ class ShadowMapping
                 }
             }
         }
-    };
+    }
 
     lookAt(camera, lookAt, up, eyePosition)
     {
@@ -1076,7 +1099,7 @@ class ShadowMapping
         md.v3Normalize(xaxis, xaxis);
         var yaxis = md.v3Cross(zaxis, xaxis, this.tempV3AxisY);
         camera.matrix = md.m43Build(xaxis, yaxis, zaxis, eyePosition, camera.matrix);
-    };
+    }
 
     destroy()
     {
@@ -1111,9 +1134,9 @@ class ShadowMapping
         delete this.occludersExtents;
         delete this.md;
         delete this.gd;
-    };
+    }
 
-// Constructor function
+    // Constructor function
     static create(gd, md, shaderManager, effectsManager, sizeLow,
                   sizeHigh): ShadowMapping
     {
@@ -1164,7 +1187,13 @@ class ShadowMapping
 
         shadowMapping.occludersExtents = [];
 
-        return shadowMapping;
-    };
+        var precision = gd.maxSupported("FRAGMENT_SHADER_PRECISION");
+        if (precision && // Just in case the query is not supported
+            precision < 16)
+        {
+            shadowMapping.blurEnabled = false;
+        }
 
-};
+        return shadowMapping;
+    }
+}

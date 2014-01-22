@@ -1,9 +1,6 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 /*global TurbulenzEngine: false*/
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="scenenode.ts" />
-
 interface Bounds
 {
     center: any;     // v3
@@ -21,6 +18,7 @@ interface Hierarchy
 interface Skeleton extends Hierarchy
 {
     invBoneLTMs: any[]; // m43[]
+    bindPoses?: any[]; // m43[]
 };
 
 // TODO: There is more we can add to this.  It can also be turned into
@@ -31,12 +29,12 @@ interface ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
 
     // Methods
 
@@ -49,7 +47,7 @@ interface ControllerBaseClass
     updateBounds(): void;
 
     getJointTransform(jointId: number): any; // m43
-    getJointWorldTransform(jointId: number, asMatrix?: bool): any; // m43
+    getJointWorldTransform(jointId: number, asMatrix?: boolean): any; // m43
 };
 
 //
@@ -180,7 +178,7 @@ var Animation =
     function StandardGetJointWorldTransformFn(controller: ControllerBaseClass,
                                               jointId: number,
                                               mathDevice: MathDevice,
-                                              asMatrix?: bool): any
+                                              asMatrix?: boolean): any
     {
         var quatMulTranslate = mathDevice.quatMulTranslate;
         var m43FromRTS = mathDevice.m43FromRTS;
@@ -264,17 +262,17 @@ class InterpolatorController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     rate                 : number;
     currentTime          : number;
-    looping              : bool;
+    looping              : boolean;
 
     currentAnim          : Animation;
     translationEndFrames : Uint32Array;
@@ -340,7 +338,15 @@ class InterpolatorController implements ControllerBaseClass
                         return;
                     }
                 }
-                this.currentTime -= animLength;
+                if (0 !== animLength)
+                {
+                    this.currentTime -= animLength;
+                }
+                else
+                {
+                    this.currentTime = 0;
+                    break;
+                }
             }
             else
             {
@@ -352,6 +358,7 @@ class InterpolatorController implements ControllerBaseClass
                     }
                 }
                 this.currentTime = animLength;
+                break;
             }
         }
 
@@ -359,7 +366,7 @@ class InterpolatorController implements ControllerBaseClass
         {
             this.onUpdateCallback(this);
         }
-    };
+    }
 
     update()
     {
@@ -389,7 +396,8 @@ class InterpolatorController implements ControllerBaseClass
         {
             var data = nodeData[j];
             var jointChannels = data.channels;
-            var jointHasScale = jointChannels ? jointChannels.scale : animHasScale;
+            var jointHasScale =
+                jointChannels ? jointChannels.scale : animHasScale;
             var hasScale = jointHasScale || animHasScale;
             var jointKeys = data.keyframes;
             var jointBase = data.baseframe;
@@ -402,7 +410,7 @@ class InterpolatorController implements ControllerBaseClass
                 basePos = jointBase.translation;
                 baseScale = jointBase.scale;
                 /*jshint bitwise: false*/
-                jointHasScale |= baseScale !== undefined;
+                jointHasScale = jointHasScale || (baseScale !== undefined);
                 /*jshint bitwise: true*/
             }
 
@@ -587,7 +595,7 @@ class InterpolatorController implements ControllerBaseClass
         {
             this.updateBounds();
         }
-    };
+    }
 
     updateBounds()
     {
@@ -596,8 +604,12 @@ class InterpolatorController implements ControllerBaseClass
             return;
         }
 
+        this.dirtyBounds = false;
+
         var currentTime = this.currentTime;
         var anim = this.currentAnim;
+        var mathDevice = this.mathDevice;
+        var ibounds = this.bounds;
 
         // work out the offset in the frame list and the delta between frame pairs
         var bounds = anim.bounds;
@@ -606,8 +618,8 @@ class InterpolatorController implements ControllerBaseClass
         {
             // copy the end bounds
             var endBounds = bounds[numFrames - 1];
-            this.bounds.center = endBounds.center;
-            this.bounds.halfExtent = endBounds.halfExtent;
+            ibounds.center = mathDevice.v3Copy(endBounds.center, ibounds.center);
+            ibounds.halfExtent = mathDevice.v3Copy(endBounds.halfExtent, ibounds.halfExtent);
             return;
         }
 
@@ -615,8 +627,8 @@ class InterpolatorController implements ControllerBaseClass
         {
             // copy the start bounds
             var startBounds = bounds[0];
-            this.bounds.center = startBounds.center;
-            this.bounds.halfExtent = startBounds.halfExtent;
+            ibounds.center = mathDevice.v3Copy(startBounds.center, ibounds.center);
+            ibounds.halfExtent = mathDevice.v3Copy(startBounds.halfExtent, ibounds.halfExtent);
             return;
         }
 
@@ -632,9 +644,6 @@ class InterpolatorController implements ControllerBaseClass
         var startTime = boundsStart.time;
         var endTime = boundsEnd.time;
         var delta = (currentTime - startTime) / (endTime - startTime);
-
-        var mathDevice = this.mathDevice;
-        var ibounds = this.bounds;
 
         // If delta is close to the limits we just copy the bounds
         var minKeyframeDelta = Animation.minKeyframeDelta;
@@ -663,9 +672,12 @@ class InterpolatorController implements ControllerBaseClass
             centerOffset = mathDevice.v3Abs(centerOffset, centerOffset);
             ibounds.halfExtent = mathDevice.v3Add(newExtent, centerOffset, newExtent);
         }
+    }
 
+    _updateBoundsNoop()
+    {
         this.dirtyBounds = false;
-    };
+    }
 
     // Note this is purely a transform for the given joint and doesn't include parent transforms
     getJointTransform(jointId: number)
@@ -787,9 +799,9 @@ class InterpolatorController implements ControllerBaseClass
                 return m43FromRT.call(mathDevice, jointOutput.rotation, jointOutput.translation);
             }
         }
-    };
+    }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool): any
+    getJointWorldTransform(jointId: number, asMatrix?: boolean): any
     {
         if (this.dirty)
         {
@@ -798,7 +810,7 @@ class InterpolatorController implements ControllerBaseClass
         }
 
         return Animation.standardGetJointWorldTransform(this, jointId, this.mathDevice, asMatrix);
-    };
+    }
 
     setAnimation(animation: Animation, looping)
     {
@@ -836,7 +848,43 @@ class InterpolatorController implements ControllerBaseClass
         }
 
         this.outputChannels = AnimationChannels.copy(animation.channels);
-    };
+
+        // Check if we need to update bounds
+        var bounds = animation.bounds;
+        var numFrames = bounds.length;
+        debug.assert(0 < numFrames);
+        var centerStart = bounds[0].center;
+        var halfExtentStart = bounds[0].halfExtent;
+        var n;
+        for (n = 1; n < numFrames; n += 1)
+        {
+            var frame = bounds[n];
+            var center = frame.center;
+            var halfExtent = frame.halfExtent;
+            if (centerStart[0] !== center[0] ||
+                centerStart[1] !== center[1] ||
+                centerStart[2] !== center[2] ||
+                halfExtentStart[0] !== halfExtent[0] ||
+                halfExtentStart[1] !== halfExtent[1] ||
+                halfExtentStart[2] !== halfExtent[2])
+            {
+                break;
+            }
+        }
+        if (n < numFrames)
+        {
+            this.updateBounds = InterpolatorController.prototype.updateBounds;
+        }
+        else
+        {
+            this.updateBounds = InterpolatorController.prototype._updateBoundsNoop;
+
+            var ibounds = this.bounds;
+            var mathDevice = this.mathDevice;
+            ibounds.center = mathDevice.v3Copy(centerStart, ibounds.center);
+            ibounds.halfExtent = mathDevice.v3Copy(halfExtentStart, ibounds.halfExtent);
+        }
+    }
 
     setTime(time)
     {
@@ -852,17 +900,17 @@ class InterpolatorController implements ControllerBaseClass
             this.rotationEndFrames[index] = 0;
             this.scaleEndFrames[index] = 0;
         }
-    };
+    }
 
     setRate(rate)
     {
         this.rate = rate;
-    };
+    }
 
     getHierarchy()
     {
         return this.hierarchy;
-    };
+    }
 
     // Constructor function
     static create(hierarchy): InterpolatorController
@@ -899,8 +947,8 @@ class InterpolatorController implements ControllerBaseClass
         }
 
         return i;
-    };
-};
+    }
+}
 InterpolatorController.prototype.scratchV3 = null;
 
 // This controller works off a base interpolator and copies all it's output data
@@ -915,12 +963,12 @@ class OverloadedNodeController
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     baseController: ControllerBaseClass;
@@ -932,7 +980,7 @@ class OverloadedNodeController
         this.dirtyBounds = true;
 
         this.baseController.addTime(delta);
-    };
+    }
 
     update()
     {
@@ -963,7 +1011,7 @@ class OverloadedNodeController
             this.baseController.updateBounds();
             this.dirtyBounds = false;
         }
-    };
+    }
 
     updateBounds()
     {
@@ -972,25 +1020,25 @@ class OverloadedNodeController
             this.baseController.updateBounds();
             this.dirtyBounds = false;
         }
-    };
+    }
 
     // Note this is purely a transform for the given joint and doesn't include parent transforms
     getJointTransform(jointId)
     {
         // TODO: check if the jointId is overloaded and return the correct one
         return this.baseController.getJointTransform(jointId);
-    };
+    }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         // TODO: check if the jointId is overloaded and return the correct one
         return this.baseController.getJointWorldTransform(jointId, asMatrix);
-    };
+    }
 
     getHierarchy()
     {
         return this.baseController.getHierarchy();
-    };
+    }
 
     addOverload(sourceController, sourceIndex, overloadIndex)
     {
@@ -1001,7 +1049,7 @@ class OverloadedNodeController
             sourceIndex: sourceIndex,
             overloadIndex: overloadIndex
         });
-    };
+    }
 
     // Constructor function
     static create(baseController: ControllerBaseClass): OverloadedNodeController
@@ -1018,8 +1066,8 @@ class OverloadedNodeController
         c.mathDevice = TurbulenzEngine.getMathDevice();
 
         return c;
-    };
-};
+    }
+}
 
 class ReferenceController
 {
@@ -1028,16 +1076,18 @@ class ReferenceController
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     referenceSource: ControllerBaseClass;
     setReferenceController: { (controller: ControllerBaseClass): void; };
+
+    private __proto__ : any; //
 
     // Constructor function
     static create(baseController): ReferenceController
@@ -1046,7 +1096,7 @@ class ReferenceController
         var c = new ReferenceController();
         /*jshint nomen: false*/
         /*jshint proto: true*/
-        c['__proto__'] = baseController;
+        c.__proto__ = baseController;
         /*jshint proto: false*/
         /*jshint nomen: true*/
 
@@ -1066,7 +1116,7 @@ class ReferenceController
 
             /*jshint nomen: false*/
             /*jshint proto: true*/
-            this['__proto__'] = controller;
+            this.__proto__ = controller;
             /*jshint proto: false*/
             /*jshint nomen: true*/
             this.referenceSource = controller;
@@ -1078,10 +1128,11 @@ class ReferenceController
 
         /*jshint proto:false*/
         return c;
-    };
-};
+    }
+}
 
-// The TransitionController interpolates between the fixed state of input controllers across a period of time
+// The TransitionController interpolates between the fixed state of
+// input controllers across a period of time
 class TransitionController implements ControllerBaseClass
 {
     static version = 1;
@@ -1091,12 +1142,12 @@ class TransitionController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     rate: number;
@@ -1105,7 +1156,7 @@ class TransitionController implements ControllerBaseClass
     transitionTime: number;
     transitionLength: number;
 
-    onFinishedTransitionCallback: { (controller: ControllerBaseClass): bool; };
+    onFinishedTransitionCallback: { (controller: ControllerBaseClass): boolean; };
 
     addTime(delta)
     {
@@ -1130,7 +1181,7 @@ class TransitionController implements ControllerBaseClass
         {
             this.onUpdateCallback(this);
         }
-    };
+    }
 
     update()
     {
@@ -1192,7 +1243,7 @@ class TransitionController implements ControllerBaseClass
         {
             this.updateBounds();
         }
-    };
+    }
 
     updateBounds()
     {
@@ -1230,7 +1281,7 @@ class TransitionController implements ControllerBaseClass
         this.bounds.halfExtent = v3Add.call(mathDevice, newExtent, centerOffset, newExtent);
 
         this.dirtyBounds = false;
-    };
+    }
 
     // Note this is purely a transform for the given joint and doesn't include parent transforms
     getJointTransform(jointId)
@@ -1244,9 +1295,9 @@ class TransitionController implements ControllerBaseClass
         var output = this.output;
         var jointOutput = output[jointId];
         return jointOutput;
-    };
+    }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         if (this.dirty)
         {
@@ -1255,7 +1306,7 @@ class TransitionController implements ControllerBaseClass
         }
 
         return Animation.standardGetJointWorldTransform(this, jointId, this.mathDevice, asMatrix);
-    };
+    }
 
     setStartController(controller)
     {
@@ -1263,7 +1314,7 @@ class TransitionController implements ControllerBaseClass
         this.outputChannels = AnimationChannels.union(this.startController.outputChannels, this.endController.outputChannels);
         this.dirty = true;
         this.dirtyBounds = true;
-    };
+    }
 
     setEndController(controller)
     {
@@ -1271,32 +1322,32 @@ class TransitionController implements ControllerBaseClass
         this.outputChannels = AnimationChannels.union(this.startController.outputChannels, this.endController.outputChannels);
         this.dirty = true;
         this.dirtyBounds = true;
-    };
+    }
 
     setTransitionLength(length)
     {
         this.transitionLength = length;
         this.dirty = true;
         this.dirtyBounds = true;
-    };
+    }
 
     setTime(time)
     {
         this.transitionTime = time;
         this.dirty = true;
         this.dirtyBounds = true;
-    };
+    }
 
     setRate(rate)
     {
         this.rate = rate;
-    };
+    }
 
     getHierarchy()
     {
         // Return the start controller, they should match anyway
         return this.startController.getHierarchy();
-    };
+    }
 
     // Constructor function
     static create(startController: ControllerBaseClass,
@@ -1319,8 +1370,8 @@ class TransitionController implements ControllerBaseClass
         c.dirtyBounds = true;
 
         return c;
-    };
-};
+    }
+}
 
 // The BlendController blends between the animating state of input controllers given a user specified delta
 class BlendController implements ControllerBaseClass
@@ -1332,12 +1383,12 @@ class BlendController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     controllers: ControllerBaseClass[];
@@ -1355,7 +1406,7 @@ class BlendController implements ControllerBaseClass
             var controller = controllers[i];
             controller.addTime(delta);
         }
-    };
+    }
 
     update()
     {
@@ -1427,7 +1478,7 @@ class BlendController implements ControllerBaseClass
         {
             this.updateBounds();
         }
-    };
+    }
 
     updateBounds()
     {
@@ -1467,7 +1518,7 @@ class BlendController implements ControllerBaseClass
         this.bounds.halfExtent = v3Add.call(mathDevice, newExtent, centerOffset, newExtent);
 
         this.dirtyBounds = false;
-    };
+    }
 
     // Note this is purely a transform for the given joint and doesn't include parent transforms
     getJointTransform(jointId)
@@ -1479,9 +1530,9 @@ class BlendController implements ControllerBaseClass
         }
 
         return this.output[jointId];
-    };
+    }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         if (this.dirty)
         {
@@ -1490,14 +1541,14 @@ class BlendController implements ControllerBaseClass
         }
 
         return Animation.standardGetJointWorldTransform(this, jointId, this.mathDevice, asMatrix);
-    };
+    }
 
     setBlendDelta(delta)
     {
         this.blendDelta = (0 < delta ? delta : 0);
         this.dirty = true;
         this.dirtyBounds = true;
-    };
+    }
 
     setTime(time)
     {
@@ -1510,7 +1561,7 @@ class BlendController implements ControllerBaseClass
         }
         this.dirty = true;
         this.dirtyBounds = true;
-    };
+    }
 
     setRate(rate)
     {
@@ -1520,13 +1571,13 @@ class BlendController implements ControllerBaseClass
         {
             controllers[i].setRate(rate);
         }
-    };
+    }
 
     getHierarchy()
     {
         // Return the first controller since they should all match
         return this.controllers[0].getHierarchy();
-    };
+    }
 
     // Constructor function
     static create(controllers: ControllerBaseClass[]): BlendController
@@ -1559,8 +1610,8 @@ class BlendController implements ControllerBaseClass
 
 
         return c;
-    };
-};
+    }
+}
 
 // The MaskController takes joints from various controllers based on a per joint mask
 class MaskController implements ControllerBaseClass
@@ -1572,16 +1623,16 @@ class MaskController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     controllers: ControllerBaseClass[];
-    masks: { [idx: number]: bool; }[];
+    masks: { [idx: number]: boolean; }[];
 
     addTime(delta)
     {
@@ -1595,7 +1646,7 @@ class MaskController implements ControllerBaseClass
             var controller = controllers[i];
             controller.addTime(delta);
         }
-    };
+    }
 
     update()
     {
@@ -1603,6 +1654,7 @@ class MaskController implements ControllerBaseClass
         var outputChannels = this.outputChannels;
         var outputScale = outputChannels.scale;
 
+        var mathDevice = this.mathDevice;
         var controllers = this.controllers;
         var numControllers = controllers.length;
         var masks = this.masks;
@@ -1625,15 +1677,15 @@ class MaskController implements ControllerBaseClass
                 }
                 if (mask[j])
                 {
-                    output[j].rotation = controllerOutput[j].rotation.slice();
-                    output[j].translation = controllerOutput[j].translation.slice();
+                    output[j].rotation = mathDevice.quatCopy(controllerOutput[j].rotation, output[j].rotation);
+                    output[j].translation = mathDevice.v3Copy(controllerOutput[j].translation, output[j].translation);
                     if (createScale)
                     {
-                        output[j].scale = this.mathDevice.v3BuildOne();
+                        output[j].scale = mathDevice.v3BuildOne(output[j].scale);
                     }
                     else if (outputScale)
                     {
-                        output[j].scale = controllerOutput[j].scale.slice();
+                        output[j].scale = mathDevice.v3Copy(controllerOutput[j].scale, output[j].scale);
                     }
                 }
             }
@@ -1645,7 +1697,7 @@ class MaskController implements ControllerBaseClass
         {
             this.updateBounds();
         }
-    };
+    }
 
     updateBounds()
     {
@@ -1690,7 +1742,7 @@ class MaskController implements ControllerBaseClass
         }
 
         this.dirtyBounds = false;
-    };
+    }
 
     // Note this is purely a transform for the given joint and doesn't include parent transforms
     getJointTransform(jointId)
@@ -1702,9 +1754,9 @@ class MaskController implements ControllerBaseClass
         }
 
         return this.output[jointId];
-    };
+    }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         if (this.dirty)
         {
@@ -1713,7 +1765,7 @@ class MaskController implements ControllerBaseClass
         }
 
         return Animation.standardGetJointWorldTransform(this, jointId, this.mathDevice, asMatrix);
-    };
+    }
 
     setTime(time)
     {
@@ -1726,7 +1778,7 @@ class MaskController implements ControllerBaseClass
         }
         this.dirty = true;
         this.dirtyBounds = true;
-    };
+    }
 
     setRate(rate)
     {
@@ -1736,7 +1788,7 @@ class MaskController implements ControllerBaseClass
         {
             controllers[i].setRate(rate);
         }
-    };
+    }
 
     setMask(controllerIndex, maskJoints, maskArray)
     {
@@ -1816,13 +1868,13 @@ class MaskController implements ControllerBaseClass
                 }
             }
         }
-    };
+    }
 
     getHierarchy()
     {
         // Return the first controller since they should all match
         return this.controllers[0].getHierarchy();
-    };
+    }
 
     // Constructor function
     static create(controllers: ControllerBaseClass[]): MaskController
@@ -1854,8 +1906,8 @@ class MaskController implements ControllerBaseClass
 
 
         return c;
-    };
-};
+    }
+}
 
 // The PoseController allows the user to set a fixed set of joint transforms to pose a hierarchy
 class PoseController implements ControllerBaseClass
@@ -1867,21 +1919,21 @@ class PoseController implements ControllerBaseClass
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
-    addTime(/* delta */)
+    addTime( delta )
     {
-    };
+    }
 
     update()
     {
-    };
+    }
 
     updateBounds()
     {
@@ -1942,32 +1994,32 @@ class PoseController implements ControllerBaseClass
         }
 
         this.dirtyBounds = false;
-    };
+    }
 
     // Note this is purely a transform for the given joint and doesn't include parent transforms
     getJointTransform(jointId)
     {
         var output = this.output;
         return output[jointId];
-    };
+    }
 
-    getJointWorldTransform(jointId: number, asMatrix?: bool)
+    getJointWorldTransform(jointId: number, asMatrix?: boolean)
     {
         return Animation.standardGetJointWorldTransform(this, jointId, this.mathDevice, asMatrix);
-    };
+    }
 
-    setTime(/* time */)
+    setTime(time)
     {
-    };
+    }
 
-    setRate(/* rate */)
+    setRate(rate)
     {
-    };
+    }
 
     setOutputChannels(channels)
     {
         this.outputChannels = channels;
-    };
+    }
 
     setJointPose(jointIndex, rotation, translation, scale)
     {
@@ -1976,13 +2028,13 @@ class PoseController implements ControllerBaseClass
         this.output[jointIndex].translation = translation;
         this.output[jointIndex].scale = scale;
         this.dirtyBounds = true;
-    };
+    }
 
     getHierarchy()
     {
         // Return the first controller since they should all match
         return this.hierarchy;
-    };
+    }
 
     // Constructor function
     static create(hierarchy: Hierarchy): PoseController
@@ -2012,8 +2064,8 @@ class PoseController implements ControllerBaseClass
         c.dirtyBounds = true;
 
         return c;
-    };
-};
+    }
+}
 
 //
 // NodeTransformController
@@ -2027,12 +2079,12 @@ class NodeTransformController
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     ltms: any[];     // m43[]  bone-local to model space?
@@ -2044,13 +2096,13 @@ class NodeTransformController
     {
         this.inputController.addTime(delta);
         this.dirty = true;
-    };
+    }
 
     setInputController(input)
     {
         this.inputController = input;
         this.dirty = true;
-    };
+    }
 
     setHierarchy(hierarchy, fromNode?)
     {
@@ -2127,16 +2179,18 @@ class NodeTransformController
                 if (rootNode)
                 {
                     j = matchJointHierarchy(j, rootNode, this.nodesMap, numJoints, jointNames, jointParents);
+                    // matchJointHierarchy returns the next joint to process but the loop will step to the node after
+                    j -= 1;
                 }
             }
         }
-    };
+    }
 
     setScene(scene)
     {
         this.scene = scene;
         this.setHierarchy(this.hierarchy);
-    };
+    }
 
     update()
     {
@@ -2191,7 +2245,7 @@ class NodeTransformController
         }
 
         this.dirty = false;
-    };
+    }
 
     // Constructor function
     static create(hierarchy: Hierarchy, scene: Scene): NodeTransformController
@@ -2210,19 +2264,19 @@ class NodeTransformController
         c.mathDevice = TurbulenzEngine.getMathDevice();
 
         return c;
-    };
-};
+    }
+}
 
 interface SkinControllerBase
 {
-    dirty: bool;
+    dirty: boolean;
     skeleton: Skeleton;
     inputController: ControllerBaseClass;
 
     setInputController(input);
     setSkeleton(skeleton);
     update();
-};
+}
 
 //
 // SkinController
@@ -2236,12 +2290,12 @@ class SkinController implements SkinControllerBase
     bounds: Bounds;
     output: any[];       // TODO
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     // SkinControllerBase
@@ -2256,7 +2310,7 @@ class SkinController implements SkinControllerBase
     {
         this.inputController = input;
         this.dirty = true;
-    };
+    }
 
     setSkeleton(skeleton)
     {
@@ -2267,7 +2321,7 @@ class SkinController implements SkinControllerBase
         var newNumBones = skeleton.numNodes;
         this.ltms.length = newNumBones;
         this.output.length = newNumBones;
-    };
+    }
 
     update()
     {
@@ -2313,7 +2367,7 @@ class SkinController implements SkinControllerBase
             output[b] = md.m43MulTranspose(invBoneLTMs[b], boneMatrix, output[b]);
         }
         this.dirty = false;
-    };
+    }
 
     // Constructor function
     static create(md: MathDevice): SkinController
@@ -2326,8 +2380,8 @@ class SkinController implements SkinControllerBase
         c.output = [];
 
         return c;
-    };
-};
+    }
+}
 
 //
 // GPUSkinController
@@ -2343,12 +2397,12 @@ class GPUSkinController implements SkinControllerBase
     // renamed
     output: TechniqueParameterBuffer;
     outputChannels: any; // TODO
-    dirty: bool;
-    dirtyBounds: bool;
+    dirty: boolean;
+    dirtyBounds: boolean;
     hierarchy: Hierarchy;
     onUpdateCallback: { (controller: ControllerBaseClass): void; };
-    onLoopCallback: { (controller: ControllerBaseClass): bool; };
-    onFinishedCallback: { (controller: ControllerBaseClass): bool; };
+    onLoopCallback: { (controller: ControllerBaseClass): boolean; };
+    onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
     // SkinControllerBase
@@ -2367,7 +2421,7 @@ class GPUSkinController implements SkinControllerBase
     {
         this.inputController = input;
         this.dirty = true;
-    };
+    }
 
     setSkeleton(skeleton)
     {
@@ -2390,7 +2444,7 @@ class GPUSkinController implements SkinControllerBase
                 dynamic : true
             });
         }
-    };
+    }
 
     update()
     {
@@ -2454,7 +2508,7 @@ class GPUSkinController implements SkinControllerBase
         }
 
         this.dirty = false;
-    };
+    }
 
     // prototype
     defaultBufferSize : number;
@@ -2462,7 +2516,7 @@ class GPUSkinController implements SkinControllerBase
     static setDefaultBufferSize(size: number)
     {
         GPUSkinController.prototype.defaultBufferSize = size;
-    };
+    }
 
     // Constructor function
     static create(gd: GraphicsDevice, md: MathDevice,
@@ -2474,13 +2528,13 @@ class GPUSkinController implements SkinControllerBase
         c.gd = gd;
         c.dirty = true;
         c.ltms = [];
-        c.outputMat = md.m43BuildIdentity();
+        c.outputMat = md.m34BuildIdentity();
         c.convertedquatPos = md.m43BuildIdentity();
         c.bufferSize = bufferSize || GPUSkinController.prototype.defaultBufferSize;
 
         return c;
-    };
-};
+    }
+}
 
 GPUSkinController.prototype.defaultBufferSize = undefined;
 
@@ -2505,7 +2559,59 @@ class SkinnedNode
     {
         this.input.addTime(delta);
         this.skinController.dirty = true;
-    };
+    }
+
+    setNodeHierarchyBoneMatricesAndBounds(node, extents, skinController): boolean
+    {
+        var isFullySkinned = (!node.lightInstances || node.lightInstances.length === 0);
+
+        var renderables = node.renderables;
+        if (renderables)
+        {
+            var numRenderables = renderables.length;
+            for (var i = 0; i < numRenderables; i += 1)
+            {
+                var renderable = renderables[i];
+                if (renderable.isSkinned())
+                {
+                    renderable.skinController = skinController;
+                    renderable.addCustomWorldExtents(extents);
+                }
+                else
+                {
+                    isFullySkinned = false;
+                }
+            }
+        }
+
+        var children = node.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var c = 0; c < numChildren; c += 1)
+            {
+                var childSkinned = this.setNodeHierarchyBoneMatricesAndBounds(children[c], extents, skinController);
+                if (!childSkinned)
+                {
+                    isFullySkinned = false;
+                }
+            }
+        }
+
+        if (isFullySkinned)
+        {
+            node.addCustomWorldExtents(extents);
+        }
+        else
+        {
+            if (node.getCustomWorldExtents())
+            {
+                node.removeCustomWorldExtents();
+            }
+        }
+
+        return isFullySkinned;
+    }
 
     update(updateSkinController)
     {
@@ -2521,58 +2627,6 @@ class SkinnedNode
             {
                 this.input.updateBounds();
             }
-        }
-
-        function setNodeHierarchyBoneMatricesAndBoundsFn(node, extents, skinController)
-        {
-            var isFullySkinned = (!node.lightInstances || node.lightInstances.length === 0);
-
-            var renderables = node.renderables;
-            if (renderables)
-            {
-                var numRenderables = renderables.length;
-                for (var i = 0; i < numRenderables; i += 1)
-                {
-                    var renderable = renderables[i];
-                    if (renderable.isSkinned())
-                    {
-                        renderable.skinController = skinController;
-                        renderable.addCustomWorldExtents(extents);
-                    }
-                    else
-                    {
-                        isFullySkinned = false;
-                    }
-                }
-            }
-
-            var children = node.children;
-            if (children)
-            {
-                var numChildren = children.length;
-                for (var c = 0; c < numChildren; c += 1)
-                {
-                    var childSkinned = setNodeHierarchyBoneMatricesAndBoundsFn(children[c], extents, skinController);
-                    if (!childSkinned)
-                    {
-                        isFullySkinned = false;
-                    }
-                }
-            }
-
-            if (isFullySkinned)
-            {
-                node.addCustomWorldExtents(extents);
-            }
-            else
-            {
-                if (node.getCustomWorldExtents())
-                {
-                    node.removeCustomWorldExtents();
-                }
-            }
-
-            return isFullySkinned;
         }
 
         // calculate the bounds in world space
@@ -2636,8 +2690,8 @@ class SkinnedNode
             extents[5] = (c2 + h2);
         }
 
-        setNodeHierarchyBoneMatricesAndBoundsFn(this.node, extents, skinController);
-    };
+        this.setNodeHierarchyBoneMatricesAndBounds(this.node, extents, skinController);
+    }
 
     getJointIndex(jointName)
     {
@@ -2653,7 +2707,7 @@ class SkinnedNode
             }
         }
         return jointIndex;
-    };
+    }
 
     getJointLTM(jointIndex, dst)
     {
@@ -2713,19 +2767,19 @@ class SkinnedNode
             boneMatrix = m43Mul.call(md, boneMatrix, parentMatrix, boneMatrix);
         }
         return boneMatrix;
-    };
+    }
 
     setInputController(controller)
     {
         this.input = controller;
         this.skinController.setInputController(controller);
         this.skinController.dirty = true;
-    };
+    }
 
     getSkeleton()
     {
         return this.skinController.skeleton;
-    };
+    }
 
     // Constructor function
     static create(gd: GraphicsDevice, md: MathDevice,
@@ -2765,8 +2819,8 @@ class SkinnedNode
         }
 
         return sn;
-    };
-};
+    }
+}
 
 SkinnedNode.prototype.scratchM43 = null;
 SkinnedNode.prototype.scratchExtents  = null;

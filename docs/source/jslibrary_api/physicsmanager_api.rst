@@ -44,6 +44,35 @@ Constructor
 Methods
 =======
 
+.. index::
+    pair: PhysicsManager; addNode
+
+`addNode`
+---------
+
+**Summary**
+
+Add a SceneNode and its relevant physics object to the manager.
+
+**Syntax** ::
+
+    physicsManager.addNode(sceneNode, physicsObject, origin, triangleArray);
+
+``SceneNode``
+    The :ref:`SceneNode <scenenode>` object.
+
+``physicsObject``
+    The physics object to be assigned to the SceneNode.
+
+``origin``
+    Optional parameter to offset the world matrix for the physics object.
+
+``triangleArray``
+    Optional parameter to set the triangle array to be used for debug rendering.
+
+.. note::
+    This method calls :ref:`enableHierarchy <physicsmanagerenablehierarchy>`.
+
 
 .. index::
     pair: PhysicsManager; update
@@ -61,6 +90,8 @@ This should be called after DynamicsWorld.update() but before Scene.update().
 
     physicsManager.update();
 
+
+.. _physicsmanagerenablehierarchy:
 
 .. index::
     pair: PhysicsManager; enableHierarchy

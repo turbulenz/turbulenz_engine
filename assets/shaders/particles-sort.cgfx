@@ -1,0 +1,93 @@
+// Copyright (c) 2013-2014 Turbulenz Limited
+
+#include "particles-common.cgh"
+
+// z bound for normalization
+float zBound;
+
+// merge_sort_pass parameters
+float cpass;
+float PmS;
+float twoStage;
+float twoStage_PmS_1;
+
+// --------------------------------------------------------------
+
+// Compute zOrder for each particle.
+float4 fp_prepare_sort(float2 INParticle : TEXCOORD0) : COLOR
+{
+    float2 uv = tex2D(mappingTable, mappingRegionMap(INParticle)).xy;
+    float2 particleUV = particleRegionMap(uv * 255.0 * PARTICLE_DIM * invRegionSize);
+    if (getLife(fParticleState, particleUV, invTextureSize) <= 0)
+    {
+        // maximum order depth (move to back of "list")
+        return float4(uv, 1.0, 1.0);
+    }
+    else
+    {
+        float3 pos = getPosition(fParticleState, particleUV, invTextureSize);
+        float z = (pos.x * modelView[0].z) + (pos.y * modelView[1].z) + (pos.z * modelView[2].z);
+        z = (z + zBound) / (2 * zBound);
+        return float4(uv, encodeHalfUnsignedFloat(z));
+    }
+}
+
+// Map uv in [0,1]^2 to particle index [0,maxParticles)
+float indexOf(float2 uv)
+{
+    float2 p = floor(uv * regionSize / PARTICLE_DIM);
+    return (p.y * regionSize.x / PARTICLE_DIM.x) + p.x;
+}
+float2 uvFromIndex(float index)
+{
+    float u = mod(index, regionSize.x / PARTICLE_DIM.x);
+    float v = (index - u) * invRegionSize.x * PARTICLE_DIM.x;
+    return float2(u + 0.5, v + 0.5) * invRegionSize * PARTICLE_DIM;
+}
+
+// Perform sort pass on mapping table by particle zOrder
+// Adapated from GPUGems 2 (Faster GPU Sorting)
+float4 fp_merge_sort_pass(float2 INParticle : TEXCOORD0) : COLOR
+{
+    float4 self = tex2D(mappingTable, mappingRegionMap(INParticle));
+    float index = indexOf(INParticle);
+    float j = floor(mod(index, twoStage));
+
+    float compare =
+        (j < PmS || j > twoStage_PmS_1) ? 0.0 :
+        (mod((j + PmS) / cpass, 2.0) < 1.0) ? 1.0 :
+        -1.0;
+
+    float4 other = tex2D(mappingTable, mappingRegionMap(uvFromIndex(index + compare * cpass)));
+    return (decodeHalfUnsignedFloat(self.zw)  * compare <=
+            decodeHalfUnsignedFloat(other.zw) * compare) ? self : other;
+}
+
+// --------------------------------------------------------------
+
+technique prepare_sort
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_update_mapping();
+        FragmentProgram = compile latest fp_prepare_sort();
+    }
+}
+
+technique sort_pass
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_update_mapping();
+        FragmentProgram = compile latest fp_merge_sort_pass();
+    }
+}
+

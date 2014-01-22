@@ -4,8 +4,6 @@
 /*global TurbulenzBridge*/
 /*global Utilities*/
 
-/// <reference path="turbulenzservices.ts" />
-
 //
 // API
 //
@@ -55,12 +53,12 @@ class BadgeManager
             callback: cb,
             requestHandler: this.requestHandler
         });
-    };
+    }
 
     awardUserBadge(badge_key, callbackFn, errorCallbackFn)
     {
         this.addUserBadge(badge_key, null, callbackFn, errorCallbackFn);
-    };
+    }
 
     updateUserBadgeProgress(badge_key, current, callbackFn, errorCallbackFn)
     {
@@ -76,7 +74,7 @@ class BadgeManager
                           400,
                           [badge_key, current, callbackFn]);
         }
-    };
+    }
 
     // add a badge to a user (gets passed a badge and a current level
     // over POST, the username is taken from the environment)
@@ -131,7 +129,7 @@ class BadgeManager
                 encrypt: true
             });
         }
-    };
+    }
 
     // list all badges (just queries the yaml file)
     listBadges(callbackFn, errorCallbackFn)
@@ -162,13 +160,13 @@ class BadgeManager
             callback: cb,
             requestHandler: this.requestHandler
         });
-    };
+    }
 
     errorCallbackFn()
     {
         var x = Array.prototype.slice.call(arguments);
         Utilities.log('BadgeManager error: ', x);
-    };
+    }
 
     static create(requestHandler: RequestHandler,
                   gameSession: GameSession): BadgeManager
@@ -186,5 +184,5 @@ class BadgeManager
         badgeManager.requestHandler = requestHandler;
 
         return badgeManager;
-    };
-};
+    }
+}

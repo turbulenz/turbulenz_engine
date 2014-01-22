@@ -3,8 +3,8 @@ TZROOT := ..
 # LIBS
 
 TS_BASE_FILES :=                                                 \
-  $(TZROOT)/external/definitelytyped/jquery/jquery-1.8.d.ts      \
-  $(TZROOT)/external/definitelytyped/jqueryui/jqueryui-1.9.d.ts
+  $(TZROOT)/external/definitelytyped/jquery/jquery.d.ts          \
+  $(TZROOT)/external/definitelytyped/jqueryui/jqueryui.d.ts
 
 sceneloader_src := tsscripts/sceneloader.ts
 htmlcontrols_src := tsscripts/htmlcontrols.ts
@@ -92,6 +92,10 @@ TSAPPS += multiple_animations
 particles_src := tsscripts/templates/particles.ts
 particles_deps := motion sceneloader emitter htmlcontrols
 TSAPPS += particles
+
+gpu_particles_src := tsscripts/templates/gpu_particles.ts
+gpu_particles_deps := htmlcontrols
+TSAPPS += gpu_particles
 
 payments_src := tsscripts/templates/payments.ts
 payments_deps := htmlcontrols simplebuttons

@@ -1,0 +1,225 @@
+// Copyright (c) 2013-2014 Turbulenz Limited
+
+#include "particles-common.cgh"
+
+sampler2D texture = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+float4 animationScale;
+float2 animationRotation;
+
+sampler2D noiseTexture = sampler_state
+{
+    MinFilter = LinearMipMapNearest;
+    magFilter = Linear;
+    WrapS = Wrap;
+    WrapT = Wrap;
+};
+
+// Randomisation strengths
+float randomizedRotation;
+float2 randomizedScale;
+float2 randomizedOrientation;
+float randomizedAlpha;
+
+bool animatedRotation;
+bool animatedScale;
+bool animatedOrientation;
+bool animatedAlpha;
+
+// -----------------------------------------------------------------------------
+
+// Rows of animation texture expected by shader.
+static const float COLOR = 0;
+static const float SCALE = 1;
+static const float ROTATION = 2;
+static const float TEX_UV = 3;
+
+float4 getColor(float t)
+{
+    return getAnimation4(t, COLOR);
+}
+float2 getScale(float t)
+{
+    float2 scale = getAnimation2(t, SCALE);
+    return animationScale.xy + (scale * animationScale.zw);
+}
+float getRotation(float t)
+{
+    float rot = getAnimation(t, ROTATION);
+    float rad = animationRotation.x + (rot * animationRotation.y);
+    return rad;
+}
+float4 getUV(float t)
+{
+    return getAnimation4(t, TEX_UV);
+}
+
+// Constants are randomised values only, as are choices of noise channels.
+float2 getOrientNoise(float2 uv, float t)
+{
+    t *= animatedOrientation;
+    return (2.0 * tex2D(noiseTexture, uv + (float2(0.40390668832696974, 0.32054057461209595) * t)
+                                           + float2(0.48812856408767412, 0.09654562245123088)).yx - 1.0)
+           * randomizedOrientation;
+}
+float2 getScaleNoise(float2 uv, float t)
+{
+    t *= animatedScale;
+    return (2.0 * tex2D(noiseTexture, uv + (float2(0.13936933642253284, 0.75842813239432871) * t)
+                                           + float2(0.18285232875496157, 0.14858058188110593)).xw - 1.0)
+           * randomizedScale;
+}
+float getRotationNoise(float2 uv, float t) {
+    t *= animatedRotation;
+    return (2.0 * tex2D(noiseTexture, uv + (float2(0.68003948801197112, 0.32643742742948234) * t)
+                                           + float2(0.26063257455825806, 0.29187747463583946)).z - 1.0)
+           * randomizedRotation;
+}
+float getAlphaNoise(float2 uv, float t) {
+    t *= animatedAlpha;
+    return (2.0 * tex2D(noiseTexture, uv + (float2(0.25916925235651433, 0.09688800573348999) * t)
+                                           + float2(0.83695788355544211, 0.90477761672809723)).w - 1.0)
+           * randomizedAlpha;
+}
+
+// -----------------------------------------------------------------------------
+
+float2 quadVertex[4] = {float2(-1,-1), float2(1,-1), float2(1,1), float2(-1,1)};
+void vp_render( in float2 inData     : POSITION,
+               out float4 outPosition: POSITION,
+               out float2 outParticle: TEXCOORD0,
+               out float2 outUV      : TEXCOORD1,
+               out float4 outColor   : COLOR)
+{
+    float2 particle = particleRegionMap(getParticle(inData.y, mappingTable));
+    float life = getLife(vParticleState, particle, invTextureSize) * maxLifeTime;
+    if (life <= 0)
+    {
+        outPosition = float4(0, 0, 0, 0);
+        return;
+    }
+
+    float4 data = getData(vParticleState, particle, invTextureSize);
+    float animTime = getAnimationTime(vParticleState, particle, invTextureSize,
+                                      getLifePair(vParticleState, particle, invTextureSize));
+
+    float2 noiseUV = decodeByteUnsignedFloat2(data.z);
+
+    float3 pos = (getPosition(vParticleState, particle, invTextureSize) * halfExtents) + center;
+
+    float2 scale = getScale(animTime);
+    // random scale pertubation
+    if (bitSet(data.w, BIT5))
+    {
+        scale += getScaleNoise(noiseUV, life);
+    }
+    float2 inPosition = quadVertex[inData.x] * scale * 0.5;
+
+    float rad = getRotation(animTime);
+    // random rotation pertubation
+    if (bitSet(data.w, BIT6))
+    {
+        rad += getRotationNoise(noiseUV, life);
+    }
+    float3x3 rot = rotZ(rad);
+
+    float3 right = float3(1.0, 0.0, 0.0);
+    float3 up = float3(0.0, 1.0, 0.0);
+    // random orientation pertubation
+    if (bitSet(data.w, BIT4))
+    {
+        float3x3 orient = orientSpherical2(getOrientNoise(noiseUV, life).yx);
+        right = mul(orient, right);
+        up = mul(orient, up);
+    }
+
+    if (bitSet(data.w, BIT8))
+    {
+        // custom orientation
+        float3x3 orient = orientSpherical(data.x, data.y);
+        pos += mul(mul(orient, rot), (right * inPosition.x + up * inPosition.y));
+        pos = transform43Rot(pos, modelView);
+    }
+    else if (bitSet(data.w, BIT7))
+    {
+        // velocity orientated verts
+        float3x3 orient = orientTo(getVelocity(vParticleState, particle, invTextureSize));
+        pos += mul(mul(orient, rot), (right * inPosition.x + up * inPosition.y));
+        pos = transform43Rot(pos, modelView);
+    }
+    else
+    {
+        // bill-boarded verts
+        pos = transform43Rot(pos, modelView);
+        pos += mul(rot, transform43Scale(right * inPosition.x + up * inPosition.y, modelView));
+    }
+
+    outPosition = mul(float4(transform43Pos(pos, modelView), 1.0), projection);
+    outParticle = particle;
+
+    float4 texuv = getUV(animTime);
+    // swap y-coordinates to avoid texture-flip
+    outUV = texuv.xy + (quadVertex[inData.x] * float2(1, -1) + 1.0) * 0.5 * texuv.zw;
+    outColor = getColor(animTime);
+
+    // random alpha pertubation
+    if (bitSet(data.w, BIT3))
+    {
+        outColor.w += getAlphaNoise(noiseUV, life);
+    }
+}
+
+float4 fp_render(float2 inParticle: TEXCOORD0,
+                 float2 inUV      : TEXCOORD1,
+                 float4 inColor   : COLOR) : COLOR
+{
+    return tex2D(texture, inUV) * inColor;
+}
+
+// -----------------------------------------------------------------------------
+
+technique opaque
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_render();
+        FragmentProgram = compile latest fp_render();
+    }
+}
+
+technique alpha
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        VertexProgram   = compile latest vp_render();
+        FragmentProgram = compile latest fp_render();
+    }
+}
+
+technique additive
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, One);
+        VertexProgram   = compile latest vp_render();
+        FragmentProgram = compile latest fp_render();
+    }
+}
+

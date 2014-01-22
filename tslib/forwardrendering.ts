@@ -1,33 +1,15 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
-/// <reference path="scene.ts" />
-/// <reference path="renderingcommon.ts" />
-/// <reference path="shadowmapping.ts" />
-
 interface ForwardRendererInfo
 {
     far: number;
     id: number;
     shadowMappingUpdate: { (camera: Camera, md: MathDevice): void; };
-};
-
-// TODO: Turn ShaderManager into a full class and get rid of this (TSC
-// doesn't pick this up from the .d.ts for some reason).
-
-interface ShaderManager
-{
-    load(a, b?): Shader;
-};
+}
 
 //
 // ForwardRendering
 //
-
-/*global ShadowMapping: false, VMath: false,
-         VMathArrayConstructor:false, Effect: false,
-         renderingCommonCreateRendererInfoFn: false,
-         renderingCommonGetTechniqueIndexFn: false,
-         renderingCommonSortKeyFn: false*/
 
 class ForwardRendering
 {
@@ -45,6 +27,7 @@ class ForwardRendering
 
     numPasses: number;
     passes: Pass[][];
+    passesSize: number[];
 
     lightingScale: number;
     diffuseQueue: DrawParameters[];
@@ -86,6 +69,8 @@ class ForwardRendering
     defaultShadowMappingUpdateFn: { (camera: Camera): void; };
     defaultShadowMappingSkinnedUpdateFn: { (camera: Camera): void; };
 
+    loadTechniquesFn: { (shaderManager: ShaderManager): void; };
+
     zonlyShader: Shader;
     zonlyRigidTechnique: Technique;
     zonlySkinnedTechnique: Technique;
@@ -95,10 +80,6 @@ class ForwardRendering
     zonlySkinnedNoCullTechnique: Technique;
     zonlyRigidAlphaNoCullTechnique: Technique;
     zonlySkinnedAlphaNoCullTechnique: Technique;
-    stencilSetTechnique: Technique;
-    stencilClearTechnique: Technique;
-    stencilSetSpotLightTechnique: Technique;
-    stencilClearSpotLightTechnique: Technique;
 
     forwardShader: Shader;
     skyboxTechnique: Technique;
@@ -132,8 +113,6 @@ class ForwardRendering
     bufferWidth: number;
     bufferHeight: number;
 
-    techniqueIndex: number;
-
     //minPixelCount: 16,
     //minPixelCountShadows: 256,
 
@@ -151,10 +130,6 @@ class ForwardRendering
             this.zonlySkinnedNoCullTechnique = shader.getTechnique("skinned_nocull");
             this.zonlyRigidAlphaNoCullTechnique = shader.getTechnique("rigid_alphatest_nocull");
             this.zonlySkinnedAlphaNoCullTechnique = shader.getTechnique("skinned_alphatest_nocull");
-            this.stencilSetTechnique = shader.getTechnique("stencil_set");
-            this.stencilClearTechnique = shader.getTechnique("stencil_clear");
-            this.stencilSetSpotLightTechnique = shader.getTechnique("stencil_set_spotlight");
-            this.stencilClearSpotLightTechnique = shader.getTechnique("stencil_clear_spotlight");
         }
 
         shader = shaderManager.get("shaders/forwardrendering.cgfx");
@@ -182,7 +157,7 @@ class ForwardRendering
         {
             shadowMaps.updateShader(shaderManager);
         }
-    };
+    }
 
     static createNodeRendererInfo(node, md)
     {
@@ -192,7 +167,7 @@ class ForwardRendering
             worldViewInverseTranspose: md.m33BuildIdentity()
         };
         ForwardRendering.nextNodeID += 1;
-    };
+    }
 
     createRendererInfo(renderable): ForwardRendererInfo
     {
@@ -209,14 +184,14 @@ class ForwardRendering
             if (!sharedMaterialTechniqueParameters.materialColor &&
                 !renderable.techniqueParameters.materialColor)
             {
-                renderable.techniqueParameters.materialColor = this.v4One;
+                sharedMaterialTechniqueParameters.materialColor = this.v4One;
             }
         }
 
         if (!sharedMaterialTechniqueParameters.uvTransform &&
             !renderable.techniqueParameters.uvTransform)
         {
-            renderable.techniqueParameters.uvTransform = this.identityUVTransform;
+            sharedMaterialTechniqueParameters.uvTransform = this.identityUVTransform;
         }
 
         var node = renderable.node;
@@ -225,20 +200,21 @@ class ForwardRendering
             ForwardRendering.createNodeRendererInfo(node, this.md);
         }
 
-        var nodeId = node.rendererInfo.id;
-        rendererInfo.id = (nodeId ? (1.0 / (1.0 + nodeId)) : 0);
+        var vertexBufferId = renderable.geometry.vertexBuffer.id;
+        rendererInfo.id = (1.0 / (1.0 + vertexBufferId));
 
         return rendererInfo;
-    };
+    }
 
     prepareRenderables(camera, scene)
     {
         var passIndex;
+        var passesSize = this.passesSize;
         var passes = this.passes;
         var numPasses = this.numPasses;
         for (passIndex = 0; passIndex < numPasses; passIndex += 1)
         {
-            passes[passIndex].length = 0;
+            passesSize[passIndex] = 0;
         }
 
         var visibleRenderables = scene.getCurrentVisibleRenderables();
@@ -246,7 +222,7 @@ class ForwardRendering
         var numVisibleRenderables = visibleRenderables.length;
         if (numVisibleRenderables > 0)
         {
-            var n, renderable, rendererInfo, pass;
+            var n, renderable, rendererInfo, passSize;
             var drawParametersArray, numDrawParameters, drawParametersIndex, drawParameters, sortDistance;
             var transparentPassIndex = this.passIndex.transparent;
             var ambientPassIndex = this.passIndex.ambient;
@@ -306,8 +282,9 @@ class ForwardRendering
                     {
                         drawParameters.sortKey = sortDistance;
                     }
-                    pass = passes[passIndex];
-                    pass[pass.length] = drawParameters;
+                    passSize = passesSize[passIndex];
+                    passes[passIndex][passSize] = drawParameters;
+                    passesSize[passIndex] = (passSize + 1);
                 }
 
                 drawParametersArray = renderable.diffuseDrawParameters;
@@ -336,7 +313,12 @@ class ForwardRendering
             }
             while (n < numVisibleRenderables);
         }
-    };
+
+        for (passIndex = 0; passIndex < numPasses; passIndex += 1)
+        {
+            passes[passIndex].length = passesSize[passIndex];
+        }
+    }
 
     prepareLights(gd, scene)
     {
@@ -470,7 +452,7 @@ class ForwardRendering
         localDirectionalLights.length = numLocalDirectional;
         pointLights.length = numPoint;
         spotLights.length = numSpot;
-    };
+    }
 
     addToDiffuseQueue(gd, renderableDrawParameters,
                       lightInstanceTechniqueParameters)
@@ -485,10 +467,10 @@ class ForwardRendering
 
             queue[queueLength] = renderableDrawParameters;
         }
-    };
+    }
 
     //TODO name.
-    lightFindVisibleRenderables(gd, lightInstance, scene): bool
+    lightFindVisibleRenderables(gd, lightInstance, scene): boolean
     {
         var origin, overlappingRenderables, numOverlappingRenderables;
         var n, meta, extents, lightFrameVisible;
@@ -660,9 +642,9 @@ class ForwardRendering
         lightInstance.numVisibleDrawParameters = numVisibleDrawParameters;
 
         return (0 < numVisibleDrawParameters);
-    };
+    }
 
-    directionalLightsUpdateVisibleRenderables(gd /*, scene */) : bool
+    directionalLightsUpdateVisibleRenderables(gd /*, scene */) : boolean
     {
         var globalDirectionalLights = this.globalDirectionalLights;
         var numGlobalDirectionalLights = globalDirectionalLights.length;
@@ -711,7 +693,7 @@ class ForwardRendering
 
 
         return (0 < totalVisibleDrawParameters);
-    };
+    }
 
     update(gd, camera, scene, currentTime)
     {
@@ -722,6 +704,10 @@ class ForwardRendering
         if (0 < currentTime)
         {
             scene.updateVisibleNodes(camera);
+        }
+        else
+        {
+            this.forceRenderInfoUpdate(scene);
         }
 
         this.sceneExtents = scene.extents;
@@ -1007,7 +993,22 @@ class ForwardRendering
             }
             while (l < numSpotInstances);
         }
-    };
+    }
+
+    forceRenderInfoUpdate(scene)
+    {
+        var visibleNodes = scene.visibleNodes;
+        var numVisibleNodes = visibleNodes.length;
+        var n;
+        for (n = 0; n < numVisibleNodes; n += 1)
+        {
+            var rendererInfo = visibleNodes[n].rendererInfo;
+            if (rendererInfo)
+            {
+                rendererInfo.frameVisible = -1;
+            }
+        }
+    }
 
     destroyBuffers()
     {
@@ -1026,9 +1027,9 @@ class ForwardRendering
             this.depthBuffer.destroy();
             this.depthBuffer = null;
         }
-    };
+    }
 
-    updateBuffers(gd, deviceWidth, deviceHeight): bool
+    updateBuffers(gd, deviceWidth, deviceHeight): boolean
     {
         if (this.bufferWidth === deviceWidth && this.bufferHeight === deviceHeight)
         {
@@ -1072,7 +1073,7 @@ class ForwardRendering
         this.bufferHeight = 0;
         this.destroyBuffers();
         return false;
-    };
+    }
 
     drawAmbientPass(gd, ambientColor)
     {
@@ -1080,7 +1081,7 @@ class ForwardRendering
         gd.drawArray(this.passes[this.passIndex.ambient],
                      [this.globalTechniqueParameters,
                       this.ambientTechniqueParameters], -1);
-    };
+    }
 
     drawShadowMaps(gd, globalTechniqueParameters, lightInstances, shadowMaps, minExtentsHigh)
     {
@@ -1117,14 +1118,14 @@ class ForwardRendering
             l += 1;
         }
         while (l < numInstances);
-    };
+    }
 
     draw(gd,
-                                          clearColor,
-                                          drawDecalsFn,
-                                          drawTransparentFn,
-                                          drawDebugFn,
-                                          postFXsetupFn)
+         clearColor,
+         drawDecalsFn,
+         drawTransparentFn,
+         drawDebugFn,
+         postFXsetupFn)
     {
         var globalTechniqueParameters = this.globalTechniqueParameters;
         var ambientColor = this.ambientColor;
@@ -1250,22 +1251,23 @@ class ForwardRendering
             gd.setStream(this.quadVertexBuffer, this.quadSemantics);
             gd.draw(this.quadPrimitive, 4);
         }
-    };
+    }
 
     setLightingScale(scale)
     {
         this.lightingScale = scale;
-    };
+    }
 
     getDefaultSkinBufferSize(): number
     {
         return this.defaultSkinBufferSize;
-    };
+    }
 
     destroy()
     {
         delete this.globalTechniqueParameters;
         delete this.ambientTechniqueParameters;
+        delete this.passesSize;
         delete this.passes;
         delete this.passIndex;
 
@@ -1315,10 +1317,6 @@ class ForwardRendering
             delete this.zonlySkinnedNoCullTechnique;
             delete this.zonlyRigidAlphaNoCullTechnique;
             delete this.zonlySkinnedAlphaNoCullTechnique;
-            delete this.stencilSetTechnique;
-            delete this.stencilClearTechnique;
-            delete this.stencilSetSpotLightTechnique;
-            delete this.stencilClearSpotLightTechnique;
         }
 
         if (this.forwardShader)
@@ -1350,7 +1348,7 @@ class ForwardRendering
         this.destroyBuffers();
 
         delete this.md;
-    };
+    }
 
     // Constructor function
     static create(gd: GraphicsDevice, md: MathDevice,
@@ -1378,6 +1376,8 @@ class ForwardRendering
         {
             passes[index] = [];
         }
+
+        fr.passesSize = [];
 
         fr.lightingScale = 2.0;
 
@@ -1446,7 +1446,7 @@ class ForwardRendering
             fr.defaultShadowMappingSkinnedUpdateFn = shadowMappingSkinnedUpdateFn;
         }
 
-        var flareIndexBuffer, flareSemantics, flareVertexData;
+        var flareIndexBuffer, flareSemantics, flareVertexData, flareMatrix;
 
         var lightProjectionRight = md.v3Build(0.5, 0.0, 0.0);
         var lightProjectionUp    = md.v3Build(0.0, 0.5, 0.0);
@@ -1554,7 +1554,7 @@ class ForwardRendering
                     drawParameters.technique = fr.glowmapRigidTechnique;
                 }
 
-                drawParameters.sortKey = renderingCommonSortKeyFn(renderingCommonGetTechniqueIndexFn(drawParameters.technique.name),
+                drawParameters.sortKey = renderingCommonSortKeyFn(drawParameters.technique.id,
                                                                   meta.materialIndex);
                 //Now add common for world and skin data. materialColor is also copied here.
                 drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
@@ -1659,7 +1659,7 @@ class ForwardRendering
                     }
                 }
 
-                var techniqueIndex = renderingCommonGetTechniqueIndexFn(drawParameters.technique.name);
+                var techniqueIndex = drawParameters.technique.id;
                 if (alpha)
                 {
                     drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex, meta.materialIndex);
@@ -1743,7 +1743,7 @@ class ForwardRendering
                         drawParameters.technique = fr.ambientRigidTechnique;
                     }
                 }
-                drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | renderingCommonGetTechniqueIndexFn(drawParameters.technique.name),
+                drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | drawParameters.technique.id,
                                                                   meta.materialIndex);
                 //Now add common for world and skin data. materialColor is also copied here.
                 drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
@@ -1901,7 +1901,7 @@ class ForwardRendering
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
-            drawParameters.sortKey = renderingCommonSortKeyFn(renderingCommonGetTechniqueIndexFn(drawParameters.technique.name),
+            drawParameters.sortKey = renderingCommonSortKeyFn(drawParameters.technique.id,
                                                               meta.materialIndex);
             geometryInstance.drawParameters.push(drawParameters);
 
@@ -1913,7 +1913,7 @@ class ForwardRendering
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
-            drawParameters.sortKey = renderingCommonSortKeyFn(opaqueSortOffset | renderingCommonGetTechniqueIndexFn(drawParameters.technique.name),
+            drawParameters.sortKey = renderingCommonSortKeyFn(opaqueSortOffset | drawParameters.technique.id,
                                                               meta.materialIndex);
             geometryInstance.drawParameters.push(drawParameters);
 
@@ -1999,6 +1999,8 @@ class ForwardRendering
                     flareSemantics = gd.createSemantics(['POSITION', 'TEXCOORD']);
 
                     flareVertexData = new VMathArrayConstructor(6 * (3 + 2));
+
+                    flareMatrix = md.m43BuildIdentity();
                 }
 
                 var oldGeometry = geometryInstance.geometry;
@@ -2134,7 +2136,7 @@ class ForwardRendering
             {
                 this.techniqueParametersUpdated = worldUpdate;
                 var matrix = node.world;
-                this.techniqueParameters.world = md.m43BuildIdentity();
+                this.techniqueParameters.world = flareMatrix;
                 var sourceVertices = geometry.sourceVertices;
                 top    = md.m43TransformPoint(matrix, sourceVertices[0], geometry.top);
                 bottom = md.m43TransformPoint(matrix, sourceVertices[1], geometry.bottom);
@@ -2169,7 +2171,7 @@ class ForwardRendering
                     geometry.bottom = [bottom0, bottom1, bottom2];
                     geometry.normal = [normal0, normal1, normal2];
                 }
-                geometry.tb     = [tb0, tb1, tb2];
+                geometry.tb = [tb0, tb1, tb2];
             }
             else
             {
@@ -2232,43 +2234,38 @@ class ForwardRendering
                 var flareAt1 = (cameraToBottom1 * atScale);
                 var flareAt2 = (cameraToBottom2 * atScale);
 
-                flareVertexData[0] = (top0    - flareRight0 + flareUp0 + flareAt0);
-                flareVertexData[1] = (top1    - flareRight1 + flareUp1 + flareAt1);
-                flareVertexData[2] = (top2    - flareRight2 + flareUp2 + flareAt2);
-                flareVertexData[3] = 1.0;
-                flareVertexData[4] = 0.0;
-
-                flareVertexData[5] = (top0    + flareRight0 + flareUp0 + flareAt0);
-                flareVertexData[6] = (top1    + flareRight1 + flareUp1 + flareAt1);
-                flareVertexData[7] = (top2    + flareRight2 + flareUp2 + flareAt2);
-                flareVertexData[8] = 1.0;
-                flareVertexData[9] = 1.0;
-
-                flareVertexData[10] = top0;
-                flareVertexData[11] = top1;
-                flareVertexData[12] = top2;
-                flareVertexData[13] = 0.5;
-                flareVertexData[14] = 0.0;
-
-                flareVertexData[15] = (bottom0 + flareRight0 - flareUp0 + flareAt0);
-                flareVertexData[16] = (bottom1 + flareRight1 - flareUp1 + flareAt1);
-                flareVertexData[17] = (bottom2 + flareRight2 - flareUp2 + flareAt2);
-                flareVertexData[18] = 1.0;
-                flareVertexData[19] = 0.0;
-
-                flareVertexData[20] = bottom0;
-                flareVertexData[21] = bottom1;
-                flareVertexData[22] = bottom2;
-                flareVertexData[23] = 0.5;
-                flareVertexData[24] = 1.0;
-
-                flareVertexData[25] = (bottom0 - flareRight0 - flareUp0 + flareAt0);
-                flareVertexData[26] = (bottom1 - flareRight1 - flareUp1 + flareAt1);
-                flareVertexData[27] = (bottom2 - flareRight2 - flareUp2 + flareAt2);
-                flareVertexData[28] = 1.0;
-                flareVertexData[29] = 1.0;
-
-                vertexBuffer.setData(flareVertexData, 0, 6);
+                var data = flareVertexData;
+                data[0] = (top0    - flareRight0 + flareUp0 + flareAt0);
+                data[1] = (top1    - flareRight1 + flareUp1 + flareAt1);
+                data[2] = (top2    - flareRight2 + flareUp2 + flareAt2);
+                data[3] = 1.0;
+                data[4] = 0.0;
+                data[5] = (top0    + flareRight0 + flareUp0 + flareAt0);
+                data[6] = (top1    + flareRight1 + flareUp1 + flareAt1);
+                data[7] = (top2    + flareRight2 + flareUp2 + flareAt2);
+                data[8] = 1.0;
+                data[9] = 1.0;
+                data[10] = top0;
+                data[11] = top1;
+                data[12] = top2;
+                data[13] = 0.5;
+                data[14] = 0.0;
+                data[15] = (bottom0 + flareRight0 - flareUp0 + flareAt0);
+                data[16] = (bottom1 + flareRight1 - flareUp1 + flareAt1);
+                data[17] = (bottom2 + flareRight2 - flareUp2 + flareAt2);
+                data[18] = 1.0;
+                data[19] = 0.0;
+                data[20] = bottom0;
+                data[21] = bottom1;
+                data[22] = bottom2;
+                data[23] = 0.5;
+                data[24] = 1.0;
+                data[25] = (bottom0 - flareRight0 - flareUp0 + flareAt0);
+                data[26] = (bottom1 - flareRight1 - flareUp1 + flareAt1);
+                data[27] = (bottom2 - flareRight2 - flareUp2 + flareAt2);
+                data[28] = 1.0;
+                data[29] = 1.0;
+                vertexBuffer.setData(data, 0, 6);
             }
             else
             {
@@ -2287,7 +2284,7 @@ class ForwardRendering
             }
         };
 
-        var loadTechniques = function loadTechniquesFn(shaderManager)
+        var loadTechniques = function loadTechniquesFn(shaderManager: ShaderManager): void
         {
             var that = this;
 
@@ -2295,7 +2292,7 @@ class ForwardRendering
             {
                 that.shader = shader;
                 that.technique = shader.getTechnique(that.techniqueName);
-                that.techniqueIndex =  renderingCommonGetTechniqueIndexFn(that.techniqueName);
+                that.techniqueIndex =  that.technique.id;
             };
             shaderManager.load(this.shaderName, callback);
 
@@ -2307,7 +2304,7 @@ class ForwardRendering
                     {
                         that.shadowMappingShader = shader;
                         that.shadowMappingTechnique = shader.getTechnique(that.shadowMappingTechniqueName);
-                        that.shadowMappingTechniqueIndex = renderingCommonGetTechniqueIndexFn(that.shadowMappingTechniqueName);
+                        that.shadowMappingTechniqueIndex = that.shadowMappingTechnique.id;
                     };
                     shaderManager.load(this.shadowMappingShaderName, shadowMappingCallback);
                 }
@@ -2318,12 +2315,14 @@ class ForwardRendering
                     {
                         that.shadowShader = shader;
                         that.shadowTechnique = shader.getTechnique(that.shadowTechniqueName);
-                        that.shadowTechniqueIndex = renderingCommonGetTechniqueIndexFn(that.shadowTechniqueName);
+                        that.shadowTechniqueIndex = that.shadowTechnique.id;
                     };
                     shaderManager.load(this.shadowShaderName, shadowCallback);
                 }
             }
         };
+
+        fr.loadTechniquesFn = loadTechniques;
 
         var effect;
         var effectTypeData;
@@ -3205,5 +3204,5 @@ class ForwardRendering
         effect.add(rigid, effectTypeData);
 
         return fr;
-    };
-};
+    }
+}

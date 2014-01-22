@@ -5,7 +5,7 @@
 //
 class Motion
 {
-    version = 3;
+    static version = 3;
 
     pi2 = 2 * Math.PI;
 
@@ -69,8 +69,8 @@ class Motion
     motionWaveCos: number;
     movementDelta: number;
 
-    move: bool;
-    atTarget: bool;
+    move: boolean;
+    atTarget: boolean;
     atTargetDelta: number;
     targetPosition: any; // v3
 
@@ -102,7 +102,7 @@ class Motion
 
         this.centerPosition = md.v3Build(circularCenter[0], 0, circularCenter[2], this.centerPosition);
         this.dirMode = this.directionType.circular2D;
-    };
+    }
 
     setRailMovement(endPosition, startRate)
     {
@@ -117,7 +117,7 @@ class Motion
 
         this.atTarget = false;
         this.targetPosition = endPosition;
-    };
+    }
 
     setConstantMotion(constantRate)
     {
@@ -126,7 +126,7 @@ class Motion
             this.movementRate = constantRate;
         }
         this.movMode = this.movementType.constant;
-    };
+    }
 
     setDuckMotion(swimRate, wobbleRate, wobbleVariation)
     {
@@ -147,7 +147,7 @@ class Motion
 
         this.rotMode = this.rotationType.weave2D;
         this.movMode = this.movementType.pulse;
-    };
+    }
 
     setConstantRotation(constantRate)
     {
@@ -156,35 +156,37 @@ class Motion
             this.rotationRate = constantRate;
         }
         this.rotMode = this.rotationType.rotate;
-    };
+    }
 
     setUpdateMatrix(matrixToUpdate)
     {
         this.matrix = matrixToUpdate;
-    };
+    }
 
     setBaseOrientation(rotationAngle)
     {
         var md = this.md;
         this.baseRotation = md.m43FromAxisRotation(this.up, rotationAngle, this.baseRotation);
-    };
+    }
 
     reverseDirection()
     {
         this.isMovementForward = !this.isMovementForward;
-    };
+    }
 
     getMovementRate()
     {
         return this.movementRate;
-    };
+    }
 
     getRotationRate()
     {
         return this.rotationRate;
-    };
+    }
 
-    updateRotation(/* delta2PI */)
+    //
+
+    updateRotation(delta2PI)
     {
         // Math device functions
         var md = this.md;
@@ -242,7 +244,7 @@ class Motion
         matrix = md.m43Build(xaxis, up, zaxis, endPosition, matrix);
         matrix = md.m43Mul(matrix, baseRotation, matrix);
         this.matrix = md.m43Mul(matrix, variantRotation, matrix);
-    };
+    }
 
     updateMovement(delta)
     {
@@ -263,9 +265,9 @@ class Motion
         {
             // No change to movementDelta
         }
-    };
+    }
 
-    updateDirection(/* delta */)
+    updateDirection(delta)
     {
         var md = this.md;
         var movementDelta2PI = (this.movementDelta * this.pi2);
@@ -324,7 +326,7 @@ class Motion
         }
 
         this.endPosition = md.v3Copy(this.position, this.endPosition);
-    };
+    }
 
     update(delta)
     {
@@ -339,12 +341,12 @@ class Motion
             this.motionWaveCos = Math.cos(this.motionPhase);
 
             this.updateMovement(delta);
-            this.updateDirection(/* delta */);
-            this.updateRotation(/* delta2PI */);
+            this.updateDirection(delta);
+            this.updateRotation(delta2PI);
 
             md.m43SetPos(this.matrix, this.endPosition);
         }
-    };
+    }
 
     // Motion Constructor function
     static create(md: MathDevice, name:string): Motion
@@ -393,5 +395,5 @@ class Motion
         m.variantRotation = md.m43BuildIdentity();
 
         return m;
-    };
-};
+    }
+}

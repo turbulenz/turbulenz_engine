@@ -1,21 +1,8 @@
 /*{# Copyright (c) 2010-2012 Turbulenz Limited #}*/
 
-/*{{ javascript("scripts/benchmark.js") }}*/
-/*{{ javascript("scripts/benchmark_singleton.js") }}*/
-/*{{ javascript("scripts/benchmarks/turbulenz/js/passing_params.js") }}*/
-/*{{ javascript("scripts/benchmarks/turbulenz/js/inline_functions.js") }}*/
-/*{{ javascript("scripts/benchmarks/turbulenz/js/object_array_access.js") }}*/
-/*{{ javascript("scripts/benchmarks/turbulenz/js/iterate_object_array.js") }}*/
-/*{{ javascript("scripts/benchmarks/turbulenz/js/indirect_direct_access.js") }}*/
-/*{{ javascript("scripts/benchmarks/turbulenz/js/get_set_properties.js") }}*/
-/*{{ javascript("scripts/benchmarks/turbulenz/js/recursive_iterative.js") }}*/
-
 /*global TurbulenzEngine: true */
 /*global BF: true*/
 /*global params: true*/
-
-declare var BF;
-declare var params;
 
 TurbulenzEngine.onload = function onloadFn()
 {
@@ -1094,6 +1081,6 @@ TurbulenzEngine.onload = function onloadFn()
 
         TurbulenzEngine.flush();
         BF = null;
-        params = {};
+        params = null;
     };
 };

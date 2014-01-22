@@ -1,7 +1,5 @@
 // Copyright (c) 2009-2011 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-
 //
 // Camera
 //
@@ -45,7 +43,7 @@ class Camera
         v3Normalize.call(md, xaxis, xaxis);
         var yaxis = v3Cross.call(md, zaxis, xaxis);
         this.matrix = md.m43Build(xaxis, yaxis, zaxis, eyePosition, this.matrix);
-    };
+    }
 
     updateProjectionMatrix()
     {
@@ -98,19 +96,19 @@ class Camera
                                                  -shearX, -shearY,  z0,  z1,
                                                  0.0,     0.0,      w0,  w1,
                                                  this.projectionMatrix);
-    };
+    }
 
     updateViewMatrix()
     {
         var md = this.md;
         this.viewMatrix = md.m43InverseOrthonormal(this.matrix, this.viewMatrix);
-    };
+    }
 
     updateViewProjectionMatrix()
     {
         var md = this.md;
         this.viewProjectionMatrix = md.m43MulM44(this.viewMatrix, this.projectionMatrix, this.viewProjectionMatrix);
-    };
+    }
 
     extractFrustumPlanes(m, p): any[]
     {
@@ -153,45 +151,46 @@ class Camera
         planes[5] = md.planeNormalize(vec, planes[5]); // far
 
         return planes;
-    };
+    }
 
     updateFrustumPlanes()
     {
         this.frustumPlanes = this.extractFrustumPlanes(this.viewProjectionMatrix, this.frustumPlanes);
-    };
+    }
 
     isVisiblePoint(p)
     {
         var md = this.md;
         return md.isInsidePlanesPoint(p, this.frustumPlanes);
-    };
+    }
 
     isVisibleSphere(c, r)
     {
         var md = this.md;
         return md.isInsidePlanesSphere(c, r, this.frustumPlanes);
-    };
+    }
 
     isVisibleBox(c, h)
     {
         var md = this.md;
         return md.isInsidePlanesBox(c, h, this.frustumPlanes);
-    };
+    }
 
     isVisibleAABB(extents)
     {
         var md = this.md;
         return md.aabbIsInsidePlanes(extents, this.frustumPlanes);
-    };
+    }
 
     isFullyInsideAABB(extents)
     {
         var md = this.md;
         return md.aabbIsFullyInsidePlanes(extents, this.frustumPlanes);
-    };
+    }
 
-    getFrustumPoints(farPlane?) : any[]
+    getFrustumPoints(farPlane?: number, nearPlane?: number, points?: any[]) : any[]
     {
+        var md = this.md;
         var viewOffsetX = this.viewOffsetX;
         var viewOffsetY = this.viewOffsetY;
 
@@ -201,9 +200,9 @@ class Camera
         var transform = this.matrix;
 
         var farClip  = farPlane || this.farPlane;
-        var nearClip = this.nearPlane;
+        var nearClip = (nearPlane !== undefined ? nearPlane : this.nearPlane);
 
-        var frustumPoints = [];
+        var frustumPoints = points || new Array(8);
 
         if (!this.parallel)
         {
@@ -237,84 +236,55 @@ class Camera
             var dirBR1 = (at1 + right1 - up1);
             var dirBR2 = (at2 + right2 - up2);
 
-            frustumPoints[0] = [(pos0 + (dirTR0 * nearClip)), (pos1 + (dirTR1 * nearClip)), (pos2 + (dirTR2 * nearClip))];
-            frustumPoints[4] = [(pos0 + (dirTR0 * farClip)),  (pos1 + (dirTR1 * farClip)),  (pos2 + (dirTR2 * farClip))];
-            frustumPoints[1] = [(pos0 + (dirTL0 * nearClip)), (pos1 + (dirTL1 * nearClip)), (pos2 + (dirTL2 * nearClip))];
-            frustumPoints[5] = [(pos0 + (dirTL0 * farClip)),  (pos1 + (dirTL1 * farClip)),  (pos2 + (dirTL2 * farClip))];
-            frustumPoints[2] = [(pos0 + (dirBL0 * nearClip)), (pos1 + (dirBL1 * nearClip)), (pos2 + (dirBL2 * nearClip))];
-            frustumPoints[6] = [(pos0 + (dirBL0 * farClip)),  (pos1 + (dirBL1 * farClip)),  (pos2 + (dirBL2 * farClip))];
-            frustumPoints[3] = [(pos0 + (dirBR0 * nearClip)), (pos1 + (dirBR1 * nearClip)), (pos2 + (dirBR2 * nearClip))];
-            frustumPoints[7] = [(pos0 + (dirBR0 * farClip)),  (pos1 + (dirBR1 * farClip)),  (pos2 + (dirBR2 * farClip))];
+            frustumPoints[0] = md.v3Build((pos0 + (dirTR0 * nearClip)), (pos1 + (dirTR1 * nearClip)), (pos2 + (dirTR2 * nearClip)), frustumPoints[0]);
+            frustumPoints[1] = md.v3Build((pos0 + (dirTL0 * nearClip)), (pos1 + (dirTL1 * nearClip)), (pos2 + (dirTL2 * nearClip)), frustumPoints[1]);
+            frustumPoints[2] = md.v3Build((pos0 + (dirBL0 * nearClip)), (pos1 + (dirBL1 * nearClip)), (pos2 + (dirBL2 * nearClip)), frustumPoints[2]);
+            frustumPoints[3] = md.v3Build((pos0 + (dirBR0 * nearClip)), (pos1 + (dirBR1 * nearClip)), (pos2 + (dirBR2 * nearClip)), frustumPoints[3]);
+            frustumPoints[4] = md.v3Build((pos0 + (dirTR0 * farClip)),  (pos1 + (dirTR1 * farClip)),  (pos2 + (dirTR2 * farClip)), frustumPoints[4]);
+            frustumPoints[5] = md.v3Build((pos0 + (dirTL0 * farClip)),  (pos1 + (dirTL1 * farClip)),  (pos2 + (dirTL2 * farClip)), frustumPoints[5]);
+            frustumPoints[6] = md.v3Build((pos0 + (dirBL0 * farClip)),  (pos1 + (dirBL1 * farClip)),  (pos2 + (dirBL2 * farClip)), frustumPoints[6]);
+            frustumPoints[7] = md.v3Build((pos0 + (dirBR0 * farClip)),  (pos1 + (dirBR1 * farClip)),  (pos2 + (dirBR2 * farClip)), frustumPoints[7]);
         }
         else
         {
-            frustumPoints[0] = [];
-            frustumPoints[4] = [];
-            frustumPoints[1] = [];
-            frustumPoints[5] = [];
-            frustumPoints[2] = [];
-            frustumPoints[6] = [];
-            frustumPoints[3] = [];
-            frustumPoints[7] = [];
+            var noffsetx = (1.0 - nearClip) * viewOffsetX;
+            var foffsetx = (1.0 - farClip) * viewOffsetX;
+            var noffsety = (1.0 - nearClip) * viewOffsetY;
+            var foffsety = (1.0 - farClip) * viewOffsetY;
 
-            frustumPoints[0][2] = nearClip;
-            frustumPoints[1][2] = nearClip;
-            frustumPoints[2][2] = nearClip;
-            frustumPoints[3][2] = nearClip;
+            frustumPoints[0] = md.v3Build((viewWindowX + noffsetx), (viewWindowY + noffsety), nearClip, frustumPoints[0]);
+            frustumPoints[1] = md.v3Build((noffsetx - viewWindowX), (viewWindowY + noffsety), nearClip, frustumPoints[1]);
+            frustumPoints[2] = md.v3Build((noffsetx - viewWindowX), (noffsety - viewWindowY), nearClip, frustumPoints[2]);
+            frustumPoints[3] = md.v3Build((viewWindowX + noffsetx), (noffsety - viewWindowY), nearClip, frustumPoints[3]);
+            frustumPoints[4] = md.v3Build((viewWindowX + foffsetx), (viewWindowY + foffsety), farClip, frustumPoints[4]);
+            frustumPoints[5] = md.v3Build((foffsetx - viewWindowX), (viewWindowY + foffsety), farClip, frustumPoints[5]);
+            frustumPoints[6] = md.v3Build((foffsetx - viewWindowX), (foffsety - viewWindowY), farClip, frustumPoints[6]);
+            frustumPoints[7] = md.v3Build((viewWindowX + foffsetx), (foffsety - viewWindowY), farClip, frustumPoints[7]);
 
-            frustumPoints[4][2] = farClip;
-            frustumPoints[5][2] = farClip;
-            frustumPoints[6][2] = farClip;
-            frustumPoints[7][2] = farClip;
-
-            var offset = (1.0 - nearClip) * viewOffsetX;
-            frustumPoints[0][0] = (viewWindowX + offset);
-            frustumPoints[1][0] = (offset - viewWindowX);
-            frustumPoints[2][0] = (offset - viewWindowX);
-            frustumPoints[3][0] = (viewWindowX + offset);
-
-            offset = (1.0 - farClip) * viewOffsetX;
-            frustumPoints[4][0] = (viewWindowX + offset);
-            frustumPoints[5][0] = (offset - viewWindowX);
-            frustumPoints[6][0] = (offset - viewWindowX);
-            frustumPoints[7][0] = (viewWindowX + offset);
-
-            offset = (1.0 - nearClip) * viewOffsetY;
-            frustumPoints[0][1] = (viewWindowY + offset);
-            frustumPoints[1][1] = (viewWindowY + offset);
-            frustumPoints[2][1] = (offset - viewWindowY);
-            frustumPoints[3][1] = (offset - viewWindowY);
-
-            offset = (1.0 - farClip) * viewOffsetY;
-            frustumPoints[4][1] = (viewWindowY + offset);
-            frustumPoints[5][1] = (viewWindowY + offset);
-            frustumPoints[6][1] = (offset - viewWindowY);
-            frustumPoints[7][1] = (offset - viewWindowY);
-
-            var md = this.md;
-            frustumPoints[0] = md.m43TransformPoint(transform, frustumPoints[0]);
-            frustumPoints[1] = md.m43TransformPoint(transform, frustumPoints[1]);
-            frustumPoints[2] = md.m43TransformPoint(transform, frustumPoints[2]);
-            frustumPoints[3] = md.m43TransformPoint(transform, frustumPoints[3]);
-            frustumPoints[4] = md.m43TransformPoint(transform, frustumPoints[4]);
-            frustumPoints[5] = md.m43TransformPoint(transform, frustumPoints[5]);
-            frustumPoints[6] = md.m43TransformPoint(transform, frustumPoints[6]);
-            frustumPoints[7] = md.m43TransformPoint(transform, frustumPoints[7]);
+            md.m43TransformPoint(transform, frustumPoints[0], frustumPoints[0]);
+            md.m43TransformPoint(transform, frustumPoints[1], frustumPoints[1]);
+            md.m43TransformPoint(transform, frustumPoints[2], frustumPoints[2]);
+            md.m43TransformPoint(transform, frustumPoints[3], frustumPoints[3]);
+            md.m43TransformPoint(transform, frustumPoints[4], frustumPoints[4]);
+            md.m43TransformPoint(transform, frustumPoints[5], frustumPoints[5]);
+            md.m43TransformPoint(transform, frustumPoints[6], frustumPoints[6]);
+            md.m43TransformPoint(transform, frustumPoints[7], frustumPoints[7]);
         }
 
         return frustumPoints;
-    };
+    }
 
-    getFrustumFarPoints()
+    getFrustumFarPoints(farPlane?: number, points?: any[]): any[]
     {
+        var md = this.md;
         var viewOffsetX = this.viewOffsetX;
         var viewOffsetY = this.viewOffsetY;
         var viewWindowX = 1.0 / this.recipViewWindowX;
         var viewWindowY = 1.0 / (this.recipViewWindowY * this.aspectRatio);
         var transform   = this.matrix;
-        var farClip     = this.farPlane;
+        var farClip     = farPlane || this.farPlane;
 
-        var frustumPoints;
+        var frustumPoints = points || new Array(4);
 
         if (!this.parallel)
         {
@@ -361,28 +331,31 @@ class Camera
             var dirBR1 = ((at1 + right1 - up1) * farClip);
             var dirBR2 = ((at2 + right2 - up2) * farClip);
 
-            frustumPoints = [ [(pos0 + dirTR0), (pos1 + dirTR1), (pos2 + dirTR2)],
-                              [(pos0 + dirTL0), (pos1 + dirTL1), (pos2 + dirTL2)],
-                              [(pos0 + dirBL0), (pos1 + dirBL1), (pos2 + dirBL2)],
-                              [(pos0 + dirBR0), (pos1 + dirBR1), (pos2 + dirBR2)] ];
+            frustumPoints[0] = md.v3Build((pos0 + dirTR0), (pos1 + dirTR1), (pos2 + dirTR2), frustumPoints[0]);
+            frustumPoints[1] = md.v3Build((pos0 + dirTL0), (pos1 + dirTL1), (pos2 + dirTL2), frustumPoints[1]);
+            frustumPoints[2] = md.v3Build((pos0 + dirBL0), (pos1 + dirBL1), (pos2 + dirBL2), frustumPoints[2]);
+            frustumPoints[3] = md.v3Build((pos0 + dirBR0), (pos1 + dirBR1), (pos2 + dirBR2), frustumPoints[3]);
         }
         else
         {
             var offsetX = (1.0 - farClip) * viewOffsetX;
             var offsetY = (1.0 - farClip) * viewOffsetY;
-            var md = this.md;
-            frustumPoints = [ md.m43TransformPoint(transform, [(viewWindowX + offsetX), (viewWindowY + offsetY), farClip]),
-                              md.m43TransformPoint(transform, [(offsetX - viewWindowX), (viewWindowY + offsetY), farClip]),
-                              md.m43TransformPoint(transform, [(offsetX - viewWindowX), (offsetY - viewWindowY), farClip]),
-                              md.m43TransformPoint(transform, [(viewWindowX + offsetX), (offsetY - viewWindowY), farClip]) ];
+            frustumPoints[0] = md.v3Build((viewWindowX + offsetX), (viewWindowY + offsetY), farClip, frustumPoints[0]);
+            frustumPoints[1] = md.v3Build((offsetX - viewWindowX), (viewWindowY + offsetY), farClip, frustumPoints[1]);
+            frustumPoints[2] = md.v3Build((offsetX - viewWindowX), (offsetY - viewWindowY), farClip, frustumPoints[2]);
+            frustumPoints[3] = md.v3Build((viewWindowX + offsetX), (offsetY - viewWindowY), farClip, frustumPoints[3]);
+            md.m43TransformPoint(transform, frustumPoints[0], frustumPoints[0]);
+            md.m43TransformPoint(transform, frustumPoints[1], frustumPoints[1]);
+            md.m43TransformPoint(transform, frustumPoints[2], frustumPoints[2]);
+            md.m43TransformPoint(transform, frustumPoints[3], frustumPoints[3]);
         }
 
         return frustumPoints;
-    };
+    }
 
-    getFrustumExtents(extents, farClip)
+    getFrustumExtents(extents, farClip, nearClip?)
     {
-        var frustumPoints = this.getFrustumPoints(farClip);
+        var frustumPoints = this.getFrustumPoints(farClip, nearClip);
         var frustumPoint = frustumPoints[0];
         var min0 = frustumPoint[0];
         var min1 = frustumPoint[1];
@@ -427,7 +400,7 @@ class Camera
         extents[3] = max0;
         extents[4] = max1;
         extents[5] = max2;
-    };
+    }
 
     // Constructor function
     static create(md: MathDevice): Camera
@@ -441,8 +414,8 @@ class Camera
         c.frustumPlanes = [];
         c.updateFrustumPlanes();
         return c;
-    };
-};
+    }
+}
 
 //
 // CameraController
@@ -533,7 +506,7 @@ class CameraController
         md.m43SetPos(matrix, pos);
 
         this.camera.matrix = matrix;
-    };
+    }
 
     translate(right, up, forward)
     {
@@ -546,7 +519,7 @@ class CameraController
                         md.v3ScalarMul(md.m43Up(matrix),    (speed * up)),
                         md.v3ScalarMul(md.m43At(matrix),   -(speed * forward)));
         md.m43SetPos(matrix, pos);
-    };
+    }
 
     update()
     {
@@ -599,7 +572,7 @@ class CameraController
         {
             this.camera.updateViewMatrix();
         }
-    };
+    }
 
     static create(gd: GraphicsDevice, id: InputDevice, camera: Camera,
                   log?: HTMLElement) : CameraController
@@ -951,5 +924,5 @@ class CameraController
         }
 
         return c;
-    };
-};
+    }
+}

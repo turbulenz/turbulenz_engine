@@ -18,9 +18,6 @@
 /*{{ javascript("scripts/simplebuttons.js") }}*/
 /*{{ javascript("scripts/tictactoelib.js") }}*/
 
-/// <reference path="../../simplebuttons.ts" />
-/// <reference path="../../../../jslib-modular/services.d.ts" />
-
 /*global TurbulenzEngine: true */
 /*global Application: false */
 

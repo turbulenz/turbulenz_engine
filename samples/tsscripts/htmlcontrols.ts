@@ -1,7 +1,5 @@
 // Copyright (c) 2010-2011 Turbulenz Limited
 
-/// <reference path="../../external/definitelytyped/jqueryui/jqueryui-1.9.d.ts" />
-
 interface Window
 {
     $: JQueryStatic;
@@ -25,7 +23,7 @@ class HTMLControls
     checkboxControls: any; // Created by value
     buttonControls: any; // Created by value
     sliderControls: any; // Created by id
-    registered: bool;
+    registered: boolean;
 
     setSelectedRadio(groupName, index)
     {
@@ -41,7 +39,7 @@ class HTMLControls
                 this.updateRadio(control.id, true);
             }
         }
-    };
+    }
 
     addRadioControl(radioControlOptions)
     {
@@ -79,7 +77,7 @@ class HTMLControls
         }
 
         this.updateRadio(radioID, isDefault);
-    };
+    }
 
     addCheckboxControl(checkboxControlOptions)
     {
@@ -88,20 +86,20 @@ class HTMLControls
         var value = checkboxControlOptions.value;
         checkboxControls[value] = checkboxControlOptions;
         this.updateCheckbox(id, checkboxControlOptions.isSelected);
-    };
+    }
 
     addButtonControl(buttonControlOptions)
     {
         var buttonControls = this.buttonControls;
         var id = buttonControlOptions.id;
         buttonControls[id] = buttonControlOptions;
-    };
+    }
 
     addSliderControl(sliderControlOptions)
     {
         var sliderControls = this.sliderControls;
         sliderControls[sliderControlOptions.id] = sliderControlOptions;
-    };
+    }
 
     getSliderValue(id)
     {
@@ -111,7 +109,7 @@ class HTMLControls
             return parseInt(value, 10);
         }
         return undefined;
-    };
+    }
 
     getHandler()
     {
@@ -205,7 +203,7 @@ class HTMLControls
                 // Unsupported
             }
         };
-    };
+    }
 
     register()
     {
@@ -350,7 +348,7 @@ class HTMLControls
         }
 
         this.registered = true;
-    };
+    }
 
     updateRadio(elementID, isSelected)
     {
@@ -364,7 +362,7 @@ class HTMLControls
         {
             element.checked = !!isSelected;
         }
-    };
+    }
 
     updateCheckbox(elementID, isSelected)
     {
@@ -378,7 +376,7 @@ class HTMLControls
         {
             element.checked = !!isSelected;
         }
-    };
+    }
 
     updateSlider(elementID, value)
     {
@@ -395,7 +393,7 @@ class HTMLControls
                 element.slider("option", "value", value);
             }
         }
-    };
+    }
 
     // Constructor function
     static create()
@@ -407,6 +405,5 @@ class HTMLControls
         c.sliderControls = {}; // Created by id
         c.registered = false;
         return c;
-    };
-
-};
+    }
+}

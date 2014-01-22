@@ -233,8 +233,8 @@ Properties
 
 **Summary**
 
-An array of :ref:`DrawParameters <drawparameters>`. These are the objects the renders uses to render. Typically the prepare() function registered with the :ref:`Effects <effect>` creates these and they are updated for visible renderables using the renderUpdate() method.
-An array of DrawParameters. These are the objects the renders uses to render. Typically the prepare() function registered with the Effects creates these and they are updated for visible renderables using the renderUpdate() method.
+An array of :ref:`DrawParameters <drawparameters>`. These are the objects the renderers use to render the renderable.
+Typically, the prepare() function registered with the :ref:`Effects <effect>` creates these and they are updated for visible renderables using the renderUpdate() method.
 
 **Syntax** ::
 

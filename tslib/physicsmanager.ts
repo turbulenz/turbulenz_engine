@@ -3,9 +3,6 @@
 /*global Utilities: false */
 /*global SceneNode: false */
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="scenenode.ts" />
-
 // TODO: Does this inherit from some base Node?
 interface PhysicsNode
 {
@@ -14,8 +11,8 @@ interface PhysicsNode
 
     origin?        : any; // v3
     triangleArray? : any; // number[] or Float32Array
-    dynamic?       : bool;
-    kinematic?     : bool;
+    dynamic?       : boolean;
+    kinematic?     : boolean;
 
     worldUpdate?   : any;
 };
@@ -40,6 +37,65 @@ class PhysicsManager
 
     sceneNodeCloned: { (data): void; };
     sceneNodeDestroyed: { (data): void; };
+
+    //
+    // addNode
+    //
+    addNode(sceneNode: SceneNode,
+            physicsObject: PhysicsCollisionObject,
+            origin?: any,
+            triangleArray?: any): void
+    {
+        var physicsNode: PhysicsNode = {
+            body: physicsObject,
+            target: sceneNode
+        };
+
+        physicsObject.userData = sceneNode;
+
+        if (origin)
+        {
+            physicsNode.origin = origin;
+        }
+
+        if (triangleArray)
+        {
+            physicsNode.triangleArray = triangleArray;
+        }
+
+        if (physicsObject.kinematic)
+        {
+            physicsNode.kinematic = true;
+
+            sceneNode.setDynamic();
+            sceneNode.kinematic = true;
+
+            this.kinematicPhysicsNodes.push(physicsNode);
+        }
+        else if ("mass" in physicsObject)
+        {
+            physicsNode.dynamic = true;
+
+            sceneNode.setDynamic();
+
+            this.dynamicPhysicsNodes.push(physicsNode);
+        }
+
+        var targetPhysicsNodes = sceneNode.physicsNodes;
+        if (targetPhysicsNodes)
+        {
+            targetPhysicsNodes.push(physicsNode);
+        }
+        else
+        {
+            sceneNode.physicsNodes = [physicsNode];
+            this.subscribeSceneNode(sceneNode);
+        }
+
+        this.physicsNodes.push(physicsNode);
+
+        this.enableHierarchy(sceneNode, true);
+    }
 
     //
     // update
@@ -115,7 +171,7 @@ class PhysicsManager
                 }
             }
         }
-    };
+    }
 
     //
     // enableNode
@@ -170,7 +226,7 @@ class PhysicsManager
                 }
             }
         }
-    };
+    }
 
     //
     // enableHierarchy
@@ -188,7 +244,7 @@ class PhysicsManager
                 this.enableHierarchy(children[c], enabled);
             }
         }
-    };
+    }
 
     //
     // deletePhysicsNode
@@ -228,7 +284,7 @@ class PhysicsManager
                 break;
             }
         }
-    };
+    }
 
     //
     // deleteNode
@@ -269,7 +325,7 @@ class PhysicsManager
                 delete sceneNode.physicsNodes;
             }
         }
-    };
+    }
 
     //
     // deleteHierarchy
@@ -287,7 +343,7 @@ class PhysicsManager
                 this.deleteHierarchy(children[c]);
             }
         }
-    };
+    }
 
     //
     // calculateHierarchyExtents
@@ -343,7 +399,7 @@ class PhysicsManager
             return undefined;
         }
         return totalExtents;
-    };
+    }
 
     //
     // calculateExtents
@@ -379,7 +435,7 @@ class PhysicsManager
             return undefined;
         }
         return totalExtents;
-    };
+    }
 
     //
     // clear
@@ -396,7 +452,7 @@ class PhysicsManager
         this.physicsNodes = [];
         this.dynamicPhysicsNodes = [];
         this.kinematicPhysicsNodes = [];
-    };
+    }
 
     //
     // loadNodes
@@ -525,9 +581,10 @@ class PhysicsManager
                             var inputPosition = inputs.POSITION;
                             var positions = geometry.sources[inputPosition.source];
                             var positionsData = positions.data;
+                            var numPositionsValues = positionsData.length;
                             var posMin = positions.min;
                             var posMax = positions.max;
-                            var numPositionsValues, np, pos0, pos1, pos2;
+                            var np, pos0, pos1, pos2;
                             var min0, min1, min2, max0, max1, max2;
                             if (posMin && posMax)
                             {
@@ -547,7 +604,6 @@ class PhysicsManager
                                     max0 = halfPos0;
                                     max1 = halfPos1;
                                     max2 = halfPos2;
-                                    numPositionsValues = positionsData.length;
                                     var newPositionsData = [];
                                     newPositionsData.length = numPositionsValues;
                                     for (np = 0; np < numPositionsValues; np += 3)
@@ -903,7 +959,7 @@ class PhysicsManager
                 }
             }
         }
-    };
+    }
 
     //
     // unsubscribeSceneNode
@@ -912,7 +968,7 @@ class PhysicsManager
     {
         sceneNode.unsubscribeCloned(this.sceneNodeCloned);
         sceneNode.unsubscribeDestroyed(this.sceneNodeDestroyed);
-    };
+    }
 
     //
     // subscribeSceneNode
@@ -921,7 +977,7 @@ class PhysicsManager
     {
         sceneNode.subscribeCloned(this.sceneNodeCloned);
         sceneNode.subscribeDestroyed(this.sceneNodeDestroyed);
-    };
+    }
 
     //
     // cloneSceneNode
@@ -995,7 +1051,7 @@ class PhysicsManager
                 physicsManagerCloneNode(physicsNodes[p], newSceneNode);
             }
         }
-    };
+    }
 
     //
     // Snapshot
@@ -1024,7 +1080,7 @@ class PhysicsManager
         }
 
         return snapshot;
-    };
+    }
 
     restoreSnapshot(snapshot)
     {
@@ -1047,7 +1103,7 @@ class PhysicsManager
                 }
             }
         }
-    };
+    }
 
     //
     // Constructor function
@@ -1075,8 +1131,8 @@ class PhysicsManager
         physicsManager.tempMatrix = mathsDevice.m43BuildIdentity();
 
         return physicsManager;
-    };
-};
+    }
+}
 
 PhysicsManager.prototype.arrayConstructor = Array;
 

@@ -332,7 +332,7 @@ Options
 .. cmdoption:: --mode=MODE, -m MODE
 
     Generate an HTML page for use in the given run mode. Supported
-    modes include: *plugin*, *canvas*, *plugin-debug*, *canvas-debug*.
+    modes include: *plugin*, *canvas*, *canvas-debug*.
 
 .. cmdoption:: --hybrid
 

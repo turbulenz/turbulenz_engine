@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 /*global AABBTree*/
 /*global Material*/
 /*global SceneNode*/
@@ -14,20 +14,9 @@
 /*global Uint32Array*/
 /*global Float32Array*/
 
-/// <reference path="geometry.ts" />
-/// <reference path="material.ts" />
-/// <reference path="effectmanager.ts" />
-/// <reference path="aabbtree.ts" />
-/// <reference path="light.ts" />
-/// <reference path="indexbuffermanager.ts" />
-/// <reference path="vertexbuffermanager.ts" />
-/// <reference path="scenenode.ts" />
-/// <reference path="camera.ts" />
-/// <reference path="physicsmanager.ts" />
-
 interface ScenePortal
 {
-    disabled : bool;
+    disabled : boolean;
     area     : SceneArea;
     extents  : any; // Array[6] or Float32Array(6)?
     plane    : any; // v4 or Array
@@ -48,6 +37,20 @@ interface SceneBSPNode
     plane: any; // v4
     pos: any; // v3?
     neg: any; // TODO:
+};
+
+interface SpatialMap
+{
+    add: (externalNode, extents: any) => void;
+    update: (externalNode, extents) => void;
+    remove: (externalNode) => void;
+    finalize: () => void;
+    getVisibleNodes: (planes, visibleNodes, startIndex?) => number;
+    getOverlappingNodes: (queryExtents, overlappingNodes, startIndex?) => number;
+    getSphereOverlappingNodes: (center, radius, overlappingNodes) => void;
+    getOverlappingPairs: (overlappingPairs, startIndex) => number;
+    getExtents: () => any;
+    clear: () => void;
 };
 
 //
@@ -72,13 +75,14 @@ class Scene
     rootNodesMap: { [name: string]: SceneNode; };
     dirtyRoots: { [name: string]: SceneNode; };
     nodesToUpdate: SceneNode[];
+    numNodesToUpdate: number;
     queryVisibleNodes: SceneNode[];
 
     materials: { [name: string]: Material; };
     shapes: any; // TODO:
 
-    staticSpatialMap: AABBTree;
-    dynamicSpatialMap: AABBTree;
+    staticSpatialMap: SpatialMap;
+    dynamicSpatialMap: SpatialMap;
     frustumPlanes: any[]; // v4[]?
     animations: any; // TODO:
     skeletons: any; // TODO:
@@ -94,6 +98,8 @@ class Scene
     staticNodesChangeCounter: number;
     testExtents: any; // Array or Float32Array(6)
     externalNodesStack: SceneNode[];
+    overlappingPortals: any[]; // PortalItem[]
+    newPoints: any[]; // v3[]
 
     vertexBufferManager: VertexBufferManager;
     indexBufferManager: IndexBufferManager;
@@ -111,9 +117,12 @@ class Scene
     uint32ArrayConstructor: any; // on prototype
 
     // Scene
-    constructor(mathDevice: MathDevice)
+    constructor(mathDevice: MathDevice, staticSpatialMap?: SpatialMap, dynamicSpatialMap?: SpatialMap)
     {
         this.md = mathDevice;
+        this.staticSpatialMap = (staticSpatialMap || AABBTree.create(true));
+        this.dynamicSpatialMap = (dynamicSpatialMap || AABBTree.create());
+
         this.clear();
 
         var scene = this;
@@ -128,7 +137,7 @@ class Scene
             material.reference.unsubscribeDestroyed(scene.onMaterialDestroyed);
             delete scene.materials[material.name];
         };
-    };
+    }
 
     // getMaterial: (node) => string;
     getMaterialName: (node) => string;
@@ -151,6 +160,7 @@ class Scene
     updateNormals: (gd, scale, drawNormals, normalMaterial, drawTangents,
                     tangentMaterial, drawBinormals, binormalMaterial) => void;
     drawNodesTree: (tree, gd, sm, camera, drawLevel) => void;
+    drawCellsGrid: (grid, gd, sm, camera) => void;
     drawDynamicNodesTree: (gd, sm, camera, drawLevel) => void;
     drawStaticNodesTree: (gd, sm, camera, drawLevel) => void;
     drawTransparentNodesExtents: (gd, sm, camera) => void;
@@ -197,7 +207,7 @@ class Scene
             result = result.findChild(names[depth]);
         }
         return result;
-    };
+    }
 
     //
     // addRootNode
@@ -212,10 +222,15 @@ class Scene
         debug.assert(!this.rootNodesMap[name], "Root node with the same name exits in the scene");
 
         rootNode.scene = this;
+
+        // Ensure node will be added to spatial map on update
+        // In the event that there are no dirty flags set.
+        rootNode.worldExtentsUpdate = true;
+
         this.rootNodes.push(rootNode);
         this.rootNodesMap[name] = rootNode;
         this.addRootNodeToUpdate(rootNode, name);
-    };
+    }
 
     //
     // removeRootNode
@@ -227,10 +242,16 @@ class Scene
         debug.assert(rootNode.scene === this, "Root node is not in the scene");
         rootNode.removedFromScene(this);
 
-        var index = this.rootNodes.indexOf(rootNode);
+        var rootNodes = this.rootNodes;
+        var index = rootNodes.indexOf(rootNode);
         if (index !== -1)
         {
-            this.rootNodes.splice(index, 1);
+            var numRootNodes = (rootNodes.length - 1);
+            if (index < numRootNodes)
+            {
+                rootNodes[index] = rootNodes[numRootNodes];
+            }
+            rootNodes.length = numRootNodes;
         }
         delete this.rootNodesMap[name];
 
@@ -238,15 +259,27 @@ class Scene
         {
             delete this.dirtyRoots[name];
 
-            index = this.nodesToUpdate.indexOf(rootNode);
-            if (index !== -1)
+            // Can not use indexOf because it will search the whole array instead of just the active range
+            var nodesToUpdate = this.nodesToUpdate;
+            var numNodesToUpdate = this.numNodesToUpdate;
+            for (index = 0; index < numNodesToUpdate; index += 1)
             {
-                this.nodesToUpdate.splice(index, 1);
+                if (nodesToUpdate[index] === rootNode)
+                {
+                    numNodesToUpdate -= 1;
+                    if (index < numNodesToUpdate)
+                    {
+                        nodesToUpdate[index] = nodesToUpdate[numNodesToUpdate];
+                    }
+                    nodesToUpdate[numNodesToUpdate] = null;
+                    this.numNodesToUpdate = numNodesToUpdate;
+                    break;
+                }
             }
         }
 
         delete rootNode.scene;
-    };
+    }
 
     //
     // addLight
@@ -259,7 +292,7 @@ class Scene
         {
             this.globalLights.push(light);
         }
-    };
+    }
 
     //
     // removeLight
@@ -281,7 +314,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // getLight
@@ -289,7 +322,7 @@ class Scene
     getLight(name)
     {
         return this.lights[name];
-    };
+    }
 
     //
     // getGlobalLights
@@ -297,7 +330,7 @@ class Scene
     getGlobalLights()
     {
         return this.globalLights;
-    };
+    }
 
     //
     // calculateNumNodes
@@ -315,24 +348,27 @@ class Scene
             }
         }
         return numTotalNodes;
-    };
+    }
 
     //
     // buildPortalPlanes
     //
-    buildPortalPlanes(points, planes, cX, cY, cZ, frustumPlanes) : bool
+    buildPortalPlanes(points, planes, cX, cY, cZ, frustumPlanes) : boolean
     {
+        var md = this.md;
         var numPoints = points.length;
         var numFrustumPlanes = frustumPlanes.length;
         var numPlanes = 0;
         var n, np, nnp, p, plane, numVisiblePointsPlane;
 
-        var culledByPlane = [];
+        debug.assert(numFrustumPlanes < 32, "Cannot use bit field for so many planes...");
+
+        var culledByPlane: number[] = [];
         culledByPlane.length = numPoints;
         np = 0;
         do
         {
-            culledByPlane[np] = [];
+            culledByPlane[np] = 0;
             np += 1;
         }
         while (np < numPoints);
@@ -357,7 +393,7 @@ class Scene
                 }
                 else
                 {
-                    culledByPlane[np][n] = true;
+                    culledByPlane[np] |= (1 << n);
                 }
                 np += 1;
             }
@@ -370,7 +406,7 @@ class Scene
             }
             else if (numVisiblePointsPlane < numPoints)
             {
-                planes[numPlanes] = plane;
+                planes[numPlanes] = md.v4Copy(plane, planes[numPlanes]);
                 numPlanes += 1;
             }
             n += 1;
@@ -379,13 +415,12 @@ class Scene
 
         var allPointsVisible = (numPlanes === 0);
 
-        var newPoints = [];
-        newPoints.length = numPoints;
+        var newPoints = this.newPoints;
         np = 0;
         do
         {
             p = points[np];
-            newPoints[np] = [(p[0] - cX), (p[1] - cY), (p[2] - cZ)];
+            newPoints[np] = md.v3Build((p[0] - cX), (p[1] - cY), (p[2] - cZ), newPoints[np]);
             np += 1;
         }
         while (np < numPoints);
@@ -401,17 +436,7 @@ class Scene
             }
 
             // Skip plane if both points were culled by the same frustum plane
-            var culled0 = culledByPlane[np];
-            var culled1 = culledByPlane[nnp];
-            var maxCulled = (culled0.length < culled1.length ? culled0.length : culled1.length);
-            for (n = 0; n < maxCulled; n += 1)
-            {
-                if (culled0[n] && culled1[n])
-                {
-                    break;
-                }
-            }
-            if (n < maxCulled)
+            if (0 !== (culledByPlane[np] & culledByPlane[nnp]))
             {
                 np += 1;
                 continue;
@@ -447,15 +472,16 @@ class Scene
             // d = dot(n, c)
             var d = ((nX * cX) + (nY * cY) + (nZ * cZ));
 
-            planes[numPlanes] = [nX, nY, nZ, d];
+            planes[numPlanes] = md.v4Build(nX, nY, nZ, d, planes[numPlanes]);
             numPlanes += 1;
 
             np += 1;
         }
         while (np < numPoints);
 
+        planes.length = numPlanes;
         return allPointsVisible;
-    };
+    }
 
     //
     // findAreaIndex
@@ -477,7 +503,7 @@ class Scene
         }
         while (nodeIndex < numNodes);
         return -1;
-    };
+    }
 
     //
     // findAreaIndicesAABB
@@ -549,14 +575,13 @@ class Scene
         }
         while (0 < numNodesStack);
         return areaIndices;
-    };
+    }
 
     //
     // findVisiblePortals
     //
     findVisiblePortals(areaIndex, cX, cY, cZ)
     {
-        var buildPortalPlanes = this.buildPortalPlanes;
         var visiblePortals = this.visiblePortals;
         var oldNumVisiblePortals = visiblePortals.length;
         var frustumPlanes = this.frustumPlanes;
@@ -572,7 +597,10 @@ class Scene
         var nearPlane0 = nearPlane[0];
         var nearPlane1 = nearPlane[1];
         var nearPlane2 = nearPlane[2];
-        frustumPlanes[numFrustumPlanes] = [nearPlane0, nearPlane1, nearPlane2, ((nearPlane0 * cX) + (nearPlane1 * cY) + (nearPlane2 * cZ))];
+        frustumPlanes[numFrustumPlanes] = this.md.v4Build(nearPlane0,
+                                                          nearPlane1,
+                                                          nearPlane2,
+                                                          ((nearPlane0 * cX) + (nearPlane1 * cY) + (nearPlane2 * cZ)));
 
         area = areas[areaIndex];
         portals = area.portals;
@@ -592,13 +620,12 @@ class Scene
                 {
                     portalItem = visiblePortals[numVisiblePortals];
                     portalPlanes = portalItem.planes;
-                    portalPlanes.length = 0;
                 }
                 else
                 {
                     portalPlanes = [];
                 }
-                buildPortalPlanes(portal.points, portalPlanes, cX, cY, cZ, frustumPlanes);
+                this.buildPortalPlanes(portal.points, portalPlanes, cX, cY, cZ, frustumPlanes);
                 if (0 < portalPlanes.length)
                 {
                     if (numVisiblePortals < oldNumVisiblePortals)
@@ -658,13 +685,12 @@ class Scene
                             {
                                 portalItem = visiblePortals[numVisiblePortals];
                                 planes = portalItem.planes;
-                                planes.length = 0;
                             }
                             else
                             {
                                 planes = [];
                             }
-                            allPointsVisible = buildPortalPlanes(portal.points, planes, cX, cY, cZ, portalPlanes);
+                            allPointsVisible = this.buildPortalPlanes(portal.points, planes, cX, cY, cZ, portalPlanes);
                             if (0 < planes.length)
                             {
                                 if (allPointsVisible)
@@ -703,7 +729,7 @@ class Scene
         {
             visiblePortals.length = numVisiblePortals;
         }
-    };
+    }
 
     //
     // findVisibleNodes
@@ -712,7 +738,7 @@ class Scene
     {
         var numVisibleNodes = visibleNodes.length;
         var frustumPlanes = this.frustumPlanes;
-        var useAABBTrees = true;
+        var useSpatialMaps = true;
         var areas = this.areas;
         if (areas)
         {
@@ -834,7 +860,7 @@ class Scene
                     }
                 }
 
-                useAABBTrees = false;
+                useSpatialMaps = false;
             } /*
             else
             {
@@ -842,12 +868,12 @@ class Scene
             }*/
         }
 
-        if (useAABBTrees)
+        if (useSpatialMaps)
         {
             numVisibleNodes += this.staticSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
             this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
         }
-    };
+    }
 
     //
     // findVisibleNodesTree
@@ -856,7 +882,7 @@ class Scene
     {
         var numVisibleNodes = visibleNodes.length;
         var frustumPlanes = this.frustumPlanes;
-        var useAABBTree = true;
+        var useSpatialMap = true;
         var areas = this.areas;
         if (areas)
         {
@@ -891,7 +917,6 @@ class Scene
                     nodes = area.externalNodes;
                     if (nodes)
                     {
-                        nodes.length = 0;
                         externalNodesStack.push(nodes);
                         area.externalNodes = null;
                     }
@@ -937,10 +962,9 @@ class Scene
                     combinedExtents[4] = (areaMaxExtent1 > cameraMaxExtent1 ? cameraMaxExtent1 : areaMaxExtent1);
                     combinedExtents[5] = (areaMaxExtent2 > cameraMaxExtent2 ? cameraMaxExtent2 : areaMaxExtent2);
 
-                    tree.getOverlappingNodes(combinedExtents, nodes);
+                    numNodes = tree.getOverlappingNodes(combinedExtents, nodes, 0);
 
                     // Check which ones actually belong to the area
-                    numNodes = nodes.length;
                     for (n = 0; n < numNodes; n += 1)
                     {
                         node = nodes[n];
@@ -1025,10 +1049,9 @@ class Scene
                         combinedExtents[4] = (areaMaxExtent1 > cameraMaxExtent1 ? cameraMaxExtent1 : areaMaxExtent1);
                         combinedExtents[5] = (areaMaxExtent2 > cameraMaxExtent2 ? cameraMaxExtent2 : areaMaxExtent2);
 
-                        tree.getOverlappingNodes(combinedExtents, nodes);
+                        numNodes = tree.getOverlappingNodes(combinedExtents, nodes, 0);
 
                         // Check which ones actually belong to the area
-                        numNodes = nodes.length;
                         for (n = 0; n < numNodes; n += 1)
                         {
                             node = nodes[n];
@@ -1083,33 +1106,33 @@ class Scene
                     }
                 }
 
-                useAABBTree = false;
+                useSpatialMap = false;
             }
         }
 
-        if (useAABBTree)
+        if (useSpatialMap)
         {
             tree.getVisibleNodes(frustumPlanes, visibleNodes, numVisibleNodes);
         }
-    };
+    }
 
     //
     // buildPortalPlanesNoFrustum
     //
-    buildPortalPlanesNoFrustum(points, cX, cY, cZ) : any[] // v4[]
+    buildPortalPlanesNoFrustum(points: any[], planes: any[], cX: number, cY: number, cZ: number, parentPlanes: any[]) : boolean
     {
+        var md = this.md;
         var numPoints = points.length;
-        var planes = [];
-        var numPlanes = 0;
-        var newPoints = [];
+        var numParentPlanes = (parentPlanes ? parentPlanes.length : 0);
+        var numPlanes = numParentPlanes;
+        var newPoints = this.newPoints;
         var np, p;
 
-        newPoints.length = numPoints;
         np = 0;
         do
         {
             p = points[np];
-            newPoints[np] = [(p[0] - cX), (p[1] - cY), (p[2] - cZ)];
+            newPoints[np] = md.v3Build((p[0] - cX), (p[1] - cY), (p[2] - cZ), newPoints[np]);
             np += 1;
         }
         while (np < numPoints);
@@ -1135,8 +1158,7 @@ class Scene
             var lnsq = ((nX * nX) + (nY * nY) + (nZ * nZ));
             if (lnsq === 0)
             {
-                // TODO: Surely this is wrong?
-                return <any[]><any>false;
+                return false;
             }
             var lnrcp = 1.0 / sqrt(lnsq);
             nX *= lnrcp;
@@ -1146,26 +1168,32 @@ class Scene
             // d = dot(n, c)
             var d = ((nX * cX) + (nY * cY) + (nZ * cZ));
 
-            planes[numPlanes] = [nX, nY, nZ, d];
+            planes[numPlanes] = md.v4Build(nX, nY, nZ, d, planes[numPlanes]);
             numPlanes += 1;
 
             np += 1;
         }
         while (np < numPoints);
 
-        return planes;
-    };
+        for (np = 0; np < numParentPlanes; np += 1)
+        {
+            planes[np] = md.v4Copy(parentPlanes[np], planes[np]);
+        }
+
+        planes.length = numPlanes;
+        return true;
+    }
 
     //
     // findOverlappingPortals
     //
-    findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals)
+    findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals): number
     {
         var portals, numPortals, n, portal, plane, d0, d1, d2, offset, area, portalExtents, planes;
-        var buildPortalPlanesNoFrustum = this.buildPortalPlanesNoFrustum;
         var queryCounter = this.getQueryCounter();
         var areas = this.areas;
         var numOverlappingPortals = 0;
+        var portalItem;
 
         var min0 = extents[0];
         var min1 = extents[1];
@@ -1203,14 +1231,24 @@ class Scene
                 if (((d0 * cX) + (d1 * cY) + (d2 * cZ)) < offset &&
                     (d0 * (d0 < 0 ? min0 : max0) + d1 * (d1 < 0 ? min1 : max1) + d2 * (d2 < 0 ? min2 : max2)) >= offset)
                 {
-                    planes = buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
-                    if (planes)
+                    portalItem = overlappingPortals[numOverlappingPortals];
+                    if (portalItem)
                     {
-                        overlappingPortals[numOverlappingPortals] = {
-                                portal: portal,
+                        planes = portalItem.planes;
+                    }
+                    else
+                    {
+                        planes = [];
+                        overlappingPortals[numOverlappingPortals] = portalItem = {
+                                portal: null,
                                 planes: planes,
-                                area: portal.area
+                                area: 0
                             };
+                    }
+                    if (this.buildPortalPlanesNoFrustum(portal.points, planes, cX, cY, cZ, null))
+                    {
+                        portalItem.portal = portal;
+                        portalItem.area = portal.area;
                         numOverlappingPortals += 1;
                     }
                 }
@@ -1219,7 +1257,7 @@ class Scene
 
         if (0 < numOverlappingPortals)
         {
-            var portalItem, parentPlanes, nextArea;
+            var parentPlanes, nextArea;
             var currentPortalIndex = 0;
             do
             {
@@ -1256,15 +1294,25 @@ class Scene
                             if (((d0 * cX) + (d1 * cY) + (d2 * cZ)) < offset &&
                                 (d0 * (d0 < 0 ? min0 : max0) + d1 * (d1 < 0 ? min1 : max1) + d2 * (d2 < 0 ? min2 : max2)) >= offset)
                             {
-                                planes = buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
-                                if (planes)
+                                portalItem = overlappingPortals[numOverlappingPortals];
+                                if (portalItem)
+                                {
+                                    planes = portalItem.planes;
+                                }
+                                else
+                                {
+                                    planes = [];
+                                    overlappingPortals[numOverlappingPortals] = portalItem = {
+                                        portal: null,
+                                        planes: planes,
+                                        area: 0
+                                    };
+                                }
+                                if (this.buildPortalPlanesNoFrustum(portal.points, planes, cX, cY, cZ, parentPlanes))
                                 {
                                     portal.queryCounter = queryCounter;
-                                    overlappingPortals[numOverlappingPortals] = {
-                                            portal: portal,
-                                            planes: parentPlanes.concat(planes),
-                                            area: nextArea
-                                        };
+                                    portalItem.portal = portal;
+                                    portalItem.area = nextArea;
                                     numOverlappingPortals += 1;
                                 }
                             }
@@ -1282,25 +1330,27 @@ class Scene
             }
             while (currentPortalIndex < numOverlappingPortals);
         }
-    };
+
+        return numOverlappingPortals;
+    }
 
     //
     // findOverlappingNodes
     //
     findOverlappingNodes(tree, origin, extents, overlappingNodes)
     {
-        var useAABBTree = true;
+        var useSpatialMap = true;
 
         if (this.areas)
         {
-            useAABBTree = !this._findOverlappingNodesAreas(tree, origin, extents, overlappingNodes);
+            useSpatialMap = !this._findOverlappingNodesAreas(tree, origin, extents, overlappingNodes);
         }
 
-        if (useAABBTree)
+        if (useSpatialMap)
         {
             tree.getOverlappingNodes(extents, overlappingNodes);
         }
-    };
+    }
 
     //
     // findStaticOverlappingNodes
@@ -1308,7 +1358,7 @@ class Scene
     findStaticOverlappingNodes(origin, extents, overlappingNodes)
     {
         this.findOverlappingNodes(this.staticSpatialMap, origin, extents, overlappingNodes);
-    };
+    }
 
     //
     // findDynamicOverlappingNodes
@@ -1316,12 +1366,12 @@ class Scene
     findDynamicOverlappingNodes(origin, extents, overlappingNodes)
     {
         this.findOverlappingNodes(this.dynamicSpatialMap, origin, extents, overlappingNodes);
-    };
+    }
 
     //
     // _findOverlappingNodesAreas
     //
-    _findOverlappingNodesAreas(tree, origin, extents, overlappingNodes): bool
+    _findOverlappingNodesAreas(tree, origin, extents, overlappingNodes): boolean
     {
         // Assume scene.update has been called before this function
         var cX = origin[0];
@@ -1344,7 +1394,6 @@ class Scene
             nodes = area.externalNodes;
             if (nodes)
             {
-                nodes.length = 0;
                 externalNodesStack.push(nodes);
                 area.externalNodes = null;
             }
@@ -1366,12 +1415,11 @@ class Scene
         var testMaxExtent1 = areaExtents[4];
         var testMaxExtent2 = areaExtents[5];
 
-        var overlappingPortals = [];
-        this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
+        var overlappingPortals = this.overlappingPortals;
+        var numOverlappingPortals = this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
 
         var isInsidePlanesAABB = this.isInsidePlanesAABB;
         var queryCounter = this.getQueryCounter();
-        var numOverlappingPortals = overlappingPortals.length;
         var numOverlappingNodes = overlappingNodes.length;
         var portalPlanes;
         var n, node, np, portalItem;
@@ -1394,7 +1442,7 @@ class Scene
         testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
         testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
-        tree.getOverlappingNodes(testExtents, nodes);
+        nodes.length = tree.getOverlappingNodes(testExtents, nodes, 0);
 
         numNodes = nodes.length;
         for (n = 0; n < numNodes; n += 1)
@@ -1438,7 +1486,7 @@ class Scene
                 testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
                 testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
-                tree.getOverlappingNodes(testExtents, nodes);
+                nodes.length = tree.getOverlappingNodes(testExtents, nodes, 0);
             }
 
             numNodes = nodes.length;
@@ -1458,21 +1506,21 @@ class Scene
         }
 
         return true;
-    };
+    }
 
     //
     // findOverlappingRenderables
     //
     findOverlappingRenderables(tree, origin, extents, overlappingRenderables)
     {
-        var useAABBTree = true;
+        var useSpatialMap = true;
 
         if (this.areas)
         {
-            useAABBTree = !this._findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables);
+            useSpatialMap = !this._findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables);
         }
 
-        if (useAABBTree)
+        if (useSpatialMap)
         {
             this._findOverlappingRenderablesNoAreas(tree, extents, overlappingRenderables)
         }
@@ -1484,7 +1532,7 @@ class Scene
     findStaticOverlappingRenderables(origin, extents, overlappingRenderables)
     {
         this.findOverlappingRenderables(this.staticSpatialMap, origin, extents, overlappingRenderables);
-    };
+    }
 
     //
     // findDynamicOverlappingRenderables
@@ -1492,12 +1540,12 @@ class Scene
     findDynamicOverlappingRenderables(origin, extents, overlappingRenderables)
     {
         this.findOverlappingRenderables(this.dynamicSpatialMap, origin, extents, overlappingRenderables);
-    };
+    }
 
     //
     // _findOverlappingRenderablesAreas
     //
-    _findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables): bool
+    _findOverlappingRenderablesAreas(tree, origin, extents, overlappingRenderables): boolean
     {
         // Assume scene.update has been called before this function
         var cX = origin[0];
@@ -1538,7 +1586,6 @@ class Scene
             nodes = area.externalNodes;
             if (nodes)
             {
-                nodes.length = 0;
                 externalNodesStack.push(nodes);
                 area.externalNodes = null;
             }
@@ -1553,13 +1600,12 @@ class Scene
         var testMaxExtent1 = areaExtents[4];
         var testMaxExtent2 = areaExtents[5];
 
-        var overlappingPortals = [];
-        this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
+        var overlappingPortals = this.overlappingPortals;
+        var numOverlappingPortals = this.findOverlappingPortals(areaIndex, cX, cY, cZ, extents, overlappingPortals);
 
         var isInsidePlanesAABB = this.isInsidePlanesAABB;
         var isFullyInsidePlanesAABB = this.isFullyInsidePlanesAABB;
         var queryCounter = this.getQueryCounter();
-        var numOverlappingPortals = overlappingPortals.length;
         var portalPlanes;
         var n, np, portalItem;
         var allVisible;
@@ -1582,7 +1628,7 @@ class Scene
         testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
         testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
-        tree.getOverlappingNodes(testExtents, nodes);
+        nodes.length = tree.getOverlappingNodes(testExtents, nodes, 0);
 
         numNodes = nodes.length;
         for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
@@ -1670,7 +1716,7 @@ class Scene
                 testExtents[4] = (testMaxExtent1 < maxExtent1 ? testMaxExtent1 : maxExtent1);
                 testExtents[5] = (testMaxExtent2 < maxExtent2 ? testMaxExtent2 : maxExtent2);
 
-                tree.getOverlappingNodes(testExtents, nodes);
+                nodes.length = tree.getOverlappingNodes(testExtents, nodes, 0);
             }
 
             numNodes = nodes.length;
@@ -1815,7 +1861,7 @@ class Scene
         }
 
         return true;
-    };
+    }
 
     //
     // _findOverlappingRenderablesNoAreas
@@ -1830,7 +1876,7 @@ class Scene
         var maxExtent1 = extents[4];
         var maxExtent2 = extents[5];
 
-        var overlappingNodes = [];
+        var overlappingNodes = this.queryVisibleNodes;
 
         var node;
         var numNodes;
@@ -1842,8 +1888,7 @@ class Scene
         var renderableIndex;
         var renderableExtents;
 
-        tree.getOverlappingNodes(extents, overlappingNodes);
-        numNodes = overlappingNodes.length;
+        numNodes = tree.getOverlappingNodes(extents, overlappingNodes, 0);
         for (nodeIndex = 0; nodeIndex < numNodes; nodeIndex += 1)
         {
             node = overlappingNodes[nodeIndex];
@@ -1894,7 +1939,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // cloneRootNode
@@ -1904,27 +1949,27 @@ class Scene
         var newNode = rootNode.clone(newInstanceName);
         this.addRootNode(newNode);
         return newNode;
-    };
+    }
 
     //
     // updateVisibleNodes
     //
     updateVisibleNodes(camera)
     {
-        var useAABBTree = true;
+        var useSpatialMap = true;
 
         if (this.areas)
         {
-            useAABBTree = !this._updateVisibleNodesAreas(camera);
+            useSpatialMap = !this._updateVisibleNodesAreas(camera);
         }
 
-        if (useAABBTree)
+        if (useSpatialMap)
         {
             this._updateVisibleNodesNoAreas(camera);
         }
 
         this.frameIndex += 1;
-    };
+    }
 
     //
     // _updateVisibleNodesNoAreas
@@ -1956,10 +2001,6 @@ class Scene
         var isInsidePlanesAABB = this.isInsidePlanesAABB;
 
         var queryVisibleNodes = this.queryVisibleNodes;
-        if (!queryVisibleNodes)
-        {
-            this.queryVisibleNodes = queryVisibleNodes = [];
-        }
         var numQueryVisibleNodes = this.staticSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes, 0);
         numQueryVisibleNodes += this.dynamicSpatialMap.getVisibleNodes(frustumPlanes, queryVisibleNodes, numQueryVisibleNodes);
 
@@ -2097,12 +2138,12 @@ class Scene
             visibleLights.length = numVisibleLights;
             visibleNodes.length = numVisibleNodes;
         }
-    };
+    }
 
     //
     // _updateVisibleNodesAreas
     //
-    _updateVisibleNodesAreas(camera): bool
+    _updateVisibleNodesAreas(camera): boolean
     {
         var cameraMatrix = camera.matrix;
         var cX = cameraMatrix[9];
@@ -2440,7 +2481,7 @@ class Scene
         }
 
         return true;
-    };
+    }
 
     //
     // _filterVisibleNodesForCameraBox
@@ -2561,7 +2602,7 @@ class Scene
         visibleRenderables.length = numVisibleRenderables;
         visibleLights.length = numVisibleLights;
         visibleNodes.length = numVisibleNodes;
-    };
+    }
 
     //
     // getCurrentVisibleNodes
@@ -2569,23 +2610,23 @@ class Scene
     getCurrentVisibleNodes(): SceneNode[]
     {
         return this.visibleNodes;
-    };
+    }
 
     //
     // getCurrentVisibleRenderables
     //
-    getCurrentVisibleRenderables(): Renderable[]
+    getCurrentVisibleRenderables()
     {
         return this.visibleRenderables;
-    };
+    }
 
     //
     // getCurrentVisibleLights
     //
-    getCurrentVisibleLights(): LightInstance[]
+    getCurrentVisibleLights()
     {
         return this.visibleLights;
-    };
+    }
 
     //
     // addRootNodeToUpdate
@@ -2596,19 +2637,21 @@ class Scene
         if (dirtyRoots[name] !== rootNode)
         {
             dirtyRoots[name] = rootNode;
-            this.nodesToUpdate.push(rootNode);
+            var numNodesToUpdate = this.numNodesToUpdate;
+            this.nodesToUpdate[numNodesToUpdate] = rootNode;
+            this.numNodesToUpdate = (numNodesToUpdate + 1);
         }
-    };
+    }
 
     //
     // updateNodes
     //
     updateNodes()
     {
-        var nodesToUpdate = this.nodesToUpdate;
-        var numNodesToUpdate = nodesToUpdate.length;
+        var numNodesToUpdate = this.numNodesToUpdate;
         if (0 < numNodesToUpdate)
         {
+            var nodesToUpdate = this.nodesToUpdate;
             var dirtyRoots = this.dirtyRoots;
             var n;
             for (n = 0; n < numNodesToUpdate; n += 1)
@@ -2616,11 +2659,11 @@ class Scene
                 dirtyRoots[nodesToUpdate[n].name] = null;
             }
 
-            SceneNode.prototype.updateHelper(this.md, this, nodesToUpdate);
+            SceneNode.updateNodes(this.md, this, nodesToUpdate, numNodesToUpdate);
 
-            nodesToUpdate.length = 0;
+            this.numNodesToUpdate = 0;
         }
-    };
+    }
 
     //
     // update
@@ -2638,41 +2681,37 @@ class Scene
             //Note this leaves extents of areas as large as they ever got.
             this.initializeAreas();
         }
-    };
+    }
 
     //
     // updateExtents
     //
     updateExtents()
     {
-        var rootStaticNode = this.staticSpatialMap.getRootNode();
-        var rootDynamicNode = this.dynamicSpatialMap.getRootNode();
+        var rootStaticExtents = this.staticSpatialMap.getExtents();
+        var rootDynamicExtents = this.dynamicSpatialMap.getExtents();
         var sceneExtents = this.extents;
 
-        var extents;
-        if (rootStaticNode)
+        if (rootStaticExtents)
         {
-            extents = rootStaticNode.extents;
-
-            if (rootDynamicNode)
+            if (rootDynamicExtents)
             {
                 var minStaticX, minStaticY, minStaticZ, maxStaticX, maxStaticY, maxStaticZ;
                 var minDynamicX, minDynamicY, minDynamicZ, maxDynamicX, maxDynamicY, maxDynamicZ;
 
-                minStaticX = extents[0];
-                minStaticY = extents[1];
-                minStaticZ = extents[2];
-                maxStaticX = extents[3];
-                maxStaticY = extents[4];
-                maxStaticZ = extents[5];
+                minStaticX = rootStaticExtents[0];
+                minStaticY = rootStaticExtents[1];
+                minStaticZ = rootStaticExtents[2];
+                maxStaticX = rootStaticExtents[3];
+                maxStaticY = rootStaticExtents[4];
+                maxStaticZ = rootStaticExtents[5];
 
-                extents = rootDynamicNode.extents;
-                minDynamicX = extents[0];
-                minDynamicY = extents[1];
-                minDynamicZ = extents[2];
-                maxDynamicX = extents[3];
-                maxDynamicY = extents[4];
-                maxDynamicZ = extents[5];
+                minDynamicX = rootDynamicExtents[0];
+                minDynamicY = rootDynamicExtents[1];
+                minDynamicZ = rootDynamicExtents[2];
+                maxDynamicX = rootDynamicExtents[3];
+                maxDynamicY = rootDynamicExtents[4];
+                maxDynamicZ = rootDynamicExtents[5];
 
                 sceneExtents[0] = (minStaticX < minDynamicX ? minStaticX : minDynamicX);
                 sceneExtents[1] = (minStaticY < minDynamicY ? minStaticY : minDynamicY);
@@ -2683,26 +2722,24 @@ class Scene
             }
             else
             {
-                sceneExtents[0] = extents[0];
-                sceneExtents[1] = extents[1];
-                sceneExtents[2] = extents[2];
-                sceneExtents[3] = extents[3];
-                sceneExtents[4] = extents[4];
-                sceneExtents[5] = extents[5];
+                sceneExtents[0] = rootStaticExtents[0];
+                sceneExtents[1] = rootStaticExtents[1];
+                sceneExtents[2] = rootStaticExtents[2];
+                sceneExtents[3] = rootStaticExtents[3];
+                sceneExtents[4] = rootStaticExtents[4];
+                sceneExtents[5] = rootStaticExtents[5];
             }
         }
         else
         {
-            if (rootDynamicNode)
+            if (rootDynamicExtents)
             {
-                extents = rootDynamicNode.extents;
-
-                sceneExtents[0] = extents[0];
-                sceneExtents[1] = extents[1];
-                sceneExtents[2] = extents[2];
-                sceneExtents[3] = extents[3];
-                sceneExtents[4] = extents[4];
-                sceneExtents[5] = extents[5];
+                sceneExtents[0] = rootDynamicExtents[0];
+                sceneExtents[1] = rootDynamicExtents[1];
+                sceneExtents[2] = rootDynamicExtents[2];
+                sceneExtents[3] = rootDynamicExtents[3];
+                sceneExtents[4] = rootDynamicExtents[4];
+                sceneExtents[5] = rootDynamicExtents[5];
             }
             else
             {
@@ -2714,14 +2751,14 @@ class Scene
                 sceneExtents[5] = 0;
             }
         }
-    };
+    }
 
     //
     //  getExtents
     //
     getExtents()
     {
-        if (0 < this.nodesToUpdate.length)
+        if (0 < this.numNodesToUpdate)
         {
             this.updateNodes();
             this.staticSpatialMap.finalize();
@@ -2729,7 +2766,7 @@ class Scene
             this.updateExtents();
         }
         return this.extents;
-    };
+    }
 
     //
     //  loadMaterial
@@ -2756,12 +2793,12 @@ class Scene
             }
         }
         return false;
-    };
+    }
 
     //
     // hasMaterial
     //
-    hasMaterial(materialName): bool
+    hasMaterial(materialName): boolean
     {
         var material = this.materials[materialName];
         if (material)
@@ -2769,7 +2806,7 @@ class Scene
             return true;
         }
         return false;
-    };
+    }
 
     //
     // getMaterial
@@ -2777,7 +2814,7 @@ class Scene
     getMaterial(materialName): Material
     {
         return this.materials[materialName];
-    };
+    }
 
     //
     // Draw nodes with same technique, mostly for debugging
@@ -2796,7 +2833,8 @@ class Scene
             var currentSharedTechniqueParameters = null;
             var currentVertexBuffer = null;
             var currentSemantics = null;
-            var node, shape, sharedTechniqueParameters, techniqueParameters, vertexBuffer, semantics, surface, indexBuffer;
+            var currentOffset = -1;
+            var node, shape, sharedTechniqueParameters, techniqueParameters, vertexBuffer, semantics, offset, surface, indexBuffer;
             var renderables, renderable, numRenderables, i;
             var n = 0;
             setTechnique.call(gd, technique);
@@ -2816,6 +2854,7 @@ class Scene
 
                         shape = renderable.geometry;
                         vertexBuffer = shape.vertexBuffer;
+                        offset = shape.vertexOffset;
                         semantics = shape.semantics;
                         surface = renderable.surface;
                         sharedTechniqueParameters = renderable.sharedMaterial.techniqueParameters;
@@ -2832,11 +2871,13 @@ class Scene
                         }
 
                         if (currentVertexBuffer !== vertexBuffer ||
-                            currentSemantics !== semantics)
+                            currentSemantics !== semantics ||
+                            currentOffset !== offset)
                         {
                             currentVertexBuffer = vertexBuffer;
                             currentSemantics = semantics;
-                            setStream.call(gd, vertexBuffer, semantics);
+                            currentOffset = offset;
+                            setStream.call(gd, vertexBuffer, semantics, offset);
                         }
 
                         indexBuffer = surface.indexBuffer;
@@ -2858,12 +2899,12 @@ class Scene
             }
             while (n < numNodes);
         }
-    };
+    }
 
     drawVisibleNodes(gd, globalTechniqueParameters, technique, renderUpdate)
     {
         this.drawNodesArray(this.visibleNodes, gd, globalTechniqueParameters, technique, renderUpdate);
-    };
+    }
 
     //
     // clearMaterials
@@ -2883,7 +2924,7 @@ class Scene
             }
         }
         this.materials = {};
-    };
+    }
 
     //
     // clearShapes
@@ -2903,7 +2944,7 @@ class Scene
             }
         }
         this.shapes = {};
-    };
+    }
 
     //
     // clearShapesVertexData
@@ -2937,7 +2978,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // clearRootNodes
@@ -2957,7 +2998,8 @@ class Scene
         this.rootNodesMap = {};
         this.dirtyRoots = {};
         this.nodesToUpdate = [];
-    };
+        this.numNodesToUpdate = 0;
+    }
 
     //
     // clear
@@ -2972,30 +3014,27 @@ class Scene
         this.clearRootNodes();
         this.clearMaterials();
         this.clearShapes();
-        this.staticSpatialMap = AABBTree.create(true);
-        this.dynamicSpatialMap = AABBTree.create();
+        this.staticSpatialMap.clear();
+        this.dynamicSpatialMap.clear();
         this.frustumPlanes = [];
         this.animations = {};
         this.skeletons = {};
-        this.extents = (this.float32ArrayConstructor ?
-                        new this.float32ArrayConstructor(6) :
-                        new Array(6));
+        this.extents = this.md.aabbBuildEmpty();
         this.visibleNodes = [];
         this.visibleRenderables = [];
         this.visibleLights = [];
         this.cameraAreaIndex = -1;
-        this.cameraExtents = (this.float32ArrayConstructor ?
-                              new this.float32ArrayConstructor(6) :
-                              new Array(6));
+        this.cameraExtents = this.md.aabbBuildEmpty();
         this.visiblePortals = [];
         this.frameIndex = 0;
         this.queryCounter = 0;
         this.staticNodesChangeCounter = 0;
-        this.testExtents = (this.float32ArrayConstructor ?
-                            new this.float32ArrayConstructor(6) :
-                            new Array(6));
+        this.testExtents = this.md.aabbBuildEmpty();
         this.externalNodesStack = [];
-    };
+        this.overlappingPortals = [];
+        this.newPoints = [];
+        this.queryVisibleNodes = [];
+    }
 
     //
     // endLoading
@@ -3008,17 +3047,26 @@ class Scene
         {
             onload(this);
         }
-    };
+    }
 
     //
     // initializeNodes
     //
     initializeNodes()
     {
-        this.updateNodes();
+        var numNodesToUpdate = this.numNodesToUpdate;
+        if (0 < numNodesToUpdate)
+        {
+            this.numNodesToUpdate = 0;
+            this.dirtyRoots = {};
+
+            SceneNode.updateNodes(this.md, this, this.nodesToUpdate, numNodesToUpdate);
+        }
+
         this.staticSpatialMap.finalize();
+
         this.updateExtents();
-    };
+    }
 
     //
     // addAreaStaticNodes
@@ -3150,13 +3198,13 @@ class Scene
         {
             addAreasNode.call(rootNodes[n], bspNodes, areas);
         }
-    };
+    }
 
     //
     // findOverlappingAreas
     //
     findOverlappingAreas(startAreaIndex: number, extents: any,
-                         avoidDisabled?: bool)
+                         avoidDisabled?: boolean)
     {
         var area, portals, numPortals, n, portal, plane, d0, d1, d2, portalExtents, areaIndex, nextArea;
         var queryCounter = this.getQueryCounter();
@@ -3260,7 +3308,7 @@ class Scene
         }
 
         return overlappingAreas;
-    };
+    }
 
     //
     // checkAreaDynamicNodes
@@ -3353,7 +3401,7 @@ class Scene
         {
             checkAreaNode.call(rootNodes[n]);
         }
-    };
+    }
 
     //
     // initializeAreas
@@ -3394,7 +3442,7 @@ class Scene
             }
         }
         this.areaInitalizeStaticNodesChangeCounter = this.staticNodesChangeCounter;
-    };
+    }
 
     //
     // createMaterial
@@ -3516,7 +3564,7 @@ class Scene
         material.reference.subscribeDestroyed(this.onMaterialDestroyed);
 
         return material;
-    };
+    }
 
     //
     // loadMaterials
@@ -3553,7 +3601,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // loadSkeletons
@@ -3587,10 +3635,345 @@ class Scene
                     invLTMs[b] = m43Build.apply(md, invLTM);
                     bindPoses[b] = m43Build.apply(md, bindPose);
                 }
+
+                if (loadParams.skeletonNamePrefix)
+                {
+                    s = loadParams.skeletonNamePrefix + s;
+                }
+
                 this.skeletons[s] = skeleton;
             }
         }
-    };
+    }
+
+    // For cases where > 1-index per vertex we process it to create 1-index per vertex from data
+    _updateSingleIndexTables(surface,
+                             indicesPerVertex,
+                             verticesAsIndexLists,
+                             verticesAsIndexListTable,
+                             numUniqueVertices)
+    {
+        var faces = surface.faces;
+        var numIndices = faces.length;
+
+        var numUniqueVertIndex = verticesAsIndexLists.length;
+        var vertIdx = 0;
+        var srcIdx = 0;
+        var n, maxn, index;
+        var currentLevel, nextLevel, thisVertIndex;
+
+        while (srcIdx < numIndices)
+        {
+            currentLevel = verticesAsIndexListTable;
+            n = srcIdx;
+            maxn = (srcIdx + (indicesPerVertex - 1));
+            do
+            {
+                index = faces[n];
+                nextLevel = currentLevel[index];
+                if (nextLevel === undefined)
+                {
+                    currentLevel[index] = nextLevel = {};
+                }
+                currentLevel = nextLevel;
+                n += 1;
+            }
+            while (n < maxn);
+
+            index = faces[n];
+            thisVertIndex = currentLevel[index];
+            if (thisVertIndex === undefined)
+            {
+                // New index - add to tables
+                currentLevel[index] = thisVertIndex = numUniqueVertices;
+                numUniqueVertices += 1;
+
+                // Copy indices
+                n = srcIdx;
+                do
+                {
+                    verticesAsIndexLists[numUniqueVertIndex] = faces[n];
+                    numUniqueVertIndex += 1;
+                    n += 1;
+                }
+                while (n < maxn);
+
+                verticesAsIndexLists[numUniqueVertIndex] = index;
+                numUniqueVertIndex += 1;
+            }
+
+            faces[vertIdx] = thisVertIndex;
+            vertIdx += 1;
+
+            srcIdx += indicesPerVertex;
+        }
+
+        surface.faces.length = vertIdx;
+
+        return numUniqueVertices;
+    }
+
+    _isSequentialIndices(indices, numIndices): boolean
+    {
+        var baseIndex = indices[0];
+        var n;
+        for (n = 1; n < numIndices; n += 1)
+        {
+            if (indices[n] !== (baseIndex + n))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // try to group sequential renderables into a single draw call
+    _optimizeRenderables(node: SceneNode, gd: GraphicsDevice): void
+    {
+        var renderables = node.renderables;
+        var numRenderables = renderables.length;
+        var triangles = gd.PRIMITIVE_TRIANGLES;
+        var vbMap = {};
+        var n, renderable, geometry, surface, vbid, ibMap, ibid, group;
+        var foundGroup = false;
+        for (n = 0; n < numRenderables; n += 1)
+        {
+            renderable = renderables[n];
+            surface = renderable.surface;
+            // we can only trivially group rigid triangle primitives
+            if (surface.primitive === triangles &&
+                renderable.geometryType === "rigid")
+            {
+                geometry = renderable.geometry;
+                vbid = geometry.vertexBuffer.id;
+                ibMap = vbMap[vbid];
+                if (ibMap === undefined)
+                {
+                    vbMap[vbid] = ibMap = {};
+                }
+                if (surface.indexBuffer)
+                {
+                    ibid = surface.indexBuffer.id;
+                }
+                else
+                {
+                    ibid = 'null';
+                }
+                group = ibMap[ibid];
+                if (group === undefined)
+                {
+                    ibMap[ibid] = [renderable];
+                }
+                else
+                {
+                    group.push(renderable);
+                    foundGroup = true;
+                }
+            }
+        }
+
+        function cloneSurface(surface: any): any
+        {
+            var clone = new surface.constructor();
+            var p;
+            for (p in surface)
+            {
+                if (surface.hasOwnProperty(p))
+                {
+                    clone[p] = surface[p];
+                }
+            }
+            return clone;
+        }
+
+        if (foundGroup)
+        {
+            var max = Math.max;
+            var min = Math.min;
+            var sequenceExtents = (this.float32ArrayConstructor ?
+                                   new this.float32ArrayConstructor(6) :
+                                   new Array(6));
+            var sequenceFirstRenderable, sequenceLength, sequenceVertexOffset, sequenceIndicesEnd, sequenceNumVertices;
+            var groupSize, g, lastMaterial, material, center, halfExtents;
+
+            var flushSequence = function flushSequenceFn()
+            {
+                var surface = cloneSurface(sequenceFirstRenderable.surface);
+                sequenceFirstRenderable.surface = surface;
+                if (surface.indexBuffer)
+                {
+                    surface.numIndices = (sequenceIndicesEnd - surface.first);
+                    surface.numVertices = sequenceNumVertices;
+                }
+                else
+                {
+                    surface.numVertices = (sequenceIndicesEnd - surface.first);
+                }
+
+                var c0 = (sequenceExtents[3] + sequenceExtents[0]) * 0.5;
+                var c1 = (sequenceExtents[4] + sequenceExtents[1]) * 0.5;
+                var c2 = (sequenceExtents[5] + sequenceExtents[2]) * 0.5;
+                if (c0 !== 0 ||
+                    c1 !== 0 ||
+                    c2 !== 0)
+                {
+                    var center = (this.float32ArrayConstructor ?
+                                  new this.float32ArrayConstructor(3) :
+                                  new Array(3));
+                    sequenceFirstRenderable.center = center;
+                    center[0] = c0;
+                    center[1] = c1;
+                    center[2] = c2;
+                }
+                else
+                {
+                    sequenceFirstRenderable.center = null;
+                }
+
+                var halfExtents = (this.float32ArrayConstructor ?
+                                   new this.float32ArrayConstructor(3) :
+                                   new Array(3));
+                sequenceFirstRenderable.halfExtents = halfExtents;
+                halfExtents[0] = (sequenceExtents[3] - sequenceExtents[0]) * 0.5;
+                halfExtents[1] = (sequenceExtents[4] - sequenceExtents[1]) * 0.5;
+                halfExtents[2] = (sequenceExtents[5] - sequenceExtents[2]) * 0.5;
+            };
+
+            numRenderables = 0;
+            for (vbid in vbMap)
+            {
+                if (vbMap.hasOwnProperty(vbid))
+                {
+                    ibMap = vbMap[vbid];
+                    for (ibid in ibMap)
+                    {
+                        if (ibMap.hasOwnProperty(ibid))
+                        {
+                            group = ibMap[ibid];
+                            groupSize = group.length;
+                            if (groupSize === 1)
+                            {
+                                renderables[numRenderables] = group[0];
+                                numRenderables += 1;
+                            }
+                            else
+                            {
+                                group.sort(function (a, b) {
+                                    return (a.geometry.vertexOffset - b.geometry.vertexOffset) || (a.surface.first - b.surface.first);
+                                });
+
+                                g = 0;
+                                lastMaterial = null;
+                                sequenceFirstRenderable = null;
+                                sequenceNumVertices = 0;
+                                sequenceVertexOffset = -1;
+                                sequenceIndicesEnd = 0;
+                                sequenceLength = 0;
+                                do
+                                {
+                                    renderable = group[g];
+                                    geometry = renderable.geometry;
+                                    surface = renderable.surface;
+                                    material = renderable.sharedMaterial;
+                                    center = renderable.center;
+                                    halfExtents = renderable.halfExtents;
+                                    if (sequenceVertexOffset !== geometry.vertexOffset ||
+                                        sequenceIndicesEnd !== surface.first ||
+                                        !lastMaterial ||
+                                        (lastMaterial !== material &&
+                                         !lastMaterial.isSimilar(material)))
+                                    {
+                                        if (0 < sequenceLength)
+                                        {
+                                            if (1 < sequenceLength)
+                                            {
+                                                flushSequence();
+                                            }
+
+                                            renderables[numRenderables] = sequenceFirstRenderable;
+                                            numRenderables += 1;
+                                        }
+
+                                        lastMaterial = material;
+                                        sequenceFirstRenderable = renderable;
+                                        sequenceNumVertices = 0;
+                                        sequenceLength = 1;
+                                        sequenceVertexOffset = geometry.vertexOffset;
+
+                                        if (center)
+                                        {
+                                            sequenceExtents[0] = (center[0] - halfExtents[0]);
+                                            sequenceExtents[1] = (center[1] - halfExtents[1]);
+                                            sequenceExtents[2] = (center[2] - halfExtents[2]);
+                                            sequenceExtents[3] = (center[0] + halfExtents[0]);
+                                            sequenceExtents[4] = (center[1] + halfExtents[1]);
+                                            sequenceExtents[5] = (center[2] + halfExtents[2]);
+                                        }
+                                        else
+                                        {
+                                            sequenceExtents[0] = -halfExtents[0];
+                                            sequenceExtents[1] = -halfExtents[1];
+                                            sequenceExtents[2] = -halfExtents[2];
+                                            sequenceExtents[3] = halfExtents[0];
+                                            sequenceExtents[4] = halfExtents[1];
+                                            sequenceExtents[5] = halfExtents[2];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        sequenceLength += 1;
+
+                                        if (center)
+                                        {
+                                            sequenceExtents[0] = min(sequenceExtents[0], (center[0] - halfExtents[0]));
+                                            sequenceExtents[1] = min(sequenceExtents[1], (center[1] - halfExtents[1]));
+                                            sequenceExtents[2] = min(sequenceExtents[2], (center[2] - halfExtents[2]));
+                                            sequenceExtents[3] = max(sequenceExtents[3], (center[0] + halfExtents[0]));
+                                            sequenceExtents[4] = max(sequenceExtents[4], (center[1] + halfExtents[1]));
+                                            sequenceExtents[5] = max(sequenceExtents[5], (center[2] + halfExtents[2]));
+                                        }
+                                        else
+                                        {
+                                            sequenceExtents[0] = min(sequenceExtents[0], -halfExtents[0]);
+                                            sequenceExtents[1] = min(sequenceExtents[1], -halfExtents[1]);
+                                            sequenceExtents[2] = min(sequenceExtents[2], -halfExtents[2]);
+                                            sequenceExtents[3] = max(sequenceExtents[3], halfExtents[0]);
+                                            sequenceExtents[4] = max(sequenceExtents[4], halfExtents[1]);
+                                            sequenceExtents[5] = max(sequenceExtents[5], halfExtents[2]);
+                                        }
+                                    }
+
+                                    if (surface.indexBuffer)
+                                    {
+                                        sequenceIndicesEnd = (surface.first + surface.numIndices);
+                                        sequenceNumVertices += surface.numVertices;
+                                    }
+                                    else
+                                    {
+                                        sequenceIndicesEnd = (surface.first + surface.numVertices);
+                                    }
+
+                                    g += 1;
+                                }
+                                while (g < groupSize);
+
+                                debug.assert(0 < sequenceLength);
+
+                                if (1 < sequenceLength)
+                                {
+                                    flushSequence();
+                                }
+
+                                renderables[numRenderables] = sequenceFirstRenderable;
+                                numRenderables += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            renderables.length = numRenderables;
+        }
+    }
 
     //
     // loadShape
@@ -3610,7 +3993,7 @@ class Scene
             var fileShape = fileShapes[fileShapeName];
             var sources = fileShape.sources;
             var inputs = fileShape.inputs;
-            var skeletonName = fileShape.skeleton;
+            var skeletonName = loadParams.skeletonNamePrefix ? loadParams.skeletonNamePrefix + fileShape.skeleton : fileShape.skeleton;
 
             shape = Geometry.create();
 
@@ -3896,90 +4279,28 @@ class Scene
                     }
                 }
 
-                // For cases where > 1-index per vertex we process it to create 1-index per vertex from data
-
-                var updateSingleIndexTables =
-                    function updateSingleIndexTablesFn(surface, indicesPerVertex,
-                                                       verticesAsIndexLists,
-                                                       verticesAsIndexListTable)
-                {
-                    var faces = surface.faces;
-                    var numVerts = faces.length / indicesPerVertex;
-
-                    var singleIndices = new Array(numVerts);
-                    var thisVert = new Array(indicesPerVertex);
-
-                    var vertIdx = 0;
-                    var srcIdx = 0;
-                    var nextSrcIdx = indicesPerVertex;
-                    var numUniqueVertIndex = verticesAsIndexLists.length;
-                    var numUniqueVertices = ((numUniqueVertIndex / indicesPerVertex) | 0 );
-                    var n;
-
-                    while (srcIdx < faces.length)
-                    {
-                        n = 0;
-                        do
-                        {
-                            thisVert[n] = faces[srcIdx];
-                            n += 1;
-                            srcIdx += 1;
-                        }
-                        while (srcIdx < nextSrcIdx);
-
-                        var thisVertHash = thisVert.join(",");
-
-                        var thisVertIndex = verticesAsIndexListTable[thisVertHash];
-                        if (thisVertIndex === undefined)
-                        {
-                            // New index - add to tables
-                            thisVertIndex = numUniqueVertices;
-                            verticesAsIndexListTable[thisVertHash] = thisVertIndex;
-                            numUniqueVertices += 1;
-
-                            // Copy indices
-                            n = 0;
-                            do
-                            {
-                                verticesAsIndexLists[numUniqueVertIndex] = thisVert[n];
-                                numUniqueVertIndex += 1;
-                                n += 1;
-                            }
-                            while (n < indicesPerVertex);
-                        }
-
-                        singleIndices[vertIdx] = thisVertIndex;
-
-                        nextSrcIdx += indicesPerVertex;
-                        vertIdx += 1;
-                    }
-
-                    surface.faces = singleIndices;
-                };
-
                 if (indicesPerVertex > 1)
                 {
                     // [ [a,b,c], [d,e,f], ... ]
+                    totalNumVertices = 0;
+
                     var verticesAsIndexLists = [];
                     var verticesAsIndexListTable = {};
-
                     var shapeSurfaces = shape.surfaces;
                     for (s in shapeSurfaces)
                     {
                         if (shapeSurfaces.hasOwnProperty(s))
                         {
                             var shapeSurface = shapeSurfaces[s];
-                            updateSingleIndexTables(shapeSurface,
-                                                    indicesPerVertex,
-                                                    verticesAsIndexLists,
-                                                    verticesAsIndexListTable);
+                            totalNumVertices = this._updateSingleIndexTables(shapeSurface,
+                                                                             indicesPerVertex,
+                                                                             verticesAsIndexLists,
+                                                                             verticesAsIndexListTable,
+                                                                             totalNumVertices);
                         }
                     }
 
                     verticesAsIndexListTable = null;
-
-                    // recalc totalNumVertices
-                    totalNumVertices = ((verticesAsIndexLists.length / indicesPerVertex) | 0);
 
                     // Recreate vertex buffer data on the vertexSources
                     for (vs = 0; vs < numVertexSources; vs += 1)
@@ -4099,21 +4420,14 @@ class Scene
                 }
                 vertexBuffer.setData(vertexData, baseIndex, totalNumVertices);
 
-                // Count total num indices
-                var isSequentialIndices = function isSequentialIndicesFn(indices, numIndices)
+                if (keepVertexData &&
+                    !useFloatArray &&
+                    this.float32ArrayConstructor)
                 {
-                    var baseIndex = indices[0];
-                    var n;
-                    for (n = 1; n < numIndices; n += 1)
-                    {
-                        if (indices[n] !== (baseIndex + n))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
+                    vertexData = new this.float32ArrayConstructor(vertexData);
+                }
 
+                // Count total num indices
                 var totalNumIndices = 0;
                 var numIndices;
 
@@ -4126,7 +4440,7 @@ class Scene
                         if (faces)
                         {
                             numIndices = faces.length;
-                            if (!isSequentialIndices(faces, numIndices))
+                            if (!this._isSequentialIndices(faces, numIndices))
                             {
                                 totalNumIndices += numIndices;
                             }
@@ -4138,6 +4452,34 @@ class Scene
                 if (0 < totalNumIndices)
                 {
                     maxIndex = (baseIndex + totalNumVertices - 1);
+                    if (maxIndex >= 65536)
+                    {
+                        if (totalNumVertices <= 65536)
+                        {
+                            // Assign vertex offsets in blocks of 16bits so we can optimize renderables togheter
+                            var blockBase = ((baseIndex >>> 16) << 16);
+                            baseIndex -= blockBase;
+                            if ((baseIndex + totalNumVertices) > 65536)
+                            {
+                                blockBase += (baseIndex + totalNumVertices - 65536);
+                                baseIndex = (65536 - totalNumVertices);
+                                maxIndex = 65535;
+                            }
+                            else
+                            {
+                                maxIndex = (baseIndex + totalNumVertices - 1);
+                            }
+                            shape.vertexOffset = blockBase;
+                        }
+                        else
+                        {
+                            shape.vertexOffset = 0;
+                        }
+                    }
+                    else
+                    {
+                        shape.vertexOffset = 0;
+                    }
 
                     indexBufferAllocation = indexBufferManager.allocate(totalNumIndices,
                                                                         (maxIndex < 65536 ? 'USHORT' : 'UINT'));
@@ -4184,7 +4526,7 @@ class Scene
                             numIndices = faces.length;
 
                             //See if they are all sequential, in which case we don't need an index buffer
-                            if (!isSequentialIndices(faces, numIndices))
+                            if (!this._isSequentialIndices(faces, numIndices))
                             {
                                 destSurface.indexBuffer = indexBuffer;
                                 destSurface.numIndices = numIndices;
@@ -4345,7 +4687,7 @@ class Scene
             throw "Geometry '" + shapeName + "' already exists in the scene";
         }
         return shape;
-    };
+    }
 
     streamShapes(loadParams, postLoadFn)
     {
@@ -4364,15 +4706,6 @@ class Scene
         {
             if (fileShapes.hasOwnProperty(fileShapeName))
             {
-                // Early check whether a geometry of the same name is
-                // already scheduled to load.
-
-                if (shapesToLoad[fileShapeName] ||
-                    customShapesToLoad[fileShapeName])
-                {
-                    throw "Multiple geometries named '" + fileShapeName + "'";
-                }
-
                 var fileShape = fileShapes[fileShapeName];
                 if (fileShape.meta && fileShape.meta.graphics)
                 {
@@ -4438,7 +4771,7 @@ class Scene
         {
             yieldFn(postLoadFn);
         }
-    };
+    }
 
     //
     // Load lights
@@ -4529,7 +4862,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // loadNodes
@@ -4543,13 +4876,15 @@ class Scene
         var baseScene = loadParams.baseScene;
         var keepCameras = loadParams.keepCameras;
         var keepLights = loadParams.keepLights;
+        var optimizeHierarchy = loadParams.optimizeHierarchy;
+        var optimizeRenderables = loadParams.optimizeRenderables;
         var disableNodes = loadParams.disabled;
 
         if (!loadParams.append)
         {
             this.clearRootNodes();
-            this.staticSpatialMap = AABBTree.create(true);
-            this.dynamicSpatialMap = AABBTree.create();
+            this.staticSpatialMap.clear();
+            this.dynamicSpatialMap.clear();
         }
 
         var loadCustomGeometryInstanceFn = loadParams.loadCustomGeometryInstanceFn;
@@ -4568,6 +4903,65 @@ class Scene
         var baseMatrix = loadParams.baseMatrix;
         var nodesNamePrefix = loadParams.nodesNamePrefix;
         var shapesNamePrefix = loadParams.shapesNamePrefix;
+
+        function optimizeNode(parent, child)
+        {
+            function matrixIsIdentity(matrix)
+            {
+                var abs = Math.abs;
+                return (abs(1.0 - matrix[0]) < 1e-5 &&
+                        abs(0.0 - matrix[1]) < 1e-5 &&
+                        abs(0.0 - matrix[2]) < 1e-5 &&
+                        abs(0.0 - matrix[3]) < 1e-5 &&
+                        abs(1.0 - matrix[4]) < 1e-5 &&
+                        abs(0.0 - matrix[5]) < 1e-5 &&
+                        abs(0.0 - matrix[6]) < 1e-5 &&
+                        abs(0.0 - matrix[7]) < 1e-5 &&
+                        abs(1.0 - matrix[8]) < 1e-5 &&
+                        abs(0.0 - matrix[9]) < 1e-5 &&
+                        abs(0.0 - matrix[10]) < 1e-5 &&
+                        abs(0.0 - matrix[11]) < 1e-5);
+            }
+
+            if ((!child.camera || !parent.camera) &&
+                child.disabled === parent.disabled &&
+                child.dynamic === parent.dynamic &&
+                child.kinematic === parent.kinematic &&
+                matrixIsIdentity(child.local))
+            {
+                if (child.renderables)
+                {
+                    parent.addRenderableArray(child.renderables);
+                }
+
+                if (child.lightInstances)
+                {
+                    parent.addLightInstanceArray(child.lightInstances);
+                }
+
+                if (child.camera)
+                {
+                    parent.camera = child.camera;
+                }
+
+                var grandChildren = child.children;
+                if (grandChildren)
+                {
+                    var n;
+                    var numGrandChildren = grandChildren;
+                    for (n = 0; n < numGrandChildren; n += 1)
+                    {
+                        if (!optimizeNode(parent, child))
+                        {
+                            parent.addChild(child);
+                        }
+                    }
+                }
+                return true;
+            }
+
+            return false;
+        }
 
         var copyNode = function copyNodeFn(nodeName, parentNodePath,
                                            baseNode, materialSkin)
@@ -4746,7 +5140,6 @@ class Scene
             }
 
             var fileChildren = this.nodes;
-
             if (fileChildren)
             {
                 for (var c in fileChildren)
@@ -4760,10 +5153,23 @@ class Scene
                                 this.skin || materialSkin);
                             if (child)
                             {
-                                node.addChild(child);
+                                if (!optimizeHierarchy ||
+                                    !optimizeNode(node, child))
+                                {
+                                    node.addChild(child);
+                                }
                             }
                         }
                     }
+                }
+            }
+
+            if (optimizeRenderables)
+            {
+                if (node.renderables &&
+                    1 < node.renderables.length)
+                {
+                    currentScene._optimizeRenderables(node, gd);
                 }
             }
 
@@ -4862,7 +5268,7 @@ class Scene
                 }
             }
         }
-    };
+    }
 
     //
     // loadAreas
@@ -5057,7 +5463,7 @@ class Scene
                     neg: fileBspNode.neg
                 };
         }
-    };
+    }
 
     //
     // load
@@ -5112,7 +5518,7 @@ class Scene
         {
             sceneCompleteLoadStage();
         }
-    };
+    }
 
     planeNormalize(a, b, c, d, dst?)
     {
@@ -5145,9 +5551,9 @@ class Scene
         }
 
         return res;
-    };
+    }
 
-    isInsidePlanesAABB(extents, planes) : bool
+    isInsidePlanesAABB(extents, planes) : boolean
     {
         var n0 = extents[0];
         var n1 = extents[1];
@@ -5171,9 +5577,9 @@ class Scene
         }
         while (n < numPlanes);
         return true;
-    };
+    }
 
-    isFullyInsidePlanesAABB(extents, planes) : bool
+    isFullyInsidePlanesAABB(extents, planes) : boolean
     {
         var n0 = extents[0];
         var n1 = extents[1];
@@ -5197,9 +5603,9 @@ class Scene
         }
         while (n < numPlanes);
         return true;
-    };
+    }
 
-    extractFrustumPlanes(camera) : any[] // v4[]
+    extractFrustumPlanes(camera) : any[]
     {
         var planeNormalize = this.planeNormalize;
         var m = camera.viewProjectionMatrix;
@@ -5242,7 +5648,7 @@ class Scene
         this.nearPlane = planeNormalize((m3 + m2), (m7 + m6), (m11 + m10), -(m15 + m14), this.nearPlane);  // near
 
         return planes;
-    };
+    }
 
     //
     // calculateHullScreenExtents
@@ -5438,7 +5844,7 @@ class Scene
         screenExtents[2] = maxX;
         screenExtents[3] = maxY;
         return screenExtents;
-    };
+    }
 
     //
     // calculateLightsScreenExtents
@@ -5537,7 +5943,7 @@ class Scene
             }
             while (n < numVisibleLights);
         }
-    };
+    }
 
     //
     // destroy
@@ -5555,22 +5961,22 @@ class Scene
             this.indexBufferManager.destroy();
             delete this.indexBufferManager;
         }
-    };
+    }
 
     getQueryCounter()
     {
         var queryCounter = this.queryCounter;
         this.queryCounter = (queryCounter + 1);
         return queryCounter;
-    };
+    }
 
     // Constructor function
-    static create(mathDevice: MathDevice) : Scene
+    static create(mathDevice: MathDevice, staticSpatialMap?: SpatialMap, dynamicSpatialMap?: SpatialMap) : Scene
     {
-        return new Scene(mathDevice);
-    };
+        return new Scene(mathDevice, staticSpatialMap, dynamicSpatialMap);
+    }
 
-};
+}
 
 // Detect correct typed arrays
 (function () {

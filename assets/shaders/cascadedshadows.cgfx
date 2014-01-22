@@ -1,0 +1,229 @@
+// Copyright (c) 2013 Turbulenz Limited
+
+#include "skinning.cgh"
+
+//
+// Uniform variables
+//
+float4x3 world;
+float3x4 viewTranspose;
+float4x4 shadowProjectionTranspose;
+float4 shadowDepth;
+
+
+float4 uvScaleOffset;
+float2 pixelOffset;
+
+sampler2D shadowMap = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+//
+// Utils
+//
+
+float3 EncodeFloatRGB24(float v)
+{
+    if (v >= 1.0)
+    {
+        return float3(1.0, 1.0, 1.0);
+    }
+    else
+    {
+        float3 enc = frac(saturate(v) * float3(65536.0, 256.0, 1.0)) * 256.0;
+        enc.yz -= (enc.xy / 256.0);
+        return float3(enc / 255.0);
+    }
+}
+
+float DecodeFloatRGBA32(float4 rgba)
+{
+    if (rgba.w > (1.0 / 255.0))
+    {
+        return saturate(dot(rgba.xyz, float3(255.0/16777216.0, 255.0/65536.0, 255.0/256.0)));
+    }
+    else
+    {
+        return 1.0;
+    }
+}
+
+float4 EncodeFloatRGB16(float v)
+{
+    v = saturate(v);
+    float r = floor(v * (31.0 * 65535.0 / 63488.0));
+    float rg = r * (63488.0 * 63.0 / (31.0 * 2016.0));
+    float g = floor(v * (65535.0  * 63.0 / 2016.0) - rg);
+    float b = ((v * (65535.0 / 31.0) - r * (63488.0 / (31.0 * 31.0))) - g * (2016.0 / (63.0 * 31.0)));
+    return float4(r * (1.0 / 31.0), g * (1.0 / 63.0), b, 1.0);
+}
+
+float DecodeFloatRGB16(float4 rgba)
+{
+    return dot(rgba.xyz, float3(63488.0 / 65535.0, 2016.0 / 65535.0, 31.0 / 65535.0));
+}
+
+float log_conv(float x0, float X, float y0, float Y)
+{
+    return (X + log(x0 + (y0 * exp(Y - X))));
+}
+
+//
+// Vertex programs
+//
+void vp(in float3 INPosition : POSITION,
+        out float4 OUTPosition : POSITION,
+        out float  OUTDepth    : TEXCOORD0)
+{
+    float4 worldPosition = float4(((INPosition.x * world[0]) +
+                                   (INPosition.y * world[1]) +
+                                   (INPosition.z * world[2]) +
+                                   world[3]),
+                                  1.0);
+
+    float4 viewPosition;
+    viewPosition.x = dot(worldPosition, viewTranspose[0]);
+    viewPosition.y = dot(worldPosition, viewTranspose[1]);
+    viewPosition.z = dot(worldPosition, viewTranspose[2]);
+    viewPosition.w = 1.0;
+
+    OUTPosition.x = dot(viewPosition, shadowProjectionTranspose[0]);
+    OUTPosition.y = dot(viewPosition, shadowProjectionTranspose[1]);
+    OUTPosition.z = dot(viewPosition, shadowProjectionTranspose[2]);
+    OUTPosition.w = dot(viewPosition, shadowProjectionTranspose[3]);
+
+    OUTDepth = ((shadowDepth.z * viewPosition.z) + shadowDepth.w);
+}
+
+void vp_skinned(in float3 INPosition : POSITION,
+                in float4 INIndices  : BLENDINDICES,
+                in float4 INWeights  : BLENDWEIGHT,
+                out float4 OUTPosition : POSITION,
+                out float  OUTDepth    : TEXCOORD0)
+{
+    float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
+
+    float4 skinTempPosition = float4(INPosition, 1.0);
+    float3 Position;
+    Position.x = dot(skinTempPosition, skinMatrix[0]);
+    Position.y = dot(skinTempPosition, skinMatrix[1]);
+    Position.z = dot(skinTempPosition, skinMatrix[2]);
+
+    float4 worldPosition = float4(((Position.x * world[0]) +
+                                   (Position.y * world[1]) +
+                                   (Position.z * world[2]) +
+                                   world[3]),
+                                  1.0);
+
+    float4 viewPosition;
+    viewPosition.x = dot(worldPosition, viewTranspose[0]);
+    viewPosition.y = dot(worldPosition, viewTranspose[1]);
+    viewPosition.z = dot(worldPosition, viewTranspose[2]);
+    viewPosition.w = 1.0;
+
+    OUTPosition.x = dot(viewPosition, shadowProjectionTranspose[0]);
+    OUTPosition.y = dot(viewPosition, shadowProjectionTranspose[1]);
+    OUTPosition.z = dot(viewPosition, shadowProjectionTranspose[2]);
+    OUTPosition.w = dot(viewPosition, shadowProjectionTranspose[3]);
+
+    OUTDepth = ((shadowDepth.z * viewPosition.z) + shadowDepth.w);
+}
+
+void vp_blur(in float4 INPosition : POSITION,
+             in float2 INUV       : TEXCOORD0,
+             out float4 OUTPosition : POSITION,
+             out float2 OUTUV       : TEXCOORD0)
+{
+    OUTPosition = INPosition;
+    OUTUV       = ((INUV * uvScaleOffset.xy) + uvScaleOffset.zw);
+}
+
+//
+// Fragment programs
+//
+float4 fp(in float INDepth : TEXCOORD0) : COLOR
+{
+    return float4(EncodeFloatRGB24(INDepth), 1.0);
+}
+
+float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
+{
+    float4 sample0 = tex2D(shadowMap, (UV - (2.0 * pixelOffset)));
+    float4 sample1 = tex2D(shadowMap, (UV - (1.0 * pixelOffset)));
+    float4 sample2 = tex2D(shadowMap,  UV);
+    float4 sample3 = tex2D(shadowMap, (UV + (1.0 * pixelOffset)));
+    float4 sample4 = tex2D(shadowMap, (UV + (2.0 * pixelOffset)));
+
+    const float c = (1.0 / 5.0);
+
+    float alpha = (sample0.w + sample1.w + sample2.w + sample3.w + sample4.w) * c;
+    if (alpha < (1.0 / 255.0))
+    {
+        return float4(1.0, 1.0, 1.0, 0.0);
+    }
+
+    float value0 = DecodeFloatRGBA32(sample0);
+    float value1 = DecodeFloatRGBA32(sample1);
+    float value2 = DecodeFloatRGBA32(sample2);
+    float value3 = DecodeFloatRGBA32(sample3);
+    float value4 = DecodeFloatRGBA32(sample4);
+
+    float accum = log_conv(c, value0, c, value1);
+    accum = log_conv(1.0, accum, c, value2);
+    accum = log_conv(1.0, accum, c, value3);
+    accum = log_conv(1.0, accum, c, value4);
+
+    return float4(EncodeFloatRGB24(accum), alpha);
+}
+
+//
+// Techniques
+//
+technique rigid
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp();
+    }
+}
+
+technique skinned
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = true;
+        CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile glslv vp_skinned();
+        FragmentProgram = compile glslf fp();
+    }
+}
+
+technique blur
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile glslv vp_blur();
+        FragmentProgram = compile glslf fp_blur();
+    }
+}

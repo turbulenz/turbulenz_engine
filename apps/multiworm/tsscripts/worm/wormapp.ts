@@ -25,8 +25,8 @@ interface Technique2DParameters extends TechniqueParameters
 class Application
 {
     // Ensures shutdown function is only called once
-    hasShutDown               : bool;
-    runInEngine               : bool; // TODO: seems not to be used
+    hasShutDown               : boolean;
+    runInEngine               : boolean; // TODO: seems not to be used
 
     previousGameUpdateTime    : number;
     gameSession               : GameSession;
@@ -43,13 +43,13 @@ class Application
     devices                   : any;
     managers                  : any;
     others                    : any;
-    isHost                    : bool;
+    isHost                    : boolean;
     connectionTime            : number;
     previousHeartbeatTime     : number;
     lastSentMessageTime       : number;
     frameCounter              : number;
     hostFrameCounter          : number;
-    needToRender              : bool;
+    needToRender              : boolean;
     requestHandler            : RequestHandler;
     intervalID                : number;
     mappingTable              : any;
@@ -59,7 +59,7 @@ class Application
     technique2D               : Technique;
     technique2Dparameters     : Technique2DParameters;
 
-    hasShutdown               : bool;
+    hasShutdown               : boolean;
 
     gameSettings = {
         width : 30,  // Must be a multiple of 2
@@ -88,7 +88,7 @@ class Application
     errorCallback(msg)
     {
         window.alert(msg);
-    };
+    }
 
     // Initialise the application
     init()
@@ -115,7 +115,7 @@ class Application
             {func : this.enterLoadingLoop, isDependent : true}
         ];
         this.enterCallbackChain(this, creationFunctions);
-    };
+    }
 
     // Update function called in main loop
     update(currentTime)
@@ -158,7 +158,7 @@ class Application
         }
 
         return false;
-    };
+    }
 
     // Update game state
     updateGame(gameStep, heartbeat)
@@ -260,7 +260,7 @@ class Application
         }
 
         return this.needToRender;
-    };
+    }
 
     // Render function called in main loop
     render(currentTime)
@@ -282,7 +282,7 @@ class Application
         }
 
         this.needToRender = false;
-    };
+    }
 
     // Load UI
     loadUI()
@@ -290,7 +290,7 @@ class Application
         var managers = this.managers;
         managers.fontManager.load('fonts/hero.fnt');
         managers.shaderManager.load('shaders/font.cgfx');
-    };
+    }
 
     hasUILoaded()
     {
@@ -319,7 +319,7 @@ class Application
         }
 
         return false;
-    };
+    }
 
     // Draw UI
     drawUI()
@@ -449,7 +449,7 @@ class Application
                     });
             }
         }
-    };
+    }
 
     // Checks for shading language support
     hasShaderSupport()
@@ -463,7 +463,7 @@ class Application
             return false;
         }
         return true;
-    };
+    }
 
     // Create the device interfaces required
     createDevices()
@@ -499,7 +499,7 @@ class Application
         managers.fontManager = FontManager.create(graphicsDevice, requestHandler, null, errorCallback);
 
         return true;
-    };
+    }
 
     // Calls functions in order
     enterCallbackChain(context, functions)
@@ -549,7 +549,7 @@ class Application
 
         // Start the async callback chain
         callNextFunction();
-    };
+    }
 
     // Creates the game with the settings provided
     createGame()
@@ -566,7 +566,7 @@ class Application
                                 inputDevice.mouseCodes);
 
         this.createInputDeviceCallbacks();
-    };
+    }
 
     // Adds onKeyDown functions to inputDevice
     createInputDeviceCallbacks()
@@ -587,26 +587,26 @@ class Application
 
         inputDevice.addEventListener('keydown', onKeyDown);
         inputDevice.addEventListener('mousedown', onMouseDown);
-    };
+    }
 
     // Create GameLeaderboards
     createGameLeaderboards(callback)
     {
         this.leaderboards = GameLeaderboards.create(this.leaderboardManager, callback);
-    };
+    }
 
     // Create GameBadges
     createGameBadges(callback)
     {
         this.badges = GameBadges.create(this.badgeManager, callback);
-    };
+    }
 
     // Create HTML Writer
     createHTMLWriter()
     {
         // Must be created after badges, leaderboards, and game have been initialised
         this.htmlWriter = HtmlWriter.create(this.leaderboards, this.badges, this.game);
-    };
+    }
 
     // Create multiplayer session
     startMultiplayerSession()
@@ -777,7 +777,7 @@ class Application
                                                                multiplayerSessionSuccess,
                                                                multiplayerSessionCreateError);
         }
-    };
+    }
 
     // Create game session
     createGameSession(callback)
@@ -785,19 +785,19 @@ class Application
         this.gameSession = TurbulenzServices.createGameSession(this.requestHandler, callback);
         // Setup static teamlist for ordering teams
         this.gameSession.setTeamInfo(['Worms', 'Snakes']);
-    };
+    }
 
     // Create a user profile
     createUserProfile(callback)
     {
         this.userProfile = TurbulenzServices.createUserProfile(this.requestHandler, callback);
-    };
+    }
 
     // Create mapping table
     createMappingTable(callback)
     {
         this.mappingTable = TurbulenzServices.createMappingTable(this.requestHandler, this.gameSession, callback);
-    };
+    }
 
     // Create leaderboard manager
     createLeaderboardManager(callback)
@@ -814,7 +814,7 @@ class Application
                                                                              this.gameSession,
                                                                              callback,
                                                                              createLeaderboardManagerError);
-    };
+    }
 
     // Create badge manager
     createBadgeManager()
@@ -824,13 +824,13 @@ class Application
         {
             this.badgeManager = TurbulenzServices.createBadgeManager(this.requestHandler, this.gameSession);
         }
-    };
+    }
 
     createMultiplayerSessionManager()
     {
         this.multiplayerSessionManager = TurbulenzServices.createMultiplayerSessionManager(this.requestHandler,
             this.gameSession);
-    };
+    }
 
     // Starts loading scene and creates an interval to check loading progress
     enterLoadingLoop()
@@ -856,7 +856,7 @@ class Application
             return that.loadingStateLoop();
         }
         this.intervalID = TurbulenzEngine.setInterval(localLoadingStateLoop, (1000 / 10));
-    };
+    }
 
     // Called until assets have been loaded at which point the connecting loop is entered
     loadingStateLoop()
@@ -878,7 +878,7 @@ class Application
 
             this.intervalID = TurbulenzEngine.setInterval(localConnectingStateLoop, (1000 / 10));
         }
-    };
+    }
 
     // Called until connected to the multiplayer session at which point the main loop is entered
     connectingStateLoop()
@@ -925,7 +925,7 @@ class Application
                 }
             }
         }
-    };
+    }
 
     mainStateLoop()
     {
@@ -934,7 +934,7 @@ class Application
         {
             this.render(currentTime);
         }
-    };
+    }
 
     onMessage(senderID, messageType, messageData)
     {
@@ -963,7 +963,7 @@ class Application
             this.onPongMessage(senderID, messageData);
             break;
         }
-    };
+    }
 
     onJoiningMessage(senderID)
     {
@@ -1070,7 +1070,7 @@ class Application
             // Send new player current game state
             multiplayerSession.sendTo(senderID, networkIds.update, JSON.stringify(updateData));
         }
-    };
+    }
 
     onUpdateMessage(senderID, messageData)
     {
@@ -1180,7 +1180,7 @@ class Application
                 }
             }
         }
-    };
+    }
 
     onLeavingMessage(senderID)
     {
@@ -1192,7 +1192,7 @@ class Application
 
             this.previousHeartbeatTime = 0; // Force a checkOthers
         }
-    };
+    }
 
     onPingMessage(senderID, messageData)
     {
@@ -1208,7 +1208,7 @@ class Application
                 this.multiplayerSession.sendTo(senderID, this.networkIds.pong, JSON.stringify(pingData));
             }
         }
-    };
+    }
 
     onPongMessage(senderID, messageData)
     {
@@ -1267,7 +1267,7 @@ class Application
                 other.time = ((pongData.pong * 0.001) + (0.5 * latency));
             }
         }
-    };
+    }
 
     // Migrate host to player with lower index
     migrateHost()
@@ -1291,7 +1291,7 @@ class Application
         this.isHost = true;
 
         //Utilities.log("You have become the host of the game!");
-    };
+    }
 
     // Check state of others
     checkOthers()
@@ -1341,7 +1341,7 @@ class Application
                 while (n < numStale);
             }
         }
-    };
+    }
 
     // is anyone listening?
     hasOthers()
@@ -1356,7 +1356,7 @@ class Application
             }
         }
         return false;
-    };
+    }
 
     // Attempts to free memory - called from onbeforeunload and/or TurbulenzEngine.onUnload
     shutdown()
@@ -1408,10 +1408,10 @@ class Application
             // Clear native engine references
             this.devices = null;
         }
-    };
+    }
 
     // Application constructor function
-    static create(runInEngine?: bool)
+    static create(runInEngine?: boolean)
     {
         var application = new Application();
 
@@ -1448,5 +1448,5 @@ class Application
         application.technique2Dparameters = null;
 
         return application;
-    };
-};
+    }
+}

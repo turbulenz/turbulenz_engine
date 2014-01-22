@@ -5,53 +5,63 @@
 /*global TouchEvent: false*/
 /*global TurbulenzEngine: false*/
 
-/// <reference path="touchevent.ts" />
-
 //
 // WebGLInputDevice
 //
-interface WebGLInputDevice extends InputDevice
+class WebGLInputDevice implements InputDevice
 {
-    lastX: number;
-    lastY: number;
+    static version = 1;
 
-    isMouseLocked: bool;
-    isHovering: bool;
-    isWindowFocused: bool;
-    isCursorHidden: bool;
-    isOutsideEngine: bool;
+    // We'd like to use { [key: string]: number }, but it doesn't
+    // allow keyCodes.A, etc.  See comment in InputDevice decl.
 
-    touches: any;
+    keyCodes                     : any; // prototype
+    mouseCodes                   : any; // prototype
+    padCodes                     : any; // prototype
 
-    boundFunctions: any;
-    elementEventFlags: any;
+    lastX                        : number;
+    lastY                        : number;
 
-    canvas: any;
-    previousCursor: string;
-    ignoreNextMouseMoves: number;
-    ignoreNextBlur: bool;
+    isMouseLocked                : boolean;
+    isHovering                   : boolean;
+    isWindowFocused              : boolean;
+    isCursorHidden               : boolean;
+    isOutsideEngine              : boolean;
 
-    // Used to screen out auto-repeats, dictionary from keycode to bool,
-    // true for each key currently pressed down
-    pressedKeys: any;
+    touches                      : any;
 
-    // keyCodes: any; // TODO: moving the definition into a class will
-    //                // automatically fill in this type info.
-    keyMap: any;   // Could use a literal here.  Can't do:
-                   // { [index: any]: number; };
+    boundFunctions               : any;
+    elementEventFlags            : any;
 
-    mouseMap: any; //{ 0: number; 1: number; 2: number; };
+    canvas                       : any;
+    previousCursor               : string;
+    ignoreNextMouseMoves         : number;
+    ignoreNextBlur               : boolean;
 
-    padButtons: number[];
-    padMap: any;
-    padAxisDeadZone: number;
-    maxAxisRange: number;
-    padTimestampUpdate: number;
+    // Used to screen out auto-repeats, dictionary from keycode to
+    // boolean, true for each key currently pressed down
+    pressedKeys                  : any;
 
-    keyCodeToUnicode: any;
+    keyMap                       : any;
+    mouseMap                     : any; //{ 0: number; 1: number; 2: number; };
 
-    macosx: bool;
-    webkit: bool;
+    padButtons                   : number[];
+    padMap                       : any;
+    padAxisDeadZone              : number;
+    maxAxisRange                 : number;
+    padTimestampUpdate           : number;
+
+    keyCodeToUnicode             : any;
+
+    private macosx               : boolean;
+    private webkit               : boolean;
+
+    private requestBrowserLock   : () => void;
+    private requestBrowserUnlock : () => void;
+    private onPointerLockChanged : () => void;
+    private onPointerLockError   : () => void;
+    private setEventHandlersPointerLock: () => void;
+    private setEventHandlersPointerUnlock: () => void;
 
     // Game event handlers.  TODO: introduce types
     handlers:
@@ -83,36 +93,9 @@ interface WebGLInputDevice extends InputDevice
         touchcancel : any[];
     };
 
-    onPointerLockChanged: { () : void; };
-    onPointerLockError: { (): void; };
-    setEventHandlersPointerLock: { (): void; };
-    setEventHandlersPointerUnlock: { (): void; };
-    requestBrowserLock: { () : void; };
-    requestBrowserUnlock: { (): void; };
-
-    setEventHandlersCanvas(): void;
-    setEventHandlersWindow(): void;
-    setEventHandlersFocus(): void;
-    setEventHandlersBlur(): void;
-    setEventHandlersTouch(): void;
-
-    destroy(): void;
-};
-declare var WebGLInputDevice :
-{
-    new(): WebGLInputDevice;
-    prototype: any;
-    create(canvas: any /*, params: any */);
-};
-
-function WebGLInputDevice() { return this; }
-WebGLInputDevice.prototype = {
-
-    version : 1,
-
     // Public API
 
-    update : function inputDeviceUpdateFn()
+    update()
     {
         if (!this.isWindowFocused)
         {
@@ -120,9 +103,9 @@ WebGLInputDevice.prototype = {
         }
 
         this.updateGamePad();
-    },
+    }
 
-    addEventListener : function addEventListenerFn(eventType, eventListener)
+    addEventListener(eventType, eventListener)
     {
         var i;
         var length;
@@ -148,9 +131,9 @@ WebGLInputDevice.prototype = {
                 eventHandlers.push(eventListener);
             }
         }
-    },
+    }
 
-    removeEventListener : function removeEventListenerFn(eventType, eventListener)
+    removeEventListener(eventType, eventListener)
     {
         var i;
         var length;
@@ -173,9 +156,9 @@ WebGLInputDevice.prototype = {
                 }
             }
         }
-    },
+    }
 
-    lockMouse : function lockMouseFn()
+    lockMouse()
     {
         if (this.isHovering &&
             this.isWindowFocused)
@@ -193,9 +176,9 @@ WebGLInputDevice.prototype = {
         {
             return false;
         }
-    },
+    }
 
-    unlockMouse : function unlockMouseFn()
+    unlockMouse()
     {
         if (this.isMouseLocked)
         {
@@ -227,14 +210,14 @@ WebGLInputDevice.prototype = {
         {
             return false;
         }
-    },
+    }
 
-    isLocked : function isLockedFn()
+    isLocked()
     {
         return this.isMouseLocked;
-    },
+    }
 
-    hideMouse : function hideMouseFn()
+    hideMouse()
     {
         if (this.isHovering)
         {
@@ -255,9 +238,9 @@ WebGLInputDevice.prototype = {
         {
             return false;
         }
-    },
+    }
 
-    showMouse : function showMouseFn()
+    showMouse()
     {
         if (this.isCursorHidden &&
             !this.isMouseLocked)
@@ -270,20 +253,20 @@ WebGLInputDevice.prototype = {
         {
             return false;
         }
-    },
+    }
 
-    isHidden : function isHiddenFn()
+    isHidden()
     {
         return this.isCursorHidden;
-    },
+    }
 
-    isFocused : function isFocused()
+    isFocused()
     {
         return this.isWindowFocused;
-    },
+    }
 
     // Cannot convert keycodes to unicode in javascript so return empty strings
-    convertToUnicode : function convertToUnicodeFn(keyCodeArray)
+    convertToUnicode(keyCodeArray: number[]): { [code: number]: string }
     {
         var keyCodeToUnicode = this.keyCodeToUnicode;
         var result = {};
@@ -298,154 +281,11 @@ WebGLInputDevice.prototype = {
         }
 
         return result;
-    },
-
-    // KeyCodes: List of key codes and their values
-
-    keyCodes :
-    {
-        A : 0,
-        B : 1,
-        C : 2,
-        D : 3,
-        E : 4,
-        F : 5,
-        G : 6,
-        H : 7,
-        I : 8,
-        J : 9,
-        K : 10,
-        L : 11,
-        M : 12,
-        N : 13,
-        O : 14,
-        P : 15,
-        Q : 16,
-        R : 17,
-        S : 18,
-        T : 19,
-        U : 20,
-        V : 21,
-        W : 22,
-        X : 23,
-        Y : 24,
-        Z : 25,
-        NUMBER_0 : 100,
-        NUMBER_1 : 101,
-        NUMBER_2 : 102,
-        NUMBER_3 : 103,
-        NUMBER_4 : 104,
-        NUMBER_5 : 105,
-        NUMBER_6 : 106,
-        NUMBER_7 : 107,
-        NUMBER_8 : 108,
-        NUMBER_9 : 109,
-        LEFT : 200,
-        RIGHT : 201,
-        UP : 202,
-        DOWN : 203,
-        LEFT_SHIFT : 300,
-        RIGHT_SHIFT : 301,
-        LEFT_CONTROL : 302,
-        RIGHT_CONTROL : 303,
-        LEFT_ALT : 304,
-        RIGHT_ALT : 305,
-        ESCAPE : 400,
-        TAB : 401,
-        SPACE :    402,
-        BACKSPACE : 403,
-        RETURN : 404,
-        GRAVE : 500,
-        MINUS : 501,
-        EQUALS : 502,
-        LEFT_BRACKET : 503,
-        RIGHT_BRACKET : 504,
-        SEMI_COLON : 505,
-        APOSTROPHE : 506,
-        COMMA : 507,
-        PERIOD : 508,
-        SLASH: 509,
-        BACKSLASH: 510,
-        F1 : 600,
-        F2 : 601,
-        F3 : 602,
-        F4 : 603,
-        F5 : 604,
-        F6 : 605,
-        F7 : 606,
-        F8 : 607,
-        F9 : 608,
-        F10 : 609,
-        F11 : 610,
-        F12 : 611,
-        NUMPAD_0 : 612,
-        NUMPAD_1 : 613,
-        NUMPAD_2 : 614,
-        NUMPAD_3 : 615,
-        NUMPAD_4 : 616,
-        NUMPAD_5 : 617,
-        NUMPAD_6 : 618,
-        NUMPAD_7 : 619,
-        NUMPAD_8 : 620,
-        NUMPAD_9 : 621,
-        NUMPAD_ENTER : 622,
-        NUMPAD_DIVIDE : 623,
-        NUMPAD_MULTIPLY : 624,
-        NUMPAD_ADD : 625,
-        NUMPAD_SUBTRACT : 626,
-        LEFT_WIN : 627,
-        RIGHT_WIN : 628,
-        LEFT_OPTION : 629,
-        RIGHT_OPTION : 630,
-        CAPS_LOCK : 631,
-        INSERT : 632,
-        DELETE : 633,
-        HOME : 634,
-        END : 635,
-        PAGE_UP: 636,
-        PAGE_DOWN: 637,
-        BACK: 638
-    },
-
-    mouseCodes :
-    {
-        BUTTON_0 : 0,
-        BUTTON_1 : 1,
-        BUTTON_2 : 2,
-        DELTA_X : 100,
-        DELTA_Y : 101,
-        MOUSE_WHEEL : 102
-    },
-
-    padCodes :
-    {
-        UP : 0,
-        LEFT : 1,
-        DOWN : 2,
-        RIGHT : 3,
-        A : 4,
-        B : 5,
-        X : 6,
-        Y : 7,
-        LEFT_TRIGGER : 8,
-        RIGHT_TRIGGER : 9,
-        LEFT_SHOULDER : 10,
-        RIGHT_SHOULDER : 11,
-        LEFT_THUMB : 12,
-        LEFT_THUMB_X : 13,
-        LEFT_THUMB_Y : 14,
-        RIGHT_THUMB : 15,
-        RIGHT_THUMB_X : 16,
-        RIGHT_THUMB_Y : 17,
-        START : 18,
-        BACK : 19
-    },
+    }
 
     // Private API
 
-    sendEventToHandlers :
-    function sendEventToHandlersFn(eventHandlers, arg0, arg1, arg2, arg3,
-                                   arg4, arg5)
+    sendEventToHandlers(eventHandlers, arg0?, arg1?, arg2?, arg3?, arg4?, arg5?)
     {
         var i;
         var length = eventHandlers.length;
@@ -457,18 +297,17 @@ WebGLInputDevice.prototype = {
                 eventHandlers[i](arg0, arg1, arg2, arg3, arg4, arg5);
             }
         }
-    },
+    }
 
-    sendEventToHandlersASync :
-    function sendEventToHandlersASyncFn(handlers, a0, a1, a2, a3, a4, a5)
+    sendEventToHandlersASync(handlers, a0?, a1?, a2?, a3?, a4?, a5?)
     {
         var sendEvent = WebGLInputDevice.prototype.sendEventToHandlers;
         TurbulenzEngine.setTimeout(function callSendEventToHandlersFn() {
             sendEvent(handlers, a0, a1, a2, a3, a4, a5);
         }, 0);
-    },
+    }
 
-    updateGamePad : function updateGamePadFn()
+    updateGamePad()
     {
         var magnitude;
         var normalizedMagnitude;
@@ -602,16 +441,17 @@ WebGLInputDevice.prototype = {
                 }
             }
         }
-    },
+    }
 
     // Cannot detect locale in canvas mode
-    getLocale : function getLocaleFn()
+    getLocale()
     {
         return "";
-    },
+    }
 
-    // Returns the local coordinates of the event (i.e. position in Canvas coords)
-    getCanvasPosition : function getCanvasPositionFn(event, position)
+    // Returns the local coordinates of the event (i.e. position in
+    // Canvas coords)
+    getCanvasPosition(event, position)
     {
         if (event.offsetX !== undefined)
         {
@@ -623,10 +463,10 @@ WebGLInputDevice.prototype = {
             position.x = event.layerX;
             position.y = event.layerY;
         }
-    },
+    }
 
     // Called when blurring
-    resetKeyStates : function resetKeyStatesFn()
+    resetKeyStates()
     {
         var k;
         var pressedKeys = this.pressedKeys;
@@ -641,11 +481,11 @@ WebGLInputDevice.prototype = {
                 this.sendEventToHandlers(keyUpHandlers, k);
             }
         }
-    },
+    }
 
     // Private mouse event methods
 
-    onMouseOver : function onMouseOverFn(event)
+    onMouseOver(event)
     {
         var position :
         {
@@ -663,9 +503,9 @@ WebGLInputDevice.prototype = {
         this.lastY = event.screenY;
 
         this.sendEventToHandlers(mouseOverHandlers, position.x, position.y);
-    },
+    }
 
-    onMouseMove : function onMouseMoveFn(event)
+    onMouseMove(event)
     {
         var mouseMoveHandlers = this.handlers.mousemove;
 
@@ -709,9 +549,9 @@ WebGLInputDevice.prototype = {
         this.lastY = event.screenY;
 
         this.sendEventToHandlers(mouseMoveHandlers, deltaX, deltaY);
-    },
+    }
 
-    onWheel : function onWheelFn(event)
+    onWheel(event)
     {
         var mouseWheelHandlers = this.handlers.mousewheel;
 
@@ -737,24 +577,24 @@ WebGLInputDevice.prototype = {
         }
 
         this.sendEventToHandlers(mouseWheelHandlers, scrollDelta);
-    },
+    }
 
-    emptyEvent : function emptyEventFn(event)
+    emptyEvent(event)
     {
         event.stopPropagation();
         event.preventDefault();
-    },
+    }
 
-    onWindowFocus : function onWindowFocusFn()
+    onWindowFocus()
     {
         if (this.isHovering &&
             window.document.activeElement === this.canvas)
         {
             this.addInternalEventListener(window, 'mousedown', this.onMouseDown);
         }
-    },
+    }
 
-    onFocus : function onFocusFn()
+    onFocus()
     {
         var canvas = this.canvas;
         var handlers = this.handlers;
@@ -775,9 +615,9 @@ WebGLInputDevice.prototype = {
 
             this.sendEventToHandlers(focusHandlers);
         }
-    },
+    }
 
-    onBlur : function onBlurFn()
+    onBlur()
     {
         if (this.ignoreNextBlur)
         {
@@ -804,9 +644,9 @@ WebGLInputDevice.prototype = {
 
             this.sendEventToHandlers(blurHandlers);
         }
-    },
+    }
 
-    onMouseDown : function onMouseDownFn(event)
+    onMouseDown(event)
     {
         var handlers = this.handlers;
 
@@ -838,9 +678,9 @@ WebGLInputDevice.prototype = {
         {
             this.onBlur();
         }
-    },
+    }
 
-    onMouseUp : function onMouseUpFn(event)
+    onMouseUp(event)
     {
         var mouseUpHandlers = this.handlers.mouseup;
 
@@ -865,11 +705,11 @@ WebGLInputDevice.prototype = {
 
             this.sendEventToHandlers(mouseUpHandlers, button, position.x, position.y);
         }
-    },
+    }
 
     // Private key event methods
 
-    onKeyDown : function onKeyDownFn(event)
+    onKeyDown(event)
     {
         var keyDownHandlers = this.handlers.keydown;
         var pressedKeys = this.pressedKeys;
@@ -880,8 +720,6 @@ WebGLInputDevice.prototype = {
 
         var keyCode = event.keyCode;
         keyCode = this.keyMap[keyCode];
-
-        var keyLocation = event.keyLocation || event.location;
 
         if (undefined !== keyCode &&
            (keyCodes.ESCAPE !== keyCode))
@@ -894,6 +732,7 @@ WebGLInputDevice.prototype = {
             //   DOM_KEY_LOCATION_MOBILE   = 0x04;
             //   DOM_KEY_LOCATION_JOYSTICK = 0x05;
 
+            var keyLocation = (typeof event.location === "number" ? event.location : event.keyLocation);
             if (2 === keyLocation)
             {
                 // The Turbulenz KeyCodes are such that CTRL, SHIFT
@@ -907,9 +746,9 @@ WebGLInputDevice.prototype = {
                 this.sendEventToHandlers(keyDownHandlers, keyCode);
             }
         }
-    },
+    }
 
-    onKeyUp : function onKeyUpFn(event)
+    onKeyUp(event)
     {
         var keyUpHandlers = this.handlers.keyup;
         var pressedKeys = this.pressedKeys;
@@ -921,16 +760,43 @@ WebGLInputDevice.prototype = {
         var keyCode = event.keyCode;
         keyCode = this.keyMap[keyCode];
 
-        var keyLocation = event.keyLocation || event.location;
-
         if (keyCode === keyCodes.ESCAPE)
         {
             this.unlockMouse();
+
+            // Some apps environments will not exit fullscreen automatically on ESCAPE
+            if (document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement)
+            {
+                if (document.webkitCancelFullScreen)
+                {
+                    document.webkitCancelFullScreen();
+                }
+                else if (document.cancelFullScreen)
+                {
+                    document.cancelFullScreen();
+                }
+                else if (document['mozCancelFullScreen'])
+                {
+                    document['mozCancelFullScreen']();
+                }
+                else if (document.msExitFullscreen)
+                {
+                    document.msExitFullscreen();
+                }
+                else if (document.exitFullscreen)
+                {
+                    document.exitFullscreen();
+                }
+            }
         }
         else if (undefined !== keyCode)
         {
             // Handle LEFT / RIGHT.  (See OnKeyDown)
 
+            var keyLocation = (typeof event.location === "number" ? event.location : event.keyLocation);
             if (2 === keyLocation)
             {
                 keyCode = keyCode + 1;
@@ -949,11 +815,11 @@ WebGLInputDevice.prototype = {
                 }
             }
         }
-    },
+    }
 
     // Private touch event methods
 
-    onTouchStart : function onTouchStartFn(event)
+    onTouchStart(event)
     {
         var eventHandlers = this.handlers.touchstart;
 
@@ -965,9 +831,9 @@ WebGLInputDevice.prototype = {
         event = this.convertW3TouchEventToTurbulenzTouchEvent(event);
 
         this.sendEventToHandlers(eventHandlers, event);
-    },
+    }
 
-    onTouchEnd : function onTouchEndFn(event)
+    onTouchEnd(event)
     {
         var eventHandlers = this.handlers.touchend;
 
@@ -979,9 +845,9 @@ WebGLInputDevice.prototype = {
         this.removeTouches(event.changedTouches);
 
         this.sendEventToHandlers(eventHandlers, event);
-    },
+    }
 
-    onTouchMove : function onTouchMoveFn(event)
+    onTouchMove(event)
     {
         var eventHandlers = this.handlers.touchmove;
 
@@ -992,9 +858,9 @@ WebGLInputDevice.prototype = {
         event = this.convertW3TouchEventToTurbulenzTouchEvent(event);
 
         this.sendEventToHandlers(eventHandlers, event);
-    },
+    }
 
-    onTouchEnter : function onTouchEnterFn(event)
+    onTouchEnter(event)
     {
         var eventHandlers = this.handlers.touchenter;
 
@@ -1003,9 +869,9 @@ WebGLInputDevice.prototype = {
         event = this.convertW3TouchEventToTurbulenzTouchEvent(event);
 
         this.sendEventToHandlers(eventHandlers, event);
-    },
+    }
 
-    onTouchLeave : function onTouchLeaveFn(event)
+    onTouchLeave(event)
     {
         var eventHandlers = this.handlers.touchleave;
 
@@ -1014,9 +880,9 @@ WebGLInputDevice.prototype = {
         event = this.convertW3TouchEventToTurbulenzTouchEvent(event);
 
         this.sendEventToHandlers(eventHandlers, event);
-    },
+    }
 
-    onTouchCancel : function onTouchCancelFn(event)
+    onTouchCancel(event)
     {
         var eventHandlers = this.handlers.touchcancel;
 
@@ -1028,9 +894,9 @@ WebGLInputDevice.prototype = {
         this.removeTouches(event.changedTouches);
 
         this.sendEventToHandlers(eventHandlers, event);
-    },
+    }
 
-    convertW3TouchEventToTurbulenzTouchEvent : function convertW3TouchEventToTurbulenzTouchEventFn(w3TouchEvent)
+    convertW3TouchEventToTurbulenzTouchEvent(w3TouchEvent)
     {
         // Initialize changedTouches
         var changedTouches = this.convertW3TouchListToTurbulenzTouchList(w3TouchEvent.changedTouches);
@@ -1049,9 +915,9 @@ WebGLInputDevice.prototype = {
         };
 
         return WebGLTouchEvent.create(touchEventParams);
-    },
+    }
 
-    convertW3TouchListToTurbulenzTouchList : function convertW3TouchListToTurbulenzTouchListFn(w3TouchList)
+    convertW3TouchListToTurbulenzTouchList(w3TouchList)
     {
         // Set changedTouches
         var w3TouchListLength = w3TouchList.length;
@@ -1069,9 +935,9 @@ WebGLInputDevice.prototype = {
         }
 
         return touchList;
-    },
+    }
 
-    convertW3TouchToTurbulenzTouch : function convertW3TouchToTurbulenzTouchFn(w3Touch)
+    convertW3TouchToTurbulenzTouch(w3Touch)
     {
         var canvasElement   = this.canvas;
         var canvasRect      = canvasElement.getBoundingClientRect();
@@ -1089,9 +955,9 @@ WebGLInputDevice.prototype = {
         };
 
         return Touch.create(touchParams);
-    },
+    }
 
-    addTouches : function addTouchesFn(w3TouchList)
+    addTouches(w3TouchList)
     {
         var w3TouchListLength = w3TouchList.length;
 
@@ -1103,9 +969,9 @@ WebGLInputDevice.prototype = {
             touch = this.convertW3TouchToTurbulenzTouch(w3TouchList[touchIndex]);
             this.addTouch(touch);
         }
-    },
+    }
 
-    removeTouches : function removeTouchesFn(w3TouchList)
+    removeTouches(w3TouchList)
     {
         var w3TouchListLength = w3TouchList.length;
 
@@ -1117,26 +983,26 @@ WebGLInputDevice.prototype = {
             touchId = w3TouchList[touchIndex].identifier;
             this.removeTouchById(touchId);
         }
-    },
+    }
 
-    addTouch : function addTouchFn(touch)
+    addTouch(touch)
     {
         this.touches[touch.identifier] = touch;
-    },
+    }
 
-    getTouchById : function getTouchByIdFn(id)
+    getTouchById(id)
     {
         return this.touches[id];
-    },
+    }
 
-    removeTouchById : function removeTouchByIdFn(id)
+    removeTouchById(id)
     {
         delete this.touches[id];
-    },
+    }
 
     // Canvas event handlers
 
-    canvasOnMouseOver : function canvasOnMouseOverFn(event)
+    canvasOnMouseOver(event)
     {
         var mouseEnterHandlers = this.handlers.mouseenter;
 
@@ -1156,9 +1022,9 @@ WebGLInputDevice.prototype = {
         {
             this.isOutsideEngine = false;
         }
-    },
+    }
 
-    canvasOnMouseOut : function canvasOnMouseOutFn(/* event */)
+    canvasOnMouseOut(/* event */)
     {
         var mouseLeaveHandlers = this.handlers.mouseleave;
 
@@ -1180,10 +1046,11 @@ WebGLInputDevice.prototype = {
         {
             this.isOutsideEngine = true;
         }
-    },
+    }
 
-    // This is required in order to detect hovering when we missed the initial mouseover event
-    canvasOnMouseDown : function canvasOnMouseDownFn(event)
+    // This is required in order to detect hovering when we missed the
+    // initial mouseover event
+    canvasOnMouseDown(event)
     {
         var mouseEnterHandlers = this.handlers.mouseenter;
 
@@ -1204,15 +1071,18 @@ WebGLInputDevice.prototype = {
         }
 
         return false;
-    },
+    }
 
     // Window event handlers
 
-    onFullscreenChanged : function onFullscreenChangedFn(/* event */)
+    onFullscreenChanged(/* event */)
     {
         if (this.isMouseLocked)
         {
-            if (document.fullscreenEnabled || document.mozFullScreen || document.webkitIsFullScreen)
+            if (document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement)
             {
                 this.ignoreNextMouseMoves = 2; // Some browsers will send 2 mouse events with a massive delta
                 this.requestBrowserLock();
@@ -1223,11 +1093,11 @@ WebGLInputDevice.prototype = {
                 this.unlockMouse();
             }
         }
-    },
+    }
 
     // Set event handler methods
 
-    setEventHandlersMouseEnter : function setEventHandlersMouseEnterFn()
+    setEventHandlersMouseEnter()
     {
         // Add event listener to get focus event
         if (!this.isFocused())
@@ -1240,9 +1110,9 @@ WebGLInputDevice.prototype = {
         this.addInternalEventListener(window, 'DOMMouseScroll', this.onWheel);
         this.addInternalEventListener(window, 'mousewheel', this.onWheel);
         this.addInternalEventListener(window, 'click', this.emptyEvent);
-    },
+    }
 
-    setEventHandlersMouseLeave : function setEventHandlersMouseLeaveFn()
+    setEventHandlersMouseLeave()
     {
         // We do not need a mousedown listener if not focused
         if (!this.isFocused())
@@ -1256,22 +1126,22 @@ WebGLInputDevice.prototype = {
         this.removeInternalEventListener(window, 'DOMMouseScroll', this.onWheel);
         this.removeInternalEventListener(window, 'mousewheel', this.onWheel);
         this.removeInternalEventListener(window, 'click', this.emptyEvent);
-    },
+    }
 
-    setEventHandlersFocus : function setEventHandlersFocusFn()
+    setEventHandlersFocus()
     {
         this.addInternalEventListener(window, 'keydown', this.onKeyDown);
         this.addInternalEventListener(window, 'keyup', this.onKeyUp);
-    },
+    }
 
-    setEventHandlersBlur : function setEventHandlersBlurFn()
+    setEventHandlersBlur()
     {
         this.removeInternalEventListener(window, 'keydown', this.onKeyDown);
         this.removeInternalEventListener(window, 'keyup', this.onKeyUp);
         this.removeInternalEventListener(window, 'mousedown', this.onMouseDown);
-    },
+    }
 
-    setEventHandlersLock : function setEventHandlersLockFn()
+    setEventHandlersLock()
     {
         this.removeInternalEventListener(window, 'mousemove', this.onMouseOver);
 
@@ -1280,41 +1150,42 @@ WebGLInputDevice.prototype = {
         this.addInternalEventListener(document, 'fullscreenchange', this.onFullscreenChanged);
         this.addInternalEventListener(document, 'mozfullscreenchange', this.onFullscreenChanged);
         this.addInternalEventListener(document, 'webkitfullscreenchange', this.onFullscreenChanged);
-    },
+        this.addInternalEventListener(document, 'MSFullscreenChange', this.onFullscreenChanged);
+    }
 
-    setEventHandlersUnlock : function setEventHandlersUnlockFn()
+    setEventHandlersUnlock()
     {
         this.removeInternalEventListener(document, 'webkitfullscreenchange', this.onFullscreenChanged);
         this.removeInternalEventListener(document, 'mozfullscreenchange', this.onFullscreenChanged);
-        this.removeInternalEventListener(document, 'fullscreenchange', this.onFullscreenChanged);
+        this.removeInternalEventListener(document, 'MSFullscreenChange', this.onFullscreenChanged);
 
         this.removeInternalEventListener(window, 'mousemove', this.onMouseMove);
 
         this.addInternalEventListener(window, 'mousemove', this.onMouseOver);
-    },
+    }
 
-    setEventHandlersCanvas : function setEventHandlersCanvasFn()
+    setEventHandlersCanvas()
     {
         var canvas = this.canvas;
 
         this.addInternalEventListener(canvas, 'mouseover', this.canvasOnMouseOver);
         this.addInternalEventListener(canvas, 'mouseout', this.canvasOnMouseOut);
         this.addInternalEventListener(canvas, 'mousedown', this.canvasOnMouseDown);
-    },
+    }
 
-    setEventHandlersWindow : function setEventHandlersWindowFn()
+    setEventHandlersWindow()
     {
         this.addInternalEventListener(window, 'blur', this.onBlur);
         this.addInternalEventListener(window, 'focus', this.onWindowFocus);
-    },
+    }
 
-    removeEventHandlersWindow : function removeEventHandlersWindowFn()
+    removeEventHandlersWindow()
     {
         this.removeInternalEventListener(window, 'blur', this.onBlur);
         this.removeInternalEventListener(window, 'focus', this.onWindowFocus);
-    },
+    }
 
-    setEventHandlersTouch : function setEventHandlersTouchFn()
+    setEventHandlersTouch()
     {
         var canvas = this.canvas;
 
@@ -1324,11 +1195,11 @@ WebGLInputDevice.prototype = {
         this.addInternalEventListener(canvas, 'touchleave', this.onTouchLeave);
         this.addInternalEventListener(canvas, 'touchmove', this.onTouchMove);
         this.addInternalEventListener(canvas, 'touchcancel', this.onTouchCancel);
-    },
+    }
 
     // Helper methods
 
-    addInternalEventListener : function addInternalEventListenerFn(element, eventName, eventHandler)
+    addInternalEventListener(element, eventName, eventHandler)
     {
         var elementEventFlag = this.elementEventFlags[element];
         if (!elementEventFlag)
@@ -1348,9 +1219,9 @@ WebGLInputDevice.prototype = {
 
             element.addEventListener(eventName, boundEventHandler, false);
         }
-    },
+    }
 
-    removeInternalEventListener : function removeInternalEventListenerFn(element, eventName, eventHandler)
+    removeInternalEventListener(element, eventName, eventHandler)
     {
         var elementEventFlag = this.elementEventFlags[element];
         if (elementEventFlag)
@@ -1364,9 +1235,9 @@ WebGLInputDevice.prototype = {
                 element.removeEventListener(eventName, boundEventHandler, false);
             }
         }
-    },
+    }
 
-    destroy : function destroyFn()
+    destroy()
     {
         // Remove all event listeners
         if (this.isLocked())
@@ -1390,9 +1261,9 @@ WebGLInputDevice.prototype = {
         canvas.onmouseover = null;
         canvas.onmouseout = null;
         canvas.onmousedown = null;
-    },
+    }
 
-    isSupported : function inputDevice_isSupportedFn(name)
+    isSupported(name)
     {
         var canvas = this.canvas;
 
@@ -1414,427 +1285,564 @@ WebGLInputDevice.prototype = {
 
         return false;
     }
-};
 
-// Constructor function
-WebGLInputDevice.create = function webGLInputDeviceFn(canvas /*, params */)
-{
-    var id = new WebGLInputDevice();
-
-    id.lastX = 0;
-    id.lastY = 0;
-
-    id.touches = {};
-
-    id.boundFunctions = {};
-    id.elementEventFlags = {};
-
-    id.canvas = canvas;
-    id.isMouseLocked = false;
-    id.isHovering = false;
-    id.isWindowFocused = false;
-    id.isCursorHidden = false;
-    id.isOutsideEngine = false; // Used for determining where we are when unlocking
-    id.previousCursor = '';
-    id.ignoreNextMouseMoves = 0;
-    id.ignoreNextBlur = false;
-
-    // Used to screen out auto-repeats, dictionary from keycode to bool,
-    // true for each key currently pressed down
-    id.pressedKeys = {};
-
-    // Game event handlers
-    id.handlers =
+    static create(canvas: any /*, params: any */)
     {
-        keydown : [],
-        keyup : [],
+        var id = new WebGLInputDevice();
 
-        mousedown : [],
-        mouseup : [],
-        mousewheel : [],
-        mouseover : [],
-        mousemove : [],
+        id.lastX = 0;
+        id.lastY = 0;
 
-        paddown : [],
-        padup : [],
-        padmove : [],
+        id.touches = {};
 
-        mouseenter : [],
-        mouseleave : [],
-        focus : [],
-        blur : [],
-        mouselocklost : [],
+        id.boundFunctions = {};
+        id.elementEventFlags = {};
 
-        touchstart : [],
-        touchend : [],
-        touchenter : [],
-        touchleave : [],
-        touchmove : [],
-        touchcancel : []
-    };
+        id.canvas = canvas;
+        id.isMouseLocked = false;
+        id.isHovering = false;
+        id.isWindowFocused = false;
+        id.isCursorHidden = false;
+        id.isOutsideEngine = false; // Used for determining where we are when unlocking
+        id.previousCursor = '';
+        id.ignoreNextMouseMoves = 0;
+        id.ignoreNextBlur = false;
 
-    // Populate the keyCodeToUnicodeTable.  Just use the 'key' part of
-    // the keycodes, overriding some special cases.
+        // Used to screen out auto-repeats, dictionary from keycode to boolean,
+        // true for each key currently pressed down
+        id.pressedKeys = {};
 
-    var keyCodeToUnicodeTable = {};
-    var keyCodes = id.keyCodes;
-    for (var k in keyCodes)
-    {
-        if (keyCodes.hasOwnProperty(k))
+        // Game event handlers
+        id.handlers =
+            {
+                keydown : [],
+                keyup : [],
+
+                mousedown : [],
+                mouseup : [],
+                mousewheel : [],
+                mouseover : [],
+                mousemove : [],
+
+                paddown : [],
+                padup : [],
+                padmove : [],
+
+                mouseenter : [],
+                mouseleave : [],
+                focus : [],
+                blur : [],
+                mouselocklost : [],
+
+                touchstart : [],
+                touchend : [],
+                touchenter : [],
+                touchleave : [],
+                touchmove : [],
+                touchcancel : []
+            };
+
+        // Populate the keyCodeToUnicodeTable.  Just use the 'key' part of
+        // the keycodes, overriding some special cases.
+
+        var keyCodeToUnicodeTable = {};
+        var keyCodes = id.keyCodes;
+        for (var k in keyCodes)
         {
-            var code = keyCodes[k];
-            keyCodeToUnicodeTable[code] = k;
+            if (keyCodes.hasOwnProperty(k))
+            {
+                var code = keyCodes[k];
+                keyCodeToUnicodeTable[code] = k;
+            }
         }
-    }
-    keyCodeToUnicodeTable[keyCodes.SPACE] = ' ';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_0] = '0';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_1] = '1';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_2] = '2';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_3] = '3';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_4] = '4';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_5] = '5';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_6] = '6';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_7] = '7';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_8] = '8';
-    keyCodeToUnicodeTable[keyCodes.NUMBER_9] = '9';
-    keyCodeToUnicodeTable[keyCodes.GRAVE] = '`';
-    keyCodeToUnicodeTable[keyCodes.MINUS] = '-';
-    keyCodeToUnicodeTable[keyCodes.EQUALS] = '=';
-    keyCodeToUnicodeTable[keyCodes.LEFT_BRACKET] = '[';
-    keyCodeToUnicodeTable[keyCodes.RIGHT_BRACKET] = ']';
-    keyCodeToUnicodeTable[keyCodes.SEMI_COLON] = ';';
-    keyCodeToUnicodeTable[keyCodes.APOSTROPHE] = "'";
-    keyCodeToUnicodeTable[keyCodes.COMMA] = ',';
-    keyCodeToUnicodeTable[keyCodes.PERIOD] = '.';
-    keyCodeToUnicodeTable[keyCodes.SLASH] = '/';
-    keyCodeToUnicodeTable[keyCodes.BACKSLASH] = '\\';
+        keyCodeToUnicodeTable[keyCodes.SPACE] = ' ';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_0] = '0';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_1] = '1';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_2] = '2';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_3] = '3';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_4] = '4';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_5] = '5';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_6] = '6';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_7] = '7';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_8] = '8';
+        keyCodeToUnicodeTable[keyCodes.NUMBER_9] = '9';
+        keyCodeToUnicodeTable[keyCodes.GRAVE] = '`';
+        keyCodeToUnicodeTable[keyCodes.MINUS] = '-';
+        keyCodeToUnicodeTable[keyCodes.EQUALS] = '=';
+        keyCodeToUnicodeTable[keyCodes.LEFT_BRACKET] = '[';
+        keyCodeToUnicodeTable[keyCodes.RIGHT_BRACKET] = ']';
+        keyCodeToUnicodeTable[keyCodes.SEMI_COLON] = ';';
+        keyCodeToUnicodeTable[keyCodes.APOSTROPHE] = "'";
+        keyCodeToUnicodeTable[keyCodes.COMMA] = ',';
+        keyCodeToUnicodeTable[keyCodes.PERIOD] = '.';
+        keyCodeToUnicodeTable[keyCodes.SLASH] = '/';
+        keyCodeToUnicodeTable[keyCodes.BACKSLASH] = '\\';
 
-    // KeyMap: Maps JavaScript keycodes to Turbulenz keycodes - some
-    // keycodes are consistent across all browsers and some mappings
-    // are browser specific.
-    var keyMap = {};
+        // KeyMap: Maps JavaScript keycodes to Turbulenz keycodes - some
+        // keycodes are consistent across all browsers and some mappings
+        // are browser specific.
+        var keyMap = {};
 
-    // A-Z
-    keyMap[65] = 0; // A
-    keyMap[66] = 1; // B
-    keyMap[67] = 2; // C
-    keyMap[68] = 3; // D
-    keyMap[69] = 4; // E
-    keyMap[70] = 5; // F
-    keyMap[71] = 6; // G
-    keyMap[72] = 7; // H
-    keyMap[73] = 8; // I
-    keyMap[74] = 9; // J
-    keyMap[75] = 10; // K
-    keyMap[76] = 11; // L
-    keyMap[77] = 12; // M
-    keyMap[78] = 13; // N
-    keyMap[79] = 14; // O
-    keyMap[80] = 15; // P
-    keyMap[81] = 16; // Q
-    keyMap[82] = 17; // R
-    keyMap[83] = 18; // S
-    keyMap[84] = 19; // T
-    keyMap[85] = 20; // U
-    keyMap[86] = 21; // V
-    keyMap[87] = 22; // X
-    keyMap[88] = 23; // W
-    keyMap[89] = 24; // Y
-    keyMap[90] = 25; // Z
+        // A-Z
+        keyMap[65] = 0; // A
+        keyMap[66] = 1; // B
+        keyMap[67] = 2; // C
+        keyMap[68] = 3; // D
+        keyMap[69] = 4; // E
+        keyMap[70] = 5; // F
+        keyMap[71] = 6; // G
+        keyMap[72] = 7; // H
+        keyMap[73] = 8; // I
+        keyMap[74] = 9; // J
+        keyMap[75] = 10; // K
+        keyMap[76] = 11; // L
+        keyMap[77] = 12; // M
+        keyMap[78] = 13; // N
+        keyMap[79] = 14; // O
+        keyMap[80] = 15; // P
+        keyMap[81] = 16; // Q
+        keyMap[82] = 17; // R
+        keyMap[83] = 18; // S
+        keyMap[84] = 19; // T
+        keyMap[85] = 20; // U
+        keyMap[86] = 21; // V
+        keyMap[87] = 22; // X
+        keyMap[88] = 23; // W
+        keyMap[89] = 24; // Y
+        keyMap[90] = 25; // Z
 
-    // 0-9
-    keyMap[48] = 100; // 0
-    keyMap[49] = 101; // 1
-    keyMap[50] = 102; // 2
-    keyMap[51] = 103; // 3
-    keyMap[52] = 104; // 4
-    keyMap[53] = 105; // 5
-    keyMap[54] = 106; // 6
-    keyMap[55] = 107; // 7
-    keyMap[56] = 108; // 8
-    keyMap[57] = 109; // 9
+        // 0-9
+        keyMap[48] = 100; // 0
+        keyMap[49] = 101; // 1
+        keyMap[50] = 102; // 2
+        keyMap[51] = 103; // 3
+        keyMap[52] = 104; // 4
+        keyMap[53] = 105; // 5
+        keyMap[54] = 106; // 6
+        keyMap[55] = 107; // 7
+        keyMap[56] = 108; // 8
+        keyMap[57] = 109; // 9
 
-    // Arrow keys
-    keyMap[37] = 200; // LEFT
-    keyMap[39] = 201; // RIGHT
-    keyMap[38] = 202; // UP
-    keyMap[40] = 203; // DOWN
+        // Arrow keys
+        keyMap[37] = 200; // LEFT
+        keyMap[39] = 201; // RIGHT
+        keyMap[38] = 202; // UP
+        keyMap[40] = 203; // DOWN
 
-    // Modifier keys
-    keyMap[16] = 300; // LEFT_SHIFT
-    //keyMap[16] = 301; // RIGHT_SHIFT
-    keyMap[17] = 302; // LEFT_CONTROL
-    //keyMap[17] = 303; // RIGHT_CONTROL
-    keyMap[18] = 304; // LEFT_ALT
-    keyMap[0] = 305; // RIGHT_ALT
+        // Modifier keys
+        keyMap[16] = 300; // LEFT_SHIFT
+        //keyMap[16] = 301; // RIGHT_SHIFT
+        keyMap[17] = 302; // LEFT_CONTROL
+        //keyMap[17] = 303; // RIGHT_CONTROL
+        keyMap[18] = 304; // LEFT_ALT
+        keyMap[0] = 305; // RIGHT_ALT
 
-    // Special keys
-    keyMap[27] = 400; // ESCAPE
-    keyMap[9] = 401; // TAB
-    keyMap[32] = 402; // SPACE
-    keyMap[8] = 403; // BACKSPACE
-    keyMap[13] = 404; // RETURN
+        // Special keys
+        keyMap[27] = 400; // ESCAPE
+        keyMap[9] = 401; // TAB
+        keyMap[32] = 402; // SPACE
+        keyMap[8] = 403; // BACKSPACE
+        keyMap[13] = 404; // RETURN
 
-    // Punctuation keys
-    keyMap[223] = 500; // GRAVE
-    keyMap[173] = 501; // MINUS (mozilla - gecko)
-    keyMap[189] = 501; // MINUS (ie + webkit)
-    keyMap[61] = 502; // EQUALS (mozilla - gecko)
-    keyMap[187] = 502; // EQUALS (ie + webkit)
-    keyMap[219] = 503; // LEFT_BRACKET
-    keyMap[221] = 504; // RIGHT_BRACKET
-    keyMap[59] = 505; // SEMI_COLON (mozilla - gecko)
-    keyMap[186] = 505; // SEMI_COLON (ie + webkit)
-    keyMap[192] = 500; // GRAVE
-    keyMap[188] = 507; // COMMA
-    keyMap[190] = 508; // PERIOD
-    keyMap[222] = 506; // APOSTROPHE
+        // Punctuation keys
+        keyMap[223] = 500; // GRAVE
+        keyMap[173] = 501; // MINUS (mozilla - gecko)
+        keyMap[189] = 501; // MINUS (ie + webkit)
+        keyMap[61] = 502; // EQUALS (mozilla - gecko)
+        keyMap[187] = 502; // EQUALS (ie + webkit)
+        keyMap[219] = 503; // LEFT_BRACKET
+        keyMap[221] = 504; // RIGHT_BRACKET
+        keyMap[59] = 505; // SEMI_COLON (mozilla - gecko)
+        keyMap[186] = 505; // SEMI_COLON (ie + webkit)
+        keyMap[192] = 500; // GRAVE
+        keyMap[188] = 507; // COMMA
+        keyMap[190] = 508; // PERIOD
+        keyMap[222] = 506; // APOSTROPHE
 
-    // if Mac OS GRAVE can sometimes come through as 0
-    if (navigator.appVersion.indexOf("Mac") !== -1)
-    {
-        keyMap[0] = 500; // GRAVE (mac gecko + safari 5.1)
-    }
-
-    // Non-standard keys
-    keyMap[112] = 600; // F1
-    keyMap[113] = 601; // F2
-    keyMap[114] = 602; // F3
-    keyMap[115] = 603; // F4
-    keyMap[116] = 604; // F5
-    keyMap[117] = 605; // F6
-    keyMap[118] = 606; // F7
-    keyMap[119] = 607; // F8
-    keyMap[120] = 608; // F9
-    keyMap[121] = 609; // F10
-    keyMap[122] = 610; // F11
-    keyMap[123] = 611; // F12
-    //keyMap[45 : 612, // NUMPAD_0 (numlock on/off)
-    keyMap[96] = 612; // NUMPAD_0 (numlock on/off)
-    //keyMap[35] = 613;, // NUMPAD_1 (numlock on/off)
-    keyMap[97] = 613; // NUMPAD_1 (numlock on/off)
-    //keyMap[40] = 614; // NUMPAD_2 (numlock on/off)
-    keyMap[98] = 614; // NUMPAD_2 (numlock on/off)
-    //keyMap[34] = 615; // NUMPAD_3 (numlock on/off)
-    keyMap[99] = 615; // NUMPAD_3 (numlock on/off)
-    //keyMap[37] = 616;, // NUMPAD_4 (numlock on/off)
-    keyMap[100] = 616; // NUMPAD_4 (numlock on/off)
-    keyMap[12] = 617; // NUMPAD_5 (numlock on/off)
-    keyMap[101] = 617; // NUMPAD_5 (numlock on/off)
-    keyMap[144] = 617; // NUMPAD_5 (numlock on/off) and NUMPAD_NUM
-    //keyMap[39] = 618; // NUMPAD_6 (numlock on/off)
-    keyMap[102] = 618; // NUMPAD_6 (numlock on/off)
-    //keyMap[36] = 619; // NUMPAD_7 (numlock on/off)
-    keyMap[103] = 619; // NUMPAD_7 (numlock on/off)
-    //keyMap[38] = 620; // NUMPAD_8 (numlock on/off)
-    keyMap[104] = 620; // NUMPAD_8 (numlock on/off)
-    //keyMap[33] = 621; // NUMPAD_9 (numlock on/off)
-    keyMap[105] = 621; // NUMPAD_9 (numlock on/off)
-    //keyMap[13] = 622; // NUMPAD_ENTER (numlock on/off)
-    keyMap[111] = 623; // NUMPAD_DIVIDE (numlock on/off)
-    keyMap[191] = 623; // NUMPAD_DIVIDE (numlock on/off), mac chrome
-    keyMap[106] = 624; // NUMPAD_MULTIPLY (numlock on/off)
-    keyMap[107] = 625; // NUMPAD_ADD (numlock on/off)
-    keyMap[109] = 626; // NUMPAD_SUBTRACT (numlock on/off)
-    keyMap[91] = 627; // LEFT_WIN
-    keyMap[224] = 627; // LEFT_WIN (mac, firefox)
-    keyMap[92] = 628; // RIGHT_WIN
-    keyMap[93] = 628; // RIGHT_WIN (mac, chrome)
-    //: 629, // LEFT_OPTION
-    //: 630, // RIGHT_OPTION
-    keyMap[20] = 631; // CAPS_LOCK
-    keyMap[45] = 632; // INSERT
-    keyMap[46] = 633; // DELETE
-    keyMap[36] = 634; // HOME
-    keyMap[35] = 635; // END
-    keyMap[33] = 636; // PAGE_UP
-    keyMap[34] = 637; // PAGE_DOWN
-
-    id.keyMap = keyMap;
-
-    // MouseMap: Maps current mouse controls to new controls
-    var mouseMap =
-    {
-        0 : 0,
-        1 : 2,
-        2 : 1
-    };
-
-    id.mouseMap = mouseMap;
-
-    // padMap: Maps current pad buttons to new buttons
-    var padMap =
-    {
-        0 : 4, // A
-        1 : 5, // B
-        2 : 6, // X
-        3 : 7, // Y
-
-        4 : 10, // LEFT_SHOULDER
-        5 : 11, // RIGHT_SHOULDER
-
-        8 : 19, // BACK
-        9 : 18, // START
-
-        10 : 12, // LEFT_THUMB
-        11 : 15, // RIGHT_THUMB
-
-        12 : 0, // UP
-        13 : 2, // DOWN
-        14 : 1, // LEFT
-        15 : 3  // RIGHT
-    };
-
-    id.padMap = padMap;
-
-    id.keyCodeToUnicode = keyCodeToUnicodeTable;
-
-    id.padButtons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    id.padMap = padMap;
-    id.padAxisDeadZone = 0.26;
-    id.maxAxisRange = 1.0;
-    id.padTimestampUpdate = 0;
-
-    // Pointer locking
-    var requestPointerLock = (canvas.requestPointerLock    ||
-                              canvas.mozRequestPointerLock ||
-                              canvas.webkitRequestPointerLock);
-    if (requestPointerLock)
-    {
-        var exitPointerLock = (document.exitPointerLock    ||
-                               document.mozExitPointerLock ||
-                               document.webkitExitPointerLock);
-
-        id.onPointerLockChanged = function onPointerLockChangedFn(/* event */)
+        // if Mac OS GRAVE can sometimes come through as 0
+        if (navigator.appVersion.indexOf("Mac") !== -1)
         {
-            var pointerLockElement = (document.pointerLockElement    ||
-                                      document.mozPointerLockElement ||
-                                      document.webkitPointerLockElement);
-            if (pointerLockElement !== id.canvas)
+            keyMap[0] = 500; // GRAVE (mac gecko + safari 5.1)
+        }
+
+        // Non-standard keys
+        keyMap[112] = 600; // F1
+        keyMap[113] = 601; // F2
+        keyMap[114] = 602; // F3
+        keyMap[115] = 603; // F4
+        keyMap[116] = 604; // F5
+        keyMap[117] = 605; // F6
+        keyMap[118] = 606; // F7
+        keyMap[119] = 607; // F8
+        keyMap[120] = 608; // F9
+        keyMap[121] = 609; // F10
+        keyMap[122] = 610; // F11
+        keyMap[123] = 611; // F12
+        //keyMap[45 : 612, // NUMPAD_0 (numlock on/off)
+        keyMap[96] = 612; // NUMPAD_0 (numlock on/off)
+        //keyMap[35] = 613;, // NUMPAD_1 (numlock on/off)
+        keyMap[97] = 613; // NUMPAD_1 (numlock on/off)
+        //keyMap[40] = 614; // NUMPAD_2 (numlock on/off)
+        keyMap[98] = 614; // NUMPAD_2 (numlock on/off)
+        //keyMap[34] = 615; // NUMPAD_3 (numlock on/off)
+        keyMap[99] = 615; // NUMPAD_3 (numlock on/off)
+        //keyMap[37] = 616;, // NUMPAD_4 (numlock on/off)
+        keyMap[100] = 616; // NUMPAD_4 (numlock on/off)
+        keyMap[12] = 617; // NUMPAD_5 (numlock on/off)
+        keyMap[101] = 617; // NUMPAD_5 (numlock on/off)
+        keyMap[144] = 617; // NUMPAD_5 (numlock on/off) and NUMPAD_NUM
+        //keyMap[39] = 618; // NUMPAD_6 (numlock on/off)
+        keyMap[102] = 618; // NUMPAD_6 (numlock on/off)
+        //keyMap[36] = 619; // NUMPAD_7 (numlock on/off)
+        keyMap[103] = 619; // NUMPAD_7 (numlock on/off)
+        //keyMap[38] = 620; // NUMPAD_8 (numlock on/off)
+        keyMap[104] = 620; // NUMPAD_8 (numlock on/off)
+        //keyMap[33] = 621; // NUMPAD_9 (numlock on/off)
+        keyMap[105] = 621; // NUMPAD_9 (numlock on/off)
+        //keyMap[13] = 622; // NUMPAD_ENTER (numlock on/off)
+        keyMap[111] = 623; // NUMPAD_DIVIDE (numlock on/off)
+        keyMap[191] = 623; // NUMPAD_DIVIDE (numlock on/off), mac chrome
+        keyMap[106] = 624; // NUMPAD_MULTIPLY (numlock on/off)
+        keyMap[107] = 625; // NUMPAD_ADD (numlock on/off)
+        keyMap[109] = 626; // NUMPAD_SUBTRACT (numlock on/off)
+        keyMap[91] = 627; // LEFT_WIN
+        keyMap[224] = 627; // LEFT_WIN (mac, firefox)
+        keyMap[92] = 628; // RIGHT_WIN
+        keyMap[93] = 628; // RIGHT_WIN (mac, chrome)
+        //: 629, // LEFT_OPTION
+        //: 630, // RIGHT_OPTION
+        keyMap[20] = 631; // CAPS_LOCK
+        keyMap[45] = 632; // INSERT
+        keyMap[46] = 633; // DELETE
+        keyMap[36] = 634; // HOME
+        keyMap[35] = 635; // END
+        keyMap[33] = 636; // PAGE_UP
+        keyMap[34] = 637; // PAGE_DOWN
+
+        id.keyMap = keyMap;
+
+        // MouseMap: Maps current mouse controls to new controls
+        var mouseMap =
+            {
+                0 : 0,
+                1 : 2,
+                2 : 1
+            };
+
+        id.mouseMap = mouseMap;
+
+        // padMap: Maps current pad buttons to new buttons
+        var padMap =
+            {
+                0 : 4, // A
+                1 : 5, // B
+                2 : 6, // X
+                3 : 7, // Y
+
+                4 : 10, // LEFT_SHOULDER
+                5 : 11, // RIGHT_SHOULDER
+
+                8 : 19, // BACK
+                9 : 18, // START
+
+                10 : 12, // LEFT_THUMB
+                11 : 15, // RIGHT_THUMB
+
+                12 : 0, // UP
+                13 : 2, // DOWN
+                14 : 1, // LEFT
+                15 : 3  // RIGHT
+            };
+
+        id.padMap = padMap;
+
+        id.keyCodeToUnicode = keyCodeToUnicodeTable;
+
+        id.padButtons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        id.padMap = padMap;
+        id.padAxisDeadZone = 0.26;
+        id.maxAxisRange = 1.0;
+        id.padTimestampUpdate = 0;
+
+        // Pointer locking
+        var requestPointerLock = (canvas.requestPointerLock    ||
+                                  canvas.mozRequestPointerLock ||
+                                  canvas.webkitRequestPointerLock);
+        if (requestPointerLock)
+        {
+            var exitPointerLock = (document.exitPointerLock    ||
+                                   document.mozExitPointerLock ||
+                                   document.webkitExitPointerLock);
+
+            id.onPointerLockChanged = function onPointerLockChangedFn(/* event */)
+            {
+                var pointerLockElement = (document.pointerLockElement    ||
+                                          document.mozPointerLockElement ||
+                                          document.webkitPointerLockElement);
+                if (pointerLockElement !== id.canvas)
+                {
+                    id.unlockMouse();
+                }
+            };
+
+            id.onPointerLockError = function onPointerLockErrorFn(/* event */)
             {
                 id.unlockMouse();
+            };
+
+            // We need to set pointerlockchanged events because browsers consume the ESCAPE key without notification
+            if ('mozPointerLockElement' in document)
+            {
+                id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
+                {
+                    // firefox changes focus when requesting lock...
+                    this.ignoreNextBlur = true;
+                    document.addEventListener('mozpointerlockchange', this.onPointerLockChanged, false);
+                    document.addEventListener('mozpointerlockerror', this.onPointerLockError, false);
+                };
+
+                id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
+                {
+                    this.ignoreNextBlur = false;
+                    document.removeEventListener('mozpointerlockchange', this.onPointerLockChanged, false);
+                    document.removeEventListener('mozpointerlockerror', this.onPointerLockError, false);
+                };
             }
-        };
-
-        id.onPointerLockError = function onPointerLockErrorFn(/* event */)
-        {
-            id.unlockMouse();
-        };
-
-        // We need to set pointerlockchanged events because browsers consume the ESCAPE key without notification
-        if ('mozPointerLockElement' in document)
-        {
-            id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
+            else if ('webkitPointerLockElement' in document)
             {
-                // firefox changes focus when requesting lock...
-                this.ignoreNextBlur = true;
-                document.addEventListener('mozpointerlockchange', this.onPointerLockChanged, false);
-                document.addEventListener('mozpointerlockerror', this.onPointerLockError, false);
-            };
+                id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
+                {
+                    document.addEventListener('webkitpointerlockchange', this.onPointerLockChanged, false);
+                    document.addEventListener('webkitpointerlockerror', this.onPointerLockError, false);
+                };
 
-            id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
-            {
-                this.ignoreNextBlur = false;
-                document.removeEventListener('mozpointerlockchange', this.onPointerLockChanged, false);
-                document.removeEventListener('mozpointerlockerror', this.onPointerLockError, false);
-            };
-        }
-        else if ('webkitPointerLockElement' in document)
-        {
-            id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
-            {
-                document.addEventListener('webkitpointerlockchange', this.onPointerLockChanged, false);
-                document.addEventListener('webkitpointerlockerror', this.onPointerLockError, false);
-            };
-
-            id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
-            {
-                document.removeEventListener('webkitpointerlockchange', this.onPointerLockChanged, false);
-                document.removeEventListener('webkitpointerlockerror', this.onPointerLockError, false);
-            };
-        }
-        else if ('pointerLockElement' in document)
-        {
-            id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
-            {
-                document.addEventListener('pointerlockchange', this.onPointerLockChanged, false);
-                document.addEventListener('pointerlockerror', this.onPointerLockError, false);
-            };
-
-            id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
-            {
-                document.removeEventListener('pointerlockchange', this.onPointerLockChanged, false);
-                document.removeEventListener('pointerlockerror', this.onPointerLockError, false);
-            };
-        }
-
-        id.requestBrowserLock = function requestBrowserLockFn()
-        {
-            var pointerLockElement = (document.pointerLockElement    ||
-                                      document.mozPointerLockElement ||
-                                      document.webkitPointerLockElement);
-            if (pointerLockElement !== canvas)
-            {
-                this.setEventHandlersPointerLock();
-
-                requestPointerLock.call(canvas);
+                id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
+                {
+                    document.removeEventListener('webkitpointerlockchange', this.onPointerLockChanged, false);
+                    document.removeEventListener('webkitpointerlockerror', this.onPointerLockError, false);
+                };
             }
-        };
-
-        id.requestBrowserUnlock = function requestBrowserUnlockFn()
-        {
-            this.setEventHandlersPointerUnlock();
-
-            var pointerLockElement = (document.pointerLockElement    ||
-                                      document.mozPointerLockElement ||
-                                      document.webkitPointerLockElement);
-            if (pointerLockElement === canvas)
+            else if ('pointerLockElement' in document)
             {
-                exitPointerLock.call(document);
+                id.setEventHandlersPointerLock = function setEventHandlersPointerLockFn()
+                {
+                    document.addEventListener('pointerlockchange', this.onPointerLockChanged, false);
+                    document.addEventListener('pointerlockerror', this.onPointerLockError, false);
+                };
+
+                id.setEventHandlersPointerUnlock = function setEventHandlersPointerUnlockFn()
+                {
+                    document.removeEventListener('pointerlockchange', this.onPointerLockChanged, false);
+                    document.removeEventListener('pointerlockerror', this.onPointerLockError, false);
+                };
             }
-        };
-    }
-    else
-    {
-        var pointer = (navigator.pointer || navigator.webkitPointer);
-        if (pointer)
-        {
+
             id.requestBrowserLock = function requestBrowserLockFn()
             {
-                if (!pointer.isLocked)
+                var pointerLockElement = (document.pointerLockElement    ||
+                                          document.mozPointerLockElement ||
+                                          document.webkitPointerLockElement);
+                if (pointerLockElement !== canvas)
                 {
-                    pointer.lock(canvas);
+                    this.setEventHandlersPointerLock();
+
+                    requestPointerLock.call(canvas);
                 }
             };
 
             id.requestBrowserUnlock = function requestBrowserUnlockFn()
             {
-                if (pointer.isLocked)
+                this.setEventHandlersPointerUnlock();
+
+                var pointerLockElement = (document.pointerLockElement    ||
+                                          document.mozPointerLockElement ||
+                                          document.webkitPointerLockElement);
+                if (pointerLockElement === canvas)
                 {
-                    pointer.unlock();
+                    exitPointerLock.call(document);
                 }
             };
         }
         else
         {
-            id.requestBrowserLock = function requestBrowserLockFn() {};
-            id.requestBrowserUnlock = function requestBrowserUnlockFn() {};
+            var pointer = (navigator.pointer || navigator.webkitPointer);
+            if (pointer)
+            {
+                id.requestBrowserLock = function requestBrowserLockFn()
+                {
+                    if (!pointer.isLocked)
+                    {
+                        pointer.lock(canvas);
+                    }
+                };
+
+                id.requestBrowserUnlock = function requestBrowserUnlockFn()
+                {
+                    if (pointer.isLocked)
+                    {
+                        pointer.unlock();
+                    }
+                };
+            }
+            else
+            {
+                id.requestBrowserLock = function requestBrowserLockFn() {};
+                id.requestBrowserUnlock = function requestBrowserUnlockFn() {};
+            }
         }
+
+        // Add canvas mouse event listeners
+        id.setEventHandlersCanvas();
+
+        // Add window blur event listener
+        id.setEventHandlersWindow();
+
+        // Add canvas touch event listeners
+        id.setEventHandlersTouch();
+
+        // Record the platforms so that we can enable workarounds, etc.
+        var sysInfo = TurbulenzEngine.getSystemInfo();
+        id.macosx = ("Darwin" === sysInfo.osName);
+        id.webkit = (/WebKit/.test(navigator.userAgent));
+
+        return id;
     }
+}
 
-    // Add canvas mouse event listeners
-    id.setEventHandlersCanvas();
+// KeyCodes: List of key codes and their values
 
-    // Add window blur event listener
-    id.setEventHandlersWindow();
+WebGLInputDevice.prototype.keyCodes = {
+    A : 0,
+    B : 1,
+    C : 2,
+    D : 3,
+    E : 4,
+    F : 5,
+    G : 6,
+    H : 7,
+    I : 8,
+    J : 9,
+    K : 10,
+    L : 11,
+    M : 12,
+    N : 13,
+    O : 14,
+    P : 15,
+    Q : 16,
+    R : 17,
+    S : 18,
+    T : 19,
+    U : 20,
+    V : 21,
+    W : 22,
+    X : 23,
+    Y : 24,
+    Z : 25,
+    NUMBER_0 : 100,
+    NUMBER_1 : 101,
+    NUMBER_2 : 102,
+    NUMBER_3 : 103,
+    NUMBER_4 : 104,
+    NUMBER_5 : 105,
+    NUMBER_6 : 106,
+    NUMBER_7 : 107,
+    NUMBER_8 : 108,
+    NUMBER_9 : 109,
+    LEFT : 200,
+    RIGHT : 201,
+    UP : 202,
+    DOWN : 203,
+    LEFT_SHIFT : 300,
+    RIGHT_SHIFT : 301,
+    LEFT_CONTROL : 302,
+    RIGHT_CONTROL : 303,
+    LEFT_ALT : 304,
+    RIGHT_ALT : 305,
+    ESCAPE : 400,
+    TAB : 401,
+    SPACE :    402,
+    BACKSPACE : 403,
+    RETURN : 404,
+    GRAVE : 500,
+    MINUS : 501,
+    EQUALS : 502,
+    LEFT_BRACKET : 503,
+    RIGHT_BRACKET : 504,
+    SEMI_COLON : 505,
+    APOSTROPHE : 506,
+    COMMA : 507,
+    PERIOD : 508,
+    SLASH: 509,
+    BACKSLASH: 510,
+    F1 : 600,
+    F2 : 601,
+    F3 : 602,
+    F4 : 603,
+    F5 : 604,
+    F6 : 605,
+    F7 : 606,
+    F8 : 607,
+    F9 : 608,
+    F10 : 609,
+    F11 : 610,
+    F12 : 611,
+    NUMPAD_0 : 612,
+    NUMPAD_1 : 613,
+    NUMPAD_2 : 614,
+    NUMPAD_3 : 615,
+    NUMPAD_4 : 616,
+    NUMPAD_5 : 617,
+    NUMPAD_6 : 618,
+    NUMPAD_7 : 619,
+    NUMPAD_8 : 620,
+    NUMPAD_9 : 621,
+    NUMPAD_ENTER : 622,
+    NUMPAD_DIVIDE : 623,
+    NUMPAD_MULTIPLY : 624,
+    NUMPAD_ADD : 625,
+    NUMPAD_SUBTRACT : 626,
+    LEFT_WIN : 627,
+    RIGHT_WIN : 628,
+    LEFT_OPTION : 629,
+    RIGHT_OPTION : 630,
+    CAPS_LOCK : 631,
+    INSERT : 632,
+    DELETE : 633,
+    HOME : 634,
+    END : 635,
+    PAGE_UP: 636,
+    PAGE_DOWN: 637,
+    BACK: 638
+};
 
-    // Add canvas touch event listeners
-    id.setEventHandlersTouch();
+WebGLInputDevice.prototype.mouseCodes = {
+    BUTTON_0 : 0,
+    BUTTON_1 : 1,
+    BUTTON_2 : 2,
+    DELTA_X : 100,
+    DELTA_Y : 101,
+    MOUSE_WHEEL : 102
+};
 
-    // Record the platforms so that we can enable workarounds, etc.
-    var sysInfo = TurbulenzEngine.getSystemInfo();
-    id.macosx = ("Darwin" === sysInfo.osName);
-    id.webkit = (/WebKit/.test(navigator.userAgent));
-
-    return id;
+WebGLInputDevice.prototype.padCodes = {
+    UP : 0,
+    LEFT : 1,
+    DOWN : 2,
+    RIGHT : 3,
+    A : 4,
+    B : 5,
+    X : 6,
+    Y : 7,
+    LEFT_TRIGGER : 8,
+    RIGHT_TRIGGER : 9,
+    LEFT_SHOULDER : 10,
+    RIGHT_SHOULDER : 11,
+    LEFT_THUMB : 12,
+    LEFT_THUMB_X : 13,
+    LEFT_THUMB_Y : 14,
+    RIGHT_THUMB : 15,
+    RIGHT_THUMB_X : 16,
+    RIGHT_THUMB_Y : 17,
+    START : 18,
+    BACK : 19
 };

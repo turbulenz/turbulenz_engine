@@ -1,12 +1,4 @@
-/*{# Copyright (c) 2010-2012 Turbulenz Limited #}*/
-
-/*
- * @title: Multiple animations
- * @description:
- * This sample demonstrates how the Turbulenz engine can render a high number of animated skinned characters each one
- * with their own separate animation.
- * You can use the slider to increase or decrease the number of character to animate and render at the same time.
-*/
+/*{# Copyright (c) 2010-2013 Turbulenz Limited #}*/
 
 /*{{ javascript("jslib/aabbtree.js") }}*/
 /*{{ javascript("jslib/camera.js") }}*/
@@ -25,7 +17,6 @@
 /*{{ javascript("jslib/animationmanager.js") }}*/
 /*{{ javascript("jslib/animation.js") }}*/
 /*{{ javascript("jslib/observer.js") }}*/
-/*{{ javascript("jslib/scenedebugging.js") }}*/
 /*{{ javascript("jslib/utilities.js") }}*/
 /*{{ javascript("jslib/requesthandler.js") }}*/
 /*{{ javascript("jslib/vertexbuffermanager.js") }}*/
@@ -58,12 +49,16 @@
 /*global HTMLControls: false */
 /*global window: false */
 
+// HACK: TypeScript 0.9.0 removes the above comments without this
+// (since the comments get associated with the declare, which
+// generates no code).
+void 0;
+
 // We put some custom data onto Scene
-class CustomScene extends Scene
+declare class CustomScene extends Scene
 {
     skinnedNodes: SceneNode[];
-};
-
+}
 
 TurbulenzEngine.onload = function onloadFn()
 {
@@ -471,8 +466,6 @@ TurbulenzEngine.onload = function onloadFn()
 
         scene.skinnedNodes = [];
 
-        GPUSkinController.setDefaultBufferSize(renderer.getDefaultSkinBufferSize());
-
         var randomIndex = 0;
         // For each node find which ones have skeletons
         for (n = 0; n < numNodes; n += 1)
@@ -503,7 +496,7 @@ TurbulenzEngine.onload = function onloadFn()
     };
 
     // Initialize the previous frame time
-    var previousFrameTime = TurbulenzEngine.time;
+    var previousFrameTime = 0;
     var nextGridUpdateTime = 0;
     var fpsElement = document.getElementById("fpscounter");
     var lastFPS = '';
@@ -519,8 +512,8 @@ TurbulenzEngine.onload = function onloadFn()
         var currentCharacterCount = character.count;
         var resetGrid = false;
 
-        var currentTime = TurbulenzEngine.time;
-        var deltaTime = (currentTime - previousFrameTime);
+        var currentTime = TurbulenzEngine.getTime();
+        var deltaTime = (currentTime - previousFrameTime) * 0.001;
         if (deltaTime > 0.1)
         {
             deltaTime = 0.1;
@@ -646,6 +639,8 @@ TurbulenzEngine.onload = function onloadFn()
             htmlControls.updateSlider(slider01ID, undefined);
 
             intervalID = TurbulenzEngine.setInterval(renderFrame, 1000 / 60);
+
+            previousFrameTime = TurbulenzEngine.getTime();
         }
     };
     intervalID = TurbulenzEngine.setInterval(loadingLoop, 1000 / 10);

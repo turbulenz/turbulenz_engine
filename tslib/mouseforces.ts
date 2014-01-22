@@ -1,8 +1,5 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="camera.ts" />
-
 //
 // MouseForces
 //
@@ -29,12 +26,12 @@ class MouseForces
     Y: number;
     Z: number;
 
-    grabBody: bool;
+    grabBody: boolean;
 
-    onmousewheel: { (delta: number): bool; };
-    onmousemove: { (deltaX: number, deltaY: number): bool; };
-    onmousedown: { (/* button, x, y */): bool; };
-    onmouseup: { (/* button, x, y */): bool; };
+    onmousewheel: { (delta: number): boolean; };
+    onmousemove: { (deltaX: number, deltaY: number): boolean; };
+    onmousedown: { (/* button, x, y */): boolean; };
+    onmouseup: { (/* button, x, y */): boolean; };
 
     generatePickRay(cameraTransform,
                     viewWindowX, viewWindowY,
@@ -57,7 +54,7 @@ class MouseForces
 
         var direction = md.v3Normalize(md.v3Sub(md.v3Add(cam_at, md.v3ScalarMul(cam_right, x)), md.v3ScalarMul(cam_up, y)));
         this.pickRayTo = md.v3Add(cam_pos, md.v3ScalarMul(direction, farPlane));
-    };
+    }
 
     update(dynamicsWorld: PhysicsWorld, camera: Camera, force)
     {
@@ -127,7 +124,7 @@ class MouseForces
                 this.pickedBody = null;
             }
         }
-    };
+    }
 
     // Constructor function
     static create(gd: GraphicsDevice, id: InputDevice,
@@ -207,5 +204,5 @@ class MouseForces
         id.addEventListener("mouseup", c.onmouseup);
 
         return c;
-    };
-};
+    }
+}

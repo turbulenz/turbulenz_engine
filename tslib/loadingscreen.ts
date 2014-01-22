@@ -1,8 +1,5 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
-/// <reference path="turbulenz.d.ts" />
-/// <reference path="assettracker.ts" />
-
 class LoadingScreen
 {
     static version = 1;
@@ -32,13 +29,19 @@ class LoadingScreen
     barBackgroundWidth   : number;
     barBackgroundHeight  : number;
     assetTracker         : AssetTracker;
+    progress             : number;
+
+    setProgress(progress: number)
+    {
+        this.progress = progress;
+    }
 
     setTexture(texture)
     {
         this.textureMaterial['diffuse'] = texture;
         this.textureWidthHalf  = (texture.width  * 0.5);
         this.textureHeightHalf = (texture.height * 0.5);
-    };
+    }
 
     loadAndSetTexture(graphicsDevice, requestHandler, mappingTable, name)
     {
@@ -66,7 +69,7 @@ class LoadingScreen
                     }
                 });
         }
-    };
+    }
 
     render(backgroundAlpha, textureAlpha)
     {
@@ -127,11 +130,22 @@ class LoadingScreen
         var bottom = 0;
 
         var assetTracker = this.assetTracker;
+        var progress = (assetTracker && assetTracker.getLoadingProgress()) || this.progress;
+
         var xScale = 2 / screenWidth;
         var yScale = -2 / screenHeight;
 
-        if ((assetTracker) && (backgroundAlpha > 0))
+        if ((progress !== null) && (backgroundAlpha > 0))
         {
+            if (progress < 0)
+            {
+                progress = 0;
+            }
+            else if (progress > 1)
+            {
+                progress = 1;
+            }
+
             backgroundMaterial = this.backgroundMaterial;
             var barBackgroundColor = this.barBackgroundColor;
 
@@ -178,7 +192,7 @@ class LoadingScreen
             if (writer)
             {
                 left   = left + barBorderSize;
-                right  = left + ((barBackgroundWidth - (2 * barBorderSize)) * assetTracker.getLoadingProgress());
+                right  = left + ((barBackgroundWidth - (2 * barBorderSize)) * progress);
                 top    = top + barBorderSize;
                 bottom = bottom - barBorderSize;
 
@@ -228,7 +242,7 @@ class LoadingScreen
                 writer = null;
             }
         }
-    };
+    }
 
     static create(gd: GraphicsDevice, md: MathDevice,
                   parameters: any): LoadingScreen
@@ -263,6 +277,7 @@ class LoadingScreen
             f.barBackgroundWidth = 544;
             f.barBackgroundHeight = 32;
             f.assetTracker = null;
+            f.progress = null;
 
             if (parameters.backgroundColor)
             {
@@ -308,6 +323,11 @@ class LoadingScreen
             if (parameters.assetTracker)
             {
                 f.assetTracker = parameters.assetTracker;
+            }
+
+            if (parameters.progress)
+            {
+                f.progress = parameters.progress;
             }
         }
 
@@ -415,5 +435,5 @@ class LoadingScreen
         }
 
         return null;
-    };
-};
+    }
+}

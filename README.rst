@@ -8,6 +8,100 @@ Turbulenz is an HTML5 game engine and server-side APIs available in JavaScript a
     :local:
 
 
+Examples using the Turbulenz Engine
+===================================
+
+Games
+-----
+
+* `Polycraft <https://turbulenz.com/games/polycraft>`__ - 3D
+* `Save the day <https://turbulenz.com/games/save-the-day>`__ - 2D
+* `Denki Blocks! <https://turbulenz.com/games/denkiblocks>`__ - 2D
+* `Denki Word Quest <https://turbulenz.com/games/denkiwordquest>`__ - 2D
+* `Score Rush <https://turbulenz.com/games/scorerush>`__ - 2D
+* `Score Rush MP <https://turbulenz.com/games/scorerush-mp>`__ - multiplayer
+* `Space Ark <https://turbulenz.com/games/space-ark>`__ - 3D
+* `Apathy <http://apathy.plankhead.com/>`__ - `src <https://github.com/Zacqary/Apathy>`__ - 2D
+* Salty Dogs - `src <https://github.com/zacqary/salty-dogs>`__
+
+Apps
+----
+
+* Sample app - `src <apps/sampleapp/scripts/sampleappmain.js>`__
+* Touch, keyboard, mouse and pad controller input app - `src <apps/inputapp/tsscripts/inputapp>`__
+* Viewer - `src <apps/viewer/scripts/viewer.js>`__
+* Realtime multiplayer worm app - `src <apps/multiworm/tsscripts/worm>`__
+* Asynchronous turn based multiplayer tic-tac-toe app - `src <apps/tictactoe/tsscripts/tictactoe>`__
+
+Prototyping
+-----------
+
+* Prototyping basic app - `jsfiddle <http://jsfiddle.net/jamesaustin/WF47C/>`__
+* Prototyping sample app - `src <apps/protolibsampleapp/scripts/protolibsampleapp.js>`__
+* Prototyping template app - `src <apps/protolibtemplateapp/scripts/app.js>`__
+
+Samples
+-------
+
+* Setup:
+
+  * `Device Initialization <http://biz.turbulenz.com/sample_assets/device_initialization.canvas.release.html>`__ - `src <samples/tsscripts/templates/device_initialization.ts>`__
+  * `Basic Loop <http://biz.turbulenz.com/sample_assets/basic_loop.canvas.release.html>`__ - `src <samples/tsscripts/templates/basic_loop.ts>`__
+
+* 2D Rendering:
+
+  * `2D Canvas <http://biz.turbulenz.com/sample_assets/2dcanvas.canvas.release.html>`__ - `src <samples/tsscripts/templates/2dcanvas.ts>`__ - `jsfiddle <http://jsfiddle.net/jamesaustin/HRAw7/>`__
+  * `Draw2D <http://biz.turbulenz.com/sample_assets/draw2d.canvas.release.html>`__ - `src <samples/tsscripts/templates/draw2d.ts>`__
+  * `TextureEffects <http://biz.turbulenz.com/sample_assets/textureeffects.canvas.release.html>`__ - `src <samples/tsscripts/templates/textureeffects.ts>`__
+  * `Immediate Mode Rendering <http://biz.turbulenz.com/sample_assets/immediate_mode_rendering.canvas.release.html>`__ - `src <samples/tsscripts/templates/immediate_mode_rendering.ts>`__
+  * Loading - `src <samples/tsscripts/templates/loading.ts>`__
+  * SVG - `src <samples/tsscripts/templates/svg.ts>`__
+
+* 3D Rendering:
+
+  * `Camera <http://biz.turbulenz.com/sample_assets/camera.canvas.release.html>`__ - `src <samples/tsscripts/templates/camera.ts>`__
+  * `Material <http://biz.turbulenz.com/sample_assets/material.canvas.release.html>`__ - `src <samples/tsscripts/templates/material.ts>`__
+  * `Forward rendering <http://biz.turbulenz.com/sample_assets/forward_rendering.canvas.release.html>`__ - `src <samples/tsscripts/templates/forward_rendering.ts>`__
+  * `Morphing <http://biz.turbulenz.com/sample_assets/morphing.canvas.release.html>`__ - `src <samples/tsscripts/templates/morphing.ts>`__
+  * `Post effects <http://biz.turbulenz.com/sample_assets/postfx.canvas.release.html>`__ - `src <samples/tsscripts/templates/postfx.ts>`__
+  * `Particles <http://biz.turbulenz.com/sample_assets/particles.canvas.release.html>`__ - `src <samples/tsscripts/templates/particles.ts>`__
+  * Deferred Rendering - `src <samples/tsscripts/templates/deferred_rendering.ts>`__
+  * Load model - `src <samples/tsscripts/templates/load_model.ts>`__
+  * Scene loading - `src <samples/tsscripts/templates/scene_loading.ts>`__
+
+* Animation:
+
+  * `Animation <http://biz.turbulenz.com/sample_assets/animation.canvas.release.html>`__ - `src <samples/tsscripts/templates/animation.ts>`__
+  * `Multiple animations <http://biz.turbulenz.com/sample_assets/multiple_animations.canvas.release.html>`__ - `src <samples/tsscripts/templates/multiple_animations.ts>`__
+
+* 2D Physics:
+
+  * `2D Physics <http://biz.turbulenz.com/sample_assets/physics2d.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics2d.ts>`__
+  * `2D Physics constraints <http://biz.turbulenz.com/sample_assets/physics2d_constraints.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics2d_constraints.ts>`__
+  * `2D Physics callbacks <http://biz.turbulenz.com/sample_assets/physics2d_callbacks.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics2d_callbacks.ts>`__
+
+* 3D Physics:
+
+  * `3D Physics <http://biz.turbulenz.com/sample_assets/physics.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics.ts>`__
+  * `3D Physics <benchmark(http://biz.turbulenz.com/sample_assets/physics_benchmark.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics_benchmark.ts>`__
+  * `3D Physics collision mesh <http://biz.turbulenz.com/sample_assets/physics_collisionmesh.canvas.release.html>`__ - `src <samples/tsscripts/templates/physics_collisionmesh.ts>`__
+  * 3D Physics constraints - `src <samples/tsscripts/templates/physics_constraints.ts>`__
+
+* Sound:
+
+  * `Sound <http://biz.turbulenz.com/sample_assets/sound.canvas.release.html>`__ - `src <samples/tsscripts/templates/sound.ts>`__
+
+* Video:
+
+  * `Video playback <http://biz.turbulenz.com/sample_assets/video.canvas.release.html>`__ - `src <samples/tsscripts/templates/video.ts>`__
+
+* Services:
+
+  * Leaderboards - `src <samples/tsscripts/templates/leaderboards.ts>`__
+  * Multichat - `src <samples/tsscripts/templates/multichat.ts>`__
+  * Payments - `src <samples/tsscripts/templates/payments.ts>`__
+  * Userdata - `src <samples/tsscripts/templates/userdata.ts>`__
+
 Features
 ========
 
@@ -470,8 +564,8 @@ History
 The Engine was created and is maintained by `Turbulenz Limited <http://biz.turbulenz.com>`__ and was open sourced
 in April 2013.
 
-The latest release is 1.1 which is tagged in the repository or a tarball/zip can be can be downloaded from
-`here <https://github.com/turbulenz/turbulenz_engine/archive/release_1.1.tar.gz>`__
+The latest release is 1.2 which is tagged in the repository or a tarball/zip can be can be downloaded from
+`here <https://github.com/turbulenz/turbulenz_engine/archive/release_1.2.tar.gz>`__
 
 A full history of changes can be found in the `Changelog <docs/source/changelog.rst>`__
 
@@ -527,7 +621,7 @@ Pre-requisites for building the tools cgfx2json and NvTriStrip via ``python mana
 
 - OpenGL development libraries, these are included on Windows and Mac OSX with the compiler toolchains. For
   debian based linux distributions the libgl1-mesa-dev package will provide the required files (e.g. ``sudo
-  apt-get install libg1-mesa-dev``), for other linux distributions find the package supplying GL/gl.h and libGL.so
+  apt-get install libgl1-mesa-dev``), for other linux distributions find the package supplying GL/gl.h and libGL.so
 
 
 Setup Guide
@@ -639,7 +733,7 @@ as described in the setup section.
 
 - **Local Development Server** - Setting up the environment also includes a locally hosted web server which can be
   used for development of HTML5 games and applications. See the
-  `Local Server <http://docs.turbulenz.com/local/index.html>`__ section in the documentation for more details.
+  `Local Server <https://github.com/turbulenz/turbulenz_local>`__ repository for more details.
 
 
 Getting Started With The API

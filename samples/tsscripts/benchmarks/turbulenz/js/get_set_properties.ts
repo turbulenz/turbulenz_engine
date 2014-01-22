@@ -2,8 +2,6 @@
 
 /*global BF: false*/
 
-declare var BF;
-
 //
 //  Access properties on object vs Get/Set properties on object
 //
@@ -19,22 +17,22 @@ class GetSetObjectToAccess
     getA()
     {
         return this.a;
-    };
+    }
 
     setA(a)
     {
         this.a = a;
-    };
+    }
 
     getB()
     {
         return this.b;
-    };
+    }
 
     setB(b)
     {
         this.b = b;
-    };
+    }
 
     // Constructor function
     static create(i)
@@ -43,8 +41,8 @@ class GetSetObjectToAccess
         o.a = i;
         o.b = 0;
         return o;
-    };
-};
+    }
+}
 
 //
 //  AccessProperty: Iterate over objects and directly access the property on it
@@ -65,7 +63,7 @@ class AccessProperty
             array[i] = GetSetObjectToAccess.create(i);
         }
         this.array = array;
-    };
+    }
 
     run()
     {
@@ -79,7 +77,7 @@ class AccessProperty
             obj.b = a;
             a = obj.a;
         }
-    };
+    }
 
     destroy()
     {
@@ -90,7 +88,7 @@ class AccessProperty
             delete array[i];
         }
         delete this.array;
-    };
+    }
 
     // Constructor function
     static create()
@@ -98,8 +96,8 @@ class AccessProperty
         var a = new AccessProperty();
         a.array = [];
         return a;
-    };
-};
+    }
+}
 
 //
 //  GetSetProperty: Iterate over objects and use get and set to access the property
@@ -120,7 +118,7 @@ class GetSetProperty
             array[i] = GetSetObjectToAccess.create(i);
         }
         this.array = array;
-    };
+    }
 
     run()
     {
@@ -134,7 +132,7 @@ class GetSetProperty
             obj.setB(a);
             a = obj.getA();
         }
-    };
+    }
 
     destroy()
     {
@@ -145,7 +143,7 @@ class GetSetProperty
             delete array[i];
         }
         delete this.array;
-    };
+    }
 
     // Constructor function
     static create()
@@ -153,8 +151,8 @@ class GetSetProperty
         var a = new GetSetProperty();
         a.array = [];
         return a;
-    };
-};
+    }
+}
 
 var accessProperty = AccessProperty.create();
 var getsetProperty = GetSetProperty.create();
