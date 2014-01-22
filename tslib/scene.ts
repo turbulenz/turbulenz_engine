@@ -361,12 +361,14 @@ class Scene
         var numPlanes = 0;
         var n, np, nnp, p, plane, numVisiblePointsPlane;
 
-        var culledByPlane = [];
+        debug.assert(numFrustumPlanes < 32, "Cannot use bit field for so many planes...");
+
+        var culledByPlane: number[] = [];
         culledByPlane.length = numPoints;
         np = 0;
         do
         {
-            culledByPlane[np] = [];
+            culledByPlane[np] = 0;
             np += 1;
         }
         while (np < numPoints);
@@ -391,7 +393,7 @@ class Scene
                 }
                 else
                 {
-                    culledByPlane[np][n] = true;
+                    culledByPlane[np] |= (1 << n);
                 }
                 np += 1;
             }
@@ -434,17 +436,7 @@ class Scene
             }
 
             // Skip plane if both points were culled by the same frustum plane
-            var culled0 = culledByPlane[np];
-            var culled1 = culledByPlane[nnp];
-            var maxCulled = (culled0.length < culled1.length ? culled0.length : culled1.length);
-            for (n = 0; n < maxCulled; n += 1)
-            {
-                if (culled0[n] && culled1[n])
-                {
-                    break;
-                }
-            }
-            if (n < maxCulled)
+            if (0 !== (culledByPlane[np] & culledByPlane[nnp]))
             {
                 np += 1;
                 continue;
