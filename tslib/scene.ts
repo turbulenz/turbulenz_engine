@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 /*global AABBTree*/
 /*global Material*/
 /*global SceneNode*/
@@ -1127,12 +1127,12 @@ class Scene
     //
     // buildPortalPlanesNoFrustum
     //
-    buildPortalPlanesNoFrustum(points: any[], cX: number, cY: number, cZ: number) : any[] // v4[]
+    buildPortalPlanesNoFrustum(points: any[], planes: any[], cX: number, cY: number, cZ: number, parentPlanes: any[]) : boolean
     {
         var md = this.md;
         var numPoints = points.length;
-        var planes = [];
-        var numPlanes = 0;
+        var numParentPlanes = (parentPlanes ? parentPlanes.length : 0);
+        var numPlanes = numParentPlanes;
         var newPoints = this.newPoints;
         var np, p;
 
@@ -1166,7 +1166,7 @@ class Scene
             var lnsq = ((nX * nX) + (nY * nY) + (nZ * nZ));
             if (lnsq === 0)
             {
-                return null;
+                return false;
             }
             var lnrcp = 1.0 / sqrt(lnsq);
             nX *= lnrcp;
@@ -1176,14 +1176,20 @@ class Scene
             // d = dot(n, c)
             var d = ((nX * cX) + (nY * cY) + (nZ * cZ));
 
-            planes[numPlanes] = md.v4Build(nX, nY, nZ, d);
+            planes[numPlanes] = md.v4Build(nX, nY, nZ, d, planes[numPlanes]);
             numPlanes += 1;
 
             np += 1;
         }
         while (np < numPoints);
 
-        return planes;
+        for (np = 0; np < numParentPlanes; np += 1)
+        {
+            planes[np] = md.v4Copy(parentPlanes[np], planes[np]);
+        }
+
+        planes.length = numPlanes;
+        return true;
     }
 
     //
@@ -1233,24 +1239,24 @@ class Scene
                 if (((d0 * cX) + (d1 * cY) + (d2 * cZ)) < offset &&
                     (d0 * (d0 < 0 ? min0 : max0) + d1 * (d1 < 0 ? min1 : max1) + d2 * (d2 < 0 ? min2 : max2)) >= offset)
                 {
-                    planes = this.buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
-                    if (planes)
+                    portalItem = overlappingPortals[numOverlappingPortals];
+                    if (portalItem)
                     {
-                        portalItem = overlappingPortals[numOverlappingPortals];
-                        if (portalItem)
-                        {
-                            portalItem.portal = portal;
-                            portalItem.planes = planes;
-                            portalItem.area = portal.area;
-                        }
-                        else
-                        {
-                            overlappingPortals[numOverlappingPortals] = {
-                                    portal: portal,
-                                    planes: planes,
-                                    area: portal.area
-                                };
-                        }
+                        planes = portalItem.planes;
+                    }
+                    else
+                    {
+                        planes = [];
+                        overlappingPortals[numOverlappingPortals] = portalItem = {
+                                portal: null,
+                                planes: planes,
+                                area: 0
+                            };
+                    }
+                    if (this.buildPortalPlanesNoFrustum(portal.points, planes, cX, cY, cZ, null))
+                    {
+                        portalItem.portal = portal;
+                        portalItem.area = portal.area;
                         numOverlappingPortals += 1;
                     }
                 }
@@ -1296,25 +1302,25 @@ class Scene
                             if (((d0 * cX) + (d1 * cY) + (d2 * cZ)) < offset &&
                                 (d0 * (d0 < 0 ? min0 : max0) + d1 * (d1 < 0 ? min1 : max1) + d2 * (d2 < 0 ? min2 : max2)) >= offset)
                             {
-                                planes = this.buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
-                                if (planes)
+                                portalItem = overlappingPortals[numOverlappingPortals];
+                                if (portalItem)
+                                {
+                                    planes = portalItem.planes;
+                                }
+                                else
+                                {
+                                    planes = [];
+                                    overlappingPortals[numOverlappingPortals] = portalItem = {
+                                        portal: null,
+                                        planes: planes,
+                                        area: 0
+                                    };
+                                }
+                                if (this.buildPortalPlanesNoFrustum(portal.points, planes, cX, cY, cZ, parentPlanes))
                                 {
                                     portal.queryCounter = queryCounter;
-                                    portalItem = overlappingPortals[numOverlappingPortals];
-                                    if (portalItem)
-                                    {
-                                        portalItem.portal = portal;
-                                        portalItem.planes = parentPlanes.concat(planes);
-                                        portalItem.area = nextArea;
-                                    }
-                                    else
-                                    {
-                                        overlappingPortals[numOverlappingPortals] = {
-                                            portal: portal,
-                                            planes: parentPlanes.concat(planes),
-                                            area: nextArea
-                                        };
-                                    }
+                                    portalItem.portal = portal;
+                                    portalItem.area = nextArea;
                                     numOverlappingPortals += 1;
                                 }
                             }
