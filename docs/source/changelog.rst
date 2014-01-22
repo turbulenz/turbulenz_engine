@@ -10,6 +10,11 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-01-22
+
+- Fixed missing copyright comments
+- Add viewBox transforms to svg implementation
+
 2014-01-21
 
 - Fixed the handling of gamesession create to treat 404s as if services are unavailable
