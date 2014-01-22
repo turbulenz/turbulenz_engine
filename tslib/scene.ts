@@ -1127,7 +1127,7 @@ class Scene
     //
     // buildPortalPlanesNoFrustum
     //
-    buildPortalPlanesNoFrustum(points, cX, cY, cZ) : any[] // v4[]
+    buildPortalPlanesNoFrustum(points: any[], cX: number, cY: number, cZ: number) : any[] // v4[]
     {
         var md = this.md;
         var numPoints = points.length;
@@ -1196,6 +1196,7 @@ class Scene
         var queryCounter = this.getQueryCounter();
         var areas = this.areas;
         var numOverlappingPortals = 0;
+        var portalItem;
 
         var min0 = extents[0];
         var min1 = extents[1];
@@ -1236,11 +1237,21 @@ class Scene
                     planes = this.buildPortalPlanesNoFrustum(portal.points, cX, cY, cZ);
                     if (planes)
                     {
-                        overlappingPortals[numOverlappingPortals] = {
-                                portal: portal,
-                                planes: planes,
-                                area: portal.area
-                            };
+                        portalItem = overlappingPortals[numOverlappingPortals];
+                        if (portalItem)
+                        {
+                            portalItem.portal = portal;
+                            portalItem.planes = planes;
+                            portalItem.area = portal.area;
+                        }
+                        else
+                        {
+                            overlappingPortals[numOverlappingPortals] = {
+                                    portal: portal,
+                                    planes: planes,
+                                    area: portal.area
+                                };
+                        }
                         numOverlappingPortals += 1;
                     }
                 }
@@ -1249,7 +1260,7 @@ class Scene
 
         if (0 < numOverlappingPortals)
         {
-            var portalItem, parentPlanes, nextArea;
+            var parentPlanes, nextArea;
             var currentPortalIndex = 0;
             do
             {
@@ -1290,11 +1301,21 @@ class Scene
                                 if (planes)
                                 {
                                     portal.queryCounter = queryCounter;
-                                    overlappingPortals[numOverlappingPortals] = {
+                                    portalItem = overlappingPortals[numOverlappingPortals];
+                                    if (portalItem)
+                                    {
+                                        portalItem.portal = portal;
+                                        portalItem.planes = parentPlanes.concat(planes);
+                                        portalItem.area = nextArea;
+                                    }
+                                    else
+                                    {
+                                        overlappingPortals[numOverlappingPortals] = {
                                             portal: portal,
                                             planes: parentPlanes.concat(planes),
                                             area: nextArea
                                         };
+                                    }
                                     numOverlappingPortals += 1;
                                 }
                             }
