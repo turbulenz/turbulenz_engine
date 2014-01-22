@@ -230,7 +230,7 @@ The ``offerings`` definitions also contain:
 ``price``
     The price of the item for each currency.
     Currently, only United States dollars (USD) is supported.
-    For Google Play payments this will be automatically converted to the users local currency (at exchange rates
+    For Google Play payments the value in USD will be automatically converted to the user's local currency (at exchange rates
     provided by Google).
 
 .. NOTE::
