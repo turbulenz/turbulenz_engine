@@ -1,3 +1,5 @@
+// Copyright (c) 2013-2014 Turbulenz Limited
+
 #include "particles-common.cgh"
 
 // z bound for normalization
