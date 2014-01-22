@@ -8,11 +8,37 @@
 
 interface FontDimensions
 {
-    width: number;
-    height: number;
-    numGlyphs: number;
-    linesWidth: number[];
-};
+    width      : number;
+    height     : number;
+    numGlyphs  : number;
+    linesWidth : number[];
+}
+
+interface FontGlyph
+{
+    width   : number;
+    height  : number;
+    awidth  : number;
+    xoffset : number;
+    yoffset : number;
+    left    : number;
+    top     : number;
+    right   : number;
+    bottom  : number;
+    page    : number;
+}
+
+// A FontKerning is a map from character code to spacing values.
+interface FontKerning
+{
+    [charcode: number]: number;
+}
+
+// Map from character code to the corresponding kerning values.
+interface FontKerningMap
+{
+    [charcode: number]: FontKerning;
+}
 
 /**
    @class  Font
@@ -29,12 +55,12 @@ class Font
     pageWidth: number;
     pageHeight: number;
     baseline: any; // TODO
-    glyphs: any; // TODO
+    glyphs: FontGlyph[];
     numGlyphs: number;
     minGlyphIndex: number;
     lineHeight: number;
     pages: number;
-    kernings: any; // TODO
+    kernings: FontKerningMap;
     texture: Texture;
 
     gd: GraphicsDevice;
