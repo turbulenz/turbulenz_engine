@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2012 Turbulenz Limited
+// Copyright (c) 2011-2014 Turbulenz Limited
 /*global Float32Array: false*/
 /*global Uint16Array: false*/
 /*global Uint32Array: false*/
