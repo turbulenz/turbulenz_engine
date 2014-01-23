@@ -7558,6 +7558,7 @@ class WebGLPhysicsWorld implements PhysicsWorld
 
         s.staticSpatialMap = AABBTree.create(true);
         s.dynamicSpatialMap = AABBTree.create();
+        s.sleepingSpatialMap = AABBTree.create();
 
         s.collisionObjects = [];
         s.rigidBodies = [];
@@ -7636,6 +7637,7 @@ class WebGLPrivatePhysicsWorld
     maxGiveUpTimeStep              : number;
     staticSpatialMap               : AABBTree;
     dynamicSpatialMap              : AABBTree;
+    sleepingSpatialMap             : AABBTree;
     collisionObjects               : WebGLPhysicsCollisionObject[];
     rigidBodies                    : WebGLPhysicsRigidBody[];
     constraints                    : WebGLPhysicsConstraint[];
@@ -8448,7 +8450,7 @@ class WebGLPrivatePhysicsWorld
             {
                 if (!body.previouslyActive)
                 {
-                    this.staticSpatialMap.remove(body);
+                    this.sleepingSpatialMap.remove(body);
                     this.dynamicSpatialMap.add(body, extents);
                 }
                 else
@@ -8461,11 +8463,11 @@ class WebGLPrivatePhysicsWorld
                 if (body.previouslyActive)
                 {
                     this.dynamicSpatialMap.remove(body);
-                    this.staticSpatialMap.add(body, extents);
+                    this.sleepingSpatialMap.add(body, extents);
                 }
                 else
                 {
-                    this.staticSpatialMap.update(body, extents);
+                    this.sleepingSpatialMap.update(body, extents);
                 }
             }
 
@@ -8873,6 +8875,7 @@ class WebGLPrivatePhysicsWorld
     {
         var dynamicMap = this.dynamicSpatialMap;
         var staticMap = this.staticSpatialMap;
+        var sleepingMap = this.sleepingSpatialMap;
         var rigidBodies = this.activeBodies;
         var kinematics = this.activeKinematics;
         var constraints = this.activeConstraints;
@@ -9031,6 +9034,7 @@ class WebGLPrivatePhysicsWorld
             // Prepare broadphase
             staticMap.finalize();
             dynamicMap.finalize();
+            sleepingMap.finalize();
 
             // Perform broadphase
 
@@ -9045,7 +9049,7 @@ class WebGLPrivatePhysicsWorld
             // Get overlapping pairs of dynamic objects.
             var numDynDyn = dynamicMap.getOverlappingPairs(objects, 0);
 
-            // Get overlapping pairs of static <-> dynamic objects.
+            // Get overlapping pairs of static / sleeping <-> dynamic objects.
             var storageIndex = numDynDyn;
             var numPairs;
             limit = rigidBodies.length;
@@ -9053,6 +9057,7 @@ class WebGLPrivatePhysicsWorld
             {
                 body = rigidBodies[i];
                 numPairs = staticMap.getOverlappingNodes(body.extents, objects, storageIndex + 1);
+                numPairs += sleepingMap.getOverlappingNodes(body.extents, objects, storageIndex + 1 + numPairs);
                 // only include sublist if number of pairs is non-zero.
                 if (numPairs !== 0)
                 {
@@ -9069,7 +9074,7 @@ class WebGLPrivatePhysicsWorld
             {
                 body = kinematics[i];
 
-                numPairs = staticMap.getOverlappingNodes(body.extents, objects, storageIndex + 1);
+                numPairs = sleepingMap.getOverlappingNodes(body.extents, objects, storageIndex + 1);
                 // only include sublist if number of pairs is non-zero.
                 if (numPairs !== 0)
                 {
@@ -9365,6 +9370,7 @@ class WebGLPrivatePhysicsWorld
             // extents for continuous collisions and absolutely must be finalized.
             staticMap.finalize();
             dynamicMap.finalize();
+            sleepingMap.finalize();
 
             // Continuous collision detection.
             var slop = WebGLPhysicsConfig.CONTINUOUS_SLOP + WebGLPhysicsConfig.CONTACT_SLOP;
@@ -9429,6 +9435,7 @@ class WebGLPrivatePhysicsWorld
             {
                 objectA = unfrozen[i];
                 numPairs = staticMap.getOverlappingNodes(objectA.extents, objects, 0);
+                numPairs += sleepingMap.getOverlappingNodes(objectA.extents, objects, numPairs);
                 for (j = 0; j < numPairs; j += 1)
                 {
                     objectB = objects[j];
@@ -9698,6 +9705,7 @@ class WebGLPrivatePhysicsWorld
 
         this.staticSpatialMap.finalize();
         this.dynamicSpatialMap.finalize();
+        this.sleepingSpatialMap.finalize();
 
         function rayCallback(tree, obj, pRay, unusedAABBDistance, upperBound)
         {
@@ -9729,7 +9737,9 @@ class WebGLPrivatePhysicsWorld
             return resultObj;
         }
 
-        var ret = AABBTree.rayTest([this.staticSpatialMap, this.dynamicSpatialMap], pRay, rayCallback);
+        var ret = AABBTree.rayTest([this.staticSpatialMap, this.dynamicSpatialMap, this.sleepingSpatialMap],
+                                   pRay,
+                                   rayCallback);
         //delete additional factor property
         if (ret !== null)
         {
@@ -10157,11 +10167,13 @@ class WebGLPrivatePhysicsWorld
         // Find all objects intersecting swept shape AABB.
         this.staticSpatialMap.finalize();
         this.dynamicSpatialMap.finalize();
+        this.sleepingSpatialMap.finalize();
 
         var objects = this.persistantObjectsList;
         var triangles = this.persistantTrianglesList;
         var staticCount = this.staticSpatialMap.getOverlappingNodes(extents, objects, 0);
-        var limit = staticCount + this.dynamicSpatialMap.getOverlappingNodes(extents, objects, staticCount);
+        staticCount += this.dynamicSpatialMap.getOverlappingNodes(extents, objects, staticCount);
+        var limit = staticCount + this.sleepingSpatialMap.getOverlappingNodes(extents, objects, staticCount);
 
         var minResult = null;
         var i, j;
@@ -10383,9 +10395,13 @@ class WebGLPrivatePhysicsWorld
             activeList.pop();
             this.dynamicSpatialMap.remove(body);
         }
-        else
+        else if (body.collisionObject && !body.kinematic)
         {
             this.staticSpatialMap.remove(body);
+        }
+        else
+        {
+            this.sleepingSpatialMap.remove(body);
         }
 
         this.removeArbitersFromObject(body);
