@@ -1,3 +1,5 @@
+/*{# Copyright (c) 2013-2014 Turbulenz Limited #}*/
+
 /*global TurbulenzEngine: false*/
 /*global Application: false*/
 /*global Protolib: false*/

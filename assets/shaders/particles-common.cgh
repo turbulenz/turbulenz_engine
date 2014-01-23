@@ -1,3 +1,5 @@
+// Copyright (c) 2013-2014 Turbulenz Limited
+
 // texture dimensions and reciprocals.
 float2 textureSize;
 float2 invTextureSize;
