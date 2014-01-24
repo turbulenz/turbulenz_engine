@@ -141,6 +141,9 @@ sound_src := tsscripts/templates/sound.ts
 sound_deps := sceneloader motion htmlcontrols
 TSAPPS += sound
 
+subtitleplayer_src := tsscripts/templates/subtitleplayer.ts
+TSAPPS += subtitleplayer
+
 svg_src := tsscripts/templates/svg.ts
 TSAPPS += svg
 
