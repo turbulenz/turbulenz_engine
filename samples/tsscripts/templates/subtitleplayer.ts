@@ -37,7 +37,7 @@ TurbulenzEngine.onload = function onloadFn()
         var assetPrefix = mappingTable.assetPrefix;
 
         fontManager.setPathRemapping(urlMapping, assetPrefix);
-        fontManager.load('fonts/hero.fnt', function (fontObject)
+        fontManager.load('fonts/mincho.fnt', function (fontObject)
             {
                 font = fontObject;
             });

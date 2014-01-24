@@ -102,6 +102,11 @@
 
 - fonts/hero.fnt
 
+- fonts/mincho.fnt
+- textures/mincho_0.png
+- textures/mincho_1.png
+- textures/mincho_2.png
+
 - videos/turbulenzanimation.mp4
 - videos/turbulenzanimation.webm
 - sounds/turbulenzanimation.mp3
