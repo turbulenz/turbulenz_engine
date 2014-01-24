@@ -46,7 +46,7 @@ TurbulenzEngine.onload = function onloadFn()
         shaderManager.load('shaders/font.cgfx', function (shaderObject)
             {
                 shader = shaderObject;
-                fontTechnique = shader.getTechnique('font');
+                fontTechnique = shader.getTechnique('font8');
                 fontTechniqueParameters = gd.createTechniqueParameters({
                     clipSpace : md.v4BuildZero(),
                     alphaRef : 0.01,
