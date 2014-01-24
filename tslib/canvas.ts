@@ -3072,20 +3072,27 @@ class CanvasContext
                 alignment: alignment
             };
 
-            var textVertices = font.generateTextVertices(text, params);
-            if (textVertices)
-            {
-                var numValues = textVertices.length;
-                var n;
-                for (n = 0; n < numValues; n += 4)
-                {
-                    var p = this.transformPoint(textVertices[n], textVertices[n + 1]);
-                    textVertices[n] = p[0];
-                    textVertices[n + 1] = p[1];
-                }
+            var textCtx = font.generateTextVertices(text, params);
 
-                font.drawTextVertices(textVertices, true);
+            var pageContexts = textCtx.pageContexts;
+            for (var pageIdx in pageContexts)
+                if (pageContexts.hasOwnProperty(pageIdx))
+            {
+                var textVertices = pageContexts[pageIdx].vertices;
+                if (textVertices)
+                {
+                    var numValues = textVertices.length;
+                    var n;
+                    for (n = 0; n < numValues; n += 4)
+                    {
+                        var p = this.transformPoint(textVertices[n], textVertices[n + 1]);
+                        textVertices[n] = p[0];
+                        textVertices[n + 1] = p[1];
+                    }
+                }
             }
+
+            font.drawTextVertices(textVertices, true);
         }
         else
         {
