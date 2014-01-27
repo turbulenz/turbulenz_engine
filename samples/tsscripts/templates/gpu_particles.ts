@@ -720,7 +720,8 @@ TurbulenzEngine.onload = function onloadFn()
         var dimensions = font.calculateTextDimensions(text, fontScale, 0);
         font.drawTextRect(text, {
             rect : mathDevice.v4Build(0, 0, dimensions.width, dimensions.height),
-            scale: fontScale
+            scale: fontScale,
+            alignment: 0
         });
 
         // Draw 2d mini-map displaying all particle instances, and whether they are:

@@ -45,8 +45,8 @@ interface FontKerningMap
 interface FontDrawParameters
 {
     rect        : any;
-    alignment   : any;
     scale       : number;
+    alignment?  : any;
     spacing?    : number;
     dimensions? : FontDimensions;
 }
