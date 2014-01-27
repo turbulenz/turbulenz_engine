@@ -279,7 +279,7 @@ Calculate text dimensions of a block of text and a font.
 ``spacing``
     Extra spacing between characters (in pixels).
 
-Returns an object with 3 properties:
+Returns an object with properties:
 
 ``width`` and ``height``
     The dimensions of the block of text (in pixels).
@@ -289,6 +289,13 @@ Returns an object with 3 properties:
 
 ``numGlyphs``
     The number of glyphs in the block of text.
+
+``glyphCounts``
+    A map from page numbers to glyph counts, for the given string.
+    This is generally only used by the `drawTextRect` function, in
+    particular for fonts that require multiple texture pages.  It can
+    be passed into `drawTextRect` via the parameters object to avoid
+    recalculation.
 
 .. index::
     pair: FontManager; destroy
@@ -448,7 +455,7 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to dra
             rect: [x, y, width, height],
             alignment: windowdef.textalign,
             scale: windowdef.textscale,
-            spacing: windowdef.textspacing
+            spacing: windowdef.textspacing,
         };
     var vertices = font.generateTextVertices(text, textParameters);
     if (vertices)
@@ -469,7 +476,7 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to dra
     Vertices to be drawn.
 
 ``reuse``
-    Optional boolean value to determine if the ``vertices`` object should be reused for subsequent calls to 
+    Optional boolean value to determine if the ``vertices`` object should be reused for subsequent calls to
     :ref:`generateTextVertices <font_generatetextvertices>`.
 
 
@@ -522,6 +529,11 @@ Draws text.
 
     ``spacing``
         Extra spacing between characters. Defaults to `0`.
+
+    ``dimensions``
+        (Optional).  A dimensions object, returned by
+        calculateTextDimensions, to save internal re-calculation of
+        varioius properties of the text.
 
 
 Properties

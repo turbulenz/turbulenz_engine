@@ -8,10 +8,11 @@
 
 interface FontDimensions
 {
-    width      : number;
-    height     : number;
-    numGlyphs  : number;
-    linesWidth : number[];
+    width        : number;
+    height       : number;
+    numGlyphs    : number;
+    linesWidth   : number[];
+    glyphCounts  : { [pageIdx: number]: number; };
 }
 
 interface FontGlyph
@@ -43,10 +44,11 @@ interface FontKerningMap
 // Parameters to the drawTextRect call
 interface FontDrawParameters
 {
-    rect      : any;
-    alignment : any;
-    scale     : number;
-    spacing?  : number;
+    rect        : any;
+    alignment   : any;
+    scale       : number;
+    spacing?    : number;
+    dimensions? : FontDimensions;
 }
 
 // Maintains the per-page info for a given string.
@@ -59,8 +61,6 @@ interface FontDrawPageContext
 
 interface FontDrawContext
 {
-    // TODO: merge this into FontDimensions?
-    glyphCounts  : { [pageIdx: number]: number; };
     pageContexts : { [pageIdx: number]: FontDrawPageContext };
 }
 
@@ -113,8 +113,7 @@ class Font
     /// collect information about how the characters are distributed
     /// across the pages.
 
-    calculateTextDimensions(text: string, scale: number, spacing: number,
-                            glyphCounts?: {[pageIdx: number]: number;})
+    calculateTextDimensions(text: string, scale: number, spacing: number)
     {
         var glyphs = this.glyphs;
         var lineHeight = (this.lineHeight * scale);
@@ -123,6 +122,7 @@ class Font
         var numGlyphs = 0;
         var numLines = 0;
         var linesWidth = [];
+        var glyphCounts = {};
 
         var textLength = text.length;
         var lineWidth = 0;
@@ -167,12 +167,9 @@ class Font
                         lineWidth += spacing;
                     }
 
-                    if (glyphCounts)
-                    {
-                        pageIdx = glyph.page;
-                        curGlyphCount = glyphCounts[pageIdx] || 0;
-                        glyphCounts[pageIdx] = curGlyphCount + 1;
-                    }
+                    pageIdx = glyph.page;
+                    curGlyphCount = glyphCounts[pageIdx] || 0;
+                    glyphCounts[pageIdx] = curGlyphCount + 1;
                 }
             }
         }
@@ -188,29 +185,30 @@ class Font
             width: width,
             height: height,
             numGlyphs: numGlyphs,
-            linesWidth: linesWidth
+            linesWidth: linesWidth,
+            glyphCounts: glyphCounts
         };
     }
 
+    /// A FontDimensions object, as returned by
+    /// calculateTextDimensions can optionally be passed in to avoid
+    /// recalculating certain properties of the text.
     generateTextVertices(text: string,
-                         params: FontDrawParameters): FontDrawContext
+                         params: FontDrawParameters) : FontDrawContext
     {
-        var ctx : FontDrawContext = {
-            glyphCounts: {},
-            pageContexts: {}
-        };
-
         var rect = params.rect;
         var alignment = params.alignment;
         var scale = (params.scale || 1.0);
         var extraSpacing = (params.spacing ? (params.spacing * scale) : 0);
+        var dimensions = params.dimensions ||
+            this.calculateTextDimensions(text, scale, extraSpacing);
 
-        var glyphCounts = ctx.glyphCounts;
+        var ctx : FontDrawContext = {
+            pageContexts: {}
+        };
         var pageContexts = ctx.pageContexts;
 
-        var dimensions =
-            this.calculateTextDimensions(text, scale, extraSpacing,
-                                         glyphCounts);
+        var glyphCounts = dimensions.glyphCounts;
         var totalNumGlyphs = dimensions.numGlyphs;
         if (0 >= totalNumGlyphs)
         {
@@ -239,25 +237,22 @@ class Font
         if (glyphCounts.hasOwnProperty(pageIdx))
         {
             numGlyphs = glyphCounts[pageIdx];
+            vertices = reusableArrays[numGlyphs];
+            if (vertices)
+            {
+                // Need to remove from cache just in case it is not
+                // returned to us
+                reusableArrays[numGlyphs] = null;
+            }
+            else
+            {
+                vertices = new fm.float32ArrayConstructor((numGlyphs * 4) * 4);
+            }
+
             pageContexts[pageIdx] = {
-                vertices: new fm.float32ArrayConstructor((numGlyphs * 4) * 4),
+                vertices: vertices,
                 vertexIndex: 0
             };
-
-            // TODO: re-enable the caching here somehow.
-
-            // var vertices = reusableArrays[numGlyphs];
-            // if (vertices)
-            // {
-            //     // Need to remove from cache just in case it is not
-            //     // returned to us
-            //     reusableArrays[numGlyphs] = null;
-            // }
-            // else
-            // {
-            //     var numVertices = (numGlyphs * 4);
-            //     vertices = new fm.float32ArrayConstructor(numVertices * 4);
-            // }
         }
         }
 
@@ -376,7 +371,13 @@ class Font
 
     drawTextRect(text: string, params: FontDrawParameters)
     {
-        // TODO: cache this somewhere for fast recalculation?
+        // TODO: It may work out more efficient to check the
+        // dimensions and call 'generateTextVertices' and
+        // 'drawTextVertices' for each page.  We have to iterate
+        // through the text several times, but we can ensure we only
+        // take a single buffer from the 'reusableArrays' cache each
+        // time.
+
         var ctx = this.generateTextVertices(text, params);
         this.drawTextVertices(ctx, true);
     }
@@ -396,6 +397,7 @@ class Font
         var numGlyphs: number;
         var numVertices: number;
         var numIndices: number;
+        var reusableArrays = fm.reusableArrays;
 
         for (pageIdx in pageContexts)
         {
@@ -407,13 +409,6 @@ class Font
             /*jshint bitwise: false*/
             numGlyphs = (vertices.length >> 4);
             /*jshint bitwise: true*/
-
-            // TODO: re-enable caching somehow
-
-            // if (reuseVertices)
-            // {
-            //     fm.reusableArrays[numGlyphs] = vertices;
-            // }
 
             numVertices = (numGlyphs * 4);
 
@@ -455,6 +450,15 @@ class Font
             else
             {
                 gd.draw(fm.primitiveFan, 4, 0);
+            }
+
+            if (reuseVertices)
+            {
+                // This may overwrite an existing entry in the cache,
+                // but it's probably faster to blindly overwrite than
+                // do a lookup to see if there is already an entry.
+
+                fm.reusableArrays[numGlyphs] = vertices;
             }
         }
         }
