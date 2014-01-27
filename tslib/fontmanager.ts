@@ -153,7 +153,7 @@ class Font
             }
             else
             {
-                glyph = glyphs[c];
+                glyph = glyphs[c] || glyphs['?'.charCodeAt(0)];
                 if (glyph)
                 {
                     gaw = glyph.awidth;
@@ -166,13 +166,13 @@ class Font
                     {
                         lineWidth += spacing;
                     }
-                }
 
-                if (glyphCounts)
-                {
-                    pageIdx = glyph.page;
-                    curGlyphCount = glyphCounts[pageIdx] || 0;
-                    glyphCounts[pageIdx] = curGlyphCount + 1;
+                    if (glyphCounts)
+                    {
+                        pageIdx = glyph.page;
+                        curGlyphCount = glyphCounts[pageIdx] || 0;
+                        glyphCounts[pageIdx] = curGlyphCount + 1;
+                    }
                 }
             }
         }
@@ -299,7 +299,7 @@ class Font
             }
             else
             {
-                glyph = glyphs[c];
+                glyph = glyphs[c] || glyphs['?'.charCodeAt(0)];
                 if (glyph)
                 {
                     pageIdx = glyph.page;
