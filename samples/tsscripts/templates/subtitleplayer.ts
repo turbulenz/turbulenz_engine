@@ -81,18 +81,39 @@ TurbulenzEngine.onload = function onloadFn()
                        fontTechniqueParameters.clipSpace);
         gd.setTechniqueParameters(fontTechniqueParameters);
 
-        var text = "Hello?. こんにちは 漢字";
+        var text = "Hello?. こんにちは \n漢字\nとてもながい文字列です。画面からでないように。。。";
         var scale = 1.0;
         var spacing = 0;
 
-        var textSize = font.calculateTextDimensions(text, scale, spacing);
+        var textDimensions =
+            font.calculateTextDimensions(text, scale, spacing);
+
+        // Put the text at the right place on the screen
+
+        // var yProportion = 0.3;
+        var maxWidthProportion = 0.8;
+        var lowEdgeProportion = 0.1
+
+        var maxX = gd.width * maxWidthProportion;
+        var maxY = gd.height * (1 - lowEdgeProportion);
+
+        while ((textDimensions.width > maxX) || (textDimensions.height > maxY))
+        {
+            scale *= 0.5;
+            textDimensions = font.calculateTextDimensions(text, scale, spacing);
+        }
+
+        var posx = gd.width / 2;
+        var posy = gd.height * (1 - lowEdgeProportion) - textDimensions.height;
+
         font.drawTextRect
         (text,
          {
-             alignment: 0,
-             rect: [0, 0, 0, 0],
+             alignment: 1,
+             rect: [posx, posy, 0, 0],
              scale: scale,
-             spacing: spacing
+             spacing: spacing,
+             dimensions: textDimensions
          });
 
     };
