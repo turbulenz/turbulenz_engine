@@ -81,7 +81,7 @@ TurbulenzEngine.onload = function onloadFn()
                        fontTechniqueParameters.clipSpace);
         gd.setTechniqueParameters(fontTechniqueParameters);
 
-        var text = "Alright, world?";
+        var text = "Hello?. こんにちは 漢字";
         var scale = 1.0;
         var spacing = 0;
 
