@@ -44,7 +44,9 @@ fp_font(float2 INTexCoord0 : TEXCOORD0) : COLOR
 float4
 fp_font_8(float2 INTexCoord0 : TEXCOORD0) : COLOR
 {
-    float4 result = color * tex2D(texture, INTexCoord0).xxxx;
+    float a = tex2D(texture, INTexCoord0).y;
+    float4 result = color;
+    result.a = result.a * a;
     if (result.a < alphaRef)
     {
         discard;

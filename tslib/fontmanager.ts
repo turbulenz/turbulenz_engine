@@ -46,7 +46,7 @@ interface FontDrawParameters
 {
     rect        : any;
     scale       : number;
-    alignment?  : any;
+    alignment   : any;
     spacing?    : number;
     dimensions? : FontDimensions;
 }
