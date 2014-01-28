@@ -111,9 +111,9 @@ class Font
 
     /// Measure the width and height of the text, and optionally
     /// collect information about how the characters are distributed
-    /// across the pages.
-
-    calculateTextDimensions(text: string, scale: number, spacing: number)
+    /// across the font pages.
+    calculateTextDimensions(text: string, scale: number, spacing: number,
+                            dimensions?: FontDimensions)
     {
         var glyphs = this.glyphs;
         var lineHeight = (this.lineHeight * scale);
@@ -180,6 +180,16 @@ class Font
             width = lineWidth;
         }
         height += lineHeight;
+
+        if (dimensions)
+        {
+            dimensions.width = width;
+            dimensions.height = height;
+            dimensions.numGlyphs = numGlyphs;
+            dimensions.linesWidth = linesWidth;
+            dimensions.glyphCounts = glyphCounts;
+            return dimensions;
+        }
 
         return {
             width: width,
