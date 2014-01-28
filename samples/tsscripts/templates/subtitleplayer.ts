@@ -13,6 +13,8 @@ var x = 1;
 /*{{ javascript("jslib/draw2d.js") }}*/
 /*{{ javascript("jslib/fontmanager.js") }}*/
 
+/*{{ javascript("scripts/subtitles.js") }}*/
+
 TurbulenzEngine.onload = function onloadFn()
 {
     var md = TurbulenzEngine.createMathDevice({});
@@ -21,10 +23,79 @@ TurbulenzEngine.onload = function onloadFn()
     var requestHandler = RequestHandler.create({});
 
     var fontManager = FontManager.create(gd, requestHandler);
-    var font, fontTechnique, fontTechniqueParameters;
-
     var shaderManager = ShaderManager.create(gd, requestHandler);
-    var shader;
+    var subtitlePlayer = null;
+
+    var subtitlesStartTime = 0;
+    var subtitlesDuration = 0;
+
+    var curLanguageIdx = 0;
+    var languages = [ 'ja', 'en' ];
+
+    var onSubtitlesReady = function onSubtitlesReadyFn()
+    {
+        // TODO: In reality, we probably want to define a font and
+        // script file per-locale.
+
+        subtitlePlayer.setScript([
+            {
+                startTime: 1,
+                duration: 1,
+                text: {
+                    en: "1. First Caption",
+                    ja: "1. 最初のキャプション"
+                }
+            },
+            {
+                startTime: 3,
+                duration: 1,
+                text: {
+                    en: "2. Another Caption",
+                    ja: "2. もう一つのキャプション"
+                }
+            },
+            {
+                startTime: 5,
+                duration: 1,
+                text: {
+                    en: "2. Third Subtitle",
+                    ja: "2. 三つ目の字幕"
+                }
+            },
+        ]);
+
+        subtitlesStartTime = TurbulenzEngine.getTime();
+        subtitlesDuration = subtitlePlayer.getDuration();
+    };
+
+    // Could take the language code from the system.  For
+    // demonstration purposes, we hard-code it to Japanese.
+
+    // var sysInfo = TurbulenzEngine.getSystemInfo();
+    // var languageCode =
+    //   (sysInfo.userLocale)?(sysInfo.userLocale.slice(0,2)):('en');
+
+    var subtitlesPlayerParams = {
+        mathDevice: md,
+        graphicsDevice: gd,
+        fontManager: fontManager,
+        shaderManager: shaderManager,
+
+        fontURL: 'fonts/aozoraminchoregular.fnt',
+        shaderURL: 'shaders/font.cgfx',
+        fontTechniqueName: 'font8',
+
+        maxWidthFactor: 0.8,
+        lowEdgeFactor: 0.1,
+        languageCode: languages[0],
+        // defaultLanguageCode?: string;
+
+        onReady: onSubtitlesReady,
+        onError: function (msg)
+        {
+            window.alert("Error in SubtitlePlayer: " + msg);
+        }
+    };
 
     var errorCallback = function errorCallbackFn(msg)
     {
@@ -37,28 +108,13 @@ TurbulenzEngine.onload = function onloadFn()
         var assetPrefix = mappingTable.assetPrefix;
 
         fontManager.setPathRemapping(urlMapping, assetPrefix);
-        fontManager.load('fonts/mincho.fnt', function (fontObject)
-            {
-                font = fontObject;
-            });
-
         shaderManager.setPathRemapping(urlMapping, assetPrefix);
-        shaderManager.load('shaders/font.cgfx', function (shaderObject)
-            {
-                shader = shaderObject;
-                fontTechnique = shader.getTechnique('font8');
-                fontTechniqueParameters = gd.createTechniqueParameters({
-                    clipSpace : md.v4BuildZero(),
-                    alphaRef : 0.01,
-                    color : md.v4BuildOne()
-                });
 
-            });
+        subtitlePlayer = SubtitlePlayer.create(subtitlesPlayerParams);
     };
 
     TurbulenzServices.createMappingTable
     (requestHandler, undefined, mappingTableReceived, undefined, errorCallback);
-
 
     // ------------------------------------------------------------------
     // Per-Frame
@@ -66,56 +122,27 @@ TurbulenzEngine.onload = function onloadFn()
 
     var renderText = function renderTextFn()
     {
-        var ready = font && fontTechnique;
-        if (!ready)
+        if (!subtitlesStartTime)
         {
             return;
         }
 
-        // Graphics Setup
+        var currentTime = TurbulenzEngine.getTime();
+        var subtitlesTime = currentTime - subtitlesStartTime;
+        subtitlePlayer.draw(subtitlesTime);
 
-        gd.setTechnique(fontTechnique);
+        // Check for end of script and rotate between the languages.
 
-        fontTechniqueParameters.clipSpace =
-            md.v4Build(2 / gd.width, -2 / gd.height, -1, 1,
-                       fontTechniqueParameters.clipSpace);
-        gd.setTechniqueParameters(fontTechniqueParameters);
-
-        var text = "Hello?. こんにちは \n漢字\nとてもながい文字列です。画面からでないように。。。";
-        var scale = 1.0;
-        var spacing = 0;
-
-        var textDimensions =
-            font.calculateTextDimensions(text, scale, spacing);
-
-        // Put the text at the right place on the screen
-
-        // var yProportion = 0.3;
-        var maxWidthProportion = 0.8;
-        var lowEdgeProportion = 0.1
-
-        var maxX = gd.width * maxWidthProportion;
-        var maxY = gd.height * (1 - lowEdgeProportion);
-
-        while ((textDimensions.width > maxX) || (textDimensions.height > maxY))
+        if (subtitlesTime > subtitlesDuration)
         {
-            scale *= 0.5;
-            textDimensions = font.calculateTextDimensions(text, scale, spacing);
+            curLanguageIdx = (curLanguageIdx + 1) % languages.length;
+
+            subtitlePlayer.setLanguageCode(languages[curLanguageIdx]);
+            subtitlePlayer.reset();
+
+            subtitlesStartTime = currentTime;
+            subtitlesDuration = subtitlePlayer.getDuration();
         }
-
-        var posx = gd.width / 2;
-        var posy = gd.height * (1 - lowEdgeProportion) - textDimensions.height;
-
-        font.drawTextRect
-        (text,
-         {
-             alignment: 1,
-             rect: [posx, posy, 0, 0],
-             scale: scale,
-             spacing: spacing,
-             dimensions: textDimensions
-         });
-
     };
 
     var tick = function tickFn()
@@ -128,11 +155,7 @@ TurbulenzEngine.onload = function onloadFn()
 
             gd.endFrame();
         }
-        else
-        {
-            errorCallback("beginFrame failed");
-        }
     };
-    TurbulenzEngine.setInterval(tick, 1);
+    TurbulenzEngine.setInterval(tick, 500.0);
 
 };
