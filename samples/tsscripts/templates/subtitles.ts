@@ -13,7 +13,7 @@ var x = 1;
 /*{{ javascript("jslib/draw2d.js") }}*/
 /*{{ javascript("jslib/fontmanager.js") }}*/
 
-/*{{ javascript("scripts/subtitles.js") }}*/
+/*{{ javascript("scripts/subtitleplayer.js") }}*/
 
 TurbulenzEngine.onload = function onloadFn()
 {
