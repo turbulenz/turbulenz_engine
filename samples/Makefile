@@ -14,11 +14,11 @@ debugphysics_src := tsscripts/debugphysics.ts
 morph_src := tsscripts/morph.ts
 dynamiccameracontroller_src := tsscripts/dynamiccameracontroller.ts
 simplebuttons_src := tsscripts/simplebuttons.ts
-subtitles_src := tsscripts/subtitles.ts
+subtitleplayer_src := tsscripts/subtitleplayer.ts
 
 TSLIBS += \
   sceneloader htmlcontrols motion emitter debugphysics morph \
-  dynamiccameracontroller simplebuttons subtitles
+  dynamiccameracontroller simplebuttons subtitleplayer
 
 # APPS
 
@@ -142,9 +142,9 @@ sound_src := tsscripts/templates/sound.ts
 sound_deps := sceneloader motion htmlcontrols
 TSAPPS += sound
 
-subtitleplayer_src := tsscripts/templates/subtitleplayer.ts
-subtitleplayer_deps:= subtitles
-TSAPPS += subtitleplayer
+subtitles_src := tsscripts/templates/subtitles.ts
+subtitles_deps:= subtitleplayer
+TSAPPS += subtitles
 
 svg_src := tsscripts/templates/svg.ts
 TSAPPS += svg

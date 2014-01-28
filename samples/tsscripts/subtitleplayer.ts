@@ -282,6 +282,7 @@ class SubtitlePlayer
         }
     }
 
+    /// public creation function
     static create(params: SubtitlePlayerParameters): SubtitlePlayer
     {
         return new SubtitlePlayer(params);
