@@ -50,16 +50,16 @@ TurbulenzEngine.onload = function onloadFn()
                 startTime: 3,
                 duration: 1,
                 text: {
-                    en: "2. Another Caption",
-                    ja: "2. もう一つのキャプション"
+                    en: "2. Another Caption with\na line break.",
+                    ja: "2. もう一つのキャプション。改行が\n入ります。"
                 }
             },
             {
                 startTime: 5,
                 duration: 1,
                 text: {
-                    en: "2. Third Subtitle",
-                    ja: "2. 三つ目の字幕"
+                    en: "3. Third Subtitle",
+                    ja: "3. 三つ目の字幕"
                 }
             },
         ]);
@@ -149,7 +149,7 @@ TurbulenzEngine.onload = function onloadFn()
     {
         if (gd.beginFrame())
         {
-            gd.clear([0.4, 0.4, 0.8, 1.0], 1.0);
+            gd.clear([0.3, 0.3, 1.0, 1.0], 1.0);
 
             renderText();
 

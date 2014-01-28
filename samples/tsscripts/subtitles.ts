@@ -118,7 +118,8 @@ class SubtitlePlayer
 
                     if (player.technique)
                     {
-                        // TODO: this is hard-coded for now
+                        // TODO: set of TechniqueParameters is
+                        // hard-coded for now.
 
                         player.techniqueParameters =
                             player.gd.createTechniqueParameters({
@@ -143,7 +144,6 @@ class SubtitlePlayer
 
         player.maxWidthFactor = params.maxWidthFactor;
         player.lowEdgeFactor = params.lowEdgeFactor;
-        // TODO: do this properly from the browser
         player.languageCode = params.languageCode || "en";
         player.defaultLanguageCode = params.defaultLanguageCode || "en";
     }
@@ -276,6 +276,7 @@ class SubtitlePlayer
             var rect = drawParams.rect;
             rect[0] = screenWidth / 2;
             rect[1] = screenHeight * (1 -lowEdgeFactor) - dimensions.height;
+            drawParams.scale = scale;
 
             font.drawTextRect(text, drawParams);
         }
