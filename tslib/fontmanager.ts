@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 
 /*global TurbulenzEngine: false*/
 /*global Observer: false*/
@@ -244,26 +244,26 @@ class Font
 
         for (pageIdx in glyphCounts)
         {
-        if (glyphCounts.hasOwnProperty(pageIdx))
-        {
-            numGlyphs = glyphCounts[pageIdx];
-            vertices = reusableArrays[numGlyphs];
-            if (vertices)
+            if (glyphCounts.hasOwnProperty(pageIdx))
             {
-                // Need to remove from cache just in case it is not
-                // returned to us
-                reusableArrays[numGlyphs] = null;
-            }
-            else
-            {
-                vertices = new fm.float32ArrayConstructor((numGlyphs * 4) * 4);
-            }
+                numGlyphs = glyphCounts[pageIdx];
+                vertices = reusableArrays[numGlyphs];
+                if (vertices)
+                {
+                    // Need to remove from cache just in case it is not
+                    // returned to us
+                    reusableArrays[numGlyphs] = null;
+                }
+                else
+                {
+                    vertices = new fm.float32ArrayConstructor((numGlyphs * 4) * 4);
+                }
 
-            pageContexts[pageIdx] = {
-                vertices: vertices,
-                vertexIndex: 0
-            };
-        }
+                pageContexts[pageIdx] = {
+                    vertices: vertices,
+                    vertexIndex: 0
+                };
+            }
         }
 
         var c, glyph, gx0, gy0, gx1, gy1, gaw, u0, v0, u1, v1;
@@ -411,66 +411,66 @@ class Font
 
         for (pageIdx in pageContexts)
         {
-        if (pageContexts.hasOwnProperty(pageIdx))
-        {
-            pageCtx = pageContexts[pageIdx];
-            vertices = pageCtx.vertices;
-
-            /*jshint bitwise: false*/
-            numGlyphs = (vertices.length >> 4);
-            /*jshint bitwise: true*/
-
-            numVertices = (numGlyphs * 4);
-
-            if (!sharedVertexBuffer ||
-                numVertices > sharedVertexBuffer.numVertices)
+            if (pageContexts.hasOwnProperty(pageIdx))
             {
-                if (sharedVertexBuffer)
+                pageCtx = pageContexts[pageIdx];
+                vertices = pageCtx.vertices;
+
+                /*jshint bitwise: false*/
+                numGlyphs = (vertices.length >> 4);
+                /*jshint bitwise: true*/
+
+                numVertices = (numGlyphs * 4);
+
+                if (!sharedVertexBuffer ||
+                    numVertices > sharedVertexBuffer.numVertices)
                 {
-                    sharedVertexBuffer.destroy();
-                }
-                sharedVertexBuffer = this.createVertexBuffer(numGlyphs);
-                fm.sharedVertexBuffer = sharedVertexBuffer;
-            }
-
-            sharedVertexBuffer.setData(vertices, 0, numVertices);
-
-            gd.setStream(sharedVertexBuffer, fm.semantics);
-
-            techniqueParameters['texture'] = this.textures[pageIdx];
-            gd.setTechniqueParameters(techniqueParameters);
-
-            if (4 < numVertices)
-            {
-                numIndices = (numGlyphs * 6);
-                if (!sharedIndexBuffer ||
-                    numIndices > sharedIndexBuffer.numIndices)
-                {
-                    if (sharedIndexBuffer)
+                    if (sharedVertexBuffer)
                     {
-                        sharedIndexBuffer.destroy();
+                        sharedVertexBuffer.destroy();
                     }
-                    sharedIndexBuffer = this.createIndexBuffer(numGlyphs);
-                    fm.sharedIndexBuffer = sharedIndexBuffer;
+                    sharedVertexBuffer = this.createVertexBuffer(numGlyphs);
+                    fm.sharedVertexBuffer = sharedVertexBuffer;
                 }
 
-                gd.setIndexBuffer(sharedIndexBuffer);
-                gd.drawIndexed(fm.primitive, numIndices, 0);
-            }
-            else
-            {
-                gd.draw(fm.primitiveFan, 4, 0);
-            }
+                sharedVertexBuffer.setData(vertices, 0, numVertices);
 
-            if (reuseVertices)
-            {
-                // This may overwrite an existing entry in the cache,
-                // but it's probably faster to blindly overwrite than
-                // do a lookup to see if there is already an entry.
+                gd.setStream(sharedVertexBuffer, fm.semantics);
 
-                fm.reusableArrays[numGlyphs] = vertices;
+                techniqueParameters['texture'] = this.textures[pageIdx];
+                gd.setTechniqueParameters(techniqueParameters);
+
+                if (4 < numVertices)
+                {
+                    numIndices = (numGlyphs * 6);
+                    if (!sharedIndexBuffer ||
+                        numIndices > sharedIndexBuffer.numIndices)
+                    {
+                        if (sharedIndexBuffer)
+                        {
+                            sharedIndexBuffer.destroy();
+                        }
+                        sharedIndexBuffer = this.createIndexBuffer(numGlyphs);
+                        fm.sharedIndexBuffer = sharedIndexBuffer;
+                    }
+
+                    gd.setIndexBuffer(sharedIndexBuffer);
+                    gd.drawIndexed(fm.primitive, numIndices, 0);
+                }
+                else
+                {
+                    gd.draw(fm.primitiveFan, 4, 0);
+                }
+
+                if (reuseVertices)
+                {
+                    // This may overwrite an existing entry in the cache,
+                    // but it's probably faster to blindly overwrite than
+                    // do a lookup to see if there is already an entry.
+
+                    fm.reusableArrays[numGlyphs] = vertices;
+                }
             }
-        }
         }
     }
 
