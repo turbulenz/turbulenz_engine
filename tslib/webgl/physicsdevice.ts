@@ -1355,6 +1355,7 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
         if (numTriangles >= 8)
         {
             spatialMap = AABBTree.create(true);
+            extents = new Float32Array(6);
         }
 
         var i;
@@ -1427,7 +1428,6 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
             // If building AABBTree, store node
             if (spatialMap)
             {
-                extents = new Float32Array(6);
                 extents[0] = Math.min(v00, v10, v20);
                 extents[1] = Math.min(v01, v11, v21);
                 extents[2] = Math.min(v02, v12, v22);
@@ -1436,7 +1436,8 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
                 extents[5] = Math.max(v02, v12, v22);
 
                 var triNode = {
-                    index: itri
+                    index: itri,
+                    spatialIndex: undefined
                 };
                 spatialMap.add(triNode, extents);
             }
