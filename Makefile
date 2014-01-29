@@ -78,7 +78,7 @@ services_deps := utilities debug servicedatatypes
 
 # tzdraw2d
 tzdraw2d_src := $(TS_SRC_DIR)/draw2d.ts
-tzdraw2d_deps = platform
+tzdraw2d_deps = platform debug
 
 # physics2d
 physics2d_src := $(addprefix $(TS_SRC_DIR)/, \
