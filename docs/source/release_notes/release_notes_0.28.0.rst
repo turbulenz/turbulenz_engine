@@ -91,7 +91,7 @@ Changes
   - Improvements to DDS loader image processing
   - Removed usage of deprecated event property "event.keyLocation" in the Input Device
   - Changed default materialColor and uvTransform setting behaviour in the renderers to set on the sharedMaterial
-  instead of each renderable
+    instead of each renderable
   - Modified MIME types for tar/mp3 files required for IE11
 
 Fixed
