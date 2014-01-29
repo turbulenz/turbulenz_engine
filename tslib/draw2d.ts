@@ -39,6 +39,21 @@ class Draw2DGroup
     }
 };
 
+interface Draw2DSpriteParams
+{
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    texture?: Texture;
+    color?: any; // v4
+    rotation?: number;
+    textureRectangle?: any; // v4 (left, top, right, bottom)
+    scale?: number;
+    shear?: number;
+    origin?: any; // v2
+}
+
 //
 // Draw2DSprite
 //
@@ -161,6 +176,11 @@ class Draw2DSprite
         var data = this.data;
         if (data[17] !== width)
         {
+            // Move the origin so that the sprite gets scaled around
+            // it, rather than scaled around the top left corner.
+
+            // originX = originX * (newwidth/2) / (oldwidth/2)
+            data[23] = data[23] * width / data[17];
             data[17] = width;
             this._invalidate();
         }
@@ -177,6 +197,8 @@ class Draw2DSprite
         var data = this.data;
         if (data[18] !== height)
         {
+            // originY = originY * (newheight/2) / (oldheight/2)
+            data[24] = data[24] * height / data[18];
             data[18] = height;
             this._invalidate();
         }
@@ -397,7 +419,7 @@ class Draw2DSprite
         data[5] = v - y; // v3y = centerY - y2
     }
 
-    static create(params: any): Draw2DSprite
+    static create(params: Draw2DSpriteParams): Draw2DSprite
     {
         if ((params.width === undefined || params.height === undefined) && !params.texture)
         {
@@ -427,11 +449,29 @@ class Draw2DSprite
         // 35,36 : x2, y2 // relative defined position of top-right vertex relative to center of sprite.
         //    (dependant on rotation and u2,v2)
         // 37 : Squared epsilon to consider rotations equal based on dimensions.
+
         var s = new Draw2DSprite();
         var data = s.data = new Draw2D.floatArray(38);
 
         // texture (not optional)
         var texture = s._texture = params.texture || null;
+
+        // Verify that we can use the draw2d shader (mipmap filtering)
+        // with with given texture.
+
+        debug.assert((function checkNPOTTextures() {
+            if (!texture)
+            {
+                return true;
+            }
+            var gd = TurbulenzEngine.getGraphicsDevice();
+            if (gd.isSupported("NPOT_MIPMAPPED_TEXTURES"))
+            {
+                return true;
+            }
+            return (0 == (texture.width & (texture.width - 1)) &&
+                    0 == (texture.height & (texture.height - 1)));
+        })(), "Non power-of-2 textures cannot be mipmapped on this platform");
 
         // position (optional, default 0,0)
         s.x = (params.x || 0.0);
@@ -605,8 +645,10 @@ interface Draw2DRenderTarget
 // }
 interface Draw2DParameters
 {
-    graphicsDevice : GraphicsDevice;
-    blendModes?    : { [name: string]: Technique; };
+    graphicsDevice    : GraphicsDevice;
+    blendModes?       : { [name: string]: Technique; };
+    initialGpuMemory? : number;
+    maxGpuMemory?     : number;
 }
 
 class Draw2D
@@ -2136,7 +2178,7 @@ class Draw2D
     }
 
     // Constructor function
-    static create(params): Draw2D
+    static create(params: Draw2DParameters): Draw2D
     {
         var o = new Draw2D();
         var gd = o.graphicsDevice = params.graphicsDevice;
@@ -2183,6 +2225,7 @@ class Draw2D
         o.drawRaw = undefined;
 
         // Load embedded default shader and techniques
+
         var shader = gd.createShader(
             {
                 "version": 1,
@@ -2191,15 +2234,15 @@ class Draw2D
                 {
                     "texture":
                     {
-                        "MinFilter": 9985,
-                        "MagFilter": 9729,
+                        "MinFilter": 9985 /* LINEAR_MIPMAP_NEAREST */,
+                        "MagFilter": 9729 /* LINEAR */,
                         "WrapS": 33071,
                         "WrapT": 33071
                     },
                     "inputTexture0":
                     {
-                        "MinFilter": 9728,
-                        "MagFilter": 9729,
+                        "MinFilter": 9728, /* NEAREST */
+                        "MagFilter": 9729, /* LINEAR */
                         "WrapS": 33071,
                         "WrapT": 33071
                     }
@@ -2327,7 +2370,9 @@ class Draw2D
             opaque: shader.getTechnique("opaque")
         };
 
-        // Append techniques and supported blend modes with user supplied techniques.
+        // Append techniques and supported blend modes with user
+        // supplied techniques.
+
         if (params.blendModes)
         {
             for (var name in params.blendModes)

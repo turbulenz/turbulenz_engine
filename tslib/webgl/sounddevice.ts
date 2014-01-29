@@ -1166,10 +1166,18 @@ class WebGLSoundSource implements SoundSource
                     return this._position.slice();
                 },
                 set : function setPositionFn(newPosition) {
-                    this._position = VMath.v3Copy(newPosition, this._position);
-                    if (!this.relative)
+                    var oldPosition = this._position;
+                    if (oldPosition[0] !== newPosition[0] ||
+                        oldPosition[1] !== newPosition[1] ||
+                        oldPosition[2] !== newPosition[2])
                     {
-                        this.pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
+                        oldPosition[0] = newPosition[0];
+                        oldPosition[1] = newPosition[1];
+                        oldPosition[2] = newPosition[2];
+                        if (!this.relative)
+                        {
+                            this.pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
+                        }
                     }
                 },
                 enumerable : true,

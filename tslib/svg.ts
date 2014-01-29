@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 //
 // SVGNode
@@ -553,24 +553,24 @@ class SVGEmptyNode extends SVGBaseNode
 //
 class SVGPathNode extends SVGBaseNode
 {
-    path: string;
+    compiledPath: number[];
 
     constructor(path: string)
     {
         super();
 
-        this.path = path;
-
         debug.assert(path);
+
+        this.compiledPath = CanvasContext.prototype.parsePath(path);
     }
 
     _drawShape(ctx: CanvasContext): void
     {
-        var path = this.path;
+        var compiledPath = this.compiledPath;
 
         ctx.beginPath();
 
-        ctx.path(path);
+        ctx.compiledPath(compiledPath);
 
         if (ctx.fillStyle !== 'none')
         {
