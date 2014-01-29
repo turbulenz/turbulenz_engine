@@ -176,6 +176,11 @@ class Draw2DSprite
         var data = this.data;
         if (data[17] !== width)
         {
+            // Move the origin so that the sprite gets scaled around
+            // it, rather than scaled around the top left corner.
+
+            // originX = originX * (newwidth/2) / (oldwidth/2)
+            data[23] = data[23] * width / data[17];
             data[17] = width;
             this._invalidate();
         }
@@ -192,6 +197,8 @@ class Draw2DSprite
         var data = this.data;
         if (data[18] !== height)
         {
+            // originY = originY * (newheight/2) / (oldheight/2)
+            data[24] = data[24] * height / data[18];
             data[18] = height;
             this._invalidate();
         }
