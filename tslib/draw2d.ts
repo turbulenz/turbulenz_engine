@@ -39,6 +39,21 @@ class Draw2DGroup
     }
 };
 
+interface Draw2DSpriteParams
+{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotation: number;
+    texture: Texture;
+    color: any; // v4
+    textureRectangle?: any; // v4 (left, top, right, bottom)
+    scale?: number;
+    shear?: number;
+    origin?: any; // v2
+}
+
 //
 // Draw2DSprite
 //
@@ -397,7 +412,7 @@ class Draw2DSprite
         data[5] = v - y; // v3y = centerY - y2
     }
 
-    static create(params: any): Draw2DSprite
+    static create(params: Draw2DSpriteParams): Draw2DSprite
     {
         if ((params.width === undefined || params.height === undefined) && !params.texture)
         {
@@ -607,6 +622,9 @@ interface Draw2DParameters
 {
     graphicsDevice : GraphicsDevice;
     blendModes?    : { [name: string]: Technique; };
+    initialGpuMemory: number;
+    maxGpuMemory: number;
+    npotSupport?   : boolean;  // may disable mipmaps on some hardware
 }
 
 class Draw2D
@@ -2136,7 +2154,7 @@ class Draw2D
     }
 
     // Constructor function
-    static create(params): Draw2D
+    static create(params: Draw2DParameters): Draw2D
     {
         var o = new Draw2D();
         var gd = o.graphicsDevice = params.graphicsDevice;
