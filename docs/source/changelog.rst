@@ -17,6 +17,9 @@ Version 1.x-dev
   * Corrected 2D text rendering order
   * Added additional advanced callbacks/modified call back behavior
 
+- Fixed an issue in draw2D where sprites were incorrectly scaled around the origin
+- Added debug assertion for draw2D when npot textures are used with mipmaps not supported
+
 2014-01-22
 
 - Fixed missing copyright comments

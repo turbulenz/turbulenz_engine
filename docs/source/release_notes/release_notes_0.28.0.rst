@@ -83,6 +83,7 @@ Changes
 
 * Minor changes:
 
+  - Added debug assertion for draw2D when npot textures are used with mipmaps not supported
   - Request handler now retries if 504 responses are encountered instead of failing immediately
   - Improved handling of non-JSON responses to API requests
   - Updated device_initialization to output to console for fullscreen apps
@@ -95,6 +96,8 @@ Changes
 
 Fixed
 -----
+
+* Fixed an issue in draw2D where sprites were incorrectly scaled around the origin
 
 * Fixed missing urllib3 from tools/local packages
 
