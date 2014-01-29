@@ -41,13 +41,13 @@ class Draw2DGroup
 
 interface Draw2DSpriteParams
 {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation: number;
-    texture: Texture;
-    color: any; // v4
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    texture?: Texture;
+    color?: any; // v4
+    rotation?: number;
     textureRectangle?: any; // v4 (left, top, right, bottom)
     scale?: number;
     shear?: number;
