@@ -312,6 +312,14 @@ def command_apps(options):
     else:
         modes = args.mode
 
+    if 'plugin-debug' in modes:
+        warning('**DEPRICATED** plugin-debug has been depricated as a build mode. '
+            'Please use canvas-debug for debugging. Removing from list of modes.')
+        modes = [m for m in modes if m != 'plugin-debug']
+        if not modes:
+            error("No remaining modes to build.")
+            return
+
     options = ' '.join(args.options) if args.options else ''
 
     start_time = time.time()
