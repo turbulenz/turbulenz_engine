@@ -54,6 +54,12 @@ Changes
   so the *TurbulenzEngine* binary installers are no longer bundled
   with SDKs or available for download.
 
+* Updated to Protolib (0.2.1).
+  Minor changes include:
+
+  - Corrected the rendering order of the :ref:`drawText <protolib-drawText>` function to occur after :ref:`draw2DSprite <protolib-draw2dsprite>` function.
+  - Added new callback :ref:`setPreRendererDraw <protolib-setprerendererdraw>` and updated behavior of :ref:`setPreDraw <protolib-setpredraw>`
+
 Fixed
 -----
 

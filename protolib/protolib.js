@@ -501,6 +501,8 @@ function Protolib(params)
     this.cursorSettings = {};
 
     this.preDrawFn = null;
+    this.preRendererDrawFn = null;
+    this.postRendererDrawFn = null;
     this.postDrawFn = null;
 
     function onKeyDown(keycode)
@@ -755,17 +757,17 @@ Protolib.prototype =
 
         var clear = this.clearColor;
 
+        camera.updateViewMatrix();
+        camera.updateViewProjectionMatrix();
+        scene.update();
+
         if (this.preDrawFn)
         {
             this.preDrawFn();
         }
 
-        camera.updateViewMatrix();
-        camera.updateViewProjectionMatrix();
-        scene.update();
-
         renderer.update(graphicsDevice, camera, scene, TurbulenzEngine.time);
-        renderer.draw(graphicsDevice, clear);
+        renderer.draw(graphicsDevice, clear, this.preRendererDrawFn);
 
         simplesprite.drawSprites();
         debugdraw.drawDebugLines();
@@ -809,6 +811,10 @@ Protolib.prototype =
     setPreDraw : function setPreDrawFn(callbackFn)
     {
         this.preDrawFn = callbackFn;
+    },
+    setPreRendererDraw : function setPreRendererDrawFn(callbackFn)
+    {
+        this.preRendererDrawFn = callbackFn;
     },
     setPostRendererDraw : function setPostRendererDrawFn(callbackFn)
     {

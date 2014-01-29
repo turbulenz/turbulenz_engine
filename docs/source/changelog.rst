@@ -10,6 +10,13 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-01-29
+
+- Update protolib library (version 0.2.1):
+
+  * Corrected 2D text rendering order
+  * Added additional advanced callbacks/modified call back behavior
+
 2014-01-22
 
 - Fixed missing copyright comments
