@@ -306,7 +306,7 @@ help :
 	@echo ""
 	@echo "   JSAPPS=app        - Build/clean only app (multiple apps in quotes)"
 	@echo ""
-	@echo "   MODE=mode       - Set build mode: plugin(-debug), canvas(-debug)"
+	@echo "   MODE=mode       - Set build mode: plugin, canvas(-debug)"
 	@echo "                     or 'all' for all modes.  (default: all)"
 	@echo ""
 	@echo "   COMPACTOR=comp  - Set compactor (uglifyjs|yui|none)."
@@ -396,10 +396,10 @@ install_libraries : install_jslib $(PROTOLIB_DEPS)
 #
 # if MODE == 'plugin-debug':
 #   ...
-ifeq ($(MODE),plugin-debug)
-  HTML_EXT:=debug.html
-  CODE_EXT:=
-endif
+#ifeq ($(MODE),plugin-debug)
+#  HTML_EXT:=debug.html
+#  CODE_EXT:=
+#endif
 
 ifeq ($(MODE),plugin)
   HTML_EXT:=release.html
@@ -445,7 +445,6 @@ ifeq ($(MODE),all)
 	$(MAKE) $(make_flags) MODE=plugin $@
 	$(MAKE) $(make_flags) MODE=canvas $@
 	$(MAKE) $(make_flags) MODE=canvas-debug $@
-	# $(MAKE) $(make_flags) MODE=plugin-debug $@
 
   # Make sure no other apps are discovered
   TEMPLATES_DIR := no-such-dir
