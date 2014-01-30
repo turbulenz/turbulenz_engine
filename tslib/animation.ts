@@ -2718,30 +2718,27 @@ class SkinnedNode
 
         // convert the input quat pos data into skinning matrices
         var md = this.md;
-        var m43FromRT = md.m43FromRT;
-        var m43FromRTS = md.m43FromRTS;
-        var m43Mul = md.m43Mul;
         var interpOut = this.input.output;
         var interpChannels = this.input.outputChannels;
         var hasScale = interpChannels.scale;
 
         var jointParents = this.skinController.skeleton.parents;
 
+        var jointOutput = interpOut[jointIndex];
+
         var boneMatrix;
         if (hasScale)
         {
-            boneMatrix = m43FromRTS.call(md,
-                                         interpOut[jointIndex].rotation,
-                                         interpOut[jointIndex].translation,
-                                         interpOut[jointIndex].scale,
-                                         dst);
+            boneMatrix = md.m43FromRTS(jointOutput.rotation,
+                                       jointOutput.translation,
+                                       jointOutput.scale,
+                                       dst);
         }
         else
         {
-            boneMatrix = m43FromRT.call(md,
-                                        interpOut[jointIndex].rotation,
-                                        interpOut[jointIndex].translation,
-                                        dst);
+            boneMatrix = md.m43FromRT(jointOutput.rotation,
+                                      jointOutput.translation,
+                                      dst);
         }
 
         var parentMatrix = this.scratchM43;
@@ -2749,22 +2746,21 @@ class SkinnedNode
         while (jointParents[jointIndex] !== -1)
         {
             jointIndex = jointParents[jointIndex];
+            jointOutput = interpOut[jointIndex];
             if (hasScale)
             {
-                parentMatrix = m43FromRTS.call(md,
-                                               interpOut[jointIndex].rotation,
-                                               interpOut[jointIndex].translation,
-                                               interpOut[jointIndex].scale,
-                                               parentMatrix);
+                parentMatrix = md.m43FromRTS(jointOutput.rotation,
+                                             jointOutput.translation,
+                                             jointOutput.scale,
+                                             parentMatrix);
             }
             else
             {
-                parentMatrix = m43FromRT.call(md,
-                                              interpOut[jointIndex].rotation,
-                                              interpOut[jointIndex].translation,
-                                              parentMatrix);
+                parentMatrix = md.m43FromRT(jointOutput.rotation,
+                                            jointOutput.translation,
+                                            parentMatrix);
             }
-            boneMatrix = m43Mul.call(md, boneMatrix, parentMatrix, boneMatrix);
+            boneMatrix = md.m43Mul(boneMatrix, parentMatrix, boneMatrix);
         }
         return boneMatrix;
     }
