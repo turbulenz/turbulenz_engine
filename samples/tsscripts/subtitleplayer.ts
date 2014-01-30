@@ -77,6 +77,30 @@ class SubtitlePlayer
 
     constructor(params: SubtitlePlayerParameters)
     {
+        this.md = params.mathDevice;
+        this.gd = params.graphicsDevice;
+
+        this.font = null;
+        this.technique = null;
+        this.techniqueParameters = null;
+
+        this.script = null;
+        this.nextActiveIdx = 0;
+
+        this.maxWidthFactor = params.maxWidthFactor;
+        this.lowEdgeFactor = params.lowEdgeFactor;
+        this.languageCode = params.languageCode || "en";
+        this.defaultLanguageCode = params.defaultLanguageCode || "en";
+
+        this.scratchDimensions = null;
+        this.scratchDrawParameters = {
+            alignment: 1,
+            rect: this.md.v4BuildZero(),
+            scale: 1.0,
+            spacing: 0,
+            dimensions: null
+        };
+
         var player = this;
 
         var checkReady = function()
@@ -97,9 +121,6 @@ class SubtitlePlayer
                 params.onError(msg);
             }
         };
-
-        this.md = params.mathDevice;
-        this.gd = params.graphicsDevice;
 
         var fontManager = params.fontManager;
         fontManager.load(params.fontURL, function (fontObject)
@@ -141,11 +162,6 @@ class SubtitlePlayer
                     error("No shader '" + params.shaderURL + "'");
                 }
             });
-
-        player.maxWidthFactor = params.maxWidthFactor;
-        player.lowEdgeFactor = params.lowEdgeFactor;
-        player.languageCode = params.languageCode || "en";
-        player.defaultLanguageCode = params.defaultLanguageCode || "en";
     }
 
     /// Replace any existing script.  Assumes time will start from 0
@@ -216,32 +232,32 @@ class SubtitlePlayer
         }
 
         // Render the caption
-
-        var md = this.md;
-        var gd = this.gd;
-        var techniqueParameters = this.techniqueParameters;
-
-        var screenWidth = gd.width;
-        var screenHeight = gd.height;
-
-        gd.setTechnique(this.technique);
-        techniqueParameters['clipSpace'] =
-            md.v4Build(2 / screenWidth, -2 / screenHeight, -1, 1,
-                       techniqueParameters['clipSpace']);
-        gd.setTechniqueParameters(techniqueParameters);
-
         var text = nextActive.text[this.languageCode] ||
             nextActive.text[this.defaultLanguageCode];
 
         if (text)
         {
+            // Prepare rendering
+
+            var gd = this.gd;
+            var techniqueParameters = this.techniqueParameters;
+
+            var screenWidth = gd.width;
+            var screenHeight = gd.height;
+
+            gd.setTechnique(this.technique);
+            techniqueParameters['clipSpace'] =
+                this.md.v4Build(2 / screenWidth, -2 / screenHeight, -1, 1,
+                                techniqueParameters['clipSpace']);
+            gd.setTechniqueParameters(techniqueParameters);
+
+            // Place the text
+
             var font = this.font;
 
             var scale = 1.0;
             var spacing = 0;
             var lowEdgeFactor = this.lowEdgeFactor;
-
-            // Place the text
 
             var maxX = screenWidth * this.maxWidthFactor;
             var maxY = screenHeight * (1 - lowEdgeFactor);
@@ -261,22 +277,12 @@ class SubtitlePlayer
             // Setup font parameters
 
             var drawParams = this.scratchDrawParameters;
-            if (!drawParams)
-            {
-                drawParams = {
-                    alignment: 1,
-                    rect: [0, 0, 0, 0],
-                    scale: scale,
-                    spacing: spacing,
-                    dimensions: dimensions
-                };
-                this.scratchDrawParameters = drawParams;
-            }
-
             var rect = drawParams.rect;
             rect[0] = screenWidth / 2;
             rect[1] = screenHeight * (1 -lowEdgeFactor) - dimensions.height;
             drawParams.scale = scale;
+            drawParams.spacing = spacing;
+            drawParams.dimensions = dimensions;
 
             font.drawTextRect(text, drawParams);
         }
