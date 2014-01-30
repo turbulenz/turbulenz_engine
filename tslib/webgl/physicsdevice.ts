@@ -4347,7 +4347,7 @@ class WebGLPhysicsCharacter implements PhysicsCharacter
                         to: end,
                         group: WebGLPhysicsDevice.prototype.FILTER_CHARACTER
                     },
-                                                                 this.onGroundConvexCallback
+                                                                 pc.onGroundConvexCallback
                                                                 );
                     return (result !== null);
                 }
