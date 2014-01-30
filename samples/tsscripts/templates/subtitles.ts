@@ -32,6 +32,8 @@ TurbulenzEngine.onload = function onloadFn()
     var curLanguageIdx = 0;
     var languages = [ 'ja', 'en' ];
 
+    var clearColor = md.v4Build(0.3, 0.3, 1.0, 1.0);
+
     var onSubtitlesReady = function onSubtitlesReadyFn()
     {
         // TODO: In reality, we probably want to define a font and
@@ -149,7 +151,7 @@ TurbulenzEngine.onload = function onloadFn()
     {
         if (gd.beginFrame())
         {
-            gd.clear([0.3, 0.3, 1.0, 1.0], 1.0);
+            gd.clear(clearColor);
 
             renderText();
 
