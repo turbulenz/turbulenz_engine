@@ -150,6 +150,12 @@ class Draw2DSprite
 
     setTexture(texture)
     {
+        // Verify that the texture is not NPOT
+        debug.assert((!texture) ||
+                     (0 == (texture.width & (texture.width - 1)) &&
+                      0 == (texture.height & (texture.height - 1))),
+                     "Draw2DSprite does not support non-power-of-2 textures");
+
         if (this._texture !== texture)
         {
             var su = (this._texture ? this._texture.width  : 1.0) / (texture ? texture.width  : 1.0);
@@ -455,23 +461,16 @@ class Draw2DSprite
 
         // texture (not optional)
         var texture = s._texture = params.texture || null;
-
-        // Verify that we can use the draw2d shader (mipmap filtering)
-        // with with given texture.
-
-        debug.assert((function checkNPOTTextures() {
-            if (!texture)
+        if (texture)
+        {
+            if ((0 != (texture.width & (texture.width - 1))) ||
+                (0 != (texture.height & (texture.height - 1))))
             {
-                return true;
+                debug.abort("Draw2DSprites require textures with power-of-2 " +
+                            "dimensions");
+                return null;
             }
-            var gd = TurbulenzEngine.getGraphicsDevice();
-            if (gd.isSupported("NPOT_MIPMAPPED_TEXTURES"))
-            {
-                return true;
-            }
-            return (0 == (texture.width & (texture.width - 1)) &&
-                    0 == (texture.height & (texture.height - 1)));
-        })(), "Non power-of-2 textures cannot be mipmapped on this platform");
+        }
 
         // position (optional, default 0,0)
         s.x = (params.x || 0.0);
