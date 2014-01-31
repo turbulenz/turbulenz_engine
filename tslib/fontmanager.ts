@@ -12,7 +12,11 @@ interface FontDimensions
     height       : number;
     numGlyphs    : number;
     linesWidth   : number[];
-    glyphCounts  : { [pageIdx: number]: number; };
+    glyphCounts  : // number[]
+    {
+        [pageIdx: number]: number;
+        length: number;
+    };
 }
 
 interface FontGlyph
@@ -61,7 +65,7 @@ interface FontDrawPageContext
 
 interface FontDrawContext
 {
-    pageContexts : { [pageIdx: number]: FontDrawPageContext };
+    pageContexts : FontDrawPageContext[];
 }
 
 /**
@@ -82,6 +86,7 @@ class Font
     glyphs: FontGlyph[];
     numGlyphs: number;
     minGlyphIndex: number;
+    unknownGlyphIndex: number;
     lineHeight: number;
     pages: string[];
     kernings: FontKerningMap;
@@ -103,6 +108,7 @@ class Font
         this.glyphs = null;
         this.numGlyphs = 0;
         this.minGlyphIndex = 0;
+        this.unknownGlyphIndex = '?'.charCodeAt(0);
         this.lineHeight = 0;
         this.pages = null;
         this.kernings = null;
@@ -113,16 +119,18 @@ class Font
     /// collect information about how the characters are distributed
     /// across the font pages.
     calculateTextDimensions(text: string, scale: number, spacing: number,
-                            dimensions?: FontDimensions)
+                            dimensions?: FontDimensions): FontDimensions
     {
         var glyphs = this.glyphs;
         var lineHeight = (this.lineHeight * scale);
+        var unknownGlyph = glyphs[this.unknownGlyphIndex];
+        var numPages = this.pages.length;
         var width = 0;
         var height = 0;
         var numGlyphs = 0;
         var numLines = 0;
         var linesWidth = [];
-        var glyphCounts = {};
+        var glyphCounts = [];
 
         var textLength = text.length;
         var lineWidth = 0;
@@ -132,8 +140,14 @@ class Font
 
         var curGlyphCount: number;
         var pageIdx: number;
+        var i: number;
 
-        for (var i = 0; i < textLength; i += 1)
+        for (i = 0; i < numPages; i += 1)
+        {
+            glyphCounts[i] = 0;
+        }
+
+        for (i = 0; i < textLength; i += 1)
         {
             c = text.charCodeAt(i);
             if (c === 10)
@@ -153,7 +167,7 @@ class Font
             }
             else
             {
-                glyph = glyphs[c] || glyphs['?'.charCodeAt(0)];
+                glyph = glyphs[c] || unknownGlyph;
                 if (glyph)
                 {
                     gaw = glyph.awidth;
@@ -168,8 +182,8 @@ class Font
                     }
 
                     pageIdx = glyph.page;
-                    curGlyphCount = glyphCounts[pageIdx] || 0;
-                    glyphCounts[pageIdx] = curGlyphCount + 1;
+                    debug.assert(pageIdx < numPages);
+                    glyphCounts[pageIdx] += 1;
                 }
             }
         }
@@ -210,13 +224,8 @@ class Font
         var alignment = params.alignment;
         var scale = (params.scale || 1.0);
         var extraSpacing = (params.spacing ? (params.spacing * scale) : 0);
-        var dimensions = params.dimensions ||
+        var dimensions : FontDimensions = params.dimensions ||
             this.calculateTextDimensions(text, scale, extraSpacing);
-
-        var ctx : FontDrawContext = {
-            pageContexts: {}
-        };
-        var pageContexts = ctx.pageContexts;
 
         var glyphCounts = dimensions.glyphCounts;
         var totalNumGlyphs = dimensions.numGlyphs;
@@ -225,10 +234,16 @@ class Font
             return null;
         }
 
+        var ctx : FontDrawContext = {
+            pageContexts: []
+        };
+        var pageContexts = ctx.pageContexts;
+
         var linesWidth = dimensions.linesWidth;
         var lineHeight = (this.lineHeight * scale);
         var kernings = this.kernings;
         var glyphs = this.glyphs;
+        var numPages = glyphCounts.length;
 
         var fm = this.fm;
         var reusableArrays = fm.reusableArrays;
@@ -242,11 +257,11 @@ class Font
         // Fill out the context with buffers to hold the vertices for
         // each page.
 
-        for (pageIdx in glyphCounts)
+        for (pageIdx = 0; pageIdx < numPages; pageIdx += 1)
         {
-            if (glyphCounts.hasOwnProperty(pageIdx))
+            numGlyphs = glyphCounts[pageIdx];
+            if (numGlyphs)
             {
-                numGlyphs = glyphCounts[pageIdx];
                 vertices = reusableArrays[numGlyphs];
                 if (vertices)
                 {
@@ -263,6 +278,10 @@ class Font
                     vertices: vertices,
                     vertexIndex: 0
                 };
+            }
+            else
+            {
+                pageContexts[pageIdx] = null;
             }
         }
 
@@ -395,6 +414,7 @@ class Font
     drawTextVertices(ctx, reuseVertices?)
     {
         var pageContexts = ctx.pageContexts;
+        var numPages = pageContexts.length;
         var gd = this.gd;
         var fm = this.fm;
         var sharedVertexBuffer = fm.sharedVertexBuffer;
@@ -409,11 +429,11 @@ class Font
         var numIndices: number;
         var reusableArrays = fm.reusableArrays;
 
-        for (pageIdx in pageContexts)
+        for (pageIdx = 0; pageIdx < numPages; pageIdx += 1)
         {
-            if (pageContexts.hasOwnProperty(pageIdx))
+            pageCtx = pageContexts[pageIdx];
+            if (pageCtx)
             {
-                pageCtx = pageContexts[pageIdx];
                 vertices = pageCtx.vertices;
 
                 /*jshint bitwise: false*/
