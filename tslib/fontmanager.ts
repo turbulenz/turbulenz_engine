@@ -124,7 +124,7 @@ class Font
         var glyphs = this.glyphs;
         var lineHeight = (this.lineHeight * scale);
         var unknownGlyph = glyphs[this.unknownGlyphIndex];
-        var numPages = this.pages.length;
+        var numPages = (this.pages ? this.pages.length : 1);
         var width = 0;
         var height = 0;
         var numGlyphs = 0;
