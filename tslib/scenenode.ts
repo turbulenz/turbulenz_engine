@@ -86,7 +86,6 @@ class SceneNode
     destroyedObserver               : Observer;
 
     // Lights
-    lights                          : Light[];
     lightInstances                  : LightInstance[];
 
     // Animation
@@ -307,7 +306,7 @@ class SceneNode
         }
 
         // Clone lights
-        var lights = this.lights;
+        var lights = this.lightInstances;
         if (lights)
         {
             var numLights = lights.length;
