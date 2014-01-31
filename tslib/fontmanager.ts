@@ -217,75 +217,58 @@ class Font
     /// A FontDimensions object, as returned by
     /// calculateTextDimensions can optionally be passed in to avoid
     /// recalculating certain properties of the text.
-    generateTextVertices(text: string,
-                         params: FontDrawParameters) : FontDrawContext
+    generatePageTextVertices(text: string,
+                             params: FontDrawParameters,
+                             pageIdx: number,
+                             drawCtx?: FontDrawPageContext)
+    : FontDrawPageContext
     {
-        var rect = params.rect;
-        var alignment = params.alignment;
         var scale = (params.scale || 1.0);
         var extraSpacing = (params.spacing ? (params.spacing * scale) : 0);
-        var dimensions : FontDimensions = params.dimensions ||
-            this.calculateTextDimensions(text, scale, extraSpacing);
-
-        var glyphCounts = dimensions.glyphCounts;
-        var totalNumGlyphs = dimensions.numGlyphs;
-        if (0 >= totalNumGlyphs)
+        var dimensions : FontDimensions = params.dimensions;
+        if (!dimensions)
         {
-            return null;
+            dimensions =
+                this.calculateTextDimensions(text, scale, extraSpacing);
         }
 
-        var ctx : FontDrawContext = {
-            pageContexts: []
-        };
-        var pageContexts = ctx.pageContexts;
+        var glyphCounts = dimensions.glyphCounts;
 
+        var ctx : FontDrawPageContext = drawCtx ||
+            {
+                vertices: null,
+                vertexIndex: 0
+            };
+
+        var numGlyphs = glyphCounts[pageIdx];
+        if (0 == numGlyphs)
+        {
+            return ctx;
+        }
+
+        var rect = params.rect;
+        var alignment = params.alignment;
         var linesWidth = dimensions.linesWidth;
         var lineHeight = (this.lineHeight * scale);
         var kernings = this.kernings;
         var glyphs = this.glyphs;
-        var numPages = glyphCounts.length;
 
         var fm = this.fm;
         var reusableArrays = fm.reusableArrays;
 
-        var numGlyphs: number;
-        var pageIdx: any;
-        var pageCtx: FontDrawPageContext;
-        var vertices: Float32Array;
-        var vertexIndex: number;
-
-        // Fill out the context with buffers to hold the vertices for
-        // each page.
-
-        for (pageIdx = 0; pageIdx < numPages; pageIdx += 1)
+        var vertexIndex = 0;
+        var vertices = reusableArrays[numGlyphs];
+        if (vertices)
         {
-            numGlyphs = glyphCounts[pageIdx];
-            if (numGlyphs)
-            {
-                vertices = reusableArrays[numGlyphs];
-                if (vertices)
-                {
-                    // Need to remove from cache just in case it is not
-                    // returned to us
-                    reusableArrays[numGlyphs] = null;
-                }
-                else
-                {
-                    vertices = new fm.float32ArrayConstructor((numGlyphs * 4) * 4);
-                }
-
-                pageContexts[pageIdx] = {
-                    vertices: vertices,
-                    vertexIndex: 0
-                };
-            }
-            else
-            {
-                pageContexts[pageIdx] = null;
-            }
+            // Need to remove from cache just in case it is not
+            // returned to us
+            reusableArrays[numGlyphs] = null;
+        }
+        else
+        {
+            vertices = new fm.float32ArrayConstructor((numGlyphs * 4) * 4);
         }
 
-        var c, glyph, gx0, gy0, gx1, gy1, gaw, u0, v0, u1, v1;
         var lineWidth = linesWidth[0];
         var rectLeft = rect[0];
         var rectWidth = rect[2];
@@ -302,6 +285,9 @@ class Font
         var textLength = text.length;
         var line = 0;
         var i;
+        var glyphPageIdx: number;
+        var c, gx0, gy0, gx1, gy1, gaw, u0, v0, u1, v1;
+        var glyph: FontGlyph;
 
         for (i = 0; i < textLength; i += 1)
         {
@@ -323,54 +309,51 @@ class Font
             }
             else
             {
-                glyph = glyphs[c] || glyphs['?'.charCodeAt(0)];
+                glyph = glyphs[c] || glyphs[this.unknownGlyphIndex];
                 if (glyph)
                 {
-                    pageIdx = glyph.page;
                     gaw = (glyph.awidth * scale);
                     if (gaw)
                     {
-
-                        gx0 = (x + (glyph.xoffset * scale));
-                        gy0 = (y + (glyph.yoffset * scale));
-                        gx1 = (gx0 + (glyph.width  * scale));
-                        gy1 = (gy0 + (glyph.height * scale));
-                        u0 = glyph.left;
-                        v0 = glyph.top;
-                        u1 = glyph.right;
-                        v1 = glyph.bottom;
-
-                        pageCtx = pageContexts[pageIdx];
-                        vertices = pageCtx.vertices
-                        vertexIndex = pageCtx.vertexIndex;
-
-                        vertices[vertexIndex + 0] = gx0;
-                        vertices[vertexIndex + 1] = gy0;
-                        vertices[vertexIndex + 2] = u0;
-                        vertices[vertexIndex + 3] = v0;
-
-                        vertices[vertexIndex + 4] = gx1;
-                        vertices[vertexIndex + 5] = gy0;
-                        vertices[vertexIndex + 6] = u1;
-                        vertices[vertexIndex + 7] = v0;
-
-                        vertices[vertexIndex + 8] = gx1;
-                        vertices[vertexIndex + 9] = gy1;
-                        vertices[vertexIndex + 10] = u1;
-                        vertices[vertexIndex + 11] = v1;
-
-                        vertices[vertexIndex + 12] = gx0;
-                        vertices[vertexIndex + 13] = gy1;
-                        vertices[vertexIndex + 14] = u0;
-                        vertices[vertexIndex + 15] = v1;
-
-                        vertexIndex += 16;
-                        pageCtx.vertexIndex = vertexIndex;
-
-                        totalNumGlyphs -= 1;
-                        if (0 === totalNumGlyphs)
+                        glyphPageIdx = glyph.page || 0;
+                        if (glyphPageIdx === pageIdx)
                         {
-                            break;
+                            gx0 = (x + (glyph.xoffset * scale));
+                            gy0 = (y + (glyph.yoffset * scale));
+                            gx1 = (gx0 + (glyph.width  * scale));
+                            gy1 = (gy0 + (glyph.height * scale));
+                            u0 = glyph.left;
+                            v0 = glyph.top;
+                            u1 = glyph.right;
+                            v1 = glyph.bottom;
+
+                            vertices[vertexIndex + 0] = gx0;
+                            vertices[vertexIndex + 1] = gy0;
+                            vertices[vertexIndex + 2] = u0;
+                            vertices[vertexIndex + 3] = v0;
+
+                            vertices[vertexIndex + 4] = gx1;
+                            vertices[vertexIndex + 5] = gy0;
+                            vertices[vertexIndex + 6] = u1;
+                            vertices[vertexIndex + 7] = v0;
+
+                            vertices[vertexIndex + 8] = gx1;
+                            vertices[vertexIndex + 9] = gy1;
+                            vertices[vertexIndex + 10] = u1;
+                            vertices[vertexIndex + 11] = v1;
+
+                            vertices[vertexIndex + 12] = gx0;
+                            vertices[vertexIndex + 13] = gy1;
+                            vertices[vertexIndex + 14] = u0;
+                            vertices[vertexIndex + 15] = v1;
+
+                            vertexIndex += 16;
+
+                            numGlyphs -= 1;
+                            if (0 === numGlyphs)
+                            {
+                                break;
+                            }
                         }
                         x += (gaw + extraSpacing);
 
@@ -395,102 +378,140 @@ class Font
             }
         }
 
+        ctx.vertices = vertices;
+        ctx.vertexIndex = 0;
         return ctx;
     }
 
     drawTextRect(text: string, params: FontDrawParameters)
     {
-        // TODO: It may work out more efficient to check the
-        // dimensions and call 'generateTextVertices' and
-        // 'drawTextVertices' for each page.  We have to iterate
-        // through the text several times, but we can ensure we only
-        // take a single buffer from the 'reusableArrays' cache each
-        // time.
+        // Call 'generateTextVertices' and 'drawTextVertices' for each
+        // page.  We have to iterate through the text several times,
+        // but we can ensure we only take a single buffer from the
+        // 'reusableArrays' cache each time.
 
-        var ctx = this.generateTextVertices(text, params);
-        this.drawTextVertices(ctx, true);
+        var dimensions : FontDimensions = params.dimensions;
+        if (!dimensions)
+        {
+            var scale = params.scale || 1.0;
+            var extraSpacing = params.spacing ? (params.spacing * scale) : 0;
+            dimensions =
+                this.calculateTextDimensions(text, scale, extraSpacing);
+
+            // TODO: not nice, but avoids calling
+            // calculateTextDimensions again without corrupting
+            // params.
+
+            var origParams = params;
+            params = <FontDrawParameters><any>{
+                dimensions: dimensions
+            };
+            (<any>params).__proto__ = origParams;
+        }
+
+        var totalNumGlyphs = dimensions.numGlyphs;
+        if (0 >= totalNumGlyphs)
+        {
+            return;
+        }
+
+        var glyphCounts = dimensions.glyphCounts;
+        var numPages = glyphCounts.length;
+
+        var pageIdx: number;
+        var numGlyphs: number;
+        var pageCtx = this.fm.scratchPageContext;
+
+        for (pageIdx = 0 ; pageIdx < numPages ; pageIdx += 1)
+        {
+            numGlyphs = glyphCounts[pageIdx];
+            if (numGlyphs)
+            {
+                pageCtx = this.generatePageTextVertices(text, params, pageIdx,
+                                                        pageCtx);
+                this.drawTextVertices(pageCtx, pageIdx, true);
+
+                totalNumGlyphs -= numGlyphs;
+                if (0 == totalNumGlyphs)
+                {
+                    break;
+                }
+            }
+        }
     }
 
-    drawTextVertices(ctx, reuseVertices?)
+    drawTextVertices(pageCtx: FontDrawPageContext, pageIdx: number,
+                     reuseVertices?)
     {
-        var pageContexts = ctx.pageContexts;
-        var numPages = pageContexts.length;
+        var vertices: Float32Array = pageCtx.vertices;
+        if (!vertices)
+        {
+            // Nothing to do for this page
+            return;
+        }
+
         var gd = this.gd;
         var fm = this.fm;
         var sharedVertexBuffer = fm.sharedVertexBuffer;
         var sharedIndexBuffer = fm.sharedIndexBuffer;
         var techniqueParameters = fm.techniqueParameters;
 
-        var pageIdx: any;
-        var pageCtx: FontDrawPageContext;
-        var vertices: Float32Array;
-        var numGlyphs: number;
         var numVertices: number;
         var numIndices: number;
         var reusableArrays = fm.reusableArrays;
 
-        for (pageIdx = 0; pageIdx < numPages; pageIdx += 1)
+        /*jshint bitwise: false*/
+        var numGlyphs = (vertices.length >> 4);
+        /*jshint bitwise: true*/
+
+        numVertices = (numGlyphs * 4);
+
+        if (!sharedVertexBuffer ||
+            numVertices > sharedVertexBuffer.numVertices)
         {
-            pageCtx = pageContexts[pageIdx];
-            if (pageCtx)
+            if (sharedVertexBuffer)
             {
-                vertices = pageCtx.vertices;
-
-                /*jshint bitwise: false*/
-                numGlyphs = (vertices.length >> 4);
-                /*jshint bitwise: true*/
-
-                numVertices = (numGlyphs * 4);
-
-                if (!sharedVertexBuffer ||
-                    numVertices > sharedVertexBuffer.numVertices)
-                {
-                    if (sharedVertexBuffer)
-                    {
-                        sharedVertexBuffer.destroy();
-                    }
-                    sharedVertexBuffer = this.createVertexBuffer(numGlyphs);
-                    fm.sharedVertexBuffer = sharedVertexBuffer;
-                }
-
-                sharedVertexBuffer.setData(vertices, 0, numVertices);
-
-                gd.setStream(sharedVertexBuffer, fm.semantics);
-
-                techniqueParameters['texture'] = this.textures[pageIdx];
-                gd.setTechniqueParameters(techniqueParameters);
-
-                if (4 < numVertices)
-                {
-                    numIndices = (numGlyphs * 6);
-                    if (!sharedIndexBuffer ||
-                        numIndices > sharedIndexBuffer.numIndices)
-                    {
-                        if (sharedIndexBuffer)
-                        {
-                            sharedIndexBuffer.destroy();
-                        }
-                        sharedIndexBuffer = this.createIndexBuffer(numGlyphs);
-                        fm.sharedIndexBuffer = sharedIndexBuffer;
-                    }
-
-                    gd.setIndexBuffer(sharedIndexBuffer);
-                    gd.drawIndexed(fm.primitive, numIndices, 0);
-                }
-                else
-                {
-                    gd.draw(fm.primitiveFan, 4, 0);
-                }
-
-                if (reuseVertices)
-                {
-                    // This may overwrite an existing entry in the cache,
-                    // but it's probably faster to blindly overwrite than
-                    // do a lookup to see if there is already an entry.
-
-                    fm.reusableArrays[numGlyphs] = vertices;
-                }
+                sharedVertexBuffer.destroy();
             }
+            sharedVertexBuffer = this.createVertexBuffer(numGlyphs);
+            fm.sharedVertexBuffer = sharedVertexBuffer;
+        }
+
+        // Fill and set the vertices for this page
+
+        sharedVertexBuffer.setData(vertices, 0, numVertices);
+        gd.setStream(sharedVertexBuffer, fm.semantics);
+
+        // Set the Texture for this page
+
+        techniqueParameters['texture'] = this.textures[pageIdx];
+        gd.setTechniqueParameters(techniqueParameters);
+
+        if (4 < numVertices)
+        {
+            numIndices = (numGlyphs * 6);
+            if (!sharedIndexBuffer ||
+                numIndices > sharedIndexBuffer.numIndices)
+            {
+                if (sharedIndexBuffer)
+                {
+                    sharedIndexBuffer.destroy();
+                }
+                sharedIndexBuffer = this.createIndexBuffer(numGlyphs);
+                fm.sharedIndexBuffer = sharedIndexBuffer;
+            }
+
+            gd.setIndexBuffer(sharedIndexBuffer);
+            gd.drawIndexed(fm.primitive, numIndices, 0);
+        }
+        else
+        {
+            gd.draw(fm.primitiveFan, 4, 0);
+        }
+
+        if (reuseVertices)
+        {
+            fm.reusableArrays[numGlyphs] = vertices;
         }
     }
 
@@ -568,6 +589,7 @@ class FontManager
     public sharedIndexBuffer: IndexBuffer;
     public sharedVertexBuffer: VertexBuffer;
     public reusableArrays: {[idx: number]: Float32Array};
+    public scratchPageContext: FontDrawPageContext;
     public float32ArrayConstructor: { new(i: number): Float32Array; };
 
     /**
@@ -836,6 +858,10 @@ class FontManager
         fm.sharedIndexBuffer = null;
         fm.sharedVertexBuffer = null;
         fm.reusableArrays = {};
+        fm.scratchPageContext = {
+            vertices: null,
+            vertexIndex: 0
+        };
         fm.float32ArrayConstructor = <{new(i:number): Float32Array;}><any>Array;
         if (typeof Float32Array !== "undefined")
         {

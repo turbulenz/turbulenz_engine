@@ -3070,38 +3070,64 @@ class CanvasContext
         var params;
         if (this.transformRect === CanvasContext.prototype.transformRect)
         {
+            var dimensions = font.calculateTextDimensions(text, scale, 0);
+
             params = {
                 rect : [x, y, maxWidth, maxWidth],
                 scale : scale,
                 spacing : 0,
-                alignment: alignment
+                alignment: alignment,
+                dimensions: dimensions
             };
 
-            var textCtx = font.generateTextVertices(text, params);
+            var totalNumGlyphs = dimensions.numGlyphs;
+            var glyphCounts = dimensions.glyphCounts;
+            var numPages = glyphCounts.length;
 
-            var pageContexts = textCtx.pageContexts;
-            for (var pageIdx in pageContexts)
-                if (pageContexts.hasOwnProperty(pageIdx))
+            var pageIdx: number;
+            var numGlyphs: number;
+            var pageCtx = font.fm.scratchPageContext;
+
+            for (pageIdx = 0 ; pageIdx < numPages ; pageIdx += 1)
             {
-                var textVertices = pageContexts[pageIdx].vertices;
-                if (textVertices)
+                numGlyphs = glyphCounts[pageIdx];
+                if (numGlyphs)
                 {
-                    var numValues = textVertices.length;
-                    var n;
-                    for (n = 0; n < numValues; n += 4)
+                    pageCtx = font.generatePageTextVertices(text, params,
+                                                            pageIdx, pageCtx);
+
+                    // Transform the vertices
+
+                    var textVertices = pageCtx.vertices;
+                    if (textVertices)
                     {
-                        var p = this.transformPoint(textVertices[n], textVertices[n + 1]);
-                        textVertices[n] = p[0];
-                        textVertices[n + 1] = p[1];
+                        var numValues = textVertices.length;
+                        var n;
+                        for (n = 0; n < numValues; n += 4)
+                        {
+                            var p = this.transformPoint(textVertices[n], textVertices[n + 1]);
+                            textVertices[n] = p[0];
+                            textVertices[n + 1] = p[1];
+                        }
                     }
+
+                    font.drawTextVertices(pageCtx, pageIdx, true);
+                }
+
+                // Keep this out of the loop as a way to break when
+                // there are no glyphs to begin with.
+
+                totalNumGlyphs -= numGlyphs;
+                if (0 == totalNumGlyphs)
+                {
+                    break;
                 }
             }
-
-            font.drawTextVertices(textVertices, true);
         }
         else
         {
-            var rect = this.transformRect(x, y, maxWidth, maxWidth, this.tempRect);
+            var rect = this.transformRect(x, y, maxWidth, maxWidth,
+                                          this.tempRect);
             x = rect[4];
             y = rect[5];
             var w = (rect[2] - x);
@@ -3113,9 +3139,9 @@ class CanvasContext
                 spacing : 0,
                 alignment: alignment
             };
-
-            font.drawTextRect(text, params);
         }
+
+        font.drawTextRect(text, params);
 
         // Clear stream cache because drawTextRect sets its own
         this.activeVertexBuffer = null;
