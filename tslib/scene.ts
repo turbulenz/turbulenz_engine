@@ -4027,7 +4027,7 @@ class Scene
 
                 var isUByte4Range = function isUByte4RangeFn(minVal, maxVal)
                 {
-                    return (minVal >= 0) && (maxVal <= 255) && (maxVal > 1);
+                    return (minVal >= 0) && (maxVal <= 255) && (maxVal >= 0);
                 };
 
                 var areInRange = function areInRangeFn(minVals, maxVals, isRangeFn)

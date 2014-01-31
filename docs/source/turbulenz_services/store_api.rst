@@ -228,10 +228,10 @@ The ``offerings`` definitions also contain:
     If a user already owns an "own" type resource in an offering then that resource will be ignored when purchased.
 
 ``price``
-    A list of prices for the items in various currency codes.
-    You can find a list of currency codes here:
-    http://www.xe.com/iso4217.php.
+    The price of the item for each currency.
     Currently, only United States dollars (USD) is supported.
+    For Google Play payments the value in USD will be automatically converted to the user's local currency (at exchange rates
+    provided by Google).
 
 .. NOTE::
 

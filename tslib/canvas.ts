@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 Turbulenz Limited
+// Copyright (c) 2011-2014 Turbulenz Limited
 
 // Workaround:
 
@@ -1865,7 +1865,7 @@ class CanvasContext
         needToSimplifyPath[numSubPaths + 1] = true;
     }
 
-    private _parsePath(path: string) : any[]
+    parsePath(path: string) : number[]
     {
         var commands = [];
 
@@ -2457,12 +2457,17 @@ class CanvasContext
                 this.numCachedPaths = 0;
             }
 
-            commands = this._parsePath(path);
+            commands = this.parsePath(path);
 
             this.cachedPaths[path] = commands;
             this.numCachedPaths += 1;
         }
 
+        this.compiledPath(commands);
+    }
+
+    compiledPath(commands: number[])
+    {
         var end = commands.length;
         var currentCommand = -1;
         var i = 0;

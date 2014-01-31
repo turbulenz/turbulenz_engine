@@ -35,7 +35,7 @@ function Protolib(params)
     var globals = this.globals;
 
     // Major, Minor, Revision
-    protolib.version = [0, 2, 0];
+    protolib.version = [0, 2, 1];
 
     globals.config = params = params || {};
 
@@ -501,6 +501,8 @@ function Protolib(params)
     this.cursorSettings = {};
 
     this.preDrawFn = null;
+    this.preRendererDrawFn = null;
+    this.postRendererDrawFn = null;
     this.postDrawFn = null;
 
     function onKeyDown(keycode)
@@ -759,11 +761,15 @@ Protolib.prototype =
         camera.updateViewProjectionMatrix();
         scene.update();
 
+        if (this.preDrawFn)
+        {
+            this.preDrawFn();
+        }
+
         renderer.update(graphicsDevice, camera, scene, TurbulenzEngine.time);
-        renderer.draw(graphicsDevice, clear, this.preDrawFn);
+        renderer.draw(graphicsDevice, clear, this.preRendererDrawFn);
 
         simplesprite.drawSprites();
-        simplefont.render();
         debugdraw.drawDebugLines();
 
         if (this.postRendererDrawFn)
@@ -772,6 +778,7 @@ Protolib.prototype =
         }
 
         this._draw2DSprites();
+        simplefont.render();
 
         if (this.postDrawFn)
         {
@@ -804,6 +811,10 @@ Protolib.prototype =
     setPreDraw : function setPreDrawFn(callbackFn)
     {
         this.preDrawFn = callbackFn;
+    },
+    setPreRendererDraw : function setPreRendererDrawFn(callbackFn)
+    {
+        this.preRendererDrawFn = callbackFn;
     },
     setPostRendererDraw : function setPostRendererDrawFn(callbackFn)
     {
