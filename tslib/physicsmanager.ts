@@ -898,6 +898,11 @@ class PhysicsManager
                                     collisionFilters += kinematicFilterFlag;
                                 }
                             }
+                            if (collisionFilters === 0)
+                            {
+                                debug.log("Ignoring physics node without a collision mask: " + fn);
+                                continue;
+                            }
                         }
                     }
 
@@ -992,7 +997,6 @@ class PhysicsManager
                             target.physicsNodes = [physicsNode];
                             this.subscribeSceneNode(target);
                         }
-
                     }
                 }
             }
