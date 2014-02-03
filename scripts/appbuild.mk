@@ -176,7 +176,7 @@ define _create_html_rule
       -o $$@ $($(1)_js) $($(1)_html)                          \
       --code $($(1)_out_code)
 
-  # Include the deps
+  # Include the deps if this is a build
   ifneq (,$(filter build $(1),$(MAKECMDGOALS)))
     -include $($(1)_out_html_deps)
   endif
@@ -322,7 +322,8 @@ help :
 # JSLIBFILES, jslib PHONY target
 ############################################################
 
-JSLIBDIR ?= $(TZROOT)/jslib
+JSLIBDIR ?= $(realpath $(TZROOT))/jslib
+
 _jslib_src_files := $(shell $(FIND) $(JSLIBDIR) -iname '*.js')
 JSLIBFILES := # to be filled in by _copy_jslib_file rule
 
