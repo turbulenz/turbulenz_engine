@@ -389,7 +389,7 @@ class Font
 
     drawTextRect(text: string, params: FontDrawParameters)
     {
-        // Call 'generateTextVertices' and 'drawTextVertices' for each
+        // Call 'generatePageTextVertices' and 'drawTextVertices' for each
         // page.  We have to iterate through the text several times,
         // but we can ensure we only take a single buffer from the
         // 'reusableArrays' cache each time.
@@ -1335,7 +1335,9 @@ class FontManager
                 return {
                     width: 0,
                     height: 0,
-                    numGlyphs: 0
+                    numGlyphs: 0,
+                    linesWidth: [],
+                    glyphCounts: []
                 };
             }
         };

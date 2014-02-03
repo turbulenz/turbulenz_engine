@@ -240,7 +240,7 @@ The remapping only affects the loading URLs.
 
 **Syntax** ::
 
-    fontManager.setPathRemapping(remappingTable, gloablPrefix);
+    fontManager.setPathRemapping(remappingTable, globalPrefix);
 
 ``mappingTable``
     A remapping table that can be used to redirect specific paths.
@@ -252,6 +252,8 @@ The remapping only affects the loading URLs.
 .. index::
     pair: FontManager; calculateTextDimensions
 
+.. _fontmanager_calculatetextdimensions:
+
 `calculateTextDimensions`
 -------------------------
 
@@ -261,11 +263,12 @@ Calculate text dimensions of a block of text and a font.
 
 **Syntax** ::
 
-    var textBlockSize = fontManager.calculateTextDimensions(name, text, scale, spacing);
-    var width = textBlockSize.width;
-    var height = textBlockSize.height;
-    var linesWidth = textBlockSize.linesWidth;
-    var numGlyphs = textBlockSize.numGlyphs;
+    var dimensions = fontManager.calculateTextDimensions(name, text, scale, spacing);
+    var width = dimensions.width;
+    var height = dimensions.height;
+    var linesWidth = dimensions.linesWidth;
+    var numGlyphs = dimensions.numGlyphs;
+    var glyphCounts = dimensions.glyphCounts;
 
 ``name``
     The name used to load the font (or the remapped name).
@@ -348,6 +351,8 @@ Methods
 .. index::
     pair: Font; calculateTextDimensions
 
+.. _font_calculatetextdimensions:
+
 `calculateTextDimensions`
 -------------------------
 
@@ -357,10 +362,12 @@ Calculate text dimensions of a block of text.
 
 **Syntax** ::
 
-    var textBlockSize = font.calculateTextDimensions(text, scale, spacing);
-    var width = textBlockSize.width;
-    var height = textBlockSize.height;
-    var numGlyphs = textBlockSize.numGlyphs;
+    var dimensions = font.calculateTextDimensions(text, scale, spacing, dimensions);
+    var width = dimensions.width;
+    var height = dimensions.height;
+    var linesWidth = dimensions.linesWidth;
+    var numGlyphs = dimensions.numGlyphs;
+    var glyphCounts = dimensions.glyphCounts;
 
 ``text``
     Text to calculate dimensions for.
@@ -375,13 +382,23 @@ Calculate text dimensions of a block of text.
     (Optional) A dimensions object to overwrite, so avoid creation of
     a new one.
 
-Returns an object with 3 properties:
+Returns an object with properties:
 
 ``width`` and ``height``
     The dimensions of the block of text (in pixels).
 
+``linesWidth``
+    An array for the width (in pixels) of each line of text in ``text``
+
 ``numGlyphs``
     The number of glyphs in the block of text.
+
+``glyphCounts``
+    A map from page numbers to glyph counts, for the given string.
+    This is generally only used by the `drawTextRect` function, in
+    particular for fonts that require multiple texture pages.  It can
+    be passed into `drawTextRect` via the parameters object to avoid
+    recalculation.
 
 
 .. _font_generatetextvertices:
@@ -389,8 +406,14 @@ Returns an object with 3 properties:
 .. index::
     pair: Font; generatePageTextVertices
 
+.. _font_generatepagetextvertices:
+
 `generatePageTextVertices`
 --------------------------
+
+**Modified SDK 0.28.0**
+
+Replaces function previously called generateTextVertices
 
 **Summary**
 
@@ -407,7 +430,11 @@ drawn.
             scale: windowdef.textscale,
             spacing: windowdef.textspacing
         };
-    var vertices = font.generateTextVertices(text, textParameters, 0);
+    if (dimensions)
+    {
+        textParameters.dimensions = dimensions;
+    }
+    var vertices = font.generatePageTextVertices(text, textParameters, 0);
     if (vertices)
     {
         var numVertices = (vertices.length / 4);
@@ -443,8 +470,8 @@ drawn.
         new one.  If set, this should have been calculated for the
         given text via `calculateTextDimensions`.
 
- ``pageIdx``
-     The index of the texture page to generate indices for.
+``pageIdx``
+    The index of the texture page to generate indices for.
 
 Returns an array of numbers, 4 numbers per vertex: X, Y, U, V.
 
@@ -471,7 +498,7 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to dra
             scale: windowdef.textscale,
             spacing: windowdef.textspacing,
         };
-    var vertices = font.generateTextVertices(text, textParameters, 0);
+    var vertices = font.generatePageTextVertices(text, textParameters, 0);
     if (vertices)
     {
         var numValues = vertices.length;
@@ -493,7 +520,7 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to dra
     The index of the texture page that the vertices correspond to.
 
 ``reuse``
-    Optional boolean value to determine if the ``vertices`` object should be reused for subsequent calls to
+    (Optional) boolean value to determine if the ``vertices`` object should be reused for subsequent calls to
     :ref:`generateTextVertices <font_generatetextvertices>`.
 
 
@@ -519,6 +546,10 @@ Draws text.
             scale: windowdef.textscale,
             spacing: windowdef.textspacing
         };
+    if (dimensions)
+    {
+        textParameters.dimensions = dimensions;
+    }
     font.drawTextRect(text, textParameters);
 
 ``text``
@@ -550,7 +581,7 @@ Draws text.
     ``dimensions``
         (Optional).  A dimensions object, returned by
         calculateTextDimensions, to save internal re-calculation of
-        varioius properties of the text.
+        various properties of the text.
 
 
 Properties
