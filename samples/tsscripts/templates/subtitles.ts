@@ -1,4 +1,3 @@
-var x = 1;
 /*{# Copyright (c) 2014 Turbulenz Limited #}*/
 
 /*{{ javascript("jslib/observer.js") }}*/
@@ -36,9 +35,6 @@ TurbulenzEngine.onload = function onloadFn()
 
     var onSubtitlesReady = function onSubtitlesReadyFn()
     {
-        // TODO: In reality, we probably want to define a font and
-        // script file per-locale.
-
         subtitlePlayer.setScript([
             {
                 startTime: 1,
@@ -90,7 +86,6 @@ TurbulenzEngine.onload = function onloadFn()
         maxWidthFactor: 0.8,
         lowEdgeFactor: 0.1,
         languageCode: languages[0],
-        // defaultLanguageCode?: string;
 
         onReady: onSubtitlesReady,
         onError: function (msg)
@@ -115,8 +110,19 @@ TurbulenzEngine.onload = function onloadFn()
         subtitlePlayer = SubtitlePlayer.create(subtitlesPlayerParams);
     };
 
-    TurbulenzServices.createMappingTable
-    (requestHandler, undefined, mappingTableReceived, undefined, errorCallback);
+    var gameSession;
+    function sessionCreated()
+    {
+        TurbulenzServices.createMappingTable(
+            requestHandler,
+            gameSession,
+            mappingTableReceived,
+            undefined,
+            errorCallback
+        );
+    }
+
+    gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreated);
 
     // ------------------------------------------------------------------
     // Per-Frame
