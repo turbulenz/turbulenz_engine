@@ -327,24 +327,28 @@ class Font
                             u1 = glyph.right;
                             v1 = glyph.bottom;
 
+                            // top left
                             vertices[vertexIndex + 0] = gx0;
                             vertices[vertexIndex + 1] = gy0;
                             vertices[vertexIndex + 2] = u0;
                             vertices[vertexIndex + 3] = v0;
 
+                            // top right
                             vertices[vertexIndex + 4] = gx1;
                             vertices[vertexIndex + 5] = gy0;
                             vertices[vertexIndex + 6] = u1;
                             vertices[vertexIndex + 7] = v0;
 
-                            vertices[vertexIndex + 8] = gx1;
+                            // bottom left
+                            vertices[vertexIndex + 8] = gx0;
                             vertices[vertexIndex + 9] = gy1;
-                            vertices[vertexIndex + 10] = u1;
+                            vertices[vertexIndex + 10] = u0;
                             vertices[vertexIndex + 11] = v1;
 
-                            vertices[vertexIndex + 12] = gx0;
+                            // bottom right
+                            vertices[vertexIndex + 12] = gx1;
                             vertices[vertexIndex + 13] = gy1;
-                            vertices[vertexIndex + 14] = u0;
+                            vertices[vertexIndex + 14] = u1;
                             vertices[vertexIndex + 15] = v1;
 
                             vertexIndex += 16;
@@ -506,7 +510,7 @@ class Font
         }
         else
         {
-            gd.draw(fm.primitiveFan, 4, 0);
+            gd.draw(fm.primitiveTristrip, 4, 0);
         }
 
         if (reuseVertices)
@@ -536,7 +540,7 @@ class Font
                 i2 = (i0 + 2);
                 i3 = (i0 + 3);
                 writer(i0, i1, i2);
-                writer(i2, i3, i0);
+                writer(i2, i1, i3);
             }
 
             indexBuffer.unmap(writer);
@@ -583,7 +587,7 @@ class FontManager
     destroy: { (): void; };
 
     public primitive: number;
-    public primitiveFan: number;
+    public primitiveTristrip: number;
     public semantics: Semantics;
     public techniqueParameters: TechniqueParameters;
     public sharedIndexBuffer: IndexBuffer;
@@ -850,7 +854,7 @@ class FontManager
 
         var fm = new FontManager();
         fm.primitive = gd.PRIMITIVE_TRIANGLES;
-        fm.primitiveFan = gd.PRIMITIVE_TRIANGLE_FAN;
+        fm.primitiveTristrip = gd.PRIMITIVE_TRIANGLE_STRIP;
         fm.semantics = gd.createSemantics(['POSITION', 'TEXCOORD0']);
         fm.techniqueParameters = gd.createTechniqueParameters({
             texture: null
