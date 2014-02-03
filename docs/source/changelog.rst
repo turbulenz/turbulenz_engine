@@ -10,6 +10,28 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-02-03
+
+- Added subtitles sample:
+
+  * Demonstrates the creation of subtitles from multiple languages
+  * Example shows English and Japanese variants
+  * Added support for 8bit font rendering in font.cgfx
+
+- Added FontManager support for multiple pages:
+
+  * New properties *linesWidth* and *glyphCounts* added to the object returned by fontManager.calculateTextDimensions
+  * Added argument *dimensions* to font.calculateTextDimensions
+  * Replaced generateTextVertices function by generatePageTextVertices, now with page
+    compatibility
+  * Added argument *pageIdx* to font.drawTextVertices
+  * Added argument *dimensions* to font.drawTextRect
+
+- Modified FontManager to use tri-strip instead of fan for single characters.
+  Temporary fix for IE11.
+
+- PhysicsManager optimisations
+
 2014-01-29
 
 - Update protolib library (version 0.2.1):

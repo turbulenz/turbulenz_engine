@@ -16,8 +16,8 @@ Packaged Components
 The following versions of Turbulenz products are packaged in this SDK:
 
 * turbulenz_engine - 1.X
-* turbulenz_tools - 1.0.X
-* turbulenz_local - 1.1.X
+* turbulenz_tools - 1.0.5
+* turbulenz_local - 1.1.4
 
 Change List
 ===========
@@ -41,6 +41,8 @@ New Features
   GPU particle API.
 
 * Support for IE11. Work-around fixes have been added to allow the Turbulenz Engine to work due to an incomplete WebGL implementation. Once the WebGL 1.0 specification is completely implemented in IE11, the fixes will be removed.
+
+* Added a sample *subtitles* demonstrating the use of different language fonts to render subtitles.
 
 * Payment support added for iOS/Android Turbulenz apps.
   Apps built using Turbulenz now allow in-app purchases to be triggered from the game.
@@ -76,10 +78,24 @@ Changes
   - Corrected the rendering order of the :ref:`drawText <protolib-drawText>` function to occur after :ref:`draw2DSprite <protolib-draw2dsprite>` function.
   - Added new callback :ref:`setPreRendererDraw <protolib-setprerendererdraw>` and updated behavior of :ref:`setPreDraw <protolib-setpredraw>`
 
+* Modified FontManager to support multiple pages:
+
+  - New properties *linesWidth* and *glyphCounts* added to the object returned by :ref:`fontManager.calculateTextDimensions <fontmanager_calculatetextdimensions>`
+  - Added argument *dimensions* to :ref:`font.calculateTextDimensions <font_calculatetextdimensions>`
+  - Replaced generateTextVertices function by :ref:`generatePageTextVertices <font_generatepagetextvertices>`, now with page
+    compatibility
+  - Added argument *pageIdx* to :ref:`font.drawTextVertices <font_drawtextvertices>`
+  - Added argument *dimensions* to :ref:`font.drawTextRect <font_drawtextrect>`
+
+* Modified FontManager to use tri-strip instead of fan for single characters.
+  Temporary fix for IE11.
+
 * General improvements to the soundDevice for stability and the process of incorrectly loaded files
 
 * Updated documentation about developer clients.
   More information about the :ref:`iOS/Android Developer Client <developer_client_readme>` offerings.
+
+* Various PhysicsManager optimizations
 
 * Minor changes:
 
