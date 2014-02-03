@@ -1914,7 +1914,17 @@ class WebGLSoundDevice implements SoundDevice
         sd.listenerGain = (typeof params.listenerGain === "number" ? params.listenerGain : 1);
 
         // Need a temporary Audio element to test capabilities
-        var audio = new Audio();
+        var audio;
+        try
+        {
+            audio = new Audio();
+        }
+        catch (error)
+        {
+            (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                'Failed to create Audio:' + error);
+            return null;
+        }
 
         if (sd.audioContext)
         {
