@@ -4049,6 +4049,7 @@ class Scene
 
                 var formatMap = loadParams.vertexFormatMap || {};
 
+                var fileInput;
                 for (var input in inputs)
                 {
                     if (inputs.hasOwnProperty(input))
@@ -4060,7 +4061,7 @@ class Scene
                             continue;
                         }
 
-                        var fileInput = inputs[input];
+                        fileInput = inputs[input];
                         offset = fileInput.offset;
                         if (offset > maxOffset)
                         {
@@ -4337,6 +4338,10 @@ class Scene
 
                         vertexSource.data = newData;
                         vertexSource.offset = 0;
+
+                        fileInput = inputs[vertexSource.semantic];
+                        fileInput.offset = 0;
+                        sources[fileInput.source].data = newData;
                     }
 
                     verticesAsIndexLists.length = 0;
