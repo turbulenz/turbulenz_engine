@@ -3734,6 +3734,8 @@ class Scene
         var numRenderables = renderables.length;
         var triangles = gd.PRIMITIVE_TRIANGLES;
         var vbMap = {};
+        var ungroup = [];
+        var numUngroup = 0;
         var n, renderable, geometry, surface, vbid, ibMap, ibid, group;
         var foundGroup = false;
         for (n = 0; n < numRenderables; n += 1)
@@ -3769,6 +3771,11 @@ class Scene
                     group.push(renderable);
                     foundGroup = true;
                 }
+            }
+            else
+            {
+                ungroup[numUngroup] = renderable;
+                numUngroup += 1;
             }
         }
 
@@ -3970,6 +3977,11 @@ class Scene
                         }
                     }
                 }
+            }
+            for (n = 0; n < numUngroup; n += 1)
+            {
+                renderables[numRenderables] = ungroup[n];
+                numRenderables += 1;
             }
             renderables.length = numRenderables;
         }
