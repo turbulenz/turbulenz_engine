@@ -4457,6 +4457,52 @@ class Scene
                         if (faces)
                         {
                             numIndices = faces.length;
+
+                            // Try to optimize simple quads
+                            if (numIndices === 6 &&
+                                totalNumVertices === 4 &&
+                                destSurface.primitive === gd.PRIMITIVE_TRIANGLES)
+                            {
+                                var f0 = faces[0];
+                                if (f0 === faces[3] || f0 === faces[4] || f0 === faces[5])
+                                {
+                                    faces[0] = faces[1];
+                                    faces[1] = faces[2];
+                                    faces[2] = f0;
+
+                                    f0 = faces[0];
+                                    if (f0 === faces[3] || f0 === faces[4] || f0 === faces[5])
+                                    {
+                                        faces[0] = faces[1];
+                                        faces[1] = faces[2];
+                                        faces[2] = f0;
+                                    }
+                                }
+                                var f5 = faces[5];
+                                if (f5 === faces[1] || f5 === faces[2])
+                                {
+                                    faces[5] = faces[4];
+                                    faces[4] = faces[3];
+                                    faces[3] = f5;
+
+                                    f5 = faces[5];
+                                    if (f5 === faces[1] || f5 === faces[2])
+                                    {
+                                        faces[5] = faces[4];
+                                        faces[4] = faces[3];
+                                        faces[3] = f5;
+                                    }
+                                }
+                                if (faces[1] === faces[4] &&
+                                    faces[2] === faces[3])
+                                {
+                                    destSurface.primitive = gd.PRIMITIVE_TRIANGLE_STRIP;
+                                    numIndices = 4;
+                                    faces[3] = faces[5];
+                                    faces.length = 4;
+                                }
+                            }
+
                             if (!this._isSequentialIndices(faces, numIndices))
                             {
                                 totalNumIndices += numIndices;
