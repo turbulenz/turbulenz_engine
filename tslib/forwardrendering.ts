@@ -586,6 +586,11 @@ class ForwardRendering
             }
         }
 
+        if (overlappingRenderables.length !== numOverlappingRenderables)
+        {
+            overlappingRenderables.length = numOverlappingRenderables;
+        }
+
         if (0 === numLightVisibleRenderables)
         {
             lightInstance.numVisibleDrawParameters = 0;
