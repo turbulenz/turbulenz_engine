@@ -919,13 +919,13 @@ class CascadedShadowMapping
         // Calculate intersections between then and the main camera ones
         var numMainFrustumSidePlanes = this.numMainFrustumSidePlanes;
         var mainFrustumNearPlaneIndex = this.mainFrustumNearPlaneIndex;
-        var p = this.tempV3Int;
-        var n, i, plane, dz;
+        var tempP = this.tempV3Int;
+        var p, n, plane, dz;
 
         // left, top
         for (n = 0; n < numMainFrustumSidePlanes; n += 1)
         {
-            p = this._findPlanesIntersection(planes[0], planes[2], planes[4 + n], p);
+            p = this._findPlanesIntersection(planes[0], planes[2], planes[4 + n], tempP);
             if (p)
             {
                 if (mainFrustumNearPlaneIndex !== -1)
@@ -948,7 +948,7 @@ class CascadedShadowMapping
         // left, bottom
         for (n = 0; n < numMainFrustumSidePlanes; n += 1)
         {
-            p = this._findPlanesIntersection(planes[0], planes[3], planes[4 + n], p);
+            p = this._findPlanesIntersection(planes[0], planes[3], planes[4 + n], tempP);
             if (p)
             {
                 if (mainFrustumNearPlaneIndex !== -1)
@@ -971,7 +971,7 @@ class CascadedShadowMapping
         // right, top
         for (n = 0; n < numMainFrustumSidePlanes; n += 1)
         {
-            p = this._findPlanesIntersection(planes[1], planes[2], planes[4 + n], p);
+            p = this._findPlanesIntersection(planes[1], planes[2], planes[4 + n], tempP);
             if (p)
             {
                 if (mainFrustumNearPlaneIndex !== -1)
@@ -994,7 +994,7 @@ class CascadedShadowMapping
         // right, bottom
         for (n = 0; n < numMainFrustumSidePlanes; n += 1)
         {
-            p = this._findPlanesIntersection(planes[1], planes[3], planes[4 + n], p);
+            p = this._findPlanesIntersection(planes[1], planes[3], planes[4 + n], tempP);
             if (p)
             {
                 if (mainFrustumNearPlaneIndex !== -1)
