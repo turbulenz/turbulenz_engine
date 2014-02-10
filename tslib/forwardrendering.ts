@@ -2063,17 +2063,24 @@ class ForwardRendering
                 }
 
                 var faces;
-                if (oldIndexData[3] !== 0 && oldIndexData[4] !== 0 && oldIndexData[5] !== 0)
+                if (oldIndexData.length === 4)
                 {
-                    faces = [0, 2, 1, 3];
+                    faces = oldIndexData;
                 }
-                else if (oldIndexData[3] !== 1 && oldIndexData[4] !== 1 && oldIndexData[5] !== 1)
+                else
                 {
-                    faces = [1, 0, 2, 3];
-                }
-                else //if (oldIndexData[3] !== 2 && oldIndexData[4] !== 2 && oldIndexData[5] !== 2)
-                {
-                    faces = [3, 0, 1, 2];
+                    if (oldIndexData[3] !== 0 && oldIndexData[4] !== 0 && oldIndexData[5] !== 0)
+                    {
+                        faces = [0, 2, 1, 3];
+                    }
+                    else if (oldIndexData[3] !== 1 && oldIndexData[4] !== 1 && oldIndexData[5] !== 1)
+                    {
+                        faces = [1, 0, 2, 3];
+                    }
+                    else //if (oldIndexData[3] !== 2 && oldIndexData[4] !== 2 && oldIndexData[5] !== 2)
+                    {
+                        faces = [3, 0, 1, 2];
+                    }
                 }
                 oldIndexData = null;
 
