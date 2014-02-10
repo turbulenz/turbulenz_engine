@@ -1745,7 +1745,8 @@ class CascadedShadowMapping
             maxLightDistance = split.maxLightDistance;
         }
 
-        debug.assert(0 <= minLightDistance);
+        debug.assert(-0.01 <= minLightDistance);
+        minLightDistance = Math.max(0, minLightDistance);
 
         var distanceRange = (maxLightDistance - minLightDistance);
         if (0.001 < distanceRange)
