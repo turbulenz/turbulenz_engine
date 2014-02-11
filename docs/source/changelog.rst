@@ -10,7 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
-2014-02-03
+Version 1.3
+-----------
+
+2014-02-11
 
 - Added subtitles sample:
 
@@ -27,13 +30,8 @@ Version 1.x-dev
   * Added argument *pageIdx* to font.drawTextVertices
   * Added argument *dimensions* to font.drawTextRect
 
-- Modified FontManager to use tri-strip instead of fan for single characters.
-  Temporary fix for IE11.
-
+- Modified FontManager to use tri-strip instead of fan for single characters. Temporary fix for IE11.
 - PhysicsManager optimisations
-
-2014-01-29
-
 - Update protolib library (version 0.2.1):
 
   * Corrected 2D text rendering order
@@ -41,14 +39,8 @@ Version 1.x-dev
 
 - Fixed an issue in draw2D where sprites were incorrectly scaled around the origin
 - Added debug assertion for draw2D when npot textures are used with mipmaps not supported
-
-2014-01-22
-
 - Fixed missing copyright comments
 - Add viewBox transforms to svg implementation
-
-2014-01-21
-
 - Fixed the handling of gamesession create to treat 404s as if services are unavailable
 - Request handler now retries if 504 responses are encountered instead of failing immediately
 - Improved handling of non-JSON responses to API requests
@@ -78,19 +70,9 @@ Version 1.x-dev
 - Removed usage of deprecated event property "event.keyLocation" in the Input Device
 - Added check when using Workers for processing DDS textures on unsupported platforms
 - Added support for proposed canvas API resetTransform to canvas.js
-
-2013-12-16
-
 - Updated documentation about developer clients
-
-2013-11-11
-
-- Deprecated the *plugin-debug* build.  Sample apps no longer ship in
-  this configuration.
+- Deprecated the *plugin-debug* build.  Sample apps no longer ship in this configuration.
 - Fixed tools build under clang 3.3
-
-2013-11-07
-
 - Changed default materialColor and uvTransform setting behaviour in the renderers to set on the sharedMaterial
   instead of each renderable
 
