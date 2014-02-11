@@ -881,14 +881,21 @@ class WebGLSoundSource implements SoundSource
         return false;
     }
 
-    seek(seek)
+    seek(seek: number): boolean
     {
         if (this.playing)
         {
-            var audio = this.audio;
-            if (audio)
+            var tell = this.tell;
+            var delta = Math.abs(tell - seek);
+            if (this.looping)
             {
-                if (0.05 < Math.abs(audio.currentTime - seek))
+                delta = Math.min(Math.abs(tell - (this.sound.length + seek)), delta);
+            }
+
+            if (0.05 < delta)
+            {
+                var audio = this.audio;
+                if (audio)
                 {
                     try
                     {
@@ -899,15 +906,10 @@ class WebGLSoundSource implements SoundSource
                         // It seems there is no reliable way of seeking
                     }
                 }
-
-                return true;
-            }
-            else
-            {
-                var audioContext = this.audioContext;
-                if (audioContext)
+                else
                 {
-                    if (0.05 < Math.abs((audioContext.currentTime - this.playStart) - seek))
+                    var audioContext = this.audioContext;
+                    if (audioContext)
                     {
                         var bufferNode = this.bufferNode;
                         if (bufferNode)
@@ -937,10 +939,10 @@ class WebGLSoundSource implements SoundSource
                             this.playStart = audioContext.currentTime;
                         }
                     }
-
-                    return true;
                 }
             }
+
+            return true;
         }
 
         return false;
