@@ -52,6 +52,7 @@ interface FontDrawParameters
     scale       : number;
     alignment   : any;
     spacing?    : number;
+    lineSpacing?: number;
     dimensions? : FontDimensions;
 }
 
@@ -119,14 +120,15 @@ class Font
     /// collect information about how the characters are distributed
     /// across the font pages.
     calculateTextDimensions(text: string, scale: number, spacing: number,
-                            dimensions?: FontDimensions): FontDimensions
+                            lineSpacing?: number, dimensions?: FontDimensions)
+    : FontDimensions
     {
         var glyphs = this.glyphs;
-        var lineHeight = (this.lineHeight * scale);
+        var lineHeight = (this.lineHeight + (lineSpacing || 0)) * scale;
         var unknownGlyph = glyphs[this.unknownGlyphIndex];
         var numPages = (this.pages ? this.pages.length : 1);
         var width = 0;
-        var height = 0;
+        var height = this.lineHeight * scale;
         var numGlyphs = 0;
         var numLines = 0;
         var linesWidth = [];
@@ -193,7 +195,6 @@ class Font
         {
             width = lineWidth;
         }
-        height += lineHeight;
 
         if (dimensions)
         {
@@ -249,7 +250,7 @@ class Font
         var rect = params.rect;
         var alignment = params.alignment;
         var linesWidth = dimensions.linesWidth;
-        var lineHeight = (this.lineHeight * scale);
+        var lineHeight = (this.lineHeight + (params.lineSpacing || 0)) * scale;
         var kernings = this.kernings;
         var glyphs = this.glyphs;
 
