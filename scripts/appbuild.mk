@@ -488,6 +488,12 @@ ifneq (,$(TSAPPS))
   EXTERNAL_SCRIPTFILES := $(sort $(EXTERNAL_SCRIPTFILES))
 endif
 
+# Make all output files from TSLIBS depends on the base .d.ts files
+
+$(foreach tsl,$(TSLIBS), $(eval \
+    $(_$(tsl)_out_js) : $(TS_BASE_FILES) \
+))
+
 $(call log,JSFILES = $(JSFILES))
 
 # Generate the list of app names and set the basic variables up for
