@@ -89,9 +89,9 @@ class SoundManager
 
       @return {SoundManager} object, null if failed
     */
-    static create(sd: SoundDevice, rh: RequestHandler, ds: Sound,
-                  errorCallback: SoundManagerErrorCallback,
-                  log: HTMLElement): SoundManager
+    static create(sd: SoundDevice, rh: RequestHandler, ds?: Sound,
+                  errorCallback?: SoundManagerErrorCallback,
+                  log?: HTMLElement): SoundManager
     {
         if (!errorCallback)
         {
