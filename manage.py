@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2011-2012 Turbulenz Limited
+# Copyright (c) 2011-2014 Turbulenz Limited
 
 """
 Init script for manipulating the Turbulenz Engine project.
@@ -204,6 +204,10 @@ def command_tools():
             proj_postfix = '-2012.vcxproj'
             sln_postfix = '-2012.sln'
             vs_version = '11.0'
+        elif vs_version_name == '2013':
+            proj_postfix = '-2013.vcxproj'
+            sln_postfix = '-2013.sln'
+            vs_version = '12.0'
         if devenv:
             base_cmd = [devenv, '/build', 'Release']
         elif msbuild:
@@ -248,6 +252,10 @@ def command_tools_clean():
             proj_postfix = '-2012.vcxproj'
             sln_postfix = '-2012.sln'
             vs_version = '11.0'
+        elif vs_version_name == '2013':
+            proj_postfix = '-2013.vcxproj'
+            sln_postfix = '-2013.sln'
+            vs_version = '12.0'
         if devenv:
             base_cmd = [devenv, '/clean', 'Release']
         elif msbuild:
