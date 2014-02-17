@@ -892,13 +892,16 @@ class SceneNode
         {
             var renderables = this.renderables;
             var lights = this.lightInstances;
-            if (renderables || lights)
+            var numRenderables = (renderables ? renderables.length : 0);
+            var numLights = (lights ? lights.length : 0);
+            if (numRenderables || numLights)
             {
                 var maxValue = Number.MAX_VALUE;
                 var minValue = -maxValue;
                 var min = Math.min;
                 var max = Math.max;
                 var h0, h1, h2, c0, c1, c2;
+                var index;
 
                 var localExtents0 = maxValue;
                 var localExtents1 = maxValue;
@@ -907,86 +910,78 @@ class SceneNode
                 var localExtents4 = minValue;
                 var localExtents5 = minValue;
 
-                if (renderables)
+                for (index = 0; index < numRenderables; index += 1)
                 {
-                    var numRenderables = renderables.length;
-                    for (var index = 0; index < numRenderables; index += 1)
+                    var renderable = renderables[index];
+                    halfExtents = renderable.halfExtents;
+                    if (halfExtents && !renderable.hasCustomWorldExtents())
                     {
-                        var renderable = renderables[index];
-                        halfExtents = renderable.halfExtents;
-                        if (halfExtents && !renderable.hasCustomWorldExtents())
+                        h0 = halfExtents[0];
+                        h1 = halfExtents[1];
+                        h2 = halfExtents[2];
+
+                        center = renderable.center;
+                        if (center)
                         {
-                            h0 = halfExtents[0];
-                            h1 = halfExtents[1];
-                            h2 = halfExtents[2];
+                            c0 = center[0];
+                            c1 = center[1];
+                            c2 = center[2];
 
-                            center = renderable.center;
-                            if (center)
-                            {
-                                c0 = center[0];
-                                c1 = center[1];
-                                c2 = center[2];
+                            localExtents0 = min(localExtents0, (c0 - h0));
+                            localExtents1 = min(localExtents1, (c1 - h1));
+                            localExtents2 = min(localExtents2, (c2 - h2));
 
-                                localExtents0 = min(localExtents0, (c0 - h0));
-                                localExtents1 = min(localExtents1, (c1 - h1));
-                                localExtents2 = min(localExtents2, (c2 - h2));
+                            localExtents3 = max(localExtents3, (c0 + h0));
+                            localExtents4 = max(localExtents4, (c1 + h1));
+                            localExtents5 = max(localExtents5, (c2 + h2));
+                        }
+                        else
+                        {
+                            localExtents0 = min(localExtents0, - h0);
+                            localExtents1 = min(localExtents1, - h1);
+                            localExtents2 = min(localExtents2, - h2);
 
-                                localExtents3 = max(localExtents3, (c0 + h0));
-                                localExtents4 = max(localExtents4, (c1 + h1));
-                                localExtents5 = max(localExtents5, (c2 + h2));
-                            }
-                            else
-                            {
-                                localExtents0 = min(localExtents0, - h0);
-                                localExtents1 = min(localExtents1, - h1);
-                                localExtents2 = min(localExtents2, - h2);
-
-                                localExtents3 = max(localExtents3, + h0);
-                                localExtents4 = max(localExtents4, + h1);
-                                localExtents5 = max(localExtents5, + h2);
-                            }
+                            localExtents3 = max(localExtents3, + h0);
+                            localExtents4 = max(localExtents4, + h1);
+                            localExtents5 = max(localExtents5, + h2);
                         }
                     }
                 }
 
-                if (lights)
+                for (index = 0; index < numLights; index += 1)
                 {
-                    var numLights = lights.length;
-                    for (var lindex = 0; lindex < numLights; lindex += 1)
+                    var light = lights[index].light;
+                    halfExtents = light.halfExtents;
+                    if (halfExtents)
                     {
-                        var light = lights[lindex].light;
-                        halfExtents = light.halfExtents;
-                        if (halfExtents)
+                        h0 = halfExtents[0];
+                        h1 = halfExtents[1];
+                        h2 = halfExtents[2];
+
+                        center = light.center;
+                        if (center)
                         {
-                            h0 = halfExtents[0];
-                            h1 = halfExtents[1];
-                            h2 = halfExtents[2];
+                            c0 = center[0];
+                            c1 = center[1];
+                            c2 = center[2];
 
-                            center = light.center;
-                            if (center)
-                            {
-                                c0 = center[0];
-                                c1 = center[1];
-                                c2 = center[2];
+                            localExtents0 = min(localExtents0, (c0 - h0));
+                            localExtents1 = min(localExtents1, (c1 - h1));
+                            localExtents2 = min(localExtents2, (c2 - h2));
 
-                                localExtents0 = min(localExtents0, (c0 - h0));
-                                localExtents1 = min(localExtents1, (c1 - h1));
-                                localExtents2 = min(localExtents2, (c2 - h2));
+                            localExtents3 = max(localExtents3, (c0 + h0));
+                            localExtents4 = max(localExtents4, (c1 + h1));
+                            localExtents5 = max(localExtents5, (c2 + h2));
+                        }
+                        else
+                        {
+                            localExtents0 = min(localExtents0, - h0);
+                            localExtents1 = min(localExtents1, - h1);
+                            localExtents2 = min(localExtents2, - h2);
 
-                                localExtents3 = max(localExtents3, (c0 + h0));
-                                localExtents4 = max(localExtents4, (c1 + h1));
-                                localExtents5 = max(localExtents5, (c2 + h2));
-                            }
-                            else
-                            {
-                                localExtents0 = min(localExtents0, - h0);
-                                localExtents1 = min(localExtents1, - h1);
-                                localExtents2 = min(localExtents2, - h2);
-
-                                localExtents3 = max(localExtents3, + h0);
-                                localExtents4 = max(localExtents4, + h1);
-                                localExtents5 = max(localExtents5, + h2);
-                            }
+                            localExtents3 = max(localExtents3, + h0);
+                            localExtents4 = max(localExtents4, + h1);
+                            localExtents5 = max(localExtents5, + h2);
                         }
                     }
                 }
