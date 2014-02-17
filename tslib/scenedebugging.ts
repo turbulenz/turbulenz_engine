@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 /*global Scene*/
 /*global Geometry*/
 /*global GeometryInstance*/
