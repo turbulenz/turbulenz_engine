@@ -476,6 +476,10 @@ class WebGLSound implements Sound
                                     if (xhrStatus === 200 || xhrStatus === 0)
                                     {
                                         sound.blob = xhr.response;
+                                        if (sound.blob.type === 'audio/x-mpg')
+                                        {
+                                            sound.blob = sound.blob.slice(0, sound.blob.size, 'audio/mpeg');
+                                        }
                                         audio.src = URL.createObjectURL(sound.blob);
 
                                         sd.addLoadingSound(checkLoaded);
