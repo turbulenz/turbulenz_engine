@@ -10,6 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-02-17
+
+- Fixed node extents update when removing its last renderable or its last light.
+
 2014-02-13
 
 - Added support for building tools with Visual Studio 2013
