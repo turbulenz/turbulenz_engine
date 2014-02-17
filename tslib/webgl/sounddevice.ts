@@ -1573,7 +1573,7 @@ class WebGLSoundDevice implements SoundDevice
         return WebGLSound.create(this, params);
     }
 
-    loadSoundsArchive(params)
+    loadSoundsArchive(params: SoundArchiveParameters)
     {
         var src = params.src;
         if (typeof SoundTARLoader !== 'undefined')
