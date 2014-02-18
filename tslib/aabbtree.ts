@@ -29,8 +29,7 @@ class AABBTreeNode
     externalNode     : {};
     extents          : any;
 
-    constructor(extents: any, escapeNodeOffset: number,
-                externalNode?: {})
+    constructor(extents: any, escapeNodeOffset: number, externalNode: {})
     {
         this.escapeNodeOffset = escapeNodeOffset;
         this.externalNode = externalNode;
@@ -87,6 +86,12 @@ class AABBTreeNode
 class AABBTree
 {
     static version = 1;
+
+    static useFloat32Array = false;
+
+    static nodesPoolAllocationSize = 128;
+    static nodesPool = [];
+
     numNodesLeaf = 4;
 
     nodes:  AABBTreeNode[];
@@ -102,7 +107,63 @@ class AABBTree
     ignoreY: boolean;
     nodesStack: number[];
 
-    arrayConstructor: any;
+
+    static allocateNode(): AABBTreeNode
+    {
+        var nodesPool = this.nodesPool;
+        if (!nodesPool.length)
+        {
+            // Allocate a bunch of nodes in one go
+            var nodesPoolAllocationSize = this.nodesPoolAllocationSize;
+            var useFloat32Array = this.useFloat32Array;
+            var extentsArray, extentsArrayIndex;
+            if (useFloat32Array)
+            {
+                extentsArray = new Float32Array(nodesPoolAllocationSize * 6);
+                extentsArrayIndex = 0;
+            }
+            var n, extents;
+            for (n = 0; n < nodesPoolAllocationSize; n += 1)
+            {
+                if (useFloat32Array)
+                {
+                    extents = extentsArray.subarray(extentsArrayIndex, (extentsArrayIndex + 6));
+                    extentsArrayIndex += 6;
+                }
+                else
+                {
+                    extents = [0, 0, 0, 0, 0, 0];
+                }
+                nodesPool[n] = AABBTreeNode.create(extents, 1, undefined);
+            }
+        }
+        return nodesPool.pop();
+    }
+
+    static releaseNode(node: AABBTreeNode): void
+    {
+        var nodesPool = this.nodesPool;
+        if (nodesPool.length < this.nodesPoolAllocationSize)
+        {
+            node.clear();
+            nodesPool.push(node);
+        }
+    }
+
+    static recycleNodes(nodes: AABBTreeNode[], start: number): void
+    {
+        var numNodes = nodes.length;
+        var n;
+        for (n = start; n < numNodes; n += 1)
+        {
+            var node = nodes[n];
+            if (node)
+            {
+                this.releaseNode(node);
+            }
+        }
+        nodes.length = start;
+    }
 
     constructor(highQuality: boolean)
     {
@@ -124,14 +185,19 @@ class AABBTree
     {
         var endNode = this.endNode;
         externalNode.spatialIndex = endNode;
-        var copyExtents = new this.arrayConstructor(6);
+
+        var node = AABBTree.allocateNode();
+        node.escapeNodeOffset = 1;
+        node.externalNode = externalNode;
+        var copyExtents = node.extents;
         copyExtents[0] = extents[0];
         copyExtents[1] = extents[1];
         copyExtents[2] = extents[2];
         copyExtents[3] = extents[3];
         copyExtents[4] = extents[4];
         copyExtents[5] = extents[5];
-        this.nodes[endNode] = AABBTreeNode.create(copyExtents, 1, externalNode);
+
+        this.nodes[endNode] = node;
         this.endNode = (endNode + 1);
         this.needsRebuild = true;
         this.numAdds += 1;
@@ -401,7 +467,7 @@ class AABBTree
         {
             var nodes = this.nodes;
 
-            var buildNodes, numBuildNodes, endNodeIndex;
+            var n, buildNodes, numBuildNodes, endNodeIndex;
 
             if (this.numExternalNodes === nodes.length)
             {
@@ -416,7 +482,7 @@ class AABBTree
                 buildNodes.length = this.numExternalNodes;
                 numBuildNodes = 0;
                 endNodeIndex = this.endNode;
-                for (var n = 0; n < endNodeIndex; n += 1)
+                for (n = 0; n < endNodeIndex; n += 1)
                 {
                     var currentNode = nodes[n];
                     if (currentNode.externalNode) // Is leaf
@@ -452,14 +518,18 @@ class AABBTree
                     }
                 }
 
-                nodes.length = this._predictNumNodes(0, numBuildNodes, 0);
+                var predictedNumNodes = this._predictNumNodes(0, numBuildNodes, 0);
+                if (nodes.length > predictedNumNodes)
+                {
+                    AABBTree.recycleNodes(nodes, predictedNumNodes);
+                }
 
                 this._recursiveBuild(buildNodes, 0, numBuildNodes, 0);
 
                 endNodeIndex = nodes[0].escapeNodeOffset;
                 if (nodes.length > endNodeIndex)
                 {
-                    nodes.length = endNodeIndex;
+                    AABBTree.recycleNodes(nodes, endNodeIndex);
                 }
                 this.endNode = endNodeIndex;
 
@@ -1093,24 +1163,12 @@ class AABBTree
         }
 
         var node = nodes[nodeIndex];
-        if (node !== undefined)
+        if (node === undefined)
         {
-            node.reset(minX, minY, minZ, maxX, maxY, maxZ,
-                       (lastNodeIndex + lastNode.escapeNodeOffset - nodeIndex));
+            nodes[nodeIndex] = node = AABBTree.allocateNode();
         }
-        else
-        {
-            var parentExtents = new this.arrayConstructor(6);
-            parentExtents[0] = minX;
-            parentExtents[1] = minY;
-            parentExtents[2] = minZ;
-            parentExtents[3] = maxX;
-            parentExtents[4] = maxY;
-            parentExtents[5] = maxZ;
-
-            nodes[nodeIndex] = AABBTreeNode.create(parentExtents,
-                                                   (lastNodeIndex + lastNode.escapeNodeOffset - nodeIndex));
-        }
+        node.reset(minX, minY, minZ, maxX, maxY, maxZ,
+                   (lastNodeIndex + lastNode.escapeNodeOffset - nodeIndex));
     }
 
     _replaceNode(nodes: AABBTreeNode[], nodeIndex: number, newNode: AABBTreeNode): void
@@ -1119,12 +1177,7 @@ class AABBTree
         nodes[nodeIndex] = newNode;
         if (oldNode !== undefined)
         {
-            do
-            {
-                nodeIndex += 1;
-            }
-            while (nodes[nodeIndex] !== undefined);
-            nodes[nodeIndex] = oldNode;
+            AABBTree.releaseNode(oldNode);
         }
     }
 
@@ -1550,7 +1603,10 @@ class AABBTree
 
     clear(): void
     {
-        this.nodes = [];
+        if (this.nodes.length)
+        {
+            AABBTree.recycleNodes(this.nodes, 0);
+        }
         this.endNode = 0;
         this.needsRebuild = false;
         this.needsRebound = false;
@@ -1795,14 +1851,13 @@ class AABBTree
 //
 // Detect correct typed arrays
 (function () {
-    AABBTree.prototype.arrayConstructor = Array;
     if (typeof Float32Array !== "undefined")
     {
         var testArray = new Float32Array(4);
         var textDescriptor = Object.prototype.toString.call(testArray);
         if (textDescriptor === '[object Float32Array]')
         {
-            AABBTree.prototype.arrayConstructor = Float32Array;
+            AABBTree.useFloat32Array = true;
         }
     }
 }());
