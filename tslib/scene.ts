@@ -3797,9 +3797,8 @@ class Scene
         {
             var max = Math.max;
             var min = Math.min;
-            var sequenceExtents = (this.float32ArrayConstructor ?
-                                   new this.float32ArrayConstructor(6) :
-                                   new Array(6));
+            var arrayConstructor = (this.float32ArrayConstructor ? this.float32ArrayConstructor : Array);
+            var sequenceExtents = new arrayConstructor(6);
             var sequenceFirstRenderable, sequenceLength, sequenceVertexOffset, sequenceIndicesEnd, sequenceNumVertices;
             var groupSize, g, lastMaterial, material, center, halfExtents;
 
@@ -3824,9 +3823,7 @@ class Scene
                     c1 !== 0 ||
                     c2 !== 0)
                 {
-                    var center = (this.float32ArrayConstructor ?
-                                  new this.float32ArrayConstructor(3) :
-                                  new Array(3));
+                    var center = (sequenceFirstRenderable.center || new arrayConstructor(3));
                     sequenceFirstRenderable.center = center;
                     center[0] = c0;
                     center[1] = c1;
@@ -3837,9 +3834,7 @@ class Scene
                     sequenceFirstRenderable.center = null;
                 }
 
-                var halfExtents = (this.float32ArrayConstructor ?
-                                   new this.float32ArrayConstructor(3) :
-                                   new Array(3));
+                var halfExtents = (sequenceFirstRenderable.halfExtents || new arrayConstructor(3));
                 sequenceFirstRenderable.halfExtents = halfExtents;
                 halfExtents[0] = (sequenceExtents[3] - sequenceExtents[0]) * 0.5;
                 halfExtents[1] = (sequenceExtents[4] - sequenceExtents[1]) * 0.5;
