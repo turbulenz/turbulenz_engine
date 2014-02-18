@@ -3983,6 +3983,10 @@ class Scene
                 renderables[numRenderables] = ungroup[n];
                 numRenderables += 1;
             }
+            for (n = numRenderables; n < renderables.length; n += 1)
+            {
+                renderables[n].setNode(null);
+            }
             renderables.length = numRenderables;
         }
     }
