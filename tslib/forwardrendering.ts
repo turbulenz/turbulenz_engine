@@ -113,6 +113,8 @@ class ForwardRendering
     bufferWidth: number;
     bufferHeight: number;
 
+    sharedUserData: any[];
+
     //minPixelCount: 16,
     //minPixelCountShadows: 256,
 
@@ -1375,11 +1377,13 @@ class ForwardRendering
         fr.numPasses = fr.passIndex.transparent + 1;
 
         var passes = fr.passes = [];
+        var sharedUserData = fr.sharedUserData = [];
         var numPasses = fr.numPasses;
         var index;
         for (index = 0; index < numPasses; index += 1)
         {
             passes[index] = [];
+            sharedUserData[index] = { passIndex: index };
         }
 
         fr.passesSize = [];
@@ -1541,9 +1545,8 @@ class ForwardRendering
                 sharedMaterialTechniqueParameters.light_map)
             {
                 drawParameters = drawParameters = gd.createDrawParameters();
-                drawParameters.userData = {};
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.glow];
                 geometryInstance.prepareDrawParameters(drawParameters);
-                drawParameters.userData.passIndex = fr.passIndex.glow;
                 geometryInstance.drawParameters.push(drawParameters);
 
                 if (sharedMaterialTechniqueParameters.light_map)
@@ -1570,9 +1573,8 @@ class ForwardRendering
             {
                 // fillZ
                 drawParameters = gd.createDrawParameters();
-                drawParameters.userData = {};
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.fillZ];
                 geometryInstance.prepareDrawParameters(drawParameters);
-                drawParameters.userData.passIndex = fr.passIndex.fillZ;
                 geometryInstance.drawParameters.push(drawParameters);
                 numTechniqueParameters = 0;
 
@@ -1684,9 +1686,8 @@ class ForwardRendering
                 !meta.decal)
             {
                 drawParameters = gd.createDrawParameters();
-                drawParameters.userData = {};
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.ambient];
                 geometryInstance.prepareDrawParameters(drawParameters);
-                drawParameters.userData.passIndex = fr.passIndex.ambient;
                 geometryInstance.drawParameters.push(drawParameters);
 
                 if (geometryInstance.skinController)
@@ -1759,7 +1760,6 @@ class ForwardRendering
             // Diffuse Pass
             //
             drawParameters = gd.createDrawParameters();
-            drawParameters.userData = {};
             geometryInstance.prepareDrawParameters(drawParameters);
 
             drawParameters.technique = this.technique;
@@ -1771,12 +1771,12 @@ class ForwardRendering
 
             if (meta.decal)
             {
-                drawParameters.userData.passIndex = fr.passIndex.decal;
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.decal];
                 geometryInstance.drawParameters.push(drawParameters);
             }
             else if (meta.transparent)
             {
-                drawParameters.userData.passIndex = fr.passIndex.transparent;
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.transparent];
                 geometryInstance.drawParameters.push(drawParameters);
             }
             else
@@ -1789,14 +1789,14 @@ class ForwardRendering
                 }
                 else
                 {
-                    drawParameters.userData.passIndex = fr.passIndex.diffuse;
+                    drawParameters.userData = fr.sharedUserData[fr.passIndex.diffuse];
                     geometryInstance.diffuseDrawParameters = [drawParameters];
                 }
 
                 if (fr.shadowMaps && this.shadowTechnique)
                 {
                     var shadowDrawParameters = gd.createDrawParameters();
-                    shadowDrawParameters.userData = {};
+                    shadowDrawParameters.userData = fr.sharedUserData[fr.passIndex.diffuse];
                     geometryInstance.prepareDrawParameters(shadowDrawParameters);
 
                     shadowDrawParameters.technique = this.shadowTechnique;
@@ -1825,11 +1825,9 @@ class ForwardRendering
                     !meta.noshadows)
                 {
                     drawParameters = gd.createDrawParameters();
-                    drawParameters.userData = {};
+                    drawParameters.userData = fr.sharedUserData[fr.passIndex.shadow];
                     geometryInstance.prepareDrawParameters(drawParameters);
                     geometryInstance.shadowMappingDrawParameters = [drawParameters];
-
-                    drawParameters.userData.passIndex = fr.passIndex.shadow;
 
                     rendererInfo.shadowMappingUpdate = this.shadowMappingUpdate;
                     drawParameters.technique = this.shadowMappingTechnique;
@@ -1900,9 +1898,8 @@ class ForwardRendering
 
             // glow pass
             drawParameters = gd.createDrawParameters();
-            drawParameters.userData = {};
+            drawParameters.userData = fr.sharedUserData[fr.passIndex.glow];
             geometryInstance.prepareDrawParameters(drawParameters);
-            drawParameters.userData.passIndex = fr.passIndex.glow;
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
@@ -1912,9 +1909,8 @@ class ForwardRendering
 
             // ambient pass
             drawParameters = gd.createDrawParameters();
-            drawParameters.userData = {};
+            drawParameters.userData = fr.sharedUserData[fr.passIndex.ambient];
             geometryInstance.prepareDrawParameters(drawParameters);
-            drawParameters.userData.passIndex = fr.passIndex.ambient;
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
