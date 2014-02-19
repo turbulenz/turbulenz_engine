@@ -4497,8 +4497,8 @@ class Scene
                                 {
                                     destSurface.primitive = gd.PRIMITIVE_TRIANGLE_STRIP;
                                     numIndices = 4;
-                                    faces[3] = faces[5];
-                                    faces.length = 4;
+                                    faces = [faces[0], faces[1], faces[2], faces[5]];
+                                    destSurface.faces = faces;
                                 }
                             }
 
