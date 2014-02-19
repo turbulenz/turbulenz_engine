@@ -2552,8 +2552,14 @@ class WebGLPhysicsPrivateBody
         this.friction    = (params.friction    !== undefined) ? params.friction    : 0.5;
         this.restitution = (params.restitution !== undefined) ? params.restitution : 0.0;
 
+        var buffer = new Float32Array(12 + 12 + 6 + 12 + 12 + 12 + 12);
+        var bufferIndex = 0;
+
         var xform = params.transform;
-        this.transform = (xform ? VMath.m43Copy(xform) : VMath.m43BuildIdentity());
+        this.transform = (xform ?
+                          VMath.m43Copy(xform, buffer.subarray(bufferIndex, (bufferIndex + 12))) :
+                          VMath.m43BuildIdentity(buffer.subarray(bufferIndex, (bufferIndex + 12))));
+        bufferIndex += 12;
 
         this.arbiters = [];
         // Tracks constraints that are inside of a space, and making use of this object.
@@ -2564,7 +2570,9 @@ class WebGLPhysicsPrivateBody
         // [w0, w1, w2]
         // [v0, v1, v2] <-- bias velocity
         // [w0, w1, w2] <-- bias velocity
-        this.velocity = new Float32Array(12);
+        this.velocity = buffer.subarray(bufferIndex, (bufferIndex + 12));
+        bufferIndex += 12;
+
         var vel = params.linearVelocity;
         if (vel)
         {
@@ -2583,15 +2591,22 @@ class WebGLPhysicsPrivateBody
         this.linearDamping  = (params.linearDamping  !== undefined) ? params.linearDamping  : 0.0;
         this.angularDamping = (params.angularDamping !== undefined) ? params.angularDamping : 0.0;
 
-        this.extents = new Float32Array(6);
+        this.extents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+        bufferIndex += 6;
 
         // For continous collision detection
-        this.startTransform = VMath.m43BuildIdentity();
-        this.endTransform = VMath.m43BuildIdentity();
+        this.startTransform = VMath.m43BuildIdentity(buffer.subarray(bufferIndex, (bufferIndex + 12)));
+        bufferIndex += 12;
+
+        this.endTransform = VMath.m43BuildIdentity(buffer.subarray(bufferIndex, (bufferIndex + 12)));
+        bufferIndex += 12;
 
         // For kinematic objects.
-        this.prevTransform = VMath.m43Copy(this.transform);
-        this.newTransform = VMath.m43BuildIdentity();
+        this.prevTransform = VMath.m43Copy(this.transform, buffer.subarray(bufferIndex, (bufferIndex + 12)));
+        bufferIndex += 12;
+
+        this.newTransform = VMath.m43BuildIdentity(buffer.subarray(bufferIndex, (bufferIndex + 12)));
+        bufferIndex += 12;
 
         this.island = null;
         this.islandRoot = this;
