@@ -1124,9 +1124,10 @@ class WebGLSoundSource implements SoundSource
         source.playing = false;
         source.paused = false;
 
-        source._position = VMath.v3BuildZero();
-        source._velocity = VMath.v3BuildZero();
-        source._direction = VMath.v3BuildZero();
+        var buffer = new Float32Array(9);
+        source._position = buffer.subarray(0, 3);
+        source._velocity = buffer.subarray(3, 6);
+        source._direction = buffer.subarray(6, 9);
 
         var gain = (typeof params.gain === "number" ? params.gain : 1);
         var looping = (params.looping || false);
