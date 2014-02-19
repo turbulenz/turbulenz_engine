@@ -986,14 +986,66 @@ class SceneNode
                     }
                 }
 
-                localExtents = new this.arrayConstructor(6);
+                if (this.arrayConstructor !== Array)
+                {
+                    var bufferSize = 6;
+                    if (!this.localHalfExtents)
+                    {
+                        bufferSize += 3;
+                    }
+                    if (!this.localExtentsCenter)
+                    {
+                        bufferSize += 3;
+                    }
+                    if (!this.worldExtents)
+                    {
+                        bufferSize += 6;
+                    }
+
+                    var buffer = new Float32Array(bufferSize);
+                    var bufferIndex = 0;
+
+                    this.localExtents = localExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                    bufferIndex += 6;
+                    if (!this.localHalfExtents)
+                    {
+                        this.localHalfExtents = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                        bufferIndex += 3;
+                    }
+                    if (!this.localExtentsCenter)
+                    {
+                        this.localExtentsCenter = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                        bufferIndex += 3;
+                    }
+                    if (!this.worldExtents)
+                    {
+                        this.worldExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                        bufferIndex += 6;
+                    }
+                }
+                else
+                {
+                    this.localExtents = localExtents = new Array(6);
+                    if (!this.localHalfExtents)
+                    {
+                        this.localHalfExtents = new Array(3);
+                    }
+                    if (!this.localExtentsCenter)
+                    {
+                        this.localExtentsCenter = new Array(3);
+                    }
+                    if (!this.worldExtents)
+                    {
+                        this.worldExtents = new Array(6);
+                    }
+                }
+
                 localExtents[0] = localExtents0;
                 localExtents[1] = localExtents1;
                 localExtents[2] = localExtents2;
                 localExtents[3] = localExtents3;
                 localExtents[4] = localExtents4;
                 localExtents[5] = localExtents5;
-                this.localExtents = localExtents;
                 hasExtents = true;
             }
         }
