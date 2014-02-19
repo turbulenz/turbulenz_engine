@@ -4710,16 +4710,20 @@ class Scene
                     var max1 = maxPos[1];
                     var max2 = maxPos[2];
 
-                    var halfExtents = (this.float32ArrayConstructor ?
-                                       new this.float32ArrayConstructor(3) :
-                                       new Array(3));
-                    shape.halfExtents = halfExtents;
+                    var halfExtents, center;
                     if (min0 !== -max0 || min1 !== -max1 || min2 !== -max2)
                     {
-                        var center = (this.float32ArrayConstructor ?
-                                      new this.float32ArrayConstructor(3) :
-                                      new Array(3));
-                        shape.center = center;
+                        if (this.float32ArrayConstructor)
+                        {
+                            var buffer = new this.float32ArrayConstructor(6);
+                            center = buffer.subarray(0, 3);
+                            halfExtents= buffer.subarray(3, 6);
+                        }
+                        else
+                        {
+                            center = new Array(3);
+                            halfExtents = new Array(3);
+                        }
                         center[0] = (min0 + max0) * 0.5;
                         center[1] = (min1 + max1) * 0.5;
                         center[2] = (min2 + max2) * 0.5;
@@ -4729,10 +4733,15 @@ class Scene
                     }
                     else
                     {
+                        halfExtents = (this.float32ArrayConstructor ?
+                                       new this.float32ArrayConstructor(3) :
+                                       new Array(3));
                         halfExtents[0] = (max0 - min0) * 0.5;
                         halfExtents[1] = (max1 - min1) * 0.5;
                         halfExtents[2] = (max2 - min2) * 0.5;
                     }
+                    shape.center = center;
+                    shape.halfExtents = halfExtents;
                 }
                 //else
                 //{
@@ -5369,6 +5378,7 @@ class Scene
         var baseIndex = areas.length;
 
         var maxValue = Number.MAX_VALUE;
+        var buffer, bufferIndex;
 
         for (var fa = 0; fa < numFileAreas; fa += 1)
         {
@@ -5412,6 +5422,21 @@ class Scene
             var numFilePortals = filePortals.length;
             var portals = [];
             var filePortal, filePoints, points, numPoints, np, filePoint;
+            var areaExtents;
+
+            if (this.float32ArrayConstructor)
+            {
+                buffer = new this.float32ArrayConstructor(6 + (numFilePortals * (6 + 3 + 4)));
+                bufferIndex = 0;
+
+                areaExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                bufferIndex += 6;
+            }
+            else
+            {
+                areaExtents = new Array(6);
+            }
+
             for (var fp = 0; fp < numFilePortals; fp += 1)
             {
                 var minX = maxValue;
@@ -5455,9 +5480,22 @@ class Scene
                 if (maxZ > maxAreaZ) { maxAreaZ = maxZ; }
                 var normal = md.v3Cross(md.v3Sub(points[1], points[0]), md.v3Sub(points[2], points[0]));
 
-                var portalExtents = (this.float32ArrayConstructor ?
-                                     new this.float32ArrayConstructor(6) :
-                                     new Array(6));
+                var portalExtents, portalOrigin, portalPlane;
+                if (this.float32ArrayConstructor)
+                {
+                    portalExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                    bufferIndex += 6;
+                    portalOrigin = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                    bufferIndex += 3;
+                    portalPlane = buffer.subarray(bufferIndex, (bufferIndex + 4));
+                    bufferIndex += 4;
+                }
+                else
+                {
+                    portalExtents = new Array(6);
+                    portalOrigin = new Array(3);
+                    portalPlane = new Array(4);
+                }
                 portalExtents[0] = minX;
                 portalExtents[1] = minY;
                 portalExtents[2] = minZ;
@@ -5465,26 +5503,22 @@ class Scene
                 portalExtents[4] = maxY;
                 portalExtents[5] = maxZ;
 
-                var portalOrigin = (this.float32ArrayConstructor ?
-                                    new this.float32ArrayConstructor(3) :
-                                    new Array(3));
                 portalOrigin[0] = (c0 / numPoints);
                 portalOrigin[1] = (c1 / numPoints);
                 portalOrigin[2] = (c2 / numPoints);
+
+                portalPlane = planeNormalize(normal[0], normal[1], normal[2], md.v3Dot(normal, points[0]), portalPlane);
 
                 var portal = {
                     area: (baseIndex + filePortal.area),
                     points: points,
                     origin: portalOrigin,
                     extents: portalExtents,
-                    plane: planeNormalize(normal[0], normal[1], normal[2], md.v3Dot(normal, points[0]))
+                    plane: portalPlane
                 };
                 portals.push(portal);
             }
 
-            var areaExtents = (this.float32ArrayConstructor ?
-                               new this.float32ArrayConstructor(6) :
-                               new Array(6));
             areaExtents[0] = minAreaX;
             areaExtents[1] = minAreaY;
             areaExtents[2] = minAreaZ;
@@ -5502,19 +5536,32 @@ class Scene
         }
 
         // Keep bsp tree
-        var ArrayConstructor = (this.float32ArrayConstructor ?
-                                this.float32ArrayConstructor :
-                                Array);
         var fileBspNodes = sceneData.bspnodes;
         var numBspNodes = fileBspNodes.length;
         var bspNodes = [];
         bspNodes.length = numBspNodes;
         this.bspNodes = bspNodes;
+
+        if (this.float32ArrayConstructor)
+        {
+            buffer = new this.float32ArrayConstructor(4 * numBspNodes);
+            bufferIndex = 0;
+        }
+
         for (var bn = 0; bn < numBspNodes; bn += 1)
         {
             var fileBspNode = fileBspNodes[bn];
             var plane = fileBspNode.plane;
-            var nodePlane = new ArrayConstructor(4);
+            var nodePlane;
+            if (this.float32ArrayConstructor)
+            {
+                nodePlane = buffer.subarray(bufferIndex, (bufferIndex + 4));
+                bufferIndex += 4;
+            }
+            else
+            {
+                nodePlane = new Array(4);
+            }
             nodePlane[0] = plane[0];
             nodePlane[1] = plane[1];
             nodePlane[2] = plane[2];
