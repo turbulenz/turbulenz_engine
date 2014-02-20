@@ -1308,7 +1308,63 @@ class SceneNode
         var customLocalExtents = this.customLocalExtents;
         if (!customLocalExtents)
         {
-            this.customLocalExtents = customLocalExtents = new this.arrayConstructor(6);
+            this.localExtents = undefined;
+
+            if (this.arrayConstructor !== Array)
+            {
+                var bufferSize = 0;
+                if (!this.localHalfExtents)
+                {
+                    bufferSize += 3;
+                }
+                if (!this.localExtentsCenter)
+                {
+                    bufferSize += 3;
+                }
+                if (!this.worldExtents)
+                {
+                    bufferSize += 6;
+                }
+                bufferSize += 6;
+
+                var buffer = new Float32Array(bufferSize);
+                var bufferIndex = 0;
+
+                if (!this.localHalfExtents)
+                {
+                    this.localHalfExtents = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                    bufferIndex += 3;
+                }
+                if (!this.localExtentsCenter)
+                {
+                    this.localExtentsCenter = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                    bufferIndex += 3;
+                }
+                if (!this.worldExtents)
+                {
+                    this.worldExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                    bufferIndex += 6;
+                }
+                this.customLocalExtents = customLocalExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                bufferIndex += 6;
+            }
+            else
+            {
+                if (!this.localHalfExtents)
+                {
+                    this.localHalfExtents = new Array(3);
+                }
+                if (!this.localExtentsCenter)
+                {
+                    this.localExtentsCenter = new Array(3);
+                }
+                if (!this.worldExtents)
+                {
+                    this.worldExtents = new Array(6);
+                }
+                this.customLocalExtents = customLocalExtents = new Array(6);
+            }
+
             customLocalExtents[0] = localExtents[0];
             customLocalExtents[1] = localExtents[1];
             customLocalExtents[2] = localExtents[2];
