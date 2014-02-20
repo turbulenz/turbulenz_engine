@@ -4998,7 +4998,7 @@ class Scene
                 child.disabled === parent.disabled &&
                 child.dynamic === parent.dynamic &&
                 child.kinematic === parent.kinematic &&
-                matrixIsIdentity(child.local))
+                (!child.local || matrixIsIdentity(child.local)))
             {
                 if (child.renderables)
                 {

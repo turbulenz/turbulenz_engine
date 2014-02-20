@@ -149,14 +149,23 @@ class SceneNode
         var local = params.local;
         if (local)
         {
-            this.local = md.m43Copy(local);
+            if (this.arrayConstructor !== Array)
+            {
+                var buffer = new Float32Array(12 + 12);
+                this.local = md.m43Copy(local, buffer.subarray(0, 12));
+                this.world = md.m43Copy(this.local, buffer.subarray(12, 24));
+            }
+            else
+            {
+                this.local = md.m43Copy(local);
+                this.world = md.m43Copy(this.local);
+            }
         }
         else
         {
-            this.local = md.m43BuildIdentity();
+            this.local = undefined;
+            this.world = md.m43BuildIdentity();
         }
-        local = this.local;
-        this.world = md.m43Copy(local);
     }
 
     //
@@ -413,6 +422,10 @@ class SceneNode
     //
     getLocalTransform()
     {
+        if (!this.local)
+        {
+            this.local = this.mathDevice.m43BuildIdentity();
+        }
         return this.local;
     }
 
