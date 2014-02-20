@@ -442,6 +442,14 @@ interface Texture
     destroy();
 }
 
+interface TextureArchiveParams
+{
+    src: string;
+    mipmaps?: boolean;
+    ontextureload?: { (texture: Texture): void; };
+    onload?: { (success: boolean, status: number): void; };
+}
+
 interface RenderTargetParameters
 {
     colorTexture0  : Texture;
@@ -776,7 +784,7 @@ interface GraphicsDevice
               semantics: Semantics): VertexWriteIterator;
     endDraw(writer: VertexWriteIterator): void;
 
-    loadTexturesArchive(params: any): void;
+    loadTexturesArchive(params: TextureArchiveParams): void;
 
     // Returns 'any', since the output may be a data url (string) in
     // the case of compressed images, or number[].

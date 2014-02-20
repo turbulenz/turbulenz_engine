@@ -6493,7 +6493,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return 0;
     }
 
-    loadTexturesArchive(params: any)
+    loadTexturesArchive(params: TextureArchiveParams)
     {
         var src = params.src;
         if (typeof TARLoader !== 'undefined')
