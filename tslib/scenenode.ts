@@ -141,6 +141,7 @@ class SceneNode
         this.dynamic = params.dynamic || false;
         this.disabled = params.disabled || false;
 
+        this.dirtyWorld = false;
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
         this.worldUpdate = 0; //Counter of number of times modified.
@@ -166,6 +167,9 @@ class SceneNode
             this.local = undefined;
             this.world = md.m43BuildIdentity();
         }
+
+        this.parent = undefined;
+        this.notifiedParent = false;
     }
 
     //
