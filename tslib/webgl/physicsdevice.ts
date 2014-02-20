@@ -6045,6 +6045,7 @@ var WebGLPhysicsContact =
 {
     contactPool: <WebGLPhysicsContact[]>[],
     contactPoolSize: 0,
+    contactPoolAllocationSize: 128,
 
     publicContacts: <WebGLPhysicsPublicContact[]>
         [WebGLPhysicsPublicContact.create(),
@@ -6054,16 +6055,24 @@ var WebGLPhysicsContact =
 
     allocate: function webglPhyssicsContactAllocateFn(): WebGLPhysicsContact
     {
-        var contact : WebGLPhysicsContact;
+        var contactPool = this.contactPool;
+
         if (this.contactPoolSize === 0)
         {
-            contact = new Float32Array(52);
+            var allocationSize = this.contactPoolAllocationSize;
+            var buffer = new Float32Array(52 * allocationSize);
+            var bufferIndex = buffer.length;
+            var n;
+            for (n = 0; n < allocationSize; n += 1)
+            {
+                bufferIndex -= 52;
+                contactPool[n] = buffer.subarray(bufferIndex, (bufferIndex + 52));
+            }
+            this.contactPoolSize = allocationSize;
         }
-        else
-        {
-            this.contactPoolSize -= 1;
-            contact = this.contactPool[this.contactPoolSize];
-        }
+
+        this.contactPoolSize -= 1;
+        var contact : WebGLPhysicsContact = contactPool[this.contactPoolSize];
 
         contact[51] = 1.0; // new contact
 
