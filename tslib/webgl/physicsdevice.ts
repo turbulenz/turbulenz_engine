@@ -300,21 +300,23 @@ class WebGLPhysicsPlaneShape implements PhysicsShape
 
         p.radius = maxValue;
 
+        var buffer = new Float32Array(6);
+
         if (abs(normal[0]) === 1)
         {
-            p.halfExtents = VMath.v3Build(abs(p.distance), maxValue, maxValue);
+            p.halfExtents = VMath.v3Build(abs(p.distance), maxValue, maxValue, buffer.subarray(0, 3));
         }
         else if (abs(normal[1]) === 1)
         {
-            p.halfExtents = VMath.v3Build(maxValue, abs(p.distance), maxValue);
+            p.halfExtents = VMath.v3Build(maxValue, abs(p.distance), maxValue, buffer.subarray(0, 3));
         }
         else if (abs(normal[2]) === 1)
         {
-            p.halfExtents = VMath.v3Build(maxValue, maxValue, abs(p.distance));
+            p.halfExtents = VMath.v3Build(maxValue, maxValue, abs(p.distance), buffer.subarray(0, 3));
         }
 
         p.center = undefined;
-        p.inertia = VMath.v3BuildZero();
+        p.inertia = VMath.v3BuildZero(buffer.subarray(3, 6));
 
         initShapeProperties(retp, "PLANE");
         return retp;
@@ -513,13 +515,15 @@ class WebGLPhysicsCapsuleShape implements PhysicsShape
 
         var massRatio = (1.0 / 12.0);
 
+        var buffer = new Float32Array(6);
+
         c.radius = maxRadius + margin;
         c.capsuleRadius = radius;
         c.halfHeight = halfHeight;
-        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         c.inertia = VMath.v3Build(massRatio * (ly + lz),
                                   massRatio * (lx + lz),
-                                  massRatio * (lx + ly));
+                                  massRatio * (lx + ly), buffer.subarray(3, 6));
         c.collisionRadius = radius + margin;
 
         c.center = undefined;
@@ -643,11 +647,13 @@ class WebGLPhysicsSphereShape implements PhysicsShape
         var radius = params.radius;
         var i = (0.4 * radius * radius);
 
+        var buffer = new Float32Array(6);
+
         s.sphereRadius = radius;
         s.radius = s.sphereRadius + margin;
         s.collisionRadius = radius + margin;
-        s.halfExtents = VMath.v3Build(radius + margin, radius + margin, radius + margin);
-        s.inertia = VMath.v3Build(i, i, i);
+        s.halfExtents = VMath.v3Build(radius + margin, radius + margin, radius + margin, buffer.subarray(0, 3));
+        s.inertia = VMath.v3Build(i, i, i, buffer.subarray(3, 6));
 
         s.center = undefined;
 
@@ -840,13 +846,15 @@ class WebGLPhysicsBoxShape implements PhysicsShape
         ly *= ly;
         lz *= lz;
 
+        var buffer = new Float32Array(6);
+
         b.center = undefined;
 
         b.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        b.halfExtents = VMath.v3Build(h0, h1, h2);
+        b.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         b.inertia = VMath.v3Build((1.0 / 12.0) * (ly + lz),
                                   (1.0 / 12.0) * (lx + lz),
-                                  (1.0 / 12.0) * (lx + ly));
+                                  (1.0 / 12.0) * (lx + ly), buffer.subarray(3, 6));
         b.collisionRadius = margin;
 
         initShapeProperties(retb, "BOX");
@@ -1025,13 +1033,15 @@ class WebGLPhysicsCylinderShape implements PhysicsShape
         var t1 = (((1.0 / 12.0) * height2) + ((1.0 / 4.0) * radius2));
         var t2 = ((1.0 / 2.0) * radius2);
 
+        var buffer = new Float32Array(6);
+
         c.center = undefined;
 
         c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         c.cylinderRadius = halfExtents[0];
         c.halfHeight = halfExtents[1];
-        c.inertia = VMath.v3Build(t1, t2, t1);
+        c.inertia = VMath.v3Build(t1, t2, t1, buffer.subarray(3, 6));
         c.collisionRadius = margin;
 
         initShapeProperties(retc, "CYLINDER");
@@ -1221,13 +1231,15 @@ class WebGLPhysicsConeShape implements PhysicsShape
 
         var massRatio = (1.0 / 12.0);
 
+        var buffer = new Float32Array(6);
+
         c.halfHeight = halfHeight;
         c.coneRadius = radius;
         c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         c.inertia = VMath.v3Build(massRatio * (ly + lz),
                                   massRatio * (lx + lz),
-                                  massRatio * (lx + ly));
+                                  massRatio * (lx + ly), buffer.subarray(3, 6));
         c.collisionRadius = margin;
 
         c.center = undefined;
@@ -2145,9 +2157,11 @@ class WebGLPhysicsTriangleMeshShape implements PhysicsShape
         var c1 = (0.5 * (e1 + e4));
         var c2 = (0.5 * (e2 + e5));
 
+        var buffer = new Float32Array(6);
+
         t.triangleArray = triangleArray;
         t.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        t.halfExtents = VMath.v3Build(h0, h1, h2);
+        t.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         if (c0 !== 0 || c1 !== 0 || c2 !== 0)
         {
             t.center = VMath.v3Build(c0, c1, c2);
@@ -2156,7 +2170,7 @@ class WebGLPhysicsTriangleMeshShape implements PhysicsShape
         {
             t.center = undefined;
         }
-        t.inertia = VMath.v3Build(0, 0, 0);
+        t.inertia = VMath.v3Build(0, 0, 0, buffer.subarray(3, 6));
         t.collisionRadius = margin;
 
         initShapeProperties(rett, "TRIANGLE_MESH");
@@ -2332,9 +2346,11 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
 
         var massRatio = (1.0 / 12.0);
 
+        var buffer = new Float32Array(6);
+
         c.points = new Float32Array(points);
         c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         if (c0 !== 0 || c1 !== 0 || c2 !== 0)
         {
             c.center = VMath.v3Build(c0, c1, c2);
@@ -2345,7 +2361,7 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
         }
         c.inertia = VMath.v3Build(massRatio * (ly + lz),
                                   massRatio * (lx + lz),
-                                  massRatio * (lx + ly));
+                                  massRatio * (lx + ly), buffer.subarray(3, 6));
         c.collisionRadius = margin;
 
         // Generate triangle array for ray testing
