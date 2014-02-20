@@ -163,10 +163,11 @@ class ForwardRendering
 
     static createNodeRendererInfo(node, md)
     {
+        var buffer = new Float32Array(12 + 9);
         node.rendererInfo = {
             id: ForwardRendering.nextNodeID,
-            worldView: md.m43BuildIdentity(),
-            worldViewInverseTranspose: md.m33BuildIdentity()
+            worldView: md.m43BuildIdentity(buffer.subarray(0, 12)),
+            worldViewInverseTranspose: md.m33BuildIdentity(buffer.subarray(12, 21))
         };
         ForwardRendering.nextNodeID += 1;
     }
