@@ -537,7 +537,7 @@ class TZWebGLTexture implements Texture
                         }
                         else
                         {
-                            levelData = null;
+                            levelData = new Uint8Array(levelSize);
                         }
                         if (gd.WEBGL_compressed_texture_s3tc)
                         {
@@ -564,7 +564,17 @@ class TZWebGLTexture implements Texture
                         }
                         else
                         {
-                            gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype, null);
+                            if (gltype === gl.UNSIGNED_SHORT_5_6_5 ||
+                                gltype === gl.UNSIGNED_SHORT_5_5_5_1 ||
+                                gltype === gl.UNSIGNED_SHORT_4_4_4_4)
+                            {
+                                levelData = new Uint16Array(levelSize);
+                            }
+                            else
+                            {
+                                levelData = new Uint8Array(levelSize);
+                            }
+                            gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
                         }
                     }
                     offset += levelSize;
@@ -612,7 +622,7 @@ class TZWebGLTexture implements Texture
                     }
                     else
                     {
-                        levelData = null;
+                        levelData = new Uint8Array(levelSize);
                     }
                     if (gd.WEBGL_compressed_texture_s3tc)
                     {
@@ -644,7 +654,17 @@ class TZWebGLTexture implements Texture
                     }
                     else
                     {
-                        gl.texImage2D(target, n, internalFormat, w, h, 0, internalFormat, gltype, null);
+                        if (gltype === gl.UNSIGNED_SHORT_5_6_5 ||
+                            gltype === gl.UNSIGNED_SHORT_5_5_5_1 ||
+                            gltype === gl.UNSIGNED_SHORT_4_4_4_4)
+                        {
+                            levelData = new Uint16Array(levelSize);
+                        }
+                        else
+                        {
+                            levelData = new Uint8Array(levelSize);
+                        }
+                        gl.texImage2D(target, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
                     }
                 }
                 offset += levelSize;
