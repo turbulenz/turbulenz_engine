@@ -1114,10 +1114,13 @@ class TZWebGLTexture implements Texture
                             tex.format = format;
                             tex.cubemap = cubemap;
                             tex.depth = depth;
-                            if (!tex.mipmaps)
+                            if (1 < numLevels)
                             {
-                                tex.mipmaps = (1 < numLevels);
-                                debug.log("Mipmap levels provided for texture created without mipmaps enabled: " + tex.name);
+                                if (!tex.mipmaps)
+                                {
+                                    tex.mipmaps = true;
+                                    debug.log("Mipmap levels provided for texture created without mipmaps enabled: " + tex.name);
+                                }
                             }
                             var result = tex.createGLTexture(data);
                             if (params.onload)
