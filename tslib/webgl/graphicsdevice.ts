@@ -7232,6 +7232,15 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.height = height;
 
         var extensions = gl.getSupportedExtensions();
+
+        var extensionsMap = {};
+        var numExtensions = extensions.length;
+        var n;
+        for (n = 0; n < numExtensions; n += 1)
+        {
+            extensionsMap[extensions[n]] = true;
+        }
+
         if (extensions)
         {
             extensions = extensions.join(' ');
@@ -7246,42 +7255,38 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.renderer = gl.getParameter(gl.RENDERER);
         gd.vendor = gl.getParameter(gl.VENDOR);
 
-        if (extensions.indexOf('WEBGL_compressed_texture_s3tc') !== -1)
+        if (extensionsMap['WEBGL_compressed_texture_s3tc'])
         {
             gd.WEBGL_compressed_texture_s3tc = true;
-            if (extensions.indexOf('WEBKIT_WEBGL_compressed_texture_s3tc') !== -1)
-            {
-                gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
-            }
-            else if (extensions.indexOf('MOZ_WEBGL_compressed_texture_s3tc') !== -1)
-            {
-                gd.compressedTexturesExtension = gl.getExtension('MOZ_WEBGL_compressed_texture_s3tc');
-            }
-            else
-            {
-                gd.compressedTexturesExtension = gl.getExtension('WEBGL_compressed_texture_s3tc');
-            }
+            gd.compressedTexturesExtension = gl.getExtension('WEBGL_compressed_texture_s3tc');
         }
-        else if (extensions.indexOf('WEBKIT_WEBGL_compressed_textures') !== -1)
+        else if (extensionsMap['WEBKIT_WEBGL_compressed_texture_s3tc'])
+        {
+            gd.WEBGL_compressed_texture_s3tc = true;
+            gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
+        }
+        else if (extensionsMap['MOZ_WEBGL_compressed_texture_s3tc'])
+        {
+            gd.WEBGL_compressed_texture_s3tc = true;
+            gd.compressedTexturesExtension = gl.getExtension('MOZ_WEBGL_compressed_texture_s3tc');
+        }
+        else if (extensionsMap['WEBKIT_WEBGL_compressed_textures'])
         {
             gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_textures');
         }
 
         var anisotropyExtension;
-        if (extensions.indexOf('EXT_texture_filter_anisotropic') !== -1)
+        if (extensionsMap['EXT_texture_filter_anisotropic'])
         {
-            if (extensions.indexOf('MOZ_EXT_texture_filter_anisotropic') !== -1)
-            {
-                anisotropyExtension = gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
-            }
-            else if (extensions.indexOf('WEBKIT_EXT_texture_filter_anisotropic') !== -1)
-            {
-                anisotropyExtension = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-            }
-            else
-            {
-                anisotropyExtension = gl.getExtension('EXT_texture_filter_anisotropic');
-            }
+            anisotropyExtension = gl.getExtension('EXT_texture_filter_anisotropic');
+        }
+        else if (extensionsMap['MOZ_EXT_texture_filter_anisotropic'])
+        {
+            anisotropyExtension = gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+        }
+        else if (extensionsMap['WEBKIT_EXT_texture_filter_anisotropic'])
+        {
+            anisotropyExtension = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
         }
         if (anisotropyExtension)
         {
@@ -7296,12 +7301,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
         // Enable OES_element_index_uint extension
         gl.getExtension('OES_element_index_uint');
 
-        if (extensions.indexOf('WEBGL_draw_buffers') !== -1)
+        if (extensionsMap['WEBGL_draw_buffers'])
         {
             gd.WEBGL_draw_buffers = true;
             gd.drawBuffersExtension = gl.getExtension('WEBGL_draw_buffers');
         }
-        else if (extensions.indexOf('EXT_draw_buffers') !== -1)
+        else if (extensionsMap['EXT_draw_buffers'])
         {
             gd.drawBuffersExtension = gl.getExtension('EXT_draw_buffers');
         }
