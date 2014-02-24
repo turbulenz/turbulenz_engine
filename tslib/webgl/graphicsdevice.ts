@@ -47,7 +47,6 @@ class TZWebGLTexture implements Texture
     height            : number;
     depth             : number;
     format            : number;
-    numDataLevels     : number;
     mipmaps           : boolean;
     cubemap           : boolean;
     dynamic           : boolean;
@@ -130,7 +129,7 @@ class TZWebGLTexture implements Texture
 
         gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-        if (this.mipmaps || 1 < this.numDataLevels)
+        if (this.mipmaps)
         {
             gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
         }
@@ -252,7 +251,26 @@ class TZWebGLTexture implements Texture
             return Math.floor(Math.log(a) / Math.LN2);
         }
 
-        var generateMipMaps = this.mipmaps && (this.numDataLevels !== (1 + Math.max(log2(this.width), log2(this.height))));
+        var numLevels, generateMipMaps;
+        if (this.mipmaps)
+        {
+            if (data instanceof Image)
+            {
+                numLevels = 1;
+                generateMipMaps = true;
+            }
+            else
+            {
+                numLevels = (1 + Math.max(log2(this.width), log2(this.height)));
+                generateMipMaps = false;
+            }
+        }
+        else
+        {
+            numLevels = 1;
+            generateMipMaps = false;
+        }
+
         var format = this.format;
         var internalFormat, gltype, srcStep, bufferData = null;
         var compressedTexturesExtension;
@@ -495,7 +513,6 @@ class TZWebGLTexture implements Texture
             srcStep = 4;
         }
 
-        var numLevels = (data && 0 < this.numDataLevels ? this.numDataLevels : 1);
         var w = this.width, h = this.height, offset = 0, target, n, levelSize, levelData;
         if (this.cubemap)
         {
@@ -520,7 +537,7 @@ class TZWebGLTexture implements Texture
                         }
                         else
                         {
-                            levelData = new Uint8Array(levelSize);
+                            levelData = null;
                         }
                         if (gd.WEBGL_compressed_texture_s3tc)
                         {
@@ -547,20 +564,20 @@ class TZWebGLTexture implements Texture
                         }
                         else
                         {
-                            if (gltype === gl.UNSIGNED_SHORT_5_6_5 ||
-                                gltype === gl.UNSIGNED_SHORT_5_5_5_1 ||
-                                gltype === gl.UNSIGNED_SHORT_4_4_4_4)
-                            {
-                                levelData = new Uint16Array(levelSize);
-                            }
-                            else
-                            {
-                                levelData = new Uint8Array(levelSize);
-                            }
-                            gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
+                            gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype, null);
                         }
                     }
                     offset += levelSize;
+                    if (bufferData && bufferData.length <= offset)
+                    {
+                        bufferData = null;
+                        data = null;
+                        if (0 === n && 1 < numLevels)
+                        {
+                            generateMipMaps = true;
+                            break;
+                        }
+                    }
                     w = (w > 1 ? Math.floor(w / 2) : 1);
                     h = (h > 1 ? Math.floor(h / 2) : 1);
                 }
@@ -595,7 +612,7 @@ class TZWebGLTexture implements Texture
                     }
                     else
                     {
-                        levelData = new Uint8Array(levelSize);
+                        levelData = null;
                     }
                     if (gd.WEBGL_compressed_texture_s3tc)
                     {
@@ -627,20 +644,20 @@ class TZWebGLTexture implements Texture
                     }
                     else
                     {
-                        if (gltype === gl.UNSIGNED_SHORT_5_6_5 ||
-                            gltype === gl.UNSIGNED_SHORT_5_5_5_1 ||
-                            gltype === gl.UNSIGNED_SHORT_4_4_4_4)
-                        {
-                            levelData = new Uint16Array(levelSize);
-                        }
-                        else
-                        {
-                            levelData = new Uint8Array(levelSize);
-                        }
-                        gl.texImage2D(target, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
+                        gl.texImage2D(target, n, internalFormat, w, h, 0, internalFormat, gltype, null);
                     }
                 }
                 offset += levelSize;
+                if (bufferData && bufferData.length <= offset)
+                {
+                    bufferData = null;
+                    data = null;
+                    if (0 === n && 1 < numLevels)
+                    {
+                        generateMipMaps = true;
+                        break;
+                    }
+                }
                 w = (w > 1 ? Math.floor(w / 2) : 1);
                 h = (h > 1 ? Math.floor(h / 2) : 1);
             }
@@ -981,7 +998,6 @@ class TZWebGLTexture implements Texture
         tex.mipmaps = params.mipmaps;
         tex.dynamic = params.dynamic;
         tex.renderable = params.renderable;
-        tex.numDataLevels = 0;
         tex.id = ++gd.counters.textures;
 
         var src = params.src;
@@ -1078,7 +1094,10 @@ class TZWebGLTexture implements Texture
                             tex.format = format;
                             tex.cubemap = cubemap;
                             tex.depth = depth;
-                            tex.numDataLevels = numLevels;
+                            if (!tex.mipmaps)
+                            {
+                                tex.mipmaps = (1 < numLevels);
+                            }
                             var result = tex.createGLTexture(data);
                             if (params.onload)
                             {

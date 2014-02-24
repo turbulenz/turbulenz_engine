@@ -429,7 +429,6 @@ interface Texture
     height: number;
     depth: number;
     format: number;
-    numDataLevels: number;
     mipmaps: boolean;
     cubemap: boolean;
     dynamic: boolean;
