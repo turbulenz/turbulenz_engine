@@ -225,6 +225,7 @@ class ShadowMapping
             });
 
         this.blurTextureLow = gd.createTexture({
+                name: "blur-low",
                 width: sizeLow,
                 height: sizeLow,
                 format: "R5G6B5",
@@ -233,6 +234,7 @@ class ShadowMapping
             });
 
         this.blurTextureHigh = gd.createTexture({
+                name: "blur-high",
                 width: sizeHigh,
                 height: sizeHigh,
                 format: "R5G6B5",
@@ -551,6 +553,7 @@ class ShadowMapping
             else
             {
                 shadowMapTexture = gd.createTexture({
+                        name: "shadowmap-high",
                         width: shadowMapSize,
                         height: shadowMapSize,
                         format: "R5G6B5",
@@ -599,6 +602,7 @@ class ShadowMapping
             else
             {
                 shadowMapTexture = gd.createTexture({
+                        name: "shadowmap-low",
                         width: shadowMapSize,
                         height: shadowMapSize,
                         format: "R5G6B5",
