@@ -14,6 +14,11 @@ interface RequestOwner
     request: RequestFn;
 };
 
+interface RequestOnLoadCB
+{
+    (asset: any, status: number, callContext: RequestHandlerCallContext): void;
+}
+
 interface RequestHandlerResponseFilter
 {
     (callContext: RequestHandlerCallContext, makeRequest: { (): void; },
@@ -22,11 +27,11 @@ interface RequestHandlerResponseFilter
 
 interface RequestHandlerCallContext
 {
-    onload: any;
-    src: string;
-    requestFn?: RequestFn;
-    requestOwner?: RequestOwner;
-    responseFilter?: RequestHandlerResponseFilter;
+    onload          : RequestOnLoadCB;
+    src             : string;
+    requestFn?      : RequestFn;
+    requestOwner?   : RequestOwner;
+    responseFilter? : RequestHandlerResponseFilter;
 }
 
 class RequestHandler
