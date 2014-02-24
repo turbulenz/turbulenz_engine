@@ -1094,7 +1094,7 @@ class FontManager
                                 {
                                     if (!gd.createTexture({
                                         src     : url,
-                                        mipmaps : false,
+                                        mipmaps : true,
                                         onload  : onload
                                     }))
                                     {
