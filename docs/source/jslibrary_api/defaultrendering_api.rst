@@ -92,7 +92,7 @@ The following TechniqueParameters properties are supported for the scene rendera
 * `glow_map`
     Texture that will provide the emissive color
 * `env_map`
-    Texture that will provide the skybox color
+    Cubemap texture that will provide the skybox color
 * `alpha_map`
     Texture that will provide the alpha component
 
