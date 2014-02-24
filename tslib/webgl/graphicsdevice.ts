@@ -1097,6 +1097,7 @@ class TZWebGLTexture implements Texture
                             if (!tex.mipmaps)
                             {
                                 tex.mipmaps = (1 < numLevels);
+                                debug.log("Mipmap levels provided for texture created without mipmaps enabled: " + tex.name);
                             }
                             var result = tex.createGLTexture(data);
                             if (params.onload)
