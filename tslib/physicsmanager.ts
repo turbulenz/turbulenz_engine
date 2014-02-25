@@ -731,7 +731,9 @@ class PhysicsManager
                             {
                                 shape = physicsDevice.createConvexHullShape({
                                     points: positionsData,
-                                    margin: collisionMargin
+                                    margin: collisionMargin,
+                                    minExtent: posMin,
+                                    maxExtent: posMax
                                 });
                             }
                             else if (shapeType === "mesh")
