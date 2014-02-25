@@ -755,6 +755,8 @@ class CascadedShadowMapping
 
         this.numSplitFrustumPlanes = 4 + numMainFrustumPlanes;
 
+        planes.length = this.numSplitFrustumPlanes;
+
         return planes;
     }
 
