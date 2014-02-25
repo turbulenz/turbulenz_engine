@@ -2290,44 +2290,61 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
         var margin = (params.margin !== undefined) ? params.margin : 0.04;
         var points = params.points;
 
-        var min0 = points[0];
-        var min1 = points[1];
-        var min2 = points[2];
-        var max0 = min0;
-        var max1 = min1;
-        var max2 = min2;
-        var maxN = points.length;
-        var n;
-        var v0, v1, v2;
-        for (n = 3; n < maxN; n += 3)
+        var minExtent = params.minExtent;
+        var maxExtent = params.maxExtent;
+
+        var min0, min1, min2, max0, max1, max2;
+
+        if (!minExtent || !maxExtent)
         {
-            v0 = points[n];
-            v1 = points[n + 1];
-            v2 = points[n + 2];
-            if (min0 > v0)
+            min0 = points[0];
+            min1 = points[1];
+            min2 = points[2];
+            max0 = min0;
+            max1 = min1;
+            max2 = min2;
+            var maxN = points.length;
+            var n;
+            var v0, v1, v2;
+            for (n = 3; n < maxN; n += 3)
             {
-                min0 = v0;
+                v0 = points[n];
+                v1 = points[n + 1];
+                v2 = points[n + 2];
+                if (min0 > v0)
+                {
+                    min0 = v0;
+                }
+                else if (max0 < v0)
+                {
+                    max0 = v0;
+                }
+                if (min1 > v1)
+                {
+                    min1 = v1;
+                }
+                else if (max1 < v1)
+                {
+                    max1 = v1;
+                }
+                if (min2 > v2)
+                {
+                    min2 = v2;
+                }
+                else if (max2 < v2)
+                {
+                    max2 = v2;
+                }
             }
-            else if (max0 < v0)
-            {
-                max0 = v0;
-            }
-            if (min1 > v1)
-            {
-                min1 = v1;
-            }
-            else if (max1 < v1)
-            {
-                max1 = v1;
-            }
-            if (min2 > v2)
-            {
-                min2 = v2;
-            }
-            else if (max2 < v2)
-            {
-                max2 = v2;
-            }
+        }
+        else
+        {
+            min0 = minExtent[0];
+            min1 = minExtent[1];
+            min2 = minExtent[2];
+            max0 = maxExtent[0];
+            max1 = maxExtent[1];
+            max2 = maxExtent[2];
         }
 
         var h0 = ((0.5 * (max0 - min0)) + margin);
