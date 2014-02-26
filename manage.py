@@ -84,6 +84,11 @@ def command_env():
         cmd.append('-f')
     sh(cmd, console=True)
 
+    if TURBULENZOS == 'win32':
+        sh(['npm.cmd', 'install', '-g', 'tslint@0.4.5'])
+    else:
+        sh(['npm', 'install', '-g', 'tslint@0.4.5'])
+
 @command_no_arguments
 def command_env_clean():
     rmdir(os.path.join(TURBULENZROOT, ENV))
@@ -482,12 +487,28 @@ def command_check_docs_links(args):
 
 @command_requires_env
 @command_with_arguments
-def command_check_ts(_args=None):
+def command_check_ts(tsfiles=None):
 
-    # If we get a TS linter, run it here
-
+    # Run the basic reference checks by building the jslib
     if 0 != command_jslib(['--refcheck']):
         return 1
+
+    # Run tslint on all the typescript source
+    tslint = 'tslint -c .tslintrc -f '
+    tsfiles = tsfiles or ['tslib/*.ts']
+
+    files = []
+    for pattern in tsfiles:
+        for f in iglob(pattern):
+            files.append(f)
+
+    for f in files:
+        try:
+            sh('%s %s' % (tslint, f), verbose=False)
+            ok(f)
+        except CalledProcessError as e:
+            warning(f)
+            echo(e.output)
 
     return 0
 
