@@ -390,7 +390,7 @@ class PhysicsManager
                     calculateNodeExtents(children[n]);
                 }
             }
-        }
+        };
 
         calculateNodeExtents(sceneNode);
 
@@ -1084,7 +1084,7 @@ class PhysicsManager
                 targetSceneNode.physicsNodes = [newPhysicsNode];
                 this.subscribeSceneNode(targetSceneNode);
             }
-        }
+        };
 
         var physicsNodes = oldSceneNode.physicsNodes;
         if (physicsNodes)

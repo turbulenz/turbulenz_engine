@@ -695,7 +695,7 @@ class CameraController
                 gd.fullscreen = !gd.fullscreen;
                 break;
             }
-        }
+        };
 
         if (log)
         {

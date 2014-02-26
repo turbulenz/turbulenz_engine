@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2012 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 /*global TurbulenzEngine:false*/
 /*global VMath:false*/
 
@@ -256,7 +256,7 @@ class ResourceLoader
                 }
             }
             return newObj;
-        }
+        };
 
         var resolveNode =
             function resolveNodeFn(fileNode: SceneNodeParameters,
@@ -388,7 +388,7 @@ class ResourceLoader
             }
 
             return node;
-        }
+        };
 
         var fileNodes = sceneData.nodes;
         var parentNode = loadParams.parentNode;

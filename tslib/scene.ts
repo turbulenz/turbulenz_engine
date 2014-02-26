@@ -1522,7 +1522,7 @@ class Scene
 
         if (useSpatialMap)
         {
-            this._findOverlappingRenderablesNoAreas(tree, extents, overlappingRenderables)
+            this._findOverlappingRenderablesNoAreas(tree, extents, overlappingRenderables);
         }
     }
 
@@ -2130,7 +2130,7 @@ class Scene
         this.maxDistance = (maxDistance + camera.nearPlane);
         if (this.maxDistance < camera.farPlane)
         {
-            this._filterVisibleNodesForCameraBox(camera, numVisibleNodes, numVisibleRenderables, numVisibleLights)
+            this._filterVisibleNodesForCameraBox(camera, numVisibleNodes, numVisibleRenderables, numVisibleLights);
         }
         else
         {
@@ -2471,7 +2471,7 @@ class Scene
         this.maxDistance = (maxDistance + camera.nearPlane);
         if (this.maxDistance < camera.farPlane)
         {
-            this._filterVisibleNodesForCameraBox(camera, numVisibleNodes, numVisibleRenderables, numVisibleLights)
+            this._filterVisibleNodesForCameraBox(camera, numVisibleNodes, numVisibleRenderables, numVisibleLights);
         }
         else
         {
@@ -3188,7 +3188,7 @@ class Scene
                     addAreasNode.call(children[nc], bspNodes, areas);
                 }
             }
-        }
+        };
 
         var rootNodes = this.rootNodes;
         var numRootNodes = rootNodes.length;
@@ -3393,7 +3393,7 @@ class Scene
                     checkAreaNode.call(children[nc]);
                 }
             }
-        }
+        };
 
         var rootNodes = this.rootNodes;
         var numRootNodes = rootNodes.length;
@@ -5844,7 +5844,7 @@ class Scene
             {
                 out.push(vb);
             }
-        }
+        };
 
         var minX =  1.0;
         var maxX = -1.0;

@@ -1333,10 +1333,10 @@ class ForwardRendering
             delete this.skyboxTechnique;
             delete this.ambientRigidTechnique;
             delete this.ambientSkinnedTechnique;
-            delete this.ambientRigidAlphaTechnique
+            delete this.ambientRigidAlphaTechnique;
             delete this.ambientSkinnedAlphaTechnique;
             delete this.ambientFlatRigidTechnique;
-            delete this.ambientFlatRigidNoCullTechnique
+            delete this.ambientFlatRigidNoCullTechnique;
             delete this.ambientFlatSkinnedTechnique;
             delete this.ambientGlowmapRigidTechnique;
             delete this.ambientGlowmapSkinnedTechnique;
@@ -1472,7 +1472,7 @@ class ForwardRendering
         {
             var worldView = md.m43Mul(node.world, camera.viewMatrix, rendererInfo.worldView);
             md.m33InverseTranspose(worldView, rendererInfo.worldViewInverseTranspose);
-        }
+        };
 
         var forwardUpdate = function forwardUpdateFn(camera)
         {

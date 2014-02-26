@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2012-2014 Turbulenz Limited
 
 /*global
 
@@ -1062,7 +1062,7 @@ class Physics2DDebugDraw
             ret[2] = b;
             ret[3] = a;
             return ret;
-        }
+        };
 
         var bulletColor                  = v4Build(1.0, 1.0, 1.0, 1.0);
         var staticColor                  = v4Build(1.0, 0.5, 0.5, 1.0);

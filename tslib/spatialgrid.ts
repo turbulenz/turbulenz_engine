@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 //
 // SpatialGridNode
@@ -459,7 +459,7 @@ class SpatialGrid
             var cell, numCellNodes, n, node, nodeExtents;
             do
             {
-                var internalRow = (firstRow < minRow && minRow < lastRow)
+                var internalRow = (firstRow < minRow && minRow < lastRow);
                 var cs = (minX + minRow);
                 var ce = (maxX + minRow);
                 var ci = cs;

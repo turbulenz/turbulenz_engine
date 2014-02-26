@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 var CaptureGraphicsCommand =
 {
@@ -465,7 +465,7 @@ class CaptureGraphicsDevice
             if (lowerIndex < 0)
             {
                 lowerIndex = ((-lowerIndex) - 1);
-                return objectsBin[lowerIndex].toString()
+                return objectsBin[lowerIndex].toString();
             }
         }
 
@@ -1364,14 +1364,14 @@ class CaptureGraphicsDevice
     {
         this._addCommand(CaptureGraphicsCommand.beginOcclusionQuery, query._id);
 
-        return this.gd.beginOcclusionQuery(query)
+        return this.gd.beginOcclusionQuery(query);
     }
 
     public endOcclusionQuery(query)
     {
         this._addCommand(CaptureGraphicsCommand.endOcclusionQuery, query._id);
 
-        this.gd.endOcclusionQuery(query)
+        this.gd.endOcclusionQuery(query);
     }
 
     public endFrame()

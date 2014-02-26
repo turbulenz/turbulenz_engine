@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 
 /*global VMathArrayConstructor: false*/
 
@@ -159,7 +159,7 @@ class DeferredRendering
             function distanceReverseCompareFnFn(objA: any, objB: any): number
         {
             return (objB.distance - objA.distance);
-        }
+        };
 
         var localDirectionalLights = this.localDirectionalLights;
         var pointLights = this.pointLights;
@@ -1827,7 +1827,7 @@ class DeferredRendering
                 this.techniqueParametersUpdated = worldUpdate;
                 techniqueParameters.world = matrix;
             }
-        }
+        };
 
         var deferredSkinnedUpdate = function deferredSkinnedUpdateFn(camera)
         {
@@ -1849,7 +1849,7 @@ class DeferredRendering
                 techniqueParameters.skinBones = skinController.output;
                 skinController.update();
             }
-        }
+        };
 
         var deferredPrepare = function deferredPrepareFn(geometryInstance)
         {
@@ -1924,7 +1924,7 @@ class DeferredRendering
                     meta.noshadows = true;
                 }
             }
-        }
+        };
 
         var deferredBlendUpdate = function deferredBlendUpdateFn(/* camera */)
         {
@@ -1936,7 +1936,7 @@ class DeferredRendering
                 this.techniqueParametersUpdated = worldUpdate;
                 this.techniqueParameters.world = node.world;
             }
-        }
+        };
 
         var deferredBlendSkinnedUpdate = function deferredBlendSkinnedUpdateFn(/* camera */)
         {
@@ -1955,7 +1955,7 @@ class DeferredRendering
                 techniqueParameters.skinBones = skinController.output;
                 skinController.update();
             }
-        }
+        };
 
         var deferredEnvUpdate = function deferredEnvUpdateFn(/* camera */)
         {
@@ -1970,7 +1970,7 @@ class DeferredRendering
                 techniqueParameters.world = matrix;
                 techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
             }
-        }
+        };
 
         var deferredEnvSkinnedUpdate = function deferredEnvSkinnedUpdateFn(/* camera */)
         {
@@ -1991,7 +1991,7 @@ class DeferredRendering
                 techniqueParameters.skinBones = skinController.output;
                 skinController.update();
             }
-        }
+        };
 
         var deferredFlarePrepare =
             function deferredFlarePrepareFn(geometryInstance)
@@ -2145,7 +2145,7 @@ class DeferredRendering
 
                 deferredPrepare.call(this, geometryInstance);
             }
-        }
+        };
 
         var deferredFlareUpdate = function deferredFlareUpdateFn(camera)
         {
@@ -2302,7 +2302,7 @@ class DeferredRendering
                     vertexBuffer.setData(flareVertexData, 0, 6);
                 }
             }
-        }
+        };
 
         var deferredSkyboxUpdate = function deferredSkyboxUpdateFn(/* camera */)
         {
@@ -2313,7 +2313,7 @@ class DeferredRendering
                 this.techniqueParametersUpdated = worldUpdate;
                 this.techniqueParameters.world = node.world;
             }
-        }
+        };
 
         var loadTechniques = function loadTechniquesFn(shaderManager: ShaderManager): void
         {
@@ -2337,7 +2337,7 @@ class DeferredRendering
                 };
                 shaderManager.load(this.shadowMappingShaderName, shadowCallback);
             }
-        }
+        };
 
         dr.defaultUpdateFn = deferredUpdate;
         dr.defaultSkinnedUpdateFn = deferredSkinnedUpdate;

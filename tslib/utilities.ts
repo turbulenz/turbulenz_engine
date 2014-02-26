@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*global window: false*/
 /*global Observer: false*/
@@ -599,7 +599,7 @@ var Profile =
     //
     reset: function profileResetFn()
     {
-        this.profiles = {}
+        this.profiles = {};
     },
 
     //
@@ -690,7 +690,7 @@ var Profile =
         }
         return text;
     }
-}
+};
 
 //
 // Utilities to use with TurbulenzEngine.stopProfiling() object.

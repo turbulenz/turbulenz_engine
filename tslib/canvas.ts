@@ -319,7 +319,7 @@ var parseCSSColor = function parseCSSColorFn(text, color) : number[]
     }
 
     return undefined;
-}
+};
 
 //
 // CanvasLinearGradient
@@ -6516,7 +6516,7 @@ class CanvasContext
    "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nattribute vec4 ATTR0;\nuniform vec4 screen;void main()\n{vec2 tmpvar_1;tmpvar_1=((ATTR0.xy*screen.xy)+screen.zw);vec4 tmpvar_2;tmpvar_2.zw=vec2(0.0,1.0);tmpvar_2.x=tmpvar_1.x;tmpvar_2.y=tmpvar_1.y;gl_Position=tmpvar_2;}"
   }
  }
-}
+};
 
     // Constructor function
     static create(canvas, gd, width, height): CanvasContext

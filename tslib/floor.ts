@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 
 class Floor
 {
@@ -268,5 +268,5 @@ class Floor
 
 Floor.prototype.color       = [0.1, 0.1, 1.0, 1.0],
 Floor.prototype.fadeToColor = [0.95, 0.95, 1.0, 1.0],
-Floor.prototype.numLines    = 200
+Floor.prototype.numLines    = 200;
 Floor.prototype._frustumPoints = [];
