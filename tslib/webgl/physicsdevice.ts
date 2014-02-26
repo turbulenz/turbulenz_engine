@@ -2208,7 +2208,7 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
     points          : Float32Array;
 
     triangleArray   : WebGLPhysicsPrivateTriangleArray;
-    supportTopology : any; // Int32Array / Int16Array
+    supportTopology : any; // Uint32Array / Uint16Array
 
     private lastSupport: number;
 
@@ -2494,7 +2494,7 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
             }
 
             // Produce flattened array.
-            c.supportTopology = (size > 65536) ? new Int32Array(size) : new Int16Array(size);
+            c.supportTopology = (size > 65536) ? new Uint32Array(size) : new Uint16Array(size);
             var index = 0;
             for (n = 0; n < (maxN / 3); n += 1)
             {
