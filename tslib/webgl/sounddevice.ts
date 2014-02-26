@@ -1782,7 +1782,14 @@ class WebGLSoundDevice implements SoundDevice
         sd.playingSources = <WebGLSoundDeviceSourceMap><any>{};
         sd.lastSourceID = 0;
 
-        var AudioContextConstructor = (window.AudioContext || window.webkitAudioContext);
+        var AudioContextConstructor;
+
+        if (sd.deviceSpecifier !== "audioelement")
+        {
+            AudioContextConstructor =
+                (window.AudioContext || window.webkitAudioContext);
+        }
+
         if (AudioContextConstructor)
         {
             var audioContext;
