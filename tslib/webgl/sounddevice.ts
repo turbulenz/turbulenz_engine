@@ -1758,7 +1758,7 @@ class WebGLSoundDevice implements SoundDevice
         WebGLSoundSource.prototype.audioContext = null;
     }
 
-    static create(params: any): WebGLSoundDevice
+    static create(params: SoundDeviceParameters): WebGLSoundDevice
     {
         var sd = new WebGLSoundDevice();
 

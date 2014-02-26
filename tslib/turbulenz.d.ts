@@ -1174,6 +1174,19 @@ interface SoundArchiveParameters
 
 // SoundDevice
 
+interface SoundDeviceParameters
+{
+    deviceSpecifier?   : string;
+    linearDistance?    : boolean;
+    frequency?         : number;
+    dopplerFactor?     : number;
+    dopplerVelocity?   : number;
+    speedOfSound?      : number;
+    listenerTransform? : any; // m43
+    listenerVelocity?  : any; // v3
+    listenerGain?      : number;
+}
+
 interface SoundDevice
 {
     vendor                : string;
@@ -1335,7 +1348,7 @@ interface TurbulenzEngine
     createPhysicsDevice(params: any): PhysicsDevice;
     getPhysicsDevice(): PhysicsDevice;
 
-    createSoundDevice(params: any): SoundDevice;
+    createSoundDevice(params: SoundDeviceParameters): SoundDevice;
     getSoundDevice(): SoundDevice;
 
     createNetworkDevice(params: any): NetworkDevice;

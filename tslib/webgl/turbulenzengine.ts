@@ -138,7 +138,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
     }
 
-    createSoundDevice(params): WebGLSoundDevice
+    createSoundDevice(params: SoundDeviceParameters): WebGLSoundDevice
     {
         if (this.soundDevice)
         {
