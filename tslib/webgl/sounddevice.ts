@@ -690,6 +690,7 @@ class WebGLSoundSource implements SoundSource
             }
             else
             {
+                this.updateAudioVolume();
                 soundAudio.play();
             }
         }
@@ -1414,7 +1415,7 @@ class WebGLSoundSource implements SoundSource
                 },
                 set : function setGainFn(newGain) {
                     gain = newGain;
-                    this.gainFactor = -1;
+                    this.updateAudioVolume();
                 },
                 enumerable : true,
                 configurable : false
