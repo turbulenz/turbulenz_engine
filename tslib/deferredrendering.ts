@@ -28,7 +28,9 @@ interface DeferredEffectTypeData extends EffectPrepareObject
 
 class DeferredRendering
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     minPixelCount = 256;
 
@@ -140,7 +142,8 @@ class DeferredRendering
             {
                 this.spotLightShadowTechnique = shader.getTechnique("spot_light_shadow");
                 this.pointLightSpecularShadowTechnique = shader.getTechnique("point_light_specular_shadow");
-                this.pointLightSpecularShadowOpaqueTechnique = shader.getTechnique("point_light_specular_shadow_opaque");
+                this.pointLightSpecularShadowOpaqueTechnique =
+                                                              shader.getTechnique("point_light_specular_shadow_opaque");
             }
         }
 
@@ -297,6 +300,7 @@ class DeferredRendering
         var viewProjectionMatrix = camera.viewProjectionMatrix;
 
         var md = this.md;
+        /* tslint:disable:no-string-literal */
         var globalTechniqueParameters = this.globalTechniqueParameters;
         globalTechniqueParameters['viewProjection'] = viewProjectionMatrix;
         globalTechniqueParameters['eyePosition'] =
@@ -318,8 +322,9 @@ class DeferredRendering
         var sharedTechniqueParameters = this.sharedTechniqueParameters;
         sharedTechniqueParameters['viewProjection'] = viewProjectionMatrix;
         sharedTechniqueParameters['maxDepth'] = -maxDepth;
+        /* tslint:enable:no-string-literal */
 
-        var l, node, light, lightInstance, matrix, techniqueParameters, origin, halfExtents, worldView;
+        var l, node, light, lightInstance, matrix, tp, origin, halfExtents, worldView;
 
         var directionalInstances = this.localDirectionalLights;
         var numDirectionalInstances = directionalInstances.length;
@@ -337,28 +342,29 @@ class DeferredRendering
                 if (this.lightFindVisibleRenderables(lightInstance, scene))
                 {
                     matrix = node.world;
-                    techniqueParameters = lightInstance.techniqueParameters;
-                    if (!techniqueParameters)
+                    tp = lightInstance.techniqueParameters;
+                    if (!tp)
                     {
-                        techniqueParameters = gd.createTechniqueParameters();
-                        lightInstance.techniqueParameters = techniqueParameters;
+                        tp = gd.createTechniqueParameters();
+                        lightInstance.techniqueParameters = tp;
                     }
 
                     halfExtents = light.halfExtents;
 
                     worldView = md.m43Mul(matrix, viewMatrix, worldView);
 
-                    techniqueParameters.world = matrix;
-                    techniqueParameters.worldViewTranspose = md.m43Transpose(worldView, techniqueParameters.worldViewTranspose);
+                    tp.world = matrix;
+                    tp.worldViewTranspose = md.m43Transpose(worldView, tp.worldViewTranspose);
 
                     direction = md.m43TransformVector(worldView, light.direction, direction);
-                    techniqueParameters.lightOrigin = md.v3ScalarMul(direction, -1e6, techniqueParameters.lightOrigin);
+                    tp.lightOrigin = md.v3ScalarMul(direction, -1e6, tp.lightOrigin);
 
-                    techniqueParameters.lightColor = light.color;
+                    tp.lightColor = light.color;
 
-                    techniqueParameters.lightExtents = halfExtents;
-                    techniqueParameters.lightViewInverseTranspose = md.m43InverseTransposeProjection(worldView, halfExtents,
-                                                                                                     techniqueParameters.lightViewInverseTranspose);
+                    tp.lightExtents = halfExtents;
+                    tp.lightViewInverseTranspose = md.m43InverseTransposeProjection(worldView,
+                                                                                    halfExtents,
+                                                                                    tp.lightViewInverseTranspose);
 
                     l += 1;
                 }
@@ -398,11 +404,11 @@ class DeferredRendering
                 if (this.lightFindVisibleRenderables(lightInstance, scene))
                 {
                     matrix = node.world;
-                    techniqueParameters = lightInstance.techniqueParameters;
-                    if (!techniqueParameters)
+                    tp = lightInstance.techniqueParameters;
+                    if (!tp)
                     {
-                        techniqueParameters = gd.createTechniqueParameters();
-                        lightInstance.techniqueParameters = techniqueParameters;
+                        tp = gd.createTechniqueParameters();
+                        lightInstance.techniqueParameters = tp;
                     }
 
                     origin = light.origin;
@@ -410,21 +416,22 @@ class DeferredRendering
 
                     worldView = md.m43Mul(matrix, viewMatrix, worldView);
 
-                    techniqueParameters.world = matrix;
-                    techniqueParameters.worldViewTranspose = md.m43Transpose(worldView, techniqueParameters.worldViewTranspose);
+                    tp.world = matrix;
+                    tp.worldViewTranspose = md.m43Transpose(worldView, tp.worldViewTranspose);
                     if (origin)
                     {
-                        techniqueParameters.lightOrigin = md.m43TransformPoint(worldView, origin, techniqueParameters.lightOrigin);
+                        tp.lightOrigin = md.m43TransformPoint(worldView, origin, tp.lightOrigin);
                     }
                     else
                     {
-                        techniqueParameters.lightOrigin = md.m43Pos(worldView, techniqueParameters.lightOrigin);
+                        tp.lightOrigin = md.m43Pos(worldView, tp.lightOrigin);
                     }
-                    techniqueParameters.lightColor = light.color;
+                    tp.lightColor = light.color;
 
-                    techniqueParameters.lightExtents = halfExtents;
-                    techniqueParameters.lightViewInverseTranspose = md.m43InverseTransposeProjection(worldView, halfExtents,
-                                                                                                     techniqueParameters.lightViewInverseTranspose);
+                    tp.lightExtents = halfExtents;
+                    tp.lightViewInverseTranspose = md.m43InverseTransposeProjection(worldView,
+                                                                                    halfExtents,
+                                                                                    tp.lightViewInverseTranspose);
 
                     l += 1;
                 }
@@ -467,28 +474,28 @@ class DeferredRendering
                 if (this.lightFindVisibleRenderables(lightInstance, scene))
                 {
                     matrix = node.world;
-                    techniqueParameters = lightInstance.techniqueParameters;
-                    if (!techniqueParameters)
+                    tp = lightInstance.techniqueParameters;
+                    if (!tp)
                     {
-                        techniqueParameters = gd.createTechniqueParameters();
-                        lightInstance.techniqueParameters = techniqueParameters;
+                        tp = gd.createTechniqueParameters();
+                        lightInstance.techniqueParameters = tp;
                     }
 
                     origin = light.origin;
 
                     worldView = md.m43Mul(matrix, viewMatrix, worldView);
 
-                    techniqueParameters.world = matrix;
-                    techniqueParameters.worldViewTranspose = md.m43Transpose(worldView, techniqueParameters.worldViewTranspose);
+                    tp.world = matrix;
+                    tp.worldViewTranspose = md.m43Transpose(worldView, tp.worldViewTranspose);
                     if (origin)
                     {
-                        techniqueParameters.lightOrigin = md.m43TransformPoint(worldView, origin, techniqueParameters.lightOrigin);
+                        tp.lightOrigin = md.m43TransformPoint(worldView, origin, tp.lightOrigin);
                     }
                     else
                     {
-                        techniqueParameters.lightOrigin = md.m43Pos(worldView, techniqueParameters.lightOrigin);
+                        tp.lightOrigin = md.m43Pos(worldView, tp.lightOrigin);
                     }
-                    techniqueParameters.lightColor = light.color;
+                    tp.lightColor = light.color;
 
                     var frustum = light.frustum;
                     var frustumNear = light.frustumNear;
@@ -497,9 +504,12 @@ class DeferredRendering
                     lightViewInverse = md.m43Inverse(lightView, lightViewInverse);
                     lightProjection[8] = invFrustumNear;
                     lightProjection[11] = -(frustumNear * invFrustumNear);
-                    lightViewInverseProjection = md.m43Mul(lightViewInverse, lightProjection, lightViewInverseProjection);
-                    techniqueParameters.lightFrustum = frustum;
-                    techniqueParameters.lightViewInverseTranspose = md.m43Transpose(lightViewInverseProjection, techniqueParameters.lightViewInverseTranspose);
+                    lightViewInverseProjection = md.m43Mul(lightViewInverse,
+                                                           lightProjection,
+                                                           lightViewInverseProjection);
+                    tp.lightFrustum = frustum;
+                    tp.lightViewInverseTranspose = md.m43Transpose(lightViewInverseProjection,
+                                                                   tp.lightViewInverseTranspose);
 
                     l += 1;
                 }
@@ -537,11 +547,11 @@ class DeferredRendering
                 node = lightInstance.node;
                 light = lightInstance.light;
                 matrix = node.world;
-                techniqueParameters = lightInstance.techniqueParameters;
-                if (!techniqueParameters)
+                tp = lightInstance.techniqueParameters;
+                if (!tp)
                 {
-                    techniqueParameters = gd.createTechniqueParameters();
-                    lightInstance.techniqueParameters = techniqueParameters;
+                    tp = gd.createTechniqueParameters();
+                    lightInstance.techniqueParameters = tp;
                 }
 
                 halfExtents = light.halfExtents;
@@ -563,16 +573,16 @@ class DeferredRendering
 
                 worldView = md.m43Mul(matrix, viewMatrix, worldView);
                 lightViewInverseTranspose = md.m43InverseTransposeProjection(worldView, halfExtents,
-                                                                             techniqueParameters.lightViewInverseTranspose);
+                                                                             tp.lightViewInverseTranspose);
 
-                techniqueParameters.world = matrix;
-                techniqueParameters.worldViewTranspose = md.m43Transpose(worldView, techniqueParameters.worldViewTranspose);
-                techniqueParameters.lightOrigin = md.m43Pos(worldView, techniqueParameters.lightOrigin);
-                techniqueParameters.lightColor = light.color;
-                techniqueParameters.lightExtents = halfExtents;
-                techniqueParameters.lightExtentsInverse = halfExtentsInverse;
-                techniqueParameters.eyePositionLightSpace = md.m34Pos(lightViewInverseTranspose, techniqueParameters.eyePositionLightSpace);
-                techniqueParameters.lightViewInverseTranspose = lightViewInverseTranspose;
+                tp.world = matrix;
+                tp.worldViewTranspose = md.m43Transpose(worldView, tp.worldViewTranspose);
+                tp.lightOrigin = md.m43Pos(worldView, tp.lightOrigin);
+                tp.lightColor = light.color;
+                tp.lightExtents = halfExtents;
+                tp.lightExtentsInverse = halfExtentsInverse;
+                tp.eyePositionLightSpace = md.m34Pos(lightViewInverseTranspose, tp.eyePositionLightSpace);
+                tp.lightViewInverseTranspose = lightViewInverseTranspose;
 
                 l += 1;
             }
@@ -837,6 +847,7 @@ class DeferredRendering
             this.specularLightingTexture &&
             this.finalTexture)
         {
+            /* tslint:disable:no-string-literal */
             var sharedTechniqueParameters = this.sharedTechniqueParameters;
             sharedTechniqueParameters['normalTexture'] = this.normalTexture;
             sharedTechniqueParameters['depthTexture'] = this.depthTexture;
@@ -848,6 +859,7 @@ class DeferredRendering
                 this.diffuseLightingTexture;
             mixTechniqueParameters['specularLightingTexture'] =
                 this.specularLightingTexture;
+            /* tslint:enable:no-string-literal */
 
             this.baseRenderTarget = gd.createRenderTarget({
                     colorTexture0: this.albedoTexture,
@@ -1148,43 +1160,45 @@ class DeferredRendering
                     }
                 }
 
+                var directionalLightTechnique;
                 if (numGlobalDirectionalLights)
                 {
                     var ambientDirectionalLightTechnique = this.ambientDirectionalLightTechnique;
-                    var directionalLightTechnique = this.directionalLightTechnique;
+                    directionalLightTechnique = this.directionalLightTechnique;
 
                     var viewMatrix = md.m43InverseOrthonormal(this.globalCameraMatrix);
 
                     gd.setStream(quadVertexBuffer, quadSemantics);
 
                     gd.setTechnique(ambientDirectionalLightTechnique);
-                    ambientDirectionalLightTechnique['normalTexture'] =
-                        this.normalTexture;
-                    ambientDirectionalLightTechnique['ambientColor'] =
-                        md.v3Build(ambientColor0, ambientColor1, ambientColor2);
+
+                    /* tslint:disable:no-string-literal */
+                    ambientDirectionalLightTechnique['normalTexture'] = this.normalTexture;
+                    ambientDirectionalLightTechnique['ambientColor'] = md.v3Build(ambientColor0,
+                                                                                  ambientColor1,
+                                                                                  ambientColor2);
 
                     globalLight = globalDirectionalLights[0];
-                    ambientDirectionalLightTechnique['lightColor'] =
-                        globalLight.color;
-                    ambientDirectionalLightTechnique['lightDirection'] =
-                        md.m43TransformVector(viewMatrix, globalLight.direction);
+                    ambientDirectionalLightTechnique['lightColor'] = globalLight.color;
+                    ambientDirectionalLightTechnique['lightDirection'] = md.m43TransformVector(viewMatrix,
+                                                                                               globalLight.direction);
                     gd.draw(quadPrimitive, 4);
 
                     if (1 < numGlobalDirectionalLights)
                     {
                         gd.setTechnique(directionalLightTechnique);
-                        directionalLightTechnique['normalTexture'] =
-                            this.normalTexture;
+                        directionalLightTechnique['normalTexture'] = this.normalTexture;
 
                         for (g = 1; g < numGlobalDirectionalLights; g += 1)
                         {
                             globalLight = globalDirectionalLights[g];
-                            directionalLightTechnique['lightColor'] =
-                                globalLight.color;
-                            directionalLightTechnique['lightDirection'] = md.m43TransformVector(viewMatrix, globalLight.direction);
+                            directionalLightTechnique['lightColor'] = globalLight.color;
+                            directionalLightTechnique['lightDirection'] = md.m43TransformVector(viewMatrix,
+                                                                                                globalLight.direction);
                             gd.draw(quadPrimitive, 4);
                         }
                     }
+                    /* tslint:enable:no-string-literal */
 
                     firstLight = false;
                 }
@@ -1194,8 +1208,9 @@ class DeferredRendering
 
                     gd.setTechnique(this.ambientLightTechnique);
 
-                    this.ambientLightTechnique['lightColor'] =
-                        md.v3Build(ambientColor0, ambientColor1, ambientColor2);
+                    /* tslint:disable:no-string-literal */
+                    this.ambientLightTechnique['lightColor'] = md.v3Build(ambientColor0, ambientColor1, ambientColor2);
+                    /* tslint:enable:no-string-literal */
 
                     gd.draw(quadPrimitive, 4);
 
@@ -1216,7 +1231,7 @@ class DeferredRendering
 
             if (numDirectionalInstances)
             {
-                var directionalLightTechnique = this.pointLightTechnique;
+                directionalLightTechnique = this.pointLightTechnique;
                 var directionalLightSpecularTechnique = this.pointLightSpecularTechnique;
                 var directionalLightSpecularShadowTechnique = this.pointLightSpecularShadowTechnique;
 
@@ -1272,7 +1287,9 @@ class DeferredRendering
 
                         gd.setTechnique(technique);
 
-                        gd.setTechniqueParameters(sharedTechniqueParameters, lightTechniqueParameters, techniqueParameters);
+                        gd.setTechniqueParameters(sharedTechniqueParameters,
+                                                  lightTechniqueParameters,
+                                                  techniqueParameters);
                     }
                     else if (currentLightTechniqueParameters !== lightTechniqueParameters)
                     {
@@ -1361,7 +1378,9 @@ class DeferredRendering
 
                         gd.setTechnique(technique);
 
-                        gd.setTechniqueParameters(sharedTechniqueParameters, lightTechniqueParameters, techniqueParameters);
+                        gd.setTechniqueParameters(sharedTechniqueParameters,
+                                                  lightTechniqueParameters,
+                                                  techniqueParameters);
                     }
                     else if (currentLightTechniqueParameters !== lightTechniqueParameters)
                     {
@@ -1422,7 +1441,9 @@ class DeferredRendering
                         currentTechnique = technique;
                         currentLightTechniqueParameters = lightTechniqueParameters;
                         gd.setTechnique(technique);
-                        gd.setTechniqueParameters(sharedTechniqueParameters, lightTechniqueParameters, techniqueParameters);
+                        gd.setTechniqueParameters(sharedTechniqueParameters,
+                                                  lightTechniqueParameters,
+                                                  techniqueParameters);
                     }
                     else if (currentLightTechniqueParameters !== lightTechniqueParameters)
                     {
@@ -1495,7 +1516,9 @@ class DeferredRendering
                     if (l === 0)
                     {
                         currentLightTechniqueParameters = lightTechniqueParameters;
-                        gd.setTechniqueParameters(sharedTechniqueParameters, lightTechniqueParameters, techniqueParameters);
+                        gd.setTechniqueParameters(sharedTechniqueParameters,
+                                                  lightTechniqueParameters,
+                                                  techniqueParameters);
                     }
                     else if (currentLightTechniqueParameters !== lightTechniqueParameters)
                     {
@@ -1558,7 +1581,9 @@ class DeferredRendering
 
     setLightingScale(scale)
     {
+        /* tslint:disable:no-string-literal */
         this.mixTechniqueParameters['lightingScale'] = scale;
+        /* tslint:enable:no-string-literal */
     }
 
     getDefaultSkinBufferSize(): number
@@ -1746,7 +1771,9 @@ class DeferredRendering
 
         if (settings && settings.shadowRendering)
         {
-            var shadowMaps = ShadowMapping.create(gd, md, shaderManager, effectManager, settings.shadowSizeLow, settings.shadowSizeHigh);
+            var shadowMaps = ShadowMapping.create(gd, md,
+                                                  shaderManager, effectManager,
+                                                  settings.shadowSizeLow, settings.shadowSizeHigh);
             dr.shadowMaps = shadowMaps;
             shadowMappingUpdateFn = shadowMaps.update;
             shadowMappingSkinnedUpdateFn = shadowMaps.skinnedUpdate;
@@ -1815,38 +1842,38 @@ class DeferredRendering
 
         var deferredUpdate = function deferredUpdateFn(camera)
         {
-            var techniqueParameters = this.techniqueParameters;
+            var tp = this.techniqueParameters;
             var node = this.node;
             var matrix = node.world;
             worldView = m43MulAsM33(matrix, camera.viewMatrix, worldView);
-            techniqueParameters.worldViewInverseTranspose = md.m33InverseTranspose(worldView, techniqueParameters.worldViewInverseTranspose);
+            tp.worldViewInverseTranspose = md.m33InverseTranspose(worldView, tp.worldViewInverseTranspose);
             this.frameUpdated = this.frameVisible;
             var worldUpdate = node.worldUpdate;
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
-                techniqueParameters.world = matrix;
+                tp.world = matrix;
             }
         };
 
         var deferredSkinnedUpdate = function deferredSkinnedUpdateFn(camera)
         {
-            var techniqueParameters = this.techniqueParameters;
+            var tp = this.techniqueParameters;
             var node = this.node;
             var matrix = node.world;
             worldView = md.m33Mul(matrix, camera.viewMatrix, worldView);
-            techniqueParameters.worldViewInverseTranspose = md.m33InverseTranspose(worldView, techniqueParameters.worldViewInverseTranspose);
+            tp.worldViewInverseTranspose = md.m33InverseTranspose(worldView, tp.worldViewInverseTranspose);
             this.frameUpdated = this.frameVisible;
             var worldUpdate = node.worldUpdate;
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
-                techniqueParameters.world = matrix;
+                tp.world = matrix;
             }
             var skinController = this.skinController;
             if (skinController)
             {
-                techniqueParameters.skinBones = skinController.output;
+                tp.skinBones = skinController.output;
                 skinController.update();
             }
         };
@@ -1941,18 +1968,18 @@ class DeferredRendering
         var deferredBlendSkinnedUpdate = function deferredBlendSkinnedUpdateFn(/* camera */)
         {
             this.frameUpdated = this.frameVisible;
-            var techniqueParameters = this.techniqueParameters;
+            var tp = this.techniqueParameters;
             var node = this.node;
             var worldUpdate = node.worldUpdate;
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
-                techniqueParameters.world = node.world;
+                tp.world = node.world;
             }
             var skinController = this.skinController;
             if (skinController)
             {
-                techniqueParameters.skinBones = skinController.output;
+                tp.skinBones = skinController.output;
                 skinController.update();
             }
         };
@@ -1965,30 +1992,30 @@ class DeferredRendering
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
-                var techniqueParameters = this.techniqueParameters;
+                var tp = this.techniqueParameters;
                 var matrix = node.world;
-                techniqueParameters.world = matrix;
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                tp.world = matrix;
+                tp.worldInverseTranspose = md.m33InverseTranspose(matrix, tp.worldInverseTranspose);
             }
         };
 
         var deferredEnvSkinnedUpdate = function deferredEnvSkinnedUpdateFn(/* camera */)
         {
             this.frameUpdated = this.frameVisible;
-            var techniqueParameters = this.techniqueParameters;
+            var tp = this.techniqueParameters;
             var node = this.node;
             var worldUpdate = node.worldUpdate;
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
                 var matrix = node.world;
-                techniqueParameters.world = matrix;
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                tp.world = matrix;
+                tp.worldInverseTranspose = md.m33InverseTranspose(matrix, tp.worldInverseTranspose);
             }
             var skinController = this.skinController;
             if (skinController)
             {
-                techniqueParameters.skinBones = skinController.output;
+                tp.skinBones = skinController.output;
                 skinController.update();
             }
         };
@@ -2228,7 +2255,9 @@ class DeferredRendering
                 var flareScale = this.sharedMaterial.meta.flareScale;
 
                 // Normalize camera to bottom
-                var ctblensq = ((cameraToBottom0 * cameraToBottom0) + (cameraToBottom1 * cameraToBottom1) + (cameraToBottom2 * cameraToBottom2));
+                var ctblensq = ((cameraToBottom0 * cameraToBottom0) +
+                                (cameraToBottom1 * cameraToBottom1) +
+                                (cameraToBottom2 * cameraToBottom2));
                 var ctblenrec = (ctblensq > 0.0 ? (1.0 / Math.sqrt(ctblensq)) : 0);
                 cameraToBottom0 *= ctblenrec;
                 cameraToBottom1 *= ctblenrec;
@@ -2348,7 +2377,7 @@ class DeferredRendering
         var effectTypeData : DeferredEffectTypeData;
         var skinned = "skinned";
         var rigid = "rigid";
-        var particle = "rigid";//"particle";
+        var particle = "rigid"; //"particle";
         var flare = "rigid"; //flare"; //TODO: change geometry type...
 
         //

@@ -1616,7 +1616,7 @@ WebGLMathDevice =
         return this._vmath.quatEqual(q1, q2, precision);
     },
 
-    quatPosBuild : function quatPosBuildFn(x, y, z, w, px, py, pz, dst?)
+    quatPosBuild : function quatPosBuildFn(x, y, z?, w?, px?, py?, pz?, dst?)
     {
         if (arguments.length < 7)
         {

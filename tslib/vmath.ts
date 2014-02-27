@@ -5315,7 +5315,7 @@ var VMath : MathDevice =
     },
 
     // quatPos
-    quatPosBuild : function quatPosBuildFn(x, y, z, w, px, py, pz, dst?)
+    quatPosBuild : function quatPosBuildFn(x, y, z?, w?, px?, py?, pz?, dst?)
     {
         var res;
         if (arguments.length < 7)
