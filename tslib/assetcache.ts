@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2012-2014 Turbulenz Limited
 /*global Observer: false*/
 /*global debug: false*/
 /*global TurbulenzEngine: false*/
@@ -141,7 +141,7 @@ class AssetCache
                 isLoading: true,
                 key: key,
                 observer: Observer.create()
-            }
+            };
         }
         this.hitCounter += 1;
 
