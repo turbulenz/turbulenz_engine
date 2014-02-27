@@ -494,7 +494,10 @@ def command_check_ts(tsfiles=None):
         return 1
 
     # Run tslint on all the typescript source
-    tslint = 'tslint -c .tslintrc -f '
+    if TURBULENZOS == 'win32':
+        tslint = 'tslint.cmd -c .tslintrc -f '
+    else:
+        tslint = 'tslint -c .tslintrc -f '
     tsfiles = tsfiles or ['tslib/*.ts']
 
     files = []
