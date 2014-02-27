@@ -15,7 +15,7 @@ Packaged Components
 
 The following versions of Turbulenz products are packaged in this SDK:
 
-* turbulenz_engine - 1.X
+* turbulenz_engine - 1.3
 * turbulenz_tools - 1.0.5
 * turbulenz_local - 1.1.4
 
@@ -97,6 +97,15 @@ Changes
 
 * Various PhysicsManager optimizations
 
+.. _assetcache_v2:
+
+* Updated :ref:`AssetCache <assetcache>` to version 2:
+
+  - Includes a new :ref:`get <assetcache_get>` function
+  - Modified :ref:`request <assetcache_request>` behavior to include a callback
+  - Improved speed and memory allocations
+  - Improved handling of the case where assets are forced out during loading
+
 * Minor changes:
 
   - Added debug assertion for draw2D when npot textures are used with mipmaps not supported
@@ -109,6 +118,9 @@ Changes
   - Changed default materialColor and uvTransform setting behaviour in the renderers to set on the sharedMaterial
     instead of each renderable
   - Modified MIME types for tar/mp3 files required for IE11
+  - Added node pool and extents to reduce number of ArrayBuffers in AABBTree
+  - Various memory saving optimizations for scenes, sounds, physics, forward rendering
+  - SoundDevice improvements for playing/stoping sources
 
 Fixed
 -----
@@ -132,6 +144,10 @@ Fixed
 * Fixed scale animation export when stored as separate axis components
 
 * Fix dae2json referencing a legacy flat effect in the shaders
+
+* Fixed WebGL extension checking to avoid warnings in Firefox
+
+* Fixed mipmap initialization and debug checking
 
 
 Known Issues

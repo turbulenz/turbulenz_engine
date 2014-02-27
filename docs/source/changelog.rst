@@ -10,6 +10,24 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-02-27
+
+- Updated AssetCache to version 2:
+
+  * Includes a new 'get' function
+  * Modified 'request' behavior to include a callback
+  * Improved speed and memory allocations
+  * Improved handling of the case where assets are forced out during loading
+
+- Fixed WebGL extension checking to avoid warnings in Firefox
+- Fixed mipmap initialization and debug checking
+- Fixed fontmanager mipmaps enabled by default
+- Fixed wireframe drawing of triangle strips
+- Fixed mime-type for mp3 files in SoundDevice
+- SoundDevice improvements for playing/stoping sources
+- Added node pool and extents to reduce number of ArrayBuffers in AABBTree
+- Various memory saving optimizations for scenes, sounds, physics, forward rendering
+
 2014-02-17
 
 - Fixed node extents update when removing its last renderable or its last light.

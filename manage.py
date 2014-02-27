@@ -74,7 +74,7 @@ def command_env():
     _easy_install('Sphinx>=1.1.3')
 
     _easy_install('turbulenz_tools>=1.0.5')
-    _easy_install('turbulenz_local>=1.1.3')
+    _easy_install('turbulenz_local>=1.1.4')
 
     cmd = [os.path.join(env_bin, 'python'),
            os.path.join(TURBULENZROOT, 'scripts', 'install_nodejs.py'),
@@ -85,9 +85,9 @@ def command_env():
     sh(cmd, console=True)
 
     if TURBULENZOS == 'win32':
-        sh(['npm.cmd', 'install', '-g', 'tslint@0.4.5'])
+        sh([os.path.join(env_bin, 'npm.cmd'), 'install', '-g', 'tslint@0.4.5'])
     else:
-        sh(['npm', 'install', '-g', 'tslint@0.4.5'])
+        sh([os.path.join(env_bin, 'npm'), 'install', '-g', 'tslint@0.4.5'])
 
 @command_no_arguments
 def command_env_clean():
