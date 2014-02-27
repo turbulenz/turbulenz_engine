@@ -27,6 +27,9 @@ Version 1.x-dev
 - SoundDevice improvements for playing/stoping sources
 - Added node pool and extents to reduce number of ArrayBuffers in AABBTree
 - Various memory saving optimizations for scenes, sounds, physics, forward rendering
+- Enabled tslint and fixed basic errors on tslib
+- TypeScript files can now be linted by using the command:
+  python manage.py check-ts path/to/file.ts
 
 2014-02-17
 
