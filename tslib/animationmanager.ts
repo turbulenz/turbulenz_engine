@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2012 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*global TurbulenzEngine: false*/
 
@@ -11,7 +11,9 @@ interface AnimationList
 
 class AnimationManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     mathDevice: MathDevice;
 
@@ -36,7 +38,9 @@ class AnimationManager
     {
         if (!errorCallback)
         {
+            /* tslint:disable:no-empty */
             errorCallback = function (msg) {};
+            /* tslint:enable:no-empty */
         }
 
         var animations : AnimationList = {};
@@ -132,7 +136,8 @@ class AnimationManager
                                 {
                                     channel = channels[value];
 
-                                    channel.count = 1 + channel.lastKey - channel.firstKey; // TODO: For now we repeate values for intermediate keyframes
+                                    // TODO: For now we repeate values for intermediate keyframes
+                                    channel.count = 1 + channel.lastKey - channel.firstKey;
                                     if (channel.firstKey)
                                     {
                                         channel.count += 1;
@@ -250,10 +255,12 @@ class AnimationManager
             }
         };
 
+        /* tslint:disable:no-empty */
         var loadAnimationFile = function loadAnimationFileFn(path, onload)
         {
 
         };
+        /* tslint:enable:no-empty */
 
         var getAnimation = function getAnimationFn(name)
         {

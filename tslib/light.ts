@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2012 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 /*global TurbulenzEngine: false */
 /*global VMath: false */
 
@@ -7,7 +7,9 @@
 //
 class Light
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     name                : string;
     color               : any; // v3
@@ -248,7 +250,9 @@ class Light
 //
 class LightInstance
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     node               : SceneNode;
     light              : Light;
