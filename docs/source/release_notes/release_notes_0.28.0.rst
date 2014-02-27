@@ -118,6 +118,9 @@ Changes
   - Changed default materialColor and uvTransform setting behaviour in the renderers to set on the sharedMaterial
     instead of each renderable
   - Modified MIME types for tar/mp3 files required for IE11
+  - Added node pool and extents to reduce number of ArrayBuffers in AABBTree
+  - Various memory saving optimizations for scenes, sounds, physics, forward rendering
+  - SoundDevice improvements for playing/stoping sources
 
 Fixed
 -----
@@ -141,6 +144,10 @@ Fixed
 * Fixed scale animation export when stored as separate axis components
 
 * Fix dae2json referencing a legacy flat effect in the shaders
+
+* Fixed WebGL extension checking to avoid warnings in Firefox
+
+* Fixed mipmap initialization and debug checking
 
 
 Known Issues
