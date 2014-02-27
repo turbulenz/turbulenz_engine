@@ -13,7 +13,9 @@ interface ForwardRendererInfo
 
 class ForwardRendering
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     passIndex = {
         fillZ: 0, glow: 1, ambient: 2,
@@ -277,9 +279,9 @@ class ForwardRendering
                     passIndex = drawParameters.userData.passIndex;
                     if (passIndex <= ambientPassIndex)
                     {
-                        /*jshint bitwise:false*/
+                        /* tslint:disable:no-bitwise */
                         drawParameters.sortKey = ((drawParameters.sortKey | 0) + sortDistance);
-                        /*jshint bitwise:true*/
+                        /* tslint:enable:no-bitwise */
                     }
                     else if (passIndex === transparentPassIndex)
                     {
@@ -638,9 +640,9 @@ class ForwardRendering
             for (drawParameterIndex = 0; drawParameterIndex < numDrawParameters; drawParameterIndex += 1)
             {
                 drawParameters = drawParametersArray[drawParameterIndex];
-                /*jshint bitwise:false*/
+                /* tslint:disable:no-bitwise */
                 drawParameters.sortKey = ((drawParameters.sortKey | 0) + renderableID);
-                /*jshint bitwise:true*/
+                /* tslint:enable:no-bitwise */
                 this.addToDiffuseQueue(gd, drawParameters,
                                        lightInstanceTechniqueParameters);
                 numVisibleDrawParameters += 1;
@@ -730,12 +732,14 @@ class ForwardRendering
 
         var viewMatrix = camera.viewMatrix;
         var globalTechniqueParameters = this.globalTechniqueParameters;
+        /* tslint:disable:no-string-literal */
         globalTechniqueParameters['projection'] = camera.projectionMatrix;
         globalTechniqueParameters['viewProjection'] =
             camera.viewProjectionMatrix;
         globalTechniqueParameters['eyePosition'] =
             md.m43Pos(camera.matrix, globalTechniqueParameters['eyePosition']);
         globalTechniqueParameters['time'] = currentTime;
+        /* tslint:enable:no-string-literal */
 
         /*
         var maxDepth = (scene.maxDistance + camera.nearPlane);
@@ -804,7 +808,9 @@ class ForwardRendering
 
             if (origin)
             {
-                techniqueParameters.lightOrigin = md.m43TransformPoint(worldView, origin, techniqueParameters.lightOrigin);
+                techniqueParameters.lightOrigin = md.m43TransformPoint(worldView,
+                                                                       origin,
+                                                                       techniqueParameters.lightOrigin);
             }
             else
             {
@@ -965,7 +971,9 @@ class ForwardRendering
 
                 if (origin)
                 {
-                    techniqueParameters.lightOrigin = md.m43TransformPoint(worldView, origin, techniqueParameters.lightOrigin);
+                    techniqueParameters.lightOrigin = md.m43TransformPoint(worldView,
+                                                                           origin,
+                                                                           techniqueParameters.lightOrigin);
                 }
                 else
                 {
@@ -1085,7 +1093,9 @@ class ForwardRendering
 
     drawAmbientPass(gd, ambientColor)
     {
+        /* tslint:disable:no-string-literal */
         this.ambientTechniqueParameters['ambientColor'] = ambientColor;
+        /* tslint:enable:no-string-literal */
         gd.drawArray(this.passes[this.passIndex.ambient],
                      [this.globalTechniqueParameters,
                       this.ambientTechniqueParameters], -1);
@@ -1448,7 +1458,8 @@ class ForwardRendering
         {
             shaderManager.load("shaders/forwardrenderingshadows.cgfx");
 
-            var shadowMaps = ShadowMapping.create(gd, md, shaderManager, effectManager, settings.shadowSizeLow, settings.shadowSizeHigh);
+            var shadowMaps = ShadowMapping.create(gd, md, shaderManager, effectManager,
+                                                  settings.shadowSizeLow, settings.shadowSizeHigh);
             fr.shadowMaps = shadowMaps;
             shadowMappingUpdateFn = shadowMaps.update;
             shadowMappingSkinnedUpdateFn = shadowMaps.skinnedUpdate;
@@ -1526,12 +1537,16 @@ class ForwardRendering
             var meta = geometryInstanceSharedMaterial.meta;
             var sharedMaterialTechniqueParameters = geometryInstanceSharedMaterial.techniqueParameters;
             var geometryInstanceTechniqueParameters = geometryInstance.techniqueParameters;
-            var materialColor = geometryInstanceTechniqueParameters.materialColor || sharedMaterialTechniqueParameters.materialColor || fr.v4One;
+            var materialColor = (geometryInstanceTechniqueParameters.materialColor ||
+                                 sharedMaterialTechniqueParameters.materialColor ||
+                                 fr.v4One);
             geometryInstance.drawParameters = [];
             var numTechniqueParameters;
 
             var techniqueName = this.technique.name;
-            var sortOffset = opaqueSortOffset;  // Used to force alpha tested objects to be rendererd after opaque so the halo blends with objects
+
+            // Used to force alpha tested objects to be rendererd after opaque so the halo blends with objects
+            var sortOffset = opaqueSortOffset;
 
             var node = geometryInstance.node;
             if (!node.rendererInfo)
@@ -1667,15 +1682,20 @@ class ForwardRendering
                     }
                 }
 
+                /* tslint:disable:no-bitwise */
                 var techniqueIndex = drawParameters.technique.id;
                 if (alpha)
                 {
-                    drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex, meta.materialIndex);
+                    drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex,
+                                                                      meta.materialIndex);
                 }
                 else
                 {
-                    drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex, node.rendererInfo.id);
+                    drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex,
+                                                                      node.rendererInfo.id);
                 }
+                /* tslint:enable:no-bitwise */
+
                 //Now add common for world and skin data
                 drawParameters.setTechniqueParameters(numTechniqueParameters, geometryInstanceTechniqueParameters);
             }
@@ -1750,8 +1770,11 @@ class ForwardRendering
                         drawParameters.technique = fr.ambientRigidTechnique;
                     }
                 }
+                /* tslint:disable:no-bitwise */
                 drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | drawParameters.technique.id,
                                                                   meta.materialIndex);
+                /* tslint:enable:no-bitwise */
+
                 //Now add common for world and skin data. materialColor is also copied here.
                 drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
                 drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
@@ -1764,7 +1787,9 @@ class ForwardRendering
             geometryInstance.prepareDrawParameters(drawParameters);
 
             drawParameters.technique = this.technique;
+            /* tslint:disable:no-bitwise */
             drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | this.techniqueIndex, meta.materialIndex);
+            /* tslint:enable:no-bitwise */
             geometryInstance.renderUpdate = this.update;
 
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
@@ -1801,8 +1826,11 @@ class ForwardRendering
                     geometryInstance.prepareDrawParameters(shadowDrawParameters);
 
                     shadowDrawParameters.technique = this.shadowTechnique;
+                    /* tslint:disable:no-bitwise */
                     shadowDrawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | this.shadowTechniqueIndex,
                                                                             meta.materialIndex);
+                    /* tslint:enable:no-bitwise */
+
                     // for now force all shadows to be updated in the default update loop
                     //rendererInfo.renderUpdateShadow = this.shadowUpdate;
 
@@ -1915,8 +1943,10 @@ class ForwardRendering
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
+            /* tslint:disable:no-bitwise */
             drawParameters.sortKey = renderingCommonSortKeyFn(opaqueSortOffset | drawParameters.technique.id,
                                                               meta.materialIndex);
+            /* tslint:enable:no-bitwise */
             geometryInstance.drawParameters.push(drawParameters);
 
             geometryInstance.diffuseDrawParameters = [];
@@ -1929,8 +1959,7 @@ class ForwardRendering
             this.techniqueParameters.world = this.node.world;
         };
 
-        var forwardBlendSkinnedUpdate =
-            function forwardBlendSkinnedUpdateFn(/* camera */)
+        var forwardBlendSkinnedUpdate = function forwardBlendSkinnedUpdateFn(/* camera */)
         {
             var techniqueParameters = this.techniqueParameters;
             techniqueParameters.world = this.node.world;
@@ -1947,6 +1976,7 @@ class ForwardRendering
             this.techniqueParameters.world = this.node.world;
         };
 
+        /* tslint:disable:max-line-length */
         var forwardEnvUpdate = function forwardEnvUpdateFn(/* camera */)
         {
             var techniqueParameters = this.techniqueParameters;
@@ -1957,12 +1987,12 @@ class ForwardRendering
                 this.techniqueParametersUpdated = worldUpdate;
                 var matrix = node.world;
                 techniqueParameters.world = matrix;
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix,
+                                                                                   techniqueParameters.worldInverseTranspose);
             }
         };
 
-        var forwardEnvSkinnedUpdate =
-            function forwardEnvSkinnedUpdateFn(/* camera */)
+        var forwardEnvSkinnedUpdate = function forwardEnvSkinnedUpdateFn(/* camera */)
         {
             var techniqueParameters = this.techniqueParameters;
             var node = this.node;
@@ -1972,7 +2002,8 @@ class ForwardRendering
                 this.techniqueParametersUpdated = worldUpdate;
                 var matrix = node.world;
                 techniqueParameters.world = matrix;
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix,
+                                                                                   techniqueParameters.worldInverseTranspose);
             }
             var skinController = this.skinController;
             if (skinController)
@@ -1981,9 +2012,9 @@ class ForwardRendering
                 skinController.update();
             }
         };
+        /* tslint:enable:max-line-length */
 
-        var forwardFlarePrepare =
-            function forwardFlarePrepareFn(geometryInstance)
+        var forwardFlarePrepare = function forwardFlarePrepareFn(geometryInstance)
         {
             if (!geometryInstance.customGeometry)
             {
@@ -2214,7 +2245,9 @@ class ForwardRendering
                 var flareScale = this.sharedMaterial.meta.flareScale;
 
                 // Normalize camera to bottom
-                var ctblensq = ((cameraToBottom0 * cameraToBottom0) + (cameraToBottom1 * cameraToBottom1) + (cameraToBottom2 * cameraToBottom2));
+                var ctblensq = ((cameraToBottom0 * cameraToBottom0) +
+                                (cameraToBottom1 * cameraToBottom1) +
+                                (cameraToBottom2 * cameraToBottom2));
                 var ctblenrec = (ctblensq > 0.0 ? (1.0 / Math.sqrt(ctblensq)) : 0);
                 cameraToBottom0 *= ctblenrec;
                 cameraToBottom1 *= ctblenrec;

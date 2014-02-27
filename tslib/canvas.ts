@@ -3118,7 +3118,7 @@ class CanvasContext
                 // there are no glyphs to begin with.
 
                 totalNumGlyphs -= numGlyphs;
-                if (0 == totalNumGlyphs)
+                if (0 === totalNumGlyphs)
                 {
                     break;
                 }
@@ -5011,7 +5011,6 @@ class CanvasContext
         var d10l = ((d10x * d10x) + (d10y * d10y));
         var n = 2;
         var sqrt = Math.sqrt;
-        var abs = Math.abs;
         var angle;
         do
         {
@@ -5042,7 +5041,7 @@ class CanvasContext
         var first: number = 0;
         var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
         var step: number, middle : number, binIndex:number, diff: number;
-        var diff: number, n: number;
+        var n: number;
         var a: number[];
 
         while (0 < count)

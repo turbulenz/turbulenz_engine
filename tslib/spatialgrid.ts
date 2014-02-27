@@ -257,7 +257,7 @@ class SpatialGrid
                                     cell.push(node);
                                 }
                             }
-                            else if(oldCell)
+                            else if (oldCell)
                             {
                                 for (n = 0; n < numNodes; n += 1)
                                 {
@@ -806,12 +806,13 @@ class SpatialGrid
                                     }
                                 }
 
+                                var node;
                                 if (numQueryCellPlanes === 0)
                                 {
                                     for (k = 0; k < numNodes; k += 1)
                                     {
                                         // check if node is visible
-                                        var node = cell[k];
+                                        node = cell[k];
                                         if (node.queryIndex !== queryIndex)
                                         {
                                             node.queryIndex = queryIndex;
@@ -826,7 +827,7 @@ class SpatialGrid
                                     for (k = 0; k < numNodes; k += 1)
                                     {
                                         // check if node is visible
-                                        var node = cell[k];
+                                        node = cell[k];
                                         if (node.queryIndex !== queryIndex)
                                         {
                                             node.queryIndex = queryIndex;

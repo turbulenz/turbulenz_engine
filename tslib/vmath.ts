@@ -96,12 +96,12 @@ var VMath : MathDevice =
         }
     },
 
-    /*jshint bitwise: false*/
+    /* tslint:disable:no-bitwise */
     truncate : function truncateFn(value)
     {
         return (value | 0);
     },
-    /*jshint bitwise: true*/
+    /* tslint:enable:no-bitwise */
 
     //
     // Vector2
@@ -174,7 +174,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(2);
         }
-        debug.assert(2 == src.length);
+        debug.assert(2 === src.length);
         debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = src[0];
         dst[1] = src[1];
@@ -2088,7 +2088,10 @@ var VMath : MathDevice =
             var d0 = plane[0];
             var d1 = plane[1];
             var d2 = plane[2];
-            if ((d0 * (d0 < 0 ? aabb[0] : aabb[3]) + d1 * (d1 < 0 ? aabb[1] : aabb[4]) + d2 * (d2 < 0 ? aabb[2] : aabb[5])) < plane[3])
+            var distance = (d0 * (d0 < 0 ? aabb[0] : aabb[3]) +
+                            d1 * (d1 < 0 ? aabb[1] : aabb[4]) +
+                            d2 * (d2 < 0 ? aabb[2] : aabb[5]));
+            if (distance < plane[3])
             {
                 return false;
             }
@@ -2109,7 +2112,10 @@ var VMath : MathDevice =
             var d0 = plane[0];
             var d1 = plane[1];
             var d2 = plane[2];
-            if ((d0 * (d0 > 0 ? aabb[0] : aabb[3]) + d1 * (d1 > 0 ? aabb[1] : aabb[4]) + d2 * (d2 > 0 ? aabb[2] : aabb[5])) < plane[3])
+            var distance = (d0 * (d0 > 0 ? aabb[0] : aabb[3]) +
+                            d1 * (d1 > 0 ? aabb[1] : aabb[4]) +
+                            d2 * (d2 > 0 ? aabb[2] : aabb[5]));
+            if (distance < plane[3])
             {
                 return false;
             }
@@ -3775,19 +3781,19 @@ var VMath : MathDevice =
             {
                 dst = new VMathArrayConstructor(12);
             }
-            var detrecp = 1.0 / det;
-            dst[0] = ((m4 * m8 + m5 * (-m7)) * detrecp);
-            dst[1] = ((m7 * m2 + m8 * (-m1)) * detrecp);
-            dst[2] = ((m1 * m5 - m2 *   m4)  * detrecp);
-            dst[3] = ((m5 * m6 + m3 * (-m8)) * detrecp);
-            dst[4] = ((m8 * m0 + m6 * (-m2)) * detrecp);
-            dst[5] = ((m3 * m2 - m0 *   m5)  * detrecp);
-            dst[6] = ((m3 * m7 + m4 * (-m6)) * detrecp);
-            dst[7] = ((m6 * m1 + m7 * (-m0)) * detrecp);
-            dst[8] = ((m0 * m4 - m3 *   m1)  * detrecp);
-            dst[9]  = ((m3 * (m10 * m8  - m7 * m11) + m4  * (m6 * m11 - m9 * m8) + m5  * (m9 * m7 - m6 * m10)) * detrecp);
-            dst[10] = ((m6 * (m2  * m10 - m1 * m11) + m7  * (m0 * m11 - m9 * m2) + m8  * (m9 * m1 - m0 * m10)) * detrecp);
-            dst[11] = ((m9 * (m2  * m4  - m1 * m5)  + m10 * (m0 * m5  - m3 * m2) + m11 * (m3 * m1 - m0 * m4))  * detrecp);
+            var rdet = 1.0 / det;
+            dst[0] = ((m4 * m8 + m5 * (-m7)) * rdet);
+            dst[1] = ((m7 * m2 + m8 * (-m1)) * rdet);
+            dst[2] = ((m1 * m5 - m2 *   m4)  * rdet);
+            dst[3] = ((m5 * m6 + m3 * (-m8)) * rdet);
+            dst[4] = ((m8 * m0 + m6 * (-m2)) * rdet);
+            dst[5] = ((m3 * m2 - m0 *   m5)  * rdet);
+            dst[6] = ((m3 * m7 + m4 * (-m6)) * rdet);
+            dst[7] = ((m6 * m1 + m7 * (-m0)) * rdet);
+            dst[8] = ((m0 * m4 - m3 *   m1)  * rdet);
+            dst[9]  = ((m3 * (m10 * m8  - m7 * m11) + m4  * (m6 * m11 - m9 * m8) + m5  * (m9 * m7 - m6 * m10)) * rdet);
+            dst[10] = ((m6 * (m2  * m10 - m1 * m11) + m7  * (m0 * m11 - m9 * m2) + m8  * (m9 * m1 - m0 * m10)) * rdet);
+            dst[11] = ((m9 * (m2  * m4  - m1 * m5)  + m10 * (m0 * m5  - m3 * m2) + m11 * (m3 * m1 - m0 * m4))  * rdet);
             return dst;
         }
     },

@@ -42,7 +42,9 @@ interface Renderable
 //
 class SceneNode
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     static _tempDirtyNodes: SceneNode[] = [];
 
@@ -215,7 +217,7 @@ class SceneNode
     //
     //addChild
     //
-    addChild(child)
+    addChild(child: SceneNode)
     {
         if (child.parent)
         {
@@ -247,7 +249,7 @@ class SceneNode
     //
     //removeChild
     //
-    removeChild(child)
+    removeChild(child: SceneNode)
     {
         var children = this.children;
         if (children)
@@ -580,7 +582,8 @@ class SceneNode
             }
             delete this.setLocalTransform; //Allowed to move again.
 
-            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
+            //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
+            var worldExtents = this.getWorldExtents();
             if (worldExtents)
             {
                 this.getRoot().scene.dynamicSpatialMap.update(this, worldExtents);
@@ -614,7 +617,8 @@ class SceneNode
 
             this.setLocalTransform = SceneNode.invalidSetLocalTransform;
 
-            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
+            //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
+            var worldExtents = this.getWorldExtents();
             if (worldExtents)
             {
                 var scene = this.getRoot().scene;
@@ -1101,7 +1105,8 @@ class SceneNode
         {
             this.updateLocalExtents();
         }
-        return this.localExtents; //Can be undefined if no local extents. These are not transformed by the local transform matrix.
+        //Can be undefined if no local extents. These are not transformed by the local transform matrix.
+        return this.localExtents;
     }
 
     //
@@ -1490,7 +1495,9 @@ class SceneNode
         if (!wasAlreadyCustom)
         {
             this.dirtyLocalExtents = true;
-            this.numCustomRenderableWorldExtents = this.numCustomRenderableWorldExtents ? this.numCustomRenderableWorldExtents + 1 : 1;
+            this.numCustomRenderableWorldExtents = (this.numCustomRenderableWorldExtents ?
+                                                    (this.numCustomRenderableWorldExtents + 1) :
+                                                    1);
         }
     }
 

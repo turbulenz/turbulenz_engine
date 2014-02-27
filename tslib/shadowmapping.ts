@@ -277,9 +277,8 @@ class ShadowMapping
         var light = lightInstance.light;
         var node = lightInstance.node;
         var matrix = node.world;
-        var occludersDrawArray = lightInstance.occludersDrawArray;
         var origin = lightInstance.lightOrigin;
-        var target, up, frustumWorld;
+        var target, up, frustumWorld, p0, p1, p2;
         var halfExtents = light.halfExtents;
 
         var shadowMapInfo = lightInstance.shadowMapInfo;
@@ -325,9 +324,9 @@ class ShadowMapping
                 var d1 = direction[1];
                 var d2 = direction[2];
 
-                var p0 = halfExtents[0];
-                var p1 = halfExtents[1];
-                var p2 = halfExtents[2];
+                p0 = halfExtents[0];
+                p1 = halfExtents[1];
+                p2 = halfExtents[2];
 
                 var n0 = -p0;
                 var n1 = -p1;
@@ -361,7 +360,7 @@ class ShadowMapping
 
         if (!lightInstance.lightDepth || light.dynamic)
         {
-            var halfExtents = light.halfExtents;
+            halfExtents = light.halfExtents;
             var halfExtents0 = halfExtents[0];
             var halfExtents1 = halfExtents[1];
             var halfExtents2 = halfExtents[2];
@@ -370,11 +369,11 @@ class ShadowMapping
             {
                 var tan = Math.tan;
                 var acos = Math.acos;
-                var frustumWorld = shadowMapInfo.frustumWorld;
+                frustumWorld = shadowMapInfo.frustumWorld;
 
-                var p0 = md.m43TransformPoint(frustumWorld, md.v3Build(-1, -1, 1));
-                var p1 = md.m43TransformPoint(frustumWorld, md.v3Build( 1, -1, 1));
-                var p2 = md.m43TransformPoint(frustumWorld, md.v3Build(-1,  1, 1));
+                p0 = md.m43TransformPoint(frustumWorld, md.v3Build(-1, -1, 1));
+                p1 = md.m43TransformPoint(frustumWorld, md.v3Build( 1, -1, 1));
+                p2 = md.m43TransformPoint(frustumWorld, md.v3Build(-1,  1, 1));
                 var p3 = md.m43TransformPoint(frustumWorld, md.v3Build( 1,  1, 1));
                 var farLightCenter = md.v3Sub(md.v3ScalarMul(md.v3Add4(p0, p1, p2, p3), 0.25), origin);
                 lightDepth = md.v3Length(farLightCenter);
@@ -446,6 +445,12 @@ class ShadowMapping
         camera.updateViewProjectionMatrix();
         camera.updateFrustumPlanes();
 
+        var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
+        var overlappingRenderables = lightInstance.overlappingRenderables;
+        var numOverlappingRenderables = overlappingRenderables.length;
+        var staticNodesChangeCounter = lightInstance.staticNodesChangeCounter;
+
+        var occludersDrawArray = lightInstance.occludersDrawArray;
         if (!occludersDrawArray)
         {
             occludersDrawArray = new Array(numOverlappingRenderables);
@@ -462,11 +467,6 @@ class ShadowMapping
             lightInstance.shadowMap = null;
             lightInstance.shadows = false;
         }
-
-        var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
-        var overlappingRenderables = lightInstance.overlappingRenderables;
-        var numOverlappingRenderables = overlappingRenderables.length;
-        var staticNodesChangeCounter = lightInstance.staticNodesChangeCounter;
 
         if (node.dynamic ||
             numStaticOverlappingRenderables !== numOverlappingRenderables ||

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 // -----------------------------------------------------------------------------
 // MathDevice
@@ -436,7 +436,7 @@ interface Texture
 
     // Methods
 
-    setData(data: any, face?: number, level?: number, x?:number, y?:number, w?:number, h?:number);
+    setData(data: any, face?: number, level?: number, x?: number, y?: number, w?: number, h?: number);
     typedArrayIsValid(array: any);
     destroy();
 }
@@ -1350,4 +1350,5 @@ interface TurbulenzEngine
 // TurbulenzEngine global
 // -----------------------------------------------------------------------------
 
+/* tslint:disable:no-unused-variable */
 declare var TurbulenzEngine : TurbulenzEngine;

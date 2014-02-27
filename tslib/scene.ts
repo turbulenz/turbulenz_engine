@@ -14,6 +14,8 @@
 /*global Uint32Array*/
 /*global Float32Array*/
 
+/* tslint:disable:max-line-length */
+
 interface ScenePortal
 {
     disabled : boolean;
@@ -58,7 +60,9 @@ interface SpatialMap
 //
 class Scene
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     md: MathDevice;
 
@@ -393,7 +397,9 @@ class Scene
                 }
                 else
                 {
+                    /* tslint:disable:no-bitwise */
                     culledByPlane[np] |= (1 << n);
+                    /* tslint:enable:no-bitwise */
                 }
                 np += 1;
             }
@@ -435,12 +441,14 @@ class Scene
                 nnp = 0;
             }
 
+            /* tslint:disable:no-bitwise */
             // Skip plane if both points were culled by the same frustum plane
             if (0 !== (culledByPlane[np] & culledByPlane[nnp]))
             {
                 np += 1;
                 continue;
             }
+            /* tslint:enable:no-bitwise */
 
             p = newPoints[np];
             var p0X = p[0];
@@ -3127,7 +3135,7 @@ class Scene
                 {
                     var areaFound = false;
                     var areaExtents;
-                    for (;;)
+                    for ( ; ; )
                     {
                         var areaIndices = findAreaIndicesAABB(bspNodes, min0, min1, min2, max0, max1, max2);
                         var numAreaIndices = areaIndices.length;
@@ -3335,7 +3343,7 @@ class Scene
                 var pad = false;
                 var areaFound = false;
                 var na;
-                for (;;)
+                for ( ; ; )
                 {
                     var areaIndices = findAreaIndicesAABB(bspNodes, min0, min1, min2, max0, max1, max2);
                     var numAreaIndices = areaIndices.length;
@@ -4519,7 +4527,9 @@ class Scene
                         if (totalNumVertices <= 65536)
                         {
                             // Assign vertex offsets in blocks of 16bits so we can optimize renderables togheter
+                            /* tslint:disable:no-bitwise */
                             var blockBase = ((baseIndex >>> 16) << 16);
+                            /* tslint:enable:no-bitwise */
                             baseIndex -= blockBase;
                             if ((baseIndex + totalNumVertices) > 65536)
                             {
@@ -4717,7 +4727,7 @@ class Scene
                         {
                             var buffer = new this.float32ArrayConstructor(6);
                             center = buffer.subarray(0, 3);
-                            halfExtents= buffer.subarray(3, 6);
+                            halfExtents = buffer.subarray(3, 6);
                         }
                         else
                         {

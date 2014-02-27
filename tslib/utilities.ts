@@ -351,7 +351,7 @@ var Utilities : Utilities = {
         503: "Service Unavailable",
         504: "Gateway Time-out",
         505: "HTTP Version not supported"
-    },
+    }
 };
 
 var MathDeviceConvert =
@@ -755,7 +755,7 @@ JSProfiling.createArray = function JSProfilingCreateArrayFn(rootNode)
             existingNode.numberOfCalls += node.numberOfCalls;
         }
 
-        var children = typeof node.children === 'function' ? node.children(): node.children;
+        var children = typeof node.children === 'function' ? node.children() : node.children;
         if (children)
         {
             var numberOfChildren = children.length;

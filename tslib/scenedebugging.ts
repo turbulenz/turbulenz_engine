@@ -2632,7 +2632,7 @@ Scene.prototype.drawStaticNodesTree = function sceneDrawStaticNodesTreeFn(gd, sm
     {
         this.drawNodesTree(this.staticSpatialMap, gd, sm, camera, drawLevel);
     }
-    else if(this.staticSpatialMap.getCells)
+    else if (this.staticSpatialMap.getCells)
     {
         this.drawCellsGrid(this.staticSpatialMap, gd, sm, camera);
     }
@@ -2647,7 +2647,7 @@ Scene.prototype.drawDynamicNodesTree = function sceneDrawDynamicNodesTreeFn(gd, 
     {
         this.drawNodesTree(this.dynamicSpatialMap, gd, sm, camera, drawLevel);
     }
-    else if(this.dynamicSpatialMap.getCells)
+    else if (this.dynamicSpatialMap.getCells)
     {
         this.drawCellsGrid(this.dynamicSpatialMap, gd, sm, camera);
     }

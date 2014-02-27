@@ -96,7 +96,7 @@ class DefaultRendering
         var numVisibleRenderables = visibleRenderables.length;
         if (numVisibleRenderables > 0)
         {
-            var renderable, pass, passIndex;
+            var renderable, passIndex;
             var n = 0;
             do
             {
