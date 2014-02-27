@@ -3664,6 +3664,9 @@ class Scene
         var faces = surface.faces;
         var numIndices = faces.length;
 
+        var newFaces = [];
+        newFaces.length = numIndices;
+
         var numUniqueVertIndex = verticesAsIndexLists.length;
         var vertIdx = 0;
         var srcIdx = 0;
@@ -3710,13 +3713,14 @@ class Scene
                 numUniqueVertIndex += 1;
             }
 
-            faces[vertIdx] = thisVertIndex;
+            newFaces[vertIdx] = thisVertIndex;
             vertIdx += 1;
 
             srcIdx += indicesPerVertex;
         }
 
-        surface.faces.length = vertIdx;
+        newFaces.length = vertIdx;
+        surface.faces = newFaces;
 
         return numUniqueVertices;
     }
@@ -4357,10 +4361,6 @@ class Scene
 
                         vertexSource.data = newData;
                         vertexSource.offset = 0;
-
-                        fileInput = inputs[vertexSource.semantic];
-                        fileInput.offset = 0;
-                        sources[fileInput.source].data = newData;
                     }
 
                     verticesAsIndexLists.length = 0;
