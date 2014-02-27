@@ -85,9 +85,9 @@ def command_env():
     sh(cmd, console=True)
 
     if TURBULENZOS == 'win32':
-        sh(['npm.cmd', 'install', '-g', 'tslint@0.4.5'])
+        sh([os.path.join(env_bin, 'npm.cmd'), 'install', '-g', 'tslint@0.4.5'])
     else:
-        sh(['npm', 'install', '-g', 'tslint@0.4.5'])
+        sh([os.path.join(env_bin, 'npm'), 'install', '-g', 'tslint@0.4.5'])
 
 @command_no_arguments
 def command_env_clean():
