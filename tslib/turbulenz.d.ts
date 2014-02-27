@@ -299,7 +299,7 @@ interface MathDevice
     quatEqual(q1, q2, precision?);
 
     // quatPos
-    quatPosBuild(x, y, z, w, px, py, pz, dst?);
+    quatPosBuild(x, y, z?, w?, px?, py?, pz?, dst?);
     quatPosTransformVector(qp, n, dst?);
     quatPosTransformPoint(qp, p);
     quatPosMul(qp1, qp2);
