@@ -15,7 +15,7 @@ Packaged Components
 
 The following versions of Turbulenz products are packaged in this SDK:
 
-* turbulenz_engine - 1.X
+* turbulenz_engine - 1.3
 * turbulenz_tools - 1.0.5
 * turbulenz_local - 1.1.4
 
@@ -96,6 +96,15 @@ Changes
   More information about the :ref:`iOS/Android Developer Client <developer_client_readme>` offerings.
 
 * Various PhysicsManager optimizations
+
+.. _assetcache_v2:
+
+* Updated :ref:`AssetCache <assetcache>` to version 2:
+
+  - Includes a new :ref:`get <assetcache_get>` function
+  - Modified :ref:`request <assetcache_request>` behavior to include a callback
+  - Improved speed and memory allocations
+  - Improved handling of the case where assets are forced out during loading
 
 * Minor changes:
 

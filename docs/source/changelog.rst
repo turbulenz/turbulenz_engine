@@ -10,6 +10,15 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-02-27
+
+- Updated AssetCache to version 2:
+
+  * Includes a new 'get' function
+  * Modified 'request' behavior to include a callback
+  * Improved speed and memory allocations
+  * Improved handling of the case where assets are forced out during loading
+
 2014-02-17
 
 - Fixed node extents update when removing its last renderable or its last light.
