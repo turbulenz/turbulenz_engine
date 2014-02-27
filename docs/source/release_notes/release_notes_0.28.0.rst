@@ -57,6 +57,7 @@ New Features
   - Added scene extents to the viewer scene metrics
   - Added check when using Workers for processing DDS textures on unsupported platforms
   - Added support for non-ascii characters in makehtml and maketzjs
+  - Added support for tslint and fixed basic errors on tslib
 
 Changes
 -------
