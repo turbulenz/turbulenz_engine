@@ -3207,6 +3207,39 @@ class WebGLPass implements Pass
 {
     static version = 1;
 
+    // DO NOT CHANGE: This table is independent from the actual attribute index on GraphicsDevice.SEMANTIC_xxx
+    static semanticToAttr = {
+        POSITION: "ATTR0",
+        POSITION0: "ATTR0",
+        BLENDWEIGHT: "ATTR1",
+        BLENDWEIGHT0: "ATTR1",
+        NORMAL: "ATTR2",
+        NORMAL0: "ATTR2",
+        COLOR: "ATTR3",
+        COLOR0: "ATTR3",
+        COLOR1: "ATTR4",
+        SPECULAR: "ATTR4",
+        FOGCOORD: "ATTR5",
+        TESSFACTOR: "ATTR5",
+        PSIZE0: "ATTR6",
+        BLENDINDICES: "ATTR7",
+        BLENDINDICES0: "ATTR7",
+        TEXCOORD: "ATTR8",
+        TEXCOORD0: "ATTR8",
+        TEXCOORD1: "ATTR9",
+        TEXCOORD2: "ATTR10",
+        TEXCOORD3: "ATTR11",
+        TEXCOORD4: "ATTR12",
+        TEXCOORD5: "ATTR13",
+        TEXCOORD6: "ATTR14",
+        TEXCOORD7: "ATTR15",
+        TANGENT: "ATTR14",
+        TANGENT0: "ATTR14",
+        BINORMAL0: "ATTR15",
+        BINORMAL: "ATTR15",
+        PSIZE: "ATTR6"
+    };
+
     name: string;
     parameters: any;
 
@@ -3440,7 +3473,15 @@ class WebGLPass implements Pass
                 if (attribute !== undefined)
                 {
                     semanticsMask |= (1 << attribute);
-                    gl.bindAttribLocation(glProgram, attribute, ("ATTR" + attribute));
+                    if (0 === semanticName.indexOf("ATTR"))
+                    {
+                        gl.bindAttribLocation(glProgram, attribute, semanticName);
+                    }
+                    else
+                    {
+                        var attributeName = WebGLPass.semanticToAttr[semanticName];
+                        gl.bindAttribLocation(glProgram, attribute, attributeName);
+                    }
                 }
             }
 
@@ -7486,6 +7527,71 @@ class WebGLGraphicsDevice implements GraphicsDevice
             gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
             gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
             gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+        }
+
+        var maxAttributes = gl.MAX_VERTEX_ATTRIBS;
+        if (maxAttributes < 16)
+        {
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR0 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_POSITION =
+            WebGLGraphicsDevice.prototype.SEMANTIC_POSITION0 = 0;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR1 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDWEIGHT =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDWEIGHT0 = 1;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR2 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_NORMAL =
+            WebGLGraphicsDevice.prototype.SEMANTIC_NORMAL0 = 2;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR3 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR =
+            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR0 = 3;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR7 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDINDICES =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDINDICES0 = 4;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR8 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD0 = 5;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR9 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD1 = 6;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR14 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD6 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TANGENT =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TANGENT0 = 7;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR15 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD7 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BINORMAL0 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BINORMAL = 8;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR10 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD2 = 9;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR11 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD3 = 10;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR12 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD4 = 11;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR13 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD5 = 12;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR4 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR1 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_SPECULAR = 13;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR5 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_FOGCOORD =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TESSFACTOR = 14;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR6 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_PSIZE =
+            WebGLGraphicsDevice.prototype.SEMANTIC_PSIZE0 = 15;
         }
 
         gd.DEFAULT_SAMPLER = {
