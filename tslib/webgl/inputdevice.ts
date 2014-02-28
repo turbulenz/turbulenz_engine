@@ -314,6 +314,7 @@ class WebGLInputDevice implements InputDevice
 
         var gamepads = (navigator.gamepads ||
                         navigator.webkitGamepads ||
+                        (navigator.getGamepads && navigator.getGamepads()) ||
                         (navigator.webkitGetGamepads && navigator.webkitGetGamepads()));
 
         if (gamepads)
@@ -347,6 +348,10 @@ class WebGLInputDevice implements InputDevice
                         for (var n = 0; n < numButtons; n += 1)
                         {
                             var value = buttons[n];
+                            if (typeof value === "object")
+                            {
+                                value = value.value;
+                            }
                             if (padButtons[n] !== value)
                             {
                                 padButtons[n] = value;

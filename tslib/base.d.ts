@@ -123,6 +123,7 @@ interface Navigator
 {
     gamepads?: any[];
     webkitGamepads?: any[];
+    getGamepads?: { (): any[]; };
     webkitGetGamepads?: { (): any[]; };
 
     pointer: // TODO: Where is this type documented?
