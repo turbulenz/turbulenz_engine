@@ -79,14 +79,19 @@ Changes
   - Corrected the rendering order of the :ref:`drawText <protolib-drawText>` function to occur after :ref:`draw2DSprite <protolib-draw2dsprite>` function.
   - Added new callback :ref:`setPreRendererDraw <protolib-setprerendererdraw>` and updated behavior of :ref:`setPreDraw <protolib-setpredraw>`
 
+.. _sdk_0_28_0_fontmanager:
+
 * Modified FontManager to support multiple pages:
 
-  - New properties *linesWidth* and *glyphCounts* added to the object returned by :ref:`fontManager.calculateTextDimensions <fontmanager_calculatetextdimensions>`
+  - New property *glyphCounts* added to the object returned by :ref:`fontManager.calculateTextDimensions <fontmanager_calculatetextdimensions>`
   - Added argument *dimensions* to :ref:`font.calculateTextDimensions <font_calculatetextdimensions>`
+  - Added argument *lineSpacing* to :ref:`font.calculateTextDimensions <font_calculatetextdimensions>`
+  - New properties *linesWidth* and *glyphCounts* added to the object returned by :ref:`font.calculateTextDimensions <font_calculatetextdimensions>`
   - Replaced generateTextVertices function by :ref:`generatePageTextVertices <font_generatepagetextvertices>`, now with page
     compatibility
   - Added argument *pageIdx* to :ref:`font.drawTextVertices <font_drawtextvertices>`
   - Added argument *dimensions* to :ref:`font.drawTextRect <font_drawtextrect>`
+  - Added argument *lineSpacing* to :ref:`font.drawTextRect <font_drawtextrect>`
 
 * Modified FontManager to use tri-strip instead of fan for single characters.
   Temporary fix for IE11.

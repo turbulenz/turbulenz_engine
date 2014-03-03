@@ -293,7 +293,7 @@ Returns an object with properties:
 ``numGlyphs``
     The number of glyphs in the block of text.
 
-``glyphCounts``
+``glyphCounts`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
     A map from page numbers to glyph counts, for the given string.
     This is generally only used by the `drawTextRect` function, in
     particular for fonts that require multiple texture pages.  It can
@@ -379,10 +379,10 @@ Calculate text dimensions of a block of text.
 ``spacing``
     Extra spacing between characters (in pixels).
 
-``lineSpacing``
+``lineSpacing`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
     (Optional) extra spacing between lines (in pixels).
 
-``dimensions``
+``dimensions`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
     (Optional) A dimensions object to overwrite, so avoid creation of
     a new one.
 
@@ -391,13 +391,13 @@ Returns an object with properties:
 ``width`` and ``height``
     The dimensions of the block of text (in pixels).
 
-``linesWidth``
+``linesWidth`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
     An array for the width (in pixels) of each line of text in ``text``
 
 ``numGlyphs``
     The number of glyphs in the block of text.
 
-``glyphCounts``
+``glyphCounts`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
     A map from page numbers to glyph counts, for the given string.
     This is generally only used by the `drawTextRect` function, in
     particular for fonts that require multiple texture pages.  It can
@@ -415,7 +415,7 @@ Returns an object with properties:
 `generatePageTextVertices`
 --------------------------
 
-**Modified SDK 0.28.0**
+**Modified** :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`
 
 Replaces function previously called generateTextVertices
 
@@ -520,7 +520,7 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to dra
 ``vertices``
     Vertices to be drawn.
 
-``pageIdx``
+``pageIdx`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
     The index of the texture page that the vertices correspond to.
 
 ``reuse``
@@ -583,10 +583,10 @@ Draws text.
     ``spacing``
         Extra spacing between characters. Defaults to `0`.
 
-    ``lineSpacing``
+    ``lineSpacing`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
         (Optional) Extra spacing between lines. Defaults to `0`.
 
-    ``dimensions``
+    ``dimensions`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
         (Optional).  A dimensions object, returned by
         calculateTextDimensions, to save internal re-calculation of
         various properties of the text.
