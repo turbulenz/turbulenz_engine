@@ -164,6 +164,9 @@ New
   *graphicsDevice.maxSupported("VERTEX_TEXTURE_UNITS") >= 4*.
   There is currently no fallback available for unsupported platforms.
 
+* IE11 has an issue attempting to play sound sources multiple times.
+  This sometimes manifests in sounds partially playing or failing to play at all and sometimes can be experienced in the sound sample.
+
 Unchanged
 ---------
 
