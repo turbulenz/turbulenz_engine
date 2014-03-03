@@ -264,14 +264,14 @@ class SubtitlePlayer
 
             var dimensions = this.scratchDimensions;
             dimensions = font.calculateTextDimensions(text, scale, spacing,
-                                                      dimensions);
+                                                      0, dimensions);
             this.scratchDimensions = dimensions;
 
             while ((dimensions.width > maxX) || (dimensions.height > maxY))
             {
                 scale *= 0.5;
                 dimensions = font.calculateTextDimensions(text, scale, spacing,
-                                                          dimensions);
+                                                          0, dimensions);
             }
 
             // Setup font parameters
