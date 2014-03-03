@@ -507,9 +507,11 @@ class SVGBaseNode implements SVGNode
         }
     }
 
+    /* tslint:disable:no-empty */
     _drawShape(ctx: CanvasContext): void
     {
     }
+    /* tslint:enable:no-empty */
 };
 
 //
@@ -517,9 +519,11 @@ class SVGBaseNode implements SVGNode
 //
 class SVGEmptyNode extends SVGBaseNode
 {
+    /* tslint:disable:no-empty */
     _drawState(ctx: CanvasContext): void
     {
     }
+    /* tslint:enable:no-empty */
 
     _drawStateChildren(ctx: CanvasContext): void
     {

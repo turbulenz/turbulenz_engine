@@ -237,7 +237,10 @@ class RequestHandler
             {
                 if (callContext.requestOwner)
                 {
-                    callContext.requestFn.call(callContext.requestOwner, callContext.src, responseCallback, callContext);
+                    callContext.requestFn.call(callContext.requestOwner,
+                                               callContext.src,
+                                               responseCallback,
+                                               callContext);
                 }
                 else
                 {
@@ -345,8 +348,11 @@ class RequestHandler
         rh.reconnectedObserver = Observer.create();
         rh.reconnectTest = null;
 
+        /* tslint:disable:no-empty */
         rh.onReconnected = params.onReconnected || function onReconnectedFn() {};
         rh.onRequestTimeout = params.onRequestTimeout || function onRequestTimeoutFn(/* callContext */) {};
+        /* tslint:enable:no-empty */
+
         var handlers = { eventOnload: [] };
         rh.handlers = handlers;
 

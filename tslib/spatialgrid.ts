@@ -6,7 +6,9 @@
 
 class SpatialGridNode
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     extents          : any;
     cellExtents      : any;
@@ -48,7 +50,9 @@ class SpatialGridNode
 //
 class SpatialGrid
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     extents: any;
     cellSize: number;
@@ -93,7 +97,9 @@ class SpatialGrid
     add(externalNode: {}, extents: any): void
     {
         var numNodes = this.numNodes;
+        /* tslint:disable:no-string-literal */
         externalNode['spatialIndex'] = numNodes;
+        /* tslint:enable:no-string-literal */
 
         var node = this.nodes[numNodes];
         var nodeExtents, cellExtents;
@@ -155,7 +161,9 @@ class SpatialGrid
 
     update(externalNode: {}, extents: any): void
     {
+        /* tslint:disable:no-string-literal */
         var index = externalNode['spatialIndex'];
+        /* tslint:enable:no-string-literal */
         if (index !== undefined)
         {
             var cellSize = this.cellSize;
@@ -306,10 +314,12 @@ class SpatialGrid
 
     remove(externalNode: {}): void
     {
+        /* tslint:disable:no-string-literal */
         var index = externalNode['spatialIndex'];
         if (index !== undefined)
         {
             externalNode['spatialIndex'] = undefined;
+            /* tslint:enable:no-string-literal */
 
             var numNodes = this.numNodes;
             if (1 < numNodes)
@@ -336,7 +346,9 @@ class SpatialGrid
                     nodes[numNodes] = node;
                     node.id = numNodes;
                     lastNode.id = index;
+                    /* tslint:disable:no-string-literal */
                     lastNode.externalNode['spatialIndex'] = index;
+                    /* tslint:enable:no-string-literal */
                 }
             }
             else
@@ -424,9 +436,11 @@ class SpatialGrid
         while (minRow <= maxRow);
     }
 
+    /* tslint:disable:no-empty */
     finalize(): void
     {
     }
+    /* tslint:enable:no-empty */
 
     getOverlappingNodes(queryExtents: any, overlappingNodes: any[], startIndex?: number): number
     {
@@ -648,7 +662,9 @@ class SpatialGrid
                     for (i = 0; i < numNodes; i += 1)
                     {
                         nodeI = cell[i];
+                        /* tslint:disable:no-bitwise */
                         pairIdBase = (nodeI.id << 16);
+                        /* tslint:enable:no-bitwise */
                         extents = nodeI.extents;
                         var minX = extents[0];
                         var minY = extents[1];
@@ -659,7 +675,9 @@ class SpatialGrid
                         for (j = (i + 1); j < numNodes; j += 1)
                         {
                             nodeJ = cell[j];
+                            /* tslint:disable:no-bitwise */
                             pairId = (pairIdBase | nodeJ.id);
+                            /* tslint:enable:no-bitwise */
                             if (!pairsMap[pairId])
                             {
                                 extents = nodeJ.extents;
@@ -702,7 +720,7 @@ class SpatialGrid
             var minGridZ = gridExtents[2];
             var maxGridX = gridExtents[3];
             var maxGridY = gridExtents[4];
-            var maxGridZ = gridExtents[5];
+            //var maxGridZ = gridExtents[5];
 
             var queryIndex = (this.queryIndex + 1);
             this.queryIndex = queryIndex;
