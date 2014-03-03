@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2012-2014 Turbulenz Limited
 /*global Float32Array: false*/
 
 interface BoxTreeRay
@@ -24,7 +24,9 @@ interface BoxTreeRayTestCallback
 //
 class BoxTreeNode
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     escapeNodeOffset: number;
     externalNode: {};
@@ -78,7 +80,9 @@ class BoxTreeNode
 //
 class BoxTree
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     nodes: BoxTreeNode[];
     endNode: number;
@@ -284,7 +288,7 @@ class BoxTree
             var nodesStack = [];
             var numNodesStack = 0;
             var topNodeIndex = 0;
-            for (;;)
+            for ( ; ; )
             {
                 var topNode = nodes[topNodeIndex];
                 var currentNodeIndex = topNodeIndex;
@@ -483,9 +487,9 @@ class BoxTree
         var sortNodesRecursive =
             function sortNodesRecursiveFn(nodes, startIndex, endIndex)
         {
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             var splitNodeIndex = ((startIndex + endIndex) >> 1);
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
 
             if (axis === 0)
             {
@@ -600,21 +604,25 @@ class BoxTree
             function sortNodesHighQualityRecursiveFn(nodes, startIndex,
                                                      endIndex)
         {
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             var splitNodeIndex = ((startIndex + endIndex) >> 1);
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
 
             nthElement(nodes, startIndex, splitNodeIndex, endIndex, getkeyXfn);
-            var sahX = (calculateSAH(nodes, startIndex, splitNodeIndex) + calculateSAH(nodes, splitNodeIndex, endIndex));
+            var sahX = (calculateSAH(nodes, startIndex, splitNodeIndex) +
+                        calculateSAH(nodes, splitNodeIndex, endIndex));
 
             nthElement(nodes, startIndex, splitNodeIndex, endIndex, getkeyYfn);
-            var sahY = (calculateSAH(nodes, startIndex, splitNodeIndex) + calculateSAH(nodes, splitNodeIndex, endIndex));
+            var sahY = (calculateSAH(nodes, startIndex, splitNodeIndex) +
+                        calculateSAH(nodes, splitNodeIndex, endIndex));
 
             nthElement(nodes, startIndex, splitNodeIndex, endIndex, getkeyXYfn);
-            var sahXY = (calculateSAH(nodes, startIndex, splitNodeIndex) + calculateSAH(nodes, splitNodeIndex, endIndex));
+            var sahXY = (calculateSAH(nodes, startIndex, splitNodeIndex) +
+                         calculateSAH(nodes, splitNodeIndex, endIndex));
 
             nthElement(nodes, startIndex, splitNodeIndex, endIndex, getkeyYXfn);
-            var sahYX = (calculateSAH(nodes, startIndex, splitNodeIndex) + calculateSAH(nodes, splitNodeIndex, endIndex));
+            var sahYX = (calculateSAH(nodes, startIndex, splitNodeIndex) +
+                         calculateSAH(nodes, splitNodeIndex, endIndex));
 
             if (sahX <= sahY &&
                 sahX <= sahXY &&
@@ -763,11 +771,11 @@ class BoxTree
 
         while ((last - first) > 8)
         {
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             var midValue = medianFn(getkey(nodes[first]),
                                     getkey(nodes[first + ((last - first) >> 1)]),
                                     getkey(nodes[last - 1]));
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
 
             var firstPos = first;
             var lastPos  = last;
@@ -849,9 +857,9 @@ class BoxTree
         }
         else
         {
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             var splitPosIndex = ((startIndex + endIndex) >> 1);
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
 
             if ((startIndex + 1) >= splitPosIndex)
             {
@@ -924,7 +932,7 @@ class BoxTree
             var isInside, n, plane, d0, d1;
             var nodeIndex = 0;
 
-            for (;;)
+            for ( ; ; )
             {
                 node = nodes[nodeIndex];
                 extents = node.extents;
@@ -1030,7 +1038,7 @@ class BoxTree
             var numOverlappingNodes = 0;
             var storageIndex = (startIndex === undefined) ? overlappingNodes.length : startIndex;
             var nodeIndex = 0;
-            for (;;)
+            for ( ; ; )
             {
                 node = nodes[nodeIndex];
                 extents = node.extents;
@@ -1115,7 +1123,7 @@ class BoxTree
             var node, extents;
             var numOverlappingNodes = overlappingNodes.length;
             var nodeIndex = 0;
-            for (;;)
+            for ( ; ; )
             {
                 node = nodes[nodeIndex];
                 extents = node.extents;
@@ -1179,7 +1187,7 @@ class BoxTree
             var numInsertions = 0;
             var storageIndex = (startIndex === undefined) ? overlappingPairs.length : startIndex;
             var currentNodeIndex = 0, nodeIndex;
-            for (;;)
+            for ( ; ; )
             {
                 currentNode = nodes[currentNodeIndex];
                 while (!currentNode.externalNode) // No leaf
@@ -1199,7 +1207,7 @@ class BoxTree
                     var maxY = extents[3];
 
                     nodeIndex = currentNodeIndex;
-                    for (;;)
+                    for ( ; ; )
                     {
                         node = nodes[nodeIndex];
                         extents = node.extents;

@@ -14,7 +14,9 @@ interface CharacterControllerTouch
 
 class CharacterController
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     md                           : MathDevice;
 
@@ -769,9 +771,13 @@ class CharacterController
                 if (onGround)
                 {
                     var dampingScale = Math.pow((1.0 - 0.8), deltaTime);
-                    character.velocity = md.v3Build(((Math.abs(oldVelocity0) < 0.01) ? 0.0 : (oldVelocity0 * dampingScale)),
-                                                  oldVelocity1,
-                                                  ((Math.abs(oldVelocity2) < 0.01) ? 0.0 : (oldVelocity2 * dampingScale)));
+                    character.velocity = md.v3Build(((Math.abs(oldVelocity0) < 0.01) ?
+                                                        0.0 :
+                                                        (oldVelocity0 * dampingScale)),
+                                                    oldVelocity1,
+                                                    ((Math.abs(oldVelocity2) < 0.01) ?
+                                                        0.0 :
+                                                        (oldVelocity2 * dampingScale)));
                 }
             }
 
