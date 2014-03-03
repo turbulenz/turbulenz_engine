@@ -38,6 +38,7 @@ Version 1.x-dev
 2014-02-13
 
 - Added support for building tools with Visual Studio 2013
+- Line spacing support in FontManager
 
 Version 1.3
 -----------
