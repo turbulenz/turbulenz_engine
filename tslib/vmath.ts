@@ -2698,7 +2698,12 @@ var VMath : MathDevice =
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
-        var det = VMath.m33Determinant(m);
+        var d4857 = (m4 * m8 - m5 * m7);
+        var d5638 = (m5 * m6 - m3 * m8);
+        var d3746 = (m3 * m7 - m4 * m6);
+        var det = (m0 * d4857 +
+                   m1 * d5638 +
+                   m2 * d3746);
         if (det === 0.0)
         {
             dst[0] = dst[1] = dst[2] = 0.0;
@@ -2719,15 +2724,15 @@ var VMath : MathDevice =
             var m8 = m[8];
 
             var detrecp = 1.0 / det;
-            dst[0] = ((m4 * m8 + m5 * (-m7)) * detrecp);
-            dst[1] = ((m7 * m2 + m8 * (-m1)) * detrecp);
-            dst[2] = ((m1 * m5 - m2 *   m4)  * detrecp);
-            dst[3] = ((m5 * m6 + m3 * (-m8)) * detrecp);
-            dst[4] = ((m8 * m0 + m6 * (-m2)) * detrecp);
-            dst[5] = ((m3 * m2 - m0 *   m5)  * detrecp);
-            dst[6] = ((m3 * m7 + m4 * (-m6)) * detrecp);
-            dst[7] = ((m6 * m1 + m7 * (-m0)) * detrecp);
-            dst[8] = ((m0 * m4 - m3 *   m1)  * detrecp);
+            dst[0] = (d4857 * detrecp);
+            dst[1] = ((m7 * m2 - m8 * m1) * detrecp);
+            dst[2] = ((m1 * m5 - m2 * m4) * detrecp);
+            dst[3] = (d5638 * detrecp);
+            dst[4] = ((m8 * m0 - m6 * m2) * detrecp);
+            dst[5] = ((m3 * m2 - m0 * m5) * detrecp);
+            dst[6] = (d3746 * detrecp);
+            dst[7] = ((m6 * m1 - m7 * m0) * detrecp);
+            dst[8] = ((m0 * m4 - m3 * m1) * detrecp);
             return dst;
         }
     },
@@ -3768,9 +3773,12 @@ var VMath : MathDevice =
         var m10 = m[10];
         var m11 = m[11];
 
-        var det = (m0 * (m4 * m8 - m5 * m7) +
-                   m1 * (m5 * m6 - m3 * m8) +
-                   m2 * (m3 * m7 - m4 * m6));
+        var d4857 = (m4 * m8 - m5 * m7);
+        var d5638 = (m5 * m6 - m3 * m8);
+        var d3746 = (m3 * m7 - m4 * m6);
+        var det = (m0 * d4857 +
+                   m1 * d5638 +
+                   m2 * d3746);
         if (det === 0.0)
         {
             return dst;
@@ -3782,15 +3790,15 @@ var VMath : MathDevice =
                 dst = new VMathArrayConstructor(12);
             }
             var rdet = 1.0 / det;
-            dst[0] = ((m4 * m8 + m5 * (-m7)) * rdet);
-            dst[1] = ((m7 * m2 + m8 * (-m1)) * rdet);
-            dst[2] = ((m1 * m5 - m2 *   m4)  * rdet);
-            dst[3] = ((m5 * m6 + m3 * (-m8)) * rdet);
-            dst[4] = ((m8 * m0 + m6 * (-m2)) * rdet);
-            dst[5] = ((m3 * m2 - m0 *   m5)  * rdet);
-            dst[6] = ((m3 * m7 + m4 * (-m6)) * rdet);
-            dst[7] = ((m6 * m1 + m7 * (-m0)) * rdet);
-            dst[8] = ((m0 * m4 - m3 *   m1)  * rdet);
+            dst[0] = (d4857 * rdet);
+            dst[1] = ((m7 * m2 - m8 * m1) * rdet);
+            dst[2] = ((m1 * m5 - m2 * m4) * rdet);
+            dst[3] = (d5638 * rdet);
+            dst[4] = ((m8 * m0 - m6 * m2) * rdet);
+            dst[5] = ((m3 * m2 - m0 * m5) * rdet);
+            dst[6] = (d3746 * rdet);
+            dst[7] = ((m6 * m1 - m7 * m0) * rdet);
+            dst[8] = ((m0 * m4 - m3 * m1) * rdet);
             dst[9]  = ((m3 * (m10 * m8  - m7 * m11) + m4  * (m6 * m11 - m9 * m8) + m5  * (m9 * m7 - m6 * m10)) * rdet);
             dst[10] = ((m6 * (m2  * m10 - m1 * m11) + m7  * (m0 * m11 - m9 * m2) + m8  * (m9 * m1 - m0 * m10)) * rdet);
             dst[11] = ((m9 * (m2  * m4  - m1 * m5)  + m10 * (m0 * m5  - m3 * m2) + m11 * (m3 * m1 - m0 * m4))  * rdet);
