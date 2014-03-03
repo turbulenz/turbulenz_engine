@@ -47,7 +47,6 @@ class TZWebGLTexture implements Texture
     height            : number;
     depth             : number;
     format            : number;
-    numDataLevels     : number;
     mipmaps           : boolean;
     cubemap           : boolean;
     dynamic           : boolean;
@@ -130,7 +129,7 @@ class TZWebGLTexture implements Texture
 
         gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-        if (this.mipmaps || 1 < this.numDataLevels)
+        if (this.mipmaps)
         {
             gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
         }
@@ -252,7 +251,26 @@ class TZWebGLTexture implements Texture
             return Math.floor(Math.log(a) / Math.LN2);
         }
 
-        var generateMipMaps = this.mipmaps && (this.numDataLevels !== (1 + Math.max(log2(this.width), log2(this.height))));
+        var numLevels, generateMipMaps;
+        if (this.mipmaps)
+        {
+            if (data instanceof Image)
+            {
+                numLevels = 1;
+                generateMipMaps = true;
+            }
+            else
+            {
+                numLevels = (1 + Math.max(log2(this.width), log2(this.height)));
+                generateMipMaps = false;
+            }
+        }
+        else
+        {
+            numLevels = 1;
+            generateMipMaps = false;
+        }
+
         var format = this.format;
         var internalFormat, gltype, srcStep, bufferData = null;
         var compressedTexturesExtension;
@@ -495,7 +513,6 @@ class TZWebGLTexture implements Texture
             srcStep = 4;
         }
 
-        var numLevels = (data && 0 < this.numDataLevels ? this.numDataLevels : 1);
         var w = this.width, h = this.height, offset = 0, target, n, levelSize, levelData;
         if (this.cubemap)
         {
@@ -561,6 +578,16 @@ class TZWebGLTexture implements Texture
                         }
                     }
                     offset += levelSize;
+                    if (bufferData && bufferData.length <= offset)
+                    {
+                        bufferData = null;
+                        data = null;
+                        if (0 === n && 1 < numLevels)
+                        {
+                            generateMipMaps = true;
+                            break;
+                        }
+                    }
                     w = (w > 1 ? Math.floor(w / 2) : 1);
                     h = (h > 1 ? Math.floor(h / 2) : 1);
                 }
@@ -641,6 +668,16 @@ class TZWebGLTexture implements Texture
                     }
                 }
                 offset += levelSize;
+                if (bufferData && bufferData.length <= offset)
+                {
+                    bufferData = null;
+                    data = null;
+                    if (0 === n && 1 < numLevels)
+                    {
+                        generateMipMaps = true;
+                        break;
+                    }
+                }
                 w = (w > 1 ? Math.floor(w / 2) : 1);
                 h = (h > 1 ? Math.floor(h / 2) : 1);
             }
@@ -981,7 +1018,6 @@ class TZWebGLTexture implements Texture
         tex.mipmaps = params.mipmaps;
         tex.dynamic = params.dynamic;
         tex.renderable = params.renderable;
-        tex.numDataLevels = 0;
         tex.id = ++gd.counters.textures;
 
         var src = params.src;
@@ -1078,7 +1114,14 @@ class TZWebGLTexture implements Texture
                             tex.format = format;
                             tex.cubemap = cubemap;
                             tex.depth = depth;
-                            tex.numDataLevels = numLevels;
+                            if (1 < numLevels)
+                            {
+                                if (!tex.mipmaps)
+                                {
+                                    tex.mipmaps = true;
+                                    debug.log("Mipmap levels provided for texture created without mipmaps enabled: " + tex.name);
+                                }
+                            }
                             var result = tex.createGLTexture(data);
                             if (params.onload)
                             {
@@ -3164,6 +3207,39 @@ class WebGLPass implements Pass
 {
     static version = 1;
 
+    // DO NOT CHANGE: This table is independent from the actual attribute index on GraphicsDevice.SEMANTIC_xxx
+    static semanticToAttr = {
+        POSITION: "ATTR0",
+        POSITION0: "ATTR0",
+        BLENDWEIGHT: "ATTR1",
+        BLENDWEIGHT0: "ATTR1",
+        NORMAL: "ATTR2",
+        NORMAL0: "ATTR2",
+        COLOR: "ATTR3",
+        COLOR0: "ATTR3",
+        COLOR1: "ATTR4",
+        SPECULAR: "ATTR4",
+        FOGCOORD: "ATTR5",
+        TESSFACTOR: "ATTR5",
+        PSIZE0: "ATTR6",
+        BLENDINDICES: "ATTR7",
+        BLENDINDICES0: "ATTR7",
+        TEXCOORD: "ATTR8",
+        TEXCOORD0: "ATTR8",
+        TEXCOORD1: "ATTR9",
+        TEXCOORD2: "ATTR10",
+        TEXCOORD3: "ATTR11",
+        TEXCOORD4: "ATTR12",
+        TEXCOORD5: "ATTR13",
+        TEXCOORD6: "ATTR14",
+        TEXCOORD7: "ATTR15",
+        TANGENT: "ATTR14",
+        TANGENT0: "ATTR14",
+        BINORMAL0: "ATTR15",
+        BINORMAL: "ATTR15",
+        PSIZE: "ATTR6"
+    };
+
     name: string;
     parameters: any;
 
@@ -3397,7 +3473,15 @@ class WebGLPass implements Pass
                 if (attribute !== undefined)
                 {
                     semanticsMask |= (1 << attribute);
-                    gl.bindAttribLocation(glProgram, attribute, ("ATTR" + attribute));
+                    if (0 === semanticName.indexOf("ATTR"))
+                    {
+                        gl.bindAttribLocation(glProgram, attribute, semanticName);
+                    }
+                    else
+                    {
+                        var attributeName = WebGLPass.semanticToAttr[semanticName];
+                        gl.bindAttribLocation(glProgram, attribute, attributeName);
+                    }
                 }
             }
 
@@ -4489,15 +4573,15 @@ class WebGLDrawParameters implements DrawParameters
     constructor()
     {
         // Streams, TechniqueParameters and Instances are stored as indexed properties
+        this.sortKey = 0;
+        this.technique = null;
         this.endStreams = 0;
         this.endTechniqueParameters = (16 * 3);
         this.endInstances = ((16 * 3) + 8);
-        this.firstIndex = 0;
-        this.count = 0;
-        this.sortKey = 0;
-        this.technique = null;
         this.indexBuffer = null;
         this.primitive = -1;
+        this.count = 0;
+        this.firstIndex = 0;
         this.userData = null;
 
         // Initialize for 1 Stream
@@ -7189,6 +7273,15 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.height = height;
 
         var extensions = gl.getSupportedExtensions();
+
+        var extensionsMap = {};
+        var numExtensions = extensions.length;
+        var n;
+        for (n = 0; n < numExtensions; n += 1)
+        {
+            extensionsMap[extensions[n]] = true;
+        }
+
         if (extensions)
         {
             extensions = extensions.join(' ');
@@ -7203,42 +7296,38 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.renderer = gl.getParameter(gl.RENDERER);
         gd.vendor = gl.getParameter(gl.VENDOR);
 
-        if (extensions.indexOf('WEBGL_compressed_texture_s3tc') !== -1)
+        if (extensionsMap['WEBGL_compressed_texture_s3tc'])
         {
             gd.WEBGL_compressed_texture_s3tc = true;
-            if (extensions.indexOf('WEBKIT_WEBGL_compressed_texture_s3tc') !== -1)
-            {
-                gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
-            }
-            else if (extensions.indexOf('MOZ_WEBGL_compressed_texture_s3tc') !== -1)
-            {
-                gd.compressedTexturesExtension = gl.getExtension('MOZ_WEBGL_compressed_texture_s3tc');
-            }
-            else
-            {
-                gd.compressedTexturesExtension = gl.getExtension('WEBGL_compressed_texture_s3tc');
-            }
+            gd.compressedTexturesExtension = gl.getExtension('WEBGL_compressed_texture_s3tc');
         }
-        else if (extensions.indexOf('WEBKIT_WEBGL_compressed_textures') !== -1)
+        else if (extensionsMap['WEBKIT_WEBGL_compressed_texture_s3tc'])
+        {
+            gd.WEBGL_compressed_texture_s3tc = true;
+            gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
+        }
+        else if (extensionsMap['MOZ_WEBGL_compressed_texture_s3tc'])
+        {
+            gd.WEBGL_compressed_texture_s3tc = true;
+            gd.compressedTexturesExtension = gl.getExtension('MOZ_WEBGL_compressed_texture_s3tc');
+        }
+        else if (extensionsMap['WEBKIT_WEBGL_compressed_textures'])
         {
             gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_textures');
         }
 
         var anisotropyExtension;
-        if (extensions.indexOf('EXT_texture_filter_anisotropic') !== -1)
+        if (extensionsMap['EXT_texture_filter_anisotropic'])
         {
-            if (extensions.indexOf('MOZ_EXT_texture_filter_anisotropic') !== -1)
-            {
-                anisotropyExtension = gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
-            }
-            else if (extensions.indexOf('WEBKIT_EXT_texture_filter_anisotropic') !== -1)
-            {
-                anisotropyExtension = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-            }
-            else
-            {
-                anisotropyExtension = gl.getExtension('EXT_texture_filter_anisotropic');
-            }
+            anisotropyExtension = gl.getExtension('EXT_texture_filter_anisotropic');
+        }
+        else if (extensionsMap['MOZ_EXT_texture_filter_anisotropic'])
+        {
+            anisotropyExtension = gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+        }
+        else if (extensionsMap['WEBKIT_EXT_texture_filter_anisotropic'])
+        {
+            anisotropyExtension = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
         }
         if (anisotropyExtension)
         {
@@ -7253,12 +7342,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
         // Enable OES_element_index_uint extension
         gl.getExtension('OES_element_index_uint');
 
-        if (extensions.indexOf('WEBGL_draw_buffers') !== -1)
+        if (extensionsMap['WEBGL_draw_buffers'])
         {
             gd.WEBGL_draw_buffers = true;
             gd.drawBuffersExtension = gl.getExtension('WEBGL_draw_buffers');
         }
-        else if (extensions.indexOf('EXT_draw_buffers') !== -1)
+        else if (extensionsMap['EXT_draw_buffers'])
         {
             gd.drawBuffersExtension = gl.getExtension('EXT_draw_buffers');
         }
@@ -7438,6 +7527,71 @@ class WebGLGraphicsDevice implements GraphicsDevice
             gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
             gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
             gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+        }
+
+        var maxAttributes = gl.MAX_VERTEX_ATTRIBS;
+        if (maxAttributes < 16)
+        {
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR0 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_POSITION =
+            WebGLGraphicsDevice.prototype.SEMANTIC_POSITION0 = 0;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR1 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDWEIGHT =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDWEIGHT0 = 1;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR2 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_NORMAL =
+            WebGLGraphicsDevice.prototype.SEMANTIC_NORMAL0 = 2;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR3 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR =
+            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR0 = 3;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR7 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDINDICES =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDINDICES0 = 4;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR8 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD0 = 5;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR9 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD1 = 6;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR14 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD6 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TANGENT =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TANGENT0 = 7;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR15 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD7 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BINORMAL0 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_BINORMAL = 8;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR10 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD2 = 9;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR11 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD3 = 10;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR12 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD4 = 11;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR13 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD5 = 12;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR4 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR1 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_SPECULAR = 13;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR5 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_FOGCOORD =
+            WebGLGraphicsDevice.prototype.SEMANTIC_TESSFACTOR = 14;
+
+            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR6 =
+            WebGLGraphicsDevice.prototype.SEMANTIC_PSIZE =
+            WebGLGraphicsDevice.prototype.SEMANTIC_PSIZE0 = 15;
         }
 
         gd.DEFAULT_SAMPLER = {

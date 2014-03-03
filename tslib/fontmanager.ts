@@ -140,7 +140,6 @@ class Font
         var glyph: FontGlyph;
         var gaw: number;
 
-        var curGlyphCount: number;
         var pageIdx: number;
         var i: number;
 
@@ -242,7 +241,7 @@ class Font
             };
 
         var numGlyphs = glyphCounts[pageIdx];
-        if (0 == numGlyphs)
+        if (0 === numGlyphs)
         {
             return ctx;
         }
@@ -437,7 +436,7 @@ class Font
                 this.drawTextVertices(pageCtx, pageIdx, true);
 
                 totalNumGlyphs -= numGlyphs;
-                if (0 == totalNumGlyphs)
+                if (0 === totalNumGlyphs)
                 {
                     break;
                 }
@@ -463,11 +462,10 @@ class Font
 
         var numVertices: number;
         var numIndices: number;
-        var reusableArrays = fm.reusableArrays;
 
-        /*jshint bitwise: false*/
+        /* tslint:disable:no-bitwise */
         var numGlyphs = (vertices.length >> 4);
-        /*jshint bitwise: true*/
+        /* tslint:enable:no-bitwise */
 
         numVertices = (numGlyphs * 4);
 
@@ -596,6 +594,33 @@ class FontManager
     public reusableArrays: {[idx: number]: Float32Array};
     public scratchPageContext: FontDrawPageContext;
     public float32ArrayConstructor: { new(i: number): Float32Array; };
+
+    constructor(gd: GraphicsDevice)
+    {
+        this.primitive = gd.PRIMITIVE_TRIANGLES;
+        this.primitiveTristrip = gd.PRIMITIVE_TRIANGLE_STRIP;
+        this.semantics = gd.createSemantics(['POSITION', 'TEXCOORD0']);
+        this.techniqueParameters = gd.createTechniqueParameters({
+            texture: null
+        });
+        this.sharedIndexBuffer = null;
+        this.sharedVertexBuffer = null;
+        this.reusableArrays = {};
+        this.scratchPageContext = {
+            vertices: null,
+            vertexIndex: 0
+        };
+        this.float32ArrayConstructor = <{ new(i: number): Float32Array; }><any>Array;
+        if (typeof Float32Array !== "undefined")
+        {
+            var testArray = new Float32Array(4);
+            var textDescriptor = Object.prototype.toString.call(testArray);
+            if (textDescriptor === '[object Float32Array]')
+            {
+                this.float32ArrayConstructor = Float32Array;
+            }
+        }
+    }
 
     /**
        @constructs Constructs a FontManager object.
@@ -798,7 +823,7 @@ class FontManager
 
             function unpack(dst, d, c)
             {
-                /*jshint bitwise: false*/
+                /* tslint:disable:no-bitwise */
                 dst[d + 0] = 255;
                 dst[d + 1] = (c & 0x80 ? 255 : 0);
                 dst[d + 2] = 255;
@@ -815,7 +840,7 @@ class FontManager
                 dst[d + 13] = (c & 0x02 ? 255 : 0);
                 dst[d + 14] = 255;
                 dst[d + 15] = (c & 0x01 ? 255 : 0);
-                /*jshint bitwise: true*/
+                /* tslint:enable:no-bitwise */
             }
 
             var textureData = new Array(16 * 16 * 8 * 8 * 2);
@@ -853,30 +878,7 @@ class FontManager
             });
         };
 
-        var fm = new FontManager();
-        fm.primitive = gd.PRIMITIVE_TRIANGLES;
-        fm.primitiveTristrip = gd.PRIMITIVE_TRIANGLE_STRIP;
-        fm.semantics = gd.createSemantics(['POSITION', 'TEXCOORD0']);
-        fm.techniqueParameters = gd.createTechniqueParameters({
-            texture: null
-        });
-        fm.sharedIndexBuffer = null;
-        fm.sharedVertexBuffer = null;
-        fm.reusableArrays = {};
-        fm.scratchPageContext = {
-            vertices: null,
-            vertexIndex: 0
-        };
-        fm.float32ArrayConstructor = <{new(i:number): Float32Array;}><any>Array;
-        if (typeof Float32Array !== "undefined")
-        {
-            var testArray = new Float32Array(4);
-            var textDescriptor = Object.prototype.toString.call(testArray);
-            if (textDescriptor === '[object Float32Array]')
-            {
-                fm.float32ArrayConstructor = Float32Array;
-            }
-        }
+        var fm = new FontManager(gd);
 
         if (!defaultFont)
         {
@@ -1028,7 +1030,7 @@ class FontManager
                             loadingPages[path] += numPages;
 
                             var onloadFn =
-                                function onloadFn(t:Texture,
+                                function onloadFn(t: Texture,
                                                   status: number,
                                                   callContext)
                             {
@@ -1049,7 +1051,7 @@ class FontManager
                                     }
                                     else
                                     {
-                                        errorCallback("Failed to load font page: '" + pages[i] + "'.");
+                                        errorCallback("Failed to load font page: '" + pages[pageIdx] + "'.");
                                         delete fonts[path];
                                     }
                                 }
@@ -1095,7 +1097,7 @@ class FontManager
                                 {
                                     if (!gd.createTexture({
                                         src     : url,
-                                        mipmaps : false,
+                                        mipmaps : true,
                                         onload  : onload
                                     }))
                                     {
@@ -1345,9 +1347,9 @@ class FontManager
 
         fm.reuseVertices = function reuseVerticesFn(vertices)
         {
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             (<FontManager><any>this).reusableArrays[vertices.length >> 4] = vertices;
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
         };
 
         /**

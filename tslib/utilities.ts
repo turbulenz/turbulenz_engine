@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*global window: false*/
 /*global Observer: false*/
@@ -29,7 +29,8 @@ var Utilities : Utilities = {
         {
             if (!this.skipAsserts)
             {
-                this.breakInDebugger.doesNotExist(); //Use a function that does not exist. This is caught in the debuggers.
+                // Use a function that does not exist. This is caught in the debuggers.
+                this.breakInDebugger.doesNotExist();
             }
         }
     },
@@ -39,7 +40,9 @@ var Utilities : Utilities = {
     //
     beget: function begetFn(o)
     {
+        /* tslint:disable:no-empty */
         var F = function () { };
+        /* tslint:enable:no-empty */
         F.prototype = o;
         return new F();
     },
@@ -76,6 +79,7 @@ var Utilities : Utilities = {
         }
     },
 
+    /* tslint:disable:no-bitwise */
     nearestLowerPow2: function UtilitiesNearestLowerPow2(num)
     {
         num = num | (num >>> 1);
@@ -88,7 +92,6 @@ var Utilities : Utilities = {
 
     nearestUpperPow2: function UtilitiesNearestUpperPow2(num)
     {
-        /*jshint bitwise: false*/
         num = num - 1;
         num = num | (num >>> 1);
         num = num | (num >>> 2);
@@ -97,6 +100,7 @@ var Utilities : Utilities = {
         num = num | (num >>> 16);
         return (num + 1);
     },
+    /* tslint:enable:no-bitwise */
 
     //
     // ajax
@@ -164,7 +168,8 @@ var Utilities : Utilities = {
             if (xhr.getResponseHeader("Content-Type") !== "application/json; charset=utf-8")
             {
                 TurbulenzEngine.setTimeout(function () {
-                    callbackFn({msg : 'HttpStatus ' + xhrStatus + ' ' + Utilities.ajaxStatusCodes[xhrStatus]}, xhrStatus);
+                    callbackFn({ msg : 'HttpStatus ' + xhrStatus + ' ' + Utilities.ajaxStatusCodes[xhrStatus] },
+                               xhrStatus);
                     callbackFn = null;
                 }, 0);
             }
@@ -250,7 +255,10 @@ var Utilities : Utilities = {
                     // before the message is sent (weird!).
                     // In order to address this we fail any completely empty responses.
                     // Hopefully, nobody will get a valid response with no headers and no body!
-                    if (xhr.getAllResponseHeaders() === "" && xhrResponseText === "" && xhrStatus === 200 && xhrStatusText === 'OK')
+                    if (xhr.getAllResponseHeaders() === "" &&
+                        xhrResponseText === "" &&
+                        xhrStatus === 200 &&
+                        xhrStatusText === 'OK')
                     {
                         onload('', 0);
                         return;
@@ -351,10 +359,12 @@ var Utilities : Utilities = {
         503: "Service Unavailable",
         504: "Gateway Time-out",
         505: "HTTP Version not supported"
-    },
+    }
 };
 
+/* tslint:disable:no-unused-variable */
 var MathDeviceConvert =
+/* tslint:enable:no-unused-variable */
 {
     v2ToArray : function v2ToJavaScriptArrayFn(v2)
     {
@@ -482,7 +492,9 @@ var MathDeviceConvert =
 // Proxy reference class allowing weak reference to the object
 class Reference
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     object            : any;
     referenceCount    : number;
@@ -599,7 +611,7 @@ var Profile =
     //
     reset: function profileResetFn()
     {
-        this.profiles = {}
+        this.profiles = {};
     },
 
     //
@@ -690,7 +702,7 @@ var Profile =
         }
         return text;
     }
-}
+};
 
 //
 // Utilities to use with TurbulenzEngine.stopProfiling() object.
@@ -755,7 +767,7 @@ JSProfiling.createArray = function JSProfilingCreateArrayFn(rootNode)
             existingNode.numberOfCalls += node.numberOfCalls;
         }
 
-        var children = typeof node.children === 'function' ? node.children(): node.children;
+        var children = typeof node.children === 'function' ? node.children() : node.children;
         if (children)
         {
             var numberOfChildren = children.length;

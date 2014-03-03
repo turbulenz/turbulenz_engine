@@ -152,8 +152,8 @@ class Draw2DSprite
     {
         // Verify that the texture is not NPOT
         debug.assert((!texture) ||
-                     (0 == (texture.width & (texture.width - 1)) &&
-                      0 == (texture.height & (texture.height - 1))),
+                     (0 === (texture.width & (texture.width - 1)) &&
+                      0 === (texture.height & (texture.height - 1))),
                      "Draw2DSprite does not support non-power-of-2 textures");
 
         if (this._texture !== texture)
@@ -463,8 +463,8 @@ class Draw2DSprite
         var texture = s._texture = params.texture || null;
         if (texture)
         {
-            if ((0 != (texture.width & (texture.width - 1))) ||
-                (0 != (texture.height & (texture.height - 1))))
+            if ((0 !== (texture.width & (texture.width - 1))) ||
+                (0 !== (texture.height & (texture.height - 1))))
             {
                 debug.abort("Draw2DSprites require textures with power-of-2 " +
                             "dimensions");

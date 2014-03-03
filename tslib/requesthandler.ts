@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 Turbulenz Limited
+// Copyright (c) 2011-2014 Turbulenz Limited
 
 /*global TurbulenzEngine*/
 /*global Observer*/
@@ -224,7 +224,7 @@ class RequestHandler
                 callContext.onload = null;
             }
             callContext = null;
-        }
+        };
 
         makeRequest = function makeRequestFn()
         {
@@ -252,7 +252,7 @@ class RequestHandler
             {
                 TurbulenzEngine.request(callContext.src, responseCallback);
             }
-        }
+        };
 
         makeRequest();
     }

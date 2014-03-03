@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 /*global TurbulenzEngine: false*/
 /*global Utilities: false*/
 /*global Observer: false*/
@@ -42,7 +42,9 @@ interface Renderable
 //
 class SceneNode
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     static _tempDirtyNodes: SceneNode[] = [];
 
@@ -141,6 +143,7 @@ class SceneNode
         this.dynamic = params.dynamic || false;
         this.disabled = params.disabled || false;
 
+        this.dirtyWorld = false;
         this.dirtyWorldExtents = true;
         this.dirtyLocalExtents = true;
         this.worldUpdate = 0; //Counter of number of times modified.
@@ -149,14 +152,26 @@ class SceneNode
         var local = params.local;
         if (local)
         {
-            this.local = md.m43Copy(local);
+            if (this.arrayConstructor !== Array)
+            {
+                var buffer = new Float32Array(12 + 12);
+                this.local = md.m43Copy(local, buffer.subarray(0, 12));
+                this.world = md.m43Copy(this.local, buffer.subarray(12, 24));
+            }
+            else
+            {
+                this.local = md.m43Copy(local);
+                this.world = md.m43Copy(this.local);
+            }
         }
         else
         {
-            this.local = md.m43BuildIdentity();
+            this.local = undefined;
+            this.world = md.m43BuildIdentity();
         }
-        local = this.local;
-        this.world = md.m43Copy(local);
+
+        this.parent = undefined;
+        this.notifiedParent = false;
     }
 
     //
@@ -202,7 +217,7 @@ class SceneNode
     //
     //addChild
     //
-    addChild(child)
+    addChild(child: SceneNode)
     {
         if (child.parent)
         {
@@ -234,7 +249,7 @@ class SceneNode
     //
     //removeChild
     //
-    removeChild(child)
+    removeChild(child: SceneNode)
     {
         var children = this.children;
         if (children)
@@ -413,6 +428,10 @@ class SceneNode
     //
     getLocalTransform()
     {
+        if (!this.local)
+        {
+            this.local = this.mathDevice.m43BuildIdentity();
+        }
         return this.local;
     }
 
@@ -563,7 +582,8 @@ class SceneNode
             }
             delete this.setLocalTransform; //Allowed to move again.
 
-            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
+            //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
+            var worldExtents = this.getWorldExtents();
             if (worldExtents)
             {
                 this.getRoot().scene.dynamicSpatialMap.update(this, worldExtents);
@@ -597,7 +617,8 @@ class SceneNode
 
             this.setLocalTransform = SceneNode.invalidSetLocalTransform;
 
-            var worldExtents = this.getWorldExtents();  //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
+            //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
+            var worldExtents = this.getWorldExtents();
             if (worldExtents)
             {
                 var scene = this.getRoot().scene;
@@ -892,13 +913,16 @@ class SceneNode
         {
             var renderables = this.renderables;
             var lights = this.lightInstances;
-            if (renderables || lights)
+            var numRenderables = (renderables ? renderables.length : 0);
+            var numLights = (lights ? lights.length : 0);
+            if (numRenderables || numLights)
             {
                 var maxValue = Number.MAX_VALUE;
                 var minValue = -maxValue;
                 var min = Math.min;
                 var max = Math.max;
                 var h0, h1, h2, c0, c1, c2;
+                var index;
 
                 var localExtents0 = maxValue;
                 var localExtents1 = maxValue;
@@ -907,98 +931,142 @@ class SceneNode
                 var localExtents4 = minValue;
                 var localExtents5 = minValue;
 
-                if (renderables)
+                for (index = 0; index < numRenderables; index += 1)
                 {
-                    var numRenderables = renderables.length;
-                    for (var index = 0; index < numRenderables; index += 1)
+                    var renderable = renderables[index];
+                    halfExtents = renderable.halfExtents;
+                    if (halfExtents && !renderable.hasCustomWorldExtents())
                     {
-                        var renderable = renderables[index];
-                        halfExtents = renderable.halfExtents;
-                        if (halfExtents && !renderable.hasCustomWorldExtents())
+                        h0 = halfExtents[0];
+                        h1 = halfExtents[1];
+                        h2 = halfExtents[2];
+
+                        center = renderable.center;
+                        if (center)
                         {
-                            h0 = halfExtents[0];
-                            h1 = halfExtents[1];
-                            h2 = halfExtents[2];
+                            c0 = center[0];
+                            c1 = center[1];
+                            c2 = center[2];
 
-                            center = renderable.center;
-                            if (center)
-                            {
-                                c0 = center[0];
-                                c1 = center[1];
-                                c2 = center[2];
+                            localExtents0 = min(localExtents0, (c0 - h0));
+                            localExtents1 = min(localExtents1, (c1 - h1));
+                            localExtents2 = min(localExtents2, (c2 - h2));
 
-                                localExtents0 = min(localExtents0, (c0 - h0));
-                                localExtents1 = min(localExtents1, (c1 - h1));
-                                localExtents2 = min(localExtents2, (c2 - h2));
+                            localExtents3 = max(localExtents3, (c0 + h0));
+                            localExtents4 = max(localExtents4, (c1 + h1));
+                            localExtents5 = max(localExtents5, (c2 + h2));
+                        }
+                        else
+                        {
+                            localExtents0 = min(localExtents0, - h0);
+                            localExtents1 = min(localExtents1, - h1);
+                            localExtents2 = min(localExtents2, - h2);
 
-                                localExtents3 = max(localExtents3, (c0 + h0));
-                                localExtents4 = max(localExtents4, (c1 + h1));
-                                localExtents5 = max(localExtents5, (c2 + h2));
-                            }
-                            else
-                            {
-                                localExtents0 = min(localExtents0, - h0);
-                                localExtents1 = min(localExtents1, - h1);
-                                localExtents2 = min(localExtents2, - h2);
-
-                                localExtents3 = max(localExtents3, + h0);
-                                localExtents4 = max(localExtents4, + h1);
-                                localExtents5 = max(localExtents5, + h2);
-                            }
+                            localExtents3 = max(localExtents3, + h0);
+                            localExtents4 = max(localExtents4, + h1);
+                            localExtents5 = max(localExtents5, + h2);
                         }
                     }
                 }
 
-                if (lights)
+                for (index = 0; index < numLights; index += 1)
                 {
-                    var numLights = lights.length;
-                    for (var lindex = 0; lindex < numLights; lindex += 1)
+                    var light = lights[index].light;
+                    halfExtents = light.halfExtents;
+                    if (halfExtents)
                     {
-                        var light = lights[lindex].light;
-                        halfExtents = light.halfExtents;
-                        if (halfExtents)
+                        h0 = halfExtents[0];
+                        h1 = halfExtents[1];
+                        h2 = halfExtents[2];
+
+                        center = light.center;
+                        if (center)
                         {
-                            h0 = halfExtents[0];
-                            h1 = halfExtents[1];
-                            h2 = halfExtents[2];
+                            c0 = center[0];
+                            c1 = center[1];
+                            c2 = center[2];
 
-                            center = light.center;
-                            if (center)
-                            {
-                                c0 = center[0];
-                                c1 = center[1];
-                                c2 = center[2];
+                            localExtents0 = min(localExtents0, (c0 - h0));
+                            localExtents1 = min(localExtents1, (c1 - h1));
+                            localExtents2 = min(localExtents2, (c2 - h2));
 
-                                localExtents0 = min(localExtents0, (c0 - h0));
-                                localExtents1 = min(localExtents1, (c1 - h1));
-                                localExtents2 = min(localExtents2, (c2 - h2));
+                            localExtents3 = max(localExtents3, (c0 + h0));
+                            localExtents4 = max(localExtents4, (c1 + h1));
+                            localExtents5 = max(localExtents5, (c2 + h2));
+                        }
+                        else
+                        {
+                            localExtents0 = min(localExtents0, - h0);
+                            localExtents1 = min(localExtents1, - h1);
+                            localExtents2 = min(localExtents2, - h2);
 
-                                localExtents3 = max(localExtents3, (c0 + h0));
-                                localExtents4 = max(localExtents4, (c1 + h1));
-                                localExtents5 = max(localExtents5, (c2 + h2));
-                            }
-                            else
-                            {
-                                localExtents0 = min(localExtents0, - h0);
-                                localExtents1 = min(localExtents1, - h1);
-                                localExtents2 = min(localExtents2, - h2);
-
-                                localExtents3 = max(localExtents3, + h0);
-                                localExtents4 = max(localExtents4, + h1);
-                                localExtents5 = max(localExtents5, + h2);
-                            }
+                            localExtents3 = max(localExtents3, + h0);
+                            localExtents4 = max(localExtents4, + h1);
+                            localExtents5 = max(localExtents5, + h2);
                         }
                     }
                 }
 
-                localExtents = new this.arrayConstructor(6);
+                if (this.arrayConstructor !== Array)
+                {
+                    var bufferSize = 6;
+                    if (!this.localHalfExtents)
+                    {
+                        bufferSize += 3;
+                    }
+                    if (!this.localExtentsCenter)
+                    {
+                        bufferSize += 3;
+                    }
+                    if (!this.worldExtents)
+                    {
+                        bufferSize += 6;
+                    }
+
+                    var buffer = new Float32Array(bufferSize);
+                    var bufferIndex = 0;
+
+                    this.localExtents = localExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                    bufferIndex += 6;
+                    if (!this.localHalfExtents)
+                    {
+                        this.localHalfExtents = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                        bufferIndex += 3;
+                    }
+                    if (!this.localExtentsCenter)
+                    {
+                        this.localExtentsCenter = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                        bufferIndex += 3;
+                    }
+                    if (!this.worldExtents)
+                    {
+                        this.worldExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                        bufferIndex += 6;
+                    }
+                }
+                else
+                {
+                    this.localExtents = localExtents = new Array(6);
+                    if (!this.localHalfExtents)
+                    {
+                        this.localHalfExtents = new Array(3);
+                    }
+                    if (!this.localExtentsCenter)
+                    {
+                        this.localExtentsCenter = new Array(3);
+                    }
+                    if (!this.worldExtents)
+                    {
+                        this.worldExtents = new Array(6);
+                    }
+                }
+
                 localExtents[0] = localExtents0;
                 localExtents[1] = localExtents1;
                 localExtents[2] = localExtents2;
                 localExtents[3] = localExtents3;
                 localExtents[4] = localExtents4;
                 localExtents[5] = localExtents5;
-                this.localExtents = localExtents;
                 hasExtents = true;
             }
         }
@@ -1037,7 +1105,8 @@ class SceneNode
         {
             this.updateLocalExtents();
         }
-        return this.localExtents; //Can be undefined if no local extents. These are not transformed by the local transform matrix.
+        //Can be undefined if no local extents. These are not transformed by the local transform matrix.
+        return this.localExtents;
     }
 
     //
@@ -1244,7 +1313,63 @@ class SceneNode
         var customLocalExtents = this.customLocalExtents;
         if (!customLocalExtents)
         {
-            this.customLocalExtents = customLocalExtents = new this.arrayConstructor(6);
+            this.localExtents = undefined;
+
+            if (this.arrayConstructor !== Array)
+            {
+                var bufferSize = 0;
+                if (!this.localHalfExtents)
+                {
+                    bufferSize += 3;
+                }
+                if (!this.localExtentsCenter)
+                {
+                    bufferSize += 3;
+                }
+                if (!this.worldExtents)
+                {
+                    bufferSize += 6;
+                }
+                bufferSize += 6;
+
+                var buffer = new Float32Array(bufferSize);
+                var bufferIndex = 0;
+
+                if (!this.localHalfExtents)
+                {
+                    this.localHalfExtents = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                    bufferIndex += 3;
+                }
+                if (!this.localExtentsCenter)
+                {
+                    this.localExtentsCenter = buffer.subarray(bufferIndex, (bufferIndex + 3));
+                    bufferIndex += 3;
+                }
+                if (!this.worldExtents)
+                {
+                    this.worldExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                    bufferIndex += 6;
+                }
+                this.customLocalExtents = customLocalExtents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+                bufferIndex += 6;
+            }
+            else
+            {
+                if (!this.localHalfExtents)
+                {
+                    this.localHalfExtents = new Array(3);
+                }
+                if (!this.localExtentsCenter)
+                {
+                    this.localExtentsCenter = new Array(3);
+                }
+                if (!this.worldExtents)
+                {
+                    this.worldExtents = new Array(6);
+                }
+                this.customLocalExtents = customLocalExtents = new Array(6);
+            }
+
             customLocalExtents[0] = localExtents[0];
             customLocalExtents[1] = localExtents[1];
             customLocalExtents[2] = localExtents[2];
@@ -1370,7 +1495,9 @@ class SceneNode
         if (!wasAlreadyCustom)
         {
             this.dirtyLocalExtents = true;
-            this.numCustomRenderableWorldExtents = this.numCustomRenderableWorldExtents ? this.numCustomRenderableWorldExtents + 1 : 1;
+            this.numCustomRenderableWorldExtents = (this.numCustomRenderableWorldExtents ?
+                                                    (this.numCustomRenderableWorldExtents + 1) :
+                                                    1);
         }
     }
 

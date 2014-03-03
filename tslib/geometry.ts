@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*global TurbulenzEngine: false*/
 /*global Reference: false*/
@@ -25,7 +25,9 @@ interface Surface
 //
 class Geometry
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     name                   : string;
     type                   : string;
@@ -101,7 +103,10 @@ class Geometry
 //
 class GeometryInstance implements Renderable
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
+
     static maxUpdateValue = Number.MAX_VALUE;
 
     // Renderable
@@ -401,7 +406,7 @@ class GeometryInstance implements Renderable
         instance.halfExtents = geometry.halfExtents;
         instance.center = geometry.center;
 
-        instance.techniqueParameters = graphicsDevice ? graphicsDevice.createTechniqueParameters(): null;
+        instance.techniqueParameters = graphicsDevice ? graphicsDevice.createTechniqueParameters() : null;
         instance.sharedMaterial = sharedMaterial;
         if (instance.sharedMaterial)
         {

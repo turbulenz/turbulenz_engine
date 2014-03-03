@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*global Utilities: false */
 /*global SceneNode: false */
@@ -390,7 +390,7 @@ class PhysicsManager
                     calculateNodeExtents(children[n]);
                 }
             }
-        }
+        };
 
         calculateNodeExtents(sceneNode);
 
@@ -461,6 +461,7 @@ class PhysicsManager
     {
         var sceneData = loadParams.data;
         var collisionMargin = (loadParams.collisionMargin || 0.005);
+        var positionMargin = collisionMargin * 0.1;
         var nodesNamePrefix = loadParams.nodesNamePrefix;
 
         if (!loadParams.append)
@@ -591,9 +592,9 @@ class PhysicsManager
                                 var centerPos0 = ((posMax[0] + posMin[0]) * 0.5);
                                 var centerPos1 = ((posMax[1] + posMin[1]) * 0.5);
                                 var centerPos2 = ((posMax[2] + posMin[2]) * 0.5);
-                                if (Math.abs(centerPos0) > 1.e-6 ||
-                                    Math.abs(centerPos1) > 1.e-6 ||
-                                    Math.abs(centerPos2) > 1.e-6)
+                                if (Math.abs(centerPos0) > positionMargin ||
+                                    Math.abs(centerPos1) > positionMargin ||
+                                    Math.abs(centerPos2) > positionMargin)
                                 {
                                     var halfPos0 = ((posMax[0] - posMin[0]) * 0.5);
                                     var halfPos1 = ((posMax[1] - posMin[1]) * 0.5);
@@ -731,7 +732,9 @@ class PhysicsManager
                             {
                                 shape = physicsDevice.createConvexHullShape({
                                     points: positionsData,
-                                    margin: collisionMargin
+                                    margin: collisionMargin,
+                                    minExtent: posMin,
+                                    maxExtent: posMax
                                 });
                             }
                             else if (shapeType === "mesh")
@@ -1081,7 +1084,7 @@ class PhysicsManager
                 targetSceneNode.physicsNodes = [newPhysicsNode];
                 this.subscribeSceneNode(targetSceneNode);
             }
-        }
+        };
 
         var physicsNodes = oldSceneNode.physicsNodes;
         if (physicsNodes)

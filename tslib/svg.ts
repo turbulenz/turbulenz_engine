@@ -254,7 +254,7 @@ class SVGBaseNode implements SVGNode
         var numTransforms = transforms.length;
         var matrix = [1, 0, 0, 1, 0, 0];
         var ax, ay;
-        var m0, m1, m2, m3, m4, m5;
+        var m0, m1, m2, m3;
         for (var t = 0; t < numTransforms; t += 2)
         {
             var type = transforms[t];
@@ -286,8 +286,8 @@ class SVGBaseNode implements SVGNode
                     if (s < -0.005 || 0.005 < s ||
                         c < 0.995 || 1.005 < c)
                     {
-                        var ax = arg[1];
-                        var ay = arg[2];
+                        ax = arg[1];
+                        ay = arg[2];
 
                         m0 = matrix[0];
                         m1 = matrix[1];

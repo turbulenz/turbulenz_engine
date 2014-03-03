@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 // -----------------------------------------------------------------------------
 // MathDevice
@@ -299,7 +299,7 @@ interface MathDevice
     quatEqual(q1, q2, precision?);
 
     // quatPos
-    quatPosBuild(x, y, z, w, px, py, pz, dst?);
+    quatPosBuild(x, y, z?, w?, px?, py?, pz?, dst?);
     quatPosTransformVector(qp, n, dst?);
     quatPosTransformPoint(qp, p);
     quatPosMul(qp1, qp2);
@@ -429,7 +429,6 @@ interface Texture
     height: number;
     depth: number;
     format: number;
-    numDataLevels: number;
     mipmaps: boolean;
     cubemap: boolean;
     dynamic: boolean;
@@ -437,7 +436,7 @@ interface Texture
 
     // Methods
 
-    setData(data: any, face?: number, level?: number, x?:number, y?:number, w?:number, h?:number);
+    setData(data: any, face?: number, level?: number, x?: number, y?: number, w?: number, h?: number);
     typedArrayIsValid(array: any);
     destroy();
 }
@@ -1372,4 +1371,5 @@ interface TurbulenzEngine
 // TurbulenzEngine global
 // -----------------------------------------------------------------------------
 
+/* tslint:disable:no-unused-variable */
 declare var TurbulenzEngine : TurbulenzEngine;

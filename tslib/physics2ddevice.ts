@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2012-2014 Turbulenz Limited
 
 // Complains in various parts about use of (/*NAME*/value) constants.
 
@@ -6067,7 +6067,6 @@ class Physics2DPolygon extends Physics2DShape
     }
 }
 
-Physics2DPolygon
 
 // =========================================================================
 
@@ -7422,7 +7421,6 @@ class Physics2DTOIEvent
         }
     }
 
-    static deallocate(toi: Physics2DTOIEvent)
     static deallocate(toi: Physics2DTOIEvent): void
     {
         toi.next = Physics2DTOIEvent.pool;

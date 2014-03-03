@@ -15,6 +15,7 @@
     #define GetCurrentDir getcwd
     #define _stat stat
  #endif
+typedef std::map<std::string, const char *> SemanticsMap;
 typedef std::map<std::string, std::string> UniformsMap;
 typedef std::pair<boost::xpressive::sregex, std::string> UniformRule;
 typedef std::list<UniformRule> UniformRules;
@@ -23,7 +24,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.22"
+#define VERSION_STRING "cgfx2json 0.23"
 
 //
 // Utils
@@ -536,7 +537,7 @@ static void AddMappedParameter(JSON &json,
     }
 }
 
-static bool AddPass(CGtechnique technique, JSON &json, CGpass pass, UniformsMap &uniformRemapping)
+static bool AddPass(CGtechnique technique, JSON &json, CGpass pass, UniformsMap &uniformRemapping, const SemanticsMap &semanticsMap)
 {
     bool success = true;
     json.AddObject(NULL);
@@ -608,6 +609,8 @@ static bool AddPass(CGtechnique technique, JSON &json, CGpass pass, UniformsMap 
     json.AddArray("semantics", true);
     json.BeginData(true);
 
+    const SemanticsMap::const_iterator itSemanticsEnd = semanticsMap.end();
+
     CGprogram vertexProgram = cgGetPassProgram(pass, CG_VERTEX_DOMAIN);
     CGparameter vertexInputParameter = cgGetFirstLeafParameter(vertexProgram, CG_PROGRAM);
     while (NULL != vertexInputParameter)
@@ -620,7 +623,25 @@ static bool AddPass(CGtechnique technique, JSON &json, CGpass pass, UniformsMap 
                 CG_INOUT == direction)
             {
                 const char * const semantic = cgGetParameterSemantic(vertexInputParameter);
-                json.AddData(semantic, strlen(semantic));
+                if (0 == memcmp(semantic, "ATTR", 4))
+                {
+                    json.AddData(semantic, strlen(semantic));
+                }
+                else
+                {
+                    const SemanticsMap::const_iterator itAttributeName = semanticsMap.find(semantic);
+                    if (itAttributeName != itSemanticsEnd)
+                    {
+                        const char * const attributeName = itAttributeName->second;
+                        json.AddData(attributeName, strlen(attributeName));
+                    }
+                    else
+                    {
+                        json.AddData(semantic, strlen(semantic));
+                        ErrorMessage("%s : Unknown semantic '%s'.", cgGetTechniqueName(technique), semantic);
+                        success = false;
+                    }
+                }
             }
         }
         vertexInputParameter = cgGetNextLeafParameter(vertexInputParameter);
@@ -689,7 +710,7 @@ static void replace(std::string &target, const std::string &that, const std::str
     }
 }
 
-static bool AddTechnique(JSON &json, CGtechnique technique, UniformsMap &uniformRemapping)
+static bool AddTechnique(JSON &json, CGtechnique technique, UniformsMap &uniformRemapping, const SemanticsMap &semanticsMap)
 {
     bool success = true;
     const char * const techniqueName = cgGetTechniqueName(technique);
@@ -709,7 +730,7 @@ static bool AddTechnique(JSON &json, CGtechnique technique, UniformsMap &uniform
 
     while (NULL != pass)
     {
-        success &= AddPass(technique, json, pass, uniformRemapping);
+        success &= AddPass(technique, json, pass, uniformRemapping, semanticsMap);
 
         pass = cgGetNextPass(pass);
     }
@@ -1434,6 +1455,37 @@ int main(int argc, char **argv)
              "\n-----------");
     }
 
+    SemanticsMap semanticsMap;
+    semanticsMap["POSITION"] = "ATTR0";
+    semanticsMap["POSITION0"] = "ATTR0";
+    semanticsMap["BLENDWEIGHT"] = "ATTR1";
+    semanticsMap["BLENDWEIGHT0"] = "ATTR1";
+    semanticsMap["NORMAL"] = "ATTR2";
+    semanticsMap["NORMAL0"] = "ATTR2";
+    semanticsMap["COLOR"] = "ATTR3";
+    semanticsMap["COLOR0"] = "ATTR3";
+    semanticsMap["COLOR1"] = "ATTR4";
+    semanticsMap["SPECULAR"] = "ATTR4";
+    semanticsMap["FOGCOORD"] = "ATTR5";
+    semanticsMap["TESSFACTOR"] = "ATTR5";
+    semanticsMap["PSIZE0"] = "ATTR6";
+    semanticsMap["BLENDINDICES"] = "ATTR7";
+    semanticsMap["BLENDINDICES0"] = "ATTR7";
+    semanticsMap["TEXCOORD"] = "ATTR8";
+    semanticsMap["TEXCOORD0"] = "ATTR8";
+    semanticsMap["TEXCOORD1"] = "ATTR9";
+    semanticsMap["TEXCOORD2"] = "ATTR10";
+    semanticsMap["TEXCOORD3"] = "ATTR11";
+    semanticsMap["TEXCOORD4"] = "ATTR12";
+    semanticsMap["TEXCOORD5"] = "ATTR13";
+    semanticsMap["TEXCOORD6"] = "ATTR14";
+    semanticsMap["TEXCOORD7"] = "ATTR15";
+    semanticsMap["TANGENT"] = "ATTR14";
+    semanticsMap["TANGENT0"] = "ATTR14";
+    semanticsMap["BINORMAL0"] = "ATTR15";
+    semanticsMap["BINORMAL"] = "ATTR15";
+    semanticsMap["PSIZE"] = "ATTR6";
+
     bool success = true;
     int numTechniques = 0;
 
@@ -1444,7 +1496,7 @@ int main(int argc, char **argv)
     CGtechnique technique = cgGetFirstTechnique(effect);
     while (NULL != technique)
     {
-        success &= AddTechnique(json, technique, uniformRemapping);
+        success &= AddTechnique(json, technique, uniformRemapping, semanticsMap);
         technique = cgGetNextTechnique(technique);
         numTechniques++;
     }

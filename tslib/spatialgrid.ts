@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 //
 // SpatialGridNode
@@ -257,7 +257,7 @@ class SpatialGrid
                                     cell.push(node);
                                 }
                             }
-                            else if(oldCell)
+                            else if (oldCell)
                             {
                                 for (n = 0; n < numNodes; n += 1)
                                 {
@@ -459,7 +459,7 @@ class SpatialGrid
             var cell, numCellNodes, n, node, nodeExtents;
             do
             {
-                var internalRow = (firstRow < minRow && minRow < lastRow)
+                var internalRow = (firstRow < minRow && minRow < lastRow);
                 var cs = (minX + minRow);
                 var ce = (maxX + minRow);
                 var ci = cs;
@@ -806,12 +806,13 @@ class SpatialGrid
                                     }
                                 }
 
+                                var node;
                                 if (numQueryCellPlanes === 0)
                                 {
                                     for (k = 0; k < numNodes; k += 1)
                                     {
                                         // check if node is visible
-                                        var node = cell[k];
+                                        node = cell[k];
                                         if (node.queryIndex !== queryIndex)
                                         {
                                             node.queryIndex = queryIndex;
@@ -826,7 +827,7 @@ class SpatialGrid
                                     for (k = 0; k < numNodes; k += 1)
                                     {
                                         // check if node is visible
-                                        var node = cell[k];
+                                        node = cell[k];
                                         if (node.queryIndex !== queryIndex)
                                         {
                                             node.queryIndex = queryIndex;

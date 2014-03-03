@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 //
 // CascadedShadowMapping
@@ -207,8 +207,8 @@ class CascadedShadowMapping
 
 
     // Render update calbacks
-    update: () => void
-    skinnedUpdate: () => void
+    update: () => void;
+    skinnedUpdate: () => void;
 
 
     constructor(gd: GraphicsDevice, md: MathDevice, shaderManager: ShaderManager, size: number)
@@ -318,7 +318,7 @@ class CascadedShadowMapping
         this.update = function _cascadedShadowsUpdateFn(): void
         {
             this.shadowTechniqueParameters['world'] = this.node.world;
-        }
+        };
 
         this.skinnedUpdate = function _cascadedShadowsSkinnedUpdateFn(): void
         {
@@ -331,7 +331,7 @@ class CascadedShadowMapping
                 shadowTechniqueParameters['skinBones'] = skinController.output;
                 skinController.update();
             }
-        }
+        };
 
         return this;
     }
@@ -723,19 +723,19 @@ class CascadedShadowMapping
         var m = camera.viewProjectionMatrix;
         var m0 = m[0];
         var m1 = m[1];
-        var m2 = m[2];
+        //var m2 = m[2];
         var m3 = m[3];
         var m4 = m[4];
         var m5 = m[5];
-        var m6 = m[6];
+        //var m6 = m[6];
         var m7 = m[7];
         var m8 = m[8];
         var m9 = m[9];
-        var m10 = m[10];
+        //var m10 = m[10];
         var m11 = m[11];
         var m12 = m[12];
         var m13 = m[13];
-        var m14 = m[14];
+        //var m14 = m[14];
         var m15 = m[15];
         var planes = this.splitFrustumPlanes;
 
@@ -754,6 +754,8 @@ class CascadedShadowMapping
         }
 
         this.numSplitFrustumPlanes = 4 + numMainFrustumPlanes;
+
+        planes.length = this.numSplitFrustumPlanes;
 
         return planes;
     }
@@ -1048,13 +1050,13 @@ class CascadedShadowMapping
         var maxWindowY = -Number.MAX_VALUE;
         var minWindowZ = Number.MAX_VALUE;
         var maxWindowZ = -Number.MAX_VALUE;
-        var n, p;
+        var n, p, dx, dy, dz;
         for (n = 0; n < 8; n += 1)
         {
             p = frustumPoints[n];
-            var dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]));
-            var dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]));
-            var dz = ((a0 * p[0]) + (a1 * p[1]) + (a2 * p[2]));
+            dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]));
+            dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]));
+            dz = ((a0 * p[0]) + (a1 * p[1]) + (a2 * p[2]));
             if (minWindowX > dx)
             {
                 minWindowX = dx;
@@ -1222,8 +1224,8 @@ class CascadedShadowMapping
             for (n = 0; n < numPreviousSplitPoints; n += 1)
             {
                 p = previousSplitPoints[n];
-                var dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]) - roffset);
-                var dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]) - uoffset);
+                dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]) - roffset);
+                dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]) - uoffset);
                 if (previousMinWindowX > dx)
                 {
                     previousMinWindowX = dx;
@@ -1907,7 +1909,7 @@ class CascadedShadowMapping
 
         var globalTechniqueParametersArray = this.globalTechniqueParametersArray;
         var globalTechniqueParameters = this.globalTechniqueParameters;
-        var renderTarget= this.renderTarget;
+        var renderTarget = this.renderTarget;
         var clearColor = this.clearColor;
         var gd = this.gd;
         var md = this.md;

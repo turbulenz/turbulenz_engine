@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 /*global Scene*/
 /*global Geometry*/
 /*global GeometryInstance*/
@@ -2632,7 +2632,7 @@ Scene.prototype.drawStaticNodesTree = function sceneDrawStaticNodesTreeFn(gd, sm
     {
         this.drawNodesTree(this.staticSpatialMap, gd, sm, camera, drawLevel);
     }
-    else if(this.staticSpatialMap.getCells)
+    else if (this.staticSpatialMap.getCells)
     {
         this.drawCellsGrid(this.staticSpatialMap, gd, sm, camera);
     }
@@ -2647,7 +2647,7 @@ Scene.prototype.drawDynamicNodesTree = function sceneDrawDynamicNodesTreeFn(gd, 
     {
         this.drawNodesTree(this.dynamicSpatialMap, gd, sm, camera, drawLevel);
     }
-    else if(this.dynamicSpatialMap.getCells)
+    else if (this.dynamicSpatialMap.getCells)
     {
         this.drawCellsGrid(this.dynamicSpatialMap, gd, sm, camera);
     }
@@ -3422,8 +3422,17 @@ Scene.prototype.drawWireframe = function drawWireframeFn(gd, sm, camera, wirefra
                             if (indexBuffer)
                             {
                                 indexBufferData = oldSurface.indexData;
-                                dataLength = indexBufferData.length;
-                                stepSize = 3;
+                                if (surfacePrimitive === gd.PRIMITIVE_TRIANGLE_STRIP)
+                                {
+                                    numTriangles = indexBufferData.length - 2;
+                                    dataLength = numTriangles * 3;
+                                    stepSize = 1;
+                                }
+                                else
+                                {
+                                    dataLength = indexBufferData.length;
+                                    stepSize = 3;
+                                }
                             }
                             else if (surfacePrimitive === gd.PRIMITIVE_TRIANGLE_STRIP || surfacePrimitive === gd.PRIMITIVE_TRIANGLE_FAN)
                             {
@@ -3452,9 +3461,27 @@ Scene.prototype.drawWireframe = function drawWireframeFn(gd, sm, camera, wirefra
                                 //set the indices
                                 if (indexBuffer)
                                 {
-                                    vdIndex0 = indexBufferData[j] * stride + positionOffset;
-                                    vdIndex1 = indexBufferData[j + 1] * stride + positionOffset;
-                                    vdIndex2 = indexBufferData[j + 2] * stride + positionOffset;
+                                    if (surfacePrimitive === gd.PRIMITIVE_TRIANGLE_STRIP)
+                                    {
+                                        if ((j % 2) === 0)
+                                        {
+                                            vdIndex0 = indexBufferData[j] * stride + positionOffset;
+                                            vdIndex1 = indexBufferData[(j + 1)] * stride + positionOffset;
+                                            vdIndex2 = indexBufferData[(j + 2)] * stride + positionOffset;
+                                        }
+                                        else
+                                        {
+                                            vdIndex0 = indexBufferData[(j + 1)] * stride + positionOffset;
+                                            vdIndex1 = indexBufferData[j] * stride + positionOffset;
+                                            vdIndex2 = indexBufferData[(j + 2)] * stride + positionOffset;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        vdIndex0 = indexBufferData[j] * stride + positionOffset;
+                                        vdIndex1 = indexBufferData[j + 1] * stride + positionOffset;
+                                        vdIndex2 = indexBufferData[j + 2] * stride + positionOffset;
+                                    }
                                 }
                                 else if (surfacePrimitive === gd.PRIMITIVE_TRIANGLE_STRIP)
                                 {

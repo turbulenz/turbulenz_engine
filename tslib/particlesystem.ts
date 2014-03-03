@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 /*global Float32Array: false*/
 /*global Uint8Array: false*/
@@ -2614,12 +2614,12 @@ class ParticleBuilder
         if (params.alreadyParsed)
         {
             sys = system;
-            parts = []
+            parts = [];
             // copy over whatever fields are mutated by compilation process.
             // This is still far more efficient than parsing from scratch!
             for (i = 0; i < count; i += 1)
             {
-                var part = particles[i]
+                var part = particles[i];
                 // deep copy.
                 var textureUVs = Types.copy(part.textureUVs);
                 // shallow copy. dont want to try and copy interpolator objects.
@@ -6856,7 +6856,7 @@ class DefaultParticleEmitter
                             error.error("default emitter archetype " + n + " should be an object");
                         }
                         return val;
-                    }
+                    };
                 }
 
                 Parser.extraFields(error, "default emitter archetype particle", delta,
@@ -8044,7 +8044,7 @@ class ParticleManager
                 {
                     onload(archetype);
                 }
-            }
+            };
             textureLoad = function (path) {
                 requestCount += 1;
                 self.textureManager.load(path, undefined, loaded);

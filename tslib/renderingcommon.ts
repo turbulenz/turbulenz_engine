@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2011 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*exported renderingCommonSortKeyFn*/
 /*exported renderingCommonCreateRendererInfoFn*/
@@ -22,7 +22,7 @@ var renderingCommonGetTechniqueIndexFn = <{
         dataStore.numTechniques += 1;
     }
     return techniqueIndex;
-}
+};
 
 renderingCommonGetTechniqueIndexFn.techniquesIndexMap = {};
 renderingCommonGetTechniqueIndexFn.numTechniques = 0;
@@ -35,7 +35,7 @@ function renderingCommonSortKeyFn(techniqueIndex, materialIndex, nodeIndex?)
     var sortKey = ((techniqueIndex * 0x10000) + (materialIndex % 0x10000));
     if (nodeIndex)
     {
-        sortKey += (1.0 / (1.0 + nodeIndex))
+        sortKey += (1.0 / (1.0 + nodeIndex));
     }
     return sortKey;
 }
@@ -67,4 +67,4 @@ var renderingCommonAddDrawParameterFastestFn =
 {
     var array = this.array;
     array[array.length] = drawParameters;
-}
+};

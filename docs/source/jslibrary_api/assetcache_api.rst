@@ -9,6 +9,10 @@
 The AssetCache Object
 ---------------------
 
+**Version 1 - SDK 0.24.0 to 0.27.0**
+
+**Version 2 - SDK 0.28.0**
+
 Provides functionality for caching assets using least recently used (LRU) caching.
 When the cache is full each cache miss causes the removal of the asset that has the oldest requested time.
 
@@ -21,7 +25,7 @@ The AssetCache object requires::
 **Example**
 
 The ``AssetCache`` object is used in the leaderboards sample to make sure that by scrolling through users' avatar
-textures we don't use too much memory (while keeping the interface smooth).
+textures the amount of memory used is limited (while keeping the interface smooth).
 
 Constructor
 ===========
@@ -72,7 +76,7 @@ Creates and returns an AssetCache object.
     The function called when a cache miss occurs to load the asset into the cache.
     See :ref:`assetCache.onLoad <assetcache_onload>`.
 
-``onDestroy``
+``onDestroy`` (Optional)
     A JavaScript function.
     This is called for the asset with the oldest requested time when a cache miss occurs and the cache is full.
     See :ref:`assetCache.onDestroy <assetcache_ondestroy>`.
@@ -95,24 +99,83 @@ Methods
 
 **Summary**
 
-Get/load the asset from the cache.
+Load the asset from the cache.
 
 **Syntax** ::
 
-    var assetOrNull = assetCache.request(key, params);
+    var callback = function loadedCallbackFn(key, asset, params)
+    {
+        // Loading complete, use asset/trigger cache use
+    };
+
+    assetCache.request(key, params, callback);
 
 ``key``
     The cache identifier.
     This is normally the URL of the asset to get.
 
-``params``
+``params`` (Optional)
     Custom params object passed onto the :ref:`assetCache.onLoad <assetcache_onload>` function in the case of a cache miss.
 
-Returns the loaded asset for a cache hit.
-If the key is missing from the cache (cache miss) or if the asset is loading returns ``null``.
+``callback`` (Optional) Added in :ref:`SDK 0.28.0 <assetcache_v2>`
+    The callback to be triggered when the requested asset has been loaded.
+    This function will be called with the following arguments:
+
+    ``key``
+        The cache identifier.
+
+    ``asset``
+        The loaded asset that exists in the cache.
+        Note that this value can be any value returned by the loaded function,
+        for example NULL if the asset cannot be loaded or found.
+        If the asset requested is forced out of the cache before
+        loading is complete the onDestroy function will be called and the asset
+        returned in this callback will be NULL.
+
+    ``params``
+        Custom params object passed to the request function.
+        This will be undefined if params is not used.
 
 In the case of a cache miss the asset will be loaded asynchronously using the :ref:`assetCache.onLoad <assetcache_onload>` function.
 If the cache is full this will also trigger an :ref:`assetCache.onDestroy <assetcache_ondestroy>` function for the asset that has the oldest requested time.
+
+In :ref:`SDK 0.28.0 <assetcache_v2>`
+
+    Does not return a value.
+
+    If the asset is already loading, the callback argument will be added to list of
+    callbacks to notify when the asset is loaded.
+
+In SDK 0.24.0 to 0.27.0
+
+    Returns the loaded asset for a cache hit.
+    If the key is missing from the cache (cache miss) or if the asset is loading returns ``null``.
+
+
+.. index::
+    pair: AssetCache; get
+
+.. _assetcache_get:
+
+`get`
+-----
+
+**Summary**
+
+Added in :ref:`SDK 0.28.0 <assetcache_v2>`
+
+Get the asset from the cache.
+
+**Syntax** ::
+
+    var assetOrNull = assetCache.get(key);
+
+``key``
+    The cache identifier.
+    This is normally the URL of the asset to get.
+
+Returns the loaded asset for a cache hit.
+If the key is missing from the cache (cache miss) or if the asset is loading returns ``null``.
 
 .. index::
     pair: AssetCache; exists

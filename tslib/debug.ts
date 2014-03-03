@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2012-2014 Turbulenz Limited
 
 // For V8 stack traces
 
@@ -18,7 +18,7 @@ declare var VMathArrayConstructor : Function;
 declare var TurbulenzEngine :
 {
     onperformancewarning : { (msg: string):void; };
-}
+};
 
 // The debug object is only available in debug modes.  The build tools
 // will automatically include it or prevent it from being included
@@ -42,7 +42,7 @@ interface TurbulenzDebug
 {
     reportAssert(msg:string): void;
     abort(msg: string): void;
-    assert(condition: any, msg?: string): void
+    assert(condition: any, msg?: string): void;
     log(msg: string): void;
 
     /// Call the given function.  No returns values are propagated.
