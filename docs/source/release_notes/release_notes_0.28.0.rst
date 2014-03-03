@@ -155,6 +155,8 @@ Fixed
 
 * Fixed mipmap initialization and debug checking
 
+* Fixed an issue in the SoundDevice when gain was ignored on a source before playing
+
 
 Known Issues
 ============
