@@ -529,6 +529,7 @@ var Draw2DSpriteData = {
     function setFromRotatedRectangleFn(sprite, texture, rect, uvrect, color,
                                        rotation, origin)
     {
+        debug.assert(rect.length === 4);
         var x1 = rect[0];
         var y1 = rect[1];
         var x2 = rect[2];
@@ -550,6 +551,7 @@ var Draw2DSpriteData = {
             var cx, cy;
             if (origin)
             {
+                debug.assert(origin.length === 2);
                 cx = x1 + origin[0];
                 cy = y1 + origin[1];
             }
@@ -579,6 +581,7 @@ var Draw2DSpriteData = {
 
         if (color)
         {
+            debug.assert(color.length === 4);
             sprite[8]  = color[0];
             sprite[9]  = color[1];
             sprite[10] = color[2];
@@ -591,6 +594,7 @@ var Draw2DSpriteData = {
 
         if (uvrect && texture)
         {
+            debug.assert(uvrect.length === 4);
             var iwidth  = 1 / texture.width;
             var iheight = 1 / texture.height;
             sprite[12] = uvrect[0] * iwidth;
