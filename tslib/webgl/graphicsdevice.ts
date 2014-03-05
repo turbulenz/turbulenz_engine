@@ -7529,7 +7529,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
         }
 
-        var maxAttributes = gl.MAX_VERTEX_ATTRIBS;
+        var maxAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
         if (maxAttributes < 16)
         {
             WebGLGraphicsDevice.prototype.SEMANTIC_ATTR0 =
