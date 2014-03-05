@@ -58,6 +58,7 @@ New Features
   - Added check when using Workers for processing DDS textures on unsupported platforms
   - Added support for non-ascii characters in makehtml and maketzjs
   - Added support for tslint and fixed basic errors on tslib
+  - Added support for building tools with Visual Studio 2013
 
 Changes
 -------
