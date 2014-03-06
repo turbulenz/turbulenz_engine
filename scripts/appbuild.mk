@@ -443,7 +443,7 @@ ifeq ($(MODE),all)
 	$(MAKE) $(make_flags) MODE=plugin $@
 	$(MAKE) $(make_flags) MODE=canvas $@
 	$(MAKE) $(make_flags) MODE=canvas-debug $@
-	@# $(MAKE) $(make_flags) MODE=plugin-debug $@
+# $(MAKE) $(make_flags) MODE=plugin-debug $@
 
   # Make sure no other apps are discovered
   TEMPLATES_DIR := no-such-dir
