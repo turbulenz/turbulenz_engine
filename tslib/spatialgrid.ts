@@ -672,7 +672,7 @@ class SpatialGrid
                         var maxX = extents[3];
                         var maxY = extents[4];
                         var maxZ = extents[5];
-                        for (j = (i + 1); j < numNodes; j += 1)
+                        for (j = numNodes; i < j; j -= 1)
                         {
                             nodeJ = cell[j];
                             /* tslint:disable:no-bitwise */
