@@ -10,6 +10,17 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-03-06
+
+- Modified simplerendering.cgfx to not use structs (feature not yet implemented in IE11)
+- Updated TypeScript documentation for 0.9.1
+- Remapped semantics for devices with fewer than 16 vertex attributes
+- Updated gamepad detection to support latest specification
+- Updated fontManager documentation
+- Minor fix to subtitles sample
+- Correction of various tslint errors
+- Fixed an issue in the SoundDevice when gain was ignored on a source before playing
+
 2014-02-27
 
 - Updated AssetCache to version 2:
