@@ -652,7 +652,7 @@ class SpatialGrid
             var cells = this.cells;
             var numCells = cells.length;
             var pairsMap = {};
-            var c, i, j, nodeI, nodeJ, extents, pairIdBase, pairId;
+            var c, i, j, nodeI, idI, nodeJ, idJ, extents, pairId;
             for (c = 0; c < numCells; c += 1)
             {
                 var cell = cells[c];
@@ -662,9 +662,7 @@ class SpatialGrid
                     for (i = 0; i < numNodes; i += 1)
                     {
                         nodeI = cell[i];
-                        /* tslint:disable:no-bitwise */
-                        pairIdBase = (nodeI.id << 16);
-                        /* tslint:enable:no-bitwise */
+                        idI = nodeI.id;
                         extents = nodeI.extents;
                         var minX = extents[0];
                         var minY = extents[1];
@@ -675,8 +673,16 @@ class SpatialGrid
                         for (j = numNodes; i < j; j -= 1)
                         {
                             nodeJ = cell[j];
+                            idJ = nodeJ.id;
                             /* tslint:disable:no-bitwise */
-                            pairId = (pairIdBase | nodeJ.id);
+                            if (idI < idJ)
+                            {
+                                pairId = ((idJ << 16) | idI);
+                            }
+                            else
+                            {
+                                pairId = ((idI << 16) | idJ);
+                            }
                             /* tslint:enable:no-bitwise */
                             if (!pairsMap[pairId])
                             {
