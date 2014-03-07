@@ -439,11 +439,11 @@ use and requires knowledge of the FontManager implementation details.
     {
         textParameters.dimensions = dimensions;
     }
-    var vertices = font.generatePageTextVertices(text, textParameters, 0);
-    if (vertices)
+    var drawCtx = font.generatePageTextVertices(text, textParameters, 0);
+    if (drawCtx.vertices)
     {
-        var numVertices = (vertices.length / 4);
-        vertexBuffer.setData(vertices, 0, numVertices);
+        var numVertices = (drawCtx.vertices.length / 4);
+        vertexBuffer.setData(drawCtx.vertices, 0, numVertices);
     }
 
 ``text``
@@ -482,8 +482,17 @@ use and requires knowledge of the FontManager implementation details.
     (Optional) A context object to re-use to avoid creating a new one.
 
 Returns a rendering context object containing internal information
-including an array of vertex data.  The context object can be passed
-into drawTextVertices.
+including an array of vertex data. The context object can be passed
+into drawTextVertices. The context has the following property:
+
+    ``vertices``
+            An array of numbers, 4 numbers per vertex: X, Y, U, V.
+
+            SDK 0.28.0 onwards the vertex order is: top left, top right, bottom left, bottom right
+
+            Prior to SDK 0.28.0 the vertex order was: top left, top right, bottom right, bottom left
+
+
 
 .. _font_drawtextvertices:
 
