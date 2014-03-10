@@ -424,7 +424,8 @@ Replaces function previously called generateTextVertices
 For a given bit of text, generates the vertices corresponding to a
 specific texture page.  This method is used internally by
 :ref:`drawTextRect <font_drawtextrect>` to generate the vertices to be
-drawn.
+drawn for a given texture page.  It is not recommended for external
+use and requires knowledge of the FontManager implementation details.
 
 **Syntax** ::
 
@@ -438,11 +439,11 @@ drawn.
     {
         textParameters.dimensions = dimensions;
     }
-    var vertices = font.generatePageTextVertices(text, textParameters, 0);
-    if (vertices)
+    var drawCtx = font.generatePageTextVertices(text, textParameters, 0);
+    if (drawCtx.vertices)
     {
-        var numVertices = (vertices.length / 4);
-        vertexBuffer.setData(vertices, 0, numVertices);
+        var numVertices = (drawCtx.vertices.length / 4);
+        vertexBuffer.setData(drawCtx.vertices, 0, numVertices);
     }
 
 ``text``
@@ -477,7 +478,20 @@ drawn.
 ``pageIdx``
     The index of the texture page to generate indices for.
 
-Returns an array of numbers, 4 numbers per vertex: X, Y, U, V.
+``drawCtx``
+    (Optional) A context object to re-use to avoid creating a new one.
+
+Returns a rendering context object containing internal information
+including an array of vertex data. The context object can be passed
+into drawTextVertices. The context has the following property:
+
+    ``vertices``
+            An array of numbers, 4 numbers per vertex: X, Y, U, V.
+
+            SDK 0.28.0 onwards the vertex order is: top left, top right, bottom left, bottom right
+
+            Prior to SDK 0.28.0 the vertex order was: top left, top right, bottom right, bottom left
+
 
 
 .. _font_drawtextvertices:

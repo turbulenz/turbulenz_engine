@@ -10,7 +10,10 @@ Changelog
 Version 1.x-dev
 ---------------
 
-2014-03-06
+Version 1.3.1
+-------------
+
+2014-03-07
 
 - Modified simplerendering.cgfx to not use structs (feature not yet implemented in IE11)
 - Updated TypeScript documentation for 0.9.1
@@ -20,9 +23,6 @@ Version 1.x-dev
 - Minor fix to subtitles sample
 - Correction of various tslint errors
 - Fixed an issue in the SoundDevice when gain was ignored on a source before playing
-
-2014-02-27
-
 - Updated AssetCache to version 2:
 
   * Includes a new 'get' function
@@ -41,13 +41,7 @@ Version 1.x-dev
 - Enabled tslint and fixed basic errors on tslib
 - TypeScript files can now be linted by using the command:
   python manage.py check-ts path/to/file.ts
-
-2014-02-17
-
 - Fixed node extents update when removing its last renderable or its last light.
-
-2014-02-13
-
 - Added support for building tools with Visual Studio 2013
 - Line spacing support in FontManager
 

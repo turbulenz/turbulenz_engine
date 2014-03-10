@@ -564,8 +564,8 @@ History
 The Engine was created and is maintained by `Turbulenz Limited <http://biz.turbulenz.com>`__ and was open sourced
 in April 2013.
 
-The latest release is 1.3 which is tagged in the repository or a tarball/zip can be can be downloaded from
-`here <https://github.com/turbulenz/turbulenz_engine/archive/release_1.3.tar.gz>`__
+The latest release is 1.3.1 which is tagged in the repository or a tarball/zip can be can be downloaded from
+`here <https://github.com/turbulenz/turbulenz_engine/archive/release_1.3.1.tar.gz>`__
 
 A full history of changes can be found in the `Changelog <docs/source/changelog.rst>`__
 
