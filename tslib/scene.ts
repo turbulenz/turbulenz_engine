@@ -4364,8 +4364,6 @@ class Scene
                     if (surfaces.hasOwnProperty(s))
                     {
                         surface = surfaces[s];
-                        destSurface = {};
-                        shape.surfaces[s] = destSurface;
 
                         faces = surface.triangles;
                         var primitive, vertexPerPrimitive;
@@ -4383,8 +4381,14 @@ class Scene
                                 vertexPerPrimitive = 2;
                             }
                         }
-                        destSurface.primitive = primitive;
-                        destSurface.faces = faces;
+
+                        destSurface = {
+                            first: 0,
+                            numVertices: 0,
+                            primitive: primitive,
+                            faces: faces
+                        };
+                        shape.surfaces[s] = destSurface;
 
                         if (faces)
                         {
@@ -4633,7 +4637,7 @@ class Scene
                         destSurface = shape.surfaces[s];
 
                         faces = destSurface.faces;
-                        destSurface.faces = undefined;
+                        delete destSurface.faces;
 
                         if (faces)
                         {
@@ -4733,7 +4737,7 @@ class Scene
                         }
                     }
 
-                    shape.surfaces = undefined;
+                    delete shape.surfaces;
                 }
             }
 
