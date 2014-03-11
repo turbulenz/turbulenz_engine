@@ -41,9 +41,9 @@ class DeferredRendering
     passIndex                               : { opaque: number;
                                                 decal: number;
                                                 transparent: number;
-                                                shadow?: number; // TODO
+                                                shadow: number;
                                               };
-    passes                                  : any[][];
+    passes                                  : DrawParameters[][];
 
     globalTechniqueParameters               : TechniqueParameters;
     sharedTechniqueParameters               : TechniqueParameters;
@@ -112,6 +112,8 @@ class DeferredRendering
 
     defaultSkinBufferSize: number;
 
+    sharedUserData: any[];
+
     ft: number; // TODO: Where is this set?  Not mentioned in the docs.
     sm: number; // TODO: Where is this set?  Not mentioned in the docs.
 
@@ -179,7 +181,7 @@ class DeferredRendering
         var numPasses = this.numPasses;
         for (index = 0; index < numPasses; index += 1)
         {
-            passes[index] = [];
+            passes[index].length = 0;
         }
 
         var visibleRenderables = scene.getCurrentVisibleRenderables();
@@ -1676,8 +1678,10 @@ class DeferredRendering
         dr.black = md.v4BuildZero();
 
         dr.numPasses = 3;
-        dr.passIndex = {opaque: 0, decal: 1, transparent: 2};
         dr.passes = [[], [], []];
+        // Shadow pass is done externally
+        dr.passIndex = {opaque: 0, decal: 1, transparent: 2, shadow: 3};
+        dr.sharedUserData = [{ passIndex: 0 }, { passIndex: 1 }, { passIndex: 2 }, { passIndex: 3 }];
 
         dr.globalTechniqueParameters = gd.createTechniqueParameters();
         dr.sharedTechniqueParameters = gd.createTechniqueParameters();
@@ -1883,22 +1887,20 @@ class DeferredRendering
             var meta = geometryInstance.sharedMaterial.meta;
             var rendererInfo = geometryInstance.rendererInfo;
             var drawParameters = gd.createDrawParameters();
-            drawParameters.userData = {};
-            geometryInstance.prepareDrawParameters(drawParameters);
-            geometryInstance.drawParameters = [drawParameters];
-
             if (meta.transparent)
             {
-                drawParameters.userData.passIndex = dr.passIndex.transparent;
+                drawParameters.userData = dr.sharedUserData[dr.passIndex.transparent];
             }
             else if (meta.decal)
             {
-                drawParameters.userData.passIndex = dr.passIndex.decal;
+                drawParameters.userData = dr.sharedUserData[dr.passIndex.decal];
             }
             else
             {
-                drawParameters.userData.passIndex = dr.passIndex.opaque;
+                drawParameters.userData = dr.sharedUserData[dr.passIndex.opaque];
             }
+            geometryInstance.prepareDrawParameters(drawParameters);
+            geometryInstance.drawParameters = [drawParameters];
 
             if (!geometryInstance.sharedMaterial.techniqueParameters.materialColor &&
                 !geometryInstance.techniqueParameters.materialColor)
@@ -1929,11 +1931,9 @@ class DeferredRendering
                     !meta.noshadows)
                 {
                     drawParameters = gd.createDrawParameters();
-                    drawParameters.userData = {};
+                    drawParameters.userData = dr.sharedUserData[dr.passIndex.shadow];
                     geometryInstance.prepareDrawParameters(drawParameters);
                     geometryInstance.shadowMappingDrawParameters = [drawParameters];
-
-                    drawParameters.userData.passIndex = dr.passIndex.shadow;
 
                     rendererInfo.shadowMappingUpdate =
                         this.shadowMappingUpdate;
@@ -1953,6 +1953,8 @@ class DeferredRendering
             }
         };
 
+        // This is because of a bug on tslint:
+        /* tslint:disable:no-trailing-comma */
         var deferredBlendUpdate = function deferredBlendUpdateFn(/* camera */)
         {
             this.frameUpdated = this.frameVisible;
@@ -1964,6 +1966,7 @@ class DeferredRendering
                 this.techniqueParameters.world = node.world;
             }
         };
+        /* tslint:enable:no-trailing-comma */
 
         var deferredBlendSkinnedUpdate = function deferredBlendSkinnedUpdateFn(/* camera */)
         {
