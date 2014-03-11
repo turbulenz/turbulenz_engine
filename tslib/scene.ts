@@ -3725,6 +3725,84 @@ class Scene
         return numUniqueVertices;
     }
 
+    _remapVertices(vertexSources: any[],
+                   totalNumVertices: number,
+                   indicesPerVertex: number,
+                   verticesAsIndexLists: number[]): void
+    {
+        var numVertexSources = vertexSources.length;
+        var vs;
+        for (vs = 0; vs < numVertexSources; vs += 1)
+        {
+            var vertexSource = vertexSources[vs];
+            var thisSourceOffset = vertexSource.offset;
+            var thisSourceStride = vertexSource.stride;
+            var thisSourceData = vertexSource.data;
+
+            var newData = new Array(thisSourceStride * totalNumVertices);
+
+            // For each entry in index list
+            var vertIdx = 0;
+            var vertIdxOffset = thisSourceOffset;
+            while (vertIdx < totalNumVertices)
+            {
+                var newVBIdx = thisSourceStride * vertIdx;
+                var oldVBIdx = thisSourceStride * verticesAsIndexLists[vertIdxOffset];
+
+                // Copy the vertex data out of the vertex buffer
+                for (var attrIdx = 0; attrIdx < thisSourceStride; attrIdx += 1)
+                {
+                    newData[newVBIdx + attrIdx] = thisSourceData[oldVBIdx + attrIdx];
+                }
+
+                vertIdx += 1;
+                vertIdxOffset += indicesPerVertex;
+            }
+
+            vertexSource.data = newData;
+            vertexSource.offset = 0;
+        }
+    }
+
+    _gatherVertexData(vertexData: any,
+                      vertexSources: any[],
+                      totalNumVertices: number): void
+    {
+        var numVertexSources = vertexSources.length;
+        var vertexDataCount = 0;
+        var t = 0;
+        for (t = 0; t < totalNumVertices; t += 1)
+        {
+            var vs = 0;
+            do
+            {
+                var vertexSource = vertexSources[vs];
+                var sourceData = vertexSource.data;
+                var stride = vertexSource.stride;
+                var index = t * stride;
+                var nextIndex = (index + stride);
+                var destStride = vertexSource.destStride;
+                do
+                {
+                    vertexData[vertexDataCount] = sourceData[index];
+                    vertexDataCount += 1;
+                    index += 1;
+                }
+                while (index < nextIndex);
+
+                while (stride < destStride)
+                {
+                    vertexData[vertexDataCount] = 0;
+                    vertexDataCount += 1;
+                    destStride -= 1;
+                }
+
+                vs += 1;
+            }
+            while (vs < numVertexSources);
+        }
+    }
+
     _isSequentialIndices(indices, numIndices): boolean
     {
         var baseIndex = indices[0];
@@ -3737,6 +3815,32 @@ class Scene
             }
         }
         return true;
+    }
+
+    _copyIndexData(indexBufferData: any,
+                   indexBufferOffset: number,
+                   faces: number[],
+                   numIndices: number,
+                   baseIndex: number): number
+    {
+        var t;
+        if (baseIndex)
+        {
+            for (t = 0; t < numIndices; t += 1)
+            {
+                indexBufferData[indexBufferOffset] = (baseIndex + faces[t]);
+                indexBufferOffset += 1;
+            }
+        }
+        else
+        {
+            for (t = 0; t < numIndices; t += 1)
+            {
+                indexBufferData[indexBufferOffset] = faces[t];
+                indexBufferOffset += 1;
+            }
+        }
+        return indexBufferOffset;
     }
 
     // try to group sequential renderables into a single draw call
@@ -4042,7 +4146,7 @@ class Scene
             if (gd)
             {
                 // First calculate data about the vertex streams
-                var offset, stride;
+                var offset;
                 var destStride;
                 var destFormat;
                 var maxOffset = 0;
@@ -4327,41 +4431,10 @@ class Scene
                     verticesAsIndexListTable = null;
 
                     // Recreate vertex buffer data on the vertexSources
-                    for (vs = 0; vs < numVertexSources; vs += 1)
-                    {
-                        vertexSource = vertexSources[vs];
-                        var thisSourceOffset = vertexSource.offset;
-                        var thisSourceStride = vertexSource.stride;
-                        var thisSourceData = vertexSource.data;
-
-                        var newData = new Array(thisSourceStride * totalNumVertices);
-
-                        // For each entry in index list
-
-                        var vertIdx = 0;
-                        var vertIdxOffset = thisSourceOffset;
-                        while (vertIdx < totalNumVertices)
-                        {
-                            var newVBIdx = thisSourceStride * vertIdx;
-                            var oldVBIdx = thisSourceStride * verticesAsIndexLists[vertIdxOffset];
-
-                            // Copy the vertex data out of the vertex buffer
-
-                            for (var attrIdx = 0 ;
-                                 attrIdx < thisSourceStride ;
-                                 attrIdx += 1)
-                            {
-                                newData[newVBIdx + attrIdx] =
-                                    thisSourceData[oldVBIdx + attrIdx];
-                            }
-
-                            vertIdx += 1;
-                            vertIdxOffset += indicesPerVertex;
-                        }
-
-                        vertexSource.data = newData;
-                        vertexSource.offset = 0;
-                    }
+                    this._remapVertices(vertexSources,
+                                        totalNumVertices,
+                                        indicesPerVertex,
+                                        verticesAsIndexLists);
 
                     verticesAsIndexLists.length = 0;
                     verticesAsIndexLists = null;
@@ -4403,45 +4476,15 @@ class Scene
 
                 baseIndex = vertexBufferAllocation.baseIndex;
 
-                var indexBufferAllocation;
-                var t, index, nextIndex;
                 //
                 // We no have the simple case of each index maps to one vertex so create one vertex buffer and fill in.
                 //
                 var vertexData = (useFloatArray ?
                                   new this.float32ArrayConstructor(totalNumVertices * numValuesPerVertex) :
                                   new Array(totalNumVertices * numValuesPerVertex));
-                var vertexDataCount = 0;
-                for (t = 0; t < totalNumVertices; t += 1)
-                {
-                    vs = 0;
-                    do
-                    {
-                        vertexSource = vertexSources[vs];
-                        var sourceData = vertexSource.data;
-                        stride = vertexSource.stride;
-                        index = t * stride;
-                        nextIndex = (index + stride);
-                        destStride = vertexSource.destStride;
-                        do
-                        {
-                            vertexData[vertexDataCount] = sourceData[index];
-                            vertexDataCount += 1;
-                            index += 1;
-                        }
-                        while (index < nextIndex);
-
-                        while (stride < destStride)
-                        {
-                            vertexData[vertexDataCount] = 0;
-                            vertexDataCount += 1;
-                            destStride -= 1;
-                        }
-
-                        vs += 1;
-                    }
-                    while (vs < numVertexSources);
-                }
+                this._gatherVertexData(vertexData,
+                                       vertexSources,
+                                       totalNumVertices);
                 vertexBuffer.setData(vertexData, baseIndex, totalNumVertices);
 
                 if (keepVertexData &&
@@ -4553,8 +4596,8 @@ class Scene
                         shape.vertexOffset = 0;
                     }
 
-                    indexBufferAllocation = indexBufferManager.allocate(totalNumIndices,
-                                                                        (maxIndex < 65536 ? 'USHORT' : 'UINT'));
+                    var indexBufferAllocation = indexBufferManager.allocate(totalNumIndices,
+                                                                            (maxIndex < 65536 ? 'USHORT' : 'UINT'));
                     indexBuffer = indexBufferAllocation.indexBuffer;
                     if (!indexBuffer)
                     {
@@ -4590,7 +4633,7 @@ class Scene
                         destSurface = shape.surfaces[s];
 
                         faces = destSurface.faces;
-                        delete destSurface.faces;
+                        destSurface.faces = undefined;
 
                         if (faces)
                         {
@@ -4605,23 +4648,11 @@ class Scene
                                 destSurface.first = (indexBufferBaseIndex + indexBufferOffset);
                                 destSurface.numVertices = totalNumVertices;
 
-                                if (baseIndex)
-                                {
-                                    for (t = 0; t < numIndices; t += 1)
-                                    {
-                                        indexBufferData[indexBufferOffset] = (baseIndex + faces[t]);
-                                        indexBufferOffset += 1;
-                                    }
-                                }
-                                else
-                                {
-                                    for (t = 0; t < numIndices; t += 1)
-                                    {
-                                        indexBufferData[indexBufferOffset] = faces[t];
-                                        indexBufferOffset += 1;
-                                    }
-                                }
-
+                                indexBufferOffset = this._copyIndexData(indexBufferData,
+                                                                        indexBufferOffset,
+                                                                        faces,
+                                                                        numIndices,
+                                                                        baseIndex);
                                 if (keepVertexData)
                                 {
                                     if (maxIndex < 65536 &&
@@ -4702,7 +4733,7 @@ class Scene
                         }
                     }
 
-                    delete shape.surfaces;
+                    shape.surfaces = undefined;
                 }
             }
 
