@@ -120,7 +120,7 @@ class Draw2DSprite
         }
     }
 
-    getColor(dst)
+    getColor(dst?)
     {
         if (dst === undefined)
         {
