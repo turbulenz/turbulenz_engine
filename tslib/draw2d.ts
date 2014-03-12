@@ -143,6 +143,16 @@ class Draw2DSprite
         data[11] = color[3];
     }
 
+    getAlpha() : number
+    {
+        return this.data[11];
+    }
+
+    setAlpha(alpha: number)
+    {
+        this.data[11] = alpha;
+    }
+
     getTexture() : Texture
     {
         return this._texture;
