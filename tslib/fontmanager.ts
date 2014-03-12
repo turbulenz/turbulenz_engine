@@ -77,7 +77,9 @@ interface FontDrawContext
 */
 class Font
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     bold: boolean;
     italic: boolean;
@@ -487,7 +489,9 @@ class Font
 
         // Set the Texture for this page
 
+        /* tslint:disable:no-string-literal */
         techniqueParameters['texture'] = this.textures[pageIdx];
+        /* tslint:enable:no-string-literal */
         gd.setTechniqueParameters(techniqueParameters);
 
         if (4 < numVertices)
@@ -566,7 +570,9 @@ class Font
 */
 class FontManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     fonts: { [name: string]: Font; };
 
@@ -638,7 +644,9 @@ class FontManager
     {
         if (!errorCallback)
         {
+            /* tslint:disable:no-empty */
             errorCallback = function (/* e */) {};
+            /* tslint:enable:no-empty */
         }
 
         var fonts = {};
@@ -894,7 +902,9 @@ class FontManager
                 defaultFont.pageHeight = 64;
             }
         }
+        /* tslint:disable:no-string-literal */
         fonts["default"] = defaultFont;
+        /* tslint:enable:no-string-literal */
 
         var singlePageLoaded = function singlePageLoadedFn(font: Font,
                                                            t: Texture)

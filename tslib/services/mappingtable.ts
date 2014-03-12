@@ -40,7 +40,9 @@ interface MappingTableParameters
 
 class MappingTable
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     private mappingTableURL : string;
     private tablePrefix     : string;
@@ -157,7 +159,7 @@ class MappingTable
                             map[source] = tablePrefix + map[source];
                         }
                     }
-                }
+                };
 
                 // Apply the prefix to the main runmapping table, and
                 // any override tables.

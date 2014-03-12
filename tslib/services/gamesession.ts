@@ -26,7 +26,9 @@ interface GameSessionPlayerData
 
 class GameSession
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     post_delay = 1000;
 
@@ -254,7 +256,8 @@ class GameSession
             }
             else
             {
-                gameSession.errorCallbackFn("TurbulenzServices.createGameSession error with HTTP status " + status + ": " + jsonResponse.msg, status);
+                gameSession.errorCallbackFn("TurbulenzServices.createGameSession error with HTTP status " +
+                                            status + ": " + jsonResponse.msg, status);
             }
         };
 

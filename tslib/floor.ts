@@ -2,7 +2,9 @@
 
 class Floor
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     render      : { (gd: GraphicsDevice, camera: Camera): void; };
     color       : any; // v4
@@ -198,6 +200,8 @@ class Floor
             }
         };
 
+        /* tslint:disable:whitespace */
+        /* tslint:disable:max-line-length */
         var shaderParameters =
             {
                 "version": 1,
@@ -254,6 +258,8 @@ class Floor
                     }
                 }
             };
+        /* tslint:enable:max-line-length */
+        /* tslint:enable:whitespace */
 
         var shader = gd.createShader(shaderParameters);
         if (shader)

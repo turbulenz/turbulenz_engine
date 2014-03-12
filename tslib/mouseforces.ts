@@ -5,7 +5,9 @@
 //
 class MouseForces
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     md: MathDevice;
     pd: PhysicsDevice;
@@ -52,7 +54,8 @@ class MouseForces
 
         this.pickRayFrom = cam_pos;
 
-        var direction = md.v3Normalize(md.v3Sub(md.v3Add(cam_at, md.v3ScalarMul(cam_right, x)), md.v3ScalarMul(cam_up, y)));
+        var direction = md.v3Normalize(md.v3Sub(md.v3Add(cam_at, md.v3ScalarMul(cam_right, x)),
+                                                md.v3ScalarMul(cam_up, y)));
         this.pickRayTo = md.v3Add(cam_pos, md.v3ScalarMul(direction, farPlane));
     }
 

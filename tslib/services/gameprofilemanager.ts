@@ -12,7 +12,9 @@ interface GameProfileErrorFn
 
 class GameProfileManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     maxValueSize = 1024;
     maxGetListUsernames = 64;
@@ -56,7 +58,7 @@ class GameProfileManager
 
         var dataSpec = {
             value: value,
-            gameSessionId: that.gameSessionId,
+            gameSessionId: that.gameSessionId
         };
 
         var url = '/api/v1/game-profile/set';
@@ -99,10 +101,12 @@ class GameProfileManager
             else
             {
                 var errorCallback = errorCallbackFn || that.errorCallbackFn;
+                /* tslint:disable:no-trailing-comma */
                 errorCallback("GameProfileManager.remove failed with status " + status + ": " + jsonResponse.msg,
                               status,
                               that.remove,
                               [callbackFn]);
+                /* tslint:enable:no-trailing-comma */
             }
         }
 

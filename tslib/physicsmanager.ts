@@ -22,7 +22,10 @@ interface PhysicsNode
 //
 class PhysicsManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
+
     arrayConstructor: any;  // on prototype
 
     mathsDevice: MathDevice;

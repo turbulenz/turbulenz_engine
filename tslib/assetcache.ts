@@ -33,7 +33,9 @@ interface AssetCacheParams
 
 class AssetCache
 {
+    /* tslint:disable:no-unused-variable */
     static version = 2;
+    /* tslint:enable:no-unused-variable */
 
     maxCacheSize: number;
     onLoad: AssetCacheOnLoadFn;

@@ -64,7 +64,7 @@ class UserDataManager
         };
 
         var dataSpec : UserDataManagerDataSpec = {
-            gameSessionId: that.gameSessionId,
+            gameSessionId: that.gameSessionId
         };
 
         if (TurbulenzServices.bridgeServices)

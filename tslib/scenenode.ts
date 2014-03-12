@@ -149,7 +149,9 @@ class SceneNode
         this.worldUpdate = 0; //Counter of number of times modified.
         this.frameVisible = -1;
 
+        /* tslint:disable:no-duplicate-variable */
         var local = params.local;
+        /* tslint:enable:no-duplicate-variable */
         if (local)
         {
             if (this.arrayConstructor !== Array)

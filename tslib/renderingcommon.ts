@@ -30,7 +30,9 @@ renderingCommonGetTechniqueIndexFn.numTechniques = 0;
 //
 // renderingCommonSortKeyFn
 //
+/* tslint:disable:no-unused-variable */
 function renderingCommonSortKeyFn(techniqueIndex, materialIndex, nodeIndex?)
+/* tslint:enable:no-unused-variable */
 {
     var sortKey = ((techniqueIndex * 0x10000) + (materialIndex % 0x10000));
     if (nodeIndex)
@@ -43,7 +45,9 @@ function renderingCommonSortKeyFn(techniqueIndex, materialIndex, nodeIndex?)
 //
 // renderingCommonCreateRendererInfoFn
 //
+/* tslint:disable:no-unused-variable */
 function renderingCommonCreateRendererInfoFn(renderable)
+/* tslint:enable:no-unused-variable */
 {
     var rendererInfo = {
         far: renderable.sharedMaterial.meta.far
@@ -62,9 +66,10 @@ function renderingCommonCreateRendererInfoFn(renderable)
 //
 // renderingCommonAddDrawParameterFastestFn
 //
-var renderingCommonAddDrawParameterFastestFn =
-    function renderingCommonAddDrawParameterFastestFnFn(drawParameters)
+/* tslint:disable:no-unused-variable */
+function renderingCommonAddDrawParameterFastestFn(drawParameters)
+/* tslint:enable:no-unused-variable */
 {
     var array = this.array;
     array[array.length] = drawParameters;
-};
+}

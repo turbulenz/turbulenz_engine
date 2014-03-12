@@ -10,7 +10,9 @@
 
 class SimpleRendering
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     static numPasses = 3;
     static passIndex = { opaque: 0, decal: 1, transparent: 2 };
@@ -38,9 +40,11 @@ class SimpleRendering
 
     // Methods
 
+    /* tslint:disable:no-empty */
     updateShader(sm: ShaderManager)
     {
     }
+    /* tslint:enable:no-empty */
 
     sortRenderablesAndLights(camera, scene)
     {
@@ -61,7 +65,7 @@ class SimpleRendering
         var numVisibleRenderables = visibleRenderables.length;
         if (numVisibleRenderables > 0)
         {
-            var renderable, meta, pass, passIndex;
+            var renderable, pass, passIndex;
             var transparent = SimpleRendering.passIndex.transparent;
             var n = 0;
             do
@@ -126,7 +130,9 @@ class SimpleRendering
         {
             this.eyePositionUpdated = false;
         }
+        /* tslint:disable:no-string-literal */
         this.globalTechniqueParameters['time'] = currentTime;
+        /* tslint:enable:no-string-literal */
         this.camera = camera;
         this.scene = scene;
     }
@@ -199,17 +205,23 @@ class SimpleRendering
 
     setGlobalLightColor(color)
     {
+        /* tslint:disable:no-string-literal */
         this.globalTechniqueParameters['lightColor'] = color;
+        /* tslint:enable:no-string-literal */
     }
 
     setAmbientColor(color)
     {
+        /* tslint:disable:no-string-literal */
         this.globalTechniqueParameters['ambientColor'] = color;
+        /* tslint:enable:no-string-literal */
     }
 
     setDefaultTexture(tex)
     {
+        /* tslint:disable:no-string-literal */
         this.globalTechniqueParameters['diffuse'] = tex;
+        /* tslint:enable:no-string-literal */
     }
 
     setWireframe(wireframeEnabled, wireframeInfo)
@@ -263,7 +275,8 @@ class SimpleRendering
         }
 
         // TODO: any cast
-        drawParameters.sortKey = renderingCommonSortKeyFn((<any>this).techniqueIndex, sharedMaterial.meta.materialIndex);
+        drawParameters.sortKey = renderingCommonSortKeyFn((<any>this).techniqueIndex,
+                                                          sharedMaterial.meta.materialIndex);
 
         if (!geometryInstance.sharedMaterial.techniqueParameters.materialColor &&
             !geometryInstance.techniqueParameters.materialColor)
@@ -326,7 +339,9 @@ class SimpleRendering
 
             var lightPositionUpdated, eyePositionUpdated, worldInverse;
 
-            techniqueParameters.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, techniqueParameters.worldViewProjection);
+            techniqueParameters.worldViewProjection = md.m43MulM44(matrix,
+                                                                   camera.viewProjectionMatrix,
+                                                                   techniqueParameters.worldViewProjection);
 
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
@@ -366,7 +381,9 @@ class SimpleRendering
 
             var lightPositionUpdated, eyePositionUpdated, worldInverse;
 
-            techniqueParameters.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, techniqueParameters.worldViewProjection);
+            techniqueParameters.worldViewProjection = md.m43MulM44(matrix,
+                                                                   camera.viewProjectionMatrix,
+                                                                   techniqueParameters.worldViewProjection);
 
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
@@ -407,14 +424,18 @@ class SimpleRendering
         var simpleNoLightUpdate = function simpleNoLightUpdateFn(camera)
         {
             var techniqueParameters = this.techniqueParameters;
-            techniqueParameters.worldViewProjection = md.m43MulM44(this.node.world, camera.viewProjectionMatrix, techniqueParameters.worldViewProjection);
+            techniqueParameters.worldViewProjection = md.m43MulM44(this.node.world,
+                                                                   camera.viewProjectionMatrix,
+                                                                   techniqueParameters.worldViewProjection);
         };
 
         var simpleNoLightSkinnedUpdate =
             function simpleNoLightSkinnedUpdateFn(camera)
         {
             var techniqueParameters = this.techniqueParameters;
-            techniqueParameters.worldViewProjection = md.m43MulM44(this.node.world, camera.viewProjectionMatrix, techniqueParameters.worldViewProjection);
+            techniqueParameters.worldViewProjection = md.m43MulM44(this.node.world,
+                                                                   camera.viewProjectionMatrix,
+                                                                   techniqueParameters.worldViewProjection);
             var skinController = this.skinController;
             if (skinController)
             {
@@ -426,98 +447,94 @@ class SimpleRendering
         var simpleDebugNormalsUpdate =
             function simpleDebugNormalsUpdateFn(camera)
         {
-            var techniqueParameters = this.techniqueParameters;
+            var tp = this.techniqueParameters;
             var node = this.node;
             var matrix = node.world;
             var worldUpdate = node.worldUpdate;
 
-            techniqueParameters.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, techniqueParameters.worldViewProjection);
+            tp.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, tp.worldViewProjection);
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                tp.worldInverseTranspose = md.m33InverseTranspose(matrix, tp.worldInverseTranspose);
             }
         };
 
         var simpleDebugNormalsSkinnedUpdate =
             function simpleDebugNormalsSkinnedUpdateFn(camera)
         {
-            var techniqueParameters = this.techniqueParameters;
+            var tp = this.techniqueParameters;
             var node = this.node;
             var matrix = node.world;
             var worldUpdate = node.worldUpdate;
 
-            techniqueParameters.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, techniqueParameters.worldViewProjection);
+            tp.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, tp.worldViewProjection);
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                tp.worldInverseTranspose = md.m33InverseTranspose(matrix, tp.worldInverseTranspose);
             }
             var skinController = this.skinController;
             if (skinController)
             {
-                techniqueParameters.skinBones = skinController.output;
+                tp.skinBones = skinController.output;
                 skinController.update();
             }
         };
 
         var simpleEnvUpdate = function simpleEnvUpdateFn(camera)
         {
-            var techniqueParameters = this.techniqueParameters;
+            var tp = this.techniqueParameters;
             var node = this.node;
             var matrix = node.world;
             var worldUpdate = node.worldUpdate;
 
             var worldInverse;
 
-            techniqueParameters.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, techniqueParameters.worldViewProjection);
+            tp.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, tp.worldViewProjection);
 
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
                 this.worldInverse = worldInverse = md.m43Inverse(matrix, worldInverse);
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                tp.worldInverseTranspose = md.m33InverseTranspose(matrix, tp.worldInverseTranspose);
             }
             else
             {
                 worldInverse = this.worldInverse;
             }
 
-            techniqueParameters.eyePosition = md.m43TransformPoint(worldInverse,
-                                                                   dr.eyePosition,
-                                                                   techniqueParameters.eyePosition);
+            tp.eyePosition = md.m43TransformPoint(worldInverse, dr.eyePosition, tp.eyePosition);
         };
 
         var simpleEnvSkinnedUpdate = function simpleEnvSkinnedUpdateFn(camera)
         {
-            var techniqueParameters = this.techniqueParameters;
+            var tp = this.techniqueParameters;
             var node = this.node;
             var matrix = node.world;
             var worldUpdate = node.worldUpdate;
 
             var worldInverse;
 
-            techniqueParameters.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, techniqueParameters.worldViewProjection);
+            tp.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, tp.worldViewProjection);
 
             if (this.techniqueParametersUpdated !== worldUpdate)
             {
                 this.techniqueParametersUpdated = worldUpdate;
                 this.worldInverse = worldInverse = md.m43Inverse(matrix, worldInverse);
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                tp.worldInverseTranspose = md.m33InverseTranspose(matrix, tp.worldInverseTranspose);
             }
             else
             {
                 worldInverse = this.worldInverse;
             }
 
-            techniqueParameters.eyePosition = md.m43TransformPoint(worldInverse,
-                                                                   dr.eyePosition,
-                                                                   techniqueParameters.eyePosition);
+            tp.eyePosition = md.m43TransformPoint(worldInverse, dr.eyePosition, tp.eyePosition);
 
             var skinController = this.skinController;
             if (skinController)
             {
-                techniqueParameters.skinBones = skinController.output;
+                tp.skinBones = skinController.output;
                 skinController.update();
             }
         };

@@ -43,7 +43,9 @@ interface SceneNodeParameters // extends SceneNode
 //
 class ResourceLoader
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     nodesMap             : { [name: string]: SceneNodeParameters; };
     referencesPending    : { [name: string]: any[]; }; // TODO
@@ -118,7 +120,9 @@ class ResourceLoader
                     // the shape has to be copied if it has a skeleton as the same shape
                     // can be used with multiple skeletons
                     targetShapes[targetShapeName] = copyObject(fileShape);
-                    targetShapes[targetShapeName].skeleton = (skeletonNamePrefix ? (skeletonNamePrefix + "-" + fileSkeletonName) : fileSkeletonName);
+                    targetShapes[targetShapeName].skeleton = (skeletonNamePrefix ?
+                                                              (skeletonNamePrefix + "-" + fileSkeletonName) :
+                                                              fileSkeletonName);
                 }
                 else
                 {
@@ -146,7 +150,9 @@ class ResourceLoader
             if (fileSkeletons.hasOwnProperty(fileSkeletonName))
             {
                 var fileSkeleton = fileSkeletons[fileSkeletonName];
-                var targetSkeletonName = (skeletonNamePrefix ? (skeletonNamePrefix + "-" + fileSkeletonName) : fileSkeletonName);
+                var targetSkeletonName = (skeletonNamePrefix ?
+                                          (skeletonNamePrefix + "-" + fileSkeletonName) :
+                                          fileSkeletonName);
                 targetSkeletons[targetSkeletonName] = fileSkeleton;
             }
         }
@@ -474,7 +480,9 @@ class ResourceLoader
 
         function begetFn(o)
         {
+            /* tslint:disable:no-empty */
             var F = function () { };
+            /* tslint:enable:no-empty */
             F.prototype = o;
             return new F();
         }

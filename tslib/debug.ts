@@ -17,7 +17,7 @@ interface IErrorStackResult
 declare var VMathArrayConstructor : Function;
 declare var TurbulenzEngine :
 {
-    onperformancewarning : { (msg: string):void; };
+    onperformancewarning : { (msg: string): void; };
 };
 
 // The debug object is only available in debug modes.  The build tools
@@ -40,13 +40,13 @@ declare var TurbulenzEngine :
 
 interface TurbulenzDebug
 {
-    reportAssert(msg:string): void;
+    reportAssert(msg: string): void;
     abort(msg: string): void;
     assert(condition: any, msg?: string): void;
     log(msg: string): void;
 
     /// Call the given function.  No returns values are propagated.
-    evaluate(fn: { ():void; }): void;
+    evaluate(fn: { (): void; }): void;
 
     isNumber(s: any): boolean;
 
@@ -135,7 +135,7 @@ var debug : TurbulenzDebug = {
         window.console.log(msg);
     },
 
-    evaluate : function debugEvaluateFn(fn: {():void;})
+    evaluate : function debugEvaluateFn(fn: { (): void; })
     {
         fn();
     },

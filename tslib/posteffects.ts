@@ -13,7 +13,9 @@ interface PostEffectsEntry
 //
 class PostEffects
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     shader: Shader;
     bicolor: PostEffectsEntry;
