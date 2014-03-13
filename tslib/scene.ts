@@ -225,13 +225,13 @@ class Scene
         debug.assert(!rootNode.scene, "Root node already in a scene");
         debug.assert(!this.rootNodesMap[name], "Root node with the same name exits in the scene");
 
+        // Need to call this method before setting scene property
         rootNode.addedToScene(this);
 
         rootNode.scene = this;
 
         this.rootNodes.push(rootNode);
         this.rootNodesMap[name] = rootNode;
-        this.addRootNodeToUpdate(rootNode, name);
     }
 
     //
@@ -5341,7 +5341,7 @@ class Scene
 
                     if (overloadedNode)
                     {
-                        //Utilities.log("Overloaded node '" + nodePath + "'");
+                        debug.log("Overloading existing node '" + nodePath + "'");
 
                         var overloadedMatrix = overloadedNode.local;
                         if (overloadedMatrix && node.local)
