@@ -305,11 +305,13 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         console.warn(msg);
     }
 
-    /* tslint:disable:no-empty */
     onperformancewarning(msg)
     {
+        if (debug)
+        {
+            console.warn(msg);
+        }
     }
-    /* tslint:enable:no-empty */
 
     getSystemInfo()
     {
