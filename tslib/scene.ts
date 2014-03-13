@@ -225,11 +225,9 @@ class Scene
         debug.assert(!rootNode.scene, "Root node already in a scene");
         debug.assert(!this.rootNodesMap[name], "Root node with the same name exits in the scene");
 
-        rootNode.scene = this;
+        rootNode.addedToScene(this);
 
-        // Ensure node will be added to spatial map on update
-        // In the event that there are no dirty flags set.
-        rootNode.worldExtentsUpdate = true;
+        rootNode.scene = this;
 
         this.rootNodes.push(rootNode);
         this.rootNodesMap[name] = rootNode;
@@ -282,7 +280,7 @@ class Scene
             }
         }
 
-        delete rootNode.scene;
+        rootNode.scene = undefined;
     }
 
     //

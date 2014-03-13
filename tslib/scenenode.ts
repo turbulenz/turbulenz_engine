@@ -70,7 +70,6 @@ class SceneNode
     customLocalExtents              : any; //
 
     worldExtents                    : any; //
-    worldExtentsUpdate              : boolean;
     customWorldExtents              : any; //
     numCustomRenderableWorldExtents : number;
 
@@ -116,14 +115,6 @@ class SceneNode
     static makePath(parentPath, childName)
     {
         return parentPath + "/" + childName;
-    }
-
-    //
-    //SceneNode.invalidSetLocalTransform
-    //
-    static invalidSetLocalTransform()
-    {
-        debug.abort("setLocalTransform can not be called on static nodes.");
     }
 
     //
@@ -379,11 +370,47 @@ class SceneNode
     }
 
     //
+    //addedToScene
+    //
+    addedToScene(scene: Scene): void
+    {
+        //private function, used by the Scene
+
+        //Update both world transform and world extents
+        this.updateWorldExtents();
+
+        var worldExtents = this.worldExtents;
+        if (worldExtents)
+        {
+            debug.assert(this.spatialIndex === undefined);
+            if (this.dynamic)
+            {
+                scene.dynamicSpatialMap.add(this, worldExtents);
+            }
+            else
+            {
+                scene.staticSpatialMap.add(this, worldExtents);
+                scene.staticNodesChangeCounter += 1;
+            }
+        }
+
+        var children = this.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var childIndex = 0; childIndex < numChildren; childIndex += 1)
+            {
+                children[childIndex].addedToScene(scene);
+            }
+        }
+    }
+
+    //
     //removedFromScene
     //
     private removedFromScene(scene)
     {
-        //private function
+        //private function, used by the Scene too
 
         if (this.spatialIndex !== undefined)
         {
@@ -414,6 +441,19 @@ class SceneNode
     //
     setLocalTransform(matrix)
     {
+        if (debug)
+        {
+            if (!this.dynamic && this.getRoot().scene)
+            {
+                if (TurbulenzEngine.onperformancewarning)
+                {
+                    TurbulenzEngine.onperformancewarning("Changing local transform of static SceneNode '" + this.name +
+                                                         "' whilst still added to a Scene." +
+                                                         "If this message appears frequently, performance of your" +
+                                                         " game may be affected.");
+                }
+            }
+        }
         if (matrix !== this.local)
         {
             this.local = this.mathDevice.m43Copy(matrix, this.local);
@@ -575,21 +615,24 @@ class SceneNode
     {
         if (!this.dynamic)
         {
+            var scene = this.getRoot().scene;
+
             if (this.spatialIndex !== undefined)
             {
-                var scene = this.getRoot().scene;
                 scene.staticSpatialMap.remove(this);
                 scene.staticNodesChangeCounter += 1;
-                delete this.spatialIndex;
             }
-            delete this.setLocalTransform; //Allowed to move again.
 
             //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
             var worldExtents = this.getWorldExtents();
             if (worldExtents)
             {
-                this.getRoot().scene.dynamicSpatialMap.update(this, worldExtents);
+                if (scene)
+                {
+                    scene.dynamicSpatialMap.add(this, worldExtents);
+                }
             }
+
             this.dynamic = true;
         }
 
@@ -611,31 +654,25 @@ class SceneNode
     {
         if (this.dynamic)
         {
+            var scene = this.getRoot().scene;
+
             if (this.spatialIndex !== undefined)
             {
-                this.getRoot().scene.dynamicSpatialMap.remove(this);
-                delete this.spatialIndex;
+                scene.dynamicSpatialMap.remove(this);
             }
-
-            this.setLocalTransform = SceneNode.invalidSetLocalTransform;
 
             //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
             var worldExtents = this.getWorldExtents();
             if (worldExtents)
             {
-                var scene = this.getRoot().scene;
                 if (scene)
                 {
-                    scene.staticSpatialMap.update(this, worldExtents);
+                    scene.staticSpatialMap.add(this, worldExtents);
                     scene.staticNodesChangeCounter += 1;
                 }
             }
 
-            delete this.dirtyWorldExtents;
-            delete this.worldExtentsUpdate;
-            delete this.dirtyWorld;
-            delete this.notifiedParent;
-            delete this.dynamic;
+            this.dynamic = false;
         }
 
         var children = this.children;
@@ -774,8 +811,7 @@ class SceneNode
 
     static updateNodes(mathDevice, scene, nodes, numNodes)
     {
-        var dynamicSpatialMap = scene.dynamicSpatialMap;
-        var node, parent, index, worldExtents;
+        var node, parent, index;
         do
         {
             numNodes -= 1;
@@ -834,44 +870,8 @@ class SceneNode
                 }
 
                 node.dirtyWorldExtents = false;
-                node.worldExtentsUpdate = true;
-            }
 
-            if (node.worldExtentsUpdate)
-            {
-                node.worldExtentsUpdate = false;
-
-                worldExtents = node.worldExtents;
-                if (worldExtents)
-                {
-                    if (node.dynamic)
-                    {
-                        dynamicSpatialMap.update(node, worldExtents);
-                    }
-                    else
-                    {
-                        scene.staticSpatialMap.update(node, worldExtents);
-                        scene.staticNodesChangeCounter += 1;
-                        //Remove things that are no longer relevant.
-                        node.setLocalTransform = SceneNode.invalidSetLocalTransform;  //no longer allowed to move it.
-                        delete node.dirtyWorldExtents;
-                        delete node.worldExtentsUpdate;
-                        delete node.dirtyWorld;
-                        delete node.notifiedParent;
-                    }
-                }
-                else if (node.spatialIndex !== undefined)
-                {
-                    if (node.dynamic)
-                    {
-                        dynamicSpatialMap.remove(node);
-                    }
-                    else
-                    {
-                        scene.staticSpatialMap.remove(node);
-                        scene.staticNodesChangeCounter += 1;
-                    }
-                }
+                node._updateSpatialMap(scene);
             }
 
             if (node.childNeedsUpdateCount)
@@ -897,6 +897,35 @@ class SceneNode
             node.notifiedParent = false;
         }
         while (0 < numNodes);
+    }
+
+    _updateSpatialMap(scene: Scene): void
+    {
+        var worldExtents = this.worldExtents;
+        if (worldExtents)
+        {
+            if (this.dynamic)
+            {
+                scene.dynamicSpatialMap.update(this, worldExtents);
+            }
+            else
+            {
+                scene.staticSpatialMap.update(this, worldExtents);
+                scene.staticNodesChangeCounter += 1;
+            }
+        }
+        else if (this.spatialIndex !== undefined)
+        {
+            if (this.dynamic)
+            {
+                scene.dynamicSpatialMap.remove(this);
+            }
+            else
+            {
+                scene.staticSpatialMap.remove(this);
+                scene.staticNodesChangeCounter += 1;
+            }
+        }
     }
 
     //
@@ -1150,7 +1179,12 @@ class SceneNode
             }
 
             this.dirtyWorldExtents = false;
-            this.worldExtentsUpdate = true;
+
+            var scene = this.getRoot().scene;
+            if (scene)
+            {
+                this._updateSpatialMap(scene);
+            }
 
             this.checkUpdateRequired();
         }
@@ -1758,7 +1792,7 @@ class SceneNode
             this.lightInstances = [];
         }
 
-        delete this.scene;
+        this.scene = undefined;
 
         // Make sure there are no references to any nodes
         var nodes = SceneNode._tempDirtyNodes;
