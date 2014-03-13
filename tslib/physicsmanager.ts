@@ -58,7 +58,7 @@ class PhysicsManager
 
         if (origin)
         {
-            physicsNode.origin = origin;
+            physicsNode.origin = this.mathsDevice.v3Build(origin[0], origin[1], origin[2]);
         }
 
         if (triangleArray)
@@ -653,7 +653,7 @@ class PhysicsManager
                             else
                             {
                                 //TODO: add a warning that with no extents we can't calculate and origin?
-                                geometry.origin = [0, 0, 0];
+                                geometry.origin = mathsDevice.v3BuildZero();
                             }
 
                             // Can we use a box?
