@@ -385,7 +385,7 @@ TurbulenzEngine.onload = function onloadFn()
                         {
                             // Create the first instance of the node, from the material name 'refNode'
                             nodeName = node.name + "_" + refNode;
-                            newNode = scene.cloneRootNode(node, nodeName);
+                            newNode = node.clone(nodeName);
 
                             // Sets the material on this node and its children
                             setMaterialHierarchy(scene, newNode, refNode);
@@ -396,7 +396,7 @@ TurbulenzEngine.onload = function onloadFn()
                         else
                         {
                             // Clone the reference node
-                            newNode = scene.cloneRootNode(refNode, refNode.name + currentNodeIndex);
+                            newNode = refNode.clone(refNode.name + currentNodeIndex);
                         }
 
                         // CharacterAngle is the random angle of rotation
@@ -411,6 +411,9 @@ TurbulenzEngine.onload = function onloadFn()
                         matrix = m43FromAxisRotation.call(mathDevice, worldUp, characterAngle * deg2Rad);
                         m43SetPos.call(mathDevice, matrix, nodePos);
                         newNode.setLocalTransform(matrix);
+
+                        scene.addRootNode(newNode);
+
                         // Set the grid position identifiers for our nodes
                         // We can find the node grid position later
                         newNode.gridX = i;
