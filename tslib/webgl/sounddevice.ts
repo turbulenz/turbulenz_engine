@@ -23,7 +23,9 @@ interface WebGLSoundDeviceSourceMap
 //
 class WebGLSound implements Sound
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Sound
     name         : string;
@@ -132,6 +134,7 @@ class WebGLSound implements Sound
         var numSamples, numChannels, samplerRate;
 
         var audioContext = sd.audioContext;
+        var xhr: XMLHttpRequest;
         if (audioContext && (sound.forceUncompress || params.uncompress))
         {
             var buffer;
@@ -192,7 +195,6 @@ class WebGLSound implements Sound
                 }
                 else
                 {
-                    var xhr: XMLHttpRequest;
                     if (window.XMLHttpRequest)
                     {
                         xhr = new window.XMLHttpRequest();
@@ -217,7 +219,7 @@ class WebGLSound implements Sound
                             if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
                             {
                                 var xhrStatus = xhr.status;
-                                var xhrStatusText = (xhrStatus !== 0 && xhr.statusText || 'No connection');
+                                //var xhrStatusText = (xhrStatus !== 0 && xhr.statusText || 'No connection');
                                 var response = xhr.response;
 
                                 // Sometimes the browser sets status to 200 OK when the connection is closed
@@ -292,9 +294,9 @@ class WebGLSound implements Sound
                     else
                     {
                         var ratio = (samplerRate / contextSampleRate);
-                        /*jshint bitwise: false*/
+                        /* tslint:disable:no-bitwise */
                         var bufferLength = ((numSamples / (ratio * numChannels)) | 0);
-                        /*jshint bitwise: true*/
+                        /* tslint:enable:no-bitwise */
 
                         buffer = audioContext.createBuffer(numChannels, bufferLength, contextSampleRate);
 
@@ -304,9 +306,9 @@ class WebGLSound implements Sound
                             channel = buffer.getChannelData(c);
                             for (j = 0; j < bufferLength; j += 1)
                             {
-                                /*jshint bitwise: false*/
+                                /* tslint:disable:no-bitwise */
                                 channel[j] = data[c + (((j * ratio) | 0) * numChannels)];
-                                /*jshint bitwise: true*/
+                                /* tslint:enable:no-bitwise */
                             }
                         }
                     }
@@ -332,7 +334,6 @@ class WebGLSound implements Sound
         else
         {
             var audio;
-
             if (soundPath)
             {
                 var extension = soundPath.slice(-3);
@@ -399,7 +400,8 @@ class WebGLSound implements Sound
                             extension = 'mp3';
                             dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
                         }
-                        debug.assert(dataArray.length === dataBlob.size, "Blob constructor does not support typed arrays.");
+                        debug.assert(dataArray.length === dataBlob.size,
+                                    "Blob constructor does not support typed arrays.");
                         sound.blob = dataBlob;
                         soundPath = URL.createObjectURL(dataBlob);
                     }
@@ -445,7 +447,7 @@ class WebGLSound implements Sound
                         return null;
                     }
 
-                    var xhr = new XMLHttpRequest();
+                    xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = function () {
                         if (xhr.readyState === 4)
                         {
@@ -484,7 +486,7 @@ class WebGLSound implements Sound
 
                                         sd.addLoadingSound(checkLoaded);
                                     }
-                                    else if(onload)
+                                    else if (onload)
                                     {
                                         onload(null, xhrStatus);
                                     }
@@ -567,7 +569,9 @@ class WebGLSound implements Sound
 //
 class WebGLSoundSource implements SoundSource
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // SoundSource
     position    : any; // v3
@@ -1543,12 +1547,16 @@ interface WebGLSoundDeviceExtensions
 //
 class WebGLSoundDevice implements SoundDevice
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // SoundDevice
     vendor               : string; // prototype
     renderer             : string;
+    /* tslint:disable:no-duplicate-variable */
     version              : string;
+    /* tslint:enable:no-duplicate-variable */
     deviceSpecifier      : string;
     extensions           : string;
     listenerTransform    : any; // m43
@@ -1677,7 +1685,7 @@ class WebGLSoundDevice implements SoundDevice
     }
 
     // Private API
-    addLoadingSound(soundCheckCall)
+    addLoadingSound(soundCheckCall): void
     {
         var loadingSounds = this.loadingSounds;
         loadingSounds[loadingSounds.length] = soundCheckCall;
@@ -1952,10 +1960,12 @@ class WebGLSoundDevice implements SoundDevice
                 }
 
                 this.numPlayingSources = numPlayingSources;
+                /* tslint:disable:no-bitwise */
                 if (numPlayingSources < (playingSources.length >> 1))
                 {
                     playingSources.length = numPlayingSources;
                 }
+                /* tslint:enable:no-bitwise */
             };
         }
         else

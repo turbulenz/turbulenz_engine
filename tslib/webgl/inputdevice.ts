@@ -10,7 +10,9 @@
 //
 class WebGLInputDevice implements InputDevice
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // We'd like to use { [key: string]: number }, but it doesn't
     // allow keyCodes.A, etc.  See comment in InputDevice decl.
@@ -663,7 +665,7 @@ class WebGLInputDevice implements InputDevice
             {
                 x?: number;
                 y?: number;
-            }= {};
+            } = {};
 
             this.onFocus();
 
@@ -770,6 +772,7 @@ class WebGLInputDevice implements InputDevice
             this.unlockMouse();
 
             // Some apps environments will not exit fullscreen automatically on ESCAPE
+            /* tslint:disable:no-string-literal */
             if (document.fullscreenElement ||
                 document.webkitFullscreenElement ||
                 document.mozFullScreenElement ||
@@ -796,6 +799,7 @@ class WebGLInputDevice implements InputDevice
                     document.exitFullscreen();
                 }
             }
+            /* tslint:enable:no-string-literal */
         }
         else if (undefined !== keyCode)
         {
@@ -1691,8 +1695,10 @@ class WebGLInputDevice implements InputDevice
             }
             else
             {
+                /* tslint:disable:no-empty */
                 id.requestBrowserLock = function requestBrowserLockFn() {};
                 id.requestBrowserUnlock = function requestBrowserUnlockFn() {};
+                /* tslint:enable:no-empty */
             }
         }
 
