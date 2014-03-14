@@ -64,11 +64,6 @@ interface FontDrawPageContext
     vertexIndex : number;
 }
 
-interface FontDrawContext
-{
-    pageContexts : FontDrawPageContext[];
-}
-
 /**
    @class  Font
    @private
