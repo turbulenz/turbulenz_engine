@@ -117,7 +117,6 @@ class AppScene
         var devices = this.devices;
         var graphicsDevice = devices.graphicsDevice;
         var mathDevice = devices.mathDevice;
-        var v4Build = mathDevice.v4Build;
         var managers = this.managers;
         var materials;
         var materialName;
@@ -135,7 +134,7 @@ class AppScene
                 },
                 parameters :
                 {
-                    materialColor : v4Build.call(mathDevice, 0.0, 0.0, 1.0, 1.0)
+                    materialColor : mathDevice.v4Build(0.0, 0.0, 1.0, 1.0)
                 }
             },
             playerMaterial :
@@ -159,7 +158,7 @@ class AppScene
                 },
                 parameters :
                 {
-                    materialColor : v4Build.call(mathDevice, 1.0, 0.0, 0.0, 1.0)
+                    materialColor : mathDevice.v4Build(1.0, 0.0, 0.0, 1.0)
                 }
             },
             grayMaterial :
@@ -171,7 +170,7 @@ class AppScene
                 },
                 parameters :
                 {
-                    materialColor : v4Build.call(mathDevice, 0.5, 0.5, 0.5, 1.0)
+                    materialColor : mathDevice.v4Build(0.5, 0.5, 0.5, 1.0)
                 }
             }
         };
@@ -209,10 +208,9 @@ class AppScene
         var scene = this.scene;
         var gameSettings = this.game.gameSettings;
         var mathDevice = this.devices.mathDevice;
-        var v3Build = mathDevice.v3Build;
 
         // Board dimensions
-        var boardCenter = v3Build.call(mathDevice, 0, 0, 0);
+        var boardCenter = mathDevice.v3Build(0, 0, 0);
         var boardSpacing = gameSettings.boardSpacing;
         var horizontalCubes = gameSettings.width;
         var verticalCubes = gameSettings.height;
@@ -235,12 +233,11 @@ class AppScene
     setupCamera()
     {
         var mathDevice = this.devices.mathDevice;
-        var v3Build = mathDevice.v3Build;
 
         // Camera looks along -ive z direction towards origin - has 60 degree FOV
-        var cameraPosition = v3Build.call(mathDevice, -0.5, -25.0, 25.0);
-        var cameraTarget = v3Build.call(mathDevice, -0.5, 0.0, 0.0);
-        var worldUp = v3Build.call(mathDevice, 0.0, 1.0, 0.0);
+        var cameraPosition = mathDevice.v3Build(-0.5, -25.0, 25.0);
+        var cameraTarget = mathDevice.v3Build(-0.5, 0.0, 0.0);
+        var worldUp = mathDevice.v3Build(0.0, 1.0, 0.0);
         var halfFov = Math.tan(30 * (Math.PI / 180));
         var camera = Camera.create(mathDevice);
 
@@ -392,7 +389,6 @@ class AppScene
     {
         // Cached vars
         var mathDevice = this.devices.mathDevice;
-        var m43BuildTranslation = mathDevice.m43BuildTranslation;
 
         var boardNode = this.boardNode;
         var boardCubeNode = this.boardCubeNode;
@@ -418,7 +414,7 @@ class AppScene
                 // Reset node transform
                 local = newCubeNode.getLocalTransform();
 
-                m43BuildTranslation.call(mathDevice, x, y, z, local);
+                mathDevice.m43BuildTranslation(x, y, z, local);
 
                 newCubeNode.setLocalTransform(local);
 
@@ -466,13 +462,12 @@ class AppScene
         var myWorm = game.getWorm(game.myWormIndex);
         var myColor = (myWorm && myWorm.playerInfo.color) || this.currentPlayerColor || "green";
         var mathDevice = this.devices.mathDevice;
-        var v4Build = mathDevice.v4Build;
 
         if (currentState === state.DEAD)
         {
             if (this.previousGameState !== currentState)
             {
-                this.clearColor = v4Build.call(mathDevice, 1, 0, 0, 1, this.clearColor);
+                this.clearColor = mathDevice.v4Build(1, 0, 0, 1, this.clearColor);
             }
             else
             {
@@ -487,14 +482,14 @@ class AppScene
 
                 this.scene.update();
 
-                this.clearColor = v4Build.call(mathDevice, 0, 0, 0, 1, this.clearColor);
+                this.clearColor = mathDevice.v4Build(0, 0, 0, 1, this.clearColor);
             }
         }
         else if (currentState === state.ERROR)
         {
             if (this.previousGameState !== currentState)
             {
-                this.clearColor = v4Build.call(mathDevice, 0.8, 0.4, 0.2, 1, this.clearColor);
+                this.clearColor = mathDevice.v4Build(0.8, 0.4, 0.2, 1, this.clearColor);
             }
             else
             {
@@ -506,11 +501,11 @@ class AppScene
         {
             if (myColor === "yellow")
             {
-                v4Build.call(mathDevice, 1, 1, 0, 1, this.playerColor);
+                mathDevice.v4Build(1, 1, 0, 1, this.playerColor);
             }
             else
             {
-                v4Build.call(mathDevice, 0, 1, 0, 1, this.playerColor);
+                mathDevice.v4Build(0, 1, 0, 1, this.playerColor);
             }
             this.currentPlayerColor = myColor;
         }
@@ -524,7 +519,6 @@ class AppScene
     moveWormNodes(wormIndex)
     {
         var mathDevice = this.devices.mathDevice;
-        var m43BuildTranslation = mathDevice.m43BuildTranslation;
         var game = this.game;
         var gameSettings = game.gameSettings;
         var boardSpacing = gameSettings.boardSpacing;
@@ -573,10 +567,10 @@ class AppScene
 
             var local = wormPartNode.getLocalTransform();
 
-            m43BuildTranslation.call(mathDevice, (partsPositionX[i] - offsetX) * boardSpacing,
-                                                 (partsPositionY[i] - offsetY) * boardSpacing,
-                                                 1,
-                                                 local);
+            mathDevice.m43BuildTranslation((partsPositionX[i] - offsetX) * boardSpacing,
+                                           (partsPositionY[i] - offsetY) * boardSpacing,
+                                           1,
+                                           local);
 
             wormPartNode.setLocalTransform(local);
         }
@@ -666,9 +660,8 @@ class AppScene
         appScene.wormPartsNodes = [];
 
         // Load the scene
-        var v3Build = mathDevice.v3Build;
-        var globalLightPosition = v3Build.call(mathDevice, 20.0, 0.0, 100.0);
-        var ambientColor = v3Build.call(mathDevice, 0.3, 0.3, 0.4);
+        var globalLightPosition = mathDevice.v3Build(20.0, 0.0, 100.0);
+        var ambientColor = mathDevice.v3Build(0.3, 0.3, 0.4);
 
         var renderer = SimpleRendering.create(devices.graphicsDevice,
                                               mathDevice,
