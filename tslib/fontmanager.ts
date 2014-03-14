@@ -228,6 +228,8 @@ class Font
         }
 
         var glyphCounts = dimensions.glyphCounts;
+        var numGlyphs = glyphCounts[pageIdx];
+        var vertices : Float32Array; // = reusableArrays[numGlyphs];
 
         var ctx : FontDrawPageContext = drawCtx ||
             {
@@ -235,9 +237,18 @@ class Font
                 vertexIndex: 0
             };
 
-        var numGlyphs = glyphCounts[pageIdx];
         if (0 === numGlyphs)
         {
+            // If there is a buffer on this context, recycle it for
+            // use later.
+
+            vertices = ctx.vertices;
+            if (vertices)
+            {
+                this.fm.reusableArrays[numGlyphs] = vertices;
+                ctx.vertices = null;
+            }
+
             return ctx;
         }
 
@@ -252,7 +263,7 @@ class Font
         var reusableArrays = fm.reusableArrays;
 
         var vertexIndex = 0;
-        var vertices = reusableArrays[numGlyphs];
+        vertices = reusableArrays[numGlyphs];
         if (vertices)
         {
             // Need to remove from cache just in case it is not
@@ -509,7 +520,11 @@ class Font
 
         if (reuseVertices)
         {
+            // Reclaim the vertex data buffer, and clear it from the
+            // callers context.
+
             fm.reusableArrays[numGlyphs] = vertices;
+            pageCtx.vertices = null;
         }
     }
 
