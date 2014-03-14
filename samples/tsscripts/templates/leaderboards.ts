@@ -693,7 +693,7 @@ TurbulenzEngine.onload = function onloadFn()
         leaderboardManager.set(leaderboardKeys[currentLeaderboardIndex],
                                scoreOnClick, scoresSetFn, scoresSetErrorFn);
         scoreOnClick += 10;
-    }
+    };
 
     inputDevice.addEventListener('mousewheel', onMouseWheel);
     inputDevice.addEventListener("keyup", keyUp);

@@ -713,7 +713,7 @@ TurbulenzEngine.onload = function onloadFn()
         {
             return 0;
         }
-        return baseVal.value
+        return baseVal.value;
     }
 
     function loadSVGfile(url)

@@ -344,7 +344,10 @@ TurbulenzEngine.onload = function onloadFn()
     var distortionSprite = null;
     function mainLoop()
     {
-        if (!graphicsDevice.beginFrame()) return;
+        if (!graphicsDevice.beginFrame())
+        {
+            return;
+        }
 
         // If no effects applied, render directly to back buffer.
         if (activeEffects.length === 0)

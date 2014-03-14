@@ -329,7 +329,10 @@ TurbulenzEngine.onload = function onloadFn()
     var colorTmp = mathDevice.v4Build(0, 0, 0, 0);
     function mainLoop()
     {
-        if (!graphicsDevice.beginFrame()) return;
+        if (!graphicsDevice.beginFrame())
+        {
+            return;
+        }
 
         draw2D.resetPerformanceData();
 
