@@ -617,14 +617,15 @@ class SceneNode
         {
             var scene = this.getRoot().scene;
 
+            // getWorldExtents will clean and update the state
+            var worldExtents = this.getWorldExtents();
+
             if (this.spatialIndex !== undefined)
             {
                 scene.staticSpatialMap.remove(this);
                 scene.staticNodesChangeCounter += 1;
             }
 
-            //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
-            var worldExtents = this.getWorldExtents();
             if (worldExtents)
             {
                 if (scene)
@@ -656,13 +657,14 @@ class SceneNode
         {
             var scene = this.getRoot().scene;
 
+            // getWorldExtents will clean and update the state
+            var worldExtents = this.getWorldExtents();
+
             if (this.spatialIndex !== undefined)
             {
                 scene.dynamicSpatialMap.remove(this);
             }
 
-            //If there is any dirty state then its possible that even if it still has an spatialIndex it may no longer.
-            var worldExtents = this.getWorldExtents();
             if (worldExtents)
             {
                 if (scene)
