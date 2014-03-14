@@ -1950,9 +1950,13 @@ class Scene
     //
     // cloneRootNode
     //
-    cloneRootNode(rootNode, newInstanceName)
+    cloneRootNode(rootNode, newInstanceName, newLocalTransform?): void
     {
         var newNode = rootNode.clone(newInstanceName);
+        if (newLocalTransform)
+        {
+            rootNode.setLocalTransform(newLocalTransform);
+        }
         this.addRootNode(newNode);
         return newNode;
     }
