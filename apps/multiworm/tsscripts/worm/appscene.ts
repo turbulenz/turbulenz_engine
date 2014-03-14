@@ -414,7 +414,6 @@ class AppScene
             {
                 // Create new node, position it, and add to scene
                 newCubeNode = boardCubeNode.clone();
-                boardNode.addChild(newCubeNode);
 
                 // Reset node transform
                 local = newCubeNode.getLocalTransform();
@@ -422,6 +421,9 @@ class AppScene
                 m43BuildTranslation.call(mathDevice, x, y, z, local);
 
                 newCubeNode.setLocalTransform(local);
+
+                // Now add it to the Scene
+                boardNode.addChild(newCubeNode);
 
                 y += boardSpacing;
             }
