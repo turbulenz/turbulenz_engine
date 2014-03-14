@@ -36,14 +36,11 @@ class Camera
     lookAt(lookAt, up, eyePosition)
     {
         var md = this.md;
-        var v3Normalize = md.v3Normalize;
-        var v3Cross = md.v3Cross;
         var zaxis = md.v3Sub(eyePosition, lookAt);
-
-        v3Normalize.call(md, zaxis, zaxis);
-        var xaxis = v3Cross.call(md, v3Normalize.call(md, up, up), zaxis);
-        v3Normalize.call(md, xaxis, xaxis);
-        var yaxis = v3Cross.call(md, zaxis, xaxis);
+        md.v3Normalize(zaxis, zaxis);
+        var xaxis = md.v3Cross(md.v3Normalize(up, up), zaxis);
+        md.v3Normalize(xaxis, xaxis);
+        var yaxis = md.v3Cross(zaxis, xaxis);
         this.matrix = md.m43Build(xaxis, yaxis, zaxis, eyePosition, this.matrix);
     }
 
