@@ -589,7 +589,7 @@ class FontManager
     getNumPendingFonts: { (): number; };
     isFontLoaded: { (path: string): boolean; };
     isFontMissing: { (path: string): boolean; };
-    setPathRemapping: { (prm, assetUrl: string): void; };
+    setPathRemapping: { (prm, assetPrefix: string): void; };
     calculateTextDimensions: { (path: string, text: string, scale: number,
                                 spacing: number): FontDimensions; };
     reuseVertices: { (vertices: any): void; };
