@@ -138,7 +138,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
     }
 
-    createSoundDevice(params): WebGLSoundDevice
+    createSoundDevice(params: SoundDeviceParameters): WebGLSoundDevice
     {
         if (this.soundDevice)
         {
@@ -204,9 +204,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             testVector[0] = VMath.FLOAT_MAX;
             VMath.FLOAT_MAX = testVector[0];
         }
+        /* tslint:disable:no-empty */
         catch (e)
         {
         }
+        /* tslint:enable:no-empty */
 
         return WebGLMathDevice;
     }
@@ -261,6 +263,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         return null;
     }
 
+    /* tslint:disable:no-empty */
     flush()
     {
 
@@ -270,6 +273,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
     {
 
     }
+    /* tslint:enable:no-empty */
 
     encrypt(msg: string): string
     {
@@ -303,6 +307,10 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     onperformancewarning(msg)
     {
+        if (debug)
+        {
+            console.warn(msg);
+        }
     }
 
     getSystemInfo()
@@ -476,9 +484,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         return this.unloading;
     }
 
+    /* tslint:disable:no-empty */
     enableProfiling()
     {
     }
+    /* tslint:enable:no-empty */
 
     startProfiling()
     {
@@ -586,9 +596,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 configurable : false
             });
 
+            /* tslint:disable:no-empty */
             tz.updateTime = function ()
             {
             };
+            /* tslint:enable:no-empty */
         }
         else
         {
@@ -843,10 +855,9 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             userLocale: (navigator.language || navigator.userLanguage).replace('-', '_')
         };
 
-        var looksLikeNetbook = function looksLikeNetbookFn(): boolean
+        function looksLikeNetbook(): boolean
         {
-            var minScreenDim =
-                Math.min(window.screen.height, window.screen.width)
+            var minScreenDim = Math.min(window.screen.height, window.screen.width);
             return minScreenDim < 900;
         }
 
@@ -970,7 +981,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             var valueToChar = b64ConversionTable;
             var n, chr1, chr2, chr3, enc1, enc2, enc3, enc4;
 
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             n = 0;
             while (n < numBytes)
             {
@@ -1012,7 +1023,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 output += valueToChar[enc3];
                 output += valueToChar[enc4];
             }
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
 
             return output;
         };

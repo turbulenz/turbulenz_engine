@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 
 interface ForwardRendererInfo
 {
@@ -13,7 +13,9 @@ interface ForwardRendererInfo
 
 class ForwardRendering
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     passIndex = {
         fillZ: 0, glow: 1, ambient: 2,
@@ -113,6 +115,8 @@ class ForwardRendering
     bufferWidth: number;
     bufferHeight: number;
 
+    sharedUserData: any[];
+
     //minPixelCount: 16,
     //minPixelCountShadows: 256,
 
@@ -161,10 +165,11 @@ class ForwardRendering
 
     static createNodeRendererInfo(node, md)
     {
+        var buffer = new Float32Array(12 + 9);
         node.rendererInfo = {
             id: ForwardRendering.nextNodeID,
-            worldView: md.m43BuildIdentity(),
-            worldViewInverseTranspose: md.m33BuildIdentity()
+            worldView: md.m43BuildIdentity(buffer.subarray(0, 12)),
+            worldViewInverseTranspose: md.m33BuildIdentity(buffer.subarray(12, 21))
         };
         ForwardRendering.nextNodeID += 1;
     }
@@ -274,9 +279,9 @@ class ForwardRendering
                     passIndex = drawParameters.userData.passIndex;
                     if (passIndex <= ambientPassIndex)
                     {
-                        /*jshint bitwise:false*/
+                        /* tslint:disable:no-bitwise */
                         drawParameters.sortKey = ((drawParameters.sortKey | 0) + sortDistance);
-                        /*jshint bitwise:true*/
+                        /* tslint:enable:no-bitwise */
                     }
                     else if (passIndex === transparentPassIndex)
                     {
@@ -586,6 +591,11 @@ class ForwardRendering
             }
         }
 
+        if (overlappingRenderables.length !== numOverlappingRenderables)
+        {
+            overlappingRenderables.length = numOverlappingRenderables;
+        }
+
         if (0 === numLightVisibleRenderables)
         {
             lightInstance.numVisibleDrawParameters = 0;
@@ -630,9 +640,9 @@ class ForwardRendering
             for (drawParameterIndex = 0; drawParameterIndex < numDrawParameters; drawParameterIndex += 1)
             {
                 drawParameters = drawParametersArray[drawParameterIndex];
-                /*jshint bitwise:false*/
+                /* tslint:disable:no-bitwise */
                 drawParameters.sortKey = ((drawParameters.sortKey | 0) + renderableID);
-                /*jshint bitwise:true*/
+                /* tslint:enable:no-bitwise */
                 this.addToDiffuseQueue(gd, drawParameters,
                                        lightInstanceTechniqueParameters);
                 numVisibleDrawParameters += 1;
@@ -722,12 +732,14 @@ class ForwardRendering
 
         var viewMatrix = camera.viewMatrix;
         var globalTechniqueParameters = this.globalTechniqueParameters;
+        /* tslint:disable:no-string-literal */
         globalTechniqueParameters['projection'] = camera.projectionMatrix;
         globalTechniqueParameters['viewProjection'] =
             camera.viewProjectionMatrix;
         globalTechniqueParameters['eyePosition'] =
             md.m43Pos(camera.matrix, globalTechniqueParameters['eyePosition']);
         globalTechniqueParameters['time'] = currentTime;
+        /* tslint:enable:no-string-literal */
 
         /*
         var maxDepth = (scene.maxDistance + camera.nearPlane);
@@ -796,7 +808,9 @@ class ForwardRendering
 
             if (origin)
             {
-                techniqueParameters.lightOrigin = md.m43TransformPoint(worldView, origin, techniqueParameters.lightOrigin);
+                techniqueParameters.lightOrigin = md.m43TransformPoint(worldView,
+                                                                       origin,
+                                                                       techniqueParameters.lightOrigin);
             }
             else
             {
@@ -957,7 +971,9 @@ class ForwardRendering
 
                 if (origin)
                 {
-                    techniqueParameters.lightOrigin = md.m43TransformPoint(worldView, origin, techniqueParameters.lightOrigin);
+                    techniqueParameters.lightOrigin = md.m43TransformPoint(worldView,
+                                                                           origin,
+                                                                           techniqueParameters.lightOrigin);
                 }
                 else
                 {
@@ -1077,7 +1093,9 @@ class ForwardRendering
 
     drawAmbientPass(gd, ambientColor)
     {
+        /* tslint:disable:no-string-literal */
         this.ambientTechniqueParameters['ambientColor'] = ambientColor;
+        /* tslint:enable:no-string-literal */
         gd.drawArray(this.passes[this.passIndex.ambient],
                      [this.globalTechniqueParameters,
                       this.ambientTechniqueParameters], -1);
@@ -1325,10 +1343,10 @@ class ForwardRendering
             delete this.skyboxTechnique;
             delete this.ambientRigidTechnique;
             delete this.ambientSkinnedTechnique;
-            delete this.ambientRigidAlphaTechnique
+            delete this.ambientRigidAlphaTechnique;
             delete this.ambientSkinnedAlphaTechnique;
             delete this.ambientFlatRigidTechnique;
-            delete this.ambientFlatRigidNoCullTechnique
+            delete this.ambientFlatRigidNoCullTechnique;
             delete this.ambientFlatSkinnedTechnique;
             delete this.ambientGlowmapRigidTechnique;
             delete this.ambientGlowmapSkinnedTechnique;
@@ -1370,11 +1388,13 @@ class ForwardRendering
         fr.numPasses = fr.passIndex.transparent + 1;
 
         var passes = fr.passes = [];
+        var sharedUserData = fr.sharedUserData = [];
         var numPasses = fr.numPasses;
         var index;
         for (index = 0; index < numPasses; index += 1)
         {
             passes[index] = [];
+            sharedUserData[index] = { passIndex: index };
         }
 
         fr.passesSize = [];
@@ -1438,7 +1458,8 @@ class ForwardRendering
         {
             shaderManager.load("shaders/forwardrenderingshadows.cgfx");
 
-            var shadowMaps = ShadowMapping.create(gd, md, shaderManager, effectManager, settings.shadowSizeLow, settings.shadowSizeHigh);
+            var shadowMaps = ShadowMapping.create(gd, md, shaderManager, effectManager,
+                                                  settings.shadowSizeLow, settings.shadowSizeHigh);
             fr.shadowMaps = shadowMaps;
             shadowMappingUpdateFn = shadowMaps.update;
             shadowMappingSkinnedUpdateFn = shadowMaps.skinnedUpdate;
@@ -1462,7 +1483,7 @@ class ForwardRendering
         {
             var worldView = md.m43Mul(node.world, camera.viewMatrix, rendererInfo.worldView);
             md.m33InverseTranspose(worldView, rendererInfo.worldViewInverseTranspose);
-        }
+        };
 
         var forwardUpdate = function forwardUpdateFn(camera)
         {
@@ -1516,12 +1537,16 @@ class ForwardRendering
             var meta = geometryInstanceSharedMaterial.meta;
             var sharedMaterialTechniqueParameters = geometryInstanceSharedMaterial.techniqueParameters;
             var geometryInstanceTechniqueParameters = geometryInstance.techniqueParameters;
-            var materialColor = geometryInstanceTechniqueParameters.materialColor || sharedMaterialTechniqueParameters.materialColor || fr.v4One;
+            var materialColor = (geometryInstanceTechniqueParameters.materialColor ||
+                                 sharedMaterialTechniqueParameters.materialColor ||
+                                 fr.v4One);
             geometryInstance.drawParameters = [];
             var numTechniqueParameters;
 
             var techniqueName = this.technique.name;
-            var sortOffset = opaqueSortOffset;  // Used to force alpha tested objects to be rendererd after opaque so the halo blends with objects
+
+            // Used to force alpha tested objects to be rendererd after opaque so the halo blends with objects
+            var sortOffset = opaqueSortOffset;
 
             var node = geometryInstance.node;
             if (!node.rendererInfo)
@@ -1536,9 +1561,8 @@ class ForwardRendering
                 sharedMaterialTechniqueParameters.light_map)
             {
                 drawParameters = drawParameters = gd.createDrawParameters();
-                drawParameters.userData = {};
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.glow];
                 geometryInstance.prepareDrawParameters(drawParameters);
-                drawParameters.userData.passIndex = fr.passIndex.glow;
                 geometryInstance.drawParameters.push(drawParameters);
 
                 if (sharedMaterialTechniqueParameters.light_map)
@@ -1565,9 +1589,8 @@ class ForwardRendering
             {
                 // fillZ
                 drawParameters = gd.createDrawParameters();
-                drawParameters.userData = {};
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.fillZ];
                 geometryInstance.prepareDrawParameters(drawParameters);
-                drawParameters.userData.passIndex = fr.passIndex.fillZ;
                 geometryInstance.drawParameters.push(drawParameters);
                 numTechniqueParameters = 0;
 
@@ -1659,15 +1682,20 @@ class ForwardRendering
                     }
                 }
 
+                /* tslint:disable:no-bitwise */
                 var techniqueIndex = drawParameters.technique.id;
                 if (alpha)
                 {
-                    drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex, meta.materialIndex);
+                    drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex,
+                                                                      meta.materialIndex);
                 }
                 else
                 {
-                    drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex, node.rendererInfo.id);
+                    drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | techniqueIndex,
+                                                                      node.rendererInfo.id);
                 }
+                /* tslint:enable:no-bitwise */
+
                 //Now add common for world and skin data
                 drawParameters.setTechniqueParameters(numTechniqueParameters, geometryInstanceTechniqueParameters);
             }
@@ -1679,9 +1707,8 @@ class ForwardRendering
                 !meta.decal)
             {
                 drawParameters = gd.createDrawParameters();
-                drawParameters.userData = {};
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.ambient];
                 geometryInstance.prepareDrawParameters(drawParameters);
-                drawParameters.userData.passIndex = fr.passIndex.ambient;
                 geometryInstance.drawParameters.push(drawParameters);
 
                 if (geometryInstance.skinController)
@@ -1743,8 +1770,11 @@ class ForwardRendering
                         drawParameters.technique = fr.ambientRigidTechnique;
                     }
                 }
+                /* tslint:disable:no-bitwise */
                 drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | drawParameters.technique.id,
                                                                   meta.materialIndex);
+                /* tslint:enable:no-bitwise */
+
                 //Now add common for world and skin data. materialColor is also copied here.
                 drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
                 drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
@@ -1754,11 +1784,12 @@ class ForwardRendering
             // Diffuse Pass
             //
             drawParameters = gd.createDrawParameters();
-            drawParameters.userData = {};
             geometryInstance.prepareDrawParameters(drawParameters);
 
             drawParameters.technique = this.technique;
+            /* tslint:disable:no-bitwise */
             drawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | this.techniqueIndex, meta.materialIndex);
+            /* tslint:enable:no-bitwise */
             geometryInstance.renderUpdate = this.update;
 
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
@@ -1766,12 +1797,12 @@ class ForwardRendering
 
             if (meta.decal)
             {
-                drawParameters.userData.passIndex = fr.passIndex.decal;
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.decal];
                 geometryInstance.drawParameters.push(drawParameters);
             }
             else if (meta.transparent)
             {
-                drawParameters.userData.passIndex = fr.passIndex.transparent;
+                drawParameters.userData = fr.sharedUserData[fr.passIndex.transparent];
                 geometryInstance.drawParameters.push(drawParameters);
             }
             else
@@ -1784,19 +1815,22 @@ class ForwardRendering
                 }
                 else
                 {
-                    drawParameters.userData.passIndex = fr.passIndex.diffuse;
+                    drawParameters.userData = fr.sharedUserData[fr.passIndex.diffuse];
                     geometryInstance.diffuseDrawParameters = [drawParameters];
                 }
 
                 if (fr.shadowMaps && this.shadowTechnique)
                 {
                     var shadowDrawParameters = gd.createDrawParameters();
-                    shadowDrawParameters.userData = {};
+                    shadowDrawParameters.userData = fr.sharedUserData[fr.passIndex.diffuse];
                     geometryInstance.prepareDrawParameters(shadowDrawParameters);
 
                     shadowDrawParameters.technique = this.shadowTechnique;
+                    /* tslint:disable:no-bitwise */
                     shadowDrawParameters.sortKey = renderingCommonSortKeyFn(sortOffset | this.shadowTechniqueIndex,
                                                                             meta.materialIndex);
+                    /* tslint:enable:no-bitwise */
+
                     // for now force all shadows to be updated in the default update loop
                     //rendererInfo.renderUpdateShadow = this.shadowUpdate;
 
@@ -1820,11 +1854,9 @@ class ForwardRendering
                     !meta.noshadows)
                 {
                     drawParameters = gd.createDrawParameters();
-                    drawParameters.userData = {};
+                    drawParameters.userData = fr.sharedUserData[fr.passIndex.shadow];
                     geometryInstance.prepareDrawParameters(drawParameters);
                     geometryInstance.shadowMappingDrawParameters = [drawParameters];
-
-                    drawParameters.userData.passIndex = fr.passIndex.shadow;
 
                     rendererInfo.shadowMappingUpdate = this.shadowMappingUpdate;
                     drawParameters.technique = this.shadowMappingTechnique;
@@ -1895,9 +1927,8 @@ class ForwardRendering
 
             // glow pass
             drawParameters = gd.createDrawParameters();
-            drawParameters.userData = {};
+            drawParameters.userData = fr.sharedUserData[fr.passIndex.glow];
             geometryInstance.prepareDrawParameters(drawParameters);
-            drawParameters.userData.passIndex = fr.passIndex.glow;
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
@@ -1907,14 +1938,15 @@ class ForwardRendering
 
             // ambient pass
             drawParameters = gd.createDrawParameters();
-            drawParameters.userData = {};
+            drawParameters.userData = fr.sharedUserData[fr.passIndex.ambient];
             geometryInstance.prepareDrawParameters(drawParameters);
-            drawParameters.userData.passIndex = fr.passIndex.ambient;
             drawParameters.technique = fr.skyboxTechnique;
             drawParameters.setTechniqueParameters(0, sharedMaterialTechniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstanceTechniqueParameters);
+            /* tslint:disable:no-bitwise */
             drawParameters.sortKey = renderingCommonSortKeyFn(opaqueSortOffset | drawParameters.technique.id,
                                                               meta.materialIndex);
+            /* tslint:enable:no-bitwise */
             geometryInstance.drawParameters.push(drawParameters);
 
             geometryInstance.diffuseDrawParameters = [];
@@ -1927,8 +1959,7 @@ class ForwardRendering
             this.techniqueParameters.world = this.node.world;
         };
 
-        var forwardBlendSkinnedUpdate =
-            function forwardBlendSkinnedUpdateFn(/* camera */)
+        var forwardBlendSkinnedUpdate = function forwardBlendSkinnedUpdateFn(/* camera */)
         {
             var techniqueParameters = this.techniqueParameters;
             techniqueParameters.world = this.node.world;
@@ -1945,6 +1976,7 @@ class ForwardRendering
             this.techniqueParameters.world = this.node.world;
         };
 
+        /* tslint:disable:max-line-length */
         var forwardEnvUpdate = function forwardEnvUpdateFn(/* camera */)
         {
             var techniqueParameters = this.techniqueParameters;
@@ -1955,12 +1987,12 @@ class ForwardRendering
                 this.techniqueParametersUpdated = worldUpdate;
                 var matrix = node.world;
                 techniqueParameters.world = matrix;
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix,
+                                                                                   techniqueParameters.worldInverseTranspose);
             }
         };
 
-        var forwardEnvSkinnedUpdate =
-            function forwardEnvSkinnedUpdateFn(/* camera */)
+        var forwardEnvSkinnedUpdate = function forwardEnvSkinnedUpdateFn(/* camera */)
         {
             var techniqueParameters = this.techniqueParameters;
             var node = this.node;
@@ -1970,7 +2002,8 @@ class ForwardRendering
                 this.techniqueParametersUpdated = worldUpdate;
                 var matrix = node.world;
                 techniqueParameters.world = matrix;
-                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix, techniqueParameters.worldInverseTranspose);
+                techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix,
+                                                                                   techniqueParameters.worldInverseTranspose);
             }
             var skinController = this.skinController;
             if (skinController)
@@ -1979,9 +2012,9 @@ class ForwardRendering
                 skinController.update();
             }
         };
+        /* tslint:enable:max-line-length */
 
-        var forwardFlarePrepare =
-            function forwardFlarePrepareFn(geometryInstance)
+        var forwardFlarePrepare = function forwardFlarePrepareFn(geometryInstance)
         {
             if (!geometryInstance.customGeometry)
             {
@@ -2063,17 +2096,24 @@ class ForwardRendering
                 }
 
                 var faces;
-                if (oldIndexData[3] !== 0 && oldIndexData[4] !== 0 && oldIndexData[5] !== 0)
+                if (oldIndexData.length === 4)
                 {
-                    faces = [0, 2, 1, 3];
+                    faces = oldIndexData;
                 }
-                else if (oldIndexData[3] !== 1 && oldIndexData[4] !== 1 && oldIndexData[5] !== 1)
+                else
                 {
-                    faces = [1, 0, 2, 3];
-                }
-                else //if (oldIndexData[3] !== 2 && oldIndexData[4] !== 2 && oldIndexData[5] !== 2)
-                {
-                    faces = [3, 0, 1, 2];
+                    if (oldIndexData[3] !== 0 && oldIndexData[4] !== 0 && oldIndexData[5] !== 0)
+                    {
+                        faces = [0, 2, 1, 3];
+                    }
+                    else if (oldIndexData[3] !== 1 && oldIndexData[4] !== 1 && oldIndexData[5] !== 1)
+                    {
+                        faces = [1, 0, 2, 3];
+                    }
+                    else //if (oldIndexData[3] !== 2 && oldIndexData[4] !== 2 && oldIndexData[5] !== 2)
+                    {
+                        faces = [3, 0, 1, 2];
+                    }
                 }
                 oldIndexData = null;
 
@@ -2205,7 +2245,9 @@ class ForwardRendering
                 var flareScale = this.sharedMaterial.meta.flareScale;
 
                 // Normalize camera to bottom
-                var ctblensq = ((cameraToBottom0 * cameraToBottom0) + (cameraToBottom1 * cameraToBottom1) + (cameraToBottom2 * cameraToBottom2));
+                var ctblensq = ((cameraToBottom0 * cameraToBottom0) +
+                                (cameraToBottom1 * cameraToBottom1) +
+                                (cameraToBottom2 * cameraToBottom2));
                 var ctblenrec = (ctblensq > 0.0 ? (1.0 / Math.sqrt(ctblensq)) : 0);
                 cameraToBottom0 *= ctblenrec;
                 cameraToBottom1 *= ctblenrec;

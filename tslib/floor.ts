@@ -1,8 +1,10 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 
 class Floor
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     render      : { (gd: GraphicsDevice, camera: Camera): void; };
     color       : any; // v4
@@ -198,6 +200,8 @@ class Floor
             }
         };
 
+        /* tslint:disable:whitespace */
+        /* tslint:disable:max-line-length */
         var shaderParameters =
             {
                 "version": 1,
@@ -254,6 +258,8 @@ class Floor
                     }
                 }
             };
+        /* tslint:enable:max-line-length */
+        /* tslint:enable:whitespace */
 
         var shader = gd.createShader(shaderParameters);
         if (shader)
@@ -268,5 +274,5 @@ class Floor
 
 Floor.prototype.color       = [0.1, 0.1, 1.0, 1.0],
 Floor.prototype.fadeToColor = [0.95, 0.95, 1.0, 1.0],
-Floor.prototype.numLines    = 200
+Floor.prototype.numLines    = 200;
 Floor.prototype._frustumPoints = [];

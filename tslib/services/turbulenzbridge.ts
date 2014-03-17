@@ -60,6 +60,7 @@ class TurbulenzBridge
         return (this._bridge !== undefined);
     }
 
+    /* tslint:disable:no-empty */
     static emit(serviceName: string, request?: string, arg?: any)
     {
     }
@@ -70,12 +71,15 @@ class TurbulenzBridge
 
     //off: function offFn() {},
 
-    static addListener() {}
+    static addListener()
+    {
+    }
 
     static setListener(eventName: string,
                        listener: { (params: string): void; })
     {
     }
+    /* tslint:enable:no-empty */
 
     /**
      * Message that passes game configuration information from the hosting site

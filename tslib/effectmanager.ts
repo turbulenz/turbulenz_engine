@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 /*global Utilities: false*/
 
 "use strict";
@@ -23,7 +23,9 @@ interface EffectPrepareObject
 //
 class Effect
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     name: string;
     geometryType: { [type: string]: EffectPrepareObject; }; // TODO
@@ -66,7 +68,9 @@ class Effect
         }
         else
         {
+            /* tslint:disable:no-string-literal */
             var materialColor = material.techniqueParameters['materialColor'];
+            /* tslint:enable:no-string-literal */
             if (materialColor)
             {
                 var length = materialColor.length;
@@ -132,7 +136,9 @@ class Effect
 //
 class EffectManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     effects: any; // { [effectName: string]: Effect; };
 
@@ -164,7 +170,9 @@ class EffectManager
         var effect = this.effects[name];
         if (!effect)
         {
+            /* tslint:disable:no-string-literal */
             return this.effects["default"];
+            /* tslint:enable:no-string-literal */
         }
         return effect;
     }

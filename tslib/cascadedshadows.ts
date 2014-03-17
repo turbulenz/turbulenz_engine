@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 //
 // CascadedShadowMapping
@@ -50,12 +50,14 @@ class CascadedShadowSplit
         this.viewportX = x;
         this.viewportY = y;
 
+        /* tslint:disable:no-duplicate-variable */
         var camera = Camera.create(md);
         camera.parallel = true;
         camera.aspectRatio = 1;
         camera.viewOffsetX = 0;
         camera.viewOffsetY = 0;
         this.camera = camera;
+        /* tslint:enable:no-duplicate-variable */
 
         this.origin = md.v3BuildZero();
         this.at = md.v3BuildZero();
@@ -134,9 +136,10 @@ class CascadedShadowSplit
 
 class CascadedShadowMapping
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
-    static numSplits = 4;
     static splitDistances = [1.0 / 100.0, 4.0 / 100.0, 20.0 / 100.0, 1.0];
 
     gd                  : GraphicsDevice;
@@ -207,8 +210,8 @@ class CascadedShadowMapping
 
 
     // Render update calbacks
-    update: () => void
-    skinnedUpdate: () => void
+    update: () => void;
+    skinnedUpdate: () => void;
 
 
     constructor(gd: GraphicsDevice, md: MathDevice, shaderManager: ShaderManager, size: number)
@@ -278,7 +281,9 @@ class CascadedShadowMapping
         this.globalTechniqueParametersArray = [this.globalTechniqueParameters];
         this.shader = null;
 
+        /* tslint:disable:no-bitwise */
         var splitSize = (size >>> 1);
+        /* tslint:enable:no-bitwise */
         this.splits = [new CascadedShadowSplit(md, 0, 0),
                        new CascadedShadowSplit(md, splitSize, 0),
                        new CascadedShadowSplit(md, 0, splitSize),
@@ -315,10 +320,11 @@ class CascadedShadowMapping
             this.blurEnabled = true;
         }
 
+        /* tslint:disable:no-string-literal */
         this.update = function _cascadedShadowsUpdateFn(): void
         {
             this.shadowTechniqueParameters['world'] = this.node.world;
-        }
+        };
 
         this.skinnedUpdate = function _cascadedShadowsSkinnedUpdateFn(): void
         {
@@ -331,7 +337,8 @@ class CascadedShadowMapping
                 shadowTechniqueParameters['skinBones'] = skinController.output;
                 skinController.update();
             }
-        }
+        };
+        /* tslint:enable:no-string-literal */
 
         return this;
     }
@@ -393,7 +400,9 @@ class CascadedShadowMapping
             size = this.size;
         }
 
+        /* tslint:disable:no-bitwise */
         var splitSize = (size >>> 1);
+        /* tslint:enable:no-bitwise */
 
         var gd = this.gd;
 
@@ -438,9 +447,11 @@ class CascadedShadowMapping
                     if (this.renderTarget)
                     {
                         var techniqueParameters = this.techniqueParameters;
+                        /* tslint:disable:no-string-literal */
                         techniqueParameters['shadowSize'] = size;
                         techniqueParameters['invShadowSize'] = (1.0 / size);
                         techniqueParameters['shadowMapTexture'] = this.texture;
+                        /* tslint:enable:no-string-literal */
 
                         this.size = size;
                         return true;
@@ -545,9 +556,11 @@ class CascadedShadowMapping
         }
         while (0 === split.occludersDrawArray.length);
 
+        /* tslint:disable:no-string-literal */
         techniqueParameters['worldShadowProjection0'] = split.worldShadowProjection;
         techniqueParameters['viewShadowProjection0'] = split.viewShadowProjection;
         techniqueParameters['shadowScaleOffset0'] = split.shadowScaleOffset;
+        /* tslint:enable:no-string-literal */
 
         do
         {
@@ -561,9 +574,11 @@ class CascadedShadowMapping
         }
         while (0 === split.occludersDrawArray.length);
 
+        /* tslint:disable:no-string-literal */
         techniqueParameters['worldShadowProjection1'] = split.worldShadowProjection;
         techniqueParameters['viewShadowProjection1'] = split.viewShadowProjection;
         techniqueParameters['shadowScaleOffset1'] = split.shadowScaleOffset;
+        /* tslint:enable:no-string-literal */
 
         do
         {
@@ -577,9 +592,11 @@ class CascadedShadowMapping
         }
         while (0 === split.occludersDrawArray.length);
 
+        /* tslint:disable:no-string-literal */
         techniqueParameters['worldShadowProjection2'] = split.worldShadowProjection;
         techniqueParameters['viewShadowProjection2'] = split.viewShadowProjection;
         techniqueParameters['shadowScaleOffset2'] = split.shadowScaleOffset;
+        /* tslint:enable:no-string-literal */
 
         do
         {
@@ -593,9 +610,11 @@ class CascadedShadowMapping
         }
         while (0 === split.occludersDrawArray.length);
 
+        /* tslint:disable:no-string-literal */
         techniqueParameters['worldShadowProjection3'] = split.worldShadowProjection;
         techniqueParameters['viewShadowProjection3'] = split.viewShadowProjection;
         techniqueParameters['shadowScaleOffset3'] = split.shadowScaleOffset;
+        /* tslint:enable:no-string-literal */
     }
 
     private _planeNormalize(a, b, c, d, dst)
@@ -723,19 +742,19 @@ class CascadedShadowMapping
         var m = camera.viewProjectionMatrix;
         var m0 = m[0];
         var m1 = m[1];
-        var m2 = m[2];
+        //var m2 = m[2];
         var m3 = m[3];
         var m4 = m[4];
         var m5 = m[5];
-        var m6 = m[6];
+        //var m6 = m[6];
         var m7 = m[7];
         var m8 = m[8];
         var m9 = m[9];
-        var m10 = m[10];
+        //var m10 = m[10];
         var m11 = m[11];
         var m12 = m[12];
         var m13 = m[13];
-        var m14 = m[14];
+        //var m14 = m[14];
         var m15 = m[15];
         var planes = this.splitFrustumPlanes;
 
@@ -754,6 +773,8 @@ class CascadedShadowMapping
         }
 
         this.numSplitFrustumPlanes = 4 + numMainFrustumPlanes;
+
+        planes.length = this.numSplitFrustumPlanes;
 
         return planes;
     }
@@ -919,13 +940,13 @@ class CascadedShadowMapping
         // Calculate intersections between then and the main camera ones
         var numMainFrustumSidePlanes = this.numMainFrustumSidePlanes;
         var mainFrustumNearPlaneIndex = this.mainFrustumNearPlaneIndex;
-        var p = this.tempV3Int;
-        var n, i, plane, dz;
+        var tempP = this.tempV3Int;
+        var p, n, plane, dz;
 
         // left, top
         for (n = 0; n < numMainFrustumSidePlanes; n += 1)
         {
-            p = this._findPlanesIntersection(planes[0], planes[2], planes[4 + n], p);
+            p = this._findPlanesIntersection(planes[0], planes[2], planes[4 + n], tempP);
             if (p)
             {
                 if (mainFrustumNearPlaneIndex !== -1)
@@ -948,7 +969,7 @@ class CascadedShadowMapping
         // left, bottom
         for (n = 0; n < numMainFrustumSidePlanes; n += 1)
         {
-            p = this._findPlanesIntersection(planes[0], planes[3], planes[4 + n], p);
+            p = this._findPlanesIntersection(planes[0], planes[3], planes[4 + n], tempP);
             if (p)
             {
                 if (mainFrustumNearPlaneIndex !== -1)
@@ -971,7 +992,7 @@ class CascadedShadowMapping
         // right, top
         for (n = 0; n < numMainFrustumSidePlanes; n += 1)
         {
-            p = this._findPlanesIntersection(planes[1], planes[2], planes[4 + n], p);
+            p = this._findPlanesIntersection(planes[1], planes[2], planes[4 + n], tempP);
             if (p)
             {
                 if (mainFrustumNearPlaneIndex !== -1)
@@ -994,7 +1015,7 @@ class CascadedShadowMapping
         // right, bottom
         for (n = 0; n < numMainFrustumSidePlanes; n += 1)
         {
-            p = this._findPlanesIntersection(planes[1], planes[3], planes[4 + n], p);
+            p = this._findPlanesIntersection(planes[1], planes[3], planes[4 + n], tempP);
             if (p)
             {
                 if (mainFrustumNearPlaneIndex !== -1)
@@ -1048,13 +1069,13 @@ class CascadedShadowMapping
         var maxWindowY = -Number.MAX_VALUE;
         var minWindowZ = Number.MAX_VALUE;
         var maxWindowZ = -Number.MAX_VALUE;
-        var n, p;
+        var n, p, dx, dy, dz;
         for (n = 0; n < 8; n += 1)
         {
             p = frustumPoints[n];
-            var dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]));
-            var dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]));
-            var dz = ((a0 * p[0]) + (a1 * p[1]) + (a2 * p[2]));
+            dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]));
+            dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]));
+            dz = ((a0 * p[0]) + (a1 * p[1]) + (a2 * p[2]));
             if (minWindowX > dx)
             {
                 minWindowX = dx;
@@ -1201,8 +1222,11 @@ class CascadedShadowMapping
         // Prepare rendering data
         var shadowMapSize = this.size;
 
-        var minLightDistance = (split.minLightDistance - distanceScale); // Need padding to avoid culling near objects
-        var maxLightDistance = (split.maxLightDistance + distanceScale); // Need padding to avoid encoding singularity at far plane
+        // Need padding to avoid culling near objects
+        var minLightDistance = (split.minLightDistance - distanceScale);
+
+        // Need padding to avoid encoding singularity at far plane
+        var maxLightDistance = (split.maxLightDistance + distanceScale);
 
         var minLightDistanceX = split.minLightDistanceX;
         var maxLightDistanceX = split.maxLightDistanceX;
@@ -1222,8 +1246,8 @@ class CascadedShadowMapping
             for (n = 0; n < numPreviousSplitPoints; n += 1)
             {
                 p = previousSplitPoints[n];
-                var dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]) - roffset);
-                var dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]) - uoffset);
+                dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]) - roffset);
+                dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]) - uoffset);
                 if (previousMinWindowX > dx)
                 {
                     previousMinWindowX = dx;
@@ -1473,7 +1497,9 @@ class CascadedShadowMapping
                 renderables = node.renderables;
                 if (renderables)
                 {
-                    numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(), frustumPlanes, intersectingPlanes);
+                    numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(),
+                                                                     frustumPlanes,
+                                                                     intersectingPlanes);
 
                     numRenderables = renderables.length;
                     if (0 < numIntersectingPlanes)
@@ -1536,7 +1562,9 @@ class CascadedShadowMapping
             renderables = node.renderables;
             if (renderables)
             {
-                numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(), frustumPlanes, intersectingPlanes);
+                numIntersectingPlanes = _filterFullyInsidePlanes(node.getWorldExtents(),
+                                                                 frustumPlanes,
+                                                                 intersectingPlanes);
 
                 numRenderables = renderables.length;
                 if (0 < numIntersectingPlanes)
@@ -1690,19 +1718,34 @@ class CascadedShadowMapping
             p1 = extents[4];
             p2 = extents[5];
 
-            lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
+            lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) +
+                             (r1 * (r1 > 0 ? n1 : p1)) +
+                             (r2 * (r2 > 0 ? n2 : p2)) -
+                             roffset);
             if (lightDistance < maxWindowX)
             {
-                lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
+                lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) +
+                                 (r1 * (r1 > 0 ? p1 : n1)) +
+                                 (r2 * (r2 > 0 ? p2 : n2)) -
+                                 roffset);
                 if (lightDistance > minWindowX)
                 {
-                    lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
+                    lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) +
+                                     (u1 * (u1 > 0 ? n1 : p1)) +
+                                     (u2 * (u2 > 0 ? n2 : p2)) -
+                                     uoffset);
                     if (lightDistance < maxWindowY)
                     {
-                        lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
+                        lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) +
+                                         (u1 * (u1 > 0 ? p1 : n1)) +
+                                         (u2 * (u2 > 0 ? p2 : n2)) -
+                                         uoffset);
                         if (lightDistance > minWindowY)
                         {
-                            lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
+                            lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) +
+                                             (d1 * (d1 > 0 ? n1 : p1)) +
+                                             (d2 * (d2 > 0 ? n2 : p2)) -
+                                             offset);
                             if (lightDistance < maxWindowZ)
                             {
                                 if (lightDistance < minLightDistance)
@@ -1710,7 +1753,10 @@ class CascadedShadowMapping
                                     minLightDistance = lightDistance;
                                 }
 
-                                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)) - offset);
+                                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) +
+                                                 (d1 * (d1 > 0 ? p1 : n1)) +
+                                                 (d2 * (d2 > 0 ? p2 : n2)) -
+                                                 offset);
                                 if (maxLightDistance < lightDistance)
                                 {
                                     maxLightDistance = lightDistance;
@@ -1745,7 +1791,8 @@ class CascadedShadowMapping
             maxLightDistance = split.maxLightDistance;
         }
 
-        debug.assert(0 <= minLightDistance);
+        debug.assert(-0.01 <= minLightDistance);
+        minLightDistance = Math.max(0, minLightDistance);
 
         var distanceRange = (maxLightDistance - minLightDistance);
         if (0.001 < distanceRange)
@@ -1809,23 +1856,40 @@ class CascadedShadowMapping
             p1 = extents[4];
             p2 = extents[5];
 
-            minX = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
+            minX = ((r0 * (r0 > 0 ? n0 : p0)) +
+                    (r1 * (r1 > 0 ? n1 : p1)) +
+                    (r2 * (r2 > 0 ? n2 : p2)) -
+                    roffset);
             if (minX < maxWindowX)
             {
-                maxX = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
+                maxX = ((r0 * (r0 > 0 ? p0 : n0)) +
+                        (r1 * (r1 > 0 ? p1 : n1)) +
+                        (r2 * (r2 > 0 ? p2 : n2)) -
+                        roffset);
                 if (maxX > minWindowX)
                 {
-                    minY = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
+                    minY = ((u0 * (u0 > 0 ? n0 : p0)) +
+                            (u1 * (u1 > 0 ? n1 : p1)) +
+                            (u2 * (u2 > 0 ? n2 : p2)) -
+                            uoffset);
                     if (minY < maxWindowY)
                     {
-                        maxY = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
+                        maxY = ((u0 * (u0 > 0 ? p0 : n0)) +
+                                (u1 * (u1 > 0 ? p1 : n1)) +
+                                (u2 * (u2 > 0 ? p2 : n2)) -
+                                uoffset);
                         if (maxY > minWindowY)
                         {
-                            minZ = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
+                            minZ = ((d0 * (d0 > 0 ? n0 : p0)) +
+                                    (d1 * (d1 > 0 ? n1 : p1)) +
+                                    (d2 * (d2 > 0 ? n2 : p2)) -
+                                    offset);
                             if (minZ < maxWindowZ)
                             {
-                                maxZ = ((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2)) - offset);
-
+                                maxZ = ((d0 * (d0 > 0 ? p0 : n0)) +
+                                        (d1 * (d1 > 0 ? p1 : n1)) +
+                                        (d2 * (d2 > 0 ? p2 : n2)) -
+                                        offset);
                                 if (minZ < minLightDistance)
                                 {
                                     minLightDistance = minZ;
@@ -1905,13 +1969,15 @@ class CascadedShadowMapping
         }
 
         var globalTechniqueParametersArray = this.globalTechniqueParametersArray;
-        var globalTechniqueParameters = this.globalTechniqueParameters;
-        var renderTarget= this.renderTarget;
+        var gtp = this.globalTechniqueParameters;
+        var renderTarget = this.renderTarget;
         var clearColor = this.clearColor;
         var gd = this.gd;
         var md = this.md;
 
+        /* tslint:disable:no-bitwise */
         var splitSize = (this.size >>> 1);
+        /* tslint:enable:no-bitwise */
         var splits = this.splits;
         var numSplits = splits.length;
 
@@ -1946,15 +2012,17 @@ class CascadedShadowMapping
                 occludersDrawArray = split.occludersDrawArray;
                 if (occludersDrawArray.length)
                 {
-                    globalTechniqueParameters['viewTranspose'] = md.m43Transpose(splitCamera.viewMatrix,
-                                                                                 globalTechniqueParameters['viewTranspose']);
-                    globalTechniqueParameters['shadowProjectionTranspose'] = md.m44Transpose(splitCamera.projectionMatrix,
-                                                                                             globalTechniqueParameters['shadowProjectionTranspose']);
-                    globalTechniqueParameters['shadowDepth'] = md.v4Build(0,
-                                                                          0,
-                                                                          split.shadowDepthScale,
-                                                                          split.shadowDepthOffset,
-                                                                          globalTechniqueParameters['shadowDepth']);
+                    /* tslint:disable:no-string-literal */
+                    gtp['viewTranspose'] = md.m43Transpose(splitCamera.viewMatrix,
+                                                           gtp['viewTranspose']);
+                    gtp['shadowProjectionTranspose'] = md.m44Transpose(splitCamera.projectionMatrix,
+                                                                       gtp['shadowProjectionTranspose']);
+                    gtp['shadowDepth'] = md.v4Build(0,
+                                                    0,
+                                                    split.shadowDepthScale,
+                                                    split.shadowDepthOffset,
+                                                    gtp['shadowDepth']);
+                    /* tslint:enable:no-string-literal */
 
                     gd.drawArray(occludersDrawArray, globalTechniqueParametersArray, 0);
                 }
@@ -1986,7 +2054,9 @@ class CascadedShadowMapping
         var pixelOffsetH = this.pixelOffsetH;
         var pixelOffsetV = this.pixelOffsetV;
 
+        /* tslint:disable:no-bitwise */
         var splitSize = (this.size >>> 1);
+        /* tslint:enable:no-bitwise */
         var invSplitSize = (1.0 / splitSize);
         var invSize = (1.0 / this.size);
         pixelOffsetH[0] = invSize;
@@ -2015,9 +2085,12 @@ class CascadedShadowMapping
                 uvScaleOffset[2] = (split.viewportX + 2) * invSize;
                 uvScaleOffset[3] = (split.viewportY + 2) * invSize;
 
+                /* tslint:disable:no-string-literal */
                 shadowMappingBlurTechnique['shadowMap'] = this.texture;
                 shadowMappingBlurTechnique['uvScaleOffset'] = uvScaleOffset;
                 shadowMappingBlurTechnique['pixelOffset'] = pixelOffsetH;
+                /* tslint:enable:no-string-literal */
+
                 gd.draw(quadPrimitive, 4);
 
                 gd.endRenderTarget();
@@ -2037,9 +2110,12 @@ class CascadedShadowMapping
                 uvScaleOffset[2] = 0;
                 uvScaleOffset[3] = 0;
 
+                /* tslint:disable:no-string-literal */
                 shadowMappingBlurTechnique['shadowMap'] = blurTexture;
                 shadowMappingBlurTechnique['uvScaleOffset'] = uvScaleOffset;
                 shadowMappingBlurTechnique['pixelOffset'] = pixelOffsetV;
+                /* tslint:enable:no-string-literal */
+
                 gd.draw(quadPrimitive, 4);
 
                 gd.endRenderTarget();

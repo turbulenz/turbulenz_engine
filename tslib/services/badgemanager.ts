@@ -17,7 +17,9 @@ interface BadgeManagerDataSpec
 //badges is created by Turbulenzservices.createBadges
 class BadgeManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     gameSession: GameSession;
     gameSessionId: string;

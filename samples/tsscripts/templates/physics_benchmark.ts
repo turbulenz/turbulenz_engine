@@ -754,9 +754,9 @@ TurbulenzEngine.onload = function onloadFn()
     var gameSessionFailed = function gameSessionFailedFn(reason)
     {
         gameSessionCreated(null);
-    }
+    };
 
-    var gameSession = TurbulenzServices.createGameSession(requestHandler, gameSessionCreated);
+    var gameSession = TurbulenzServices.createGameSession(requestHandler, gameSessionCreated, gameSessionFailed);
 
     // Create a scene destroy callback to run when the window is closed
     function destroyScene()

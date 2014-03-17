@@ -28,10 +28,25 @@ vp_font(in float4 INPosition : POSITION,
 //
 // Pixel Programs
 //
+
 float4
 fp_font(float2 INTexCoord0 : TEXCOORD0) : COLOR
 {
     float4 result = color * tex2D(texture, INTexCoord0);
+    if (result.a < alphaRef)
+    {
+        discard;
+    }
+    return result;
+}
+
+// For the case where the texture is single-channel
+float4
+fp_font_8(float2 INTexCoord0 : TEXCOORD0) : COLOR
+{
+    float a = tex2D(texture, INTexCoord0).y;
+    float4 result = color;
+    result.a = result.a * a;
     if (result.a < alphaRef)
     {
         discard;
@@ -54,5 +69,20 @@ technique font
 
         VertexProgram   = compile latest vp_font();
         FragmentProgram = compile latest fp_font();
+    }
+}
+
+technique font8
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+
+        VertexProgram   = compile latest vp_font();
+        FragmentProgram = compile latest fp_font_8();
     }
 }

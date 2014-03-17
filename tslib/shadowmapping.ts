@@ -17,7 +17,9 @@ interface ShadowMap
 
 class ShadowMapping
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     defaultSizeLow = 512;
     defaultSizeHigh = 1024;
@@ -91,18 +93,24 @@ class ShadowMapping
 
     update()
     {
+        /* tslint:disable:no-string-literal */
         this.shadowTechniqueParameters['world'] = this.node.world;
+        /* tslint:enable:no-string-literal */
     }
 
     skinnedUpdate()
     {
         var techniqueParameters = this.shadowTechniqueParameters;
+        /* tslint:disable:no-string-literal */
         techniqueParameters['world'] = this.node.world;
+        /* tslint:enable:no-string-literal */
 
         var skinController = this.skinController;
         if (skinController)
         {
+            /* tslint:disable:no-string-literal */
             techniqueParameters['skinBones'] = skinController.output;
+            /* tslint:enable:no-string-literal */
             skinController.update();
         }
     }
@@ -225,6 +233,7 @@ class ShadowMapping
             });
 
         this.blurTextureLow = gd.createTexture({
+                name: "blur-low",
                 width: sizeLow,
                 height: sizeLow,
                 format: "R5G6B5",
@@ -233,6 +242,7 @@ class ShadowMapping
             });
 
         this.blurTextureHigh = gd.createTexture({
+                name: "blur-high",
                 width: sizeHigh,
                 height: sizeHigh,
                 format: "R5G6B5",
@@ -275,9 +285,8 @@ class ShadowMapping
         var light = lightInstance.light;
         var node = lightInstance.node;
         var matrix = node.world;
-        var occludersDrawArray = lightInstance.occludersDrawArray;
         var origin = lightInstance.lightOrigin;
-        var target, up, frustumWorld;
+        var target, up, frustumWorld, p0, p1, p2;
         var halfExtents = light.halfExtents;
 
         var shadowMapInfo = lightInstance.shadowMapInfo;
@@ -323,9 +332,9 @@ class ShadowMapping
                 var d1 = direction[1];
                 var d2 = direction[2];
 
-                var p0 = halfExtents[0];
-                var p1 = halfExtents[1];
-                var p2 = halfExtents[2];
+                p0 = halfExtents[0];
+                p1 = halfExtents[1];
+                p2 = halfExtents[2];
 
                 var n0 = -p0;
                 var n1 = -p1;
@@ -359,7 +368,7 @@ class ShadowMapping
 
         if (!lightInstance.lightDepth || light.dynamic)
         {
-            var halfExtents = light.halfExtents;
+            halfExtents = light.halfExtents;
             var halfExtents0 = halfExtents[0];
             var halfExtents1 = halfExtents[1];
             var halfExtents2 = halfExtents[2];
@@ -368,11 +377,11 @@ class ShadowMapping
             {
                 var tan = Math.tan;
                 var acos = Math.acos;
-                var frustumWorld = shadowMapInfo.frustumWorld;
+                frustumWorld = shadowMapInfo.frustumWorld;
 
-                var p0 = md.m43TransformPoint(frustumWorld, md.v3Build(-1, -1, 1));
-                var p1 = md.m43TransformPoint(frustumWorld, md.v3Build( 1, -1, 1));
-                var p2 = md.m43TransformPoint(frustumWorld, md.v3Build(-1,  1, 1));
+                p0 = md.m43TransformPoint(frustumWorld, md.v3Build(-1, -1, 1));
+                p1 = md.m43TransformPoint(frustumWorld, md.v3Build( 1, -1, 1));
+                p2 = md.m43TransformPoint(frustumWorld, md.v3Build(-1,  1, 1));
                 var p3 = md.m43TransformPoint(frustumWorld, md.v3Build( 1,  1, 1));
                 var farLightCenter = md.v3Sub(md.v3ScalarMul(md.v3Add4(p0, p1, p2, p3), 0.25), origin);
                 lightDepth = md.v3Length(farLightCenter);
@@ -422,8 +431,12 @@ class ShadowMapping
                 var m4 = viewMatrix[4];
                 var m6 = viewMatrix[6];
                 var m7 = viewMatrix[7];
-                lightViewWindowX = ((m0 < 0 ? -m0 : m0) * halfExtents0 + (m3 < 0 ? -m3 : m3) * halfExtents1 + (m6 < 0 ? -m6 : m6) * halfExtents2);
-                lightViewWindowY = ((m1 < 0 ? -m1 : m1) * halfExtents0 + (m4 < 0 ? -m4 : m4) * halfExtents1 + (m7 < 0 ? -m7 : m7) * halfExtents2);
+                lightViewWindowX = ((m0 < 0 ? -m0 : m0) * halfExtents0 +
+                                    (m3 < 0 ? -m3 : m3) * halfExtents1 +
+                                    (m6 < 0 ? -m6 : m6) * halfExtents2);
+                lightViewWindowY = ((m1 < 0 ? -m1 : m1) * halfExtents0 +
+                                    (m4 < 0 ? -m4 : m4) * halfExtents1 +
+                                    (m7 < 0 ? -m7 : m7) * halfExtents2);
                 lightDepth = md.v3Length(md.v3Sub(target, origin));
             }
 
@@ -444,6 +457,12 @@ class ShadowMapping
         camera.updateViewProjectionMatrix();
         camera.updateFrustumPlanes();
 
+        var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
+        var overlappingRenderables = lightInstance.overlappingRenderables;
+        var numOverlappingRenderables = overlappingRenderables.length;
+        var staticNodesChangeCounter = lightInstance.staticNodesChangeCounter;
+
+        var occludersDrawArray = lightInstance.occludersDrawArray;
         if (!occludersDrawArray)
         {
             occludersDrawArray = new Array(numOverlappingRenderables);
@@ -460,11 +479,6 @@ class ShadowMapping
             lightInstance.shadowMap = null;
             lightInstance.shadows = false;
         }
-
-        var numStaticOverlappingRenderables = lightInstance.numStaticOverlappingRenderables;
-        var overlappingRenderables = lightInstance.overlappingRenderables;
-        var numOverlappingRenderables = overlappingRenderables.length;
-        var staticNodesChangeCounter = lightInstance.staticNodesChangeCounter;
 
         if (node.dynamic ||
             numStaticOverlappingRenderables !== numOverlappingRenderables ||
@@ -551,6 +565,7 @@ class ShadowMapping
             else
             {
                 shadowMapTexture = gd.createTexture({
+                        name: "shadowmap-high",
                         width: shadowMapSize,
                         height: shadowMapSize,
                         format: "R5G6B5",
@@ -599,6 +614,7 @@ class ShadowMapping
             else
             {
                 shadowMapTexture = gd.createTexture({
+                        name: "shadowmap-low",
                         width: shadowMapSize,
                         height: shadowMapSize,
                         format: "R5G6B5",
@@ -639,8 +655,10 @@ class ShadowMapping
         lightInstance.shadows = true;
 
         var distanceScale = (1.0 / 65536);
-        var minLightDistance = (lightInstance.minLightDistance - distanceScale); // Need padding to avoid culling near objects
-        var maxLightDistance = (lightInstance.maxLightDistance + distanceScale); // Need padding to avoid encoding singularity at far plane
+        // Need padding to avoid culling near objects
+        var minLightDistance = (lightInstance.minLightDistance - distanceScale);
+        // Need padding to avoid encoding singularity at far plane
+        var maxLightDistance = (lightInstance.maxLightDistance + distanceScale);
 
         var lightViewWindowX = lightInstance.lightViewWindowX;
         var lightViewWindowY = lightInstance.lightViewWindowY;
@@ -774,7 +792,9 @@ class ShadowMapping
 
         var maxDepthReciprocal = (1.0 / (maxLightDistance - minLightDistance));
         var techniqueParameters = lightInstance.techniqueParameters;
-        techniqueParameters.shadowProjection = md.m43MulM44(cameraMatrix, shadowProjection, techniqueParameters.shadowProjection);
+        techniqueParameters.shadowProjection = md.m43MulM44(cameraMatrix,
+                                                            shadowProjection,
+                                                            techniqueParameters.shadowProjection);
         var viewToShadowMatrix = md.m43Mul(cameraMatrix, viewMatrix, this.tempMatrix43);
         techniqueParameters.shadowDepth = md.v4Build(-viewToShadowMatrix[2] * maxDepthReciprocal,
                                                      -viewToShadowMatrix[5] * maxDepthReciprocal,
@@ -822,6 +842,7 @@ class ShadowMapping
 
         gd.clear(this.clearColor, 1.0, 0);
 
+        /* tslint:disable:no-string-literal */
         var shadowMapTechniqueParameters = this.techniqueParameters;
         shadowMapTechniqueParameters['viewTranspose'] = md.m43Transpose(viewMatrix,
                                                         shadowMapTechniqueParameters['viewTranspose']);
@@ -831,6 +852,7 @@ class ShadowMapping
             md.v4Build(0, 0, -maxDepthReciprocal,
                        -minLightDistance * maxDepthReciprocal,
                        shadowMapTechniqueParameters['shadowDepth']);
+        /* tslint:enable:no-string-literal */
 
         gd.drawArray(occludersDrawArray, [shadowMapTechniqueParameters], 0);
 
@@ -936,7 +958,10 @@ class ShadowMapping
                 var f0 = plane[0];
                 var f1 = plane[1];
                 var f2 = plane[2];
-                var maxDistance = (f0 * (f0 < 0 ? n0 : p0) + f1 * (f1 < 0 ? n1 : p1) + f2 * (f2 < 0 ? n2 : p2) - plane[3]);
+                var maxDistance = (f0 * (f0 < 0 ? n0 : p0) +
+                                   f1 * (f1 < 0 ? n1 : p1) +
+                                   f2 * (f2 < 0 ? n2 : p2) -
+                                   plane[3]);
                 if (maxDistance < 0.0)
                 {
                     break;
@@ -985,7 +1010,10 @@ class ShadowMapping
 
             if (p >= numPlanes)
             {
-                lightDistance = (((d0 * (d0 > 0 ? p0 : n0)) + (d1 * (d1 > 0 ? p1 : n1)) + (d2 * (d2 > 0 ? p2 : n2))) - offset);
+                lightDistance = ((d0 * (d0 > 0 ? p0 : n0)) +
+                                 (d1 * (d1 > 0 ? p1 : n1)) +
+                                 (d2 * (d2 > 0 ? p2 : n2)) -
+                                 offset);
                 if (maxLightDistance < lightDistance)
                 {
                     maxLightDistance = lightDistance;
@@ -993,7 +1021,10 @@ class ShadowMapping
 
                 if (0 < minLightDistance)
                 {
-                    lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) + (d1 * (d1 > 0 ? n1 : p1)) + (d2 * (d2 > 0 ? n2 : p2)) - offset);
+                    lightDistance = ((d0 * (d0 > 0 ? n0 : p0)) +
+                                     (d1 * (d1 > 0 ? n1 : p1)) +
+                                     (d2 * (d2 > 0 ? n2 : p2)) -
+                                     offset);
                     if (lightDistance < minLightDistance)
                     {
                         minLightDistance = lightDistance;
@@ -1004,25 +1035,37 @@ class ShadowMapping
                         }
                     }
 
-                    lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) + (r1 * (r1 > 0 ? n1 : p1)) + (r2 * (r2 > 0 ? n2 : p2)) - roffset);
+                    lightDistance = ((r0 * (r0 > 0 ? n0 : p0)) +
+                                     (r1 * (r1 > 0 ? n1 : p1)) +
+                                     (r2 * (r2 > 0 ? n2 : p2)) -
+                                     roffset);
                     if (lightDistance < minLightDistanceX)
                     {
                         minLightDistanceX = lightDistance;
                     }
 
-                    lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) + (r1 * (r1 > 0 ? p1 : n1)) + (r2 * (r2 > 0 ? p2 : n2)) - roffset);
+                    lightDistance = ((r0 * (r0 > 0 ? p0 : n0)) +
+                                     (r1 * (r1 > 0 ? p1 : n1)) +
+                                     (r2 * (r2 > 0 ? p2 : n2)) -
+                                     roffset);
                     if (maxLightDistanceX < lightDistance)
                     {
                         maxLightDistanceX = lightDistance;
                     }
 
-                    lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) + (u1 * (u1 > 0 ? n1 : p1)) + (u2 * (u2 > 0 ? n2 : p2)) - uoffset);
+                    lightDistance = ((u0 * (u0 > 0 ? n0 : p0)) +
+                                     (u1 * (u1 > 0 ? n1 : p1)) +
+                                     (u2 * (u2 > 0 ? n2 : p2)) -
+                                     uoffset);
                     if (lightDistance < minLightDistanceY)
                     {
                         minLightDistanceY = lightDistance;
                     }
 
-                    lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) + (u1 * (u1 > 0 ? p1 : n1)) + (u2 * (u2 > 0 ? p2 : n2)) - uoffset);
+                    lightDistance = ((u0 * (u0 > 0 ? p0 : n0)) +
+                                     (u1 * (u1 > 0 ? p1 : n1)) +
+                                     (u2 * (u2 > 0 ? p2 : n2)) -
+                                     uoffset);
                     if (maxLightDistanceY < lightDistance)
                     {
                         maxLightDistanceY = lightDistance;
@@ -1099,8 +1142,10 @@ class ShadowMapping
                         break;
                     }
 
+                    /* tslint:disable:no-string-literal */
                     shadowMappingBlurTechnique['shadowMap'] = shadowMap.texture;
                     shadowMappingBlurTechnique['pixelOffset'] = pixelOffsetH;
+                    /* tslint:enable:no-string-literal */
                     gd.draw(quadPrimitive, 4);
 
                     gd.endRenderTarget();
@@ -1111,9 +1156,10 @@ class ShadowMapping
                         break;
                     }
 
-                    shadowMappingBlurTechnique['shadowMap'] =
-                        shadowMapBlurTexture;
+                    /* tslint:disable:no-string-literal */
+                    shadowMappingBlurTechnique['shadowMap'] = shadowMapBlurTexture;
                     shadowMappingBlurTechnique['pixelOffset'] = pixelOffsetV;
+                    /* tslint:enable:no-string-literal */
                     gd.draw(quadPrimitive, 4);
 
                     gd.endRenderTarget();
@@ -1139,8 +1185,10 @@ class ShadowMapping
                         break;
                     }
 
+                    /* tslint:disable:no-string-literal */
                     shadowMappingBlurTechnique['shadowMap'] = shadowMap.texture;
                     shadowMappingBlurTechnique['pixelOffset'] = pixelOffsetH;
+                    /* tslint:enable:no-string-literal */
                     gd.draw(quadPrimitive, 4);
 
                     gd.endRenderTarget();
@@ -1151,9 +1199,10 @@ class ShadowMapping
                         break;
                     }
 
-                    shadowMappingBlurTechnique['shadowMap'] =
-                        shadowMapBlurTexture;
+                    /* tslint:disable:no-string-literal */
+                    shadowMappingBlurTechnique['shadowMap'] = shadowMapBlurTexture;
                     shadowMappingBlurTechnique['pixelOffset'] = pixelOffsetV;
+                    /* tslint:enable:no-string-literal */
                     gd.draw(quadPrimitive, 4);
 
                     gd.endRenderTarget();

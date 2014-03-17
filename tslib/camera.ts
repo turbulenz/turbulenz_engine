@@ -1,11 +1,13 @@
-// Copyright (c) 2009-2011 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 
 //
 // Camera
 //
 class Camera
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     md                   : MathDevice;
     matrix               : any;   // m43
@@ -34,14 +36,11 @@ class Camera
     lookAt(lookAt, up, eyePosition)
     {
         var md = this.md;
-        var v3Normalize = md.v3Normalize;
-        var v3Cross = md.v3Cross;
         var zaxis = md.v3Sub(eyePosition, lookAt);
-
-        v3Normalize.call(md, zaxis, zaxis);
-        var xaxis = v3Cross.call(md, v3Normalize.call(md, up, up), zaxis);
-        v3Normalize.call(md, xaxis, xaxis);
-        var yaxis = v3Cross.call(md, zaxis, xaxis);
+        md.v3Normalize(zaxis, zaxis);
+        var xaxis = md.v3Cross(md.v3Normalize(up, up), zaxis);
+        md.v3Normalize(xaxis, xaxis);
+        var yaxis = md.v3Cross(zaxis, xaxis);
         this.matrix = md.m43Build(xaxis, yaxis, zaxis, eyePosition, this.matrix);
     }
 
@@ -236,6 +235,7 @@ class Camera
             var dirBR1 = (at1 + right1 - up1);
             var dirBR2 = (at2 + right2 - up2);
 
+            /* tslint:disable:max-line-length */
             frustumPoints[0] = md.v3Build((pos0 + (dirTR0 * nearClip)), (pos1 + (dirTR1 * nearClip)), (pos2 + (dirTR2 * nearClip)), frustumPoints[0]);
             frustumPoints[1] = md.v3Build((pos0 + (dirTL0 * nearClip)), (pos1 + (dirTL1 * nearClip)), (pos2 + (dirTL2 * nearClip)), frustumPoints[1]);
             frustumPoints[2] = md.v3Build((pos0 + (dirBL0 * nearClip)), (pos1 + (dirBL1 * nearClip)), (pos2 + (dirBL2 * nearClip)), frustumPoints[2]);
@@ -244,6 +244,7 @@ class Camera
             frustumPoints[5] = md.v3Build((pos0 + (dirTL0 * farClip)),  (pos1 + (dirTL1 * farClip)),  (pos2 + (dirTL2 * farClip)), frustumPoints[5]);
             frustumPoints[6] = md.v3Build((pos0 + (dirBL0 * farClip)),  (pos1 + (dirBL1 * farClip)),  (pos2 + (dirBL2 * farClip)), frustumPoints[6]);
             frustumPoints[7] = md.v3Build((pos0 + (dirBR0 * farClip)),  (pos1 + (dirBR1 * farClip)),  (pos2 + (dirBR2 * farClip)), frustumPoints[7]);
+            /* tslint:enable:max-line-length */
         }
         else
         {
@@ -252,6 +253,7 @@ class Camera
             var noffsety = (1.0 - nearClip) * viewOffsetY;
             var foffsety = (1.0 - farClip) * viewOffsetY;
 
+            /* tslint:disable:max-line-length */
             frustumPoints[0] = md.v3Build((viewWindowX + noffsetx), (viewWindowY + noffsety), nearClip, frustumPoints[0]);
             frustumPoints[1] = md.v3Build((noffsetx - viewWindowX), (viewWindowY + noffsety), nearClip, frustumPoints[1]);
             frustumPoints[2] = md.v3Build((noffsetx - viewWindowX), (noffsety - viewWindowY), nearClip, frustumPoints[2]);
@@ -260,6 +262,7 @@ class Camera
             frustumPoints[5] = md.v3Build((foffsetx - viewWindowX), (viewWindowY + foffsety), farClip, frustumPoints[5]);
             frustumPoints[6] = md.v3Build((foffsetx - viewWindowX), (foffsety - viewWindowY), farClip, frustumPoints[6]);
             frustumPoints[7] = md.v3Build((viewWindowX + foffsetx), (foffsety - viewWindowY), farClip, frustumPoints[7]);
+            /* tslint:enable:max-line-length */
 
             md.m43TransformPoint(transform, frustumPoints[0], frustumPoints[0]);
             md.m43TransformPoint(transform, frustumPoints[1], frustumPoints[1]);
@@ -430,7 +433,9 @@ interface CameraControllerTouch
 
 class CameraController
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     rotateSpeed       = 2.0;
     maxSpeed          = 1;
@@ -695,7 +700,7 @@ class CameraController
                 gd.fullscreen = !gd.fullscreen;
                 break;
             }
-        }
+        };
 
         if (log)
         {

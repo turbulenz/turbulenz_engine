@@ -78,7 +78,7 @@ services_deps := utilities debug servicedatatypes
 
 # tzdraw2d
 tzdraw2d_src := $(TS_SRC_DIR)/draw2d.ts
-tzdraw2d_deps = platform
+tzdraw2d_deps = platform debug
 
 # physics2d
 physics2d_src := $(addprefix $(TS_SRC_DIR)/, \
@@ -100,6 +100,10 @@ svg_deps := canvas
 # spatialgrid
 spatialgrid_src := $(TS_SRC_DIR)/spatialgrid.ts
 spatialgrid_deps := debug
+
+# sparsegrid
+sparsegrid_src := $(TS_SRC_DIR)/sparsegrid.ts
+sparsegrid_deps := debug
 
 # jsengine_base
 jsengine_base_src := $(addprefix $(TS_SRC_DIR)/, \
@@ -149,7 +153,7 @@ TSLIBS += platform debug vmath aabbtree physics_canvas platform_canvas   \
   utilities services tzdraw2d physics2d fontmanager canvas jsengine_base \
   jsengine jsengine_simplerendering jsengine_deferredrendering           \
   jsengine_forwardrendering jsengine_debug capturedevices svg spatialgrid \
-  particlesystem
+  particlesystem sparsegrid
 
 # Check we haven't forgotten any tslib files
 ifeq (macosx,$(TARGET))

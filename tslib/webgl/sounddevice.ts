@@ -15,7 +15,7 @@ interface WebGLSoundDeviceSoundCheckCall
 
 interface WebGLSoundDeviceSourceMap
 {
-    [id: string] : WebGLSoundSource;
+    [id: string] : boolean;
 };
 
 //
@@ -23,7 +23,9 @@ interface WebGLSoundDeviceSourceMap
 //
 class WebGLSound implements Sound
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Sound
     name         : string;
@@ -132,6 +134,7 @@ class WebGLSound implements Sound
         var numSamples, numChannels, samplerRate;
 
         var audioContext = sd.audioContext;
+        var xhr: XMLHttpRequest;
         if (audioContext && (sound.forceUncompress || params.uncompress))
         {
             var buffer;
@@ -192,7 +195,6 @@ class WebGLSound implements Sound
                 }
                 else
                 {
-                    var xhr: XMLHttpRequest;
                     if (window.XMLHttpRequest)
                     {
                         xhr = new window.XMLHttpRequest();
@@ -217,7 +219,7 @@ class WebGLSound implements Sound
                             if (!TurbulenzEngine || !TurbulenzEngine.isUnloading())
                             {
                                 var xhrStatus = xhr.status;
-                                var xhrStatusText = (xhrStatus !== 0 && xhr.statusText || 'No connection');
+                                //var xhrStatusText = (xhrStatus !== 0 && xhr.statusText || 'No connection');
                                 var response = xhr.response;
 
                                 // Sometimes the browser sets status to 200 OK when the connection is closed
@@ -292,9 +294,9 @@ class WebGLSound implements Sound
                     else
                     {
                         var ratio = (samplerRate / contextSampleRate);
-                        /*jshint bitwise: false*/
+                        /* tslint:disable:no-bitwise */
                         var bufferLength = ((numSamples / (ratio * numChannels)) | 0);
-                        /*jshint bitwise: true*/
+                        /* tslint:enable:no-bitwise */
 
                         buffer = audioContext.createBuffer(numChannels, bufferLength, contextSampleRate);
 
@@ -304,9 +306,9 @@ class WebGLSound implements Sound
                             channel = buffer.getChannelData(c);
                             for (j = 0; j < bufferLength; j += 1)
                             {
-                                /*jshint bitwise: false*/
+                                /* tslint:disable:no-bitwise */
                                 channel[j] = data[c + (((j * ratio) | 0) * numChannels)];
-                                /*jshint bitwise: true*/
+                                /* tslint:enable:no-bitwise */
                             }
                         }
                     }
@@ -332,7 +334,6 @@ class WebGLSound implements Sound
         else
         {
             var audio;
-
             if (soundPath)
             {
                 var extension = soundPath.slice(-3);
@@ -399,7 +400,8 @@ class WebGLSound implements Sound
                             extension = 'mp3';
                             dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
                         }
-                        debug.assert(dataArray.length === dataBlob.size, "Blob constructor does not support typed arrays.");
+                        debug.assert(dataArray.length === dataBlob.size,
+                                    "Blob constructor does not support typed arrays.");
                         sound.blob = dataBlob;
                         soundPath = URL.createObjectURL(dataBlob);
                     }
@@ -445,7 +447,7 @@ class WebGLSound implements Sound
                         return null;
                     }
 
-                    var xhr = new XMLHttpRequest();
+                    xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = function () {
                         if (xhr.readyState === 4)
                         {
@@ -476,11 +478,15 @@ class WebGLSound implements Sound
                                     if (xhrStatus === 200 || xhrStatus === 0)
                                     {
                                         sound.blob = xhr.response;
+                                        if (sound.blob.type === 'audio/x-mpg')
+                                        {
+                                            sound.blob = sound.blob.slice(0, sound.blob.size, 'audio/mpeg');
+                                        }
                                         audio.src = URL.createObjectURL(sound.blob);
 
                                         sd.addLoadingSound(checkLoaded);
                                     }
-                                    else if(onload)
+                                    else if (onload)
                                     {
                                         onload(null, xhrStatus);
                                     }
@@ -563,7 +569,9 @@ class WebGLSound implements Sound
 //
 class WebGLSoundSource implements SoundSource
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // SoundSource
     position    : any; // v3
@@ -614,7 +622,10 @@ class WebGLSoundSource implements SoundSource
             return this.seek(seek);
         }
 
-        this.stop();
+        if (this.playing)
+        {
+            this._stop();
+        }
 
         this.sound = <WebGLSound>sound;
 
@@ -690,6 +701,7 @@ class WebGLSoundSource implements SoundSource
             }
             else
             {
+                this.updateAudioVolume();
                 soundAudio.play();
             }
         }
@@ -702,44 +714,48 @@ class WebGLSoundSource implements SoundSource
         return true;
     }
 
-    stop()
+    _stop(): void
+    {
+        this.playing = false;
+        this.paused = false;
+        this.sound = null;
+
+        var audio = this.audio;
+        if (audio)
+        {
+            this.audio = null;
+
+            var mediaNode = this.mediaNode;
+            if (mediaNode)
+            {
+                this.mediaNode = null;
+                mediaNode.disconnect();
+            }
+
+            audio.pause();
+            audio.removeEventListener('ended', this.loopAudio, false);
+        }
+        else
+        {
+            var bufferNode = this.bufferNode;
+            if (bufferNode)
+            {
+                this.bufferNode = null;
+                bufferNode.stop(0);
+                bufferNode.disconnect();
+            }
+        }
+    }
+
+    stop(): boolean
     {
         var playing = this.playing;
         if (playing)
         {
-            this.playing = false;
-            this.paused = false;
-            this.sound = null;
-
-            var audio = this.audio;
-            if (audio)
-            {
-                this.audio = null;
-
-                var mediaNode = this.mediaNode;
-                if (mediaNode)
-                {
-                    this.mediaNode = null;
-                    mediaNode.disconnect();
-                }
-
-                audio.pause();
-                audio.removeEventListener('ended', this.loopAudio, false);
-            }
-            else
-            {
-                var bufferNode = this.bufferNode;
-                if (bufferNode)
-                {
-                    this.bufferNode = null;
-                    bufferNode.stop(0);
-                    bufferNode.disconnect();
-                }
-            }
+            this._stop();
 
             this.sd.removePlayingSource(this);
         }
-
         return playing;
     }
 
@@ -881,14 +897,21 @@ class WebGLSoundSource implements SoundSource
         return false;
     }
 
-    seek(seek)
+    seek(seek: number): boolean
     {
         if (this.playing)
         {
-            var audio = this.audio;
-            if (audio)
+            var tell = this.tell;
+            var delta = Math.abs(tell - seek);
+            if (this.looping)
             {
-                if (0.05 < Math.abs(audio.currentTime - seek))
+                delta = Math.min(Math.abs(tell - (this.sound.length + seek)), delta);
+            }
+
+            if (0.05 < delta)
+            {
+                var audio = this.audio;
+                if (audio)
                 {
                     try
                     {
@@ -899,15 +922,10 @@ class WebGLSoundSource implements SoundSource
                         // It seems there is no reliable way of seeking
                     }
                 }
-
-                return true;
-            }
-            else
-            {
-                var audioContext = this.audioContext;
-                if (audioContext)
+                else
                 {
-                    if (0.05 < Math.abs((audioContext.currentTime - this.playStart) - seek))
+                    var audioContext = this.audioContext;
+                    if (audioContext)
                     {
                         var bufferNode = this.bufferNode;
                         if (bufferNode)
@@ -937,10 +955,10 @@ class WebGLSoundSource implements SoundSource
                             this.playStart = audioContext.currentTime;
                         }
                     }
-
-                    return true;
                 }
             }
+
+            return true;
         }
 
         return false;
@@ -1111,9 +1129,10 @@ class WebGLSoundSource implements SoundSource
         source.playing = false;
         source.paused = false;
 
-        source._position = VMath.v3BuildZero();
-        source._velocity = VMath.v3BuildZero();
-        source._direction = VMath.v3BuildZero();
+        var buffer = new Float32Array(9);
+        source._position = buffer.subarray(0, 3);
+        source._velocity = buffer.subarray(3, 6);
+        source._direction = buffer.subarray(6, 9);
 
         var gain = (typeof params.gain === "number" ? params.gain : 1);
         var looping = (params.looping || false);
@@ -1412,7 +1431,7 @@ class WebGLSoundSource implements SoundSource
                 },
                 set : function setGainFn(newGain) {
                     gain = newGain;
-                    this.gainFactor = -1;
+                    this.updateAudioVolume();
                 },
                 enumerable : true,
                 configurable : false
@@ -1528,12 +1547,16 @@ interface WebGLSoundDeviceExtensions
 //
 class WebGLSoundDevice implements SoundDevice
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // SoundDevice
     vendor               : string; // prototype
     renderer             : string;
+    /* tslint:disable:no-duplicate-variable */
     version              : string;
+    /* tslint:enable:no-duplicate-variable */
     deviceSpecifier      : string;
     extensions           : string;
     listenerTransform    : any; // m43
@@ -1554,7 +1577,9 @@ class WebGLSoundDevice implements SoundDevice
     linearDistance       : boolean;
     loadingSounds        : WebGLSoundDeviceSoundCheckCall[];
     loadingInterval      : number;  // window.setIntervalID id
-    playingSources       : WebGLSoundDeviceSourceMap;
+    numPlayingSources    : number;
+    playingSources       : WebGLSoundSource[];
+    playingSourcesMap    : WebGLSoundDeviceSourceMap;
     lastSourceID         : number;
     loopingSupported     : boolean;
     supportedExtensions  : WebGLSoundDeviceExtensions;
@@ -1571,7 +1596,7 @@ class WebGLSoundDevice implements SoundDevice
         return WebGLSound.create(this, params);
     }
 
-    loadSoundsArchive(params)
+    loadSoundsArchive(params: SoundArchiveParameters)
     {
         var src = params.src;
         if (typeof SoundTARLoader !== 'undefined')
@@ -1631,17 +1656,14 @@ class WebGLSoundDevice implements SoundDevice
         var listenerPosition1 = listenerTransform[10];
         var listenerPosition2 = listenerTransform[11];
 
+        var numPlayingSources = this.numPlayingSources;
         var playingSources = this.playingSources;
-        var id;
-        for (id in playingSources)
+        var n;
+        for (n = 0; n < numPlayingSources; n += 1)
         {
-            if (playingSources.hasOwnProperty(id))
-            {
-                var source = playingSources[id];
-                source.updateRelativePosition(listenerPosition0,
-                                              listenerPosition1,
-                                              listenerPosition2);
-            }
+            playingSources[n].updateRelativePosition(listenerPosition0,
+                                                     listenerPosition1,
+                                                     listenerPosition2);
         }
     }
 
@@ -1663,7 +1685,7 @@ class WebGLSoundDevice implements SoundDevice
     }
 
     // Private API
-    addLoadingSound(soundCheckCall)
+    addLoadingSound(soundCheckCall): void
     {
         var loadingSounds = this.loadingSounds;
         loadingSounds[loadingSounds.length] = soundCheckCall;
@@ -1704,12 +1726,34 @@ class WebGLSoundDevice implements SoundDevice
 
     addPlayingSource(source)
     {
-        this.playingSources[source.id] = source;
+        var id = source.id;
+        if (!this.playingSourcesMap[id])
+        {
+            this.playingSourcesMap[id] = true;
+            var numPlayingSources = this.numPlayingSources;
+            this.playingSources[numPlayingSources] = source;
+            this.numPlayingSources = (numPlayingSources + 1);
+        }
     }
 
     removePlayingSource(source)
     {
-        delete this.playingSources[source.id];
+        delete this.playingSourcesMap[source.id];
+
+        var numPlayingSources = this.numPlayingSources;
+        var playingSources = this.playingSources;
+        var n;
+        for (n = 0; n < numPlayingSources; n += 1)
+        {
+            if (playingSources[n] === source)
+            {
+                numPlayingSources -= 1;
+                playingSources[n] = playingSources[numPlayingSources];
+                playingSources[numPlayingSources] = null;
+                this.numPlayingSources = numPlayingSources;
+                break;
+            }
+        }
     }
 
     isResourceSupported(soundPath)
@@ -1734,29 +1778,23 @@ class WebGLSoundDevice implements SoundDevice
             this.loadingSounds = null;
         }
 
+        var numPlayingSources = this.numPlayingSources;
         var playingSources = this.playingSources;
-        var id;
-        if (playingSources)
+        var n;
+        for (n = 0; n < numPlayingSources; n += 1)
         {
-            for (id in playingSources)
-            {
-                if (playingSources.hasOwnProperty(id))
-                {
-                    var source = playingSources[id];
-                    if (source)
-                    {
-                        source.stop();
-                    }
-                }
-            }
-            this.playingSources = null;
+            playingSources[n]._stop();
         }
+
+        this.numPlayingSources = 0;
+        this.playingSources = null;
+        this.playingSourcesMap = null;
 
         WebGLSound.prototype.audioContext = null;
         WebGLSoundSource.prototype.audioContext = null;
     }
 
-    static create(params: any): WebGLSoundDevice
+    static create(params: SoundDeviceParameters): WebGLSoundDevice
     {
         var sd = new WebGLSoundDevice();
 
@@ -1777,10 +1815,20 @@ class WebGLSoundDevice implements SoundDevice
         sd.loadingSounds = [];
         sd.loadingInterval = null;
 
-        sd.playingSources = <WebGLSoundDeviceSourceMap><any>{};
+        sd.numPlayingSources = 0;
+        sd.playingSources = [];
+        sd.playingSourcesMap = <WebGLSoundDeviceSourceMap><any>{};
+
         sd.lastSourceID = 0;
 
-        var AudioContextConstructor = (window.AudioContext || window.webkitAudioContext);
+        var AudioContextConstructor;
+
+        if (sd.deviceSpecifier !== "audioelement")
+        {
+            AudioContextConstructor =
+                (window.AudioContext || window.webkitAudioContext);
+        }
+
         if (AudioContextConstructor)
         {
             var audioContext;
@@ -1862,46 +1910,62 @@ class WebGLSoundDevice implements SoundDevice
                 var listenerPosition1 = listenerTransform[10];
                 var listenerPosition2 = listenerTransform[11];
 
+                var numPlayingSources = this.numPlayingSources;
                 var playingSources = this.playingSources;
-                var id;
+                var playingSourcesMap = this.playingSourcesMap;
 
-                for (id in playingSources)
+                var currentTime = audioContext.currentTime;
+
+                var n = 0;
+                while (n < numPlayingSources)
                 {
-                    if (playingSources.hasOwnProperty(id))
-                    {
-                        var source = playingSources[id];
+                    var source = playingSources[n];
 
-                        var bufferNode = source.bufferNode;
-                        if (bufferNode)
+                    var bufferNode = source.bufferNode;
+                    if (bufferNode)
+                    {
+                        var tell = (currentTime - source.playStart);
+                        var duration = bufferNode.buffer.duration;
+                        if (duration < tell)
                         {
-                            var tell = (audioContext.currentTime - source.playStart);
-                            var duration = bufferNode.buffer.duration;
-                            if (duration < tell)
+                            if (source.looping)
                             {
-                                if (source.looping)
-                                {
-                                    source.playStart = (audioContext.currentTime - (tell - duration));
-                                }
-                                else
-                                {
-                                    bufferNode.disconnect();
-                                    source.playing = false;
-                                    source.sound = null;
-                                    source.bufferNode = null;
-                                    delete playingSources[id];
-                                    continue;
-                                }
+                                source.playStart = (currentTime - (tell - duration));
+                            }
+                            else
+                            {
+                                bufferNode.disconnect();
+                                source.playing = false;
+                                source.sound = null;
+                                source.bufferNode = null;
+
+                                numPlayingSources -= 1;
+                                playingSources[n] = playingSources[numPlayingSources];
+                                playingSources[numPlayingSources] = null;
+                                delete playingSourcesMap[source.id];
+
+                                continue;
                             }
                         }
-
-                        if (source.relative)
-                        {
-                            source.updateRelativePosition(listenerPosition0,
-                                                          listenerPosition1,
-                                                          listenerPosition2);
-                        }
                     }
+
+                    if (source.relative)
+                    {
+                        source.updateRelativePosition(listenerPosition0,
+                                                      listenerPosition1,
+                                                      listenerPosition2);
+                    }
+
+                    n += 1;
                 }
+
+                this.numPlayingSources = numPlayingSources;
+                /* tslint:disable:no-bitwise */
+                if (numPlayingSources < (playingSources.length >> 1))
+                {
+                    playingSources.length = numPlayingSources;
+                }
+                /* tslint:enable:no-bitwise */
             };
         }
         else
@@ -1914,7 +1978,17 @@ class WebGLSoundDevice implements SoundDevice
         sd.listenerGain = (typeof params.listenerGain === "number" ? params.listenerGain : 1);
 
         // Need a temporary Audio element to test capabilities
-        var audio = new Audio();
+        var audio;
+        try
+        {
+            audio = new Audio();
+        }
+        catch (error)
+        {
+            (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                'Failed to create Audio:' + error);
+            return null;
+        }
 
         if (sd.audioContext)
         {

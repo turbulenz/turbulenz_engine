@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*global Utilities: false */
 /*global SceneNode: false */
@@ -22,7 +22,10 @@ interface PhysicsNode
 //
 class PhysicsManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
+
     arrayConstructor: any;  // on prototype
 
     mathsDevice: MathDevice;
@@ -55,7 +58,7 @@ class PhysicsManager
 
         if (origin)
         {
-            physicsNode.origin = origin;
+            physicsNode.origin = this.mathsDevice.v3Build(origin[0], origin[1], origin[2]);
         }
 
         if (triangleArray)
@@ -390,7 +393,7 @@ class PhysicsManager
                     calculateNodeExtents(children[n]);
                 }
             }
-        }
+        };
 
         calculateNodeExtents(sceneNode);
 
@@ -461,6 +464,7 @@ class PhysicsManager
     {
         var sceneData = loadParams.data;
         var collisionMargin = (loadParams.collisionMargin || 0.005);
+        var positionMargin = collisionMargin * 0.1;
         var nodesNamePrefix = loadParams.nodesNamePrefix;
 
         if (!loadParams.append)
@@ -591,9 +595,9 @@ class PhysicsManager
                                 var centerPos0 = ((posMax[0] + posMin[0]) * 0.5);
                                 var centerPos1 = ((posMax[1] + posMin[1]) * 0.5);
                                 var centerPos2 = ((posMax[2] + posMin[2]) * 0.5);
-                                if (Math.abs(centerPos0) > 1.e-6 ||
-                                    Math.abs(centerPos1) > 1.e-6 ||
-                                    Math.abs(centerPos2) > 1.e-6)
+                                if (Math.abs(centerPos0) > positionMargin ||
+                                    Math.abs(centerPos1) > positionMargin ||
+                                    Math.abs(centerPos2) > positionMargin)
                                 {
                                     var halfPos0 = ((posMax[0] - posMin[0]) * 0.5);
                                     var halfPos1 = ((posMax[1] - posMin[1]) * 0.5);
@@ -649,7 +653,7 @@ class PhysicsManager
                             else
                             {
                                 //TODO: add a warning that with no extents we can't calculate and origin?
-                                geometry.origin = [0, 0, 0];
+                                geometry.origin = mathsDevice.v3BuildZero();
                             }
 
                             // Can we use a box?
@@ -731,7 +735,9 @@ class PhysicsManager
                             {
                                 shape = physicsDevice.createConvexHullShape({
                                     points: positionsData,
-                                    margin: collisionMargin
+                                    margin: collisionMargin,
+                                    minExtent: posMin,
+                                    maxExtent: posMax
                                 });
                             }
                             else if (shapeType === "mesh")
@@ -898,6 +904,11 @@ class PhysicsManager
                                     collisionFilters += kinematicFilterFlag;
                                 }
                             }
+                            if (collisionFilters === 0)
+                            {
+                                debug.log("Ignoring physics node without a collision mask: " + fn);
+                                continue;
+                            }
                         }
                     }
 
@@ -992,7 +1003,6 @@ class PhysicsManager
                             target.physicsNodes = [physicsNode];
                             this.subscribeSceneNode(target);
                         }
-
                     }
                 }
             }
@@ -1077,7 +1087,7 @@ class PhysicsManager
                 targetSceneNode.physicsNodes = [newPhysicsNode];
                 this.subscribeSceneNode(targetSceneNode);
             }
-        }
+        };
 
         var physicsNodes = oldSceneNode.physicsNodes;
         if (physicsNodes)

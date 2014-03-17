@@ -204,7 +204,11 @@ class ServiceRequester
                 // call the old custom error handler
                 if (oldResponseFilter)
                 {
-                    return oldResponseFilter.call(params.requestHandler, callContext, makeRequest, responseJSON, status);
+                    return oldResponseFilter.call(params.requestHandler,
+                                                  callContext,
+                                                  makeRequest,
+                                                  responseJSON,
+                                                  status);
                 }
                 return true;
             }
@@ -214,7 +218,7 @@ class ServiceRequester
         return true;
     }
 
-    static create(serviceName:string , params?): ServiceRequester
+    static create(serviceName: string, params?): ServiceRequester
     {
         var serviceRequester = new ServiceRequester();
 
@@ -249,7 +253,9 @@ class TurbulenzServices
         // un-paused and buffers up events while paused
 
         argsQueue: [],
+        /* tslint:disable:no-empty */
         handler: function nopFn() {},
+        /* tslint:enable:no-empty */
         context: <any>undefined,
         paused: true,
         onEvent: function onEventFn(handler, context) {
@@ -387,10 +393,11 @@ class TurbulenzServices
         }
     }
 
+    /* tslint:disable:no-empty */
     static defaultErrorCallback : ServiceErrorCB =
         function(errorMsg: string, httpStatus?: number)
     {
-    }
+    };
 
     static onServiceUnavailable(serviceName: string, callContext?)
     {
@@ -399,6 +406,7 @@ class TurbulenzServices
     static onServiceAvailable(serviceName: string, callContext?)
     {
     }
+    /* tslint:enable:no-empty */
 
     static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn?)
     {

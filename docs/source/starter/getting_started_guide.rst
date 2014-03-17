@@ -1171,8 +1171,6 @@ this topic.
 TypeScript
 ----------
 
-**EXPERIMENTAL**
-
 **Added SDK 0.25.0**
 
 Building apps in TypeScript that use the type definitions specified by Turbulenz libraries require a few additional tools provided outside the SDK.
@@ -1198,11 +1196,15 @@ Installation
 To compile apps written in TypeScript for Turbulenz you require the TypeScript compiler.
 You will need the **tsc** command to be callable from the Turbulenz environment.
 
+.. NOTE::
+
+  TypeScript compiler is included in the Turbulenz environment as part of the open source repository.
+
 1) Install TypeScript from the instructions on `typescriptlang.org downloads <http://www.typescriptlang.org/#Download>`_
 2) Start the :ref:`Turbulenz environment <getting_started_run_env>` on your platform.
 3) Check the compiler by running the following command in the root Turbulenz SDK directory::
 
-      tsc tslib/camera.ts
+      tsc tslib/debug.ts
 
   This command will generate the JavaScript for the camera object in the same directory (tslib).
   If the compiler worked, the command should complete with no errors and you can delete the output file after reading it.
@@ -1221,9 +1223,9 @@ Varying degrees of support are available for the following IDEs/Editors:
 More information can be found
 `here <http://blogs.msdn.com/b/interoperability/archive/2012/10/01/sublime-text-vi-emacs-typescript-enabled.aspx>`_
 
-**Visual Studio 2012**
+**Visual Studio 2012/2013**
 
-The most complete TypeScript support is for `Visual Studio 2012 <http://www.microsoft.com/en-us/download/details.aspx?id=34790>`_.
+The most complete TypeScript support is for `Visual Studio 2012/2013 <http://www.microsoft.com/en-us/download/details.aspx?id=34790>`_.
 
 **Sublime Text 2**
 
@@ -1240,7 +1242,7 @@ Compiling
 
 .. NOTE::
 
-  The commands specified in this section were written for use with tsc version 0.8.3. For the latest commands, see the `latest project information <http://typescript.codeplex.com/>`_
+  The commands specified in this section were written for use with tsc version 0.9.1. For the latest commands, see the `latest project information <http://typescript.codeplex.com/>`_
 
 **Basic compilation**
 
@@ -1250,7 +1252,7 @@ To compile a .ts file to JavaScript simply type:
 
   tsc filename.ts
 
-This will output filename.js with errors listed on the command line.
+This will output filename.js and any errors will be listed on the command line.
 The output JavaScript file will be located in the same directory as the source file.
 To specify a different filename/location, use the --out command e.g.
 ::
@@ -1292,6 +1294,26 @@ The jslib-modular directory has groups of definitions for the following:
   * utilities.d.ts: Low level shared functions
   * vmath.d.ts: Turbulenz Math library implementation
   * webgl.d.ts: Additional declarations for the GraphicsDevice
+
+**Added SDK 0.26.0**
+
+*jlib-modular*
+
+  * capturedevices.d.ts: Declarations for the CaptureDevice
+
+**Added SDK 0.27.0**
+
+*jlib-modular*
+
+  * spatialgrid.d.ts: SpacialGrid implementation
+  * svg.d.ts: SVG rendering declarations
+
+**Added SDK 0.28.0**
+
+*jlib-modular*
+
+  * particlesystem.d.ts: Components of the GPU Particle System
+
 
 Using this method you will generate JavaScript files for your application, which you can use in conjunction with jslib.
 To explain how to do this, we will convert SampleApp to TypeScript and combine it with the jslib-modular declarations.
@@ -1357,9 +1379,9 @@ Depending which file(s) you change you there are certain files you may or may no
 Changes to this pattern of files require rebuilding the following:
 
 * **scripts/\*.js** -> \*.canvas.js, \*.tzjs
-* **templates/\*.js** -> \*.canvas.js, \*.tzjs, \*.canvas.debug.html. \*.canvas.release.html, \*.debug.html, \*.release.html
-* **templates/\*.html** -> \*.canvas.debug.html. \*.canvas.release.html, \*.debug.html, \*.release.html
-* **jslib/\*.js** -> \*.canvas.js, \*.tzjs, \*.canvas.debug.html. \*.canvas.release.html, \*.debug.html, \*.release.html
+* **templates/\*.js** -> \*.canvas.js, \*.tzjs, \*.canvas.debug.html. \*.canvas.release.html, \*.release.html
+* **templates/\*.html** -> \*.canvas.debug.html. \*.canvas.release.html, \*.release.html
+* **jslib/\*.js** -> \*.canvas.js, \*.tzjs, \*.canvas.debug.html. \*.canvas.release.html, \*.release.html
 
 **TypeScript:**
 
@@ -1397,14 +1419,14 @@ Assumed variables:
 
   ::
 
-    tsc -c --out scripts --declaration tsscripts/TYPESCRIPTNAME.ts [../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
+    tsc --outDir scripts -d tsscripts/TYPESCRIPTNAME.ts [../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
 
   To rebuild sample templates (per sample), you must know what the sample uses and include dependencies via the \*.d.ts files in jslib-modular.
   The SAMPLESCRIPT files will includes things like the shared scripts that the sample needs.
 
   ::
 
-    tsc -c --out templates tsscripts/templates/SAMPLENAME.ts [../jslib-modular/JSLIBMODULARDEP.d.ts ..] [scripts/SAMPLESCRIPT.d.ts ..] [OTHERDEP.d.ts ..]
+    tsc --outDir templates tsscripts/templates/SAMPLENAME.ts [../jslib-modular/JSLIBMODULARDEP.d.ts ..] [scripts/SAMPLESCRIPT.d.ts ..] [OTHERDEP.d.ts ..]
 
   Once the updated JavaScript has been generated, you must rebuild the required JavaScript files.
 
@@ -1462,7 +1484,7 @@ Assumed variables:
 
   For generating a combined JavaScript file and definition::
 
-      tsc -c --out scripts/APPNAME.js --declaration [tsscripts/APPNAME/APPFILE.ts ..] [../../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
+      tsc --out scripts/APPNAME.js -d [tsscripts/APPNAME/APPFILE.ts ..] [../../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
 
   .. NOTE::
 
@@ -1470,7 +1492,7 @@ Assumed variables:
 
   For generating the template from the APPNAME_entry.ts file::
 
-      tsc -c --out templates/APPNAME.js tsscripts/APPNAME/APPNAME_entry.ts scripts/APPNAME.d.ts [../../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
+      tsc --out templates/APPNAME.js tsscripts/APPNAME/APPNAME_entry.ts scripts/APPNAME.d.ts [../../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
 
   .. NOTE::
 

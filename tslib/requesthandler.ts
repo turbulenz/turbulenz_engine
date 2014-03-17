@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 Turbulenz Limited
+// Copyright (c) 2011-2014 Turbulenz Limited
 
 /*global TurbulenzEngine*/
 /*global Observer*/
@@ -14,6 +14,11 @@ interface RequestOwner
     request: RequestFn;
 };
 
+interface RequestOnLoadCB
+{
+    (asset: any, status: number, callContext: RequestHandlerCallContext): void;
+}
+
 interface RequestHandlerResponseFilter
 {
     (callContext: RequestHandlerCallContext, makeRequest: { (): void; },
@@ -22,11 +27,11 @@ interface RequestHandlerResponseFilter
 
 interface RequestHandlerCallContext
 {
-    onload: any;
-    src: string;
-    requestFn?: RequestFn;
-    requestOwner?: RequestOwner;
-    responseFilter?: RequestHandlerResponseFilter;
+    onload          : RequestOnLoadCB;
+    src             : string;
+    requestFn?      : RequestFn;
+    requestOwner?   : RequestOwner;
+    responseFilter? : RequestHandlerResponseFilter;
 }
 
 class RequestHandler
@@ -219,7 +224,7 @@ class RequestHandler
                 callContext.onload = null;
             }
             callContext = null;
-        }
+        };
 
         makeRequest = function makeRequestFn()
         {
@@ -232,7 +237,10 @@ class RequestHandler
             {
                 if (callContext.requestOwner)
                 {
-                    callContext.requestFn.call(callContext.requestOwner, callContext.src, responseCallback, callContext);
+                    callContext.requestFn.call(callContext.requestOwner,
+                                               callContext.src,
+                                               responseCallback,
+                                               callContext);
                 }
                 else
                 {
@@ -247,7 +255,7 @@ class RequestHandler
             {
                 TurbulenzEngine.request(callContext.src, responseCallback);
             }
-        }
+        };
 
         makeRequest();
     }
@@ -340,8 +348,11 @@ class RequestHandler
         rh.reconnectedObserver = Observer.create();
         rh.reconnectTest = null;
 
+        /* tslint:disable:no-empty */
         rh.onReconnected = params.onReconnected || function onReconnectedFn() {};
         rh.onRequestTimeout = params.onRequestTimeout || function onRequestTimeoutFn(/* callContext */) {};
+        /* tslint:enable:no-empty */
+
         var handlers = { eventOnload: [] };
         rh.handlers = handlers;
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 //
 // SpatialGridNode
@@ -6,7 +6,9 @@
 
 class SpatialGridNode
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     extents          : any;
     cellExtents      : any;
@@ -48,7 +50,9 @@ class SpatialGridNode
 //
 class SpatialGrid
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     extents: any;
     cellSize: number;
@@ -93,7 +97,9 @@ class SpatialGrid
     add(externalNode: {}, extents: any): void
     {
         var numNodes = this.numNodes;
+        /* tslint:disable:no-string-literal */
         externalNode['spatialIndex'] = numNodes;
+        /* tslint:enable:no-string-literal */
 
         var node = this.nodes[numNodes];
         var nodeExtents, cellExtents;
@@ -155,7 +161,9 @@ class SpatialGrid
 
     update(externalNode: {}, extents: any): void
     {
+        /* tslint:disable:no-string-literal */
         var index = externalNode['spatialIndex'];
+        /* tslint:enable:no-string-literal */
         if (index !== undefined)
         {
             var cellSize = this.cellSize;
@@ -257,7 +265,7 @@ class SpatialGrid
                                     cell.push(node);
                                 }
                             }
-                            else if(oldCell)
+                            else if (oldCell)
                             {
                                 for (n = 0; n < numNodes; n += 1)
                                 {
@@ -306,10 +314,12 @@ class SpatialGrid
 
     remove(externalNode: {}): void
     {
+        /* tslint:disable:no-string-literal */
         var index = externalNode['spatialIndex'];
         if (index !== undefined)
         {
             externalNode['spatialIndex'] = undefined;
+            /* tslint:enable:no-string-literal */
 
             var numNodes = this.numNodes;
             if (1 < numNodes)
@@ -336,7 +346,9 @@ class SpatialGrid
                     nodes[numNodes] = node;
                     node.id = numNodes;
                     lastNode.id = index;
+                    /* tslint:disable:no-string-literal */
                     lastNode.externalNode['spatialIndex'] = index;
+                    /* tslint:enable:no-string-literal */
                 }
             }
             else
@@ -424,9 +436,11 @@ class SpatialGrid
         while (minRow <= maxRow);
     }
 
+    /* tslint:disable:no-empty */
     finalize(): void
     {
     }
+    /* tslint:enable:no-empty */
 
     getOverlappingNodes(queryExtents: any, overlappingNodes: any[], startIndex?: number): number
     {
@@ -459,7 +473,7 @@ class SpatialGrid
             var cell, numCellNodes, n, node, nodeExtents;
             do
             {
-                var internalRow = (firstRow < minRow && minRow < lastRow)
+                var internalRow = (firstRow < minRow && minRow < lastRow);
                 var cs = (minX + minRow);
                 var ce = (maxX + minRow);
                 var ci = cs;
@@ -638,7 +652,7 @@ class SpatialGrid
             var cells = this.cells;
             var numCells = cells.length;
             var pairsMap = {};
-            var c, i, j, nodeI, nodeJ, extents, pairIdBase, pairId;
+            var c, i, j, nodeI, idI, nodeJ, idJ, extents, pairId;
             for (c = 0; c < numCells; c += 1)
             {
                 var cell = cells[c];
@@ -648,7 +662,7 @@ class SpatialGrid
                     for (i = 0; i < numNodes; i += 1)
                     {
                         nodeI = cell[i];
-                        pairIdBase = (nodeI.id << 16);
+                        idI = nodeI.id;
                         extents = nodeI.extents;
                         var minX = extents[0];
                         var minY = extents[1];
@@ -656,10 +670,20 @@ class SpatialGrid
                         var maxX = extents[3];
                         var maxY = extents[4];
                         var maxZ = extents[5];
-                        for (j = (i + 1); j < numNodes; j += 1)
+                        for (j = numNodes; i < j; j -= 1)
                         {
                             nodeJ = cell[j];
-                            pairId = (pairIdBase | nodeJ.id);
+                            idJ = nodeJ.id;
+                            /* tslint:disable:no-bitwise */
+                            if (idI < idJ)
+                            {
+                                pairId = ((idJ << 16) | idI);
+                            }
+                            else
+                            {
+                                pairId = ((idI << 16) | idJ);
+                            }
+                            /* tslint:enable:no-bitwise */
                             if (!pairsMap[pairId])
                             {
                                 extents = nodeJ.extents;
@@ -702,7 +726,7 @@ class SpatialGrid
             var minGridZ = gridExtents[2];
             var maxGridX = gridExtents[3];
             var maxGridY = gridExtents[4];
-            var maxGridZ = gridExtents[5];
+            //var maxGridZ = gridExtents[5];
 
             var queryIndex = (this.queryIndex + 1);
             this.queryIndex = queryIndex;
@@ -806,12 +830,13 @@ class SpatialGrid
                                     }
                                 }
 
+                                var node;
                                 if (numQueryCellPlanes === 0)
                                 {
                                     for (k = 0; k < numNodes; k += 1)
                                     {
                                         // check if node is visible
-                                        var node = cell[k];
+                                        node = cell[k];
                                         if (node.queryIndex !== queryIndex)
                                         {
                                             node.queryIndex = queryIndex;
@@ -826,7 +851,7 @@ class SpatialGrid
                                     for (k = 0; k < numNodes; k += 1)
                                     {
                                         // check if node is visible
-                                        var node = cell[k];
+                                        node = cell[k];
                                         if (node.queryIndex !== queryIndex)
                                         {
                                             node.queryIndex = queryIndex;

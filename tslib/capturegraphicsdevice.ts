@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 var CaptureGraphicsCommand =
 {
@@ -465,7 +465,7 @@ class CaptureGraphicsDevice
             if (lowerIndex < 0)
             {
                 lowerIndex = ((-lowerIndex) - 1);
-                return objectsBin[lowerIndex].toString()
+                return objectsBin[lowerIndex].toString();
             }
         }
 
@@ -485,7 +485,7 @@ class CaptureGraphicsDevice
 
     private _cloneObject(object, raw)
     {
-        var length, index, result, value, id;
+        var length, index, result, value;
 
         // Check if it has an Id
         if (typeof object._id === "string")
@@ -1364,14 +1364,14 @@ class CaptureGraphicsDevice
     {
         this._addCommand(CaptureGraphicsCommand.beginOcclusionQuery, query._id);
 
-        return this.gd.beginOcclusionQuery(query)
+        return this.gd.beginOcclusionQuery(query);
     }
 
     public endOcclusionQuery(query)
     {
         this._addCommand(CaptureGraphicsCommand.endOcclusionQuery, query._id);
 
-        this.gd.endOcclusionQuery(query)
+        this.gd.endOcclusionQuery(query);
     }
 
     public endFrame()
@@ -2046,7 +2046,7 @@ class CaptureGraphicsDevice
         framesString += '],"objects":[';
         var objects = this.objects;
         var addValuesComma = false;
-        var objectsBin, object, binLength, id, j, valueInt;
+        var objectsBin, object, binLength, id, j, value, valueInt;
         for (p in objects)
         {
             if (objects.hasOwnProperty(p))
@@ -2073,7 +2073,7 @@ class CaptureGraphicsDevice
                         {
                             framesString += ',';
                         }
-                        var value = object[j];
+                        value = object[j];
                         if (typeof value === "string")
                         {
                             framesString += '"' + value + '"';
@@ -2129,7 +2129,7 @@ class CaptureGraphicsDevice
             framesString += '[';
             var command = commandsArray[n];
             var numArguments = command.length;
-            var a, value;
+            var a;
             for (a = 0; a < numArguments; a += 1)
             {
                 value = command[a];
@@ -2972,7 +2972,6 @@ class PlaybackGraphicsDevice
         var fileFrames = framesObject.frames;
         var numFileFrames = fileFrames.length;
         var frames = this.frames;
-        var c, command, cmdId;
         if (reset)
         {
             var numFrames = frames.length;
@@ -3073,10 +3072,11 @@ class PlaybackGraphicsDevice
             }
         }
 
+        var c, cmdId;
         for (n = 0; n < numFileFrames; n += 1)
         {
             var frame = fileFrames[n];
-            var numCommands = frame.length;
+            numCommands = frame.length;
             for (c = 0; c < numCommands; c += 1)
             {
                 cmdId = frame[c];
@@ -3230,7 +3230,7 @@ class PlaybackGraphicsDevice
         this.playHeight = height;
 
         var numCommands = frame.length;
-        var c;
+        var c, x, y, w, h;
         for (c = 0; c < numCommands; c += 1)
         {
             var command = frame[c];
@@ -3299,10 +3299,10 @@ class PlaybackGraphicsDevice
             }
             else if (method === CaptureGraphicsCommand.setViewport)
             {
-                var x = command[1];
-                var y = command[2];
-                var w = command[3];
-                var h = command[4];
+                x = command[1];
+                y = command[2];
+                w = command[3];
+                h = command[4];
                 if (w === -1)
                 {
                     x = offsetX;
@@ -3317,10 +3317,10 @@ class PlaybackGraphicsDevice
             }
             else if (method === CaptureGraphicsCommand.setScissor)
             {
-                var x = command[1];
-                var y = command[2];
-                var w = command[3];
-                var h = command[4];
+                x = command[1];
+                y = command[2];
+                w = command[3];
+                h = command[4];
                 if (w === -1)
                 {
                     x = offsetX;

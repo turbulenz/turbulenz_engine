@@ -235,7 +235,14 @@ if platform.system() == "Windows":
                 result = None
             return result
 
-        versions_to_check = versions_to_check or ['9.0', '10.0', '11.0']
+        versions_to_check = versions_to_check or ['9.0', '10.0', '11.0', '12.0']
+
+        if '12.0' in versions_to_check:
+            vs_path = _query_key_value(sxs_key, '12.0')
+            if vs_path is not None:
+                devenv_path = os.path.join(vs_path, 'Common7', 'IDE', 'devenv.com')
+                if os.path.exists(devenv_path):
+                    return (devenv_path, '2013', None)
 
         if '11.0' in versions_to_check:
             vs_path = _query_key_value(sxs_key, '11.0')
@@ -261,7 +268,7 @@ if platform.system() == "Windows":
                 if os.path.exists(devenv_path):
                     return (devenv_path, '2008', None)
 
-        # If we didn't find a devenv like tool try msbuild for Visual Studio 11.0
+        # If we didn't find a devenv like tool try msbuild for Visual Studio 11.0 or Visual Studio 12.0
         if '11.0' in versions_to_check:
             vs_path = _query_key_value(sxs_key, '11.0')
             if vs_path is not None:
@@ -272,6 +279,17 @@ if platform.system() == "Windows":
                 msbuild_path = _query_key_value(msbuild_key, 'MSBuildToolsPath')
                 if msbuild_path:
                     return None, '2012', os.path.join(msbuild_path, 'MSBuild.exe')
+
+        if '12.0' in versions_to_check:
+            vs_path = _query_key_value(sxs_key, '12.0')
+            if vs_path is not None:
+                # Query the key in two steps because Python can't seem to read the 4.0 key in a
+                msbuild_basekey = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\MSBuild\ToolsVersions',
+                                          0, KEY_READ | KEY_WOW64_32KEY)
+                msbuild_key = OpenKey(msbuild_basekey, '4.0', 0, KEY_READ | KEY_WOW64_32KEY)
+                msbuild_path = _query_key_value(msbuild_key, 'MSBuildToolsPath')
+                if msbuild_path:
+                    return None, '2013', os.path.join(msbuild_path, 'MSBuild.exe')
 
         return None, None, None
     # pylint: enable=F0401, E0602
@@ -293,7 +311,8 @@ if platform.system() == "Windows":
         versions_map = {
             '2008': 9.0,
             '2010': 10.0,
-            '2012': 11.0
+            '2012': 11.0,
+            '2013': 12.0
         }
 
         # Turbulenz tools are built 32bit so always check for these compilers

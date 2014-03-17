@@ -495,7 +495,7 @@ class Application
 
         managers.textureManager = TextureManager.create(graphicsDevice, requestHandler, null, errorCallback);
         managers.shaderManager = ShaderManager.create(graphicsDevice, requestHandler, null, errorCallback);
-        managers.effectManager = EffectManager.create()
+        managers.effectManager = EffectManager.create();
         managers.fontManager = FontManager.create(graphicsDevice, requestHandler, null, errorCallback);
 
         return true;

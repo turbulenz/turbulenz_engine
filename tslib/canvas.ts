@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 Turbulenz Limited
+// Copyright (c) 2011-2014 Turbulenz Limited
 
 // Workaround:
 
@@ -319,14 +319,16 @@ var parseCSSColor = function parseCSSColorFn(text, color) : number[]
     }
 
     return undefined;
-}
+};
 
 //
 // CanvasLinearGradient
 //
 class CanvasLinearGradient
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     x0              : number;
     y0              : number;
@@ -581,7 +583,9 @@ class CanvasLinearGradient
 
 class CanvasRadialGradient
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     x0              : number;
     y0              : number;
@@ -690,9 +694,9 @@ class CanvasRadialGradient
             var abs = Math.abs;
             var pi2 = (Math.PI * 2);
 
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             var numSteps = Math.max(abs(dx | 0), abs(dy | 0), abs(dr | 0));
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
 
             var dw = (1.0 / numSteps);
             var c0, c1, c2, c3;
@@ -748,11 +752,11 @@ class CanvasRadialGradient
                     dangle = (1.0 / cr);
                     for (angle = 0; angle < pi2; angle += dangle)
                     {
-                        /*jshint bitwise: false*/
+                        /* tslint:disable:no-bitwise */
                         cx = ((x + (cr * cos(angle))) | 0);
                         cy = ((y + (cr * sin(angle))) | 0);
                         p = ((cx + (cy * width)) << 2);
-                        /*jshint bitwise: true*/
+                        /* tslint:enable:no-bitwise */
                         if (pixelData[p + 3] === undefined)
                         {
                             pixelData[p] = c0;
@@ -766,11 +770,11 @@ class CanvasRadialGradient
                 dangle = (1.0 / r);
                 for (angle = 0; angle < pi2; angle += dangle)
                 {
-                    /*jshint bitwise: false*/
+                    /* tslint:disable:no-bitwise */
                     cx = ((x + (r * cos(angle))) | 0);
                     cy = ((y + (r * sin(angle))) | 0);
                     p = ((cx + (cy * width)) << 2);
-                    /*jshint bitwise: true*/
+                    /* tslint:enable:no-bitwise */
                     if (pixelData[p + 3] === undefined)
                     {
                         pixelData[p] = c0;
@@ -856,7 +860,9 @@ class CanvasRadialGradient
 //
 class CanvasContext
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     canvas                   : any;
     globalAlpha              : number;
@@ -1038,7 +1044,7 @@ class CanvasContext
         this.width = width;
         this.height = height;
 
-        /*jshint newcap: false*/
+        /* tslint:disable:no-duplicate-variable */
         var floatArrayConstructor = this.floatArrayConstructor;
 
         this.screen = new floatArrayConstructor(4);
@@ -1056,8 +1062,10 @@ class CanvasContext
         this.activeScreen = new floatArrayConstructor(4);
         this.activeColor = new floatArrayConstructor(4);
 
+        /* tslint:disable:no-use-before-declare */
         var shader = gd.createShader(this.shaderDefinition);
         this.shader = shader;
+        /* tslint:enable:no-use-before-declare */
 
         this.triangleStripPrimitive = gd.PRIMITIVE_TRIANGLE_STRIP;
         this.triangleFanPrimitive = gd.PRIMITIVE_TRIANGLE_FAN;
@@ -1153,6 +1161,7 @@ class CanvasContext
         this.textureShadowTechnique = shader.getTechnique('texture_shadow');
         this.patternShadowTechnique = shader.getTechnique('pattern_shadow');
         this.gradientShadowTechnique = shader.getTechnique('gradient_shadow');
+        /* tslint:disable:no-duplicate-variable */
 
         /*
           this.renderTexture = gd.createTexture({
@@ -1365,7 +1374,9 @@ class CanvasContext
             {
                 this.fillFlatBuffer(rect, 4);
 
+                /* tslint:disable:no-string-literal */
                 var technique = this.flatTechniques['copy'];
+                /* tslint:enable:no-string-literal */
 
                 this.setTechniqueWithColor(technique, this.screen, this.v4Zero);
 
@@ -1649,8 +1660,10 @@ class CanvasContext
                 var t3 = (t2 * t);
                 var tinvt = (3 * t * invt2);
                 var invtt = (3 * t2 * invt);
-                currentSubPath[numCurrentSubPathElements] = [((invt3 * x1) + (tinvt * xq1) + (invtt * xq2) + (t3 * x2)),
-                                                             ((invt3 * y1) + (tinvt * yq1) + (invtt * yq2) + (t3 * y2))];
+                currentSubPath[numCurrentSubPathElements] = [((invt3 * x1) + (tinvt * xq1) +
+                                                              (invtt * xq2) + (t3 * x2)),
+                                                             ((invt3 * y1) + (tinvt * yq1) +
+                                                              (invtt * yq2) + (t3 * y2))];
                 numCurrentSubPathElements += 1;
             }
         }
@@ -1865,7 +1878,7 @@ class CanvasContext
         needToSimplifyPath[numSubPaths + 1] = true;
     }
 
-    private _parsePath(path: string) : any[]
+    parsePath(path: string) : number[]
     {
         var commands = [];
 
@@ -2457,12 +2470,17 @@ class CanvasContext
                 this.numCachedPaths = 0;
             }
 
-            commands = this._parsePath(path);
+            commands = this.parsePath(path);
 
             this.cachedPaths[path] = commands;
             this.numCachedPaths += 1;
         }
 
+        this.compiledPath(commands);
+    }
+
+    compiledPath(commands: number[])
+    {
         var end = commands.length;
         var currentCommand = -1;
         var i = 0;
@@ -3065,31 +3083,64 @@ class CanvasContext
         var params;
         if (this.transformRect === CanvasContext.prototype.transformRect)
         {
+            var dimensions = font.calculateTextDimensions(text, scale, 0);
+
             params = {
                 rect : [x, y, maxWidth, maxWidth],
                 scale : scale,
                 spacing : 0,
-                alignment: alignment
+                alignment: alignment,
+                dimensions: dimensions
             };
 
-            var textVertices = font.generateTextVertices(text, params);
-            if (textVertices)
+            var totalNumGlyphs = dimensions.numGlyphs;
+            var glyphCounts = dimensions.glyphCounts;
+            var numPages = glyphCounts.length;
+
+            var pageIdx: number;
+            var numGlyphs: number;
+            var pageCtx = font.fm.scratchPageContext;
+
+            for (pageIdx = 0 ; pageIdx < numPages ; pageIdx += 1)
             {
-                var numValues = textVertices.length;
-                var n;
-                for (n = 0; n < numValues; n += 4)
+                numGlyphs = glyphCounts[pageIdx];
+                if (numGlyphs)
                 {
-                    var p = this.transformPoint(textVertices[n], textVertices[n + 1]);
-                    textVertices[n] = p[0];
-                    textVertices[n + 1] = p[1];
+                    pageCtx = font.generatePageTextVertices(text, params,
+                                                            pageIdx, pageCtx);
+
+                    // Transform the vertices
+
+                    var textVertices = pageCtx.vertices;
+                    if (textVertices)
+                    {
+                        var numValues = textVertices.length;
+                        var n;
+                        for (n = 0; n < numValues; n += 4)
+                        {
+                            var p = this.transformPoint(textVertices[n], textVertices[n + 1]);
+                            textVertices[n] = p[0];
+                            textVertices[n + 1] = p[1];
+                        }
+                    }
+
+                    font.drawTextVertices(pageCtx, pageIdx, true);
                 }
 
-                font.drawTextVertices(textVertices, true);
+                // Keep this out of the loop as a way to break when
+                // there are no glyphs to begin with.
+
+                totalNumGlyphs -= numGlyphs;
+                if (0 === totalNumGlyphs)
+                {
+                    break;
+                }
             }
         }
         else
         {
-            var rect = this.transformRect(x, y, maxWidth, maxWidth, this.tempRect);
+            var rect = this.transformRect(x, y, maxWidth, maxWidth,
+                                          this.tempRect);
             x = rect[4];
             y = rect[5];
             var w = (rect[2] - x);
@@ -3101,9 +3152,9 @@ class CanvasContext
                 spacing : 0,
                 alignment: alignment
             };
-
-            font.drawTextRect(text, params);
         }
+
+        font.drawTextRect(text, params);
 
         // Clear stream cache because drawTextRect sets its own
         this.activeVertexBuffer = null;
@@ -3247,7 +3298,9 @@ class CanvasContext
 
                 this.setTechniqueWithColor(technique, this.screen, color);
 
+                /* tslint:disable:no-string-literal */
                 technique['texture'] = image;
+                /* tslint:enable:no-string-literal */
 
                 gd.draw(primitive, 4);
             }
@@ -3395,7 +3448,9 @@ class CanvasContext
                 gd.setTechnique(technique);
                 this.activeTechnique = null;
 
+                /* tslint:disable:no-string-literal */
                 technique['image'] = tempImage;
+                /* tslint:enable:no-string-literal */
 
                 gd.draw(this.triangleStripPrimitive, 4);
             }
@@ -4142,6 +4197,7 @@ class CanvasContext
         }
         else
         {
+            /* tslint:disable:no-string-literal */
             if (alpha < 1.0)
             {
                 technique = this.flatTechniques['source-over'];
@@ -4150,6 +4206,7 @@ class CanvasContext
             {
                 technique = this.flatTechniques['copy'];
             }
+            /* tslint:enable:no-string-literal */
 
             this.setTechniqueWithColor(technique, screen, color);
         }
@@ -4195,7 +4252,9 @@ class CanvasContext
             }
             else
             {
+                /* tslint:disable:no-string-literal */
                 technique = this.flatTechniques['copy'];
+                /* tslint:enable:no-string-literal */
             }
 
             this.setTechniqueWithColor(technique, screen, color);
@@ -4224,7 +4283,9 @@ class CanvasContext
             }
             else
             {
+                /* tslint:disable:no-string-literal */
                 technique = this.gradientTechniques['copy'];
+                /* tslint:enable:no-string-literal */
             }
 
             this.setTechniqueWithAlpha(technique, screen, globalAlpha);
@@ -4275,8 +4336,10 @@ class CanvasContext
 
             this.gd.setTechnique(technique);
 
+            /* tslint:disable:no-string-literal */
             technique['screen'] = screen;
             technique['alpha'] = alpha;
+            /* tslint:enable:no-string-literal */
 
             activeScreen[0] = screen[0];
             activeScreen[1] = screen[1];
@@ -4297,14 +4360,18 @@ class CanvasContext
                 activeScreen[2] = screen[2];
                 activeScreen[3] = screen[3];
 
+                /* tslint:disable:no-string-literal */
                 technique['screen'] = screen;
+                /* tslint:enable:no-string-literal */
             }
 
             if (activeColor[3] !== alpha)
             {
                 activeColor[3] = alpha;
 
+                /* tslint:disable:no-string-literal */
                 technique['alpha'] = alpha;
+                /* tslint:enable:no-string-literal */
             }
         }
     }
@@ -4320,8 +4387,10 @@ class CanvasContext
 
             this.gd.setTechnique(technique);
 
+            /* tslint:disable:no-string-literal */
             technique['screen'] = screen;
             technique['color'] = color;
+            /* tslint:enable:no-string-literal */
 
             activeScreen[0] = screen[0];
             activeScreen[1] = screen[1];
@@ -4345,7 +4414,9 @@ class CanvasContext
                 activeScreen[2] = screen[2];
                 activeScreen[3] = screen[3];
 
+                /* tslint:disable:no-string-literal */
                 technique['screen'] = screen;
+                /* tslint:enable:no-string-literal */
             }
 
             if (activeColor[0] !== color[0] ||
@@ -4358,7 +4429,9 @@ class CanvasContext
                 activeColor[2] = color[2];
                 activeColor[3] = color[3];
 
+                /* tslint:disable:no-string-literal */
                 technique['color'] = color;
+                /* tslint:enable:no-string-literal */
             }
         }
     }
@@ -4729,7 +4802,7 @@ class CanvasContext
 
         var flag = 0;
 
-        /*jshint bitwise: false*/
+        /* tslint:disable:no-bitwise */
         var p0 = points[0];
         var p1 = points[1];
         var p0x = p0[0];
@@ -4768,7 +4841,7 @@ class CanvasContext
             n += 1;
         }
         while (n < numSegments);
-        /*jshint bitwise: true*/
+        /* tslint:enable:no-bitwise */
 
         if (flag !== 0)
         {
@@ -4791,7 +4864,7 @@ class CanvasContext
         var p2y = p2[1];
         var n, dist;
 
-        for (;;)
+        for ( ; ; )
         {
             var p0 = points[first];
             var p0x = p0[0];
@@ -4973,7 +5046,6 @@ class CanvasContext
         var d10l = ((d10x * d10x) + (d10y * d10y));
         var n = 2;
         var sqrt = Math.sqrt;
-        var abs = Math.abs;
         var angle;
         do
         {
@@ -4985,7 +5057,9 @@ class CanvasContext
             var d20l = ((d20x * d20x) + (d20y * d20y));
 
             angle = (((d10x * d20y) - (d10y * d20x)) / sqrt(d10l * d20l));
+            /* tslint:disable:no-bitwise */
             angles[n - 2] = ((angle * 100) | 0);
+            /* tslint:enable:no-bitwise */
             // Increase the 100 to increase precision if caching matches too dissimilar shapes
 
             d10x = d20x;
@@ -5002,20 +5076,24 @@ class CanvasContext
     lowerBound(bin: any[], data: number[], length: number) : number
     {
         var first: number = 0;
+        /* tslint:disable:no-bitwise */
         var count: number = (bin.length >>> 1); // Bin elements ocupy two slots, divide by 2
-        var step: number, middle : number, binIndex:number, diff: number;
-        var diff: number, n: number;
+        /* tslint:enable:no-bitwise */
+        var step: number, middle: number, binIndex: number, diff: number;
+        var n: number;
         var a: number[];
 
         while (0 < count)
         {
+            /* tslint:disable:no-bitwise */
             step = (count >>> 1);
             middle = (first + step);
             binIndex = ((middle << 1) + 1); // Bin elements have the data on the second slot
+            /* tslint:enable:no-bitwise */
 
             n = 0;
             a = bin[binIndex];
-            for (;;)
+            for ( ; ; )
             {
                 diff = (a[n] - data[n]);
                 if (diff < 0)
@@ -5039,7 +5117,9 @@ class CanvasContext
             }
         }
 
+        /* tslint:disable:no-bitwise */
         return (first << 1); // Bin elements ocupy two slots, multiply by 2
+        /* tslint:enable:no-bitwise */
     }
 
     triangulateConcaveCached(points, numSegments, vertices, numVertices)
@@ -5576,6 +5656,8 @@ class CanvasContext
         return false;
     }
 
+    /* tslint:disable:whitespace */
+    /* tslint:disable:max-line-length */
     private shaderDefinition = {
  "version": 1,
  "name": "canvas.cgfx",
@@ -6478,7 +6560,9 @@ class CanvasContext
    "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nattribute vec4 ATTR0;\nuniform vec4 screen;void main()\n{vec2 tmpvar_1;tmpvar_1=((ATTR0.xy*screen.xy)+screen.zw);vec4 tmpvar_2;tmpvar_2.zw=vec2(0.0,1.0);tmpvar_2.x=tmpvar_1.x;tmpvar_2.y=tmpvar_1.y;gl_Position=tmpvar_2;}"
   }
  }
-}
+};
+    /* tslint:enable:max-line-length */
+    /* tslint:enable:whitespace */
 
     // Constructor function
     static create(canvas, gd, width, height): CanvasContext
@@ -6492,7 +6576,9 @@ class CanvasContext
 //
 class Canvas
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     context: CanvasContext;
     width: number;
@@ -6631,9 +6717,10 @@ class Canvas
     CanvasContext.prototype.floatArrayConstructor = Array;
     CanvasContext.prototype.byteArrayConstructor = Array;
     CanvasContext.prototype.shortArrayConstructor = Array;
+    var textDescriptor;
     if (typeof Float32Array !== "undefined")
     {
-        var textDescriptor = Object.prototype.toString.call(new Float32Array(4));
+        textDescriptor = Object.prototype.toString.call(new Float32Array(4));
         if (textDescriptor === '[object Float32Array]')
         {
             CanvasContext.prototype.floatArrayConstructor = Float32Array;
@@ -6641,7 +6728,7 @@ class Canvas
     }
     if (typeof Uint8Array !== "undefined")
     {
-        var textDescriptor = Object.prototype.toString.call(new Uint8Array(4));
+        textDescriptor = Object.prototype.toString.call(new Uint8Array(4));
         if (textDescriptor === '[object Uint8Array]')
         {
             CanvasContext.prototype.byteArrayConstructor = Uint8Array;
@@ -6649,7 +6736,7 @@ class Canvas
     }
     if (typeof Uint16Array !== "undefined")
     {
-        var textDescriptor = Object.prototype.toString.call(new Uint16Array(4));
+        textDescriptor = Object.prototype.toString.call(new Uint16Array(4));
         if (textDescriptor === '[object Uint16Array]')
         {
             CanvasContext.prototype.shortArrayConstructor = Uint16Array;

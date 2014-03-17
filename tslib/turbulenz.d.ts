@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 // -----------------------------------------------------------------------------
 // MathDevice
@@ -299,7 +299,7 @@ interface MathDevice
     quatEqual(q1, q2, precision?);
 
     // quatPos
-    quatPosBuild(x, y, z, w, px, py, pz, dst?);
+    quatPosBuild(x, y, z?, w?, px?, py?, pz?, dst?);
     quatPosTransformVector(qp, n, dst?);
     quatPosTransformPoint(qp, p);
     quatPosMul(qp1, qp2);
@@ -429,7 +429,6 @@ interface Texture
     height: number;
     depth: number;
     format: number;
-    numDataLevels: number;
     mipmaps: boolean;
     cubemap: boolean;
     dynamic: boolean;
@@ -437,9 +436,17 @@ interface Texture
 
     // Methods
 
-    setData(data: any, face?: number, level?: number, x?:number, y?:number, w?:number, h?:number);
+    setData(data: any, face?: number, level?: number, x?: number, y?: number, w?: number, h?: number);
     typedArrayIsValid(array: any);
     destroy();
+}
+
+interface TextureArchiveParams
+{
+    src: string;
+    mipmaps?: boolean;
+    ontextureload?: { (texture: Texture): void; };
+    onload?: { (success: boolean, status: number): void; };
 }
 
 interface RenderTargetParameters
@@ -776,7 +783,7 @@ interface GraphicsDevice
               semantics: Semantics): VertexWriteIterator;
     endDraw(writer: VertexWriteIterator): void;
 
-    loadTexturesArchive(params: any): void;
+    loadTexturesArchive(params: TextureArchiveParams): void;
 
     // Returns 'any', since the output may be a data url (string) in
     // the case of compressed images, or number[].
@@ -1166,6 +1173,19 @@ interface SoundArchiveParameters
 
 // SoundDevice
 
+interface SoundDeviceParameters
+{
+    deviceSpecifier?   : string;
+    linearDistance?    : boolean;
+    frequency?         : number;
+    dopplerFactor?     : number;
+    dopplerVelocity?   : number;
+    speedOfSound?      : number;
+    listenerTransform? : any; // m43
+    listenerVelocity?  : any; // v3
+    listenerGain?      : number;
+}
+
 interface SoundDevice
 {
     vendor                : string;
@@ -1327,7 +1347,7 @@ interface TurbulenzEngine
     createPhysicsDevice(params: any): PhysicsDevice;
     getPhysicsDevice(): PhysicsDevice;
 
-    createSoundDevice(params: any): SoundDevice;
+    createSoundDevice(params: SoundDeviceParameters): SoundDevice;
     getSoundDevice(): SoundDevice;
 
     createNetworkDevice(params: any): NetworkDevice;
@@ -1351,4 +1371,5 @@ interface TurbulenzEngine
 // TurbulenzEngine global
 // -----------------------------------------------------------------------------
 
+/* tslint:disable:no-unused-variable */
 declare var TurbulenzEngine : TurbulenzEngine;

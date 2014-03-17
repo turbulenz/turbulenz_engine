@@ -33,7 +33,7 @@ TurbulenzEngine.onload = function onloadFn()
         var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
     }
 
-    var canvas, ctx, crateImage, stonesImage, stonesPattern;
+    var canvas, crateImage, stonesImage, stonesPattern;
 
     var requestHandlerParameters = {};
     var requestHandler = RequestHandler.create(requestHandlerParameters);
@@ -245,7 +245,7 @@ TurbulenzEngine.onload = function onloadFn()
         {
             deviceWidth = canvas.width;
             deviceHeight = canvas.height;
-            ok =true;
+            ok = true;
         }
         else
         {

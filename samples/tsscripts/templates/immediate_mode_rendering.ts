@@ -389,8 +389,8 @@ TurbulenzEngine.onload = function onloadFn()
                         y1 = (at * sin) + startY;
                         absX = absfn(x0 - startX);
                         absY = absfn(y0 - startY);
-                        x3 = x0 + ((x0 > startX) ? scale * absX: -scale * absX);
-                        y3 = y0 + ((y0 > startY) ? scale * absY: -scale * absY);
+                        x3 = x0 + ((x0 > startX) ? scale * absX : -scale * absX);
+                        y3 = y0 + ((y0 > startY) ? scale * absY : -scale * absY);
 
                         // Draws two triangles for each iterative step of the algorithm
                         writer(x3, y3, startZ, 0, 0);

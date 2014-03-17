@@ -140,7 +140,7 @@ TurbulenzEngine.onload = function onloadFn()
             return;
         }
 
-        var text = graphicsDevice.fps.toFixed(2) +" fps";
+        var text = graphicsDevice.fps.toFixed(2) + " fps";
         if (text !== fpsText)
         {
             fpsText = text;
@@ -437,11 +437,11 @@ TurbulenzEngine.onload = function onloadFn()
             animatedAlpha: true,
             // for particles that enable these options, we're going to allow particle orientations
             //    to vary by the given spherical angles (+/-), and this variation will change over time.
-            randomizedOrientation: [Math.PI*0.25, Math.PI*0.25],
+            randomizedOrientation: [Math.PI * 0.25, Math.PI * 0.25],
             animatedOrientation  : true,
             // for particles that enable these options, we're going to allow particle rotations
             //    to vary by the given angle (+/-), and this variation will change over time.
-            randomizedRotation: Math.PI*2,
+            randomizedRotation: Math.PI * 2,
             animatedRotation  : true
         },
         updater: {
@@ -509,7 +509,7 @@ TurbulenzEngine.onload = function onloadFn()
                 speedMin: 3,
                 speedMax: 20,
                 // And with a conical spread of the given angle about the default direction (y-axis).
-                conicalSpread: Math.PI/10
+                conicalSpread: Math.PI / 10
             },
             position: {
                 // Particles will be generated at radii between these values.
@@ -720,7 +720,8 @@ TurbulenzEngine.onload = function onloadFn()
         var dimensions = font.calculateTextDimensions(text, fontScale, 0);
         font.drawTextRect(text, {
             rect : mathDevice.v4Build(0, 0, dimensions.width, dimensions.height),
-            scale: fontScale
+            scale: fontScale,
+            alignment: 0
         });
 
         // Draw 2d mini-map displaying all particle instances, and whether they are:
@@ -1031,4 +1032,4 @@ TurbulenzEngine.onload = function onloadFn()
     });
 
     htmlControls.register();
-}
+};

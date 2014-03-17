@@ -102,6 +102,13 @@
 
 - fonts/hero.fnt
 
+- fonts/aozoraminchoregular.fnt
+- textures/aozoraminchoregular_0.png
+- textures/aozoraminchoregular_1.png
+- textures/aozoraminchoregular_2.png
+- textures/aozoraminchoregular_3.png
+- textures/aozoraminchoregular_4.png
+
 - videos/turbulenzanimation.mp4
 - videos/turbulenzanimation.webm
 - sounds/turbulenzanimation.mp3

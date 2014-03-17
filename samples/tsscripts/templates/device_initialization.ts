@@ -44,7 +44,7 @@ TurbulenzEngine.onload = function onloadFn()
         {
             window.console.log(msg);
         }
-    }
+    };
 
 
     write("<h3>Turbulenz Engine Details<\/h3>");
