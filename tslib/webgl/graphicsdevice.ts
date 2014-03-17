@@ -6368,6 +6368,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     beginRenderTarget(renderTarget: RenderTarget): boolean
     {
+        debug.assert(!this.activeRenderTarget,
+                     "beginRenderTarget called before calling endRenderTarget on current render target");
         this.activeRenderTarget = <WebGLRenderTarget>renderTarget;
 
         if (debug)

@@ -844,6 +844,9 @@ It should only be called between beginFrame/endFrame.
 ``renderTarget``
     A :ref:`RenderTarget <rendertarget>` object to render to.
 
+.. note::
+    Calls to `beginRenderTarget` cannot be nested.
+
 .. _graphicsdevice_endrendertarget:
 
 .. index::
