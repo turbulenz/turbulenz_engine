@@ -174,7 +174,14 @@ This function is used by `updateFrustumPlanes` to build the camera frustum plane
     camera.updateViewProjectionMatrix();
     var frustum2 = camera.extractFrustumPlanes();
 
-Returns an array of 6 :ref:`Plane <plane>` objects.
+Returns an array of 6 :ref:`Plane <plane>` objects in the order:
+
+- 0 - left
+- 1 - right
+- 2 - top
+- 3 - bottom
+- 4 - near
+- 5 - far
 
 .. index::
     pair: Camera; getFrustumPoints
@@ -194,6 +201,17 @@ Useful for calculating a bounding volume of the camera frustum.
     var sphere = calculateBoundingSphere(frustumPoints);
 
 Returns a JavaScript array of 8 points.
+These points are ordered:
+
+- 0 - near top right
+- 1 - near top left
+- 2 - near bottom left
+- 3 - near bottom right
+- 4 - far top right
+- 5 - far top left
+- 6 - far bottom left
+- 7 - far bottom right
+
 Each point is represented as JavaScript array of 3 components.
 
 .. index::
@@ -213,6 +231,13 @@ Useful for calculating simple intersections of the camera frustum with other vol
     var farPlanePoints = camera.getFrustumFarPoints();
 
 Returns a JavaScript array of 4 points.
+These points are ordered:
+
+- 0 - top right
+- 1 - top left
+- 2 - bottom left
+- 3 - bottom right
+
 Each point is represented as JavaScript array of 3 components.
 
 .. index::
@@ -448,6 +473,15 @@ or the frustum parameters are changed.
 **Summary**
 
 The array of planes that defines the camera frustum.
+In the order:
+
+- 0 - left
+- 1 - right
+- 2 - top
+- 3 - bottom
+- 4 - near
+- 5 - far
+
 Not recommended to be updated by hand,
 it is better to call the method `updateFrustumPlanes` when the camera `matrix`
 or the frustum parameters are changed.
