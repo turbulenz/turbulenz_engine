@@ -2698,6 +2698,16 @@ var VMath : MathDevice =
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
+        var m0 = m[0];
+        var m1 = m[1];
+        var m2 = m[2];
+        var m3 = m[3];
+        var m4 = m[4];
+        var m5 = m[5];
+        var m6 = m[6];
+        var m7 = m[7];
+        var m8 = m[8];
+
         var d4857 = (m4 * m8 - m5 * m7);
         var d5638 = (m5 * m6 - m3 * m8);
         var d3746 = (m3 * m7 - m4 * m6);
@@ -2713,16 +2723,6 @@ var VMath : MathDevice =
         }
         else
         {
-            var m0 = m[0];
-            var m1 = m[1];
-            var m2 = m[2];
-            var m3 = m[3];
-            var m4 = m[4];
-            var m5 = m[5];
-            var m6 = m[6];
-            var m7 = m[7];
-            var m8 = m[8];
-
             var detrecp = 1.0 / det;
             dst[0] = (d4857 * detrecp);
             dst[1] = ((m7 * m2 - m8 * m1) * detrecp);
