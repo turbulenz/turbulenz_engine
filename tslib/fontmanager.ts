@@ -922,7 +922,8 @@ class FontManager
         };
 
         /**
-           Creates a font from an '.fnt' or '.fontdat'file and its associated image file
+           Creates a font from an '.fnt', '.json' or '.fontdat'file
+           and its associated image file
 
            @memberOf FontManager.prototype
            @public
@@ -1138,7 +1139,9 @@ class FontManager
                         extension = dataPath.substr(dot);
                     }
                     if (!extension ||
-                        (extension !== ".fnt" && extension !== ".fontdat"))
+                        (extension !== ".fnt" &&
+                         extension !== ".json" &&
+                         extension !== ".fontdat"))
                     {
                         dataPath += ".fontdat";
                     }
