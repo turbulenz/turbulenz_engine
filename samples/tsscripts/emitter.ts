@@ -18,7 +18,9 @@ interface EmitterParticle
 //
 class EmitterParticleSystem
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     md                 : MathDevice;
     numActiveParticles : number;
@@ -228,12 +230,12 @@ class EmitterParticleSystem
             p1 = position[1];
             p2 = position[2];
 
-            xMax = (p0 > xMax) ? p0: xMax;
-            xMin = (p0 < xMin) ? p0: xMin;
-            yMax = (p1 > yMax) ? p1: yMax;
-            yMin = (p1 < yMin) ? p1: yMin;
-            zMax = (p2 > zMax) ? p2: zMax;
-            zMin = (p2 < zMin) ? p2: zMin;
+            xMax = (p0 > xMax) ? p0 : xMax;
+            xMin = (p0 < xMin) ? p0 : xMin;
+            yMax = (p1 > yMax) ? p1 : yMax;
+            yMin = (p1 < yMin) ? p1 : yMin;
+            zMax = (p2 > zMax) ? p2 : zMax;
+            zMin = (p2 < zMin) ? p2 : zMin;
         }
 
         extents[0] = xMin - halfSize;
@@ -245,8 +247,11 @@ class EmitterParticleSystem
         return extents;
     }
 
+    /* tslint:disable:no-empty */
     destroy()
-    {}
+    {
+    }
+    /* tslint:enable:no-empty */
 
     // EmitterParticleSystem Constructor function
     static create(md: MathDevice, gd: GraphicsDevice,
@@ -333,7 +338,8 @@ class EmitterParticleSystem
 
         var numIndexBufferIndices = 6 * maxParticles;
 
-        if (!EmitterParticleSystem.prototype.indexBuffer || (EmitterParticleSystem.prototype.indexBuffer.numIndices < numIndexBufferIndices))
+        if (!EmitterParticleSystem.prototype.indexBuffer ||
+            (EmitterParticleSystem.prototype.indexBuffer.numIndices < numIndexBufferIndices))
         {
             var indexData = new Uint16Array(numIndexBufferIndices);
 
@@ -378,7 +384,9 @@ EmitterParticleSystem.prototype.indexBuffer = null;
 //
 class EmitterParticleSystemRenderer
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     gd: GraphicsDevice;
     md: MathDevice;
@@ -386,7 +394,6 @@ class EmitterParticleSystemRenderer
     update(particleSystem, camera)
     {
         // Basic updates rewrites the whole vertexBuffer
-        var md = this.md;
         var numParticles = particleSystem.numActiveParticles;
         var numVerticesChanged = particleSystem.numVerticesPerParticle * numParticles;
 
@@ -579,7 +586,9 @@ class EmitterParticleSystemRenderer
 //
 class Emitter
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     gd                     : GraphicsDevice;
     md                     : MathDevice;

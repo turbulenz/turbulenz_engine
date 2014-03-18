@@ -11,7 +11,9 @@
 //
 //  loadCustomFileShapeFn
 //
+/* tslint:disable:no-unused-variable */
 var loadCustomFileShape = function loadCustomFileShapeFn(shapeName, shape, fileShape, loadParams)
+/* tslint:enable:no-unused-variable */
 {
     //
     //  Custom geometry loading function:
@@ -423,7 +425,9 @@ var loadCustomFileShape = function loadCustomFileShapeFn(shapeName, shape, fileS
                                     {
                                         for (t = 0; t < numIndices; t += 3)
                                         {
-                                            writer(faces[t + 0] + firstVertex, faces[t + 1] + firstVertex, faces[t + 2] + firstVertex);
+                                            writer(faces[t + 0] + firstVertex,
+                                                   faces[t + 1] + firstVertex,
+                                                   faces[t + 2] + firstVertex);
                                         }
                                     }
                                     else //if (surface.lines)
@@ -661,7 +665,7 @@ class Morph
         var shapesLen = shapes.length;
         var maxMorphs = this.maxMorphs;
 
-        var maxTargetShapes = (shapesLen < maxMorphs) ? shapesLen + 1: maxMorphs;
+        var maxTargetShapes = (shapesLen < maxMorphs) ? shapesLen + 1 : maxMorphs;
 
         var semanticsNamesArray = [];
         var semanticMap = this.semanticMap;
@@ -679,10 +683,11 @@ class Morph
             return null;
         }
 
-        var inputs, input, semanticsNames, semanticsNamesLen, mappedName, shape, mappedNames, remainingAttributesLen, lastRemainingAttribute;
+        var inputs, input, semanticsNames, semanticsNamesLen, mappedName, shape, mappedNames;
+        var remainingAttributesLen, lastRemainingAttribute;
         for (var i = 0; i < maxTargetShapes; i += 1)
         {
-            shape = (i === 0) ? baseShape: shapes[i - 1];
+            shape = (i === 0) ? baseShape : shapes[i - 1];
             semanticsNames = shape.semanticsNames;
             mappedNames = [];
             lastRemainingAttribute = 0;
@@ -710,7 +715,8 @@ class Morph
                 }
                 else
                 {
-                    // No mapping available, systematically use remaining attributes (Since they are ignored by the shader)
+                    // No mapping available, systematically use remaining attributes
+                    // (Since they are ignored by the shader)
                     remainingAttributesLen = remainingAttributes.length;
                     if (lastRemainingAttribute < remainingAttributesLen)
                     {
@@ -1075,7 +1081,9 @@ class MorphInstance
 
     setWeights(weights)
     {
+        /* tslint:disable:no-string-literal */
         this.techniqueParameters['morphWeights'] = weights;
+        /* tslint:enable:no-string-literal */
     }
 
     //
@@ -1083,7 +1091,6 @@ class MorphInstance
     //
     static registerEffects(mathDevice, renderer, shaderManager, effectManager)
     {
-        var defaultPrepareFn = renderer.defaultPrepareFn;
         var defaultUpdateFn = renderer.defaultUpdateFn;
 
         var effect;
@@ -1170,7 +1177,7 @@ class MorphInstance
         instance.geometryType = morph.type;
         instance.halfExtents = morph.halfExtents;
         instance.center = morph.center;
-        instance.techniqueParameters = graphicsDevice ? graphicsDevice.createTechniqueParameters(): null;
+        instance.techniqueParameters = graphicsDevice ? graphicsDevice.createTechniqueParameters() : null;
         instance.sharedMaterial = sharedMaterial;
         if (instance.sharedMaterial)
         {

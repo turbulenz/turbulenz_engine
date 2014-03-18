@@ -13,4 +13,5 @@ var params = {
     estimateElapsed: 0.5        // Seconds
 };
 
+/* tslint:disable:no-unused-variable */
 var BF = BenchmarkFramework.create(params);

@@ -9,7 +9,9 @@
 
 // Calls functions in order
 // NB the argument "functions" is an array of objects of format {func: function, isDependent: true/false}
+/* tslint:disable:no-unused-variable */
 function enterCallbackChain(context, functions)
+/* tslint:enable:no-unused-variable */
 {
     var length = functions.length;
     var localCallback;

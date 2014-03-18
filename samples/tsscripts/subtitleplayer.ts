@@ -43,7 +43,7 @@ interface SubtitleCaption
     /// Start time in seconds
     startTime: number;
     duration: number;
-    text: { [locale:string]: string};
+    text: { [locale: string]: string};
 }
 
 interface SubtitleScript
@@ -213,7 +213,7 @@ class SubtitlePlayer
             nextActiveIdx += 1;
             nextActive = script[nextActiveIdx];
         }
-        this.nextActiveIdx = nextActiveIdx
+        this.nextActiveIdx = nextActiveIdx;
 
         // If we have gone past the last event, there is nothing to
         // do.
@@ -246,9 +246,12 @@ class SubtitlePlayer
             var screenHeight = gd.height;
 
             gd.setTechnique(this.technique);
+
+            /* tslint:disable:no-string-literal */
             techniqueParameters['clipSpace'] =
                 this.md.v4Build(2 / screenWidth, -2 / screenHeight, -1, 1,
                                 techniqueParameters['clipSpace']);
+            /* tslint:enable:no-string-literal */
             gd.setTechniqueParameters(techniqueParameters);
 
             // Place the text
@@ -279,7 +282,7 @@ class SubtitlePlayer
             var drawParams = this.scratchDrawParameters;
             var rect = drawParams.rect;
             rect[0] = screenWidth / 2;
-            rect[1] = screenHeight * (1 -lowEdgeFactor) - dimensions.height;
+            rect[1] = screenHeight * (1 - lowEdgeFactor) - dimensions.height;
             drawParams.scale = scale;
             drawParams.spacing = spacing;
             drawParams.dimensions = dimensions;
