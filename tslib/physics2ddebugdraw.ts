@@ -482,9 +482,9 @@ class Physics2DDebugDraw
             }
         }
         verts.push(x2, y2);
-        /*jshint bitwise: false*/
+        /* tslint:disable:no-bitwise */
         var vCount = (verts.length >> 1);
-        /*jshint bitwise: true*/
+        /* tslint:enable:no-bitwise */
 
         var numVertices = this._numVertices;
         var vindex = (numVertices * 6);
@@ -753,12 +753,12 @@ class Physics2DDebugDraw
             return;
         }
 
-        /*jshint bitwise: false*/
+        /* tslint:disable:no-bitwise */
         var color = this._colors[shape.body._type |
                                 (body.sleeping ? 4 : 0) |
                                 (shape.sensor ? 8 : 0) |
                                 (body._bullet ? 16 : 0)];
-        /*jshint bitwise: true*/
+        /* tslint:enable:no-bitwise */
 
         if (shape._type === (/*TYPE_CIRCLE*/0))
         {
@@ -1134,6 +1134,8 @@ class Physics2DDebugDraw
         colors[(/*TYPE_KINEMATIC*/1) + 12] = sleepingKinematicSensorColor;
 
         // Load embedded default shader and techniques
+        /* tslint:disable:whitespace */
+        /* tslint:disable:max-line-length */
         var shader = gd.createShader(
             {
                 "version": 1,
@@ -1180,6 +1182,8 @@ class Physics2DDebugDraw
                 }
             }
         );
+        /* tslint:enable:max-line-length */
+        /* tslint:enable:whitespace */
 
         o._techniqueParams = gd.createTechniqueParameters({
             clipSpace : new Physics2DDevice.prototype.floatArray(4)

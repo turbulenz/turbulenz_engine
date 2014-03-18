@@ -151,10 +151,12 @@ class Draw2DSprite
     setTexture(texture)
     {
         // Verify that the texture is not NPOT
+        /* tslint:disable:no-bitwise */
         debug.assert((!texture) ||
                      (0 === (texture.width & (texture.width - 1)) &&
                       0 === (texture.height & (texture.height - 1))),
                      "Draw2DSprite does not support non-power-of-2 textures");
+        /* tslint:enable:no-bitwise */
 
         if (this._texture !== texture)
         {
@@ -463,6 +465,7 @@ class Draw2DSprite
         var texture = s._texture = params.texture || null;
         if (texture)
         {
+            /* tslint:disable:no-bitwise */
             if ((0 !== (texture.width & (texture.width - 1))) ||
                 (0 !== (texture.height & (texture.height - 1))))
             {
@@ -470,6 +473,7 @@ class Draw2DSprite
                             "dimensions");
                 return null;
             }
+            /* tslint:enable:no-bitwise */
         }
 
         // position (optional, default 0,0)
@@ -614,7 +618,7 @@ var Draw2DSpriteData = {
         // x1 y1 x2 y2 x3 y3 x4 y4 - vertices [0,8)
         // cr cg cb ca u1 v1 u2 v2 - normalized color + texture [8,16)
         return new Draw2D.floatArray(16);
-    },
+    }
 };
 
 //
@@ -853,9 +857,9 @@ class Draw2D
     bufferSprite(buffer, sprite, index)
     {
         sprite._update(0);
-        /*jshint bitwise: false*/
+        /* tslint:disable:no-bitwise */
         index <<= 4;
-        /*jshint bitwise: true*/
+        /* tslint:enable:no-bitwise */
 
         var data = sprite.data;
         buffer[index]      = data[0];
@@ -1979,13 +1983,13 @@ class Draw2D
     }
 
     // always overallocate.
-    /*jshint bitwise: false*/
+    /* tslint:disable:no-bitwise */
     static makePow2(dim)
     {
         var index = Math.log(dim) / Math.log(2);
         return (1 << Math.ceil(index));
     }
-    /*jshint bitwise: true*/
+    /* tslint:enable:no-bitwise */
 
     createRenderTarget(params: Draw2DRenderTargetParams)
     {
@@ -2036,7 +2040,7 @@ class Draw2D
             }
             var makePow2 = Draw2D.makePow2;
             viewWidth = makePow2(viewWidth);
-            viewHeight =makePow2(viewHeight);
+            viewHeight = makePow2(viewHeight);
 
             if (!target.backBuffer)
             {
@@ -2229,6 +2233,8 @@ class Draw2D
 
         // Load embedded default shader and techniques
 
+        /* tslint:disable:whitespace */
+        /* tslint:disable:max-line-length */
         var shader = gd.createShader(
             {
                 "version": 1,
@@ -2365,6 +2371,8 @@ class Draw2D
                 }
             }
         );
+        /* tslint:enable:max-line-length */
+        /* tslint:enable:whitespace */
 
         // Mapping from blend mode name to Technique object.
         o.blendModeTechniques = {
