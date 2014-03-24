@@ -148,6 +148,21 @@ The version number of the CharacterController implementation.
 
 
 .. index::
+    pair: CharacterController; matrix
+
+`matrix`
+--------
+
+**Summary**
+
+    A :ref:`m43 matrix <m43object>` representing the position and orientation of the character.
+
+**Syntax** ::
+
+    var characterPosition = mathDevice.m43Pos(characterController.matrix);
+
+
+.. index::
     pair: CharacterController; god
 
 `god`
