@@ -223,6 +223,59 @@ Set the current color of the sprite.
 
 
 .. index::
+    pair: Draw2DSprite; setColorRGB
+
+`setColorRGB`
+-------------
+
+**Summary**
+
+Set the RGB elements of teh current color of the sprite.
+
+**Syntax** ::
+
+    sprite.setColorRGB(r, g, b);
+
+``r``, ``g``, ``b``
+    The values for the new color value of the sprite with normalized
+    values in the range `[0,1]`.
+
+
+.. index::
+    pair: Draw2DSprite; getAlpha
+
+`getAlpha`
+----------
+
+**Summary**
+
+Get the current alpha value of the sprite.
+
+**Syntax** ::
+
+    var alpha = sprite.getAlpha();
+
+The return value is the alpha value, as set in the final element of
+the array returned by the `getColor` method.
+
+
+lpha
+
+`setAlpha`
+----------
+
+**Summary**
+
+Set the alpha value of the current sprite color.
+
+**Syntax** ::
+
+    sprite.setAlpha(alpha);
+
+``alpha``
+    A number to set as the new alpha value, equivalent to passing the same value in the last element of the argument to `setColor`.
+
+.. index::
     pair: Draw2DSprite; getTexture
 
 `getTexture`
@@ -1337,4 +1390,3 @@ Reset recorded performance data for this object.
 **Syntax** ::
 
     draw2D.resetPerformanceData();
-

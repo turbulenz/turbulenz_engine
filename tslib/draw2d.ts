@@ -143,6 +143,14 @@ class Draw2DSprite
         data[11] = color[3];
     }
 
+    setColorRGB(r: number, g: number, b: number)
+    {
+        var data = this.data;
+        data[8]  = r;
+        data[9]  = g;
+        data[10] = b;
+    }
+
     getAlpha() : number
     {
         return this.data[11];
