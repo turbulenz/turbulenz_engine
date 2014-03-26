@@ -1829,16 +1829,20 @@ class WebGLRenderTarget implements RenderTarget
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.glObject);
 
-        var drawBuffersExtension = gd.drawBuffersExtension;
-        if (drawBuffersExtension)
+        // Only call drawBuffers if we have more than one color attachment
+        if (this.colorTexture1)
         {
-            if (gd.WEBGL_draw_buffers)
+            var drawBuffersExtension = gd.drawBuffersExtension;
+            if (drawBuffersExtension)
             {
-                drawBuffersExtension.drawBuffersWEBGL(this.buffers);
-            }
-            else
-            {
-                drawBuffersExtension.drawBuffersEXT(this.buffers);
+                if (gd.WEBGL_draw_buffers)
+                {
+                    drawBuffersExtension.drawBuffersWEBGL(this.buffers);
+                }
+                else
+                {
+                    drawBuffersExtension.drawBuffersEXT(this.buffers);
+                }
             }
         }
 
@@ -1858,18 +1862,22 @@ class WebGLRenderTarget implements RenderTarget
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        var drawBuffersExtension = gd.drawBuffersExtension;
-        if (drawBuffersExtension)
+        // Only call drawBuffers if we have more than one color attachment
+        if (this.colorTexture1)
         {
-            var buffers = [gl.BACK];
+            var drawBuffersExtension = gd.drawBuffersExtension;
+            if (drawBuffersExtension)
+            {
+                var buffers = [gl.BACK];
 
-            if (gd.WEBGL_draw_buffers)
-            {
-                drawBuffersExtension.drawBuffersWEBGL(buffers);
-            }
-            else
-            {
-                drawBuffersExtension.drawBuffersEXT(buffers);
+                if (gd.WEBGL_draw_buffers)
+                {
+                    drawBuffersExtension.drawBuffersWEBGL(buffers);
+                }
+                else
+                {
+                    drawBuffersExtension.drawBuffersEXT(buffers);
+                }
             }
         }
 
