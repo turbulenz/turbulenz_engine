@@ -20,6 +20,29 @@ Methods
 =======
 
 .. index::
+    pair: SoundDevice; createGlobalSource
+
+.. _sounddevice_createglobalsource:
+
+`createGlobalSource`
+--------------------
+
+**Summary**
+
+Creates a global sound source.
+
+**Syntax** ::
+
+    var source = soundDevice.createGlobalSource({
+        gain: 1.0,
+        looping: false,
+        pitch: 1.0
+    });
+
+Returns a :ref:`GlobalSource <globalsource>` object.
+
+
+.. index::
     pair: SoundDevice; createSource
 
 .. _sounddevice_createsource:

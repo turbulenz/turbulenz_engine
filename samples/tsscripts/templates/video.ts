@@ -56,9 +56,7 @@ TurbulenzEngine.onload = function onloadFn()
         ]
     });
 
-    var source = soundDevice.createSource({
-        position: [0, 0, 0],
-        relative: true,
+    var source = soundDevice.createGlobalSource({
         looping: true
     });
     var sound;

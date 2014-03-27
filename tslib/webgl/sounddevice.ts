@@ -565,33 +565,23 @@ class WebGLSound implements Sound
 }
 
 //
-// WebGLSoundSource
+// WebGLSoundGlobalSource
 //
-class WebGLSoundSource implements SoundSource
+class WebGLSoundGlobalSource implements SoundGlobalSource
 {
     /* tslint:disable:no-unused-variable */
     static version = 1;
     /* tslint:enable:no-unused-variable */
 
-    // SoundSource
-    position    : any; // v3
-    velocity    : any; // v3
-    direction   : any; // v3
+    // SoundGlobalSource
     gain        : number;
-    minDistance : number;
-    maxDistance : number;
-    rollOff     : number;
-    relative    : boolean;
     looping     : boolean;
     pitch       : number;
     playing     : boolean;
     paused      : boolean;
     tell        : number;
 
-    // WebGLSoundSource
-    _position: any; // v3
-    _velocity: any; // v3
-    _direction: any; // v3
+    // WebGLSoundGlobalSource
     sd: WebGLSoundDevice;
     id: number;
     sound: WebGLSound;
@@ -600,14 +590,11 @@ class WebGLSoundSource implements SoundSource
     mediaNode: any; // window.AudioContext.createMediaElementSource()
     playStart: number;
     playPaused: number;
-    pannerNode: any; // window.AudioContext.createPanner()
     gainNode: any; // window.AudioContext.createGain()
     audio: HTMLAudioElement;
-    gainFactor: number;
 
     updateAudioVolume: { (): void; };
     loopAudio: { (): void; };
-    updateRelativePosition: { (lp0: number, lp1: number, lp2: number): void; };
 
     // Public API
     play(sound: Sound, seek?: number)
@@ -666,11 +653,11 @@ class WebGLSoundSource implements SoundSource
         {
             if (soundAudio)
             {
-                this.createMediaNode(<WebGLSound>sound, soundAudio);
+                this._createMediaNode(<WebGLSound>sound, soundAudio);
             }
             else
             {
-                var bufferNode = this.createBufferNode(<WebGLSound>sound);
+                var bufferNode = this._createBufferNode(<WebGLSound>sound);
 
                 if (0 < seek)
                 {
@@ -829,7 +816,7 @@ class WebGLSoundSource implements SoundSource
                         seek = (this.playPaused - this.playStart);
                     }
 
-                    var bufferNode = this.createBufferNode(this.sound);
+                    var bufferNode = this._createBufferNode(this.sound);
 
                     if (0 < seek)
                     {
@@ -883,7 +870,7 @@ class WebGLSoundSource implements SoundSource
                         bufferNode.disconnect();
                     }
 
-                    bufferNode = this.createBufferNode(this.sound);
+                    bufferNode = this._createBufferNode(this.sound);
 
                     bufferNode.start(0);
 
@@ -934,7 +921,7 @@ class WebGLSoundSource implements SoundSource
                             bufferNode.disconnect();
                         }
 
-                        bufferNode = this.createBufferNode(this.sound);
+                        bufferNode = this._createBufferNode(this.sound);
 
                         if (0 < seek)
                         {
@@ -991,18 +978,360 @@ class WebGLSoundSource implements SoundSource
             this.gainNode = null;
             gainNode.disconnect();
         }
-
-        var pannerNode = this.pannerNode;
-        if (pannerNode)
-        {
-            this.pannerNode = null;
-            pannerNode.disconnect();
-        }
     }
 
-    updateRelativePositionWebAudio(listenerPosition0,
-                                   listenerPosition1,
-                                   listenerPosition2)
+    _createBufferNode(sound: WebGLSound): any
+    {
+        var buffer = sound.buffer;
+
+        var bufferNode = this.audioContext.createBufferSource();
+        bufferNode.buffer = buffer;
+        bufferNode.loop = this.looping;
+        if (bufferNode.playbackRate)
+        {
+            bufferNode.playbackRate.value = this.pitch;
+        }
+        bufferNode.connect(this.gainNode);
+
+        // Backwards compatibility
+        if (!bufferNode.start)
+        {
+            bufferNode.start = function audioStart(when, offset, duration)
+            {
+                if (arguments.length <= 1)
+                {
+                    this.noteOn(when);
+                }
+                else
+                {
+                    this.noteGrainOn(when, offset, duration);
+                }
+            };
+        }
+
+        if (!bufferNode.stop)
+        {
+            bufferNode.stop = function audioStop(when)
+            {
+                this.noteOff(when);
+            };
+        }
+
+        this.bufferNode = bufferNode;
+
+        return bufferNode;
+    }
+
+    _checkBufferNode(currentTime: number): boolean
+    {
+        var bufferNode = this.bufferNode;
+        if (bufferNode)
+        {
+            var tell = (currentTime - this.playStart);
+            var duration = bufferNode.buffer.duration;
+            if (duration < tell)
+            {
+                if (this.looping)
+                {
+                    this.playStart = (currentTime - (tell - duration));
+                }
+                else
+                {
+                    bufferNode.disconnect();
+                    this.playing = false;
+                    this.sound = null;
+                    this.bufferNode = null;
+
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    _createMediaNode(sound: WebGLSound, audio: HTMLAudioElement): void
+    {
+        var mediaNode = this.audioContext.createMediaElementSource(audio);
+        mediaNode.connect(this.gainNode);
+
+        this.mediaNode = mediaNode;
+    }
+
+    static create(sd: WebGLSoundDevice, id: number,
+                  params: SoundGlobalSourceParameters): WebGLSoundGlobalSource
+    {
+        var source = new WebGLSoundGlobalSource();
+
+        source.sd = sd;
+        source.id = id;
+
+        source.sound = null;
+        source.audio = null;
+        source.playing = false;
+        source.paused = false;
+
+        var gain = (typeof params.gain === "number" ? params.gain : 1);
+        var looping = (params.looping || false);
+        var pitch = (params.pitch || 1);
+
+        var audioContext = sd.audioContext;
+        if (audioContext)
+        {
+            source.bufferNode = null;
+            source.mediaNode = null;
+            source.playStart = -1;
+            source.playPaused = -1;
+
+            var masterGainNode = sd.gainNode;
+
+            var gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
+            gainNode.gain.value = gain;
+            source.gainNode = gainNode;
+            gainNode.connect(masterGainNode);
+
+            Object.defineProperty(source, "gain", {
+                get : function getGainFn() {
+                    return gain;
+                },
+                set : function setGainFn(newGain) {
+                    if (gain !== newGain)
+                    {
+                        gain = newGain;
+                        this.gainNode.gain.value = newGain;
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(source, "looping", {
+                get : function getLoopingFn() {
+                    return looping;
+                },
+                set : function setLoopingFn(newLooping) {
+                    looping = newLooping;
+                    var audio = this.audio;
+                    if (audio)
+                    {
+                        audio.loop = newLooping;
+                    }
+                    else
+                    {
+                        var bufferNode = this.bufferNode;
+                        if (bufferNode)
+                        {
+                            bufferNode.loop = newLooping;
+                        }
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(source, "pitch", {
+                get : function getPitchFn() {
+                    return pitch;
+                },
+                set : function setPitchFn(newPitch) {
+                    pitch = newPitch;
+                    var audio = this.audio;
+                    if (audio)
+                    {
+                        audio.playbackRate = newPitch;
+                    }
+                    else
+                    {
+                        var bufferNode = this.bufferNode;
+                        if (bufferNode)
+                        {
+                            if (bufferNode.playbackRate)
+                            {
+                                bufferNode.playbackRate.value = newPitch;
+                            }
+                        }
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(source, "tell", {
+                get : function tellFn() {
+                    if (this.playing)
+                    {
+                        var audio = this.audio;
+                        if (audio)
+                        {
+                            return audio.currentTime;
+                        }
+                        else
+                        {
+                            if (this.paused)
+                            {
+                                return (this.playPaused - this.playStart);
+                            }
+                            else
+                            {
+                                return (audioContext.currentTime - this.playStart);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            source.loopAudio = function loopAudioFn() {
+                source.stop();
+            };
+        }
+        else
+        {
+            source.updateAudioVolume = function updateAudioVolumeFn()
+            {
+                var audio = this.audio;
+                if (audio)
+                {
+                    var volume = Math.min(gain, 1);
+                    audio.volume = volume;
+                    if (0 >= volume)
+                    {
+                        audio.muted = true;
+                    }
+                    else
+                    {
+                        audio.muted = false;
+                    }
+                }
+            };
+
+            Object.defineProperty(source, "gain", {
+                get : function getGainFn() {
+                    return gain;
+                },
+                set : function setGainFn(newGain) {
+                    gain = newGain;
+                    this.updateAudioVolume();
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            if (sd.loopingSupported)
+            {
+                Object.defineProperty(source, "looping", {
+                    get : function getLoopingFn() {
+                        return looping;
+                    },
+                    set : function setLoopingFn(newLooping) {
+                        looping = newLooping;
+                        var audio = this.audio;
+                        if (audio)
+                        {
+                            audio.loop = newLooping;
+                        }
+                    },
+                    enumerable : true,
+                    configurable : false
+                });
+
+                source.loopAudio = function loopAudioFn() {
+                    source.stop();
+                };
+            }
+            else
+            {
+                source.looping = looping;
+
+                source.loopAudio = function loopAudioFn() {
+                    var audio = source.audio;
+                    if (audio)
+                    {
+                        if (this.looping)
+                        {
+                            audio.currentTime = 0;
+                            audio.play();
+                        }
+                        else
+                        {
+                            source.stop();
+                        }
+                    }
+                };
+            }
+
+            Object.defineProperty(source, "pitch", {
+                get : function getPitchFn() {
+                    return pitch;
+                },
+                set : function setPitchFn(newPitch) {
+                    pitch = newPitch;
+                    var audio = this.audio;
+                    if (audio)
+                    {
+                        audio.playbackRate = newPitch;
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(source, "tell", {
+                get : function tellFn() {
+                    if (this.playing)
+                    {
+                        var audio = this.audio;
+                        if (audio)
+                        {
+                            return audio.currentTime;
+                        }
+                    }
+                    return 0;
+                },
+                enumerable : true,
+                configurable : false
+            });
+        }
+
+        return source;
+    }
+}
+
+//
+// WebGLSoundSource
+//
+class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
+{
+    /* tslint:disable:no-unused-variable */
+    static version = 1;
+    /* tslint:enable:no-unused-variable */
+
+    // SoundSource
+    position    : any; // v3
+    velocity    : any; // v3
+    direction   : any; // v3
+    minDistance : number;
+    maxDistance : number;
+    rollOff     : number;
+    relative    : boolean;
+
+    // WebGLSoundSource
+    _position: any; // v3
+    _velocity: any; // v3
+    _direction: any; // v3
+    pannerNode: any; // window.AudioContext.createPanner()
+    gainFactor: number;
+
+    updateRelativePosition: { (lp0: number, lp1: number, lp2: number): void; };
+
+    _updateRelativePositionWebAudio(listenerPosition0,
+                                    listenerPosition1,
+                                    listenerPosition2)
     {
         var position = this._position;
         this.pannerNode.setPosition(position[0] + listenerPosition0,
@@ -1010,9 +1339,9 @@ class WebGLSoundSource implements SoundSource
                                     position[2] + listenerPosition2);
     }
 
-    updateRelativePositionHTML5(listenerPosition0,
-                                listenerPosition1,
-                                listenerPosition2)
+    _updateRelativePositionHTML5(listenerPosition0,
+                                 listenerPosition1,
+                                 listenerPosition2)
     {
         // Change volume depending on distance to listener
         var minDistance = this.minDistance;
@@ -1066,54 +1395,24 @@ class WebGLSoundSource implements SoundSource
         }
     }
 
-    createBufferNode(sound: WebGLSound): any
+    // Public API
+    destroy()
     {
-        var buffer = sound.buffer;
+        this.stop();
 
-        var bufferNode = this.audioContext.createBufferSource();
-        bufferNode.buffer = buffer;
-        bufferNode.loop = this.looping;
-        if (bufferNode.playbackRate)
+        var gainNode = this.gainNode;
+        if (gainNode)
         {
-            bufferNode.playbackRate.value = this.pitch;
-        }
-        bufferNode.connect(this.gainNode);
-
-        // Backwards compatibility
-        if (!bufferNode.start)
-        {
-            bufferNode.start = function audioStart(when, offset, duration)
-            {
-                if (arguments.length <= 1)
-                {
-                    this.noteOn(when);
-                }
-                else
-                {
-                    this.noteGrainOn(when, offset, duration);
-                }
-            };
+            this.gainNode = null;
+            gainNode.disconnect();
         }
 
-        if (!bufferNode.stop)
+        var pannerNode = this.pannerNode;
+        if (pannerNode)
         {
-            bufferNode.stop = function audioStop(when)
-            {
-                this.noteOff(when);
-            };
+            this.pannerNode = null;
+            pannerNode.disconnect();
         }
-
-        this.bufferNode = bufferNode;
-
-        return bufferNode;
-    }
-
-    createMediaNode(sound: WebGLSound, audio: HTMLAudioElement): void
-    {
-        var mediaNode = this.audioContext.createMediaElementSource(audio);
-        mediaNode.connect(this.gainNode);
-
-        this.mediaNode = mediaNode;
     }
 
     static create(sd: WebGLSoundDevice, id: number,
@@ -1178,7 +1477,7 @@ class WebGLSoundSource implements SoundSource
                 pannerNode.panningModel = pannerNode.EQUALPOWER;
             }
 
-            source.updateRelativePosition = source.updateRelativePositionWebAudio;
+            source.updateRelativePosition = source._updateRelativePositionWebAudio;
 
             Object.defineProperty(source, "position", {
                 get : function getPositionFn() {
@@ -1390,7 +1689,7 @@ class WebGLSoundSource implements SoundSource
                 }
             };
 
-            source.updateRelativePosition = source.updateRelativePositionHTML5;
+            source.updateRelativePosition = source._updateRelativePositionHTML5;
 
             Object.defineProperty(source, "position", {
                 get : function getPositionFn() {
@@ -1572,6 +1871,8 @@ class WebGLSoundDevice implements SoundDevice
     alcMaxAuxiliarySends : number;
 
     // WebGLSoundDevice
+    _listenerTransform    : any; // m43
+    _listenerVelocity     : any; // v3
     audioContext         : any;   //
     gainNode             : any;   //
     linearDistance       : boolean;
@@ -1584,11 +1885,19 @@ class WebGLSoundDevice implements SoundDevice
     loopingSupported     : boolean;
     supportedExtensions  : WebGLSoundDeviceExtensions;
 
+    update: { (): void; };
+
     // Public API
     createSource(params)
     {
         this.lastSourceID += 1;
         return WebGLSoundSource.create(this, this.lastSourceID, params);
+    }
+
+    createGlobalSource(params)
+    {
+        this.lastSourceID += 1;
+        return WebGLSoundGlobalSource.create(this, this.lastSourceID, params);
     }
 
     createSound(params)
@@ -1649,9 +1958,9 @@ class WebGLSoundDevice implements SoundDevice
         return null;
     }
 
-    update()
+    _updateHTML5(): void
     {
-        var listenerTransform = this.listenerTransform;
+        var listenerTransform = this._listenerTransform;
         var listenerPosition0 = listenerTransform[9];
         var listenerPosition1 = listenerTransform[10];
         var listenerPosition2 = listenerTransform[11];
@@ -1661,10 +1970,63 @@ class WebGLSoundDevice implements SoundDevice
         var n;
         for (n = 0; n < numPlayingSources; n += 1)
         {
-            playingSources[n].updateRelativePosition(listenerPosition0,
-                                                     listenerPosition1,
-                                                     listenerPosition2);
+            var source = playingSources[n];
+            if (source.updateRelativePosition)
+            {
+                source.updateRelativePosition(listenerPosition0,
+                                              listenerPosition1,
+                                              listenerPosition2);
+            }
         }
+    }
+
+    _updateWebAudio(): void
+    {
+        this.gainNode.gain.value = this.listenerGain;
+
+        var listenerTransform = this._listenerTransform;
+        var listenerPosition0 = listenerTransform[9];
+        var listenerPosition1 = listenerTransform[10];
+        var listenerPosition2 = listenerTransform[11];
+
+        var numPlayingSources = this.numPlayingSources;
+        var playingSources = this.playingSources;
+        var playingSourcesMap = this.playingSourcesMap;
+
+        var currentTime = this.audioContext.currentTime;
+
+        var n = 0;
+        while (n < numPlayingSources)
+        {
+            var source = playingSources[n];
+
+            if (!source._checkBufferNode(currentTime))
+            {
+                numPlayingSources -= 1;
+                playingSources[n] = playingSources[numPlayingSources];
+                playingSources[numPlayingSources] = null;
+                delete playingSourcesMap[source.id];
+
+                continue;
+            }
+
+            if (source.relative)
+            {
+                source.updateRelativePosition(listenerPosition0,
+                                              listenerPosition1,
+                                              listenerPosition2);
+            }
+
+            n += 1;
+        }
+
+        this.numPlayingSources = numPlayingSources;
+        /* tslint:disable:no-bitwise */
+        if (numPlayingSources < (playingSources.length >> 1))
+        {
+            playingSources.length = numPlayingSources;
+        }
+        /* tslint:enable:no-bitwise */
     }
 
     isSupported(name): boolean
@@ -1792,6 +2154,7 @@ class WebGLSoundDevice implements SoundDevice
 
         WebGLSound.prototype.audioContext = null;
         WebGLSoundSource.prototype.audioContext = null;
+        WebGLSoundGlobalSource.prototype.audioContext = null;
     }
 
     static create(params: SoundDeviceParameters): WebGLSoundDevice
@@ -1856,6 +2219,7 @@ class WebGLSoundDevice implements SoundDevice
 
             WebGLSound.prototype.audioContext = audioContext;
             WebGLSoundSource.prototype.audioContext = audioContext;
+            WebGLSoundGlobalSource.prototype.audioContext = audioContext;
 
             sd.renderer = 'WebAudio';
             sd.audioContext = audioContext;
@@ -1868,113 +2232,53 @@ class WebGLSoundDevice implements SoundDevice
             listener.dopplerFactor = sd.dopplerFactor;
             listener.speedOfSound = sd.speedOfSound;
 
-            var listenerTransform, listenerVelocity;
-
-            Object.defineProperty(sd, "listenerTransform", {
-                get : function getListenerTransformFn() {
-                    return listenerTransform.slice();
-                },
-                set : function setListenerTransformFn(transform) {
-                    listenerTransform = VMath.m43Copy(transform, listenerTransform);
-
-                    var position0 = transform[9];
-                    var position1 = transform[10];
-                    var position2 = transform[11];
-
-                    listener.setPosition(position0, position1, position2);
-
-                    listener.setOrientation(-transform[6], -transform[7], -transform[8],
-                                            transform[3], transform[4], transform[5]);
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(sd, "listenerVelocity", {
-                get : function getListenerVelocityFn() {
-                    return listenerVelocity.slice();
-                },
-                set : function setListenerVelocityFn(velocity) {
-                    listenerVelocity = VMath.v3Copy(velocity, listenerVelocity);
-                    listener.setVelocity(velocity[0], velocity[1], velocity[2]);
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            sd.update = function soundDeviceUpdate()
-            {
-                this.gainNode.gain.value = this.listenerGain;
-
-                var listenerPosition0 = listenerTransform[9];
-                var listenerPosition1 = listenerTransform[10];
-                var listenerPosition2 = listenerTransform[11];
-
-                var numPlayingSources = this.numPlayingSources;
-                var playingSources = this.playingSources;
-                var playingSourcesMap = this.playingSourcesMap;
-
-                var currentTime = audioContext.currentTime;
-
-                var n = 0;
-                while (n < numPlayingSources)
-                {
-                    var source = playingSources[n];
-
-                    var bufferNode = source.bufferNode;
-                    if (bufferNode)
-                    {
-                        var tell = (currentTime - source.playStart);
-                        var duration = bufferNode.buffer.duration;
-                        if (duration < tell)
-                        {
-                            if (source.looping)
-                            {
-                                source.playStart = (currentTime - (tell - duration));
-                            }
-                            else
-                            {
-                                bufferNode.disconnect();
-                                source.playing = false;
-                                source.sound = null;
-                                source.bufferNode = null;
-
-                                numPlayingSources -= 1;
-                                playingSources[n] = playingSources[numPlayingSources];
-                                playingSources[numPlayingSources] = null;
-                                delete playingSourcesMap[source.id];
-
-                                continue;
-                            }
-                        }
-                    }
-
-                    if (source.relative)
-                    {
-                        source.updateRelativePosition(listenerPosition0,
-                                                      listenerPosition1,
-                                                      listenerPosition2);
-                    }
-
-                    n += 1;
-                }
-
-                this.numPlayingSources = numPlayingSources;
-                /* tslint:disable:no-bitwise */
-                if (numPlayingSources < (playingSources.length >> 1))
-                {
-                    playingSources.length = numPlayingSources;
-                }
-                /* tslint:enable:no-bitwise */
-            };
+            sd.update = sd._updateWebAudio;
         }
         else
         {
+            sd.update = sd._updateHTML5;
             WebGLSound.prototype.forceUncompress = false;
         }
 
-        sd.listenerTransform = (params.listenerTransform || VMath.m43BuildIdentity());
-        sd.listenerVelocity = (params.listenerVelocity || VMath.v3BuildZero());
+        sd._listenerTransform = (params.listenerTransform ?
+                                 VMath.m43Copy(params.listenerTransform) :
+                                 VMath.m43BuildIdentity());
+        sd._listenerVelocity = (params.listenerVelocity ?
+                                VMath.v3Copy(params.listenerVelocity) :
+                                VMath.v3BuildZero());
+
+        Object.defineProperty(sd, "listenerTransform", {
+            get : function getListenerTransformFn() {
+                return this._listenerTransform.slice();
+            },
+            set : function setListenerTransformFn(transform) {
+                this._listenerTransform = VMath.m43Copy(transform, this._listenerTransform);
+
+                var position0 = transform[9];
+                var position1 = transform[10];
+                var position2 = transform[11];
+
+                listener.setPosition(position0, position1, position2);
+
+                listener.setOrientation(-transform[6], -transform[7], -transform[8],
+                                        transform[3], transform[4], transform[5]);
+            },
+            enumerable : true,
+            configurable : false
+        });
+
+        Object.defineProperty(sd, "listenerVelocity", {
+            get : function getListenerVelocityFn() {
+                return this._listenerVelocity.slice();
+            },
+            set : function setListenerVelocityFn(velocity) {
+                this._listenerVelocity = VMath.v3Copy(velocity, this._listenerVelocity);
+                listener.setVelocity(velocity[0], velocity[1], velocity[2]);
+            },
+            enumerable : true,
+            configurable : false
+        });
+
         sd.listenerGain = (typeof params.listenerGain === "number" ? params.listenerGain : 1);
 
         // Need a temporary Audio element to test capabilities

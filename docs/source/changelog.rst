@@ -10,11 +10,12 @@ Changelog
 Version 1.x-dev
 ---------------
 
-2014-03-17
+2014-03-27
 
 - Added addWebsocket function to the NetworkLatencySimulator
 - Added missing normalized `VERTEXFORMAT_` values to the GraphicsDevice documentation
 - Added frustum planes and frustum points order to the Camera documentation
+- Added createGlobalSource to SoundDevice for creating global sound sources like music.
 
 Version 1.3.1
 -------------
