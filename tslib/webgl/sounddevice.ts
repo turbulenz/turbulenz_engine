@@ -582,6 +582,9 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
     tell        : number;
 
     // WebGLSoundGlobalSource
+    _gain        : number;
+    _looping     : boolean;
+    _pitch       : number;
     sd: WebGLSoundDevice;
     id: number;
     sound: WebGLSound;
@@ -590,7 +593,7 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
     mediaNode: any; // window.AudioContext.createMediaElementSource()
     playStart: number;
     playPaused: number;
-    gainNode: any; // window.AudioContext.createGain()
+    _gainNode: any; // window.AudioContext.createGain()
     audio: HTMLAudioElement;
 
     updateAudioVolume: { (): void; };
@@ -631,7 +634,7 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
 
             this.audio = soundAudio;
 
-            soundAudio.loop = this.looping;
+            soundAudio.loop = this._looping;
 
             soundAudio.addEventListener('ended', this.loopAudio, false);
 
@@ -890,7 +893,7 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
         {
             var tell = this.tell;
             var delta = Math.abs(tell - seek);
-            if (this.looping)
+            if (this._looping)
             {
                 delta = Math.min(Math.abs(tell - (this.sound.length + seek)), delta);
             }
@@ -972,10 +975,10 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
     {
         this.stop();
 
-        var gainNode = this.gainNode;
+        var gainNode = this._gainNode;
         if (gainNode)
         {
-            this.gainNode = null;
+            this._gainNode = null;
             gainNode.disconnect();
         }
     }
@@ -986,12 +989,12 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
 
         var bufferNode = this.audioContext.createBufferSource();
         bufferNode.buffer = buffer;
-        bufferNode.loop = this.looping;
+        bufferNode.loop = this._looping;
         if (bufferNode.playbackRate)
         {
-            bufferNode.playbackRate.value = this.pitch;
+            bufferNode.playbackRate.value = this._pitch;
         }
-        bufferNode.connect(this.gainNode);
+        bufferNode.connect(this._gainNode);
 
         // Backwards compatibility
         if (!bufferNode.start)
@@ -1031,7 +1034,7 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
             var duration = bufferNode.buffer.duration;
             if (duration < tell)
             {
-                if (this.looping)
+                if (this._looping)
                 {
                     this.playStart = (currentTime - (tell - duration));
                 }
@@ -1053,7 +1056,7 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
     _createMediaNode(sound: WebGLSound, audio: HTMLAudioElement): void
     {
         var mediaNode = this.audioContext.createMediaElementSource(audio);
-        mediaNode.connect(this.gainNode);
+        mediaNode.connect(this._gainNode);
 
         this.mediaNode = mediaNode;
     }
@@ -1071,9 +1074,9 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
         source.playing = false;
         source.paused = false;
 
-        var gain = (typeof params.gain === "number" ? params.gain : 1);
-        var looping = (params.looping || false);
-        var pitch = (params.pitch || 1);
+        source._gain = (typeof params.gain === "number" ? params.gain : 1);
+        source._looping = (params.looping || false);
+        source._pitch = (params.pitch || 1);
 
         var audioContext = sd.audioContext;
         if (audioContext)
@@ -1083,22 +1086,22 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
             source.playStart = -1;
             source.playPaused = -1;
 
-            var masterGainNode = sd.gainNode;
+            var masterGainNode = sd._gainNode;
 
             var gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
-            gainNode.gain.value = gain;
-            source.gainNode = gainNode;
+            gainNode.gain.value = source._gain;
+            source._gainNode = gainNode;
             gainNode.connect(masterGainNode);
 
             Object.defineProperty(source, "gain", {
                 get : function getGainFn() {
-                    return gain;
+                    return this._gain;
                 },
                 set : function setGainFn(newGain) {
-                    if (gain !== newGain)
+                    if (this._gain !== newGain)
                     {
-                        gain = newGain;
-                        this.gainNode.gain.value = newGain;
+                        this._gain = newGain;
+                        this._gainNode.gain.value = newGain;
                     }
                 },
                 enumerable : true,
@@ -1107,10 +1110,10 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
 
             Object.defineProperty(source, "looping", {
                 get : function getLoopingFn() {
-                    return looping;
+                    return this._looping;
                 },
                 set : function setLoopingFn(newLooping) {
-                    looping = newLooping;
+                    this._looping = newLooping;
                     var audio = this.audio;
                     if (audio)
                     {
@@ -1131,10 +1134,10 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
 
             Object.defineProperty(source, "pitch", {
                 get : function getPitchFn() {
-                    return pitch;
+                    return this._pitch;
                 },
                 set : function setPitchFn(newPitch) {
-                    pitch = newPitch;
+                    this._pitch = newPitch;
                     var audio = this.audio;
                     if (audio)
                     {
@@ -1197,7 +1200,7 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
                 var audio = this.audio;
                 if (audio)
                 {
-                    var volume = Math.min(gain, 1);
+                    var volume = Math.min(this._gain, 1);
                     audio.volume = volume;
                     if (0 >= volume)
                     {
@@ -1212,10 +1215,10 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
 
             Object.defineProperty(source, "gain", {
                 get : function getGainFn() {
-                    return gain;
+                    return this._gain;
                 },
                 set : function setGainFn(newGain) {
-                    gain = newGain;
+                    this._gain = newGain;
                     this.updateAudioVolume();
                 },
                 enumerable : true,
@@ -1226,10 +1229,10 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
             {
                 Object.defineProperty(source, "looping", {
                     get : function getLoopingFn() {
-                        return looping;
+                        return this._looping;
                     },
                     set : function setLoopingFn(newLooping) {
-                        looping = newLooping;
+                        this._looping = newLooping;
                         var audio = this.audio;
                         if (audio)
                         {
@@ -1246,7 +1249,7 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
             }
             else
             {
-                source.looping = looping;
+                source.looping = source._looping;
 
                 source.loopAudio = function loopAudioFn() {
                     var audio = source.audio;
@@ -1267,10 +1270,10 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
 
             Object.defineProperty(source, "pitch", {
                 get : function getPitchFn() {
-                    return pitch;
+                    return this._pitch;
                 },
                 set : function setPitchFn(newPitch) {
-                    pitch = newPitch;
+                    this._pitch = newPitch;
                     var audio = this.audio;
                     if (audio)
                     {
@@ -1324,8 +1327,8 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
     _position: any; // v3
     _velocity: any; // v3
     _direction: any; // v3
-    pannerNode: any; // window.AudioContext.createPanner()
-    gainFactor: number;
+    _pannerNode: any; // window.AudioContext.createPanner()
+    _gainFactor: number;
 
     updateRelativePosition: { (lp0: number, lp1: number, lp2: number): void; };
 
@@ -1334,7 +1337,7 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
                                     listenerPosition2)
     {
         var position = this._position;
-        this.pannerNode.setPosition(position[0] + listenerPosition0,
+        this._pannerNode.setPosition(position[0] + listenerPosition0,
                                     position[1] + listenerPosition1,
                                     position[2] + listenerPosition2);
     }
@@ -1388,9 +1391,9 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
         gainFactor *= this.sd.listenerGain;
 
-        if (this.gainFactor !== gainFactor)
+        if (this._gainFactor !== gainFactor)
         {
-            this.gainFactor = gainFactor;
+            this._gainFactor = gainFactor;
             this.updateAudioVolume();
         }
     }
@@ -1400,17 +1403,17 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
     {
         this.stop();
 
-        var gainNode = this.gainNode;
+        var gainNode = this._gainNode;
         if (gainNode)
         {
-            this.gainNode = null;
+            this._gainNode = null;
             gainNode.disconnect();
         }
 
-        var pannerNode = this.pannerNode;
+        var pannerNode = this._pannerNode;
         if (pannerNode)
         {
-            this.pannerNode = null;
+            this._pannerNode = null;
             pannerNode.disconnect();
         }
     }
@@ -1433,9 +1436,9 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
         source._velocity = buffer.subarray(3, 6);
         source._direction = buffer.subarray(6, 9);
 
-        var gain = (typeof params.gain === "number" ? params.gain : 1);
-        var looping = (params.looping || false);
-        var pitch = (params.pitch || 1);
+        source._gain = (typeof params.gain === "number" ? params.gain : 1);
+        source._looping = (params.looping || false);
+        source._pitch = (params.pitch || 1);
 
         var audioContext = sd.audioContext;
         if (audioContext)
@@ -1445,15 +1448,15 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
             source.playStart = -1;
             source.playPaused = -1;
 
-            var masterGainNode = sd.gainNode;
+            var masterGainNode = sd._gainNode;
 
             var pannerNode = audioContext.createPanner();
-            source.pannerNode = pannerNode;
+            source._pannerNode = pannerNode;
             pannerNode.connect(masterGainNode);
 
             var gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
-            gainNode.gain.value = gain;
-            source.gainNode = gainNode;
+            gainNode.gain.value = source._gain;
+            source._gainNode = gainNode;
             gainNode.connect(pannerNode);
 
             if (sd.linearDistance)
@@ -1494,7 +1497,7 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
                         oldPosition[2] = newPosition[2];
                         if (!this.relative)
                         {
-                            this.pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
+                            this._pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
                         }
                     }
                 },
@@ -1508,7 +1511,7 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
                 },
                 set : function setDirectionFn(newDirection) {
                     this._direction = VMath.v3Copy(newDirection, this._direction);
-                    this.pannerNode.setOrientation(newDirection[0], newDirection[1], newDirection[2]);
+                    this._pannerNode.setOrientation(newDirection[0], newDirection[1], newDirection[2]);
                 },
                 enumerable : true,
                 configurable : false
@@ -1520,7 +1523,7 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
                 },
                 set : function setVelocityFn(newVelocity) {
                     this._velocity = VMath.v3Copy(newVelocity, this._velocity);
-                    this.pannerNode.setVelocity(newVelocity[0], newVelocity[1], newVelocity[2]);
+                    this._pannerNode.setVelocity(newVelocity[0], newVelocity[1], newVelocity[2]);
                 },
                 enumerable : true,
                 configurable : false
@@ -1528,13 +1531,13 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "gain", {
                 get : function getGainFn() {
-                    return gain;
+                    return this._gain;
                 },
                 set : function setGainFn(newGain) {
-                    if (gain !== newGain)
+                    if (this._gain !== newGain)
                     {
-                        gain = newGain;
-                        this.gainNode.gain.value = newGain;
+                        this._gain = newGain;
+                        this._gainNode.gain.value = newGain;
                     }
                 },
                 enumerable : true,
@@ -1543,10 +1546,10 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "looping", {
                 get : function getLoopingFn() {
-                    return looping;
+                    return this._looping;
                 },
                 set : function setLoopingFn(newLooping) {
-                    looping = newLooping;
+                    this._looping = newLooping;
                     var audio = this.audio;
                     if (audio)
                     {
@@ -1567,10 +1570,10 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "pitch", {
                 get : function getPitchFn() {
-                    return pitch;
+                    return this._pitch;
                 },
                 set : function setPitchFn(newPitch) {
-                    pitch = newPitch;
+                    this._pitch = newPitch;
                     var audio = this.audio;
                     if (audio)
                     {
@@ -1624,14 +1627,14 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "minDistance", {
                 get : function getMinDistanceFn() {
-                    return this.pannerNode.refDistance;
+                    return this._pannerNode.refDistance;
                 },
                 set : function setMinDistanceFn(minDistance) {
-                    if (this.pannerNode.maxDistance === minDistance)
+                    if (this._pannerNode.maxDistance === minDistance)
                     {
-                        minDistance = this.pannerNode.maxDistance * 0.999;
+                        minDistance = this._pannerNode.maxDistance * 0.999;
                     }
-                    this.pannerNode.refDistance = minDistance;
+                    this._pannerNode.refDistance = minDistance;
                 },
                 enumerable : true,
                 configurable : false
@@ -1639,14 +1642,14 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "maxDistance", {
                 get : function getMaxDistanceFn() {
-                    return this.pannerNode.maxDistance;
+                    return this._pannerNode.maxDistance;
                 },
                 set : function setMaxDistanceFn(maxDistance) {
-                    if (this.pannerNode.refDistance === maxDistance)
+                    if (this._pannerNode.refDistance === maxDistance)
                     {
-                        maxDistance = this.pannerNode.refDistance * 1.001;
+                        maxDistance = this._pannerNode.refDistance * 1.001;
                     }
-                    this.pannerNode.maxDistance = maxDistance;
+                    this._pannerNode.maxDistance = maxDistance;
                 },
                 enumerable : true,
                 configurable : false
@@ -1654,10 +1657,10 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "rollOff", {
                 get : function getRolloffFactorFn() {
-                    return this.pannerNode.rolloffFactor;
+                    return this._pannerNode.rolloffFactor;
                 },
                 set : function setRolloffFactorFn(rollOff) {
-                    this.pannerNode.rolloffFactor = rollOff;
+                    this._pannerNode.rolloffFactor = rollOff;
                 },
                 enumerable : true,
                 configurable : false
@@ -1669,14 +1672,14 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
         }
         else
         {
-            source.gainFactor = 1;
+            source._gainFactor = 1;
 
             source.updateAudioVolume = function updateAudioVolumeFn()
             {
                 var audio = this.audio;
                 if (audio)
                 {
-                    var volume = Math.min((this.gainFactor * gain), 1);
+                    var volume = Math.min((this._gainFactor * this._gain), 1);
                     audio.volume = volume;
                     if (0 >= volume)
                     {
@@ -1726,10 +1729,10 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "gain", {
                 get : function getGainFn() {
-                    return gain;
+                    return this._gain;
                 },
                 set : function setGainFn(newGain) {
-                    gain = newGain;
+                    this._gain = newGain;
                     this.updateAudioVolume();
                 },
                 enumerable : true,
@@ -1740,10 +1743,10 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
             {
                 Object.defineProperty(source, "looping", {
                     get : function getLoopingFn() {
-                        return looping;
+                        return this._looping;
                     },
                     set : function setLoopingFn(newLooping) {
-                        looping = newLooping;
+                        this._looping = newLooping;
                         var audio = this.audio;
                         if (audio)
                         {
@@ -1760,7 +1763,7 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
             }
             else
             {
-                source.looping = looping;
+                source.looping = source._looping;
 
                 source.loopAudio = function loopAudioFn() {
                     var audio = source.audio;
@@ -1781,10 +1784,10 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "pitch", {
                 get : function getPitchFn() {
-                    return pitch;
+                    return this._pitch;
                 },
                 set : function setPitchFn(newPitch) {
-                    pitch = newPitch;
+                    this._pitch = newPitch;
                     var audio = this.audio;
                     if (audio)
                     {
@@ -1871,10 +1874,10 @@ class WebGLSoundDevice implements SoundDevice
     alcMaxAuxiliarySends : number;
 
     // WebGLSoundDevice
-    _listenerTransform    : any; // m43
-    _listenerVelocity     : any; // v3
+    _listenerTransform   : any; // m43
+    _listenerVelocity    : any; // v3
     audioContext         : any;   //
-    gainNode             : any;   //
+    _gainNode            : any;   //
     linearDistance       : boolean;
     loadingSounds        : WebGLSoundDeviceSoundCheckCall[];
     loadingInterval      : number;  // window.setIntervalID id
@@ -1982,7 +1985,7 @@ class WebGLSoundDevice implements SoundDevice
 
     _updateWebAudio(): void
     {
-        this.gainNode.gain.value = this.listenerGain;
+        this._gainNode.gain.value = this.listenerGain;
 
         var listenerTransform = this._listenerTransform;
         var listenerPosition0 = listenerTransform[9];
@@ -2225,8 +2228,8 @@ class WebGLSoundDevice implements SoundDevice
             sd.audioContext = audioContext;
             sd.frequency = audioContext.sampleRate;
 
-            sd.gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
-            sd.gainNode.connect(audioContext.destination);
+            sd._gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
+            sd._gainNode.connect(audioContext.destination);
 
             var listener = audioContext.listener;
             listener.dopplerFactor = sd.dopplerFactor;
