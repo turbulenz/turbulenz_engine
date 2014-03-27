@@ -1624,7 +1624,7 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "minDistance", {
                 get : function getMinDistanceFn() {
-                    return pannerNode.refDistance;
+                    return this.pannerNode.refDistance;
                 },
                 set : function setMinDistanceFn(minDistance) {
                     if (this.pannerNode.maxDistance === minDistance)
@@ -1639,7 +1639,7 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "maxDistance", {
                 get : function getMaxDistanceFn() {
-                    return pannerNode.maxDistance;
+                    return this.pannerNode.maxDistance;
                 },
                 set : function setMaxDistanceFn(maxDistance) {
                     if (this.pannerNode.refDistance === maxDistance)
@@ -1654,7 +1654,7 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             Object.defineProperty(source, "rollOff", {
                 get : function getRolloffFactorFn() {
-                    return pannerNode.rolloffFactor;
+                    return this.pannerNode.rolloffFactor;
                 },
                 set : function setRolloffFactorFn(rollOff) {
                     this.pannerNode.rolloffFactor = rollOff;
