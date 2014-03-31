@@ -179,7 +179,7 @@ class GameSession
     {
         var gameSession = new GameSession();
         var gameSlug = window.gameSlug;
-        var turbulenz = window.top.Turbulenz;
+        var turbulenz = window.Turbulenz || window.top.Turbulenz;
         var turbulenzData = (turbulenz && turbulenz.Data) || {};
         var mode = turbulenzData.mode || TurbulenzServices.mode;
         var createSessionURL = '/api/v1/games/create-session/' + gameSlug;
