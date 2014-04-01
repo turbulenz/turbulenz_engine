@@ -1212,8 +1212,6 @@ class CascadedShadowMapping
         if (frustumUpdated ||
             numStaticOverlappingRenderables !== numOverlappingRenderables)
         {
-            split.needsBlur = true;
-
             if (!split.needsRedraw)
             {
                 split.needsRedraw = true;
@@ -1250,6 +1248,8 @@ class CascadedShadowMapping
                 {
                     occludersDrawArray.sort(this._sortNegative);
                 }
+
+                split.needsBlur = true;
             }
         }
         else
