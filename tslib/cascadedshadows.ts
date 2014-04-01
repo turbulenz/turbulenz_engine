@@ -188,6 +188,9 @@ class CascadedShadowMapping
     depthBuffer         : RenderBuffer;
     blurRenderTarget    : RenderTarget;
 
+    sideCamera          : Camera;
+    sideCameraNearPlane :any; // v4
+
     numMainFrustumSidePlanes: number;
     numMainFrustumPlanes: number;
     mainFrustumNearPlaneIndex: number;
@@ -295,6 +298,14 @@ class CascadedShadowMapping
         this.numSplitsToRedraw = 0;
 
         this.updateBuffers(size);
+
+        var camera = Camera.create(md);
+        camera.parallel = true;
+        camera.aspectRatio = 1;
+        camera.viewOffsetX = 0;
+        camera.viewOffsetY = 0;
+        this.sideCamera = camera;
+        this.sideCameraNearPlane = md.v4BuildZero();
 
         this.numMainFrustumSidePlanes = 0;
         this.numMainFrustumPlanes = 0;
@@ -493,20 +504,30 @@ class CascadedShadowMapping
         md.v3Normalize(xaxis, xaxis);
         var yaxis = md.v3Cross(zaxis, xaxis, this.tempV3AxisY);
 
+        var frustumPoints = this.frustumPoints;
+        frustumPoints = camera.getFrustumPoints(maxDistance, camera.nearPlane, frustumPoints);
+
+        this._updateSideCamera(cameraUp,
+                               cameraAt,
+                               direction,
+                               frustumPoints);
+
+        var sideCamera = this.sideCamera;
+        maxDistance = sideCamera.farPlane;
+
         var splitDistances = CascadedShadowMapping.splitDistances;
         var splits = this.splits;
         var numSplits = splits.length;
-        var splitStart = camera.nearPlane;
+        var splitStart = -sideCamera.nearPlane;
         var previousSplitPoints = [];
         var n, split, splitEnd;
-        var frustumPoints = this.frustumPoints;
         for (n = 0; n < numSplits; n += 1)
         {
             split = splits[n];
 
             splitEnd = maxDistance * splitDistances[n];
 
-            frustumPoints = camera.getFrustumPoints(splitEnd, splitStart, frustumPoints);
+            frustumPoints = this._getSideCameraFrustumPoints(splitEnd, splitStart, frustumPoints, camera);
 
             this._updateSplit(split,
                               xaxis,
@@ -525,7 +546,7 @@ class CascadedShadowMapping
             {
                 splitEnd = (splitEnd + (maxDistance * splitDistances[n + 1])) / 2.0;
 
-                frustumPoints = camera.getFrustumPoints(splitEnd, splitStart, frustumPoints);
+                frustumPoints = this._getSideCameraFrustumPoints(splitEnd, splitStart, frustumPoints, camera);
 
                 this._updateSplit(split,
                                   xaxis,
@@ -1036,6 +1057,138 @@ class CascadedShadowMapping
         }
 
         return maxWindowZ;
+    }
+
+    private _updateSideCamera(cameraUp: any,
+                              cameraAt: any,
+                              lightDirection: any,
+                              frustumPoints: any[]): void
+    {
+        var md = this.md;
+
+        var yaxis;
+        if (Math.abs(md.v3Dot(lightDirection, cameraAt)) < Math.abs(md.v3Dot(cameraUp, cameraAt)))
+        {
+            yaxis = md.v3Neg(lightDirection);
+        }
+        else
+        {
+            yaxis = cameraUp;
+        }
+        var xaxis = md.v3Cross(yaxis, cameraAt);
+        md.v3Normalize(xaxis, xaxis);
+        //var yaxis = md.v3Cross(cameraAt, xaxis);
+        //var zaxis = md.v3Cross(yaxis, xaxis);
+        var zaxis = md.v3Cross(xaxis, yaxis);
+
+        var r0 = -xaxis[0];
+        var r1 = -xaxis[1];
+        var r2 = -xaxis[2];
+
+        var u0 = -yaxis[0];
+        var u1 = -yaxis[1];
+        var u2 = -yaxis[2];
+
+        var a0 = -zaxis[0];
+        var a1 = -zaxis[1];
+        var a2 = -zaxis[2];
+
+        var minWindowX = Number.MAX_VALUE;
+        var maxWindowX = -Number.MAX_VALUE;
+        var minWindowY = Number.MAX_VALUE;
+        var maxWindowY = -Number.MAX_VALUE;
+        var minWindowZ = Number.MAX_VALUE;
+        var maxWindowZ = -Number.MAX_VALUE;
+        var n, p, dx, dy, dz;
+        for (n = 0; n < 8; n += 1)
+        {
+            p = frustumPoints[n];
+            dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]));
+            dy = ((u0 * p[0]) + (u1 * p[1]) + (u2 * p[2]));
+            dz = ((a0 * p[0]) + (a1 * p[1]) + (a2 * p[2]));
+            if (minWindowX > dx)
+            {
+                minWindowX = dx;
+            }
+            if (maxWindowX < dx)
+            {
+                maxWindowX = dx;
+            }
+            if (minWindowY > dy)
+            {
+                minWindowY = dy;
+            }
+            if (maxWindowY < dy)
+            {
+                maxWindowY = dy;
+            }
+            if (minWindowZ > dz)
+            {
+                minWindowZ = dz;
+            }
+            if (maxWindowZ < dz)
+            {
+                maxWindowZ = dz;
+            }
+        }
+
+        // Calculate origin
+        var origin = this.tempV3Origin;
+        var ox = (minWindowX + maxWindowX) / 2.0;
+        var oy = (minWindowY + maxWindowY) / 2.0;
+        var oz = minWindowZ;
+        origin[0] = ox * r0 + oy * u0 + oz * a0;
+        origin[1] = ox * r1 + oy * u1 + oz * a1;
+        origin[2] = ox * r2 + oy * u2 + oz * a2;
+
+        var lightViewWindowX = (maxWindowX - minWindowX) / 2.0;
+        var lightViewWindowY = (maxWindowY - minWindowY) / 2.0;
+        var lightDepth = (maxWindowZ - minWindowZ);
+
+        // Prepare camera to get light frustum planes
+        var camera = this.sideCamera;
+        camera.matrix = md.m43Build(xaxis, yaxis, zaxis, origin, camera.matrix);
+        camera.updateViewMatrix();
+
+        var distanceScale = (1.0 / (256 * 256 * 256));
+        camera.nearPlane = (lightDepth * distanceScale);
+        camera.farPlane  = (lightDepth + distanceScale);
+        camera.recipViewWindowX = 1.0 / lightViewWindowX;
+        camera.recipViewWindowY = 1.0 / lightViewWindowY;
+
+        camera.updateProjectionMatrix();
+        camera.updateViewProjectionMatrix();
+
+        var m = this.sideCamera.viewProjectionMatrix;
+        var nearPlane = this.sideCameraNearPlane;
+        this._planeNormalize((m[3]  + m[2]), (m[7]  + m[6]), (m[11] + m[10]), -(m[15] + m[14]), nearPlane);
+    }
+
+    private _getSideCameraFrustumPoints(endDistance: number,
+                                        startDistance: number,
+                                        frustumPoints: any[],
+                                        mainCamera: Camera)
+    {
+        var nearPlane = this.sideCameraNearPlane;
+        var nearDistance = nearPlane[3];
+
+        var planes = mainCamera.frustumPlanes;
+
+        nearPlane[3] = nearDistance + startDistance;
+        this._findPlanesIntersection(planes[0], planes[2], nearPlane, frustumPoints[0]);
+        this._findPlanesIntersection(planes[0], planes[3], nearPlane, frustumPoints[1]);
+        this._findPlanesIntersection(planes[1], planes[2], nearPlane, frustumPoints[2]);
+        this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[3]);
+
+        nearPlane[3] = nearDistance + endDistance;
+        this._findPlanesIntersection(planes[0], planes[2], nearPlane, frustumPoints[4]);
+        this._findPlanesIntersection(planes[0], planes[3], nearPlane, frustumPoints[5]);
+        this._findPlanesIntersection(planes[1], planes[2], nearPlane, frustumPoints[6]);
+        this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[7]);
+
+        nearPlane[3] = nearDistance;
+
+        return frustumPoints;
     }
 
     private _updateSplit(split: CascadedShadowSplit,
