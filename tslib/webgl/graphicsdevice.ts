@@ -508,17 +508,28 @@ class TZWebGLTexture implements Texture
             return;   //unknown/unsupported format
         }
 
-        if (gd.fixIE &&
-            ((internalFormat !== gl.RGBA && internalFormat !== gl.RGB) ||
-             (gltype !== gl.UNSIGNED_BYTE && gltype !== gl.FLOAT)))
+        if (gd.fixIE && !compressedTexturesExtension)
         {
-            if (bufferData)
+            var expand = false;
+            if (gd.fixIE < "0.93")
             {
-                bufferData = this.convertDataToRGBA(gl, bufferData, internalFormat, gltype, srcStep);
+                expand = ((internalFormat !== gl.RGBA && internalFormat !== gl.RGB) ||
+                          (gltype !== gl.UNSIGNED_BYTE && gltype !== gl.FLOAT));
             }
-            internalFormat = gl.RGBA;
-            gltype = gl.UNSIGNED_BYTE;
-            srcStep = 4;
+            else if (gd.fixIE < "0.94")
+            {
+                expand = (gltype !== gl.UNSIGNED_BYTE && gltype !== gl.FLOAT);
+            }
+            if (expand)
+            {
+                if (bufferData)
+                {
+                    bufferData = this.convertDataToRGBA(gl, bufferData, internalFormat, gltype, srcStep);
+                }
+                internalFormat = gl.RGBA;
+                gltype = gl.UNSIGNED_BYTE;
+                srcStep = 4;
+            }
         }
 
         var w = this.width, h = this.height, offset = 0, target, n, levelSize, levelData;
@@ -4376,7 +4387,7 @@ class TZWebGLShader implements Shader
 
                 var code = program.code;
 
-                if (gd.fixIE)
+                if (gd.fixIE && gd.fixIE < "0.93")
                 {
                     code = code.replace(/#.*\n/g, '');
                     code = code.replace(/TZ_LOWP/g, '');
@@ -5062,7 +5073,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     counters: WebGLCreationCounters;
 
-    fixIE: boolean;
+    fixIE: string;
 
     drawIndexed(primitive: number, numIndices: number, first?: number)
     {
@@ -7480,7 +7491,15 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
 
         // Detect IE11 partial WebGL implementation...
-        gd.fixIE = (gd.vendor === 'Microsoft' && -1 !== gd.rendererVersion.indexOf('0.9'));
+        var ieVersionIndex = (gd.vendor === 'Microsoft' ? gd.rendererVersion.indexOf('0.9') : -1);
+        if (-1 !== ieVersionIndex)
+        {
+            gd.fixIE = gd.rendererVersion.substr(ieVersionIndex, 4);
+        }
+        else
+        {
+            gd.fixIE = null;
+        }
 
         var getNormalizationScale = function getNormalizationScaleFn(format)
         {
@@ -7605,7 +7624,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             return attributeFormat;
         };
 
-        if (gd.fixIE)
+        if (gd.fixIE && gd.fixIE < "0.93")
         {
             gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
             gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
