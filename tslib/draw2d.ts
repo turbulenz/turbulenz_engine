@@ -120,7 +120,7 @@ class Draw2DSprite
         }
     }
 
-    getColor(dst)
+    getColor(dst?)
     {
         if (dst === undefined)
         {
@@ -141,6 +141,24 @@ class Draw2DSprite
         data[9]  = color[1];
         data[10] = color[2];
         data[11] = color[3];
+    }
+
+    setColorRGB(r: number, g: number, b: number)
+    {
+        var data = this.data;
+        data[8]  = r;
+        data[9]  = g;
+        data[10] = b;
+    }
+
+    getAlpha() : number
+    {
+        return this.data[11];
+    }
+
+    setAlpha(alpha: number)
+    {
+        this.data[11] = alpha;
     }
 
     getTexture() : Texture
