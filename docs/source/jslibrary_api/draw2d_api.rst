@@ -259,7 +259,8 @@ The return value is the alpha value, as set in the final element of
 the array returned by the `getColor` method.
 
 
-lpha
+.. index::
+    pair: Draw2DSprite; setAlpha
 
 `setAlpha`
 ----------
