@@ -1078,27 +1078,27 @@ class CascadedShadowMapping
             dz = ((a0 * p[0]) + (a1 * p[1]) + (a2 * p[2]));
             if (minWindowX > dx)
             {
-                minWindowX = dx;
+                minWindowX = Math.floor(dx);
             }
             if (maxWindowX < dx)
             {
-                maxWindowX = dx;
+                maxWindowX = Math.ceil(dx);
             }
             if (minWindowY > dy)
             {
-                minWindowY = dy;
+                minWindowY = Math.floor(dy);
             }
             if (maxWindowY < dy)
             {
-                maxWindowY = dy;
+                maxWindowY = Math.ceil(dy);
             }
             if (minWindowZ > dz)
             {
-                minWindowZ = dz;
+                minWindowZ = Math.floor(dz);
             }
             if (maxWindowZ < dz)
             {
-                maxWindowZ = dz;
+                maxWindowZ = Math.ceil(dz);
             }
         }
 
@@ -1108,13 +1108,13 @@ class CascadedShadowMapping
                                (a2 * (a2 > 0 ? sceneExtents[2] : sceneExtents[5])));
         if (minWindowZ > minSceneWindowZ)
         {
-            minWindowZ = minSceneWindowZ;
+            minWindowZ = Math.floor(minSceneWindowZ);
         }
 
         if (0 === this.numMainFrustumSidePlanes)
         {
             // Camera almost parallel to the split (worst case)
-            maxWindowZ = (maxWindowZ + maxDistance);
+            maxWindowZ = Math.ceil(maxWindowZ + maxDistance);
         }
 
         // Calculate origin of split
@@ -1125,6 +1125,44 @@ class CascadedShadowMapping
         origin[0] = ox * r0 + oy * u0 + oz * a0;
         origin[1] = ox * r1 + oy * u1 + oz * a1;
         origin[2] = ox * r2 + oy * u2 + oz * a2;
+        if (a0 < 0)
+        {
+            origin[0] = Math.ceil(origin[0]);
+        }
+        else if (a0 > 0)
+        {
+            origin[0] = Math.floor(origin[0]);
+        }
+        else //if (a0 === 0)
+        {
+            origin[0] = Math.round(origin[0]);
+        }
+
+        if (a1 < 0)
+        {
+            origin[1] = Math.ceil(origin[1]);
+        }
+        else if (a1 > 0)
+        {
+            origin[1] = Math.floor(origin[1]);
+        }
+        else //if (a1 === 0)
+        {
+            origin[1] = Math.round(origin[1]);
+        }
+
+        if (a2 < 0)
+        {
+            origin[2] = Math.ceil(origin[2]);
+        }
+        else if (a2 > 0)
+        {
+            origin[2] = Math.floor(origin[2]);
+        }
+        else //if (a2 === 0)
+        {
+            origin[2] = Math.round(origin[2]);
+        }
 
         var lightViewWindowX = (maxWindowX - minWindowX) / 2.0;
         var lightViewWindowY = (maxWindowY - minWindowY) / 2.0;
