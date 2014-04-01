@@ -52,6 +52,7 @@ interface Draw2DSpriteParams
     scale?: number;
     shear?: number;
     origin?: any; // v2
+    npot?: boolean;
 }
 
 //
@@ -65,13 +66,15 @@ class Draw2DSprite
     y                : number;
     rotation         : number;
 
+    private npot     : boolean;  // Only set in debug mode
     private data     : any; // new Draw2D.floatArray(38);
     private _texture : Texture;
 
     //
-    // Assumption is that user will not be performing these actions frequently.
-    // To that end, we provide a function which performs the ssary side effects
-    // on call, to prevent an overhead for lazy evaluation.
+    // Assumption is that user will not be performing these actions
+    // frequently.  To that end, we provide a function which performs
+    // the necessary side effects on call, to prevent an overhead for
+    // lazy evaluation.
     //
     getTextureRectangle(dst)
     {
@@ -168,8 +171,9 @@ class Draw2DSprite
 
     setTexture(texture)
     {
-        // Verify that the texture is not NPOT
-        debug.assert((!texture) ||
+        // Verify that the texture is not NPOT unless explicitly
+        // declared as such.
+        debug.assert((!texture) || (this.npot) ||
                      (0 === (texture.width & (texture.width - 1)) &&
                       0 === (texture.height & (texture.height - 1))),
                      "Draw2DSprite does not support non-power-of-2 textures");
@@ -481,12 +485,26 @@ class Draw2DSprite
         var texture = s._texture = params.texture || null;
         if (texture)
         {
-            if ((0 !== (texture.width & (texture.width - 1))) ||
-                (0 !== (texture.height & (texture.height - 1))))
+            if (!params.npot)
             {
-                debug.abort("Draw2DSprites require textures with power-of-2 " +
-                            "dimensions");
-                return null;
+                if ((0 !== (texture.width & (texture.width - 1))) ||
+                    (0 !== (texture.height & (texture.height - 1))))
+                {
+                    debug.abort("Draw2DSprites require textures with " +
+                                "power-of-2 dimensions, or npot flag.");
+                    return null;
+                }
+            }
+        }
+
+        // Set the npot flag in debug mode only (used for asserts in
+        // setTexture).
+
+        if (debug)
+        {
+            if (params.npot)
+            {
+                s.npot = true;
             }
         }
 
@@ -753,9 +771,10 @@ class Draw2D
     renderTargetParams            : RenderTargetParameters;
 
     blendModeTechniques           : {
-        additive : Technique;
-        alpha    : Technique;
-        opaque   : Technique;
+        additive   : Technique;
+        alpha      : Technique;
+        opaque     : Technique;
+        alphanomip : Technique;
     };
 
     copyTechnique                 : Technique;
@@ -815,9 +834,10 @@ class Draw2D
 
     // supported blend modes
     blend = {
-        additive : 'additive',
-        alpha    : 'alpha',
-        opaque   : 'opaque'
+        additive   : 'additive',
+        alpha      : 'alpha',
+        opaque     : 'opaque',
+        alphanomip : 'alphanomip'
     };
 
     drawStates = {
@@ -1849,6 +1869,7 @@ class Draw2D
 
         var performanceData = this.performanceData;
 
+        var texture : Texture;
         var i;
         for (i = 0; i < numGroups; i += 1)
         {
@@ -1878,7 +1899,9 @@ class Draw2D
                 var ilimit = vcount * 1.5;
                 var iindex = 0;
                 while (iindex < ilimit) {
-                    techniqueParameters['texture'] = textures[setIndex];
+                    texture = textures[setIndex];
+                    techniqueParameters['texture'] = texture;
+                    techniqueParameters['npottexture'] = texture;
 
                     // number of indices remaining to render.
                     var icount = ilimit - iindex;
@@ -2260,6 +2283,13 @@ class Draw2D
                         "WrapS": 33071,
                         "WrapT": 33071
                     },
+                    "npottexture":
+                    {
+                        "MinFilter": 9728, /* NEAREST */
+                        "MagFilter": 9729, /* LINEAR */
+                        "WrapS": 33071,
+                        "WrapT": 33071
+                    },
                     "inputTexture0":
                     {
                         "MinFilter": 9728, /* NEAREST */
@@ -2285,6 +2315,10 @@ class Draw2D
                         "type": "float"
                     },
                     "texture":
+                    {
+                        "type": "sampler2D"
+                    },
+                    "npottexture":
                     {
                         "type": "sampler2D"
                     },
@@ -2324,6 +2358,22 @@ class Draw2D
                                 "BlendFunc": [770,771]
                             },
                             "programs": ["vp_draw2D","fp_draw2D"]
+                        }
+                    ],
+                    "alphanomip":
+                    [
+                        {
+                            "parameters": ["clipSpace","npottexture"],
+                            "semantics": ["POSITION","COLOR","TEXCOORD0"],
+                            "states":
+                            {
+                                "DepthTestEnable": false,
+                                "DepthMask": false,
+                                "CullFaceEnable": false,
+                                "BlendEnable": true,
+                                "BlendFunc": [770,771]
+                            },
+                            "programs": ["vp_draw2D","fp_draw2D_nomips"]
                         }
                     ],
                     "additive":
@@ -2375,6 +2425,11 @@ class Draw2D
                         "type": "fragment",
                         "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying TZ_LOWP vec4 tz_Color;varying vec4 tz_TexCoord[1];\nvec4 _ret_0;vec4 _TMP0;uniform sampler2D texture;void main()\n{_TMP0=texture2D(texture,tz_TexCoord[0].xy);_ret_0=tz_Color*_TMP0;gl_FragColor=_ret_0;}"
                     },
+                    "fp_draw2D_nomips":
+                    {
+                        "type": "fragment",
+                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying TZ_LOWP vec4 tz_Color;varying vec4 tz_TexCoord[1];\nvec4 _ret_0;vec4 _TMP0;uniform sampler2D npottexture;void main()\n{_TMP0=texture2D(npottexture,tz_TexCoord[0].xy);_ret_0=tz_Color*_TMP0;gl_FragColor=_ret_0;}"
+                    },
                     "vp_draw2D":
                     {
                         "type": "vertex",
@@ -2388,8 +2443,17 @@ class Draw2D
         o.blendModeTechniques = {
             additive: shader.getTechnique("additive"),
             alpha: shader.getTechnique("alpha"),
-            opaque: shader.getTechnique("opaque")
+            opaque: shader.getTechnique("opaque"),
+            alphanomip: shader.getTechnique("alphanomip")
         };
+        debug.assert(o.blendModeTechniques.additive,
+                     "failed to create additive technique");
+        debug.assert(o.blendModeTechniques.alpha,
+                     "failed to create alpha technique");
+        debug.assert(o.blendModeTechniques.opaque,
+                     "failed to create opaque technique");
+        debug.assert(o.blendModeTechniques.alphanomip,
+                     "failed to create alphanomip technique");
 
         // Append techniques and supported blend modes with user
         // supplied techniques.
@@ -2409,7 +2473,8 @@ class Draw2D
         // Blending techniques.
         o.techniqueParameters = gd.createTechniqueParameters({
             clipSpace: new Draw2D.floatArray(4),
-            texture: null
+            texture: null,
+            npottexture: null
         });
 
         // Current render target
