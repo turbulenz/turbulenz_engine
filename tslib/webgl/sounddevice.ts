@@ -2195,6 +2195,7 @@ class WebGLSoundDevice implements SoundDevice
                 (window.AudioContext || window.webkitAudioContext);
         }
 
+        var listener = null;
         if (AudioContextConstructor)
         {
             var audioContext;
@@ -2231,7 +2232,7 @@ class WebGLSoundDevice implements SoundDevice
             sd._gainNode = (audioContext.createGain ? audioContext.createGain() : audioContext.createGainNode());
             sd._gainNode.connect(audioContext.destination);
 
-            var listener = audioContext.listener;
+            listener = audioContext.listener;
             listener.dopplerFactor = sd.dopplerFactor;
             listener.speedOfSound = sd.speedOfSound;
 
@@ -2256,15 +2257,17 @@ class WebGLSoundDevice implements SoundDevice
             },
             set : function setListenerTransformFn(transform) {
                 this._listenerTransform = VMath.m43Copy(transform, this._listenerTransform);
+                if (listener)
+                {
+                    var position0 = transform[9];
+                    var position1 = transform[10];
+                    var position2 = transform[11];
 
-                var position0 = transform[9];
-                var position1 = transform[10];
-                var position2 = transform[11];
+                    listener.setPosition(position0, position1, position2);
 
-                listener.setPosition(position0, position1, position2);
-
-                listener.setOrientation(-transform[6], -transform[7], -transform[8],
-                                        transform[3], transform[4], transform[5]);
+                    listener.setOrientation(-transform[6], -transform[7], -transform[8],
+                                            transform[3], transform[4], transform[5]);
+                }
             },
             enumerable : true,
             configurable : false
@@ -2276,7 +2279,10 @@ class WebGLSoundDevice implements SoundDevice
             },
             set : function setListenerVelocityFn(velocity) {
                 this._listenerVelocity = VMath.v3Copy(velocity, this._listenerVelocity);
-                listener.setVelocity(velocity[0], velocity[1], velocity[2]);
+                if (listener)
+                {
+                    listener.setVelocity(velocity[0], velocity[1], velocity[2]);
+                }
             },
             enumerable : true,
             configurable : false
