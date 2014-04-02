@@ -502,10 +502,7 @@ class Draw2DSprite
 
         if (debug)
         {
-            if (params.npot)
-            {
-                s.npot = true;
-            }
+            s.npot = !!(params.npot);
         }
 
         // position (optional, default 0,0)
