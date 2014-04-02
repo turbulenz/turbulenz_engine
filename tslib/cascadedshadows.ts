@@ -488,6 +488,15 @@ class CascadedShadowMapping
 
         var direction = md.v3Normalize(lightDirection, this.tempV3Direction);
 
+        var frustumPoints = this.frustumPoints;
+        frustumPoints = camera.getFrustumPoints(maxDistance, camera.nearPlane, frustumPoints);
+
+        var sideCamera = this._updateSideCamera(cameraUp,
+                                                cameraAt,
+                                                direction,
+                                                frustumPoints);
+        maxDistance = sideCamera.farPlane;
+
         var up;
         if (Math.abs(md.v3Dot(direction, cameraAt)) < Math.abs(md.v3Dot(direction, cameraUp)))
         {
@@ -503,17 +512,6 @@ class CascadedShadowMapping
         var xaxis = md.v3Cross(up, zaxis, this.tempV3AxisX);
         md.v3Normalize(xaxis, xaxis);
         var yaxis = md.v3Cross(zaxis, xaxis, this.tempV3AxisY);
-
-        var frustumPoints = this.frustumPoints;
-        frustumPoints = camera.getFrustumPoints(maxDistance, camera.nearPlane, frustumPoints);
-
-        this._updateSideCamera(cameraUp,
-                               cameraAt,
-                               direction,
-                               frustumPoints);
-
-        var sideCamera = this.sideCamera;
-        maxDistance = sideCamera.farPlane;
 
         var splitDistances = CascadedShadowMapping.splitDistances;
         var splits = this.splits;
@@ -1062,24 +1060,24 @@ class CascadedShadowMapping
     private _updateSideCamera(cameraUp: any,
                               cameraAt: any,
                               lightDirection: any,
-                              frustumPoints: any[]): void
+                              frustumPoints: any[]): Camera
     {
         var md = this.md;
 
         var yaxis;
         if (Math.abs(md.v3Dot(lightDirection, cameraAt)) < Math.abs(md.v3Dot(cameraUp, cameraAt)))
         {
-            yaxis = md.v3Neg(lightDirection);
+            yaxis = md.v3Neg(lightDirection, this.tempV3AxisY);
         }
         else
         {
             yaxis = cameraUp;
         }
-        var xaxis = md.v3Cross(yaxis, cameraAt);
+        var xaxis = md.v3Cross(yaxis, cameraAt, this.tempV3AxisX);
         md.v3Normalize(xaxis, xaxis);
         //var yaxis = md.v3Cross(cameraAt, xaxis);
         //var zaxis = md.v3Cross(yaxis, xaxis);
-        var zaxis = md.v3Cross(xaxis, yaxis);
+        var zaxis = md.v3Cross(xaxis, yaxis, this.tempV3AxisZ);
 
         var r0 = -xaxis[0];
         var r1 = -xaxis[1];
@@ -1162,6 +1160,8 @@ class CascadedShadowMapping
         var m = this.sideCamera.viewProjectionMatrix;
         var nearPlane = this.sideCameraNearPlane;
         this._planeNormalize((m[3]  + m[2]), (m[7]  + m[6]), (m[11] + m[10]), -(m[15] + m[14]), nearPlane);
+
+        return camera;
     }
 
     private _getSideCameraFrustumPoints(endDistance: number,
