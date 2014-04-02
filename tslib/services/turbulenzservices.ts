@@ -314,7 +314,15 @@ class TurbulenzServices
 
     static addBridgeEvents()
     {
-        var turbulenz = window.Turbulenz || window.top.Turbulenz;
+        var turbulenz = window.Turbulenz;
+        if (!turbulenz)
+        {
+            try
+            {
+                turbulenz = window.top.Turbulenz;
+            }
+            catch (_) {}
+        }
         var turbulenzData = (turbulenz && turbulenz.Data) || {};
         var sessionToJoin = turbulenzData.joinMultiplayerSessionId;
         var that = this;

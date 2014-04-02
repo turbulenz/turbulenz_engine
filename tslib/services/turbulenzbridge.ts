@@ -22,7 +22,15 @@ class TurbulenzBridge
      */
     static _initInstance()
     {
-        var Turbulenz = window.Turbulenz || window.top.Turbulenz;
+        var Turbulenz = window.Turbulenz;
+        if (!Turbulenz)
+        {
+            try
+            {
+                Turbulenz = window.top.Turbulenz;
+            }
+            catch (_) {}
+        }
 
         if (Turbulenz && Turbulenz.Services)
         {
