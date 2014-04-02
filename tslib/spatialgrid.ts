@@ -917,7 +917,7 @@ class SpatialGrid
         var numPlanes = planes.length;
         var storageIndex = (startIndex === undefined) ? visibleNodes.length : startIndex;
         var nodes = this.nodes;
-        var numNodes = nodes.length;
+        var numNodes = this.numNodes;
         var n, p, plane, isInside, d0, d1, d2;
         for (n = 0; n < numNodes; n += 1)
         {
