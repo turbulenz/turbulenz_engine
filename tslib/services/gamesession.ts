@@ -186,7 +186,11 @@ class GameSession
             {
                 turbulenz = window.top.Turbulenz;
             }
-            catch (_) {}
+            /* tslint:disable:no-empty */
+            catch (e)
+            {
+            }
+            /* tslint:enable:no-empty */
         }
         var turbulenzData = (turbulenz && turbulenz.Data) || {};
         var mode = turbulenzData.mode || TurbulenzServices.mode;

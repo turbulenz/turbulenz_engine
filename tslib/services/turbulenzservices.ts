@@ -321,7 +321,11 @@ class TurbulenzServices
             {
                 turbulenz = window.top.Turbulenz;
             }
-            catch (_) {}
+            /* tslint:disable:no-empty */
+            catch (e)
+            {
+            }
+            /* tslint:enable:no-empty */
         }
         var turbulenzData = (turbulenz && turbulenz.Data) || {};
         var sessionToJoin = turbulenzData.joinMultiplayerSessionId;

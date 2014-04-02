@@ -29,7 +29,11 @@ class TurbulenzBridge
             {
                 Turbulenz = window.top.Turbulenz;
             }
-            catch (_) {}
+            /* tslint:disable:no-empty */
+            catch (e)
+            {
+            }
+            /* tslint:enable:no-empty */
         }
 
         if (Turbulenz && Turbulenz.Services)
