@@ -535,16 +535,6 @@ Set the origin of the sprite.
 
 
 
-
-
-
-
-
-
-
-
-
-
 .. _draw2d:
 
 =================
@@ -875,6 +865,12 @@ Begin a new drawing state.
     Otherwise when unspecified, the sort mode will be unchanged.
 
     This method will fail with `false` if sort mode is specified, but is not defined in the `draw2D.sort` dictionary.
+
+``nomipmaps`` (optional)
+    Disable runtime checks for NPOT textures (in debug mode only). For
+    the built-in blend modes, this flag also forces Techniques with
+    mipmaps disabled (default techniques require Sprite textures to
+    have power-of-2 dimensions).
 
 These calls may as hinted be nested: ::
 

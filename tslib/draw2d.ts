@@ -52,7 +52,6 @@ interface Draw2DSpriteParams
     scale?: number;
     shear?: number;
     origin?: any; // v2
-    npot?: boolean;
 }
 
 //
@@ -66,7 +65,6 @@ class Draw2DSprite
     y                : number;
     rotation         : number;
 
-    private npot     : boolean;  // Only set in debug mode
     private data     : any; // new Draw2D.floatArray(38);
     private _texture : Texture;
 
@@ -171,13 +169,6 @@ class Draw2DSprite
 
     setTexture(texture)
     {
-        // Verify that the texture is not NPOT unless explicitly
-        // declared as such.
-        debug.assert((!texture) || (this.npot) ||
-                     (0 === (texture.width & (texture.width - 1)) &&
-                      0 === (texture.height & (texture.height - 1))),
-                     "Draw2DSprite does not support non-power-of-2 textures");
-
         if (this._texture !== texture)
         {
             var su = (this._texture ? this._texture.width  : 1.0) / (texture ? texture.width  : 1.0);
@@ -483,27 +474,6 @@ class Draw2DSprite
 
         // texture (not optional)
         var texture = s._texture = params.texture || null;
-        if (texture)
-        {
-            if (!params.npot)
-            {
-                if ((0 !== (texture.width & (texture.width - 1))) ||
-                    (0 !== (texture.height & (texture.height - 1))))
-                {
-                    debug.abort("Draw2DSprites require textures with " +
-                                "power-of-2 dimensions, or npot flag.");
-                    return null;
-                }
-            }
-        }
-
-        // Set the npot flag in debug mode only (used for asserts in
-        // setTexture).
-
-        if (debug)
-        {
-            s.npot = !!(params.npot);
-        }
 
         // position (optional, default 0,0)
         s.x = (params.x || 0.0);
@@ -716,10 +686,12 @@ class Draw2D
     sortMode                      : string;
     scaleMode                     : string;
     blendMode                     : string;
+    nomipmaps                     : boolean;  // Only used in debug
 
     // Disjoint stack of modes for nested begins.
     sortModeStack                 : string[];
     blendModeStack                : string[];
+    nomipmapsStack                : boolean[];  // Only used in debug
 
     // Set of render groups to be dispatched.
     drawGroups                    : Draw2DGroup[];
@@ -767,11 +739,13 @@ class Draw2D
     semantics                     : Semantics;
     renderTargetParams            : RenderTargetParameters;
 
-    blendModeTechniques           : {
-        additive   : Technique;
-        alpha      : Technique;
-        opaque     : Technique;
-        alphanomip : Technique;
+    private blendModeTechniques   : {
+        additive        : Technique;
+        additivenomip   : Technique;
+        alpha           : Technique;
+        alphanomip      : Technique;
+        opaque          : Technique;
+        opaquenomip     : Technique;
     };
 
     copyTechnique                 : Technique;
@@ -829,12 +803,18 @@ class Draw2D
         none  : 'none'
     };
 
-    // supported blend modes
+    // Supported blend modes.
     blend = {
         additive   : 'additive',
         alpha      : 'alpha',
-        opaque     : 'opaque',
-        alphanomip : 'alphanomip'
+        opaque     : 'opaque'
+    };
+
+    // Map from mode name to the "nomip" equivalent.
+    private nomipModes = {
+        additive   : 'additivenomip',
+        alpha      : 'alphanomip',
+        opaque     : 'opaquenomip'
     };
 
     drawStates = {
@@ -1256,19 +1236,15 @@ class Draw2D
         }
     }
 
-    begin(blendMode?, sortMode?)
+    begin(blendMode?: string, sortMode?: string, nomipmaps?: boolean)
     {
         // Check sort mode is well defined (or undefined signifying default)
-        if (sortMode && !(sortMode in this.sort))
-        {
-            return false;
-        }
+        debug.assert(("undefined" === typeof sortMode) ||
+                     (sortMode in this.sort), "Bad sort mode");
 
         // Check blend mode is well defined (or undefined signifying default)
-        if (blendMode && !(blendMode in this.blend))
-        {
-            return false;
-        }
+        debug.assert(("undefined" === typeof blendMode) ||
+                     (blendMode in this.blend), "Bad blend mode");
 
         //if there are render states left in the stack
         //and begin has been called without an end
@@ -1300,14 +1276,36 @@ class Draw2D
         sortMode  = (sortMode)  ? sortMode  : (firstTime ? 'deferred' : this.sortMode);
         blendMode = (blendMode) ? blendMode : (firstTime ? 'opaque'   : this.blendMode);
 
+        // For the default modes, automatically select the nomip
+        // versions.  Custom modes will remain unchanged, so their
+        // techniques must have state that is consistent with
+        // 'nomipmaps'.  In debug mode, keep track of nomipmaps so
+        // that we can assert as sprites are rendered.
+
+        if (nomipmaps)
+        {
+            var nomipModes = this.nomipModes;
+            if (nomipModes.hasOwnProperty(blendMode))
+            {
+                blendMode = nomipModes[blendMode];
+            }
+        }
 
         if (!firstTime)
         {
             this.sortModeStack.push(this.sortMode);
             this.blendModeStack.push(this.blendMode);
+            if (debug)
+            {
+                this.nomipmapsStack.push(this.nomipmaps);
+            }
         }
         this.sortMode = sortMode;
         this.blendMode = blendMode;
+        if (debug)
+        {
+            this.nomipmaps = !!nomipmaps;
+        }
 
         this.prepareSortMode(sortMode);
         this.graphicsDevice.setTechnique(this.blendModeTechniques[blendMode]);
@@ -1568,6 +1566,18 @@ class Draw2D
 
     drawSpriteImmediate(sprite)
     {
+        if (debug)
+        {
+            var _texture = sprite.getTexture();
+            if (_texture)
+            {
+                debug.assert(this.nomipmaps ||
+                             (0 === (_texture.width & (_texture.width - 1)) &&
+                              0 === (_texture.height & (_texture.height - 1))),
+                             "Cannot use mipmaps with NPOT textures");
+            }
+        }
+
         var group = this.drawGroups[0];
         group.textures[0] = sprite._texture || this.defaultTexture;
         group.indices[0] = 0;
@@ -1625,6 +1635,18 @@ class Draw2D
 
     drawSpriteDeferred(sprite)
     {
+        if (debug)
+        {
+            var _texture = sprite.getTexture();
+            if (_texture)
+            {
+                debug.assert(this.nomipmaps ||
+                             (0 === (_texture.width & (_texture.width - 1)) &&
+                              0 === (_texture.height & (_texture.height - 1))),
+                             "Cannot use mipmaps with NPOT textures");
+            }
+        }
+
         var texture = sprite._texture || this.defaultTexture;
 
         var group = this.drawGroups[0];
@@ -1709,6 +1731,18 @@ class Draw2D
 
     drawSpriteTextured(sprite)
     {
+        if (debug)
+        {
+            var _texture = sprite.getTexture();
+            if (_texture)
+            {
+                debug.assert(this.nomipmaps ||
+                             (0 === (_texture.width & (_texture.width - 1)) &&
+                              0 === (_texture.height & (_texture.height - 1))),
+                             "Cannot use mipmaps with NPOT textures");
+            }
+        }
+
         var texture = sprite._texture || this.defaultTexture;
 
         var group;
@@ -2231,6 +2265,12 @@ class Draw2D
         o.sortModeStack  = [];
         o.blendModeStack = [];
 
+        if (debug)
+        {
+            o.nomipmaps = false;
+            o.nomipmapsStack = [];
+        }
+
         // Set of render groups to be dispatched.
         o.drawGroups = [Draw2DGroup.create()];
         o.numGroups = 0;
@@ -2341,6 +2381,21 @@ class Draw2D
                             "programs": ["vp_draw2D","fp_draw2D"]
                         }
                     ],
+                    "opaquenomip":
+                    [
+                        {
+                            "parameters": ["clipSpace","npottexture"],
+                            "semantics": ["POSITION","COLOR","TEXCOORD0"],
+                            "states":
+                            {
+                                "DepthTestEnable": false,
+                                "DepthMask": false,
+                                "CullFaceEnable": false,
+                                "BlendEnable": false
+                            },
+                            "programs": ["vp_draw2D","fp_draw2D_nomips"]
+                        }
+                    ],
                     "alpha":
                     [
                         {
@@ -2387,6 +2442,22 @@ class Draw2D
                                 "BlendFunc": [770,1]
                             },
                             "programs": ["vp_draw2D","fp_draw2D"]
+                        }
+                    ],
+                    "additivenomip":
+                    [
+                        {
+                            "parameters": ["clipSpace","npottexture"],
+                            "semantics": ["POSITION","COLOR","TEXCOORD0"],
+                            "states":
+                            {
+                                "DepthTestEnable": false,
+                                "DepthMask": false,
+                                "CullFaceEnable": false,
+                                "BlendEnable": true,
+                                "BlendFunc": [770,1]
+                            },
+                            "programs": ["vp_draw2D","fp_draw2D_nomips"]
                         }
                     ],
                     "copy":
@@ -2438,19 +2509,20 @@ class Draw2D
 
         // Mapping from blend mode name to Technique object.
         o.blendModeTechniques = {
-            additive: shader.getTechnique("additive"),
-            alpha: shader.getTechnique("alpha"),
-            opaque: shader.getTechnique("opaque"),
-            alphanomip: shader.getTechnique("alphanomip")
+            additive       : shader.getTechnique("additive"),
+            additivenomip  : shader.getTechnique("additivenomip"),
+            alpha          : shader.getTechnique("alpha"),
+            alphanomip     : shader.getTechnique("alphanomip"),
+            opaque         : shader.getTechnique("opaque"),
+            opaquenomip    : shader.getTechnique("opaquenomip")
         };
-        debug.assert(o.blendModeTechniques.additive,
-                     "failed to create additive technique");
-        debug.assert(o.blendModeTechniques.alpha,
-                     "failed to create alpha technique");
-        debug.assert(o.blendModeTechniques.opaque,
-                     "failed to create opaque technique");
-        debug.assert(o.blendModeTechniques.alphanomip,
-                     "failed to create alphanomip technique");
+
+        debug.assert(o.blendModeTechniques.additive);
+        debug.assert(o.blendModeTechniques.additivenomip);
+        debug.assert(o.blendModeTechniques.alpha);
+        debug.assert(o.blendModeTechniques.alphanomip);
+        debug.assert(o.blendModeTechniques.opaque);
+        debug.assert(o.blendModeTechniques.opaquenomip);
 
         // Append techniques and supported blend modes with user
         // supplied techniques.
