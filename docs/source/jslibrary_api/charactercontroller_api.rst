@@ -129,6 +129,21 @@ Method
     characterController.setDead(true);
 
 
+.. index::
+    pair: CharacterController; destroy
+
+`destroy`
+---------
+
+**Summary**
+
+Releases the CharacterController resources; the object will be invalid after the method is called.
+
+**Syntax** ::
+
+    characterController.destroy();
+
+
 Properties
 ==========
 

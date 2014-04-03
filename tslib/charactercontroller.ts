@@ -62,6 +62,7 @@ class CharacterController
     physicsCrouchingHeightOffset : any; // v3
     deadHeightOffset             : any; // v3
     character                    : PhysicsCharacter;
+    dynamicsWorld                : PhysicsWorld;
 
     onkeydown                    : { (keynum: number): void; };
     onkeyup                      : { (keynum: number): void; };
@@ -172,6 +173,8 @@ class CharacterController
         });
 
         dynamicsWorld.addCharacter(c.character);
+
+        c.dynamicsWorld = dynamicsWorld;
 
         // keyboard handling
         var keyCodes, padCodes;
@@ -813,5 +816,19 @@ class CharacterController
         }
 
         md.m43SetPos(matrix, position);
+    }
+
+    destroy(): void
+    {
+        if (this.dynamicsWorld)
+        {
+            if (this.character)
+            {
+                this.dynamicsWorld.removeCharacter(this.character);
+                this.character = null;
+            }
+
+            this.dynamicsWorld = null;
+        }
     }
 }
