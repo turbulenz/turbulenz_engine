@@ -149,6 +149,7 @@ class CascadedShadowMapping
     tempMatrix43        : any; // m43
     tempMatrix33        : any; // m33
     tempV3Direction     : any; // v3
+    tempV3Right         : any; // v3
     tempV3Up            : any; // v3
     tempV3At            : any; // v3
     tempV3Origin        : any; // v3
@@ -228,6 +229,7 @@ class CascadedShadowMapping
         this.tempMatrix43 = md.m43BuildIdentity();
         this.tempMatrix33 = md.m33BuildIdentity();
         this.tempV3Direction = md.v3BuildZero();
+        this.tempV3Right = md.v3BuildZero();
         this.tempV3Up = md.v3BuildZero();
         this.tempV3At = md.v3BuildZero();
         this.tempV3Origin = md.v3BuildZero();
@@ -483,6 +485,7 @@ class CascadedShadowMapping
         this._extractMainFrustumPlanes(camera, lightDirection, maxDistance);
 
         var cameraMatrix = camera.matrix;
+        var cameraRight = md.m43Right(cameraMatrix, this.tempV3Right);
         var cameraUp = md.m43Up(cameraMatrix, this.tempV3Up);
         var cameraAt = md.m43At(cameraMatrix, this.tempV3At);
 
@@ -491,7 +494,8 @@ class CascadedShadowMapping
         var frustumPoints = this.frustumPoints;
         frustumPoints = camera.getFrustumPoints(maxDistance, camera.nearPlane, frustumPoints);
 
-        var sideCamera = this._updateSideCamera(cameraUp,
+        var sideCamera = this._updateSideCamera(cameraRight,
+                                                cameraUp,
                                                 cameraAt,
                                                 direction,
                                                 frustumPoints);
@@ -1057,7 +1061,8 @@ class CascadedShadowMapping
         return maxWindowZ;
     }
 
-    private _updateSideCamera(cameraUp: any,
+    private _updateSideCamera(cameraRight: any,
+                              cameraUp: any,
                               cameraAt: any,
                               lightDirection: any,
                               frustumPoints: any[]): Camera
@@ -1065,7 +1070,9 @@ class CascadedShadowMapping
         var md = this.md;
 
         var yaxis;
-        if (Math.abs(md.v3Dot(lightDirection, cameraAt)) < Math.abs(md.v3Dot(cameraUp, cameraAt)))
+        if (Math.abs(md.v3Dot(lightDirection, cameraAt)) <
+                Math.max(Math.abs(md.v3Dot(lightDirection, cameraRight)),
+                         Math.abs(md.v3Dot(lightDirection, cameraUp))))
         {
             yaxis = md.v3Neg(lightDirection, this.tempV3AxisY);
         }
@@ -2326,6 +2333,7 @@ class CascadedShadowMapping
         delete this.tempV3AxisX;
         delete this.tempV3At;
         delete this.tempV3Up;
+        delete this.tempV3Right;
         delete this.tempV3Direction;
         delete this.tempMatrix33;
         delete this.tempMatrix43;
