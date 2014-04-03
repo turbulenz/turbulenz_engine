@@ -1571,10 +1571,12 @@ class Draw2D
             var _texture = sprite.getTexture();
             if (_texture)
             {
+                /* tslint:disable:no-bitwise */
                 debug.assert(this.nomipmaps ||
                              (0 === (_texture.width & (_texture.width - 1)) &&
                               0 === (_texture.height & (_texture.height - 1))),
                              "Cannot use mipmaps with NPOT textures");
+                /* tslint:enable:no-bitwise */
             }
         }
 
@@ -1606,7 +1608,9 @@ class Draw2D
         this.numGroups = 1;
 
         var drawSprite = this.drawSprite;
-        Draw2DSpriteData.setFromRotatedRectangle(drawSprite, texture, destRect, srcRect, color, rotation, params.origin);
+        Draw2DSpriteData.setFromRotatedRectangle(
+            drawSprite, texture, destRect, srcRect, color, rotation,
+            params.origin);
         this._bufferSprite(group, drawSprite);
 
         // Draw render group immediately.
@@ -1640,10 +1644,12 @@ class Draw2D
             var _texture = sprite.getTexture();
             if (_texture)
             {
+                /* tslint:disable:no-bitwise */
                 debug.assert(this.nomipmaps ||
                              (0 === (_texture.width & (_texture.width - 1)) &&
                               0 === (_texture.height & (_texture.height - 1))),
                              "Cannot use mipmaps with NPOT textures");
+                /* tslint:enable:no-bitwise */
             }
         }
 
@@ -1736,10 +1742,12 @@ class Draw2D
             var _texture = sprite.getTexture();
             if (_texture)
             {
+                /* tslint:disable:no-bitwise */
                 debug.assert(this.nomipmaps ||
                              (0 === (_texture.width & (_texture.width - 1)) &&
                               0 === (_texture.height & (_texture.height - 1))),
                              "Cannot use mipmaps with NPOT textures");
+                /* tslint:enable:no-bitwise */
             }
         }
 
