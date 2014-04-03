@@ -499,7 +499,7 @@ class CascadedShadowMapping
                                                 cameraAt,
                                                 direction,
                                                 frustumPoints);
-        maxDistance = sideCamera.farPlane;
+        var sideCameraMaxDistance = sideCamera.farPlane;
 
         var up;
         if (Math.abs(md.v3Dot(direction, cameraAt)) < Math.abs(md.v3Dot(direction, cameraUp)))
@@ -527,9 +527,13 @@ class CascadedShadowMapping
         {
             split = splits[n];
 
-            splitEnd = maxDistance * splitDistances[n];
+            splitEnd = sideCameraMaxDistance * splitDistances[n];
 
-            frustumPoints = this._getSideCameraFrustumPoints(splitEnd, splitStart, frustumPoints, camera);
+            frustumPoints = this._getSideCameraFrustumPoints(splitEnd,
+                                                             splitStart,
+                                                             frustumPoints,
+                                                             camera,
+                                                             maxDistance);
 
             this._updateSplit(split,
                               xaxis,
@@ -546,9 +550,13 @@ class CascadedShadowMapping
             if (0 === split.occludersDrawArray.length &&
                 (n + 1) < numSplits)
             {
-                splitEnd = (splitEnd + (maxDistance * splitDistances[n + 1])) / 2.0;
+                splitEnd = (splitEnd + (sideCameraMaxDistance * splitDistances[n + 1])) / 2.0;
 
-                frustumPoints = this._getSideCameraFrustumPoints(splitEnd, splitStart, frustumPoints, camera);
+                frustumPoints = this._getSideCameraFrustumPoints(splitEnd,
+                                                                 splitStart,
+                                                                 frustumPoints,
+                                                                 camera,
+                                                                 maxDistance);
 
                 this._updateSplit(split,
                                   xaxis,
@@ -1174,7 +1182,8 @@ class CascadedShadowMapping
     private _getSideCameraFrustumPoints(endDistance: number,
                                         startDistance: number,
                                         frustumPoints: any[],
-                                        mainCamera: Camera)
+                                        mainCamera: Camera,
+                                        maxDistance: number)
     {
         var nearPlane = this.sideCameraNearPlane;
         var nearDistance = nearPlane[3];
@@ -1194,6 +1203,31 @@ class CascadedShadowMapping
         this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[7]);
 
         nearPlane[3] = nearDistance;
+
+        var mainCameraMatrix = mainCamera.matrix;
+        var ax = -mainCameraMatrix[6];
+        var ay = -mainCameraMatrix[7];
+        var az = -mainCameraMatrix[8];
+        var sx = mainCameraMatrix[9];
+        var sy = mainCameraMatrix[10];
+        var sz = mainCameraMatrix[11];
+        var n;
+        for (n = 0; n < 8; n += 1)
+        {
+            var p = frustumPoints[n];
+            var dx = (p[0] - sx);
+            var dy = (p[1] - sy);
+            var dz = (p[2] - sz);
+            var d = ((ax * dx) + (ay * dy) + (az * dz));
+            if (d > maxDistance)
+            {
+                // "d" includes "Math.sqrt((dx * dx) + (dy * dy) + (dz * dz))" and the cosine of the angle
+                var a = (maxDistance / d);
+                p[0] = sx + a * dx;
+                p[1] = sy + a * dy;
+                p[2] = sz + a * dz;
+            }
+        }
 
         return frustumPoints;
     }
