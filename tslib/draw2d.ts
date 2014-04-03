@@ -1566,19 +1566,19 @@ class Draw2D
 
     drawSpriteImmediate(sprite)
     {
+        /* tslint:disable:no-bitwise */
         if (debug)
         {
             var _texture = sprite.getTexture();
             if (_texture)
             {
-                /* tslint:disable:no-bitwise */
                 debug.assert(this.nomipmaps ||
                              (0 === (_texture.width & (_texture.width - 1)) &&
                               0 === (_texture.height & (_texture.height - 1))),
                              "Cannot use mipmaps with NPOT textures");
-                /* tslint:enable:no-bitwise */
             }
         }
+        /* tslint:enable:no-bitwise */
 
         var group = this.drawGroups[0];
         group.textures[0] = sprite._texture || this.defaultTexture;
@@ -1639,19 +1639,19 @@ class Draw2D
 
     drawSpriteDeferred(sprite)
     {
+        /* tslint:disable:no-bitwise */
         if (debug)
         {
             var _texture = sprite.getTexture();
             if (_texture)
             {
-                /* tslint:disable:no-bitwise */
                 debug.assert(this.nomipmaps ||
                              (0 === (_texture.width & (_texture.width - 1)) &&
                               0 === (_texture.height & (_texture.height - 1))),
                              "Cannot use mipmaps with NPOT textures");
-                /* tslint:enable:no-bitwise */
             }
         }
+        /* tslint:enable:no-bitwise */
 
         var texture = sprite._texture || this.defaultTexture;
 
@@ -1737,19 +1737,19 @@ class Draw2D
 
     drawSpriteTextured(sprite)
     {
+        /* tslint:disable:no-bitwise */
         if (debug)
         {
             var _texture = sprite.getTexture();
             if (_texture)
             {
-                /* tslint:disable:no-bitwise */
                 debug.assert(this.nomipmaps ||
                              (0 === (_texture.width & (_texture.width - 1)) &&
                               0 === (_texture.height & (_texture.height - 1))),
                              "Cannot use mipmaps with NPOT textures");
-                /* tslint:enable:no-bitwise */
             }
         }
+        /* tslint:enable:no-bitwise */
 
         var texture = sprite._texture || this.defaultTexture;
 
