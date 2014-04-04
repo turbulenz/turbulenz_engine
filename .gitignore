@@ -14,6 +14,8 @@ jslib-refcheck/
 
 # Temporary files
 *~
+.DS_Store
+TAGS
 
 # default local server folder
 /devserver/

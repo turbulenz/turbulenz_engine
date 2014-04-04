@@ -1,27 +1,28 @@
 .. index::
-    single: Source
+    single: GlobalSource
 
 .. highlight:: javascript
 
-.. _source:
+.. _globalsource:
 
------------------
-The Source Object
------------------
+-----------------------
+The GlobalSource Object
+-----------------------
 
-A Source object represents a 3D sound emitter.
-If you want to play sounds without positioning you should use a :ref:`GlobalSource <globalsource>` object.
+A GlobalSource object represents a global sound emitter without spatial positioning,
+for example for background music or menu sounds.
+If you want to play sounds positioned in 3D space you should use a :ref:`Source <source>` object.
 
 Constructor
 ===========
 
-A Source object can be constructed with :ref:`SoundDevice.createSource <sounddevice_createsource>`.
+A GlobalSource object can be constructed with :ref:`SoundDevice.createGlobalSource <sounddevice_createglobalsource>`.
 
 Methods
 =======
 
 .. index::
-    pair: Source; play
+    pair: GlobalSource; play
 
 `play`
 ------
@@ -42,7 +43,7 @@ Play the given sound on the source.
 
 
 .. index::
-    pair: Source; stop
+    pair: GlobalSource; stop
 
 `stop`
 ------
@@ -60,7 +61,7 @@ Returns true if the source was playing a sound, false otherwise.
 
 
 .. index::
-    pair: Source; pause
+    pair: GlobalSource; pause
 
 `pause`
 -------
@@ -77,7 +78,7 @@ Returns true if the source was playing a sound, false otherwise.
 
 
 .. index::
-    pair: Source; resume
+    pair: GlobalSource; resume
 
 `resume`
 --------
@@ -96,7 +97,7 @@ Resume the sound playback.
 Returns true if the source was paused, false otherwise.
 
 .. index::
-    pair: Source; rewind
+    pair: GlobalSource; rewind
 
 `rewind`
 --------
@@ -113,7 +114,7 @@ Returns true if the playback position was not already at the start of the sampli
 
 
 .. index::
-    pair: Source; clear
+    pair: GlobalSource; clear
 
 `clear`
 -------
@@ -127,17 +128,17 @@ Stop playback and reset the source to be ready to be released.
     source.clear();
 
 .. index::
-    pair: Source; setAuxiliarySendFilter
+    pair: GlobalSource; setAuxiliarySendFilter
 
-.. _setAuxiliarySendFilter:
+.. _globalsetAuxiliarySendFilter:
 
 `setAuxiliarySendFilter`
 ------------------------
 
 **Summary**
 
-Sets the SoundEffectSlot and SoundFilter on the Source object for a specified Auxiliary Send index.
-If the Source object doesn't have an Auxiliary Send at the index specified the function will return false.
+Sets the SoundEffectSlot and SoundFilter on the GlobalSource object for a specified Auxiliary Send index.
+If the GlobalSource object doesn't have an Auxiliary Send at the index specified the function will return false.
 When setting a SoundEffectSlot or SoundFilter on a valid Auxiliary Send index, the previous SoundEffectSlot or SoundFilter is replaced.
 
 **Syntax** ::
@@ -157,7 +158,7 @@ When setting a SoundEffectSlot or SoundFilter on a valid Auxiliary Send index, t
 
 ``index``
     The index of the Auxiliary Send to output via the SoundFilter to the SoundEffectSlot.
-    Property *soundDevice.alcMaxAuxiliarySends* specifies the maximum number of Auxiliary Send outputs per Source.
+    Property *soundDevice.alcMaxAuxiliarySends* specifies the maximum number of Auxiliary Send outputs per GlobalSource.
     i.e. if alcMaxAuxiliarySends is 2, then index can be 0 or 1.
 
 ``effectSlot``
@@ -176,16 +177,16 @@ Returns true if the operation completed successfully and returns false if an err
     Failing to do so can cause errors in the destruction of the sound objects.
 
 .. index::
-    pair: Source; setDirectFilter
+    pair: GlobalSource; setDirectFilter
 
-.. _setDirectFilter:
+.. _globalsetDirectFilter:
 
 `setDirectFilter`
 -----------------
 
 **Summary**
 
-Sets the SoundFilter on the Source object for the direct filter output.
+Sets the SoundFilter on the GlobalSource object for the direct filter output.
 When setting a SoundFilter on a direct filter, the previous SoundFilter is replaced.
 SoundEffectSlot Objects cannot be set on the direct filter.
 
@@ -212,14 +213,14 @@ Returns true if the operation completed successfully and returns false if an err
 
 
 .. index::
-    pair: Source; destroy
+    pair: GlobalSource; destroy
 
 `destroy`
 ---------
 
 **Summary**
 
-Releases the Source resources; the object will be invalid after the method is called.
+Releases the GlobalSource resources; the object will be invalid after the method is called.
 
 **Syntax** ::
 
@@ -228,100 +229,6 @@ Releases the Source resources; the object will be invalid after the method is ca
 
 Properties
 ==========
-
-.. index::
-    pair: Source; position
-
-`position`
-----------
-
-**Summary**
-
-The :ref:`Vector3 <v3object>` object representing the current location of the source.
-
-**Syntax** ::
-
-    // Get the current position
-    var position = source.position;
-
-    // Move it to the origin
-    source.position = mathDevice.v3(0, 0, 0);
-
-.. note::
-
-    This property is implemented using getters and setters. Setting the property copies the vector values
-    to the Source's internal storage, and querieng the property generates a new vector and copies the values
-    from the Source's internal storage. ::
-
-        // THIS WILL NOT WORK!!!
-        source.position[1] = 4;
-
-        // THIS WILL NOT WORK!!!
-        VMath.v3Copy(newPos, source.position);
-
-
-.. index::
-    pair: Source; velocity
-
-`velocity`
-----------
-
-**Summary**
-
-The :ref:`Vector3 <v3object>` object representing the velocity of the source.
-
-**Syntax** ::
-
-    // Get the current velocity
-    var velocity = source.velocity;
-
-    // Double it
-    source.velocity = mathDevice.v3Add(velocity, velocity);
-
-.. note::
-
-    This property is implemented using getters and setters. Setting the property copies the vector values
-    to the Source's internal storage, and querieng the property generates a new vector and copies the values
-    from the Source's internal storage. ::
-
-        // THIS WILL NOT WORK!!!
-        source.velocity[1] = 4;
-
-        // THIS WILL NOT WORK!!!
-        VMath.v3Copy(newPos, source.velocity);
-
-
-.. index::
-    pair: Source; direction
-
-`direction`
------------
-
-**Summary**
-
-The :ref:`Vector3 <v3object>` object representing the direction the source is emitting the sound to.
-
-**Syntax** ::
-
-    // Get the current direction
-    var direction = source.direction;
-
-    // Change it
-    source.direction = mathDevice.v3Build(0, 1, 0);
-
-.. note::
-
-    This property is implemented using getters and setters. Setting the property copies the vector values
-    to the Source's internal storage, and querieng the property generates a new vector and copies the values
-    from the Source's internal storage. ::
-
-        // THIS WILL NOT WORK!!!
-        source.direction[1] = 4;
-
-        // THIS WILL NOT WORK!!!
-        VMath.v3Copy(newPos, source.direction);
-
-
 
 .. index::
     pair: Source; gain
@@ -340,84 +247,6 @@ The scalar gain (volume amplification) applied to the sound.
 
     // Half the volume
     source.gain = 0.5;
-
-
-.. index::
-    pair: Source; minDistance
-
-`minDistance`
--------------
-
-**Summary**
-
-The minimum distance to the listener from which the linear volume attenuation will start to take effect.
-
-**Syntax** ::
-
-    // Get the current value
-    var minDistance = source.minDistance;
-
-    // Double it
-    source.minDistance = (2.0 * minDistance);
-
-
-.. index::
-    pair: Source; maxDistance
-
-`maxDistance`
--------------
-
-**Summary**
-
-The maximum distance to the listener after which the linear attenuation will set the volume to zero.
-
-**Syntax** ::
-
-    // Get the current value
-    var maxDistance = source.maxDistance;
-
-    // Double it
-    source.maxDistance = (2.0 * maxDistance);
-
-
-.. index::
-    pair: Source; rollOff
-
-`rollOff`
----------
-
-**Summary**
-
-The amount that the sound will drop off as by the inverse square law of the distance to the listener.
-
-**Syntax** ::
-
-    // Get the current value
-    var rollOff = source.rollOff;
-
-    // Double it
-    source.rollOff = (2.0 * rollOff);
-
-
-.. index::
-    pair: Source; relative
-
-`relative`
-----------
-
-**Summary**
-
-True if the properties `position`, `velocity` and `direction` are expressed as relative to the listener,
-false if they are absolute values.
-
-**Syntax** ::
-
-    // Get the current value
-    var relative = source.relative;
-
-    // Set to relative
-    source.relative = true;
-
 
 .. index::
     pair: Source; looping

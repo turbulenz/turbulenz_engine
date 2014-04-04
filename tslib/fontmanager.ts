@@ -64,11 +64,6 @@ interface FontDrawPageContext
     vertexIndex : number;
 }
 
-interface FontDrawContext
-{
-    pageContexts : FontDrawPageContext[];
-}
-
 /**
    @class  Font
    @private
@@ -235,6 +230,8 @@ class Font
         }
 
         var glyphCounts = dimensions.glyphCounts;
+        var numGlyphs = glyphCounts[pageIdx];
+        var vertices : Float32Array; // = reusableArrays[numGlyphs];
 
         var ctx : FontDrawPageContext = drawCtx ||
             {
@@ -242,9 +239,18 @@ class Font
                 vertexIndex: 0
             };
 
-        var numGlyphs = glyphCounts[pageIdx];
         if (0 === numGlyphs)
         {
+            // If there is a buffer on this context, recycle it for
+            // use later.
+
+            vertices = ctx.vertices;
+            if (vertices)
+            {
+                this.fm.reusableArrays[numGlyphs] = vertices;
+                ctx.vertices = null;
+            }
+
             return ctx;
         }
 
@@ -259,7 +265,7 @@ class Font
         var reusableArrays = fm.reusableArrays;
 
         var vertexIndex = 0;
-        var vertices = reusableArrays[numGlyphs];
+        vertices = reusableArrays[numGlyphs];
         if (vertices)
         {
             // Need to remove from cache just in case it is not
@@ -518,7 +524,11 @@ class Font
 
         if (reuseVertices)
         {
+            // Reclaim the vertex data buffer, and clear it from the
+            // callers context.
+
             fm.reusableArrays[numGlyphs] = vertices;
+            pageCtx.vertices = null;
         }
     }
 
@@ -585,7 +595,7 @@ class FontManager
     getNumPendingFonts: { (): number; };
     isFontLoaded: { (path: string): boolean; };
     isFontMissing: { (path: string): boolean; };
-    setPathRemapping: { (prm, assetUrl: string): void; };
+    setPathRemapping: { (prm, assetPrefix: string): void; };
     calculateTextDimensions: { (path: string, text: string, scale: number,
                                 spacing: number): FontDimensions; };
     reuseVertices: { (vertices: any): void; };
@@ -922,7 +932,8 @@ class FontManager
         };
 
         /**
-           Creates a font from an '.fnt' or '.fontdat'file and its associated image file
+           Creates a font from an '.fnt', '.json' or '.fontdat'file
+           and its associated image file
 
            @memberOf FontManager.prototype
            @public
@@ -1138,7 +1149,9 @@ class FontManager
                         extension = dataPath.substr(dot);
                     }
                     if (!extension ||
-                        (extension !== ".fnt" && extension !== ".fontdat"))
+                        (extension !== ".fnt" &&
+                         extension !== ".json" &&
+                         extension !== ".fontdat"))
                     {
                         dataPath += ".fontdat";
                     }

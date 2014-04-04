@@ -711,39 +711,65 @@ class SpatialGrid
 
     getVisibleNodes(planes: any[], visibleNodes: any[], startIndex?: number): number
     {
-        var numVisibleNodes = 0;
-        if (0 < this.numNodes)
+        // We use brute force when the number of cell checks is bigger than the number of nodes
+        if (this.numNodes < (this.numCellsZ * 2))
         {
-            var numPlanes = planes.length;
-            var storageIndex = (startIndex === undefined) ? visibleNodes.length : startIndex;
-            var cells = this.cells;
-            var cellSize = this.cellSize;
-            var numCellsX = this.numCellsX;
-            var numCellsZ = this.numCellsZ;
-            var gridExtents = this.extents;
-            var minGridX = gridExtents[0];
-            var minGridY = gridExtents[1];
-            var minGridZ = gridExtents[2];
-            var maxGridX = gridExtents[3];
-            var maxGridY = gridExtents[4];
-            //var maxGridZ = gridExtents[5];
+            return this._getVisibleNodesBruteForce(planes, visibleNodes, startIndex);
+        }
 
-            var queryIndex = (this.queryIndex + 1);
-            this.queryIndex = queryIndex;
+        var numVisibleNodes = 0;
+        var numPlanes = planes.length;
+        var storageIndex = (startIndex === undefined) ? visibleNodes.length : startIndex;
+        var cells = this.cells;
+        var cellSize = this.cellSize;
+        var numCellsX = this.numCellsX;
+        var numCellsZ = this.numCellsZ;
+        var gridExtents = this.extents;
+        var minGridX = gridExtents[0];
+        var minGridY = gridExtents[1];
+        var minGridZ = gridExtents[2];
+        var maxGridX = gridExtents[3];
+        var maxGridY = gridExtents[4];
+        //var maxGridZ = gridExtents[5];
 
-            var queryRowPlanes = this.queryRowPlanes;
-            var queryCellPlanes = this.queryCellPlanes;
-            var numQueryRowPlanes = 0;
-            var numQueryCellPlanes = 0;
+        var queryIndex = (this.queryIndex + 1);
+        this.queryIndex = queryIndex;
 
-            var isInside, n, plane, d0, d1, d2;
-            var i, j, k;
-            var minRowZ = minGridZ;
-            var maxRowZ = (minGridZ + cellSize);
-            for (j = 0; j < numCellsZ; j += 1)
+        var queryRowPlanes = this.queryRowPlanes;
+        var queryCellPlanes = this.queryCellPlanes;
+        var numQueryRowPlanes = 0;
+        var numQueryCellPlanes = 0;
+
+        var isInside, n, plane, d0, d1, d2;
+        var i, j, k;
+        var minRowZ = minGridZ;
+        var maxRowZ = (minGridZ + cellSize);
+        for (j = 0; j < numCellsZ; j += 1)
+        {
+            // Check if row is visible
+            isInside = true;
+            n = 0;
+            do
             {
-                // Check if row is visible
-                isInside = true;
+                plane = planes[n];
+                d0 = plane[0];
+                d1 = plane[1];
+                d2 = plane[2];
+                if ((d0 * (d0 < 0 ? minGridX : maxGridX) +
+                     d1 * (d1 < 0 ? minGridY : maxGridY) +
+                     d2 * (d2 < 0 ? minRowZ : maxRowZ)) < plane[3])
+                {
+                    isInside = false;
+                    break;
+                }
+                n += 1;
+            }
+            while (n < numPlanes);
+
+            if (isInside)
+            {
+                // Remove those planes on which the row is fully inside
+                numQueryRowPlanes = 0;
                 n = 0;
                 do
                 {
@@ -751,159 +777,184 @@ class SpatialGrid
                     d0 = plane[0];
                     d1 = plane[1];
                     d2 = plane[2];
-                    if ((d0 * (d0 < 0 ? minGridX : maxGridX) +
-                         d1 * (d1 < 0 ? minGridY : maxGridY) +
-                         d2 * (d2 < 0 ? minRowZ : maxRowZ)) < plane[3])
+                    if ((d0 * (d0 > 0 ? minGridX : maxGridX) +
+                         d1 * (d1 > 0 ? minGridY : maxGridY) +
+                         d2 * (d2 > 0 ? minRowZ : maxRowZ)) < plane[3])
                     {
-                        isInside = false;
-                        break;
+                        queryRowPlanes[numQueryRowPlanes] = plane;
+                        numQueryRowPlanes += 1;
                     }
                     n += 1;
                 }
                 while (n < numPlanes);
 
-                if (isInside)
+                var minCellX = minGridX;
+                var maxCellX = (minGridX + cellSize);
+                var cellIndex = (j * numCellsX);
+                for (i = 0; i < numCellsX; i += 1, cellIndex += 1)
                 {
-                    // Remove those planes on which the row is fully inside
-                    numQueryRowPlanes = 0;
-                    n = 0;
-                    do
+                    var cell = cells[cellIndex];
+                    if (cell)
                     {
-                        plane = planes[n];
-                        d0 = plane[0];
-                        d1 = plane[1];
-                        d2 = plane[2];
-                        if ((d0 * (d0 > 0 ? minGridX : maxGridX) +
-                             d1 * (d1 > 0 ? minGridY : maxGridY) +
-                             d2 * (d2 > 0 ? minRowZ : maxRowZ)) < plane[3])
+                        // check if cell is visible
+                        isInside = true;
+                        for (n = 0; n < numQueryRowPlanes; n += 1)
                         {
-                            queryRowPlanes[numQueryRowPlanes] = plane;
-                            numQueryRowPlanes += 1;
+                            plane = queryRowPlanes[n];
+                            d0 = plane[0];
+                            d1 = plane[1];
+                            d2 = plane[2];
+                            if ((d0 * (d0 < 0 ? minCellX : maxCellX) +
+                                 d1 * (d1 < 0 ? minGridY : maxGridY) +
+                                 d2 * (d2 < 0 ? minRowZ : maxRowZ)) < plane[3])
+                            {
+                                isInside = false;
+                                break;
+                            }
                         }
-                        n += 1;
-                    }
-                    while (n < numPlanes);
 
-                    var minCellX = minGridX;
-                    var maxCellX = (minGridX + cellSize);
-                    var cellIndex = (j * numCellsX);
-                    for (i = 0; i < numCellsX; i += 1, cellIndex += 1)
-                    {
-                        var cell = cells[cellIndex];
-                        if (cell)
+                        if (isInside)
                         {
-                            // check if cell is visible
-                            isInside = true;
+                            var numNodes = cell.length;
+
+                            // Remove those planes on which the cell is fully inside
+                            numQueryCellPlanes = 0;
                             for (n = 0; n < numQueryRowPlanes; n += 1)
                             {
                                 plane = queryRowPlanes[n];
                                 d0 = plane[0];
                                 d1 = plane[1];
                                 d2 = plane[2];
-                                if ((d0 * (d0 < 0 ? minCellX : maxCellX) +
-                                     d1 * (d1 < 0 ? minGridY : maxGridY) +
-                                     d2 * (d2 < 0 ? minRowZ : maxRowZ)) < plane[3])
+                                if ((d0 * (d0 > 0 ? minCellX : maxCellX) +
+                                     d1 * (d1 > 0 ? minGridY : maxGridY) +
+                                     d2 * (d2 > 0 ? minRowZ : maxRowZ)) < plane[3])
                                 {
-                                    isInside = false;
-                                    break;
+                                    queryCellPlanes[numQueryCellPlanes] = plane;
+                                    numQueryCellPlanes += 1;
                                 }
                             }
 
-                            if (isInside)
+                            var node;
+                            if (numQueryCellPlanes === 0)
                             {
-                                var numNodes = cell.length;
-
-                                // Remove those planes on which the cell is fully inside
-                                numQueryCellPlanes = 0;
-                                for (n = 0; n < numQueryRowPlanes; n += 1)
+                                for (k = 0; k < numNodes; k += 1)
                                 {
-                                    plane = queryRowPlanes[n];
-                                    d0 = plane[0];
-                                    d1 = plane[1];
-                                    d2 = plane[2];
-                                    if ((d0 * (d0 > 0 ? minCellX : maxCellX) +
-                                         d1 * (d1 > 0 ? minGridY : maxGridY) +
-                                         d2 * (d2 > 0 ? minRowZ : maxRowZ)) < plane[3])
+                                    // check if node is visible
+                                    node = cell[k];
+                                    if (node.queryIndex !== queryIndex)
                                     {
-                                        queryCellPlanes[numQueryCellPlanes] = plane;
-                                        numQueryCellPlanes += 1;
+                                        node.queryIndex = queryIndex;
+                                        visibleNodes[storageIndex] = node.externalNode;
+                                        storageIndex += 1;
+                                        numVisibleNodes += 1;
                                     }
                                 }
-
-                                var node;
-                                if (numQueryCellPlanes === 0)
+                            }
+                            else
+                            {
+                                for (k = 0; k < numNodes; k += 1)
                                 {
-                                    for (k = 0; k < numNodes; k += 1)
+                                    // check if node is visible
+                                    node = cell[k];
+                                    if (node.queryIndex !== queryIndex)
                                     {
-                                        // check if node is visible
-                                        node = cell[k];
-                                        if (node.queryIndex !== queryIndex)
+                                        node.queryIndex = queryIndex;
+
+                                        var extents = node.extents;
+                                        var n0 = extents[0];
+                                        var n1 = extents[1];
+                                        var n2 = extents[2];
+                                        var p0 = extents[3];
+                                        var p1 = extents[4];
+                                        var p2 = extents[5];
+
+                                        isInside = true;
+                                        n = 0;
+                                        do
                                         {
-                                            node.queryIndex = queryIndex;
+                                            plane = queryCellPlanes[n];
+                                            d0 = plane[0];
+                                            d1 = plane[1];
+                                            d2 = plane[2];
+                                            if ((d0 * (d0 < 0 ? n0 : p0) +
+                                                 d1 * (d1 < 0 ? n1 : p1) +
+                                                 d2 * (d2 < 0 ? n2 : p2)) < plane[3])
+                                            {
+                                                isInside = false;
+                                                break;
+                                            }
+                                            n += 1;
+                                        }
+                                        while (n < numQueryCellPlanes);
+
+                                        if (isInside)
+                                        {
                                             visibleNodes[storageIndex] = node.externalNode;
                                             storageIndex += 1;
                                             numVisibleNodes += 1;
                                         }
                                     }
                                 }
-                                else
-                                {
-                                    for (k = 0; k < numNodes; k += 1)
-                                    {
-                                        // check if node is visible
-                                        node = cell[k];
-                                        if (node.queryIndex !== queryIndex)
-                                        {
-                                            node.queryIndex = queryIndex;
-
-                                            var extents = node.extents;
-                                            var n0 = extents[0];
-                                            var n1 = extents[1];
-                                            var n2 = extents[2];
-                                            var p0 = extents[3];
-                                            var p1 = extents[4];
-                                            var p2 = extents[5];
-
-                                            isInside = true;
-                                            n = 0;
-                                            do
-                                            {
-                                                plane = queryCellPlanes[n];
-                                                d0 = plane[0];
-                                                d1 = plane[1];
-                                                d2 = plane[2];
-                                                if ((d0 * (d0 < 0 ? n0 : p0) +
-                                                     d1 * (d1 < 0 ? n1 : p1) +
-                                                     d2 * (d2 < 0 ? n2 : p2)) < plane[3])
-                                                {
-                                                    isInside = false;
-                                                    break;
-                                                }
-                                                n += 1;
-                                            }
-                                            while (n < numQueryCellPlanes);
-
-                                            if (isInside)
-                                            {
-                                                visibleNodes[storageIndex] = node.externalNode;
-                                                storageIndex += 1;
-                                                numVisibleNodes += 1;
-                                            }
-                                        }
-                                    }
-                                }
                             }
                         }
-
-                        minCellX = maxCellX;
-                        maxCellX += cellSize;
                     }
-                }
 
-                minRowZ = maxRowZ;
-                maxRowZ += cellSize;
+                    minCellX = maxCellX;
+                    maxCellX += cellSize;
+                }
+            }
+
+            minRowZ = maxRowZ;
+            maxRowZ += cellSize;
+        }
+
+        return numVisibleNodes;
+    }
+
+    private _getVisibleNodesBruteForce(planes: any[], visibleNodes: any[], startIndex?: number): number
+    {
+        var numVisibleNodes = 0;
+        var numPlanes = planes.length;
+        var storageIndex = (startIndex === undefined) ? visibleNodes.length : startIndex;
+        var nodes = this.nodes;
+        var numNodes = this.numNodes;
+        var n, p, plane, isInside, d0, d1, d2;
+        for (n = 0; n < numNodes; n += 1)
+        {
+            var node = nodes[n];
+            var extents = node.extents;
+            var n0 = extents[0];
+            var n1 = extents[1];
+            var n2 = extents[2];
+            var p0 = extents[3];
+            var p1 = extents[4];
+            var p2 = extents[5];
+
+            isInside = true;
+            p = 0;
+            do
+            {
+                plane = planes[p];
+                d0 = plane[0];
+                d1 = plane[1];
+                d2 = plane[2];
+                if ((d0 * (d0 < 0 ? n0 : p0) + d1 * (d1 < 0 ? n1 : p1) + d2 * (d2 < 0 ? n2 : p2)) < plane[3])
+                {
+                    isInside = false;
+                    break;
+                }
+                p += 1;
+            }
+            while (p < numPlanes);
+
+            if (isInside)
+            {
+                visibleNodes[storageIndex] = node.externalNode;
+                storageIndex += 1;
+                numVisibleNodes += 1;
             }
         }
+
         return numVisibleNodes;
     }
 

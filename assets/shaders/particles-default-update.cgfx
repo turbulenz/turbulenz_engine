@@ -44,19 +44,20 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
     }
 
     float2 slot = getSlot(particle);
+    float indexY = ceil(slot.y) - 1;
     if (slot.x <= 1)
     {
         // position
         float p = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
         float2 vt = inParticle + float2(invRegionSize.x, 0);
         float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(vt)));
-        return encodeSignedFloat(p + (v * timeStep * maxSpeed / halfExtents[slot.y]) + shift[slot.y]);
+        return encodeSignedFloat(p + (v * timeStep * maxSpeed / halfExtents[indexY]) + shift[indexY]);
     }
     else if (slot.x <= 2)
     {
         // velocity
         float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
-        float a = acceleration[slot.y];
+        float a = acceleration[indexY];
         float4 data = getData(previousState, particleRegionMap(pIndex), invTextureSize);
         if (bitSet(data.w, BIT1))
         {
@@ -65,7 +66,7 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
             float animTime = getAnimationTime(previousState, particleRegionMap(pIndex), invTextureSize,
                                               getLifePair(previousState, particleRegionMap(pIndex), invTextureSize));
 
-            a += getAccelerationNoise(noiseUV, animTime)[slot.y];
+            a += getAccelerationNoise(noiseUV, animTime)[indexY];
         }
         float d = 1.0 - min(1.0, timeStep * drag);
         return encodeSignedFloat(d * (v + a * timeStep / maxSpeed));

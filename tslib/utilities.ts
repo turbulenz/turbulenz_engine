@@ -146,15 +146,8 @@ var Utilities : Utilities = {
                     {
                         requestText += "&";
                     }
-                    if (method === "POST")
-                    {
-                        requestText += key + "=" + data[key];
-                    }
-                    else
-                    {
-                        requestText += encodeURIComponent(key) + "=" +
-                            encodeURIComponent(data[key]);
-                    }
+                    requestText += encodeURIComponent(key) + "=" +
+                        encodeURIComponent(data[key]);
                 }
             }
         }

@@ -1115,8 +1115,6 @@ interface SoundFilter
 }
 
 // SoundSource
-
-// TODO: Are any of these required?
 interface SoundSourceParameters
 {
     position?    : any; // v3
@@ -1141,6 +1139,37 @@ interface SoundSource
     maxDistance : number;
     rollOff     : number;
     relative    : boolean;
+    looping     : boolean;
+    pitch       : number;
+    playing     : boolean;
+    paused      : boolean;
+    tell        : number;
+
+    play(sound: Sound, position?: number): boolean;
+    stop(): void;
+    pause(): void;
+    resume(position?: number): boolean;
+    rewind(): boolean;
+    seek(seek: number): boolean;
+    clear(): void;
+    setAuxiliarySendFilter(index: number,
+                           effectSlot: SoundEffectSlot,
+                           filter: SoundFilter): boolean;
+    setDirectFilter(filter: SoundFilter): boolean;
+    destroy(): void;
+}
+
+// SoundGlobalSource
+interface SoundGlobalSourceParameters
+{
+    gain?        : number;
+    looping?     : boolean;
+    pitch?       : number;
+}
+
+interface SoundGlobalSource
+{
+    gain        : number;
     looping     : boolean;
     pitch       : number;
     playing     : boolean;
@@ -1206,6 +1235,7 @@ interface SoundDevice
     alcMaxAuxiliarySends  : number;
 
     createSource(params: SoundSourceParameters): SoundSource;
+    createGlobalSource(params: SoundGlobalSourceParameters): SoundGlobalSource;
     createSound(params: SoundParameters): Sound;
     loadSoundsArchive(params: SoundArchiveParameters): void;
     createEffect(params: SoundEffectParameters): SoundEffect;

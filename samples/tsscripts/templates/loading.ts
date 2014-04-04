@@ -572,9 +572,8 @@ TurbulenzEngine.onload = function onloadFn()
     var loadAssetsBackground = function loadAssetsBackgroundFn()
     {
         if (soundDevice) {
-            soundSource = soundDevice.createSource({
-                // Ambient sound
-                relative: true
+            // Ambient sound
+            soundSource = soundDevice.createGlobalSource({
             });
 
             var soundURL;

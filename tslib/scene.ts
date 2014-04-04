@@ -3819,6 +3819,26 @@ class Scene
         return true;
     }
 
+    _calculateNumVertices(indices, numIndices): number
+    {
+        var minIndex = indices[0];
+        var maxIndex = minIndex;
+        var n;
+        for (n = 1; n < numIndices; n += 1)
+        {
+            var index = indices[n];
+            if (minIndex > index)
+            {
+                minIndex = index;
+            }
+            else if (maxIndex < index)
+            {
+                maxIndex = index;
+            }
+        }
+        return (maxIndex - minIndex + 1);
+    }
+
     _copyIndexData(indexBufferData: any,
                    indexBufferOffset: number,
                    faces: number[],
@@ -4652,7 +4672,7 @@ class Scene
                                 destSurface.indexBuffer = indexBuffer;
                                 destSurface.numIndices = numIndices;
                                 destSurface.first = (indexBufferBaseIndex + indexBufferOffset);
-                                destSurface.numVertices = totalNumVertices;
+                                destSurface.numVertices = this._calculateNumVertices(faces, numIndices);
 
                                 indexBufferOffset = this._copyIndexData(indexBufferData,
                                                                         indexBufferOffset,
