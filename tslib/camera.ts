@@ -9,6 +9,8 @@ class Camera
     static version = 1;
     /* tslint:enable:no-unused-variable */
 
+    static _frustumPoints = []; // v4[]
+
     md                   : MathDevice;
     matrix               : any;   // m43
     viewMatrix           : any;   // m43
@@ -358,7 +360,7 @@ class Camera
 
     getFrustumExtents(extents, farClip, nearClip?)
     {
-        var frustumPoints = this.getFrustumPoints(farClip, nearClip);
+        var frustumPoints = this.getFrustumPoints(farClip, nearClip, Camera._frustumPoints);
         var frustumPoint = frustumPoints[0];
         var min0 = frustumPoint[0];
         var min1 = frustumPoint[1];
