@@ -6612,6 +6612,9 @@ interface DefaultEmitterArchetype
         radiusMax         : number;
         radiusDistribution: string;
         radiusSigma       : number;
+        box               : boolean;
+        halfExtentsMin    : FloatArray;
+        halfExtentsMax    : FloatArray;
     };
     velocity: {
         theta                    : number;
@@ -6671,6 +6674,14 @@ class DefaultParticleEmitter
         // and using the following distribution 'uniform'/'normal' using given sigma.
         radiusDistribution: string;
         radiusSigma: number;
+
+        // if box, emit within a box centered at position (orientated with normal)
+        // with given min/max half-extents (uniformnly).
+        // assert that not both spherical and box are true. If so, spherical takes precedence.
+        // We choose this in-place of an enumeration to keep backwards compatibility
+        box: boolean;
+        halfExtentsMin: FloatArray;
+        halfExtentsMax: FloatArray;
     };
 
     velocity: {
@@ -6725,7 +6736,10 @@ class DefaultParticleEmitter
             radiusMin         : 0,
             radiusMax         : 0,
             radiusDistribution: "uniform",
-            radiusSigma       : 0.25
+            radiusSigma       : 0.25,
+            box               : false,
+            halfExtentsMin    : [0, 0, 0],
+            halfExtentsMax    : [1, 1, 1]
         },
         velocity: {
             theta                    : 0,
@@ -6912,7 +6926,8 @@ class DefaultParticleEmitter
 
                 Parser.extraFields(error, "default emitter archetype position", delta,
                     ["position", "spherical", "normal", "radiusMin", "radiusMax",
-                     "radiusDistribution", "radiusSigma"]);
+                     "radiusDistribution", "radiusSigma",
+                     "box", "halfExtentsMin", "halfExtentsMax"]);
 
                 return {
                     position          : maybe(delta, "position"          , checkVec3, VMath.v3BuildZero),
@@ -6921,7 +6936,10 @@ class DefaultParticleEmitter
                     radiusMin         : maybe(delta, "radiusMin"         , checkNum , val(0)),
                     radiusMax         : maybe(delta, "radiusMax"         , checkNum , val(0)),
                     radiusDistribution: maybe(delta, "radiusDistribution", checkDist, val("uniform")),
-                    radiusSigma       : maybe(delta, "radiusSigma"       , checkNum , val(0.25))
+                    radiusSigma       : maybe(delta, "radiusSigma"       , checkNum , val(0.25)),
+                    box               : maybe(delta, "box"               , checkBool, val(false)),
+                    halfExtentsMin    : maybe(delta, "halfExtentsMin"    , checkVec3, VMath.v3BuildZero),
+                    halfExtentsMax    : maybe(delta, "halfExtentsMax"    , checkVec3, VMath.v3BuildOne)
                 };
             }, Types.copy.bind(null, DefaultParticleEmitter.template.position)),
             // Typescript compiler infers this next field as type {} erroneously... siigh.
@@ -7096,6 +7114,15 @@ class DefaultParticleEmitter
         var fSigmaRecip = 1 / Math.sqrt(fSigmaSqr * 2 * Math.PI);
         var fSigmaMin = fSigmaRecip * Math.exp(-1 / (2 * fSigmaSqr));
 
+        var bMinExtents = position.halfExtentsMin;
+        var bMaxExtents = position.halfExtentsMax;
+        var bVt4 = (bMaxExtents[1] - bMinExtents[1]) * bMaxExtents[0] * bMaxExtents[2];
+        var bVs4 = (bMaxExtents[0] - bMinExtents[0]) * bMinExtents[1] * bMaxExtents[2];
+        var bVr4 = (bMaxExtents[2] - bMinExtents[2]) * bMinExtents[0] * bMinExtents[1];
+        var bV = 1 / (bVt4 + bVs4 + bVr4);
+        bVt4 = bVt4 * bV;
+        bVs4 = bVt4 + (bVs4 * bV);
+
         var eventPool = DefaultParticleEmitter.eventPool;
 
         var sin    = Math.sin;
@@ -7159,18 +7186,23 @@ class DefaultParticleEmitter
                 if (position.radiusMax !== 0)
                 {
                     rand = 0;
-                    switch (position.radiusDistribution)
+                    if (!position.box)
                     {
-                        case "uniform":
-                            rand = random();
-                            break;
-                        case "normal":
-                            rand = random();
-                            rand = pSigmaRecip * exp(-rand * rand / (2 * pSigmaSqr));
-                            // normalise to [0, 1]
-                            rand = (rand - pSigmaMin) / (pSigmaRecip - pSigmaMin);
-                            break;
+                        switch (position.radiusDistribution)
+                        {
+                            case "uniform":
+                                rand = random();
+                                break;
+                            case "normal":
+                                rand = random();
+                                rand = pSigmaRecip * exp(-rand * rand / (2 * pSigmaSqr));
+                                // normalise to [0, 1]
+                                rand = (rand - pSigmaMin) / (pSigmaRecip - pSigmaMin);
+                                break;
+                        }
                     }
+
+                    var rx, rz, tx, ty, tz, normal, nx, ny, nz, rec;
                     if (position.spherical)
                     {
                         // uniform distribution of spherical angles in sphere.
@@ -7189,18 +7221,68 @@ class DefaultParticleEmitter
                         pos[1] += cost * rad;
                         pos[2] += sinp * sint * rad;
                     }
+                    else if (position.box)
+                    {
+                        normal = position.normal;
+                        nx = normal[0];
+                        ny = normal[1];
+                        nz = normal[2];
+                        if (nx == 0 && nz == 0)
+                        {
+                            rx = tz = 1;
+                            rz = tx = ty = 0;
+                        }
+                        else
+                        {
+                            rec = 1 / sqrt(nx * nx + nz * nz);
+                            rx = -nz * rec;
+                            rz = nx * rec;
+
+                            tx = -rz * ny;
+                            ty = (rz * nx) - (rx * nz);
+                            tz = rx * ny;
+                            rec = 1 / sqrt(tx * tx + ty * ty + tz * tz);
+                            tx *= rec;
+                            ty *= rec;
+                            tz *= rec;
+                        }
+
+                        rand = random();
+                        var bx = random() * 2 - 1;
+                        var by = random() * 2 - 1;
+                        var bz = random() * 2 - 1;
+                        if (rand < bVt4)
+                        {
+                            bx *= bMaxExtents[0];
+                            by = by * bMaxExtents[1] + ((by >= 0 ? 1 : -1) - by) * bMinExtents[1];
+                            bz *= bMaxExtents[2];
+                        }
+                        else if (rand < bVs4)
+                        {
+                            bx = bx * bMaxExtents[0] + ((bx >= 0 ? 1 : -1) - bx) * bMinExtents[0];
+                            by *= bMinExtents[1];
+                            bz *= bMaxExtents[2];
+                        }
+                        else
+                        {
+                            bx *= bMinExtents[0];
+                            by *= bMinExtents[1];
+                            bz = bz * bMaxExtents[2] + ((bz >= 0 ? 1 : -1) - bz) * bMinExtents[2];
+                        }
+                        pos[0] += (by * nx) + (bx * tx) + (bz * rx);
+                        pos[1] += (by * ny) + (bx * ty);
+                        pos[2] += (by * nz) + (bx * tz) + (bz * rz);
+                    }
                     else
                     {
                         // Re-distribute radius for area element.
                         rand = sqrt(rand);
                         rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
 
-                        var rx, rz;
-                        var tx, ty, tz;
-                        var normal = position.normal;
-                        var nx = normal[0];
-                        var ny = normal[1];
-                        var nz = normal[2];
+                        normal = position.normal;
+                        nx = normal[0];
+                        ny = normal[1];
+                        nz = normal[2];
                         if (nx == 0 && nz == 0)
                         {
                             rx = tz = rad;
@@ -7208,7 +7290,7 @@ class DefaultParticleEmitter
                         }
                         else
                         {
-                            var rec = rad / sqrt(nx * nx + nz * nz);
+                            rec = rad / sqrt(nx * nx + nz * nz);
                             rx = -nz * rec;
                             rz = nx * rec;
 
