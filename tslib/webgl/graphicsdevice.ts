@@ -7584,17 +7584,19 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
         /* tslint:enable:no-string-literal */
 
-        gd.PRIMITIVE_POINTS         = gl.POINTS;
-        gd.PRIMITIVE_LINES          = gl.LINES;
-        gd.PRIMITIVE_LINE_LOOP      = gl.LINE_LOOP;
-        gd.PRIMITIVE_LINE_STRIP     = gl.LINE_STRIP;
-        gd.PRIMITIVE_TRIANGLES      = gl.TRIANGLES;
-        gd.PRIMITIVE_TRIANGLE_STRIP = gl.TRIANGLE_STRIP;
-        gd.PRIMITIVE_TRIANGLE_FAN   = gl.TRIANGLE_FAN;
+        var proto = WebGLGraphicsDevice.prototype;
 
-        gd.INDEXFORMAT_UBYTE  = gl.UNSIGNED_BYTE;
-        gd.INDEXFORMAT_USHORT = gl.UNSIGNED_SHORT;
-        gd.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
+        proto.PRIMITIVE_POINTS         = gl.POINTS;
+        proto.PRIMITIVE_LINES          = gl.LINES;
+        proto.PRIMITIVE_LINE_LOOP      = gl.LINE_LOOP;
+        proto.PRIMITIVE_LINE_STRIP     = gl.LINE_STRIP;
+        proto.PRIMITIVE_TRIANGLES      = gl.TRIANGLES;
+        proto.PRIMITIVE_TRIANGLE_STRIP = gl.TRIANGLE_STRIP;
+        proto.PRIMITIVE_TRIANGLE_FAN   = gl.TRIANGLE_FAN;
+
+        proto.INDEXFORMAT_UBYTE  = gl.UNSIGNED_BYTE;
+        proto.INDEXFORMAT_USHORT = gl.UNSIGNED_SHORT;
+        proto.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
 
         // Detect IE11 partial WebGL implementation...
         var ieVersionIndex = (gd.vendor === 'Microsoft' ? gd.rendererVersion.indexOf('0.9') : -1);
@@ -7732,109 +7734,109 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         if (gd.fixIE && gd.fixIE < "0.93")
         {
-            gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
-            gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
-            gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4');
-            gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
-            gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2');
-            gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2N');
-            gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4');
-            gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
-            gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2');
-            gd.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2N');
-            gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4');
-            gd.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
-            gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-            gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-            gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-            gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+            proto.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
+            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
+            proto.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4');
+            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
+            proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2');
+            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4');
+            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
+            proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2');
+            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4');
+            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
+            proto.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+            proto.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+            proto.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+            proto.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
         }
         else
         {
-            gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
-            gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
-            gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
-            gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
-            gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
-            gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
-            gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
-            gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
-            gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
-            gd.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
-            gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
-            gd.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
-            gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-            gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-            gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-            gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+            proto.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
+            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
+            proto.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
+            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
+            proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
+            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
+            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
+            proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
+            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
+            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
+            proto.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+            proto.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+            proto.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+            proto.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
         }
 
         var maxAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
         if (maxAttributes < 16)
         {
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR0 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_POSITION =
-            WebGLGraphicsDevice.prototype.SEMANTIC_POSITION0 = 0;
+            proto.SEMANTIC_ATTR0 =
+            proto.SEMANTIC_POSITION =
+            proto.SEMANTIC_POSITION0 = 0;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR1 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDWEIGHT =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDWEIGHT0 = 1;
+            proto.SEMANTIC_ATTR1 =
+            proto.SEMANTIC_BLENDWEIGHT =
+            proto.SEMANTIC_BLENDWEIGHT0 = 1;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR2 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_NORMAL =
-            WebGLGraphicsDevice.prototype.SEMANTIC_NORMAL0 = 2;
+            proto.SEMANTIC_ATTR2 =
+            proto.SEMANTIC_NORMAL =
+            proto.SEMANTIC_NORMAL0 = 2;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR3 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR =
-            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR0 = 3;
+            proto.SEMANTIC_ATTR3 =
+            proto.SEMANTIC_COLOR =
+            proto.SEMANTIC_COLOR0 = 3;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR7 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDINDICES =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDINDICES0 = 4;
+            proto.SEMANTIC_ATTR7 =
+            proto.SEMANTIC_BLENDINDICES =
+            proto.SEMANTIC_BLENDINDICES0 = 4;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR8 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD0 = 5;
+            proto.SEMANTIC_ATTR8 =
+            proto.SEMANTIC_TEXCOORD =
+            proto.SEMANTIC_TEXCOORD0 = 5;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR9 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD1 = 6;
+            proto.SEMANTIC_ATTR9 =
+            proto.SEMANTIC_TEXCOORD1 = 6;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR14 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD6 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TANGENT =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TANGENT0 = 7;
+            proto.SEMANTIC_ATTR14 =
+            proto.SEMANTIC_TEXCOORD6 =
+            proto.SEMANTIC_TANGENT =
+            proto.SEMANTIC_TANGENT0 = 7;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR15 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD7 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BINORMAL0 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BINORMAL = 8;
+            proto.SEMANTIC_ATTR15 =
+            proto.SEMANTIC_TEXCOORD7 =
+            proto.SEMANTIC_BINORMAL0 =
+            proto.SEMANTIC_BINORMAL = 8;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR10 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD2 = 9;
+            proto.SEMANTIC_ATTR10 =
+            proto.SEMANTIC_TEXCOORD2 = 9;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR11 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD3 = 10;
+            proto.SEMANTIC_ATTR11 =
+            proto.SEMANTIC_TEXCOORD3 = 10;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR12 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD4 = 11;
+            proto.SEMANTIC_ATTR12 =
+            proto.SEMANTIC_TEXCOORD4 = 11;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR13 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD5 = 12;
+            proto.SEMANTIC_ATTR13 =
+            proto.SEMANTIC_TEXCOORD5 = 12;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR4 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR1 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_SPECULAR = 13;
+            proto.SEMANTIC_ATTR4 =
+            proto.SEMANTIC_COLOR1 =
+            proto.SEMANTIC_SPECULAR = 13;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR5 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_FOGCOORD =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TESSFACTOR = 14;
+            proto.SEMANTIC_ATTR5 =
+            proto.SEMANTIC_FOGCOORD =
+            proto.SEMANTIC_TESSFACTOR = 14;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR6 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_PSIZE =
-            WebGLGraphicsDevice.prototype.SEMANTIC_PSIZE0 = 15;
+            proto.SEMANTIC_ATTR6 =
+            proto.SEMANTIC_PSIZE =
+            proto.SEMANTIC_PSIZE0 = 15;
         }
 
-        gd.DEFAULT_SAMPLER = {
+        proto.DEFAULT_SAMPLER = {
             minFilter : gl.LINEAR_MIPMAP_LINEAR,
             magFilter : gl.LINEAR,
             wrapS : gl.REPEAT,
