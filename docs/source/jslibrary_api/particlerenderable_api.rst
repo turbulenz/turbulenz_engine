@@ -56,7 +56,8 @@ Create a new `ParticleRenderable`
         graphicsDevice: graphicsDevice,
         passIndex: renderer.passIndex.transparent,
         system: particleSystem,
-        sharedRenderContext: sharedRenderContext
+        sharedRenderContext: sharedRenderContext,
+        baseTechniqueParametersList: baseTechniqueParametersList
     });
 
 ``graphicsDevice``
@@ -70,6 +71,26 @@ Create a new `ParticleRenderable`
 
 ``sharedRenderContext`` (Optional)
     The :ref:`SharedRenderContext <sharedrendercontext>` to be used whenever the `ParticleRenderable` is responsible for creating new :ref:`ParticleView <particleview>` objects. Note that the restrictions regarding `SharedRenderContexts` being shared between systems and views applies equally to systems and renderables as this context is simply passed forwards to the view constructor.
+
+``baseTechniqueParametersList`` (Optional)
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied during rendering of this particle system before system specific parameters are set.
+
+.. index::
+    pair: ParticleRenderable; setBaseTechniqueParameters
+
+`setBaseTechniqueParameters`
+----------------------------
+
+**Summary**
+
+Set the list of :ref:`TechniqueParameters <techniqueparameters>` to be applied during rendering of the particle system before system specific parameters are set.
+
+**Syntax** ::
+
+    renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
+
+``baseTechniqueParametersList`` (Optional)
+    The list of :ref:`TechniqueParameters <techniqueparameters>` to be set. May be omitted to clear the existing list of parameters.
 
 .. index::
     pair: ParticleRenderable; setSystem

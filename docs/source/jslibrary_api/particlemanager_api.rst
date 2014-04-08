@@ -369,7 +369,7 @@ The emitters of the system will be enabled automatically. If a timeout is specif
 
 **Syntax** ::
 
-    var instance = particleManager.createInstance(archetype, timeout);
+    var instance = particleManager.createInstance(archetype, timeout, baseTechniqueParametersList);
 
 ``archetype``
     The pre-loaded archetype to create instance from.
@@ -378,6 +378,9 @@ The emitters of the system will be enabled automatically. If a timeout is specif
     The amount of time this instance should exist for. Once this amount of time has passed, the instance will be automatically removed from the scene if necessary, and recycled.
 
     This parameter should be specified for the creation of short-lived effects, the manager makes use of an internal optimized data structure for handling large numbers of short-lived effects in conjunction with the updates of the particleManager.
+
+``baseTechniqueParametersList`` (Optional)
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerendreable>` before system specific parameters are set during rendering of the particle system.
 
 .. index::
     pair: ParticleManager; destroyInstance

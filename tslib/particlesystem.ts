@@ -6073,6 +6073,8 @@ class ParticleRenderable
     fixedOrientation: boolean;
     localTransform: FloatArray;
 
+    parametersIndex: number;
+
     setLocalTransform(localTransform?: FloatArray)
     {
         if (localTransform && this.localTransform !== localTransform)
@@ -6173,10 +6175,11 @@ class ParticleRenderable
     private static material: Material;
     constructor() {}
     static create(params: {
-        graphicsDevice      : GraphicsDevice;
-        passIndex           : number;
-        system?             : ParticleSystem;
-        sharedRenderContext?: SharedRenderContext;
+        graphicsDevice              : GraphicsDevice;
+        passIndex                   : number;
+        system?                     : ParticleSystem;
+        baseTechniqueParametersList?: TechniqueParameters[];
+        sharedRenderContext?        : SharedRenderContext;
     }): ParticleRenderable
     {
         var gd = params.graphicsDevice;
@@ -6201,7 +6204,21 @@ class ParticleRenderable
         ret.worldExtents = new Float32Array(6);
         ret.localTransform = VMath.m43BuildIdentity();
         ret.sharedRenderContext = params.sharedRenderContext;
+
+        var parameters = gd.createDrawParameters();
+        parameters.userData  = { passIndex: params.passIndex };
+        parameters.setTechniqueParameters(0, null);
+        parameters.setTechniqueParameters(1, null);
+        ret.parametersIndex = 0;
+        ret.drawParameters       = [parameters];
+        ret.shadowDrawParameters = ret.drawParameters;
+
         ret.setSystem(params.system);
+        if (params.baseTechniqueParametersList)
+        {
+            ret.setBaseTechniqueParameters(params.baseTechniqueParametersList);
+        }
+
         return ret;
     }
 
@@ -6271,7 +6288,7 @@ class ParticleRenderable
         VMath.m43Mul(this.world, camera.viewMatrix, view.parameters["modelView"]);
         view.update(null, camera.projectionMatrix);
 
-        this.drawParameters[0].setTechniqueParameters(1, view.parameters);
+        this.drawParameters[0].setTechniqueParameters(this.parametersIndex + 1, view.parameters);
     }
 
     setLazyView(view: () => ParticleView): void
@@ -6304,19 +6321,40 @@ class ParticleRenderable
             this.halfExtents = system.halfExtents;
             this.worldExtentsUpdate = -1;
 
-            var parameters = this.graphicsDevice.createDrawParameters();
+            var parameters = this.drawParameters[0];
             parameters.setVertexBuffer(0, system.geometry.vertexBuffer);
             parameters.setSemantics   (0, system.geometry.semantics);
             parameters.technique = system.renderer.technique;
             parameters.primitive = system.geometry.primitive;
             parameters.count     = system.maxParticles * system.geometry.particleStride;
-            parameters.userData  = { passIndex: this.passIndex };
-            parameters.setTechniqueParameters(0, system.renderParameters);
-            parameters.setTechniqueParameters(1, null);
-
-            this.drawParameters       = [parameters];
-            this.shadowDrawParameters = this.drawParameters;
+            parameters.setTechniqueParameters(this.parametersIndex, system.renderParameters);
         }
+    }
+
+    setBaseTechniqueParameters(baseTechniqueParameters?: TechniqueParameters[])
+    {
+        var parameters = this.drawParameters[0];
+
+        // clear old parameters
+        var parametersIndex = this.parametersIndex;
+        var i;
+        for (i = 0; i <= parametersIndex + 1; i += 1)
+        {
+            parameters.setTechniqueParameters(i, null);
+        }
+
+        // set new parameters
+        i = 0;
+        if (baseTechniqueParameters)
+        {
+            var count = baseTechniqueParameters.length;
+            for (; i < count; i += 1)
+            {
+                parameters.setTechniqueParameters(i, baseTechniqueParameters[i]);
+            }
+        }
+        parameters.setTechniqueParameters(i, this.system ? this.system.renderParameters : null);
+        this.parametersIndex = i;
     }
 
     private resizedGeometryCb: () => void;
@@ -8316,7 +8354,7 @@ class ParticleManager
         archetype.context = context;
     }
 
-    createInstance(archetype, timeout?)
+    createInstance(archetype, timeout?, baseTechniqueParametersList?)
     {
         this.initializeArchetype(archetype);
         var context = archetype.context;
@@ -8331,6 +8369,7 @@ class ParticleManager
         {
             instance = this.createNewInstance(archetype);
         }
+        instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
         this.buildSynchronizer(archetype, instance);
 
         instance.queued = (timeout !== undefined);
