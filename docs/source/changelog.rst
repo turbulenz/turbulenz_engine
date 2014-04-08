@@ -18,6 +18,7 @@ Version 1.x-dev
 - Added createGlobalSource to SoundDevice for creating global sound sources like music.
 - Added methods to Draw2DSprite to set RGB and Alpha color components.
 - Added destroy method to CharacterController.
+- Added setColorTexture0, setColorTexture1, setColorTexture2, and setColorTexture3 methods to RenderTarget.
 
 Version 1.3.1
 -------------

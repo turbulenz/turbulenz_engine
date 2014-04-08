@@ -1036,7 +1036,7 @@ class TZWebGLTexture implements Texture
         tex.gd = gd;
         tex.mipmaps = params.mipmaps;
         tex.dynamic = params.dynamic;
-        tex.renderable = params.renderable;
+        tex.renderable = (params.renderable || false);
         tex.id = ++gd.counters.textures;
 
         var src = params.src;
@@ -1351,7 +1351,7 @@ class TZWebGLTexture implements Texture
             tex.height = params.height;
             tex.depth = params.depth;
             tex.format = format;
-            tex.cubemap = params.cubemap;
+            tex.cubemap = (params.cubemap || false);
             tex.name = params.name;
 
             var result = tex.createGLTexture(params.data);
@@ -1919,7 +1919,113 @@ class WebGLRenderTarget implements RenderTarget
         }
     }
 
-    destroy()
+    private _updateColorAttachement(colorTexture: TZWebGLTexture, index: number): void
+    {
+        var glTexture = colorTexture.glTexture;
+        var gl = this.gd.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.glObject);
+        if (colorTexture.cubemap)
+        {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                    (gl.COLOR_ATTACHMENT0 + index),
+                                    (gl.TEXTURE_CUBE_MAP_POSITIVE_X + this.face),
+                                    glTexture, 0);
+        }
+        else
+        {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                    (gl.COLOR_ATTACHMENT0 + index),
+                                    gl.TEXTURE_2D,
+                                    glTexture, 0);
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    getWidth(): number
+    {
+        if (this.colorTexture0)
+        {
+            return this.colorTexture0.width;
+        }
+        else if (this.depthBuffer)
+        {
+            return this.depthBuffer.width;
+        }
+        else if (this.depthTexture)
+        {
+            return this.depthTexture.width;
+        }
+    }
+
+    getHeight(): number
+    {
+        if (this.colorTexture0)
+        {
+            return this.colorTexture0.height;
+        }
+        else if (this.depthBuffer)
+        {
+            return this.depthBuffer.height;
+        }
+        else if (this.depthTexture)
+        {
+            return this.depthTexture.height;
+        }
+    }
+
+    setColorTexture0(colorTexture0: Texture): void
+    {
+        var oldColorTexture0 = this.colorTexture0;
+        debug.assert(oldColorTexture0 &&
+                     colorTexture0 &&
+                     oldColorTexture0.width === colorTexture0.width &&
+                     oldColorTexture0.height === colorTexture0.height &&
+                     oldColorTexture0.format === colorTexture0.format &&
+                     oldColorTexture0.cubemap === colorTexture0.cubemap);
+        this.colorTexture0 = <TZWebGLTexture>(colorTexture0);
+        this._updateColorAttachement(this.colorTexture0, 0);
+    }
+
+    setColorTexture1(colorTexture1: Texture): void
+    {
+        var oldColorTexture1 = this.colorTexture1;
+        debug.assert(oldColorTexture1 &&
+                     colorTexture1 &&
+                     oldColorTexture1.width === colorTexture1.width &&
+                     oldColorTexture1.height === colorTexture1.height &&
+                     oldColorTexture1.format === colorTexture1.format &&
+                     oldColorTexture1.cubemap === colorTexture1.cubemap);
+        this.colorTexture1 = <TZWebGLTexture>(colorTexture1);
+        this._updateColorAttachement(this.colorTexture1, 1);
+    }
+
+    setColorTexture2(colorTexture2: Texture): void
+    {
+        var oldColorTexture2 = this.colorTexture2;
+        debug.assert(oldColorTexture2 &&
+                     colorTexture2 &&
+                     oldColorTexture2.width === colorTexture2.width &&
+                     oldColorTexture2.height === colorTexture2.height &&
+                     oldColorTexture2.format === colorTexture2.format &&
+                     oldColorTexture2.cubemap === colorTexture2.cubemap);
+        this.colorTexture2 = <TZWebGLTexture>(colorTexture2);
+        this._updateColorAttachement(this.colorTexture2, 2);
+    }
+
+    setColorTexture3(colorTexture3: Texture): void
+    {
+        var oldColorTexture3 = this.colorTexture3;
+        debug.assert(oldColorTexture3 &&
+                     colorTexture3 &&
+                     oldColorTexture3.width === colorTexture3.width &&
+                     oldColorTexture3.height === colorTexture3.height &&
+                     oldColorTexture3.format === colorTexture3.format &&
+                     oldColorTexture3.cubemap === colorTexture3.cubemap);
+        this.colorTexture3 = <TZWebGLTexture>(colorTexture3);
+        this._updateColorAttachement(this.colorTexture3, 3);
+    }
+
+    destroy(): void
     {
         var gd = this.gd;
         if (gd)
