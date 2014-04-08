@@ -379,9 +379,9 @@ Parameters about the spawn positions of particles in this emitter.
     The maximum half-extents of the box in which to spawn particles if appropriate.
 
 ``halfExtentsMin`` (Default `[0, 0, 0]`)
-   The minimum half-extents of the box in which to spawn particles if appropriate.
+    The minimum half-extents of the box in which to spawn particles if appropriate.
 
-   Actual particle positions will be selected from the subtraction of the maximum and minimum half-extents.
+    Actual particle positions will be selected between the minimum and maximum half-extents.
 
 .. index::
     pair: DefaultParticleEmitter; velocity
