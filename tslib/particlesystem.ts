@@ -1451,6 +1451,25 @@ class Types {
     {
         return Types.arrayTypes.indexOf(Object.prototype.toString.call(x)) !== -1;
     }
+    static isArrayOfNumbers(x: any): boolean
+    {
+        if (!Types.isArray(x))
+        {
+            return false;
+        }
+        else
+        {
+            var count = x.length;
+            for (var i = 0; i < count; i += 1)
+            {
+                if (!Types.isNumber(x[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
     static isArray(x: any): boolean
     {
         return Types.isTypedArray(x) || Object.prototype.toString.call(x) === "[object Array]";
@@ -9341,7 +9360,9 @@ class ParticleManager
     //         o
     //    | Array ->
     //         let del = zipWith delta t o in
-    //         if (all (= null) del) then null else del
+    //         if (all (= null) del) then null
+    //         else if (t is floatarray) replace_null_with_default(del)
+    //         else del
     //    | Object ->
     //         let o = filter(hasField t) o in
     //         let del = filter (.!= null) $ zipFieldsWith delta t o ^ filter(!hasField t) o
@@ -9369,13 +9390,19 @@ class ParticleManager
         {
             delta = [];
             count = template.length;
+            var dontStoreNulls = Types.isTypedArray(template) || Types.isArrayOfNumbers(template);
             for (i = 0; i < count; i += 1)
             {
-                delta.push(this.recordDelta(template[i], obj[i]));
-                if (!Types.isNullUndefined(delta[i]))
+                var del = this.recordDelta(template[i], obj[i]);
+                if (!Types.isNullUndefined(del))
                 {
                     allZero = false;
                 }
+                else if (dontStoreNulls)
+                {
+                    del = template[i];
+                }
+                delta[i] = del;
             }
         }
         else if (Types.isObject(template))
