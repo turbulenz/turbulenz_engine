@@ -1,5 +1,6 @@
 // Copyright (c) 2013-2014 Turbulenz Limited
 
+/*global debug: false*/
 /*global Float32Array: false*/
 /*global Uint8Array: false*/
 /*global Uint16Array: false*/
@@ -7240,7 +7241,7 @@ class DefaultParticleEmitter
                 pos[0] = position.position[0];
                 pos[1] = position.position[1];
                 pos[2] = position.position[2];
-                if (position.radiusMax !== 0)
+                if (position.box || position.radiusMax !== 0)
                 {
                     rand = 0;
                     if (!position.box)
@@ -8373,6 +8374,43 @@ class ParticleManager
         archetype.context = context;
     }
 
+    createConjoinedInstance(rootInstance, timeout?, baseTechniqueParametersList?)
+    {
+        if (rootInstance.conjoined)
+        {
+            rootInstance = rootInstance.conjoined;
+        }
+
+        // Do not support conjoined instances with a non-permanent instance.
+        debug.assert(!rootInstance.queued);
+
+        var archetype = rootInstance.archetype;
+        var context = archetype.context;
+
+        var pool = context.instancePool;
+        var instance;
+        if (pool.length > 0)
+        {
+            instance = pool.pop();
+        }
+        else
+        {
+            instance = this.createNewInstance(archetype);
+        }
+        instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
+
+        instance.conjoined = rootInstance;
+        instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
+        instance.creationTime = this.timerCb();
+        if (instance.queued)
+        {
+            this.queue.insert(instance, timeout);
+        }
+        context.instances.push(instance);
+
+        return instance;
+    }
+
     createInstance(archetype, timeout?, baseTechniqueParametersList?)
     {
         this.initializeArchetype(archetype);
@@ -8388,10 +8426,12 @@ class ParticleManager
         {
             instance = this.createNewInstance(archetype);
         }
+
+        instance.conjoined = null;
         instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
         this.buildSynchronizer(archetype, instance);
 
-        instance.queued = (timeout !== undefined);
+        instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
         instance.creationTime = this.timerCb();
         if (instance.queued)
         {
@@ -8425,13 +8465,19 @@ class ParticleManager
         var context = archetype.context;
 
         this.removeInstanceFromScene(instance);
-        this.releaseSynchronizer(instance);
+        if (!instance.conjoined)
+        {
+            this.releaseSynchronizer(instance);
+        }
 
         var renderable = instance.renderable;
         renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
         if (renderable.system)
         {
-            context.systemPool.push(renderable.system);
+            if (!instance.conjoined)
+            {
+                context.systemPool.push(renderable.system);
+            }
             renderable.setSystem(null);
         }
         renderable.setLocalTransform(ParticleManager.m43Identity);
@@ -8490,6 +8536,17 @@ class ParticleManager
 
     private getSystem(archetype, instance)
     {
+        if (instance.system)
+        {
+            return instance.system;
+        }
+
+        var conjoined = instance.conjoined;
+        if (conjoined)
+        {
+            return this.getSystem(archetype, conjoined);
+        }
+
         var context = archetype.context;
         var pool = context.systemPool;
         var system;
@@ -8589,16 +8646,26 @@ class ParticleManager
             var instance = instances.pop();
 
             // Partially recycle instance.
+            var inScene = instance.sceneNode.isInScene();
             var parent = instance.sceneNode.getParent();
-            this.removeInstanceFromScene(instance);
+            if (inScene)
+            {
+                this.removeInstanceFromScene(instance);
+            }
 
-            this.releaseSynchronizer(instance);
+            if (!instance.conjoined)
+            {
+                this.releaseSynchronizer(instance);
+            }
 
             var renderable = instance.renderable;
             renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
             if (renderable.system)
             {
-                context.systemPool.push(renderable.system);
+                if (!instance.conjoined)
+                {
+                    context.systemPool.push(renderable.system);
+                }
                 renderable.setSystem(null);
             }
             instance.system = null;
@@ -8608,10 +8675,16 @@ class ParticleManager
             var lazySystem = this.getSystem.bind(this, newArchetype, instance);
             renderable.setLazySystem(lazySystem, newArchetype.system.center, newArchetype.system.halfExtents);
 
-            this.buildSynchronizer(newArchetype, instance);
+            if (!instance.conjoined)
+            {
+                this.buildSynchronizer(newArchetype, instance);
+            }
             newInstances.push(instance);
 
-            this.addInstanceToScene(instance, parent);
+            if (inScene)
+            {
+                this.addInstanceToScene(instance, parent);
+            }
         }
     }
 
@@ -8685,16 +8758,28 @@ class ParticleManager
             var instance = instances.pop();
 
             // Partially recycle instance.
-            this.removeInstanceFromScene(instance);
-            this.releaseSynchronizer(instance);
+            if (instance.sceneNode.isInScene())
+            {
+                this.removeInstanceFromScene(instance);
+            }
+            if (!instance.conjoined)
+            {
+                this.releaseSynchronizer(instance);
+            }
             var renderable = instance.renderable;
             renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
-            this.queue.remove(instance);
+            if (instance.queued)
+            {
+                this.queue.remove(instance);
+            }
             if (renderable.system)
             {
                 var system = renderable.system;
                 renderable.setSystem(null);
-                system.destroy();
+                if (!instance.conjoined)
+                {
+                    system.destroy();
+                }
             }
         }
 
