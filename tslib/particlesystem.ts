@@ -8633,9 +8633,9 @@ class ParticleManager
         }
     }
 
-    createNewInstance(archetype)
+    createNewInstance(archetype): ParticleInstance
     {
-        var instance = {
+        var instance: ParticleInstance = {
             archetype   : archetype,
             system      : null,
             renderable  : null,
