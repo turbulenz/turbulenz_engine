@@ -7597,6 +7597,9 @@ interface ParticleInstance
     queued      : boolean;
     creationTime: number;
     lazySystem  : () => ParticleSystem;
+
+    conjoined   : ParticleInstance;
+    twins       : ParticleInstance[];
 }
 
 //
@@ -8381,9 +8384,6 @@ class ParticleManager
             rootInstance = rootInstance.conjoined;
         }
 
-        // Do not support conjoined instances with a non-permanent instance.
-        debug.assert(!rootInstance.queued);
-
         var archetype = rootInstance.archetype;
         var context = archetype.context;
 
@@ -8400,6 +8400,12 @@ class ParticleManager
         instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
 
         instance.conjoined = rootInstance;
+        if (!rootInstance.twins)
+        {
+            rootInstance.twins = [];
+        }
+        rootInstance.twins.push(instance);
+
         instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
         instance.creationTime = this.timerCb();
         if (instance.queued)
@@ -8461,6 +8467,17 @@ class ParticleManager
     static m43Identity = VMath.m43BuildIdentity();
     destroyInstance(instance, removedFromQueue=false)
     {
+        var twins = instance.twins;
+        if (twins)
+        {
+            var numTwins = twins.length;
+            for (var i = 0; i < numTwins; i += 1)
+            {
+                this.destroyInstance(twins[i]);
+            }
+            instance.twins = null;
+        }
+
         var archetype = instance.archetype;
         var context = archetype.context;
 
@@ -8619,7 +8636,17 @@ class ParticleManager
     createNewInstance(archetype)
     {
         var instance = {
-            archetype: archetype
+            archetype   : archetype,
+            system      : null,
+            renderable  : null,
+            synchronizer: null,
+
+            queued      : false,
+            creationTime: -1.0,
+            lazySystem  : null,
+
+            conjoined   : null,
+            twins       : null
         };
         this.buildParticleSceneNode(archetype, instance);
         return instance;
