@@ -8514,7 +8514,7 @@ class ParticleManager
     addInstanceToScene(instance, parent?)
     {
         var sceneNode = instance.sceneNode;
-        if (sceneNode.isInScene())
+        if (sceneNode.isInScene() || sceneNode.parent)
         {
             this.removeInstanceFromScene(instance);
         }
@@ -8534,7 +8534,7 @@ class ParticleManager
     removeInstanceFromScene(instance)
     {
         var sceneNode = instance.sceneNode;
-        if (sceneNode.isInScene())
+        if (sceneNode.isInScene() || sceneNode.parent)
         {
             if (sceneNode.getRoot() === sceneNode)
             {
