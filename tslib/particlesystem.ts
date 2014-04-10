@@ -7240,7 +7240,7 @@ class DefaultParticleEmitter
                 pos[0] = position.position[0];
                 pos[1] = position.position[1];
                 pos[2] = position.position[2];
-                if (position.radiusMax !== 0)
+                if (position.radiusMax !== 0 || position.box)
                 {
                     rand = 0;
                     if (!position.box)
