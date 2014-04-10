@@ -12051,6 +12051,7 @@ class Physics2DWorld
                 var arb = arbiters[j];
                 if (arb._retired)
                 {
+                    j += 1;
                     continue;
                 }
 
