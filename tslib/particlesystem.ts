@@ -1,5 +1,6 @@
 // Copyright (c) 2013-2014 Turbulenz Limited
 
+/*global debug: false*/
 /*global Float32Array: false*/
 /*global Uint8Array: false*/
 /*global Uint16Array: false*/
@@ -7596,6 +7597,9 @@ interface ParticleInstance
     queued      : boolean;
     creationTime: number;
     lazySystem  : () => ParticleSystem;
+
+    parent      : ParticleInstance;
+    children    : ParticleInstance[];
 }
 
 //
@@ -8373,6 +8377,46 @@ class ParticleManager
         archetype.context = context;
     }
 
+    createChildInstance(parentInstance, timeout?, baseTechniqueParametersList?)
+    {
+        if (parentInstance.parent)
+        {
+            parentInstance = parentInstance.parent;
+        }
+
+        var archetype = parentInstance.archetype;
+        var context = archetype.context;
+
+        var pool = context.instancePool;
+        var instance;
+        if (pool.length > 0)
+        {
+            instance = pool.pop();
+        }
+        else
+        {
+            instance = this.createNewInstance(archetype);
+        }
+        instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
+
+        instance.parent = parentInstance;
+        if (!parentInstance.children)
+        {
+            parentInstance.children = [];
+        }
+        parentInstance.children.push(instance);
+
+        instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
+        instance.creationTime = this.timerCb();
+        if (instance.queued)
+        {
+            this.queue.insert(instance, timeout);
+        }
+        context.instances.push(instance);
+
+        return instance;
+    }
+
     createInstance(archetype, timeout?, baseTechniqueParametersList?)
     {
         this.initializeArchetype(archetype);
@@ -8388,10 +8432,12 @@ class ParticleManager
         {
             instance = this.createNewInstance(archetype);
         }
+
+        instance.parent = null;
         instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
         this.buildSynchronizer(archetype, instance);
 
-        instance.queued = (timeout !== undefined);
+        instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
         instance.creationTime = this.timerCb();
         if (instance.queued)
         {
@@ -8421,17 +8467,34 @@ class ParticleManager
     static m43Identity = VMath.m43BuildIdentity();
     destroyInstance(instance, removedFromQueue=false)
     {
+        var children = instance.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var i = 0; i < numChildren; i += 1)
+            {
+                this.destroyInstance(children[i]);
+            }
+            instance.children = null;
+        }
+
         var archetype = instance.archetype;
         var context = archetype.context;
 
         this.removeInstanceFromScene(instance);
-        this.releaseSynchronizer(instance);
+        if (!instance.parent)
+        {
+            this.releaseSynchronizer(instance);
+        }
 
         var renderable = instance.renderable;
         renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
         if (renderable.system)
         {
-            context.systemPool.push(renderable.system);
+            if (!instance.parent)
+            {
+                context.systemPool.push(renderable.system);
+            }
             renderable.setSystem(null);
         }
         renderable.setLocalTransform(ParticleManager.m43Identity);
@@ -8490,6 +8553,17 @@ class ParticleManager
 
     private getSystem(archetype, instance)
     {
+        if (instance.system)
+        {
+            return instance.system;
+        }
+
+        var parent = instance.parent;
+        if (parent)
+        {
+            return this.getSystem(archetype, parent);
+        }
+
         var context = archetype.context;
         var pool = context.systemPool;
         var system;
@@ -8562,7 +8636,17 @@ class ParticleManager
     createNewInstance(archetype)
     {
         var instance = {
-            archetype: archetype
+            archetype   : archetype,
+            system      : null,
+            renderable  : null,
+            synchronizer: null,
+
+            queued      : false,
+            creationTime: -1.0,
+            lazySystem  : null,
+
+            parent      : null,
+            children    : null
         };
         this.buildParticleSceneNode(archetype, instance);
         return instance;
@@ -8589,16 +8673,26 @@ class ParticleManager
             var instance = instances.pop();
 
             // Partially recycle instance.
+            var inScene = instance.sceneNode.isInScene();
             var parent = instance.sceneNode.getParent();
-            this.removeInstanceFromScene(instance);
+            if (inScene)
+            {
+                this.removeInstanceFromScene(instance);
+            }
 
-            this.releaseSynchronizer(instance);
+            if (!instance.parent)
+            {
+                this.releaseSynchronizer(instance);
+            }
 
             var renderable = instance.renderable;
             renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
             if (renderable.system)
             {
-                context.systemPool.push(renderable.system);
+                if (!instance.parent)
+                {
+                    context.systemPool.push(renderable.system);
+                }
                 renderable.setSystem(null);
             }
             instance.system = null;
@@ -8608,10 +8702,16 @@ class ParticleManager
             var lazySystem = this.getSystem.bind(this, newArchetype, instance);
             renderable.setLazySystem(lazySystem, newArchetype.system.center, newArchetype.system.halfExtents);
 
-            this.buildSynchronizer(newArchetype, instance);
+            if (!instance.parent)
+            {
+                this.buildSynchronizer(newArchetype, instance);
+            }
             newInstances.push(instance);
 
-            this.addInstanceToScene(instance, parent);
+            if (inScene)
+            {
+                this.addInstanceToScene(instance, parent);
+            }
         }
     }
 
@@ -8685,16 +8785,28 @@ class ParticleManager
             var instance = instances.pop();
 
             // Partially recycle instance.
-            this.removeInstanceFromScene(instance);
-            this.releaseSynchronizer(instance);
+            if (instance.sceneNode.isInScene())
+            {
+                this.removeInstanceFromScene(instance);
+            }
+            if (!instance.parent)
+            {
+                this.releaseSynchronizer(instance);
+            }
             var renderable = instance.renderable;
             renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
-            this.queue.remove(instance);
+            if (instance.queued)
+            {
+                this.queue.remove(instance);
+            }
             if (renderable.system)
             {
                 var system = renderable.system;
                 renderable.setSystem(null);
-                system.destroy();
+                if (!instance.parent)
+                {
+                    system.destroy();
+                }
             }
         }
 
