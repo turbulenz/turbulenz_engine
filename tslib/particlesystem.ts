@@ -7598,8 +7598,8 @@ interface ParticleInstance
     creationTime: number;
     lazySystem  : () => ParticleSystem;
 
-    conjoined   : ParticleInstance;
-    twins       : ParticleInstance[];
+    parent      : ParticleInstance;
+    children    : ParticleInstance[];
 }
 
 //
@@ -8377,14 +8377,14 @@ class ParticleManager
         archetype.context = context;
     }
 
-    createConjoinedInstance(rootInstance, timeout?, baseTechniqueParametersList?)
+    createChildInstance(parentInstance, timeout?, baseTechniqueParametersList?)
     {
-        if (rootInstance.conjoined)
+        if (parentInstance.parent)
         {
-            rootInstance = rootInstance.conjoined;
+            parentInstance = parentInstance.parent;
         }
 
-        var archetype = rootInstance.archetype;
+        var archetype = parentInstance.archetype;
         var context = archetype.context;
 
         var pool = context.instancePool;
@@ -8399,12 +8399,12 @@ class ParticleManager
         }
         instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
 
-        instance.conjoined = rootInstance;
-        if (!rootInstance.twins)
+        instance.parent = parentInstance;
+        if (!parentInstance.children)
         {
-            rootInstance.twins = [];
+            parentInstance.children = [];
         }
-        rootInstance.twins.push(instance);
+        parentInstance.children.push(instance);
 
         instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
         instance.creationTime = this.timerCb();
@@ -8433,7 +8433,7 @@ class ParticleManager
             instance = this.createNewInstance(archetype);
         }
 
-        instance.conjoined = null;
+        instance.parent = null;
         instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
         this.buildSynchronizer(archetype, instance);
 
@@ -8467,22 +8467,22 @@ class ParticleManager
     static m43Identity = VMath.m43BuildIdentity();
     destroyInstance(instance, removedFromQueue=false)
     {
-        var twins = instance.twins;
-        if (twins)
+        var children = instance.children;
+        if (children)
         {
-            var numTwins = twins.length;
-            for (var i = 0; i < numTwins; i += 1)
+            var numChildren = children.length;
+            for (var i = 0; i < numChildren; i += 1)
             {
-                this.destroyInstance(twins[i]);
+                this.destroyInstance(children[i]);
             }
-            instance.twins = null;
+            instance.children = null;
         }
 
         var archetype = instance.archetype;
         var context = archetype.context;
 
         this.removeInstanceFromScene(instance);
-        if (!instance.conjoined)
+        if (!instance.parent)
         {
             this.releaseSynchronizer(instance);
         }
@@ -8491,7 +8491,7 @@ class ParticleManager
         renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
         if (renderable.system)
         {
-            if (!instance.conjoined)
+            if (!instance.parent)
             {
                 context.systemPool.push(renderable.system);
             }
@@ -8558,10 +8558,10 @@ class ParticleManager
             return instance.system;
         }
 
-        var conjoined = instance.conjoined;
-        if (conjoined)
+        var parent = instance.parent;
+        if (parent)
         {
-            return this.getSystem(archetype, conjoined);
+            return this.getSystem(archetype, parent);
         }
 
         var context = archetype.context;
@@ -8645,8 +8645,8 @@ class ParticleManager
             creationTime: -1.0,
             lazySystem  : null,
 
-            conjoined   : null,
-            twins       : null
+            parent      : null,
+            children    : null
         };
         this.buildParticleSceneNode(archetype, instance);
         return instance;
@@ -8680,7 +8680,7 @@ class ParticleManager
                 this.removeInstanceFromScene(instance);
             }
 
-            if (!instance.conjoined)
+            if (!instance.parent)
             {
                 this.releaseSynchronizer(instance);
             }
@@ -8689,7 +8689,7 @@ class ParticleManager
             renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
             if (renderable.system)
             {
-                if (!instance.conjoined)
+                if (!instance.parent)
                 {
                     context.systemPool.push(renderable.system);
                 }
@@ -8702,7 +8702,7 @@ class ParticleManager
             var lazySystem = this.getSystem.bind(this, newArchetype, instance);
             renderable.setLazySystem(lazySystem, newArchetype.system.center, newArchetype.system.halfExtents);
 
-            if (!instance.conjoined)
+            if (!instance.parent)
             {
                 this.buildSynchronizer(newArchetype, instance);
             }
@@ -8789,7 +8789,7 @@ class ParticleManager
             {
                 this.removeInstanceFromScene(instance);
             }
-            if (!instance.conjoined)
+            if (!instance.parent)
             {
                 this.releaseSynchronizer(instance);
             }
@@ -8803,7 +8803,7 @@ class ParticleManager
             {
                 var system = renderable.system;
                 renderable.setSystem(null);
-                if (!instance.conjoined)
+                if (!instance.parent)
                 {
                     system.destroy();
                 }
