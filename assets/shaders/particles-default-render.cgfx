@@ -32,6 +32,7 @@ bool animatedOrientation;
 bool animatedAlpha;
 
 float invFadeOutDistance;
+float fadeScale;
 
 // -----------------------------------------------------------------------------
 
@@ -117,6 +118,7 @@ void vp_render( in float2 inData     : POSITION,
 
     particlePos = halfExtents - abs(particlePos);
     float fadeOutAlpha = saturate(min(particlePos.x, min(particlePos.y, particlePos.z)) * invFadeOutDistance);
+    fadeOutAlpha = (fadeOutAlpha * fadeScale) + (1.0 - fadeScale);
 
     float2 scale = getScale(animTime);
     // random scale pertubation

@@ -4368,7 +4368,8 @@ class DefaultParticleRenderer
         parameters["animatedScale"] = archetype.animatedScale;
         parameters["animatedAlpha"] = archetype.animatedAlpha;
         parameters["texture"] = textures("texture0");
-        parameters["invFadeOutDistance"] = 1.0 / archetype.fadeOutDistance;
+        parameters["invFadeOutDistance"] = archetype.fadeOutDistance === 0 ? 0.0 : (1.0 / archetype.fadeOutDistance);
+        parameters["fadeScale"] = archetype.fadeOutDistance === 0.0 ? 0.0 : 1.0;
     }
 
     createUserDataSeed()
@@ -4493,7 +4494,8 @@ class DefaultParticleRenderer
             animatedScale        : false,
             animatedRotation     : false,
             animatedAlpha        : false,
-            invFadeOutDistance   : Number.POSITIVE_INFINITY
+            invFadeOutDistance   : 0.0,
+            fadeScale            : 0.0
         };
         return ret;
     }
