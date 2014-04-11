@@ -4211,11 +4211,11 @@ class DefaultParticleUpdater
     }
 
     constructor() {}
-    static create(graphicsDevice: GraphicsDevice, shaderManager: ShaderManager): DefaultParticleUpdater
+    static create(graphicsDevice: GraphicsDevice, shaderManager: ShaderManager, technique?: string): DefaultParticleUpdater
     {
         var shader = shaderManager.get("shaders/particles-default-update.cgfx");
         var ret = new DefaultParticleUpdater();
-        ret.technique = shader.getTechnique("update");
+        ret.technique = shader.getTechnique(technique || "clamped");
         ret.parameters = {
             acceleration          : new Float32Array(3),
             drag                  : 0,
@@ -7802,7 +7802,19 @@ class ParticleManager
                             DefaultParticleUpdater.parseArchetype,
                             DefaultParticleUpdater.compressArchetype,
                             DefaultParticleUpdater.load,
-                            DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager));
+                            DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager, "clamped"));
+
+        ret.registerUpdater("clamped",
+                            DefaultParticleUpdater.parseArchetype,
+                            DefaultParticleUpdater.compressArchetype,
+                            DefaultParticleUpdater.load,
+                            DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager, "clamped"));
+
+        ret.registerUpdater("wrapped",
+                            DefaultParticleUpdater.parseArchetype,
+                            DefaultParticleUpdater.compressArchetype,
+                            DefaultParticleUpdater.load,
+                            DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager, "wrapped"));
 
         ret.registerAnimationSystem("default", [
             {
