@@ -4266,6 +4266,7 @@ interface DefaultRendererArchetype
     animatedOrientation  : boolean;
     animatedScale        : boolean;
     animatedAlpha        : boolean;
+    fadeOutDistance      : number;
 }
 class DefaultParticleRenderer
 {
@@ -4282,7 +4283,8 @@ class DefaultParticleRenderer
         animatedRotation     : false,
         animatedOrientation  : false,
         animatedScale        : false,
-        animatedAlpha        : false
+        animatedAlpha        : false,
+        fadeOutDistance      : 0.0
     };
     static load(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad): void
     {
@@ -4338,7 +4340,7 @@ class DefaultParticleRenderer
         Parser.extraFields(error, "default renderer archetype", delta,
             ["animatedRotation", "animatedOrientation", "animatedScale", "animatedAlpha",
              "randomizedScale", "randomizedAlpha", "randomizedRotation", "randomizedOrientation",
-             "noiseTexture"]);
+             "noiseTexture", "fadeOutDistance"]);
 
         return {
             noiseTexture         : maybe("noiseTexture"         , checkString , val(null)),
@@ -4348,8 +4350,9 @@ class DefaultParticleRenderer
             randomizedAlpha      : maybe("randomizedAlpha"      , checkNumber , val(0)),
             animatedRotation     : maybe("animatedRotation"     , checkBoolean, val(false)),
             animatedOrientation  : maybe("animatedRotation"     , checkBoolean, val(false)),
-            animatedScale        : maybe("animatedScale   "     , checkBoolean, val(false)),
-            animatedAlpha        : maybe("animatedAlpha   "     , checkBoolean, val(false))
+            animatedScale        : maybe("animatedScale"        , checkBoolean, val(false)),
+            animatedAlpha        : maybe("animatedAlpha"        , checkBoolean, val(false)),
+            fadeOutDistance      : maybe("fadeOutDistance"      , checkNumber , val(0))
         };
     }
     applyArchetype(textureManager, system, archetype, textures)
@@ -4365,6 +4368,7 @@ class DefaultParticleRenderer
         parameters["animatedScale"] = archetype.animatedScale;
         parameters["animatedAlpha"] = archetype.animatedAlpha;
         parameters["texture"] = textures("texture0");
+        parameters["invFadeOutDistance"] = 1.0 / archetype.fadeOutDistance;
     }
 
     createUserDataSeed()
@@ -4488,7 +4492,8 @@ class DefaultParticleRenderer
             animatedOrientation  : false,
             animatedScale        : false,
             animatedRotation     : false,
-            animatedAlpha        : false
+            animatedAlpha        : false,
+            invFadeOutDistance   : Number.POSITIVE_INFINITY
         };
         return ret;
     }

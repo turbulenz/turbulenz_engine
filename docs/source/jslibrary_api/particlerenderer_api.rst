@@ -335,6 +335,12 @@ The list of technique parameters exposed by the `DefaultParticleRenderer`. Unles
 
     If `true` then the randomization will change over time according to the noise texture, otherwise only an initial sample will be made to the noise texture fixing the randomization that is applied.
 
+``invFadeOutDistance`` (Default `infinity`)
+
+    One divided by the amount of distance at which particles should being to linearly fade out as they reach the particle system extents.
+
+.. note :: The parameter exposed on a ParticleArchetype description is the non-inverted fadeOutDistance instead.
+
 ``texture``
 
     The :ref:`Texture <texture>` object, with each animations flip-book of textures packed together.

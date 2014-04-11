@@ -31,6 +31,8 @@ bool animatedScale;
 bool animatedOrientation;
 bool animatedAlpha;
 
+float invFadeOutDistance;
+
 // -----------------------------------------------------------------------------
 
 // Rows of animation texture expected by shader.
@@ -110,7 +112,11 @@ void vp_render( in float2 inData     : POSITION,
 
     float2 noiseUV = decodeByteUnsignedFloat2(data.z);
 
-    float3 pos = (getPosition(vParticleState, particle, invTextureSize) * halfExtents) + center;
+    float3 particlePos = getPosition(vParticleState, particle, invTextureSize) * halfExtents;
+    float3 pos = particlePos + center;
+
+    particlePos = halfExtents - abs(particlePos);
+    float fadeOutAlpha = saturate(min(particlePos.x, min(particlePos.y, particlePos.z)) * invFadeOutDistance);
 
     float2 scale = getScale(animTime);
     // random scale pertubation
@@ -172,6 +178,8 @@ void vp_render( in float2 inData     : POSITION,
     {
         outColor.w += getAlphaNoise(noiseUV, life);
     }
+
+    outColor.w = saturate(outColor.w * fadeOutAlpha);
 }
 
 float4 fp_render(float2 inParticle: TEXCOORD0,
@@ -188,9 +196,11 @@ technique opaque
     pass
     {
         DepthTestEnable = true;
+        DepthFunc       = LEqual;
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
+
         VertexProgram   = compile latest vp_render();
         FragmentProgram = compile latest fp_render();
     }
@@ -201,9 +211,12 @@ technique alpha
     pass
     {
         DepthTestEnable = true;
+        DepthFunc       = LEqual;
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+
         VertexProgram   = compile latest vp_render();
         FragmentProgram = compile latest fp_render();
     }
@@ -214,10 +227,12 @@ technique additive
     pass
     {
         DepthTestEnable = true;
+        DepthFunc       = LEqual;
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = true;
         BlendFunc       = int2(SrcAlpha, One);
+
         VertexProgram   = compile latest vp_render();
         FragmentProgram = compile latest fp_render();
     }
