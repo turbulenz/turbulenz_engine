@@ -380,7 +380,7 @@ The emitters of the system will be enabled automatically. If a timeout is specif
     This parameter should be specified for the creation of short-lived effects, the manager makes use of an internal optimized data structure for handling large numbers of short-lived effects in conjunction with the updates of the particleManager.
 
 ``baseTechniqueParametersList`` (Optional)
-    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerendreable>` before system specific parameters are set during rendering of the particle system.
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
 
 .. index::
     pair: ParticleManager; createConjoinedInstance
@@ -415,7 +415,7 @@ Any child instance will be automatically destroyed if the original root instance
     Unlike with true instances, the child instance will not generally have its effect faded out when the instance dies as it has no control over the underlying particle system.
 
 ``baseTechniqueParametersList`` (Optional)
-    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerendreable>` before system specific parameters are set during rendering of the particle system.
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
 
 .. index::
     pair: ParticleManager; destroyInstance
