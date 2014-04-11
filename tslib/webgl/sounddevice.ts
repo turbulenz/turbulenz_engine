@@ -1218,8 +1218,11 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
                     return this._gain;
                 },
                 set : function setGainFn(newGain) {
-                    this._gain = newGain;
-                    this.updateAudioVolume();
+                    if (this._gain !== newGain)
+                    {
+                        this._gain = newGain;
+                        this.updateAudioVolume();
+                    }
                 },
                 enumerable : true,
                 configurable : false
@@ -1732,8 +1735,11 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
                     return this._gain;
                 },
                 set : function setGainFn(newGain) {
-                    this._gain = newGain;
-                    this.updateAudioVolume();
+                    if (this._gain !== newGain)
+                    {
+                        this._gain = newGain;
+                        this.updateAudioVolume();
+                    }
                 },
                 enumerable : true,
                 configurable : false
