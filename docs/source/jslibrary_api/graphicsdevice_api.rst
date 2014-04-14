@@ -1627,6 +1627,8 @@ Valid pixel format values, required when creating textures.
     - PIXELFORMAT_DXT1
     - PIXELFORMAT_DXT3
     - PIXELFORMAT_DXT5
+    - PIXELFORMAT_RGBA32F
+    - PIXELFORMAT_RGB32F
 
 **Syntax** ::
 

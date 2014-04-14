@@ -503,6 +503,54 @@ class TZWebGLTexture implements Texture
                 return;   // Unsupported format
             }
         }
+        else if (format === gd.PIXELFORMAT_RGBA32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                internalFormat = gl.RGBA;
+                gltype = gl.FLOAT;
+                srcStep = 4;
+                if (data && !data.src)
+                {
+                    if (data instanceof Float32Array)
+                    {
+                        bufferData = data;
+                    }
+                    else
+                    {
+                        bufferData = new Float32Array(data);
+                    }
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                internalFormat = gl.RGB;
+                gltype = gl.FLOAT;
+                srcStep = 3;
+                if (data && !data.src)
+                {
+                    if (data instanceof Float32Array)
+                    {
+                        bufferData = data;
+                    }
+                    else
+                    {
+                        bufferData = new Float32Array(data);
+                    }
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
         else
         {
             return;   //unknown/unsupported format
@@ -588,6 +636,10 @@ class TZWebGLTexture implements Texture
                                 gltype === gl.UNSIGNED_SHORT_4_4_4_4)
                             {
                                 levelData = new Uint16Array(levelSize);
+                            }
+                            else if (gltype === gl.FLOAT)
+                            {
+                                levelData = new Float32Array(levelSize);
                             }
                             else
                             {
@@ -678,6 +730,10 @@ class TZWebGLTexture implements Texture
                             gltype === gl.UNSIGNED_SHORT_4_4_4_4)
                         {
                             levelData = new Uint16Array(levelSize);
+                        }
+                        else if (gltype === gl.FLOAT)
+                        {
+                            levelData = new Float32Array(levelSize);
                         }
                         else
                         {
@@ -877,6 +933,46 @@ class TZWebGLTexture implements Texture
                 return;   // Unsupported format
             }
         }
+        else if (format === gd.PIXELFORMAT_RGBA32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                glformat = gl.RGBA;
+                gltype = gl.FLOAT;
+                if (data instanceof Float32Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Float32Array(data);
+                }
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                glformat = gl.RGB;
+                gltype = gl.FLOAT;
+                if (data instanceof Float32Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Float32Array(data);
+                }
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
         else
         {
             return;   //unknown/unsupported format
@@ -1025,6 +1121,16 @@ class TZWebGLTexture implements Texture
                 return (typedArray instanceof Uint16Array) &&
                     (typedArray.length ===
                      this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGBA32F)
+            {
+                return (typedArray instanceof Float32Array) &&
+                    (typedArray.length === 4 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGB32F)
+            {
+                return (typedArray instanceof Float32Array) &&
+                    (typedArray.length === 3 * this.width * this.height * this.depth);
             }
         }
         return false;
@@ -5048,6 +5154,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     PIXELFORMAT_DXT3         : number;
     PIXELFORMAT_DXT5         : number;
     PIXELFORMAT_S8           : number;
+    PIXELFORMAT_RGBA32F      : number;
+    PIXELFORMAT_RGB32F       : number;
 
     PRIMITIVE_POINTS         : number;
     PRIMITIVE_LINES          : number;
@@ -5172,6 +5280,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     maxAnisotropy: number;
     WEBGL_draw_buffers: boolean;
     drawBuffersExtension: any;
+    floatTextureExtension: any;
 
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
 
@@ -6683,6 +6792,14 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             return false;
         }
+        else if ("TEXTURE_FLOAT" === name)
+        {
+            if (this.floatTextureExtension)
+            {
+                return true;
+            }
+            return false;
+        }
         else if ("INDEXFORMAT_UINT" === name)
         {
             if (gl.getExtension('OES_element_index_uint'))
@@ -7583,6 +7700,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
             gd.drawBuffersExtension = gl.getExtension('EXT_draw_buffers');
         }
         /* tslint:enable:no-string-literal */
+
+        // Enagle OES_texture_float extension
+        if (extensionsMap['OES_texture_float'])
+        {
+            gd.floatTextureExtension = gl.getExtension('OES_texture_float');
+        }
+        if (extensionsMap['WEBGL_color_buffer_float'])
+        {
+            gd.floatTextureExtension = gl.getExtension('WEBGL_color_buffer_float');
+        }
 
         var proto = WebGLGraphicsDevice.prototype;
 
@@ -8804,3 +8931,5 @@ WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT1 = 10;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT3 = 11;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT5 = 12;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_S8 = 13;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA32F = 14;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB32F = 15;

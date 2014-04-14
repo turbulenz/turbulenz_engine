@@ -93,6 +93,7 @@ TurbulenzEngine.onload = function onloadFn()
             "<li>TEXTURE_DXT3: " + graphicsDevice.isSupported("TEXTURE_DXT3") + " <\/li>" +
             "<li>TEXTURE_DXT5: " + graphicsDevice.isSupported("TEXTURE_DXT5") + " <\/li>" +
             "<li>TEXTURE_ETC1: " + graphicsDevice.isSupported("TEXTURE_ETC1") + " <\/li>" +
+            "<li>TEXTURE_FLOAT: " + graphicsDevice.isSupported("TEXTURE_FLOAT") + " <\/li>" +
             "<li>INDEXFORMAT_UINT: " + graphicsDevice.isSupported("INDEXFORMAT_UINT") + " <\/li>" +
             "<li>VERTEX_SHADER_PRECISION: " + graphicsDevice.maxSupported("VERTEX_SHADER_PRECISION") + "-bits<\/li>" +
             "<li>FRAGMENT_SHADER_PRECISION: " + graphicsDevice.maxSupported("FRAGMENT_SHADER_PRECISION") + "-bits<\/li>" +
