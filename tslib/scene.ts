@@ -4794,9 +4794,9 @@ class Scene
                         center[0] = (min0 + max0) * 0.5;
                         center[1] = (min1 + max1) * 0.5;
                         center[2] = (min2 + max2) * 0.5;
-                        halfExtents[0] = (max0 - center[0]);
-                        halfExtents[1] = (max1 - center[1]);
-                        halfExtents[2] = (max2 - center[2]);
+                        halfExtents[0] = (max0 - min0) * 0.5;
+                        halfExtents[1] = (max1 - min1) * 0.5;
+                        halfExtents[2] = (max2 - min2) * 0.5;
                     }
                     else
                     {
