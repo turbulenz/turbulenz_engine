@@ -908,6 +908,7 @@ Now you can create the mesh example HTML file and place it at the root of the Tu
         <script src="jslib/webgl/graphicsdevice.js"></script>
         <script src="jslib/webgl/inputdevice.js"></script>
         <script src="jslib/webgl/sounddevice.js"></script>
+        <script src="jslib/webgl/mathdevice.js"></script>
 
         <script src="jslib/aabbtree.js"></script>
         <script src="jslib/assettracker.js"></script>
