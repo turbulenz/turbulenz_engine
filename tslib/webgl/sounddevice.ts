@@ -691,7 +691,10 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
             }
             else
             {
-                this.updateAudioVolume();
+                if (this.updateAudioVolume)
+                {
+                    this.updateAudioVolume();
+                }
                 soundAudio.play();
             }
         }
