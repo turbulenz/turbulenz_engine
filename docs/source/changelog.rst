@@ -21,6 +21,7 @@ Version 1.x-dev
 - Added setColorTexture0, setColorTexture1, setColorTexture2, and setColorTexture3 methods to RenderTarget.
 - Added support for floating point texture formats PIXELFORMAT_RGBA32F and PIXELFORMAT_RGB32F.
   Use `graphicsDevice.isSupported("TEXTURE_FLOAT")` to check for hardware support.
+- Added m43MulM33 function to MathDevice.
 
 Version 1.3.1
 -------------
