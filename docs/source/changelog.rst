@@ -19,8 +19,10 @@ Version 1.x-dev
 - Added methods to Draw2DSprite to set RGB and Alpha color components.
 - Added destroy method to CharacterController.
 - Added setColorTexture0, setColorTexture1, setColorTexture2, and setColorTexture3 methods to RenderTarget.
-- Added support for floating point texture formats PIXELFORMAT_RGBA32F and PIXELFORMAT_RGB32F.
-  Use `graphicsDevice.isSupported("TEXTURE_FLOAT")` to check for hardware support.
+- Added support for 16-bit (aka half float) and 32-bit floating-point texture formats
+  PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA32F and PIXELFORMAT_RGB32F.
+  Use `graphicsDevice.isSupported("TEXTURE_HALF_FLOAT")` or `graphicsDevice.isSupported("TEXTURE_FLOAT")`
+  to check for hardware support.
 - Added m43MulM33 function to MathDevice.
 
 Version 1.3.1

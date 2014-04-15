@@ -551,6 +551,40 @@ class TZWebGLTexture implements Texture
                 return; // Unsupported format
             }
         }
+        else if (format === gd.PIXELFORMAT_RGBA16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                internalFormat = gl.RGBA;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                srcStep = 4;
+                if (data && !data.src)
+                {
+                    bufferData = data;
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                internalFormat = gl.RGB;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                srcStep = 3;
+                if (data && !data.src)
+                {
+                    bufferData = data;
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
         else
         {
             return;   //unknown/unsupported format
@@ -640,6 +674,11 @@ class TZWebGLTexture implements Texture
                             else if (gltype === gl.FLOAT)
                             {
                                 levelData = new Float32Array(levelSize);
+                            }
+                            else if (gd.halfFloatTextureExtension &&
+                                     gltype === gd.halfFloatTextureExtension.HALF_FLOAT_OES)
+                            {
+                                levelData = null;
                             }
                             else
                             {
@@ -734,6 +773,11 @@ class TZWebGLTexture implements Texture
                         else if (gltype === gl.FLOAT)
                         {
                             levelData = new Float32Array(levelSize);
+                        }
+                        else if (gd.halfFloatTextureExtension &&
+                                 gltype === gd.halfFloatTextureExtension.HALF_FLOAT_OES)
+                        {
+                            levelData = null;
                         }
                         else
                         {
@@ -973,6 +1017,32 @@ class TZWebGLTexture implements Texture
                 return;   // Unsupported format
             }
         }
+        else if (format === gd.PIXELFORMAT_RGBA16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                glformat = gl.RGBA;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                bufferData = data;
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                glformat = gl.RGB;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                bufferData = data;
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
         else
         {
             return;   //unknown/unsupported format
@@ -1130,6 +1200,16 @@ class TZWebGLTexture implements Texture
             if (format === gd.PIXELFORMAT_RGB32F)
             {
                 return (typedArray instanceof Float32Array) &&
+                    (typedArray.length === 3 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGBA16F)
+            {
+                return (typedArray instanceof Uint16Array) &&
+                    (typedArray.length === 4 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGB16F)
+            {
+                return (typedArray instanceof Uint16Array) &&
                     (typedArray.length === 3 * this.width * this.height * this.depth);
             }
         }
@@ -5156,6 +5236,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     PIXELFORMAT_S8           : number;
     PIXELFORMAT_RGBA32F      : number;
     PIXELFORMAT_RGB32F       : number;
+    PIXELFORMAT_RGBA16F      : number;
+    PIXELFORMAT_RGB16F       : number;
 
     PRIMITIVE_POINTS         : number;
     PRIMITIVE_LINES          : number;
@@ -5281,6 +5363,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     WEBGL_draw_buffers: boolean;
     drawBuffersExtension: any;
     floatTextureExtension: any;
+    halfFloatTextureExtension: any;
 
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
 
@@ -6800,6 +6883,14 @@ class WebGLGraphicsDevice implements GraphicsDevice
             }
             return false;
         }
+        else if ("TEXTURE_HALF_FLOAT" === name)
+        {
+            if (this.halfFloatTextureExtension)
+            {
+                return true;
+            }
+            return false;
+        }
         else if ("INDEXFORMAT_UINT" === name)
         {
             if (gl.getExtension('OES_element_index_uint'))
@@ -7709,6 +7800,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
         if (extensionsMap['WEBGL_color_buffer_float'])
         {
             gd.floatTextureExtension = gl.getExtension('WEBGL_color_buffer_float');
+        }
+
+        // Enagle OES_texture_float extension
+        if (extensionsMap['OES_texture_half_float'])
+        {
+            gd.halfFloatTextureExtension = gl.getExtension('OES_texture_half_float');
+        }
+        if (extensionsMap['WEBGL_color_buffer_half_float'])
+        {
+            gl.getExtension('WEBGL_color_buffer_half_float');
         }
 
         var proto = WebGLGraphicsDevice.prototype;
@@ -8933,3 +9034,5 @@ WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT5 = 12;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_S8 = 13;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA32F = 14;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB32F = 15;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA16F = 16;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB16F = 17;
