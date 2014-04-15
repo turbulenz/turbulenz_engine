@@ -54,7 +54,7 @@ class CharacterController
     onGround                     : boolean;
     dead                         : boolean;
     god                          : boolean;
-    allowGod                     : boolean;
+    disableGod                   : boolean;
 
     walkDirection                : any; // v3
 
@@ -133,7 +133,7 @@ class CharacterController
         c.onGround = false;
         c.dead = false;
         c.god = false;
-        c.allowGod = true;
+        c.disableGod = false;
 
         if (params)
         {
@@ -146,7 +146,7 @@ class CharacterController
             c.maxSpeed = params.maxSpeed || c.maxSpeed;
             c.maxStepHeight = params.maxStepHeight || c.maxStepHeight;
             c.maxJumpHeight = params.maxJumpHeight || c.maxJumpHeight;
-            c.allowGod = params.allowGod != null ? params.allowGod : c.allowGod;
+            c.disableGod = params.disableGod != null ? params.disableGod : c.disableGod;
         }
 
         var at = md.m43At(matrix);
@@ -530,7 +530,7 @@ class CharacterController
 
     setGod(newGod)
     {
-        if (newGod && !this.allowGod)
+        if (newGod && this.disableGod)
         {
             return;
         }
