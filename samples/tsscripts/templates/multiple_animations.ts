@@ -1,4 +1,11 @@
-/*{# Copyright (c) 2010-2013 Turbulenz Limited #}*/
+/*{# Copyright (c) 2010-2014 Turbulenz Limited #}*/
+/*
+ * @title: Multiple animations
+ * @description:
+ * This sample demonstrates how the Turbulenz engine can render a high number of animated skinned characters each
+ * one with their own separate animation.
+ * You can use the slider to increase or decrease the number of character to animate and render at the same time.
+*/
 
 /*{{ javascript("jslib/aabbtree.js") }}*/
 /*{{ javascript("jslib/camera.js") }}*/
