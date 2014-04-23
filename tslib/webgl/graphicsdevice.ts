@@ -503,6 +503,88 @@ class TZWebGLTexture implements Texture
                 return;   // Unsupported format
             }
         }
+        else if (format === gd.PIXELFORMAT_RGBA32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                internalFormat = gl.RGBA;
+                gltype = gl.FLOAT;
+                srcStep = 4;
+                if (data && !data.src)
+                {
+                    if (data instanceof Float32Array)
+                    {
+                        bufferData = data;
+                    }
+                    else
+                    {
+                        bufferData = new Float32Array(data);
+                    }
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                internalFormat = gl.RGB;
+                gltype = gl.FLOAT;
+                srcStep = 3;
+                if (data && !data.src)
+                {
+                    if (data instanceof Float32Array)
+                    {
+                        bufferData = data;
+                    }
+                    else
+                    {
+                        bufferData = new Float32Array(data);
+                    }
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGBA16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                internalFormat = gl.RGBA;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                srcStep = 4;
+                if (data && !data.src)
+                {
+                    bufferData = data;
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                internalFormat = gl.RGB;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                srcStep = 3;
+                if (data && !data.src)
+                {
+                    bufferData = data;
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
         else
         {
             return;   //unknown/unsupported format
@@ -588,6 +670,15 @@ class TZWebGLTexture implements Texture
                                 gltype === gl.UNSIGNED_SHORT_4_4_4_4)
                             {
                                 levelData = new Uint16Array(levelSize);
+                            }
+                            else if (gltype === gl.FLOAT)
+                            {
+                                levelData = new Float32Array(levelSize);
+                            }
+                            else if (gd.halfFloatTextureExtension &&
+                                     gltype === gd.halfFloatTextureExtension.HALF_FLOAT_OES)
+                            {
+                                levelData = null;
                             }
                             else
                             {
@@ -678,6 +769,15 @@ class TZWebGLTexture implements Texture
                             gltype === gl.UNSIGNED_SHORT_4_4_4_4)
                         {
                             levelData = new Uint16Array(levelSize);
+                        }
+                        else if (gltype === gl.FLOAT)
+                        {
+                            levelData = new Float32Array(levelSize);
+                        }
+                        else if (gd.halfFloatTextureExtension &&
+                                 gltype === gd.halfFloatTextureExtension.HALF_FLOAT_OES)
+                        {
+                            levelData = null;
                         }
                         else
                         {
@@ -877,6 +977,72 @@ class TZWebGLTexture implements Texture
                 return;   // Unsupported format
             }
         }
+        else if (format === gd.PIXELFORMAT_RGBA32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                glformat = gl.RGBA;
+                gltype = gl.FLOAT;
+                if (data instanceof Float32Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Float32Array(data);
+                }
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                glformat = gl.RGB;
+                gltype = gl.FLOAT;
+                if (data instanceof Float32Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Float32Array(data);
+                }
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGBA16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                glformat = gl.RGBA;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                bufferData = data;
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                glformat = gl.RGB;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                bufferData = data;
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
         else
         {
             return;   //unknown/unsupported format
@@ -1026,6 +1192,26 @@ class TZWebGLTexture implements Texture
                     (typedArray.length ===
                      this.width * this.height * this.depth);
             }
+            if (format === gd.PIXELFORMAT_RGBA32F)
+            {
+                return (typedArray instanceof Float32Array) &&
+                    (typedArray.length === 4 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGB32F)
+            {
+                return (typedArray instanceof Float32Array) &&
+                    (typedArray.length === 3 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGBA16F)
+            {
+                return (typedArray instanceof Uint16Array) &&
+                    (typedArray.length === 4 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGB16F)
+            {
+                return (typedArray instanceof Uint16Array) &&
+                    (typedArray.length === 3 * this.width * this.height * this.depth);
+            }
         }
         return false;
     }
@@ -1036,7 +1222,7 @@ class TZWebGLTexture implements Texture
         tex.gd = gd;
         tex.mipmaps = params.mipmaps;
         tex.dynamic = params.dynamic;
-        tex.renderable = params.renderable;
+        tex.renderable = (params.renderable || false);
         tex.id = ++gd.counters.textures;
 
         var src = params.src;
@@ -1351,7 +1537,7 @@ class TZWebGLTexture implements Texture
             tex.height = params.height;
             tex.depth = params.depth;
             tex.format = format;
-            tex.cubemap = params.cubemap;
+            tex.cubemap = (params.cubemap || false);
             tex.name = params.name;
 
             var result = tex.createGLTexture(params.data);
@@ -1919,7 +2105,113 @@ class WebGLRenderTarget implements RenderTarget
         }
     }
 
-    destroy()
+    private _updateColorAttachement(colorTexture: TZWebGLTexture, index: number): void
+    {
+        var glTexture = colorTexture.glTexture;
+        var gl = this.gd.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.glObject);
+        if (colorTexture.cubemap)
+        {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                    (gl.COLOR_ATTACHMENT0 + index),
+                                    (gl.TEXTURE_CUBE_MAP_POSITIVE_X + this.face),
+                                    glTexture, 0);
+        }
+        else
+        {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                    (gl.COLOR_ATTACHMENT0 + index),
+                                    gl.TEXTURE_2D,
+                                    glTexture, 0);
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    getWidth(): number
+    {
+        if (this.colorTexture0)
+        {
+            return this.colorTexture0.width;
+        }
+        else if (this.depthBuffer)
+        {
+            return this.depthBuffer.width;
+        }
+        else if (this.depthTexture)
+        {
+            return this.depthTexture.width;
+        }
+    }
+
+    getHeight(): number
+    {
+        if (this.colorTexture0)
+        {
+            return this.colorTexture0.height;
+        }
+        else if (this.depthBuffer)
+        {
+            return this.depthBuffer.height;
+        }
+        else if (this.depthTexture)
+        {
+            return this.depthTexture.height;
+        }
+    }
+
+    setColorTexture0(colorTexture0: Texture): void
+    {
+        var oldColorTexture0 = this.colorTexture0;
+        debug.assert(oldColorTexture0 &&
+                     colorTexture0 &&
+                     oldColorTexture0.width === colorTexture0.width &&
+                     oldColorTexture0.height === colorTexture0.height &&
+                     oldColorTexture0.format === colorTexture0.format &&
+                     oldColorTexture0.cubemap === colorTexture0.cubemap);
+        this.colorTexture0 = <TZWebGLTexture>(colorTexture0);
+        this._updateColorAttachement(this.colorTexture0, 0);
+    }
+
+    setColorTexture1(colorTexture1: Texture): void
+    {
+        var oldColorTexture1 = this.colorTexture1;
+        debug.assert(oldColorTexture1 &&
+                     colorTexture1 &&
+                     oldColorTexture1.width === colorTexture1.width &&
+                     oldColorTexture1.height === colorTexture1.height &&
+                     oldColorTexture1.format === colorTexture1.format &&
+                     oldColorTexture1.cubemap === colorTexture1.cubemap);
+        this.colorTexture1 = <TZWebGLTexture>(colorTexture1);
+        this._updateColorAttachement(this.colorTexture1, 1);
+    }
+
+    setColorTexture2(colorTexture2: Texture): void
+    {
+        var oldColorTexture2 = this.colorTexture2;
+        debug.assert(oldColorTexture2 &&
+                     colorTexture2 &&
+                     oldColorTexture2.width === colorTexture2.width &&
+                     oldColorTexture2.height === colorTexture2.height &&
+                     oldColorTexture2.format === colorTexture2.format &&
+                     oldColorTexture2.cubemap === colorTexture2.cubemap);
+        this.colorTexture2 = <TZWebGLTexture>(colorTexture2);
+        this._updateColorAttachement(this.colorTexture2, 2);
+    }
+
+    setColorTexture3(colorTexture3: Texture): void
+    {
+        var oldColorTexture3 = this.colorTexture3;
+        debug.assert(oldColorTexture3 &&
+                     colorTexture3 &&
+                     oldColorTexture3.width === colorTexture3.width &&
+                     oldColorTexture3.height === colorTexture3.height &&
+                     oldColorTexture3.format === colorTexture3.format &&
+                     oldColorTexture3.cubemap === colorTexture3.cubemap);
+        this.colorTexture3 = <TZWebGLTexture>(colorTexture3);
+        this._updateColorAttachement(this.colorTexture3, 3);
+    }
+
+    destroy(): void
     {
         var gd = this.gd;
         if (gd)
@@ -4942,6 +5234,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
     PIXELFORMAT_DXT3         : number;
     PIXELFORMAT_DXT5         : number;
     PIXELFORMAT_S8           : number;
+    PIXELFORMAT_RGBA32F      : number;
+    PIXELFORMAT_RGB32F       : number;
+    PIXELFORMAT_RGBA16F      : number;
+    PIXELFORMAT_RGB16F       : number;
 
     PRIMITIVE_POINTS         : number;
     PRIMITIVE_LINES          : number;
@@ -5066,6 +5362,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     maxAnisotropy: number;
     WEBGL_draw_buffers: boolean;
     drawBuffersExtension: any;
+    floatTextureExtension: any;
+    halfFloatTextureExtension: any;
 
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
 
@@ -6577,6 +6875,22 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             return false;
         }
+        else if ("TEXTURE_FLOAT" === name)
+        {
+            if (this.floatTextureExtension)
+            {
+                return true;
+            }
+            return false;
+        }
+        else if ("TEXTURE_HALF_FLOAT" === name)
+        {
+            if (this.halfFloatTextureExtension)
+            {
+                return true;
+            }
+            return false;
+        }
         else if ("INDEXFORMAT_UINT" === name)
         {
             if (gl.getExtension('OES_element_index_uint'))
@@ -7478,17 +7792,39 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
         /* tslint:enable:no-string-literal */
 
-        gd.PRIMITIVE_POINTS         = gl.POINTS;
-        gd.PRIMITIVE_LINES          = gl.LINES;
-        gd.PRIMITIVE_LINE_LOOP      = gl.LINE_LOOP;
-        gd.PRIMITIVE_LINE_STRIP     = gl.LINE_STRIP;
-        gd.PRIMITIVE_TRIANGLES      = gl.TRIANGLES;
-        gd.PRIMITIVE_TRIANGLE_STRIP = gl.TRIANGLE_STRIP;
-        gd.PRIMITIVE_TRIANGLE_FAN   = gl.TRIANGLE_FAN;
+        // Enagle OES_texture_float extension
+        if (extensionsMap['OES_texture_float'])
+        {
+            gd.floatTextureExtension = gl.getExtension('OES_texture_float');
+        }
+        if (extensionsMap['WEBGL_color_buffer_float'])
+        {
+            gd.floatTextureExtension = gl.getExtension('WEBGL_color_buffer_float');
+        }
 
-        gd.INDEXFORMAT_UBYTE  = gl.UNSIGNED_BYTE;
-        gd.INDEXFORMAT_USHORT = gl.UNSIGNED_SHORT;
-        gd.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
+        // Enagle OES_texture_float extension
+        if (extensionsMap['OES_texture_half_float'])
+        {
+            gd.halfFloatTextureExtension = gl.getExtension('OES_texture_half_float');
+        }
+        if (extensionsMap['WEBGL_color_buffer_half_float'])
+        {
+            gl.getExtension('WEBGL_color_buffer_half_float');
+        }
+
+        var proto = WebGLGraphicsDevice.prototype;
+
+        proto.PRIMITIVE_POINTS         = gl.POINTS;
+        proto.PRIMITIVE_LINES          = gl.LINES;
+        proto.PRIMITIVE_LINE_LOOP      = gl.LINE_LOOP;
+        proto.PRIMITIVE_LINE_STRIP     = gl.LINE_STRIP;
+        proto.PRIMITIVE_TRIANGLES      = gl.TRIANGLES;
+        proto.PRIMITIVE_TRIANGLE_STRIP = gl.TRIANGLE_STRIP;
+        proto.PRIMITIVE_TRIANGLE_FAN   = gl.TRIANGLE_FAN;
+
+        proto.INDEXFORMAT_UBYTE  = gl.UNSIGNED_BYTE;
+        proto.INDEXFORMAT_USHORT = gl.UNSIGNED_SHORT;
+        proto.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
 
         // Detect IE11 partial WebGL implementation...
         var ieVersionIndex = (gd.vendor === 'Microsoft' ? gd.rendererVersion.indexOf('0.9') : -1);
@@ -7626,109 +7962,109 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         if (gd.fixIE && gd.fixIE < "0.93")
         {
-            gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
-            gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
-            gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4');
-            gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
-            gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2');
-            gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2N');
-            gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4');
-            gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
-            gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2');
-            gd.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2N');
-            gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4');
-            gd.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
-            gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-            gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-            gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-            gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+            proto.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
+            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
+            proto.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4');
+            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
+            proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2');
+            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4');
+            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
+            proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2');
+            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4');
+            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
+            proto.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+            proto.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+            proto.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+            proto.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
         }
         else
         {
-            gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
-            gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
-            gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
-            gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
-            gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
-            gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
-            gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
-            gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
-            gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
-            gd.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
-            gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
-            gd.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
-            gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-            gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-            gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-            gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+            proto.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
+            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
+            proto.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
+            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
+            proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
+            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
+            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
+            proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
+            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
+            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
+            proto.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+            proto.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+            proto.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+            proto.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
         }
 
         var maxAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
         if (maxAttributes < 16)
         {
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR0 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_POSITION =
-            WebGLGraphicsDevice.prototype.SEMANTIC_POSITION0 = 0;
+            proto.SEMANTIC_ATTR0 =
+            proto.SEMANTIC_POSITION =
+            proto.SEMANTIC_POSITION0 = 0;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR1 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDWEIGHT =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDWEIGHT0 = 1;
+            proto.SEMANTIC_ATTR1 =
+            proto.SEMANTIC_BLENDWEIGHT =
+            proto.SEMANTIC_BLENDWEIGHT0 = 1;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR2 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_NORMAL =
-            WebGLGraphicsDevice.prototype.SEMANTIC_NORMAL0 = 2;
+            proto.SEMANTIC_ATTR2 =
+            proto.SEMANTIC_NORMAL =
+            proto.SEMANTIC_NORMAL0 = 2;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR3 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR =
-            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR0 = 3;
+            proto.SEMANTIC_ATTR3 =
+            proto.SEMANTIC_COLOR =
+            proto.SEMANTIC_COLOR0 = 3;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR7 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDINDICES =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BLENDINDICES0 = 4;
+            proto.SEMANTIC_ATTR7 =
+            proto.SEMANTIC_BLENDINDICES =
+            proto.SEMANTIC_BLENDINDICES0 = 4;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR8 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD0 = 5;
+            proto.SEMANTIC_ATTR8 =
+            proto.SEMANTIC_TEXCOORD =
+            proto.SEMANTIC_TEXCOORD0 = 5;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR9 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD1 = 6;
+            proto.SEMANTIC_ATTR9 =
+            proto.SEMANTIC_TEXCOORD1 = 6;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR14 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD6 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TANGENT =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TANGENT0 = 7;
+            proto.SEMANTIC_ATTR14 =
+            proto.SEMANTIC_TEXCOORD6 =
+            proto.SEMANTIC_TANGENT =
+            proto.SEMANTIC_TANGENT0 = 7;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR15 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD7 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BINORMAL0 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_BINORMAL = 8;
+            proto.SEMANTIC_ATTR15 =
+            proto.SEMANTIC_TEXCOORD7 =
+            proto.SEMANTIC_BINORMAL0 =
+            proto.SEMANTIC_BINORMAL = 8;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR10 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD2 = 9;
+            proto.SEMANTIC_ATTR10 =
+            proto.SEMANTIC_TEXCOORD2 = 9;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR11 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD3 = 10;
+            proto.SEMANTIC_ATTR11 =
+            proto.SEMANTIC_TEXCOORD3 = 10;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR12 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD4 = 11;
+            proto.SEMANTIC_ATTR12 =
+            proto.SEMANTIC_TEXCOORD4 = 11;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR13 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TEXCOORD5 = 12;
+            proto.SEMANTIC_ATTR13 =
+            proto.SEMANTIC_TEXCOORD5 = 12;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR4 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_COLOR1 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_SPECULAR = 13;
+            proto.SEMANTIC_ATTR4 =
+            proto.SEMANTIC_COLOR1 =
+            proto.SEMANTIC_SPECULAR = 13;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR5 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_FOGCOORD =
-            WebGLGraphicsDevice.prototype.SEMANTIC_TESSFACTOR = 14;
+            proto.SEMANTIC_ATTR5 =
+            proto.SEMANTIC_FOGCOORD =
+            proto.SEMANTIC_TESSFACTOR = 14;
 
-            WebGLGraphicsDevice.prototype.SEMANTIC_ATTR6 =
-            WebGLGraphicsDevice.prototype.SEMANTIC_PSIZE =
-            WebGLGraphicsDevice.prototype.SEMANTIC_PSIZE0 = 15;
+            proto.SEMANTIC_ATTR6 =
+            proto.SEMANTIC_PSIZE =
+            proto.SEMANTIC_PSIZE0 = 15;
         }
 
-        gd.DEFAULT_SAMPLER = {
+        proto.DEFAULT_SAMPLER = {
             minFilter : gl.LINEAR_MIPMAP_LINEAR,
             magFilter : gl.LINEAR,
             wrapS : gl.REPEAT,
@@ -8696,3 +9032,7 @@ WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT1 = 10;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT3 = 11;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT5 = 12;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_S8 = 13;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA32F = 14;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB32F = 15;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA16F = 16;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB16F = 17;

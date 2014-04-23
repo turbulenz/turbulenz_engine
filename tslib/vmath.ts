@@ -2719,7 +2719,6 @@ var VMath : MathDevice =
             dst[0] = dst[1] = dst[2] = 0.0;
             dst[3] = dst[4] = dst[5] = 0.0;
             dst[6] = dst[7] = dst[8] = 0.0;
-            return dst;
         }
         else
         {
@@ -2733,8 +2732,8 @@ var VMath : MathDevice =
             dst[6] = (d3746 * detrecp);
             dst[7] = ((m6 * m1 - m7 * m0) * detrecp);
             dst[8] = ((m0 * m4 - m3 * m1) * detrecp);
-            return dst;
         }
+        return dst;
     },
 
     m33InverseTranspose : function m33InverseTransposeFn(m, dst?)
@@ -3932,6 +3931,56 @@ var VMath : MathDevice =
         res[9]  = (b0 * a9 + b3 * a10 + b6 * a11 + b[9]);
         res[10] = (b1 * a9 + b4 * a10 + b7 * a11 + b[10]);
         res[11] = (b2 * a9 + b5 * a10 + b8 * a11 + b[11]);
+
+        return res;
+    },
+
+    m43MulM33 : function m43MulM33Fn(a, b, dst?)
+    {
+        var a0  = a[0];
+        var a1  = a[1];
+        var a2  = a[2];
+        var a3  = a[3];
+        var a4  = a[4];
+        var a5  = a[5];
+        var a6  = a[6];
+        var a7  = a[7];
+        var a8  = a[8];
+        var a9  = a[9];
+        var a10 = a[10];
+        var a11 = a[11];
+
+        var b0  = b[0];
+        var b1  = b[1];
+        var b2  = b[2];
+        var b3  = b[3];
+        var b4  = b[4];
+        var b5  = b[5];
+        var b6  = b[6];
+        var b7  = b[7];
+        var b8  = b[8];
+
+        var res = dst;
+        if (res === undefined)
+        {
+            res = new VMathArrayConstructor(12);
+        }
+        debug.assert(debug.isMtx43(a));
+        debug.assert(debug.isMtx33(b));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
+
+        res[0] =  (b0 * a0 + b3 * a1 + b6 * a2);
+        res[1] =  (b1 * a0 + b4 * a1 + b7 * a2);
+        res[2] =  (b2 * a0 + b5 * a1 + b8 * a2);
+        res[3] =  (b0 * a3 + b3 * a4 + b6 * a5);
+        res[4] =  (b1 * a3 + b4 * a4 + b7 * a5);
+        res[5] =  (b2 * a3 + b5 * a4 + b8 * a5);
+        res[6] =  (b0 * a6 + b3 * a7 + b6 * a8);
+        res[7] =  (b1 * a6 + b4 * a7 + b7 * a8);
+        res[8] =  (b2 * a6 + b5 * a7 + b8 * a8);
+        res[9]  = (b0 * a9 + b3 * a10 + b6 * a11);
+        res[10] = (b1 * a9 + b4 * a10 + b7 * a11);
+        res[11] = (b2 * a9 + b5 * a10 + b8 * a11);
 
         return res;
     },

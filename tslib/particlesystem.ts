@@ -1,5 +1,6 @@
 // Copyright (c) 2013-2014 Turbulenz Limited
 
+/*global debug: false*/
 /*global Float32Array: false*/
 /*global Uint8Array: false*/
 /*global Uint16Array: false*/
@@ -1450,6 +1451,25 @@ class Types {
     static isTypedArray(x: any): boolean
     {
         return Types.arrayTypes.indexOf(Object.prototype.toString.call(x)) !== -1;
+    }
+    static isArrayOfNumbers(x: any): boolean
+    {
+        if (!Types.isArray(x))
+        {
+            return false;
+        }
+        else
+        {
+            var count = x.length;
+            for (var i = 0; i < count; i += 1)
+            {
+                if (!Types.isNumber(x[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
     static isArray(x: any): boolean
     {
@@ -4191,11 +4211,11 @@ class DefaultParticleUpdater
     }
 
     constructor() {}
-    static create(graphicsDevice: GraphicsDevice, shaderManager: ShaderManager): DefaultParticleUpdater
+    static create(graphicsDevice: GraphicsDevice, shaderManager: ShaderManager, technique?: string): DefaultParticleUpdater
     {
         var shader = shaderManager.get("shaders/particles-default-update.cgfx");
         var ret = new DefaultParticleUpdater();
-        ret.technique = shader.getTechnique("update");
+        ret.technique = shader.getTechnique(technique || "clamped");
         ret.parameters = {
             acceleration          : new Float32Array(3),
             drag                  : 0,
@@ -4246,6 +4266,7 @@ interface DefaultRendererArchetype
     animatedOrientation  : boolean;
     animatedScale        : boolean;
     animatedAlpha        : boolean;
+    fadeOutDistance      : number;
 }
 class DefaultParticleRenderer
 {
@@ -4262,7 +4283,8 @@ class DefaultParticleRenderer
         animatedRotation     : false,
         animatedOrientation  : false,
         animatedScale        : false,
-        animatedAlpha        : false
+        animatedAlpha        : false,
+        fadeOutDistance      : 0.0
     };
     static load(archetype: DefaultUpdaterArchetype, shaderLoad, textureLoad): void
     {
@@ -4318,7 +4340,7 @@ class DefaultParticleRenderer
         Parser.extraFields(error, "default renderer archetype", delta,
             ["animatedRotation", "animatedOrientation", "animatedScale", "animatedAlpha",
              "randomizedScale", "randomizedAlpha", "randomizedRotation", "randomizedOrientation",
-             "noiseTexture"]);
+             "noiseTexture", "fadeOutDistance"]);
 
         return {
             noiseTexture         : maybe("noiseTexture"         , checkString , val(null)),
@@ -4328,8 +4350,9 @@ class DefaultParticleRenderer
             randomizedAlpha      : maybe("randomizedAlpha"      , checkNumber , val(0)),
             animatedRotation     : maybe("animatedRotation"     , checkBoolean, val(false)),
             animatedOrientation  : maybe("animatedRotation"     , checkBoolean, val(false)),
-            animatedScale        : maybe("animatedScale   "     , checkBoolean, val(false)),
-            animatedAlpha        : maybe("animatedAlpha   "     , checkBoolean, val(false))
+            animatedScale        : maybe("animatedScale"        , checkBoolean, val(false)),
+            animatedAlpha        : maybe("animatedAlpha"        , checkBoolean, val(false)),
+            fadeOutDistance      : maybe("fadeOutDistance"      , checkNumber , val(0))
         };
     }
     applyArchetype(textureManager, system, archetype, textures)
@@ -4345,6 +4368,8 @@ class DefaultParticleRenderer
         parameters["animatedScale"] = archetype.animatedScale;
         parameters["animatedAlpha"] = archetype.animatedAlpha;
         parameters["texture"] = textures("texture0");
+        parameters["invFadeOutDistance"] = archetype.fadeOutDistance === 0 ? 0.0 : (1.0 / archetype.fadeOutDistance);
+        parameters["fadeScale"] = archetype.fadeOutDistance === 0.0 ? 0.0 : 1.0;
     }
 
     createUserDataSeed()
@@ -4468,7 +4493,9 @@ class DefaultParticleRenderer
             animatedOrientation  : false,
             animatedScale        : false,
             animatedRotation     : false,
-            animatedAlpha        : false
+            animatedAlpha        : false,
+            invFadeOutDistance   : 0.0,
+            fadeScale            : 0.0
         };
         return ret;
     }
@@ -6073,6 +6100,8 @@ class ParticleRenderable
     fixedOrientation: boolean;
     localTransform: FloatArray;
 
+    parametersIndex: number;
+
     setLocalTransform(localTransform?: FloatArray)
     {
         if (localTransform && this.localTransform !== localTransform)
@@ -6173,10 +6202,11 @@ class ParticleRenderable
     private static material: Material;
     constructor() {}
     static create(params: {
-        graphicsDevice      : GraphicsDevice;
-        passIndex           : number;
-        system?             : ParticleSystem;
-        sharedRenderContext?: SharedRenderContext;
+        graphicsDevice              : GraphicsDevice;
+        passIndex                   : number;
+        system?                     : ParticleSystem;
+        baseTechniqueParametersList?: TechniqueParameters[];
+        sharedRenderContext?        : SharedRenderContext;
     }): ParticleRenderable
     {
         var gd = params.graphicsDevice;
@@ -6201,7 +6231,21 @@ class ParticleRenderable
         ret.worldExtents = new Float32Array(6);
         ret.localTransform = VMath.m43BuildIdentity();
         ret.sharedRenderContext = params.sharedRenderContext;
+
+        var parameters = gd.createDrawParameters();
+        parameters.userData  = { passIndex: params.passIndex };
+        parameters.setTechniqueParameters(0, null);
+        parameters.setTechniqueParameters(1, null);
+        ret.parametersIndex = 0;
+        ret.drawParameters       = [parameters];
+        ret.shadowDrawParameters = ret.drawParameters;
+
         ret.setSystem(params.system);
+        if (params.baseTechniqueParametersList)
+        {
+            ret.setBaseTechniqueParameters(params.baseTechniqueParametersList);
+        }
+
         return ret;
     }
 
@@ -6271,7 +6315,7 @@ class ParticleRenderable
         VMath.m43Mul(this.world, camera.viewMatrix, view.parameters["modelView"]);
         view.update(null, camera.projectionMatrix);
 
-        this.drawParameters[0].setTechniqueParameters(1, view.parameters);
+        this.drawParameters[0].setTechniqueParameters(this.parametersIndex + 1, view.parameters);
     }
 
     setLazyView(view: () => ParticleView): void
@@ -6304,19 +6348,40 @@ class ParticleRenderable
             this.halfExtents = system.halfExtents;
             this.worldExtentsUpdate = -1;
 
-            var parameters = this.graphicsDevice.createDrawParameters();
+            var parameters = this.drawParameters[0];
             parameters.setVertexBuffer(0, system.geometry.vertexBuffer);
             parameters.setSemantics   (0, system.geometry.semantics);
             parameters.technique = system.renderer.technique;
             parameters.primitive = system.geometry.primitive;
             parameters.count     = system.maxParticles * system.geometry.particleStride;
-            parameters.userData  = { passIndex: this.passIndex };
-            parameters.setTechniqueParameters(0, system.renderParameters);
-            parameters.setTechniqueParameters(1, null);
-
-            this.drawParameters       = [parameters];
-            this.shadowDrawParameters = this.drawParameters;
+            parameters.setTechniqueParameters(this.parametersIndex, system.renderParameters);
         }
+    }
+
+    setBaseTechniqueParameters(baseTechniqueParameters?: TechniqueParameters[])
+    {
+        var parameters = this.drawParameters[0];
+
+        // clear old parameters
+        var parametersIndex = this.parametersIndex;
+        var i;
+        for (i = 0; i <= parametersIndex + 1; i += 1)
+        {
+            parameters.setTechniqueParameters(i, null);
+        }
+
+        // set new parameters
+        i = 0;
+        if (baseTechniqueParameters)
+        {
+            var count = baseTechniqueParameters.length;
+            for (; i < count; i += 1)
+            {
+                parameters.setTechniqueParameters(i, baseTechniqueParameters[i]);
+            }
+        }
+        parameters.setTechniqueParameters(i, this.system ? this.system.renderParameters : null);
+        this.parametersIndex = i;
     }
 
     private resizedGeometryCb: () => void;
@@ -6612,6 +6677,9 @@ interface DefaultEmitterArchetype
         radiusMax         : number;
         radiusDistribution: string;
         radiusSigma       : number;
+        box               : boolean;
+        halfExtentsMin    : FloatArray;
+        halfExtentsMax    : FloatArray;
     };
     velocity: {
         theta                    : number;
@@ -6671,6 +6739,14 @@ class DefaultParticleEmitter
         // and using the following distribution 'uniform'/'normal' using given sigma.
         radiusDistribution: string;
         radiusSigma: number;
+
+        // if box, emit within a box centered at position (orientated with normal)
+        // with given min/max half-extents (uniformnly).
+        // assert that not both spherical and box are true. If so, spherical takes precedence.
+        // We choose this in-place of an enumeration to keep backwards compatibility
+        box: boolean;
+        halfExtentsMin: FloatArray;
+        halfExtentsMax: FloatArray;
     };
 
     velocity: {
@@ -6725,7 +6801,10 @@ class DefaultParticleEmitter
             radiusMin         : 0,
             radiusMax         : 0,
             radiusDistribution: "uniform",
-            radiusSigma       : 0.25
+            radiusSigma       : 0.25,
+            box               : false,
+            halfExtentsMin    : [0, 0, 0],
+            halfExtentsMax    : [1, 1, 1]
         },
         velocity: {
             theta                    : 0,
@@ -6912,7 +6991,8 @@ class DefaultParticleEmitter
 
                 Parser.extraFields(error, "default emitter archetype position", delta,
                     ["position", "spherical", "normal", "radiusMin", "radiusMax",
-                     "radiusDistribution", "radiusSigma"]);
+                     "radiusDistribution", "radiusSigma",
+                     "box", "halfExtentsMin", "halfExtentsMax"]);
 
                 return {
                     position          : maybe(delta, "position"          , checkVec3, VMath.v3BuildZero),
@@ -6921,7 +7001,10 @@ class DefaultParticleEmitter
                     radiusMin         : maybe(delta, "radiusMin"         , checkNum , val(0)),
                     radiusMax         : maybe(delta, "radiusMax"         , checkNum , val(0)),
                     radiusDistribution: maybe(delta, "radiusDistribution", checkDist, val("uniform")),
-                    radiusSigma       : maybe(delta, "radiusSigma"       , checkNum , val(0.25))
+                    radiusSigma       : maybe(delta, "radiusSigma"       , checkNum , val(0.25)),
+                    box               : maybe(delta, "box"               , checkBool, val(false)),
+                    halfExtentsMin    : maybe(delta, "halfExtentsMin"    , checkVec3, VMath.v3BuildZero),
+                    halfExtentsMax    : maybe(delta, "halfExtentsMax"    , checkVec3, VMath.v3BuildOne)
                 };
             }, Types.copy.bind(null, DefaultParticleEmitter.template.position)),
             // Typescript compiler infers this next field as type {} erroneously... siigh.
@@ -7096,6 +7179,15 @@ class DefaultParticleEmitter
         var fSigmaRecip = 1 / Math.sqrt(fSigmaSqr * 2 * Math.PI);
         var fSigmaMin = fSigmaRecip * Math.exp(-1 / (2 * fSigmaSqr));
 
+        var bMinExtents = position.halfExtentsMin;
+        var bMaxExtents = position.halfExtentsMax;
+        var bVt4 = (bMaxExtents[1] - bMinExtents[1]) * bMaxExtents[0] * bMaxExtents[2];
+        var bVs4 = (bMaxExtents[0] - bMinExtents[0]) * bMinExtents[1] * bMaxExtents[2];
+        var bVr4 = (bMaxExtents[2] - bMinExtents[2]) * bMinExtents[0] * bMinExtents[1];
+        var bV = 1 / (bVt4 + bVs4 + bVr4);
+        bVt4 = bVt4 * bV;
+        bVs4 = bVt4 + (bVs4 * bV);
+
         var eventPool = DefaultParticleEmitter.eventPool;
 
         var sin    = Math.sin;
@@ -7156,21 +7248,26 @@ class DefaultParticleEmitter
                 pos[0] = position.position[0];
                 pos[1] = position.position[1];
                 pos[2] = position.position[2];
-                if (position.radiusMax !== 0)
+                if (position.radiusMax !== 0 || position.box)
                 {
                     rand = 0;
-                    switch (position.radiusDistribution)
+                    if (!position.box)
                     {
-                        case "uniform":
-                            rand = random();
-                            break;
-                        case "normal":
-                            rand = random();
-                            rand = pSigmaRecip * exp(-rand * rand / (2 * pSigmaSqr));
-                            // normalise to [0, 1]
-                            rand = (rand - pSigmaMin) / (pSigmaRecip - pSigmaMin);
-                            break;
+                        switch (position.radiusDistribution)
+                        {
+                            case "uniform":
+                                rand = random();
+                                break;
+                            case "normal":
+                                rand = random();
+                                rand = pSigmaRecip * exp(-rand * rand / (2 * pSigmaSqr));
+                                // normalise to [0, 1]
+                                rand = (rand - pSigmaMin) / (pSigmaRecip - pSigmaMin);
+                                break;
+                        }
                     }
+
+                    var rx, rz, tx, ty, tz, normal, nx, ny, nz, rec;
                     if (position.spherical)
                     {
                         // uniform distribution of spherical angles in sphere.
@@ -7189,18 +7286,68 @@ class DefaultParticleEmitter
                         pos[1] += cost * rad;
                         pos[2] += sinp * sint * rad;
                     }
+                    else if (position.box)
+                    {
+                        normal = position.normal;
+                        nx = normal[0];
+                        ny = normal[1];
+                        nz = normal[2];
+                        if (nx == 0 && nz == 0)
+                        {
+                            rx = tz = 1;
+                            rz = tx = ty = 0;
+                        }
+                        else
+                        {
+                            rec = 1 / sqrt(nx * nx + nz * nz);
+                            rx = -nz * rec;
+                            rz = nx * rec;
+
+                            tx = -rz * ny;
+                            ty = (rz * nx) - (rx * nz);
+                            tz = rx * ny;
+                            rec = 1 / sqrt(tx * tx + ty * ty + tz * tz);
+                            tx *= rec;
+                            ty *= rec;
+                            tz *= rec;
+                        }
+
+                        rand = random();
+                        var bx = random() * 2 - 1;
+                        var by = random() * 2 - 1;
+                        var bz = random() * 2 - 1;
+                        if (rand < bVt4)
+                        {
+                            bx *= bMaxExtents[0];
+                            by = by * bMaxExtents[1] + ((by >= 0 ? 1 : -1) - by) * bMinExtents[1];
+                            bz *= bMaxExtents[2];
+                        }
+                        else if (rand < bVs4)
+                        {
+                            bx = bx * bMaxExtents[0] + ((bx >= 0 ? 1 : -1) - bx) * bMinExtents[0];
+                            by *= bMinExtents[1];
+                            bz *= bMaxExtents[2];
+                        }
+                        else
+                        {
+                            bx *= bMinExtents[0];
+                            by *= bMinExtents[1];
+                            bz = bz * bMaxExtents[2] + ((bz >= 0 ? 1 : -1) - bz) * bMinExtents[2];
+                        }
+                        pos[0] += (by * nx) + (bx * tx) + (bz * rx);
+                        pos[1] += (by * ny) + (bx * ty);
+                        pos[2] += (by * nz) + (bx * tz) + (bz * rz);
+                    }
                     else
                     {
                         // Re-distribute radius for area element.
                         rand = sqrt(rand);
                         rad = position.radiusMin + rand * (position.radiusMax - position.radiusMin);
 
-                        var rx, rz;
-                        var tx, ty, tz;
-                        var normal = position.normal;
-                        var nx = normal[0];
-                        var ny = normal[1];
-                        var nz = normal[2];
+                        normal = position.normal;
+                        nx = normal[0];
+                        ny = normal[1];
+                        nz = normal[2];
                         if (nx == 0 && nz == 0)
                         {
                             rx = tz = rad;
@@ -7208,7 +7355,7 @@ class DefaultParticleEmitter
                         }
                         else
                         {
-                            var rec = rad / sqrt(nx * nx + nz * nz);
+                            rec = rad / sqrt(nx * nx + nz * nz);
                             rx = -nz * rec;
                             rz = nx * rec;
 
@@ -7457,6 +7604,9 @@ interface ParticleInstance
     queued      : boolean;
     creationTime: number;
     lazySystem  : () => ParticleSystem;
+
+    parent      : ParticleInstance;
+    children    : ParticleInstance[];
 }
 
 //
@@ -7659,7 +7809,19 @@ class ParticleManager
                             DefaultParticleUpdater.parseArchetype,
                             DefaultParticleUpdater.compressArchetype,
                             DefaultParticleUpdater.load,
-                            DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager));
+                            DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager, "clamped"));
+
+        ret.registerUpdater("clamped",
+                            DefaultParticleUpdater.parseArchetype,
+                            DefaultParticleUpdater.compressArchetype,
+                            DefaultParticleUpdater.load,
+                            DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager, "clamped"));
+
+        ret.registerUpdater("wrapped",
+                            DefaultParticleUpdater.parseArchetype,
+                            DefaultParticleUpdater.compressArchetype,
+                            DefaultParticleUpdater.load,
+                            DefaultParticleUpdater.create.bind(null, graphicsDevice, shaderManager, "wrapped"));
 
         ret.registerAnimationSystem("default", [
             {
@@ -8234,7 +8396,47 @@ class ParticleManager
         archetype.context = context;
     }
 
-    createInstance(archetype, timeout?)
+    createChildInstance(parentInstance, timeout?, baseTechniqueParametersList?)
+    {
+        if (parentInstance.parent)
+        {
+            parentInstance = parentInstance.parent;
+        }
+
+        var archetype = parentInstance.archetype;
+        var context = archetype.context;
+
+        var pool = context.instancePool;
+        var instance;
+        if (pool.length > 0)
+        {
+            instance = pool.pop();
+        }
+        else
+        {
+            instance = this.createNewInstance(archetype);
+        }
+        instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
+
+        instance.parent = parentInstance;
+        if (!parentInstance.children)
+        {
+            parentInstance.children = [];
+        }
+        parentInstance.children.push(instance);
+
+        instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
+        instance.creationTime = this.timerCb();
+        if (instance.queued)
+        {
+            this.queue.insert(instance, timeout);
+        }
+        context.instances.push(instance);
+
+        return instance;
+    }
+
+    createInstance(archetype, timeout?, baseTechniqueParametersList?)
     {
         this.initializeArchetype(archetype);
         var context = archetype.context;
@@ -8249,9 +8451,12 @@ class ParticleManager
         {
             instance = this.createNewInstance(archetype);
         }
+
+        instance.parent = null;
+        instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
         this.buildSynchronizer(archetype, instance);
 
-        instance.queued = (timeout !== undefined);
+        instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
         instance.creationTime = this.timerCb();
         if (instance.queued)
         {
@@ -8281,17 +8486,34 @@ class ParticleManager
     static m43Identity = VMath.m43BuildIdentity();
     destroyInstance(instance, removedFromQueue=false)
     {
+        var children = instance.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var i = 0; i < numChildren; i += 1)
+            {
+                this.destroyInstance(children[i]);
+            }
+            instance.children = null;
+        }
+
         var archetype = instance.archetype;
         var context = archetype.context;
 
         this.removeInstanceFromScene(instance);
-        this.releaseSynchronizer(instance);
+        if (!instance.parent)
+        {
+            this.releaseSynchronizer(instance);
+        }
 
         var renderable = instance.renderable;
         renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
         if (renderable.system)
         {
-            context.systemPool.push(renderable.system);
+            if (!instance.parent)
+            {
+                context.systemPool.push(renderable.system);
+            }
             renderable.setSystem(null);
         }
         renderable.setLocalTransform(ParticleManager.m43Identity);
@@ -8311,7 +8533,7 @@ class ParticleManager
     addInstanceToScene(instance, parent?)
     {
         var sceneNode = instance.sceneNode;
-        if (sceneNode.isInScene())
+        if (sceneNode.isInScene() || sceneNode.parent)
         {
             this.removeInstanceFromScene(instance);
         }
@@ -8331,7 +8553,7 @@ class ParticleManager
     removeInstanceFromScene(instance)
     {
         var sceneNode = instance.sceneNode;
-        if (sceneNode.isInScene())
+        if (sceneNode.isInScene() || sceneNode.parent)
         {
             if (sceneNode.getRoot() === sceneNode)
             {
@@ -8350,6 +8572,17 @@ class ParticleManager
 
     private getSystem(archetype, instance)
     {
+        if (instance.system)
+        {
+            return instance.system;
+        }
+
+        var parent = instance.parent;
+        if (parent)
+        {
+            return this.getSystem(archetype, parent);
+        }
+
         var context = archetype.context;
         var pool = context.systemPool;
         var system;
@@ -8419,10 +8652,20 @@ class ParticleManager
         }
     }
 
-    createNewInstance(archetype)
+    createNewInstance(archetype): ParticleInstance
     {
-        var instance = {
-            archetype: archetype
+        var instance: ParticleInstance = {
+            archetype   : archetype,
+            system      : null,
+            renderable  : null,
+            synchronizer: null,
+
+            queued      : false,
+            creationTime: -1.0,
+            lazySystem  : null,
+
+            parent      : null,
+            children    : null
         };
         this.buildParticleSceneNode(archetype, instance);
         return instance;
@@ -8449,16 +8692,26 @@ class ParticleManager
             var instance = instances.pop();
 
             // Partially recycle instance.
+            var inScene = instance.sceneNode.isInScene();
             var parent = instance.sceneNode.getParent();
-            this.removeInstanceFromScene(instance);
+            if (inScene)
+            {
+                this.removeInstanceFromScene(instance);
+            }
 
-            this.releaseSynchronizer(instance);
+            if (!instance.parent)
+            {
+                this.releaseSynchronizer(instance);
+            }
 
             var renderable = instance.renderable;
             renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
             if (renderable.system)
             {
-                context.systemPool.push(renderable.system);
+                if (!instance.parent)
+                {
+                    context.systemPool.push(renderable.system);
+                }
                 renderable.setSystem(null);
             }
             instance.system = null;
@@ -8468,10 +8721,16 @@ class ParticleManager
             var lazySystem = this.getSystem.bind(this, newArchetype, instance);
             renderable.setLazySystem(lazySystem, newArchetype.system.center, newArchetype.system.halfExtents);
 
-            this.buildSynchronizer(newArchetype, instance);
+            if (!instance.parent)
+            {
+                this.buildSynchronizer(newArchetype, instance);
+            }
             newInstances.push(instance);
 
-            this.addInstanceToScene(instance, parent);
+            if (inScene)
+            {
+                this.addInstanceToScene(instance, parent);
+            }
         }
     }
 
@@ -8545,16 +8804,28 @@ class ParticleManager
             var instance = instances.pop();
 
             // Partially recycle instance.
-            this.removeInstanceFromScene(instance);
-            this.releaseSynchronizer(instance);
+            if (instance.sceneNode.isInScene())
+            {
+                this.removeInstanceFromScene(instance);
+            }
+            if (!instance.parent)
+            {
+                this.releaseSynchronizer(instance);
+            }
             var renderable = instance.renderable;
             renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
-            this.queue.remove(instance);
+            if (instance.queued)
+            {
+                this.queue.remove(instance);
+            }
             if (renderable.system)
             {
                 var system = renderable.system;
                 renderable.setSystem(null);
-                system.destroy();
+                if (!instance.parent)
+                {
+                    system.destroy();
+                }
             }
         }
 
@@ -9220,7 +9491,9 @@ class ParticleManager
     //         o
     //    | Array ->
     //         let del = zipWith delta t o in
-    //         if (all (= null) del) then null else del
+    //         if (all (= null) del) then null
+    //         else if (t is floatarray) replace_null_with_default(del)
+    //         else del
     //    | Object ->
     //         let o = filter(hasField t) o in
     //         let del = filter (.!= null) $ zipFieldsWith delta t o ^ filter(!hasField t) o
@@ -9248,13 +9521,19 @@ class ParticleManager
         {
             delta = [];
             count = template.length;
+            var dontStoreNulls = Types.isTypedArray(template) || Types.isArrayOfNumbers(template);
             for (i = 0; i < count; i += 1)
             {
-                delta.push(this.recordDelta(template[i], obj[i]));
-                if (!Types.isNullUndefined(delta[i]))
+                var del = this.recordDelta(template[i], obj[i]);
+                if (!Types.isNullUndefined(del))
                 {
                     allZero = false;
                 }
+                else if (dontStoreNulls)
+                {
+                    del = template[i];
+                }
+                delta[i] = del;
             }
         }
         else if (Types.isObject(template))

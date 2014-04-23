@@ -64,6 +64,7 @@ class CharacterController
     character                    : PhysicsCharacter;
     dynamicsWorld                : PhysicsWorld;
 
+    inputDevice                  : InputDevice;
     onkeydown                    : { (keynum: number): void; };
     onkeyup                      : { (keynum: number): void; };
     onmousewheel                 : { (delta: number): void; };
@@ -75,7 +76,6 @@ class CharacterController
     ontouchstart                 : { (touchEvent: TouchEvent): void; };
     ontouchend                   : { (touchEvent: TouchEvent): void; };
     ontouchmove                  : { (touchEvent: TouchEvent): void; };
-    attach                       : { (id: InputDevice): void; };
 
     static create(gd: GraphicsDevice, id: InputDevice, pd: PhysicsDevice,
                   dynamicsWorld: PhysicsWorld, matrix: any, params: any,
@@ -524,20 +524,6 @@ class CharacterController
             }
         };
 
-        // Attach to an InputDevice
-        c.attach = function attachFn(inputDevice)
-        {
-            inputDevice.addEventListener('keydown', c.onkeydown);
-            inputDevice.addEventListener('keyup', c.onkeyup);
-            inputDevice.addEventListener('mousewheel', c.onmousewheel);
-            inputDevice.addEventListener('mousemove', c.onmousemove);
-            inputDevice.addEventListener('padmove', c.onpadmove);
-            inputDevice.addEventListener('paddown', c.onpaddown);
-            inputDevice.addEventListener('touchstart', c.ontouchstart);
-            inputDevice.addEventListener('touchend', c.ontouchend);
-            inputDevice.addEventListener('touchmove', c.ontouchmove);
-        };
-
         if (id)
         {
             c.attach(id);
@@ -818,6 +804,33 @@ class CharacterController
         md.m43SetPos(matrix, position);
     }
 
+    attach(inputDevice: InputDevice): void
+    {
+        this.inputDevice = inputDevice;
+        inputDevice.addEventListener('keydown', this.onkeydown);
+        inputDevice.addEventListener('keyup', this.onkeyup);
+        inputDevice.addEventListener('mousewheel', this.onmousewheel);
+        inputDevice.addEventListener('mousemove', this.onmousemove);
+        inputDevice.addEventListener('padmove', this.onpadmove);
+        inputDevice.addEventListener('paddown', this.onpaddown);
+        inputDevice.addEventListener('touchstart', this.ontouchstart);
+        inputDevice.addEventListener('touchend', this.ontouchend);
+        inputDevice.addEventListener('touchmove', this.ontouchmove);
+    }
+
+    detach(inputDevice: InputDevice): void
+    {
+        inputDevice.removeEventListener('keydown', this.onkeydown);
+        inputDevice.removeEventListener('keyup', this.onkeyup);
+        inputDevice.removeEventListener('mousewheel', this.onmousewheel);
+        inputDevice.removeEventListener('mousemove', this.onmousemove);
+        inputDevice.removeEventListener('padmove', this.onpadmove);
+        inputDevice.removeEventListener('paddown', this.onpaddown);
+        inputDevice.removeEventListener('touchstart', this.ontouchstart);
+        inputDevice.removeEventListener('touchend', this.ontouchend);
+        inputDevice.removeEventListener('touchmove', this.ontouchmove);
+    }
+
     destroy(): void
     {
         if (this.dynamicsWorld)
@@ -829,6 +842,12 @@ class CharacterController
             }
 
             this.dynamicsWorld = null;
+        }
+
+        if (this.inputDevice)
+        {
+            this.detach(this.inputDevice);
+            this.inputDevice = null;
         }
     }
 }

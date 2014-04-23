@@ -369,7 +369,7 @@ The emitters of the system will be enabled automatically. If a timeout is specif
 
 **Syntax** ::
 
-    var instance = particleManager.createInstance(archetype, timeout);
+    var instance = particleManager.createInstance(archetype, timeout, baseTechniqueParametersList);
 
 ``archetype``
     The pre-loaded archetype to create instance from.
@@ -378,6 +378,44 @@ The emitters of the system will be enabled automatically. If a timeout is specif
     The amount of time this instance should exist for. Once this amount of time has passed, the instance will be automatically removed from the scene if necessary, and recycled.
 
     This parameter should be specified for the creation of short-lived effects, the manager makes use of an internal optimized data structure for handling large numbers of short-lived effects in conjunction with the updates of the particleManager.
+
+``baseTechniqueParametersList`` (Optional)
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
+
+.. index::
+    pair: ParticleManager; createConjoinedInstance
+
+`createChildInstance`
+---------------------
+
+**Summary**
+
+Create a :ref:`ParticleInstance <particleinstance>` referencing another instance without its own particle system.
+
+The created instance will never hold its own particle system, and will instead provide an additional rendering of
+the provided instance's system instead.
+
+This may be used to render a particle system in many places around a scene, without having many real particle systems
+providing a big performance benefit if suitable.
+
+Any child instance will be automatically destroyed if the original root instance is destroyed.
+
+.. note :: The usual behaviour regarding fade-in/fade-out of particle instance will not occur for child instances, they are purely an additional render of an existing instance.
+
+**Syntax** ::
+
+    var instance = particleManager.createChildInstance(instance, timeout, baseTechniqueParametersList);
+
+``instance``
+    The instance from which to create the child instance.
+
+``timeout`` (Optional)
+    The amount of time this instance should exist for. Once this amount of time has passed, the instance will be automatically removed from the scene if necessary, and recycled.
+
+    Unlike with true instances, the child instance will not generally have its effect faded out when the instance dies as it has no control over the underlying particle system.
+
+``baseTechniqueParametersList`` (Optional)
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
 
 .. index::
     pair: ParticleManager; destroyInstance

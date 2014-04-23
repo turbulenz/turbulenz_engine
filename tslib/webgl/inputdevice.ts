@@ -58,6 +58,8 @@ class WebGLInputDevice implements InputDevice
     private macosx               : boolean;
     private webkit               : boolean;
 
+    private pointerIdToTouch     : { [pointerid: number]: Touch; };
+
     private requestBrowserLock   : () => void;
     private requestBrowserUnlock : () => void;
     private onPointerLockChanged : () => void;
@@ -837,6 +839,106 @@ class WebGLInputDevice implements InputDevice
 
     // Private touch event methods
 
+    onPointerDown(event)
+    {
+        if (event.preventManipulation)
+        {
+            event.preventManipulation();
+        }
+        if (event.preventDefault)
+        {
+            event.preventDefault();
+        }
+
+        var touch = this.convertPointerToTurbulenzTouch(event);
+
+        // console.log("onPointerDown: id: " + touch.identifier +
+        //             " (" + event.pointerId + ")" +
+        //             ", type: " + event.type +
+        //             ", pointerType: " + event.pointerType);
+
+        var e = this.createTurbulenzTouchEvent(touch);
+
+        var eventHandlers = this.handlers.touchstart;
+        this.sendEventToHandlers(eventHandlers, e);
+    }
+
+    onPointerMove(event)
+    {
+        if (event.preventManipulation)
+        {
+            event.preventManipulation();
+        }
+        if (event.preventDefault)
+        {
+            event.preventDefault();
+        }
+
+        var touch = this.convertPointerToTurbulenzTouch(event);
+
+        // console.log("onPointerMove: id: " + touch.identifier +
+        //             " (" + event.pointerId + ")" +
+        //             ", type: " + event.type +
+        //             ", pointerType: " + event.pointerType);
+
+        var e = this.createTurbulenzTouchEvent(touch);
+
+        var eventHandlers = this.handlers.touchmove;
+        this.sendEventToHandlers(eventHandlers, e);
+    }
+
+    onPointerUp(event)
+    {
+        if (event.preventManipulation)
+        {
+            event.preventManipulation();
+        }
+        if (event.preventDefault)
+        {
+            event.preventDefault();
+        }
+
+        var touch = this.convertPointerToTurbulenzTouch(event);
+
+        // console.log("onPointerUp: id: " + touch.identifier +
+        //             " (" + event.pointerId + ")" +
+        //             ", type: " + event.type +
+        //             ", pointerType: " + event.pointerType);
+
+        var e = this.createTurbulenzTouchEvent(touch);
+
+        var eventHandlers = this.handlers.touchend;
+        this.sendEventToHandlers(eventHandlers, e);
+
+        this.removePointerById(event.pointerId, touch.identifier);
+    }
+
+    onPointerCancel(event)
+    {
+        if (event.preventManipulation)
+        {
+            event.preventManipulation();
+        }
+        if (event.preventDefault)
+        {
+            event.preventDefault();
+        }
+
+        var touch = this.convertPointerToTurbulenzTouch(event);
+
+        // console.log("onPointerCancel: id: " + touch.identifier +
+        //             " (" + event.pointerId + ")" +
+        //             ", type: " + event.type +
+        //             ", pointerType: " + event.pointerType);
+
+        var e = this.createTurbulenzTouchEvent(touch);
+
+        var eventHandlers = this.handlers.touchend;
+        this.sendEventToHandlers(eventHandlers, e);
+
+        this.removePointerById(event.pointerId, touch.identifier);
+    }
+
     onTouchStart(event)
     {
         var eventHandlers = this.handlers.touchstart;
@@ -912,6 +1014,105 @@ class WebGLInputDevice implements InputDevice
         this.removeTouches(event.changedTouches);
 
         this.sendEventToHandlers(eventHandlers, event);
+    }
+
+    // Return (and update) any existing Turbulenz touch object, or
+    // create a new one.
+
+    convertPointerToTurbulenzTouch(event) : Touch
+    {
+        var pointerId = event.pointerId;
+        var pointerIdToTouch = this.pointerIdToTouch;
+
+        var canvasElement = this.canvas;
+        var canvasRect = canvasElement.getBoundingClientRect();
+
+        var isGameTouch = (event.target === canvasElement);
+        var positionX = event.pageX - canvasRect.left;
+        var positionY = event.pageY - canvasRect.top;
+
+        var touch = pointerIdToTouch[pointerId];
+        if (touch)
+        {
+            touch.isGameTouch = isGameTouch;
+            touch.positionX = positionX;
+            touch.positionY = positionY;
+        }
+        else
+        {
+            // Search for a free ID.
+
+            var touches = this.touches;
+            var touchId = 0;
+
+            while (touchId < 32)
+            {
+                if (!touches.hasOwnProperty(touchId))
+                {
+                    touch = {
+                        force         : 0,
+                        identifier    : touchId,
+                        isGameTouch   : isGameTouch,
+                        positionX     : positionX,
+                        positionY     : positionY,
+                        radiusX       : 1,
+                        radiusY       : 1,
+                        rotationAngle : 0
+                    };
+
+                    this.touches[touchId] = touch;
+                    this.pointerIdToTouch[pointerId] = touch;
+                    return touch;
+                }
+
+                touchId += 1;
+            }
+
+            // If we get here, something is wrong.  We have more than
+            // 32 active touches.
+
+            debug.assert(false);
+        }
+
+        return touch;
+    }
+
+    createTurbulenzTouchEvent(changedTouch: Touch)
+    {
+        var touches = [];
+        var gameTouches = [];
+
+        // var pointerIdToTouch = this.pointerIdToTouch;
+        var pointerIdToTouch = this.touches;
+
+        var pointerId;
+        var touch;
+
+        for (pointerId in pointerIdToTouch)
+        {
+            if (pointerIdToTouch.hasOwnProperty(pointerId))
+            {
+                touch = pointerIdToTouch[pointerId];
+                touches.push(touch);
+
+                if (touch.isGameTouch)
+                {
+                    gameTouches.push(touch);
+                }
+            }
+        }
+
+        return {
+            changedTouches: [ changedTouch ],
+            gameTouches: gameTouches,
+            touches: touches
+        };
+    }
+
+    removePointerById(eventId, touchId)
+    {
+        delete this.pointerIdToTouch[eventId];
+        this.removeTouchById(touchId);
     }
 
     convertW3TouchEventToTurbulenzTouchEvent(w3TouchEvent)
@@ -1206,6 +1407,11 @@ class WebGLInputDevice implements InputDevice
     setEventHandlersTouch()
     {
         var canvas = this.canvas;
+
+        this.addInternalEventListener(canvas, "pointerdown", this.onPointerDown);
+        this.addInternalEventListener(canvas, "pointermove", this.onPointerMove);
+        this.addInternalEventListener(canvas, "pointerup", this.onPointerUp);
+        this.addInternalEventListener(canvas, "pointerout", this.onPointerUp);
 
         this.addInternalEventListener(canvas, 'touchstart', this.onTouchStart);
         this.addInternalEventListener(canvas, 'touchend', this.onTouchEnd);
@@ -1724,6 +1930,8 @@ class WebGLInputDevice implements InputDevice
         var sysInfo = TurbulenzEngine.getSystemInfo();
         id.macosx = ("Darwin" === sysInfo.osName);
         id.webkit = (/WebKit/.test(navigator.userAgent));
+
+        id.pointerIdToTouch = {};
 
         return id;
     }

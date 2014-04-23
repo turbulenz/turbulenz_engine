@@ -26,7 +26,21 @@ float3 getAccelerationNoise(float2 uv, float t)
 
 // --------------------------------------------------------------
 
-float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
+float wrap(float x)
+{
+    x = fmod(x + 1.0, 2.0) - 1.0;
+    if (x > 1)
+    {
+        x -= 2;
+    }
+    else if (x < -1)
+    {
+        x += 2;
+    }
+    return x;
+}
+
+float4 fp_update_state_base(float2 inParticle, bool wrapPositions)
 {
     float2 particle = inParticle * regionSize;
     float2 index = floor(particle / PARTICLE_DIM) * PARTICLE_DIM;
@@ -51,7 +65,15 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
         float p = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
         float2 vt = inParticle + float2(invRegionSize.x, 0);
         float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(vt)));
-        return encodeSignedFloat(p + (v * timeStep * maxSpeed / halfExtents[indexY]) + shift[indexY]);
+        p += (v * timeStep * maxSpeed / halfExtents[indexY]) + shift[indexY];
+        if (wrapPositions)
+        {
+            return encodeSignedFloat(wrap(p));
+        }
+        else
+        {
+            return encodeSignedFloat(p);
+        }
     }
     else if (slot.x <= 2)
     {
@@ -88,9 +110,19 @@ float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
     }
 }
 
+float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
+{
+    return fp_update_state_base(inParticle, false);
+}
+
+float4 fp_update_state_wrap(float2 inParticle : TEXCOORD0) : COLOR
+{
+    return fp_update_state_base(inParticle, true);
+}
+
 // --------------------------------------------------------------
 
-technique update
+technique clamped
 {
     pass
     {
@@ -100,6 +132,19 @@ technique update
         BlendEnable     = false;
         VertexProgram   = compile latest vp_update();
         FragmentProgram = compile latest fp_update_state();
+    }
+}
+
+technique wrapped
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_update();
+        FragmentProgram = compile latest fp_update_state_wrap();
     }
 }
 

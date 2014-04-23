@@ -475,7 +475,13 @@ interface RenderTarget
 
     // Methods
 
-    destroy();
+    getWidth(): number;
+    getHeight(): number;
+    setColorTexture0(colorTexture0: Texture): void;
+    setColorTexture1(colorTexture1: Texture): void;
+    setColorTexture2(colorTexture2: Texture): void;
+    setColorTexture3(colorTexture3: Texture): void;
+    destroy(): void;
 }
 
 interface Semantics

@@ -9,6 +9,8 @@ class Camera
     static version = 1;
     /* tslint:enable:no-unused-variable */
 
+    static _frustumPoints = []; // v4[]
+
     md                   : MathDevice;
     matrix               : any;   // m43
     viewMatrix           : any;   // m43
@@ -358,7 +360,7 @@ class Camera
 
     getFrustumExtents(extents, farClip, nearClip?)
     {
-        var frustumPoints = this.getFrustumPoints(farClip, nearClip);
+        var frustumPoints = this.getFrustumPoints(farClip, nearClip, Camera._frustumPoints);
         var frustumPoint = frustumPoints[0];
         var min0 = frustumPoint[0];
         var min1 = frustumPoint[1];
@@ -460,6 +462,7 @@ class CameraController
     movetouch        : CameraControllerTouch;
 
     // Internal
+    inputDevice      : InputDevice;
 
     onkeydown        : InputDeviceEventListener;
     onkeyup          : { (keyCode: number): void; };
@@ -473,8 +476,6 @@ class CameraController
     ontouchstart     : { (touchEvent: TouchEvent): void; };
     ontouchend       : { (touchEvent: TouchEvent): void; };
     ontouchmove      : { (touchEvent: TouchEvent): void; };
-
-    attach           : (id: InputDevice) => void;
 
     rotate(turn, pitch)
     {
@@ -577,6 +578,46 @@ class CameraController
         {
             this.camera.updateViewMatrix();
         }
+    }
+
+    attach(id: InputDevice): void
+    {
+        this.inputDevice = id;
+        id.addEventListener('keydown', this.onkeydown);
+        id.addEventListener('keyup', this.onkeyup);
+        id.addEventListener('mouseup', this.onmouseup);
+        id.addEventListener('mousewheel', this.onmousewheel);
+        id.addEventListener('mousemove', this.onmousemove);
+        id.addEventListener('padmove', this.onpadmove);
+        id.addEventListener('mouselocklost', this.onmouselocklost);
+        id.addEventListener('touchstart', this.ontouchstart);
+        id.addEventListener('touchend', this.ontouchend);
+        id.addEventListener('touchmove', this.ontouchmove);
+    }
+
+    detach(id: InputDevice): void
+    {
+        id.removeEventListener('keydown', this.onkeydown);
+        id.removeEventListener('keyup', this.onkeyup);
+        id.removeEventListener('mouseup', this.onmouseup);
+        id.removeEventListener('mousewheel', this.onmousewheel);
+        id.removeEventListener('mousemove', this.onmousemove);
+        id.removeEventListener('padmove', this.onpadmove);
+        id.removeEventListener('mouselocklost', this.onmouselocklost);
+        id.removeEventListener('touchstart', this.ontouchstart);
+        id.removeEventListener('touchend', this.ontouchend);
+        id.removeEventListener('touchmove', this.ontouchmove);
+    }
+
+    destroy(): void
+    {
+        if (this.inputDevice)
+        {
+            this.detach(this.inputDevice);
+            this.inputDevice = null;
+        }
+
+        this.camera = null;
     }
 
     static create(gd: GraphicsDevice, id: InputDevice, camera: Camera,
@@ -906,21 +947,6 @@ class CameraController
                     }
                 }
             }
-        };
-
-        // Attach to an InputDevice
-        c.attach = function attachFn(id)
-        {
-            id.addEventListener('keydown', c.onkeydown);
-            id.addEventListener('keyup', c.onkeyup);
-            id.addEventListener('mouseup', c.onmouseup);
-            id.addEventListener('mousewheel', c.onmousewheel);
-            id.addEventListener('mousemove', c.onmousemove);
-            id.addEventListener('padmove', c.onpadmove);
-            id.addEventListener('mouselocklost', c.onmouselocklost);
-            id.addEventListener('touchstart', c.ontouchstart);
-            id.addEventListener('touchend', c.ontouchend);
-            id.addEventListener('touchmove', c.ontouchmove);
         };
 
         if (id)

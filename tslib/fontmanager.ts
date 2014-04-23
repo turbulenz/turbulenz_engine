@@ -484,7 +484,10 @@ class Font
             {
                 sharedVertexBuffer.destroy();
             }
-            sharedVertexBuffer = this.createVertexBuffer(numGlyphs);
+            // add a 32 glyph buffer to lower the chances of recreating the shared vertex buffer
+            // when the text length grows
+            var newVertexBufferNumGlyphs = Math.max(numGlyphs, 32) + 32;
+            sharedVertexBuffer = this.createVertexBuffer(newVertexBufferNumGlyphs);
             fm.sharedVertexBuffer = sharedVertexBuffer;
         }
 
@@ -510,7 +513,10 @@ class Font
                 {
                     sharedIndexBuffer.destroy();
                 }
-                sharedIndexBuffer = this.createIndexBuffer(numGlyphs);
+                // add a 32 glyph buffer to lower the chances of recreating the shared index buffer
+                // when the text length grows
+                var newIndexBufferNumGlyphs = Math.max(numGlyphs, 32) + 32;
+                sharedIndexBuffer = this.createIndexBuffer(newIndexBufferNumGlyphs);
                 fm.sharedIndexBuffer = sharedIndexBuffer;
             }
 

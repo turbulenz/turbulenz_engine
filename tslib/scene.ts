@@ -4388,11 +4388,10 @@ class Scene
                         surface = surfaces[s];
 
                         faces = surface.triangles;
-                        var primitive, vertexPerPrimitive;
+                        var primitive;
                         if (faces)
                         {
                             primitive = gd.PRIMITIVE_TRIANGLES;
-                            vertexPerPrimitive = 3;
                         }
                         else
                         {
@@ -4400,7 +4399,6 @@ class Scene
                             if (faces)
                             {
                                 primitive = gd.PRIMITIVE_LINES;
-                                vertexPerPrimitive = 2;
                             }
                         }
 
@@ -4411,28 +4409,10 @@ class Scene
                             faces: faces
                         };
                         shape.surfaces[s] = destSurface;
-
-                        if (faces)
-                        {
-                            if (1 < indicesPerVertex)
-                            {
-                                numVertices = (surface.numPrimitives * vertexPerPrimitive);
-                                destSurface.numVertices = numVertices;
-                            }
-                            else
-                            {
-
-                                numVertices = (vertexSources[0].data.length / vertexSources[0].stride);
-                                if (numVertices > faces.length)
-                                {
-                                    numVertices = faces.length;
-                                }
-                                destSurface.numVertices = numVertices;
-                            }
-                        }
                     }
                 }
 
+                var shapeSurfaces, shapeSurface;
                 if (indicesPerVertex > 1)
                 {
                     // [ [a,b,c], [d,e,f], ... ]
@@ -4440,12 +4420,12 @@ class Scene
 
                     var verticesAsIndexLists = [];
                     var verticesAsIndexListTable = {};
-                    var shapeSurfaces = shape.surfaces;
+                    shapeSurfaces = shape.surfaces;
                     for (s in shapeSurfaces)
                     {
                         if (shapeSurfaces.hasOwnProperty(s))
                         {
-                            var shapeSurface = shapeSurfaces[s];
+                            shapeSurface = shapeSurfaces[s];
                             totalNumVertices = this._updateSingleIndexTables(shapeSurface,
                                                                              indicesPerVertex,
                                                                              verticesAsIndexLists,
@@ -4471,6 +4451,26 @@ class Scene
                 debug.assert(indicesPerVertex === 1);
 
                 totalNumVertices = vertexSources[0].data.length / vertexSources[0].stride;
+
+                shapeSurfaces = shape.surfaces;
+                for (s in shapeSurfaces)
+                {
+                    if (shapeSurfaces.hasOwnProperty(s))
+                    {
+                        shapeSurface = shapeSurfaces[s];
+                        faces = shapeSurface.faces;
+
+                        if (faces)
+                        {
+                            numVertices = totalNumVertices;
+                            if (numVertices > faces.length)
+                            {
+                                numVertices = faces.length;
+                            }
+                            shapeSurface.numVertices = numVertices;
+                        }
+                    }
+                }
 
                 var vertexBufferManager = (loadParams.vertexBufferManager ||
                                            this.vertexBufferManager);
@@ -4794,9 +4794,9 @@ class Scene
                         center[0] = (min0 + max0) * 0.5;
                         center[1] = (min1 + max1) * 0.5;
                         center[2] = (min2 + max2) * 0.5;
-                        halfExtents[0] = (max0 - center[0]);
-                        halfExtents[1] = (max1 - center[1]);
-                        halfExtents[2] = (max2 - center[2]);
+                        halfExtents[0] = (max0 - min0) * 0.5;
+                        halfExtents[1] = (max1 - min1) * 0.5;
+                        halfExtents[2] = (max2 - min2) * 0.5;
                     }
                     else
                     {

@@ -218,13 +218,16 @@ Create a new `DefaultParticleUpdater` object.
 
 **Syntax** ::
 
-    var updater = DefaultParticleUpdater.create(graphicsDevice, shaderManager);
+    var updater = DefaultParticleUpdater.create(graphicsDevice, shaderManager, mode);
 
 ``graphicsDevice``
     The :ref:`GraphicsDevice <graphicsdevice>` object.
 
 ``shaderManager``
     The :ref:`ShaderManager <shadermanager>` object, expecting that `shaders/particles-default-updater.cgfx` has been pre-loaded.
+
+``mode`` (Optional)
+    Update shader supports one of `2` modes: `"clamped"` (default) or `"wrapped"` controlling whether particles will have their positions clamped when they hit the extents of the system, or whether particle positions will be wrapped around to other side of extents.
 
 .. index::
     pair: DefaultParticleUpdater; createUserData

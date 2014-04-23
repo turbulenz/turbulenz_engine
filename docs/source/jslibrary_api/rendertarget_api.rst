@@ -50,6 +50,74 @@ Get the height of the current RenderTarget object.
 
 
 .. index::
+    pair: RenderTarget; setColorTexture0
+
+`setColorTexture0`
+------------------
+**Summary**
+
+Change the first color attachement of the RenderTarget.
+
+**Syntax** ::
+
+    renderTarget.setColorTexture0(texture);
+
+The `Texture` parameter should be a :ref:`Texture <texture>` object and
+it must much the dimensions and format of the previous color attachement.
+
+
+.. index::
+    pair: RenderTarget; setColorTexture1
+
+`setColorTexture1`
+------------------
+**Summary**
+
+Change the second color attachement of the RenderTarget.
+
+**Syntax** ::
+
+    renderTarget.setColorTexture1(texture);
+
+The `Texture` parameter should be a :ref:`Texture <texture>` object and
+it must much the dimensions and format of the previous color attachement.
+
+
+.. index::
+    pair: RenderTarget; setColorTexture2
+
+`setColorTexture2`
+------------------
+**Summary**
+
+Change the third color attachement of the RenderTarget.
+
+**Syntax** ::
+
+    renderTarget.setColorTexture2(texture);
+
+The `Texture` parameter should be a :ref:`Texture <texture>` object and
+it must much the dimensions and format of the previous color attachement.
+
+
+.. index::
+    pair: RenderTarget; setColorTexture3
+
+`setColorTexture3`
+------------------
+**Summary**
+
+Change the fourth color attachement of the RenderTarget.
+
+**Syntax** ::
+
+    renderTarget.setColorTexture3(texture);
+
+The `Texture` parameter should be a :ref:`Texture <texture>` object and
+it must much the dimensions and format of the previous color attachement.
+
+
+.. index::
     pair: RenderTarget; destroy
 
 `destroy`

@@ -210,7 +210,7 @@ An emitter, compatible with the `DefaultParticleSynchronizer` and assuming usage
 
 This emitter will emit continuous streams of particles with a set rate, with particles emitted in a specific direction in an optional combination of a flat angular spread, and a conical spread using either a uniform or normal distribution.
 
-Particles will be emitted from within a random radius of a position in either a flat disc or spherical spread with some distribution, with randomized lifetimes and speeds.
+Particles will be emitted from within a random radius of a position in either a flat disc or spherical spread with some distribution, or within a rotated box, with randomized lifetimes and speeds.
 
 **Prediction**
 
@@ -348,19 +348,24 @@ Parameters about the spawn positions of particles in this emitter.
 ``spherical`` (Default `false`)
     If true, then particle position will be selected from within a sphere.
 
-    If false, then particle positions will be selected from within a disc.
+    If false, then particle positions will be selected from within a disc unless `box` is `true`.
+
+``box`` (Default `false`)
+    If true, and `spherical` is false, then particle position will be selected from within a box.
 
 ``normal`` (Default `[0, 1, 0]`)
-    The normal vector of the disc to select particle positions from when `spherical` is `false`.
+    The normal vector of the disc to select particle positions from if appropriate.
+
+    The vector to orient the `y`-axis of the box with if appropriate.
 
 ``radiusMin`` (Default `0`)
-    The minimum radius at which to select particle positions from.
+    The minimum radius at which to select particle positions from if appropriate.
 
 ``radiusMax`` (Default `0`)
-    The maximum radius at which to select particle positions from.
+    The maximum radius at which to select particle positions from if appropriate.
 
 ``radiusDistribution`` (Default `"uniform"`)
-    The distribution to use when selecting the radius to use when selecting particle positions.
+    The distribution to use when selecting the radius to use when selecting particle positions if appropriate.
 
     * `"uniform"`
         A uniform distribution.
@@ -369,6 +374,14 @@ Parameters about the spawn positions of particles in this emitter.
 
 ``radiusSigma`` (Default `0.25`)
     The `sigma` parameter of the normal distribution.
+
+``halfExtentsMax`` (Default `[1, 1, 1]`)
+    The maximum half-extents of the box in which to spawn particles if appropriate.
+
+``halfExtentsMin`` (Default `[0, 0, 0]`)
+    The minimum half-extents of the box in which to spawn particles if appropriate.
+
+    Actual particle positions will be selected between the minimum and maximum half-extents.
 
 .. index::
     pair: DefaultParticleEmitter; velocity

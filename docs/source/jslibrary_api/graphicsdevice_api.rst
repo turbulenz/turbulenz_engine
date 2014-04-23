@@ -1113,6 +1113,8 @@ See also :ref:`maxSupported <graphicsdevice_maxsupported>`.
 * "TEXTURE_DXT3"
 * "TEXTURE_DXT5"
 * "TEXTURE_ETC1"
+* "TEXTURE_HALF_FLOAT"
+* "TEXTURE_FLOAT"
 * "INDEXFORMAT_UINT" : If INDEXFORMAT_UINT can be used with IndexBuffers.
 * "FILEFORMAT_WEBM"
 * "FILEFORMAT_MP4"
@@ -1627,6 +1629,10 @@ Valid pixel format values, required when creating textures.
     - PIXELFORMAT_DXT1
     - PIXELFORMAT_DXT3
     - PIXELFORMAT_DXT5
+    - PIXELFORMAT_RGBA32F
+    - PIXELFORMAT_RGB32F
+    - PIXELFORMAT_RGBA16F
+    - PIXELFORMAT_RGB16F
 
 **Syntax** ::
 

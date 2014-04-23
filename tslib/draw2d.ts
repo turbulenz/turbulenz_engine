@@ -1981,7 +1981,17 @@ class Draw2D
                     }
 
                     graphicsDevice.setTechniqueParameters(techniqueParameters);
-                    graphicsDevice.drawIndexed(graphicsDevice.PRIMITIVE_TRIANGLES, icount, iindex);
+
+                    /* tslint:disable:no-bitwise */
+                    if (icount === 6)
+                    {
+                        graphicsDevice.draw(graphicsDevice.PRIMITIVE_TRIANGLE_STRIP, 4, ((iindex / 6) << 2));
+                    }
+                    else
+                    {
+                        graphicsDevice.drawIndexed(graphicsDevice.PRIMITIVE_TRIANGLES, icount, iindex);
+                    }
+                    /* tslint:enable:no-bitwise */
 
                     iindex += icount;
                 }
