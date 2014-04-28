@@ -8207,11 +8207,28 @@ class ParticleManager
                     onload(archetype);
                 }
             };
+
+            // prevent multiple requests for same resource as what is technically a bug
+            // in texturemanager/shadermanager etc prevents the loaded callback being
+            // called multiple times when the same resource is requested for this archetype
+            // leading to us never knowing the particle system finished loading.
+            var requested = {};
+
             textureLoad = function (path) {
+                if (requested.hasOwnProperty(path))
+                {
+                    return;
+                }
+                requested[path] = true;
                 requestCount += 1;
                 self.textureManager.load(path, undefined, loaded);
             };
             shaderLoad = function (path) {
+                if (requested.hasOwnProperty(path))
+                {
+                    return;
+                }
+                requested[path] = true;
                 requestCount += 1;
                 self.shaderManager.load(path, loaded);
             };
