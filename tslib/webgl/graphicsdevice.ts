@@ -3970,7 +3970,7 @@ class WebGLTechnique implements Technique
     passes        : WebGLPass[];
     numPasses     : number;
     numParameters : number;
-    device        : any;
+    device        : WebGLGraphicsDevice;
 
     getPass(id)
     {
@@ -4000,7 +4000,7 @@ class WebGLTechnique implements Technique
         return null;
     }
 
-    activate(gd)
+    activate(gd: WebGLGraphicsDevice)
     {
         this.device = gd;
 
