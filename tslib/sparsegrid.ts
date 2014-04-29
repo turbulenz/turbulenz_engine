@@ -11,13 +11,13 @@ class SparseGridNode
     /* tslint:enable:no-unused-variable */
 
     extents          : Float32Array;
-    cellExtents      : Int32Array;
+    cellExtents      : Uint16Array;
     queryIndex       : number;
     id               : number;
     externalNode     : {};
 
     constructor(extents: Float32Array,
-                cellExtents: Int32Array,
+                cellExtents: Uint16Array,
                 id: number,
                 externalNode: {})
     {
@@ -42,7 +42,7 @@ class SparseGridNode
 
     // Constructor function
     static create(extents: Float32Array,
-                  cellExtents: Int32Array,
+                  cellExtents: Uint16Array,
                   id: number,
                   externalNode?: {}): SparseGridNode
     {
@@ -183,18 +183,13 @@ class SparseGrid
     cellSize: number;
     numCells: number;
     cells: SparseGridCell[];
-    cellsMap: { [hash: string]: SparseGridCell };
+    cellsMap: { [hash: number]: SparseGridCell };
     nodes:  SparseGridNode[];
     numNodes: number;
     queryIndex: number;
     queryCellPlanes: any[];
     extents: Float32Array;
     dirtyExtents: boolean;
-
-    // On prototype
-    tempIntArray: Int32Array;
-    tempByteArray: Uint8Array;
-    byteToHex: string[];
 
     constructor(cellSize: number)
     {
@@ -215,45 +210,6 @@ class SparseGrid
         this.dirtyExtents = false;
     }
 
-    hash(x: number, z: number): string
-    {
-        var hash;
-        var byteToHex = this.byteToHex;
-        if (-129 < x && x < 128 &&
-            -129 < z && z < 128)
-        {
-            /* tslint:disable:no-bitwise */
-            hash = byteToHex[x & 0xff] +
-                   byteToHex[z & 0xff];
-            /* tslint:enable:no-bitwise */
-        }
-        else
-        {
-            var ints = this.tempIntArray;
-            var bytes = this.tempByteArray;
-            ints[0] = x;
-            ints[1] = z;
-            if (-32769 < x && x < 32768 &&
-                -32769 < z && z < 32768)
-            {
-                hash = byteToHex[bytes[0]] +
-                       byteToHex[bytes[1]] +
-                       byteToHex[bytes[4]] +
-                       byteToHex[bytes[5]];
-            }
-            else
-            {
-                hash = byteToHex[bytes[0]];
-                var n;
-                for (n = 1; n < (2 * 4); n += 1)
-                {
-                    hash += byteToHex[bytes[n]];
-                }
-            }
-        }
-        return hash;
-    }
-
     add(externalNode: {}, extents: any): void
     {
         var numNodes = this.numNodes;
@@ -272,9 +228,9 @@ class SparseGrid
         }
         else
         {
-            var buffer = new ArrayBuffer((6 + 4) * 4);
+            var buffer = new ArrayBuffer((6 * 4) + (4 * 2));
             nodeExtents = new Float32Array(buffer, 0, 6);
-            cellExtents = new Int32Array(buffer, (6 * 4), 4);
+            cellExtents = new Uint16Array(buffer, (6 * 4), 4);
 
             node = new SparseGridNode(nodeExtents, cellExtents, numNodes, externalNode);
             this.nodes[numNodes] = node;
@@ -295,13 +251,13 @@ class SparseGrid
 
         var invCellSize = this.invCellSize;
 
-        var minX = Math.floor(min0 * invCellSize);
-        var minZ = Math.floor(min2 * invCellSize);
-        var maxX = Math.floor(max0 * invCellSize);
-        var maxZ = Math.floor(max2 * invCellSize);
+        var minX = (32768 + Math.floor(min0 * invCellSize));
+        var minZ = (32768 + Math.floor(min2 * invCellSize));
+        var maxX = (32768 + Math.floor(max0 * invCellSize));
+        var maxZ = (32768 + Math.floor(max2 * invCellSize));
 
-        debug.assert(-2147483648 <= minX && maxX <= 2147483647 &&
-                     -2147483648 <= minZ && maxZ <= 2147483647,
+        debug.assert(0 <= minX && maxX <= 0xffff &&
+                     0 <= minZ && maxZ <= 0xffff,
                      "Node is out of bounds.");
 
         cellExtents[0] = minX;
@@ -346,10 +302,10 @@ class SparseGrid
                 nodeExtents[5] = max2;
 
                 var invCellSize = this.invCellSize;
-                var newMinX = Math.floor(min0 * invCellSize);
-                var newMinZ = Math.floor(min2 * invCellSize);
-                var newMaxX = Math.floor(max0 * invCellSize);
-                var newMaxZ = Math.floor(max2 * invCellSize);
+                var newMinX = (32768 + Math.floor(min0 * invCellSize));
+                var newMinZ = (32768 + Math.floor(min2 * invCellSize));
+                var newMaxX = (32768 + Math.floor(max0 * invCellSize));
+                var newMaxZ = (32768 + Math.floor(max2 * invCellSize));
 
                 var oldMinX = cellExtents[0];
                 var oldMinZ = cellExtents[1];
@@ -361,8 +317,8 @@ class SparseGrid
                     oldMaxX !== newMaxX ||
                     oldMaxZ !== newMaxZ)
                 {
-                    debug.assert(-2147483648 <= newMinX && newMaxX <= 2147483647 &&
-                                 -2147483648 <= newMinZ && newMaxZ <= 2147483647,
+                    debug.assert(0 <= newMinX && newMaxX <= 0xffff &&
+                                 0 <= newMinZ && newMaxZ <= 0xffff,
                                  "Node is out of bounds.");
 
                     cellExtents[0] = newMinX;
@@ -485,7 +441,9 @@ class SparseGrid
             var x = minX;
             do
             {
-                var hash = this.hash(x, z);
+                /* tslint:disable:no-bitwise */
+                var hash = ((x << 16) | z);
+                /* tslint:enable:no-bitwise */
                 var cell = cellsMap[hash];
                 if (cell)
                 {
@@ -533,7 +491,9 @@ class SparseGrid
             var x = minX;
             do
             {
-                var hash = this.hash(x, z);
+                /* tslint:disable:no-bitwise */
+                var hash = ((x << 16) | z);
+                /* tslint:enable:no-bitwise */
                 var cell = cellsMap[hash];
                 if (0 === cell.removeNode(node))
                 {
@@ -591,7 +551,9 @@ class SparseGrid
                 var newCell = (newZ && newMinX <= x && x <= newMaxX);
                 var oldCell = (oldZ && oldMinX <= x && x <= oldMaxX);
 
-                var hash = this.hash(x, z);
+                /* tslint:disable:no-bitwise */
+                var hash = ((x << 16) | z);
+                /* tslint:enable:no-bitwise */
                 var cell = cellsMap[hash];
                 if (cell)
                 {
@@ -705,7 +667,10 @@ class SparseGrid
             var x = minX;
             do
             {
-                var cell = cellsMap[this.hash(x, z)];
+                /* tslint:disable:no-bitwise */
+                var hash = ((x << 16) | z);
+                /* tslint:enable:no-bitwise */
+                var cell = cellsMap[hash];
                 if (1 === cell.nodes.length)
                 {
                     cell.minY = extents[1];
@@ -745,10 +710,10 @@ class SparseGrid
             var invCellSize = this.invCellSize;
             var cellsMap = this.cellsMap;
 
-            var minX = Math.floor(queryMinX * invCellSize);
-            var minZ = Math.floor(queryMinZ * invCellSize);
-            var maxX = Math.floor(queryMaxX * invCellSize);
-            var maxZ = Math.floor(queryMaxZ * invCellSize);
+            var minX = Math.max(0, Math.min(0xffff, 32768 + Math.floor(queryMinX * invCellSize)));
+            var minZ = Math.max(0, Math.min(0xffff, 32768 + Math.floor(queryMinZ * invCellSize)));
+            var maxX = Math.max(0, Math.min(0xffff, 32768 + Math.floor(queryMaxX * invCellSize)));
+            var maxZ = Math.max(0, Math.min(0xffff, 32768 + Math.floor(queryMaxZ * invCellSize)));
 
             var queryIndex = (this.queryIndex + 1);
             this.queryIndex = queryIndex;
@@ -761,7 +726,9 @@ class SparseGrid
                 var x = minX;
                 do
                 {
-                    var hash = this.hash(x, z);
+                    /* tslint:disable:no-bitwise */
+                    var hash = ((x << 16) | z);
+                    /* tslint:enable:no-bitwise */
                     cell = cellsMap[hash];
                     if (cell)
                     {
@@ -840,10 +807,10 @@ class SparseGrid
             var invCellSize = this.invCellSize;
             var cellsMap = this.cellsMap;
 
-            var minX = Math.floor((centerX - radius) * invCellSize);
-            var minZ = Math.floor((centerZ - radius) * invCellSize);
-            var maxX = Math.floor((centerX + radius) * invCellSize);
-            var maxZ = Math.floor((centerZ + radius) * invCellSize);
+            var minX = Math.max(0, Math.min(0xffff, 32768 + Math.floor((centerX - radius) * invCellSize)));
+            var minZ = Math.max(0, Math.min(0xffff, 32768 + Math.floor((centerZ - radius) * invCellSize)));
+            var maxX = Math.max(0, Math.min(0xffff, 32768 + Math.floor((centerX + radius) * invCellSize)));
+            var maxZ = Math.max(0, Math.min(0xffff, 32768 + Math.floor((centerZ + radius) * invCellSize)));
 
             var queryIndex = (this.queryIndex + 1);
             this.queryIndex = queryIndex;
@@ -856,7 +823,9 @@ class SparseGrid
                 var x = minX;
                 do
                 {
-                    var hash = this.hash(x, z);
+                    /* tslint:disable:no-bitwise */
+                    var hash = ((x << 16) | z);
+                    /* tslint:enable:no-bitwise */
                     cell = cellsMap[hash];
                     if (cell)
                     {
@@ -1263,18 +1232,4 @@ class SparseGrid
        return new SparseGrid(cellSize);
    }
 };
-
-(function () {
-    var buffer = new ArrayBuffer(2 * 4);
-    var byteToHex = [];
-    byteToHex.length = 256;
-    var n;
-    for (n = 0; n < 256; n += 1)
-    {
-        byteToHex[n] = ('0' + n.toString(16)).slice(-2);
-    }
-    SparseGrid.prototype.tempIntArray = new Int32Array(buffer);
-    SparseGrid.prototype.tempByteArray = new Uint8Array(buffer);
-    SparseGrid.prototype.byteToHex = byteToHex;
-}());
 
