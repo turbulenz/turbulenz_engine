@@ -1548,15 +1548,14 @@ class BlendController implements ControllerBaseClass
         var boundsEnd = endController.bounds;
 
         var mathDevice = this.mathDevice;
-        var v3Add = mathDevice.v3Add;
 
-        var centerSum = v3Add.call(mathDevice, boundsStart.center, boundsEnd.center);
+        var centerSum = mathDevice.v3Add(boundsStart.center, boundsEnd.center, this.bounds.center);
         var newCenter = mathDevice.v3ScalarMul(centerSum, 0.5, centerSum);
         this.bounds.center = newCenter;
-        var newExtent = mathDevice.v3Max(boundsStart.halfExtent, boundsEnd.halfExtent);
+        var newExtent = mathDevice.v3Max(boundsStart.halfExtent, boundsEnd.halfExtent, this.bounds.halfExtent);
         var centerOffset = mathDevice.v3Sub(boundsStart.center, newCenter);
         centerOffset = mathDevice.v3Abs(centerOffset, centerOffset);
-        this.bounds.halfExtent = v3Add.call(mathDevice, newExtent, centerOffset, newExtent);
+        this.bounds.halfExtent = mathDevice.v3Add(newExtent, centerOffset, newExtent);
 
         this.dirtyBounds = false;
     }
