@@ -8555,10 +8555,7 @@ class ParticleManager
     addInstanceToScene(instance, parent?)
     {
         var sceneNode = instance.sceneNode;
-        if (sceneNode.isInScene() || sceneNode.parent)
-        {
-            this.removeInstanceFromScene(instance);
-        }
+        this.removeInstanceFromScene(instance);
 
         if (parent)
         {
@@ -8575,20 +8572,20 @@ class ParticleManager
     removeInstanceFromScene(instance)
     {
         var sceneNode = instance.sceneNode;
-        if (sceneNode.isInScene() || sceneNode.parent)
+        var parent = sceneNode.parent;
+        if (parent)
         {
-            if (sceneNode.getRoot() === sceneNode)
-            {
-                this.scene.removeRootNode(sceneNode);
-            }
-            else
-            {
-                var parent = sceneNode.getParent();
-                if (parent)
-                {
-                    parent.removeChild(sceneNode);
-                }
-            }
+            parent.removeChild(sceneNode);
+            return true;
+        }
+        else if (sceneNode.scene)
+        {
+            sceneNode.scene.removeRootNode(sceneNode);
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 
@@ -8714,12 +8711,8 @@ class ParticleManager
             var instance = instances.pop();
 
             // Partially recycle instance.
-            var inScene = instance.sceneNode.isInScene();
-            var parent = instance.sceneNode.getParent();
-            if (inScene)
-            {
-                this.removeInstanceFromScene(instance);
-            }
+            var parent = instance.sceneNode.parent;
+            var inScene = this.removeInstanceFromScene(instance);
 
             if (!instance.parent)
             {
@@ -8826,10 +8819,7 @@ class ParticleManager
             var instance = instances.pop();
 
             // Partially recycle instance.
-            if (instance.sceneNode.isInScene())
-            {
-                this.removeInstanceFromScene(instance);
-            }
+            this.removeInstanceFromScene(instance);
             if (!instance.parent)
             {
                 this.releaseSynchronizer(instance);
