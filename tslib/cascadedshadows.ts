@@ -1581,7 +1581,7 @@ class CascadedShadowMapping
             minimalViewWindowY = Math.max(Math.abs(maxLightDistanceY), Math.abs(minLightDistanceY));
         }
 
-        var borderPadding = (2.0 / shadowMapSize);
+        var borderPadding = ((this.blurEnabled ? 2.0 : 1.0) / shadowMapSize);
 
         minimalViewWindowX += borderPadding * minimalViewWindowX;
         if (lightViewWindowX > minimalViewWindowX)
