@@ -6115,6 +6115,11 @@ class ParticleRenderable
         }
     }
 
+    getLocalTransform(): FloatArray
+    {
+        return this.localTransform;
+    }
+
     setFixedOrientation(fixedOrientation: boolean)
     {
         if (this.fixedOrientation !== fixedOrientation)
