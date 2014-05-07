@@ -7960,44 +7960,48 @@ class WebGLGraphicsDevice implements GraphicsDevice
             return attributeFormat;
         };
 
-        if (gd.fixIE && gd.fixIE < "0.93")
+
+        if (gd.fixIE && gd.fixIE < "0.94")
         {
             proto.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
-            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
             proto.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4');
-            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
-            proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2');
-            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,  8, gl.FLOAT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,   8, gl.FLOAT, 'SHORT2');
             proto.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4');
-            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
-            proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2');
-            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,  8, gl.FLOAT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,   8, gl.FLOAT, 'USHORT2');
             proto.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4');
-            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
-            proto.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-            proto.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-            proto.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-            proto.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
         }
         else
         {
             proto.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
-            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
             proto.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
-            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
             proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
-            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
             proto.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
-            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
             proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
-            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
             proto.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
-            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
-            proto.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-            proto.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-            proto.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-            proto.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
         }
+        if (gd.fixIE && gd.fixIE < "0.93")
+        {
+            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
+            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
+            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,   8, gl.FLOAT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
+            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,   8, gl.FLOAT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
+        }
+        else
+        {
+            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
+            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
+            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
+            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
+        }
+        proto.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+        proto.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+        proto.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+        proto.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+
 
         var maxAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
         if (maxAttributes < 16)
