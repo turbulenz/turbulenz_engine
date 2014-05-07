@@ -133,23 +133,23 @@ class Camera
         var planes = (p || []);
 
         // Negate 'd' here to avoid doing it on the isVisible functions
-        var vec = md.v4Build((m3  + m0), (m7  + m4), (m11 + m8), -(m15 + m12));
-        planes[0] = md.planeNormalize(vec, planes[0]); // left
+        planes[0] = md.v4Build((m3  + m0), (m7  + m4), (m11 + m8), -(m15 + m12), planes[0]);
+        md.planeNormalize(planes[0], planes[0]); // left
 
-        md.v4Build((m3  - m0), (m7  - m4), (m11 - m8), -(m15 - m12), vec);
-        planes[1] = md.planeNormalize(vec, planes[1]); // right
+        planes[1] = md.v4Build((m3  - m0), (m7  - m4), (m11 - m8), -(m15 - m12), planes[1]);
+        md.planeNormalize(planes[1], planes[1]); // right
 
-        md.v4Build((m3  - m1), (m7  - m5), (m11 - m9),  -(m15 - m13), vec);
-        planes[2] = md.planeNormalize(vec, planes[2]); // top
+        planes[2] = md.v4Build((m3  - m1), (m7  - m5), (m11 - m9),  -(m15 - m13), planes[2]);
+        md.planeNormalize(planes[2], planes[2]); // top
 
-        md.v4Build((m3  + m1), (m7  + m5), (m11 + m9),  -(m15 + m13), vec);
-        planes[3] = md.planeNormalize(vec, planes[3]); // bottom
+        planes[3] = md.v4Build((m3  + m1), (m7  + m5), (m11 + m9),  -(m15 + m13), planes[3]);
+        md.planeNormalize(planes[3], planes[3]); // bottom
 
-        md.v4Build((m3  + m2), (m7  + m6), (m11 + m10), -(m15 + m14), vec);
-        planes[4] = md.planeNormalize(vec, planes[4]);  // near
+        planes[4] = md.v4Build((m3  + m2), (m7  + m6), (m11 + m10), -(m15 + m14), planes[4]);
+        md.planeNormalize(planes[4], planes[4]);  // near
 
-        md.v4Build((m3  - m2), (m7  - m6), (m11 - m10), -(m15 - m14), vec);
-        planes[5] = md.planeNormalize(vec, planes[5]); // far
+        planes[5] = md.v4Build((m3  - m2), (m7  - m6), (m11 - m10), -(m15 - m14), planes[5]);
+        md.planeNormalize(planes[5], planes[5]); // far
 
         return planes;
     }
