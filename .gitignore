@@ -1,5 +1,6 @@
 # Virtual env
 /env/
+node_modules
 
 # Compiled python files
 *.pyc

@@ -842,6 +842,10 @@ class WebGLInputDevice implements InputDevice
 
     onPointerDown(event)
     {
+        if ("touch" !== event.pointerType)
+        {
+            return;
+        }
         if (event.preventManipulation)
         {
             event.preventManipulation();
@@ -866,6 +870,10 @@ class WebGLInputDevice implements InputDevice
 
     onPointerMove(event)
     {
+        if ("touch" !== event.pointerType)
+        {
+            return;
+        }
         if (event.preventManipulation)
         {
             event.preventManipulation();
@@ -890,6 +898,10 @@ class WebGLInputDevice implements InputDevice
 
     onPointerUp(event)
     {
+        if ("touch" !== event.pointerType)
+        {
+            return;
+        }
         if (event.preventManipulation)
         {
             event.preventManipulation();
@@ -916,6 +928,10 @@ class WebGLInputDevice implements InputDevice
 
     onPointerCancel(event)
     {
+        if ("touch" !== event.pointerType)
+        {
+            return;
+        }
         if (event.preventManipulation)
         {
             event.preventManipulation();
