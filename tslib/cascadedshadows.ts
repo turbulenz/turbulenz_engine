@@ -336,7 +336,13 @@ class CascadedShadowMapping
         /* tslint:disable:no-string-literal */
         this.update = function _cascadedShadowsUpdateFn(): void
         {
-            this.shadowTechniqueParameters['world'] = this.node.world;
+            var node = this.node;
+            while (!node.local &&
+                    node.parent)
+            {
+                node = node.parent;
+            }
+            this.shadowTechniqueParameters['world'] = node.world;
         };
 
         this.skinnedUpdate = function _cascadedShadowsSkinnedUpdateFn(): void
