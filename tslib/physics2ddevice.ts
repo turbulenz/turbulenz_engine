@@ -3855,11 +3855,11 @@ Physics2DDistanceConstraint.prototype._sleepComputation =
 ///*ANGLE_DATA_SIZE*/14
 
 interface Physics2DAngleConstraintParams extends Physics2DConstraintParams {
-    bodyA: Physics2DRigidBody;
-    bodyB: Physics2DRigidBody;
-    ratio: number;
-    lowerBound: number;
-    upperBound: number;
+    bodyA?: Physics2DRigidBody;
+    bodyB?: Physics2DRigidBody;
+    ratio?: number;
+    lowerBound?: number;
+    upperBound?: number;
 }
 
 class Physics2DAngleConstraint extends Physics2DConstraint
