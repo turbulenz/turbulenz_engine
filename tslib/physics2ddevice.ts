@@ -1842,14 +1842,14 @@ class Physics2DCustomConstraint extends Physics2DConstraint
 ///*PULLEY_DATA_SIZE*/37
 
 interface Physics2DPulleyConstraintParams extends Physics2DConstraintParams {
-    bodyA?: Physics2DRigidBody;
-    bodyB?: Physics2DRigidBody;
-    bodyC?: Physics2DRigidBody;
-    bodyD?: Physics2DRigidBody;
-    anchorA?: number[];
-    anchorB?: number[];
-    anchorC?: number[];
-    anchorD?: number[];
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    bodyC: Physics2DRigidBody;
+    bodyD: Physics2DRigidBody;
+    anchorA?: any;
+    anchorB?: any;
+    anchorC?: any;
+    anchorD?: any;
     ratio?: number;
     lowerBound?: number;
     upperBound?: number;
@@ -2641,8 +2641,8 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 ///*MOTOR_DATA_SIZE*/10
 
 interface Physics2DMotorConstraintParams extends Physics2DConstraintParams {
-    bodyA?: Physics2DRigidBody;
-    bodyB?: Physics2DRigidBody;
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
     ratio?: number;
     rate?: number;
 }
@@ -2846,11 +2846,11 @@ Physics2DMotorConstraint.prototype._sleepComputation =
 ///*LINE_DATA_SIZE*/33
 
 interface Physics2DLineConstraintParams extends Physics2DConstraintParams {
-    bodyA?: Physics2DRigidBody;
-    bodyB?: Physics2DRigidBody;
-    axis?: number[];
-    anchorA?: number[];
-    anchorB?: number[];
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    axis: any;
+    anchorA?: any;
+    anchorB?: any;
     lowerBound?: number;
     upperBound?: number;
 }
@@ -3388,10 +3388,10 @@ Physics2DLineConstraint.prototype._sleepComputation =
 ///*DIST_DATA_SIZE*/24
 
 interface Physics2DDistanceConstraintParams extends Physics2DConstraintParams {
-    bodyA?: Physics2DRigidBody;
-    bodyB?: Physics2DRigidBody;
-    anchorA?: number[];
-    anchorB?: number[];
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    anchorA?: any;
+    anchorB?: any;
     lowerBound?: number;
     upperBound?: number;
 }
@@ -3855,8 +3855,8 @@ Physics2DDistanceConstraint.prototype._sleepComputation =
 ///*ANGLE_DATA_SIZE*/14
 
 interface Physics2DAngleConstraintParams extends Physics2DConstraintParams {
-    bodyA?: Physics2DRigidBody;
-    bodyB?: Physics2DRigidBody;
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
     ratio?: number;
     lowerBound?: number;
     upperBound?: number;
@@ -4223,10 +4223,10 @@ Physics2DAngleConstraint.prototype._sleepComputation =
 ///*WELD_DATA_SIZE*/28
 
 interface Physics2DWeldConstraintParams extends Physics2DConstraintParams {
-    bodyA?: Physics2DRigidBody;
-    bodyB?: Physics2DRigidBody;
-    anchorA?: number[];
-    anchorB?: number[];
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    anchorA?: any;
+    anchorB?: any;
     phase?: number;
 }
 
@@ -4654,10 +4654,10 @@ Physics2DWeldConstraint.prototype._sleepComputation =
 ///*POINT_DATA_SIZE*/22
 
 interface Physics2DPointConstraintParams extends Physics2DConstraintParams {
-    bodyA?: Physics2DRigidBody;
-    bodyB?: Physics2DRigidBody;
-    anchorA?: number[];
-    anchorB?: number[];
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    anchorA?: any;
+    anchorB?: any;
 }
 
 class Physics2DPointConstraint extends Physics2DConstraint
@@ -5332,8 +5332,8 @@ class Physics2DShape
 ///*CIRCLE_DATA_SIZE*/11
 
 interface Physics2DCircleParams extends Physics2DShapeParams {
-    radius?: number;
-    origin?: number[];
+    radius: number;
+    origin?: any;
 }
 
 class Physics2DCircle extends Physics2DShape
@@ -5630,7 +5630,7 @@ class Physics2DCircle extends Physics2DShape
 ///*POLY_LENGTH*/12   // Length of edge startinga t this vertex.
 
 interface Physics2DPolygonParams extends Physics2DShapeParams {
-    vertices?: number[][];
+    vertices: any[];
 }
 
 class Physics2DPolygon extends Physics2DShape
@@ -6189,15 +6189,15 @@ interface Physics2DRigidBodyParams {
     inertia?: number;
     sleeping?: boolean;
     bullet?: boolean;
-    position?: number[];
+    position?: any;
     rotation?: number;
-    velocity?: number[];
+    velocity?: any;
     angularVelocity?: number;
-    force?: number[];
+    force?: any;
     torque?: number;
     linearDrag?: number;
     angularDrag?: number;
-    surfaceVelocity?: number[];
+    surfaceVelocity?: any;
     userData?: any;
 }
 
@@ -7572,7 +7572,7 @@ class Physics2DBoxTreeBroadphaseHandle
     }
 }
 
-class Physics2DBoxTreeBroadphase
+class Physics2DBoxTreeBroadphase implements Physics2DBroadphase
 {
     static version = 1;
 
@@ -7693,6 +7693,11 @@ class Physics2DBoxTreeBroadphase
     {
         this.staticTree.finalize();
         this.dynamicTree.finalize();
+    }
+
+    validate(): void
+    {
+        this._validate();
     }
 
     perform(lambda, thisObject)
@@ -9702,8 +9707,8 @@ interface Physics2DBroadphase
 };
 
 interface Physics2DWorldParams {
-    broadphase?: any;
-    gravity?: number[];
+    broadphase?: Physics2DBroadphase;
+    gravity?: any;
     velocityIterations?: number;
     positionIterations?: number;
 }
