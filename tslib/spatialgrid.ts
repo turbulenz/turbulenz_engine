@@ -723,14 +723,79 @@ class SpatialGrid
         var cells = this.cells;
         var cellSize = this.cellSize;
         var numCellsX = this.numCellsX;
-        var numCellsZ = this.numCellsZ;
+        //var numCellsZ = this.numCellsZ;
         var gridExtents = this.extents;
         var minGridX = gridExtents[0];
         var minGridY = gridExtents[1];
         var minGridZ = gridExtents[2];
         var maxGridX = gridExtents[3];
         var maxGridY = gridExtents[4];
-        //var maxGridZ = gridExtents[5];
+        var maxGridZ = gridExtents[5];
+
+        // clamp grid extents to planes
+        var abs = Math.abs;
+        var isInside, plane, d0, d1, d2;
+        var n = 0;
+        do
+        {
+            plane = planes[n];
+            d0 = plane[0];
+            d1 = plane[1];
+            d2 = plane[2];
+            var maxDistance = (d0 * (d0 < 0 ? minGridX : maxGridX) +
+                               d1 * (d1 < 0 ? minGridY : maxGridY) +
+                               d2 * (d2 < 0 ? minGridZ : maxGridZ) - plane[3]);
+            if (maxDistance < 0.0001)
+            {
+                return 0;
+            }
+            else
+            {
+                if (maxDistance < abs(d0) * (maxGridX - minGridX))
+                {
+                    if (d0 < 0)
+                    {
+                        maxGridX = minGridX - (maxDistance / d0);
+                    }
+                    else
+                    {
+                        minGridX = maxGridX - (maxDistance / d0);
+                    }
+                }
+                if (maxDistance < abs(d1) * (maxGridY - minGridY))
+                {
+                    if (d1 < 0)
+                    {
+                        maxGridY = minGridY - (maxDistance / d1);
+                    }
+                    else
+                    {
+                        minGridY = maxGridY - (maxDistance / d1);
+                    }
+                }
+                if (maxDistance < abs(d2) * (maxGridZ - minGridZ))
+                {
+                    if (d2 < 0)
+                    {
+                        maxGridZ = minGridZ - (maxDistance / d2);
+                    }
+                    else
+                    {
+                        minGridZ = maxGridZ - (maxDistance / d2);
+                    }
+                }
+            }
+            n += 1;
+        }
+        while (n < numPlanes);
+
+        var minX = Math.floor((minGridX - gridExtents[0]) / cellSize);
+        var minZ = Math.floor((minGridZ - gridExtents[2]) / cellSize);
+        var maxX = Math.ceil((maxGridX - gridExtents[0]) / cellSize);
+        var maxZ = Math.ceil((maxGridZ - gridExtents[2]) / cellSize);
+
+        minGridX = ((minX * cellSize) + gridExtents[0]);
+        minGridZ = ((minZ * cellSize) + gridExtents[2]);
 
         var queryIndex = (this.queryIndex + 1);
         this.queryIndex = queryIndex;
@@ -740,11 +805,10 @@ class SpatialGrid
         var numQueryRowPlanes = 0;
         var numQueryCellPlanes = 0;
 
-        var isInside, n, plane, d0, d1, d2;
         var i, j, k;
         var minRowZ = minGridZ;
         var maxRowZ = (minGridZ + cellSize);
-        for (j = 0; j < numCellsZ; j += 1)
+        for (j = minZ; j < maxZ; j += 1)
         {
             // Check if row is visible
             isInside = true;
@@ -790,8 +854,8 @@ class SpatialGrid
 
                 var minCellX = minGridX;
                 var maxCellX = (minGridX + cellSize);
-                var cellIndex = (j * numCellsX);
-                for (i = 0; i < numCellsX; i += 1, cellIndex += 1)
+                var cellIndex = ((j * numCellsX) + minX);
+                for (i = minX; i < maxX; i += 1, cellIndex += 1)
                 {
                     var cell = cells[cellIndex];
                     if (cell)
