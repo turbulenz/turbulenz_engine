@@ -635,6 +635,10 @@ interface GraphicsDevice
     PIXELFORMAT_DXT3         : number;
     PIXELFORMAT_DXT5         : number;
     PIXELFORMAT_S8           : number;
+    PIXELFORMAT_RGBA32F      : number;
+    PIXELFORMAT_RGB32F       : number;
+    PIXELFORMAT_RGBA16F      : number;
+    PIXELFORMAT_RGB16F       : number;
 
     //
     PRIMITIVE_POINTS         : number;

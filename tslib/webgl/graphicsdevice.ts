@@ -9022,6 +9022,10 @@ WebGLGraphicsDevice.prototype.SEMANTIC_ATTR12 = 12;
 WebGLGraphicsDevice.prototype.SEMANTIC_ATTR13 = 13;
 WebGLGraphicsDevice.prototype.SEMANTIC_ATTR14 = 14;
 WebGLGraphicsDevice.prototype.SEMANTIC_ATTR15 = 15;
+
+// Add any new additions need to go into into src/engine/pixelformat.h
+// and engine/tslib/turbulenz.d.ts.
+
 WebGLGraphicsDevice.prototype.PIXELFORMAT_A8 = 0;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_L8 = 1;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_L8A8 = 2;
