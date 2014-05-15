@@ -172,7 +172,7 @@ class GameProfileManager
             data: dataSpec,
             callback: getCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'gameprofile.read');
 
         return true;
     }
