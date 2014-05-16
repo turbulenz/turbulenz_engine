@@ -190,7 +190,7 @@ class CascadedShadowMapping
     blurRenderTarget    : RenderTarget;
 
     sideCamera          : Camera;
-    sideCameraNearPlane :any; // v4
+    sideCameraNearPlane : any; // v4
 
     numMainFrustumSidePlanes: number;
     numMainFrustumPlanes: number;
@@ -218,7 +218,7 @@ class CascadedShadowMapping
     skinnedUpdate: () => void;
 
 
-    constructor(gd: GraphicsDevice, md: MathDevice, shaderManager: ShaderManager, size: number)
+    constructor(gd: GraphicsDevice, md: MathDevice, shaderManager: ShaderManager, size: number, blurDisabled: boolean)
     {
         shaderManager.load("shaders/cascadedshadows.cgfx");
 
@@ -299,6 +299,18 @@ class CascadedShadowMapping
 
         this.numSplitsToRedraw = 0;
 
+        var precision = gd.maxSupported("FRAGMENT_SHADER_PRECISION");
+        if (blurDisabled ||
+            (precision && // Just in case the query is not supported
+             precision < 16))
+        {
+            this.blurEnabled = false;
+        }
+        else
+        {
+            this.blurEnabled = true;
+        }
+
         this.updateBuffers(size);
 
         var camera = Camera.create(md);
@@ -321,17 +333,6 @@ class CascadedShadowMapping
         this.numOccludees = 0;
         this.occludeesExtents = [];
         this.occludersExtents = [];
-
-        var precision = gd.maxSupported("FRAGMENT_SHADER_PRECISION");
-        if (precision && // Just in case the query is not supported
-            precision < 16)
-        {
-            this.blurEnabled = false;
-        }
-        else
-        {
-            this.blurEnabled = true;
-        }
 
         /* tslint:disable:no-string-literal */
         this.update = function _cascadedShadowsUpdateFn(): void
@@ -433,22 +434,28 @@ class CascadedShadowMapping
                 format: "D24S8"
             });
 
-        this.blurTexture = gd.createTexture({
-                width: splitSize,
-                height: splitSize,
-                format: "R8G8B8A8",
-                mipmaps: false,
-                renderable: true
-            });
+        if (this.blurEnabled)
+        {
+            this.blurTexture = gd.createTexture({
+                    width: splitSize,
+                    height: splitSize,
+                    format: "R8G8B8A8",
+                    mipmaps: false,
+                    renderable: true
+                });
+        }
 
         if (this.depthBuffer &&
-            this.blurTexture)
+            (!this.blurEnabled || this.blurTexture))
         {
-            this.blurRenderTarget = gd.createRenderTarget({
-                    colorTexture0: this.blurTexture
-                });
+            if (this.blurEnabled)
+            {
+                this.blurRenderTarget = gd.createRenderTarget({
+                        colorTexture0: this.blurTexture
+                    });
+            }
 
-            if (this.blurRenderTarget)
+            if (!this.blurEnabled || this.blurRenderTarget)
             {
                 this.texture = gd.createTexture({
                     width: size,
@@ -2400,8 +2407,12 @@ class CascadedShadowMapping
     }
 
     // Constructor function
-    static create(gd: GraphicsDevice, md: MathDevice, shaderManager: ShaderManager, size: number): CascadedShadowMapping
+    static create(gd: GraphicsDevice,
+                  md: MathDevice,
+                  shaderManager: ShaderManager,
+                  size: number,
+                  blurDisabled?: boolean): CascadedShadowMapping
     {
-        return new CascadedShadowMapping(gd, md, shaderManager, size);
+        return new CascadedShadowMapping(gd, md, shaderManager, size, blurDisabled);
     }
 }
