@@ -237,6 +237,14 @@ class SceneNode
         {
             child.setDynamic();
         }
+        else
+        {
+            var scene = this.getRoot().scene;
+            if (scene)
+            {
+                child.addedToScene(scene);
+            }
+        }
     }
 
     //
