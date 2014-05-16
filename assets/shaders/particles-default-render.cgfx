@@ -99,21 +99,21 @@ void vp_render( in float2 inData     : POSITION,
                out float2 outUV      : TEXCOORD1,
                out float4 outColor   : COLOR)
 {
-    float2 particle = particleRegionMap(getParticle(inData.y, mappingTable));
-    float life = getLife(vParticleState, particle, invTextureSize) * maxLifeTime;
+    float2 index = getParticleI(inData.y, mappingTable);
+    float life = getLifeI(vParticleState, index + regionPos, invTextureSize) * maxLifeTime;
     if (life <= 0)
     {
         outPosition = float4(0, 0, 0, 0);
         return;
     }
 
-    float4 data = getData(vParticleState, particle, invTextureSize);
-    float animTime = getAnimationTime(vParticleState, particle, invTextureSize,
-                                      getLifePair(vParticleState, particle, invTextureSize));
+    float4 data = getDataI(vParticleState, index + regionPos, invTextureSize);
+    float animTime = getAnimationTimeI(vParticleState, index + regionPos, invTextureSize,
+                                      getLifePairI(vParticleState, index + regionPos, invTextureSize));
 
     float2 noiseUV = decodeByteUnsignedFloat2(data.z);
 
-    float3 particlePos = getPosition(vParticleState, particle, invTextureSize) * halfExtents;
+    float3 particlePos = getPositionI(vParticleState, index + regionPos, invTextureSize) * halfExtents;
     float3 pos = particlePos + center;
 
     particlePos = halfExtents - abs(particlePos);
@@ -156,7 +156,7 @@ void vp_render( in float2 inData     : POSITION,
     else if (bitSet(data.w, BIT7))
     {
         // velocity orientated verts
-        float3x3 orient = orientTo(getVelocity(vParticleState, particle, invTextureSize));
+        float3x3 orient = orientTo(getVelocityI(vParticleState, index + regionPos, invTextureSize));
         pos += mul(mul(orient, rot), (right * inPosition.x + up * inPosition.y));
         pos = transform43Rot(pos, modelView);
     }
@@ -168,7 +168,7 @@ void vp_render( in float2 inData     : POSITION,
     }
 
     outPosition = mul(float4(transform43Pos(pos, modelView), 1.0), projection);
-    outParticle = particle;
+    outParticle = (index + regionPos) * invRegionSize;
 
     float4 texuv = getUV(animTime);
     // swap y-coordinates to avoid texture-flip

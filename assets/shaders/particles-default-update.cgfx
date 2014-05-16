@@ -8,7 +8,7 @@ float drag;
 sampler2D noiseTexture = sampler_state
 {
     MinFilter = LinearMipMapNearest;
-    magFilter = Linear;
+    MagFilter = Linear;
     WrapS = Wrap;
     WrapT = Wrap;
 };
@@ -40,31 +40,31 @@ float wrap(float x)
     return x;
 }
 
-float4 fp_update_state_base(float2 inParticle, bool wrapPositions)
+float4 fp_update_state_base(float2 inParticle, bool wrapPositions, float4 wPos)
 {
-    float2 particle = inParticle * regionSize;
+    float2 particle = floor(wPos.xy - regionPos);
     float2 index = floor(particle / PARTICLE_DIM) * PARTICLE_DIM;
+
     if (createdParticle(index))
     {
         // Newly created particle, no simulation to be performed.
-        return tex2D(creationState, inParticle * creationScale);
+        return tex2D(creationState, (particle + 0.5) * creationScale);
     }
 
-    float2 pIndex = index * invRegionSize;
-    if (getLife(previousState, particleRegionMap(pIndex), invTextureSize) <= 0)
+    if (getLifeI(previousState, index + regionPos, invTextureSize) <= 0.0)
     {
         // Dead particle, skip simulation
-        return tex2D(previousState, particleRegionMap(inParticle));
+        return float4(0.0);
     }
 
-    float2 slot = getSlot(particle);
-    float indexY = ceil(slot.y) - 1;
-    if (slot.x <= 1)
+    float2 slot = particle - index;
+    float indexX = slot.x;
+    float indexY = slot.y;
+    if (indexX == 0.0)
     {
         // position
-        float p = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
-        float2 vt = inParticle + float2(invRegionSize.x, 0);
-        float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(vt)));
+        float p = decodeSignedFloat(tex2D(previousState, inParticle));
+        float v = decodeSignedFloat(tex2D(previousState, inParticle + float2(1,0) * invTextureSize));
         p += (v * timeStep * maxSpeed / halfExtents[indexY]) + shift[indexY];
         if (wrapPositions)
         {
@@ -75,19 +75,19 @@ float4 fp_update_state_base(float2 inParticle, bool wrapPositions)
             return encodeSignedFloat(p);
         }
     }
-    else if (slot.x <= 2)
+    else if (indexX == 1.0)
     {
         // velocity
-        float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
+        float v = decodeSignedFloat(tex2D(previousState, inParticle));
         float a = acceleration[indexY];
-        float4 data = getData(previousState, particleRegionMap(pIndex), invTextureSize);
+        float4 data = getDataI(previousState, index + regionPos, invTextureSize);
         if (bitSet(data.w, BIT1))
         {
             float2 noiseUV = decodeByteUnsignedFloat2(data.z);
-
-            float animTime = getAnimationTime(previousState, particleRegionMap(pIndex), invTextureSize,
-                                              getLifePair(previousState, particleRegionMap(pIndex), invTextureSize));
-
+            float animTime = getAnimationTimeI(previousState,
+                                               index + regionPos,
+                                               invTextureSize,
+                                               getLifePairI(previousState, index + regionPos, invTextureSize));
             a += getAccelerationNoise(noiseUV, animTime)[indexY];
         }
         float d = 1.0 - min(1.0, timeStep * drag);
@@ -95,29 +95,31 @@ float4 fp_update_state_base(float2 inParticle, bool wrapPositions)
     }
     else
     {
-        if (slot.y <= 1)
+        if (indexY == 0.0)
         {
             // life
-            float4 pix = tex2D(previousState, particleRegionMap(inParticle));
+            float4 pix = tex2D(previousState, inParticle);
             float life = decodeHalfUnsignedFloat(pix.zw);
             return float4(pix.xy, encodeHalfUnsignedFloat(life - lifeStep));
         }
         else
         {
             // user store.
-            return tex2D(previousState, particleRegionMap(inParticle));
+            return tex2D(previousState, inParticle);
         }
     }
 }
 
-float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
+float4 fp_update_state(float2 inParticle : TEXCOORD0,
+                       float4 inWPos     : WPOS) : COLOR
 {
-    return fp_update_state_base(inParticle, false);
+    return fp_update_state_base(inParticle, false, inWPos);
 }
 
-float4 fp_update_state_wrap(float2 inParticle : TEXCOORD0) : COLOR
+float4 fp_update_state_wrap(float2 inParticle : TEXCOORD0,
+                            float4 inWPos     : WPOS) : COLOR
 {
-    return fp_update_state_base(inParticle, true);
+    return fp_update_state_base(inParticle, true, inWPos);
 }
 
 // --------------------------------------------------------------
@@ -148,3 +150,72 @@ technique wrapped
     }
 }
 
+
+void vp_debug(in  float2 inUV: POSITION,
+              out float4 outPosition: POSITION)
+{
+    outPosition = float4(inUV * 2.0 - 1.0, 0.0, 1.0);
+}
+
+float4 fp_debug(in float4 wPos: WPOS): COLOR
+{
+    float2 slot = floor(fmod(wPos.xy, 3.0));
+    return((slot.y == 0.0 ? float4(1, 0, 0, 1) :
+            slot.y == 1.0 ? float4(0, 1, 0, 1) :
+            slot.y == 2.0 ? float4(0, 0, 1, 1) :
+            float4(1, 1, 1, 1))
+    +      (slot.x == 0.0 ? float4(1, 0, 0, 1) :
+            slot.x == 1.0 ? float4(0, 1, 0, 1) :
+            slot.x == 2.0 ? float4(0, 0, 1, 1) :
+            float4(1, 1, 1, 1))) * 0.5;
+}
+
+void vp_copy(in  float2 inUV: POSITION,
+              out float4 outPosition: POSITION,
+              out float2 outUV: TEXCOORD0)
+{
+    inUV = (inUV * 5 + 7) * (1.0 / (3.0 * 160.0));
+    outPosition = float4(inUV * 2.0 - 1.0, 0.0, 1.0);
+    outUV = inUV;
+}
+
+sampler2D tex = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+float4 fp_copy(in float2 uv: TEXCOORD0): COLOR
+{
+    return tex2D(tex, uv);
+}
+
+technique debug
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_debug();
+        FragmentProgram = compile latest fp_debug();
+    }
+}
+
+technique copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile latest vp_copy();
+        FragmentProgram = compile latest fp_copy();
+    }
+}

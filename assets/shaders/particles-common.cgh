@@ -245,7 +245,7 @@ static const float2 PARTICLE_DATA = float2(2.5, 2.5);
 // (0,0 1,0 2,0) (assuming particle_dim is (3,3) of course)
 float2 getSlot(float2 uv)
 {
-    return mod(uv, PARTICLE_DIM);
+    return fmod(uv, PARTICLE_DIM);
 }
 
 float2 animationSize;
@@ -275,6 +275,23 @@ float2 getParticle(float index, sampler2D mappingTable)
     }
 }
 
+float2 getParticleI(float index, sampler2D mappingTable)
+{
+    index *= PARTICLE_DIM.x;
+    float y = floor(index * invRegionSize.x);
+    float x = index - y * regionSize.x;
+    if (zSorted)
+    {
+        float2 mappingUV = mappingRegionMap((float2(x / PARTICLE_DIM.x, y) + 0.5) * PARTICLE_DIM * invRegionSize);
+        float2 particleUV = tex2D(mappingTable, mappingUV).xy * 255.0;
+        return particleUV * PARTICLE_DIM;
+    }
+    else
+    {
+        return float2(x, y * PARTICLE_DIM.x);
+    }
+}
+
 // extract float4 data for animation frame in given row at particular animation time.
 float4 getAnimation4(float t, float row)
 {
@@ -297,12 +314,20 @@ float getAnimation(float t, float row)
 }
 
 // return normalised position for particle
+float3 getPositionI(sampler2D texture, float2 index, float2 invTextureSize)
+{
+    return extractSignedFloat3(texture, (index + PARTICLE_POS) * invTextureSize);
+}
 float3 getPosition(sampler2D texture, float2 particle, float2 invTextureSize)
 {
     return extractSignedFloat3(texture, particle + (PARTICLE_POS * invTextureSize));
 }
 
 // return normalised velocity for particle
+float3 getVelocityI(sampler2D texture, float2 index, float2 invTextureSize)
+{
+    return extractSignedFloat3(texture, (index + PARTICLE_VEL) * invTextureSize);
+}
 float3 getVelocity(sampler2D texture, float2 particle, float2 invTextureSize)
 {
     return extractSignedFloat3(texture, particle + (PARTICLE_VEL * invTextureSize));
@@ -391,12 +416,21 @@ float3x4 getContrastMatrix(float c)
 }
 
 // return userData float4
+float4 getDataI(sampler2D texture, float2 index, float2 invTextureSize)
+{
+    return tex2D(texture, (index + PARTICLE_DATA) * invTextureSize);
+}
 float4 getData(sampler2D texture, float2 particle, float2 invTextureSize)
 {
     return tex2D(texture, particle + (PARTICLE_DATA * invTextureSize));
 }
 
 // return (currentLife, totalLife) normalised values
+float2 getLifePairI(sampler2D texture, float2 index, float2 invTextureSize)
+{
+    float4 life = tex2D(texture, (index + PARTICLE_LIFE) * invTextureSize);
+    return float2(decodeHalfUnsignedFloat(life.zw), decodeHalfUnsignedFloat(life.xy));
+}
 float2 getLifePair(sampler2D texture, float2 particle, float2 invTextureSize)
 {
     float4 life = tex2D(texture, particle + (PARTICLE_LIFE * invTextureSize));
@@ -404,6 +438,11 @@ float2 getLifePair(sampler2D texture, float2 particle, float2 invTextureSize)
 }
 
 // return currentLife
+float getLifeI(sampler2D texture, float2 index, float invTextureSize)
+{
+    float4 life = tex2D(texture, (index + PARTICLE_LIFE) * invTextureSize);
+    return decodeHalfUnsignedFloat(life.zw);
+}
 float getLife(sampler2D texture, float2 particle, float2 invTextureSize)
 {
     float4 life = tex2D(texture, particle + (PARTICLE_LIFE * invTextureSize));
@@ -411,6 +450,11 @@ float getLife(sampler2D texture, float2 particle, float2 invTextureSize)
 }
 
 // return animation time for particle with given life
+float getAnimationTimeI(sampler2D texture, float2 index, float2 invTextureSize, float2 life)
+{
+    float4 c01 = tex2D(texture, (index + PARTICLE_ANIM) * invTextureSize);
+    return decodeHalfUnsignedFloat(c01.xy) - ((life.x / life.y) * decodeHalfUnsignedFloat(c01.zw));
+}
 float getAnimationTime(sampler2D texture, float2 particle, float2 invTextureSize, float2 life)
 {
     float4 c01 = tex2D(texture, particle + (PARTICLE_ANIM * invTextureSize));
@@ -419,9 +463,9 @@ float getAnimationTime(sampler2D texture, float2 particle, float2 invTextureSize
 
 // return boolean for if this particle should be gathered from creationState instead of previousState
 // takes non-normalised uv of particle
-bool createdParticle(float2 particle)
+bool createdParticle(float2 index)
 {
-    float2 flag = tex2D(creationState, (particle + PARTICLE_LIFE) * invRegionSize * creationScale).xy;
+    float2 flag = tex2D(creationState, (index + PARTICLE_LIFE) * creationScale).xy;
     return dot(flag, flag) > 0;
 }
 
