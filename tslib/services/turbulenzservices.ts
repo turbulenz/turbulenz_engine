@@ -453,8 +453,7 @@ class TurbulenzServices
             request.key = this.responseIndex;
         }
         var resultJSON = TurbulenzBridge.emit('bridgeservices.' + event, JSON.stringify(request));
-        var result = JSON.parse(resultJSON);
-        return result.fullyProcessed;
+        return resultJSON && JSON.parse(resultJSON).fullyProcessed;
     }
 
     static addSignature(data, url)
