@@ -48,10 +48,17 @@ index data at runtime.
     An array of numbers.
 
 ``offset`` (Optional)
-    Offset in indicies from the beginning of the buffer. Optional, assumed to be 0 if omitted.
+
+    Offset in indicies from the beginning of the buffer. Optional,
+    assumed to be 0 if omitted.
 
 ``count`` (Optional)
-    The number of elements to write, normally indexData.length. Optional, assumed to be IndexBuffer.numIndices if omitted.
+
+    The number of elements to write, normally
+    indexData.length. Optional, assumed to be IndexBuffer.numIndices
+    if omitted.  Since it is an error to pass parameters that would
+    write past the end of the IndexBuffer, callers should generally
+    specify neither or both ``offset`` and ``count``.
 
 .. index::
     pair: IndexBuffer; map

@@ -89,9 +89,9 @@ class SoundManager
 
       @return {SoundManager} object, null if failed
     */
-    static create(sd: SoundDevice, rh: RequestHandler, ds: Sound,
-                  errorCallback: SoundManagerErrorCallback,
-                  log: HTMLElement): SoundManager
+    static create(sd: SoundDevice, rh: RequestHandler, ds?: Sound,
+                  errorCallback?: SoundManagerErrorCallback,
+                  log?: HTMLElement): SoundManager
     {
         if (!errorCallback)
         {
@@ -113,6 +113,7 @@ class SoundManager
                     data   : SoundManager.beep(1.0, 4000, 400, 1),
                     channels : 1,
                     frequency : 4000,
+                    uncompress: true,
                     onload : function (s)
                     {
                         defaultSound = s;

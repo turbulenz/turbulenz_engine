@@ -66,3 +66,19 @@ Modifies the :ref:`MultiplayerSession <multiplayersession>` object to delay its 
 **Syntax** ::
 
     simulator.addMultiplayerSession(multiplayerSession);
+
+.. index::
+    pair: NetworkLatencySimulator; addWebsocket
+
+.. _networklatencysimulator_addwebsocket:
+
+`addWebsocket`
+--------------
+
+**Summary**
+
+Wraps a Websocket object to delay its messages.
+
+**Syntax** ::
+
+    simulator.addWebsocket(websocket);

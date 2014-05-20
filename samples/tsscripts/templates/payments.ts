@@ -1,4 +1,3 @@
-var x = 1;
 /*{# Copyright (c) 2012 Turbulenz Limited #}*/
 
 /*
@@ -170,7 +169,7 @@ TurbulenzEngine.onload = function onloadFn()
         {
             debug.log("User returned from upgrade screen, regetting profile");
             userProfile = TurbulenzServices.createUserProfile(requestHandler);
-        }
+        };
         TurbulenzServices.upgradeAnonymousUser(onUpgrade);
     };
 

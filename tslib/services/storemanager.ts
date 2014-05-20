@@ -119,7 +119,7 @@ class StoreManager
                 callback: requestUserItemsCallback,
                 requestHandler: this.requestHandler,
                 encrypt: true
-            });
+            }, 'store.useritems');
     }
 
     getUserItems(): UserItemList
@@ -370,7 +370,7 @@ class StoreManager
                 callback: consumeItemsCallback,
                 requestHandler: this.requestHandler,
                 encrypt: true
-            });
+            }, 'store.useritems-consume');
     }
 
     static create(requestHandler: RequestHandler,

@@ -10,6 +10,7 @@ The Source Object
 -----------------
 
 A Source object represents a 3D sound emitter.
+If you want to play sounds without positioning you should use a :ref:`GlobalSource <globalsource>` object.
 
 Constructor
 ===========

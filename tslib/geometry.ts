@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2013 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*global TurbulenzEngine: false*/
 /*global Reference: false*/
@@ -25,7 +25,9 @@ interface Surface
 //
 class Geometry
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     name                   : string;
     type                   : string;
@@ -36,6 +38,7 @@ class Geometry
     primitive              : number;
     semantics              : Semantics;
     vertexBuffer           : VertexBuffer;
+    vertexOffset           : number;
     //numVertices            : number;
     baseIndex              : number;
     indexBuffer            : IndexBuffer;
@@ -52,6 +55,17 @@ class Geometry
     vertexBufferManager    : VertexBufferManager;
     indexBufferAllocation  : any;
     indexBufferManager     : IndexBufferManager;
+
+    constructor()
+    {
+        this.semantics = null;
+        this.vertexBuffer = null;
+        this.vertexOffset = 0;
+        this.reference = Reference.create(this);
+        this.surfaces = {};
+        this.type = "rigid";
+        return this;
+    }
 
     destroy()
     {
@@ -80,11 +94,7 @@ class Geometry
 
     static create() : Geometry
     {
-        var geometry = new Geometry();
-        geometry.reference = Reference.create(geometry);
-        geometry.surfaces = {};
-        geometry.type = "rigid";
-        return geometry;
+        return new Geometry();
     }
 }
 
@@ -93,7 +103,10 @@ class Geometry
 //
 class GeometryInstance implements Renderable
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
+
     static maxUpdateValue = Number.MAX_VALUE;
 
     // Renderable
@@ -105,6 +118,7 @@ class GeometryInstance implements Renderable
     rendererInfo        : any;
     distance            : number;
     drawParameters      : DrawParameters[];
+    sharedMaterial      : Material;
 
     // GeometryInstance
     // TODO: Potentially some of these belong on Renderable too
@@ -115,11 +129,8 @@ class GeometryInstance implements Renderable
     worldExtents        : any; // new instance.arrayConstructor(6);
     semantics           : Semantics;
     techniqueParameters : TechniqueParameters;
-    sharedMaterial      : Material;
     worldExtentsUpdate  : number;
-    worldUpdate         : number;
     disabled            : boolean;
-    sorting             : number; // TODO: can't see any ref to this in jslib.  Is it used?
 
     arrayConstructor: any; // array constructor
 
@@ -349,7 +360,6 @@ class GeometryInstance implements Renderable
         delete this.drawParameters;
         delete this.renderUpdate;
         delete this.rendererInfo;
-        delete this.sorting;
     }
 
     //
@@ -361,6 +371,7 @@ class GeometryInstance implements Renderable
         var geometry = this.geometry;
         drawParameters.setVertexBuffer(0, geometry.vertexBuffer);
         drawParameters.setSemantics(0, this.semantics);
+        drawParameters.setOffset(0, geometry.vertexOffset);
 
         drawParameters.primitive = surface.primitive;
 
@@ -395,7 +406,7 @@ class GeometryInstance implements Renderable
         instance.halfExtents = geometry.halfExtents;
         instance.center = geometry.center;
 
-        instance.techniqueParameters = graphicsDevice ? graphicsDevice.createTechniqueParameters(): null;
+        instance.techniqueParameters = graphicsDevice ? graphicsDevice.createTechniqueParameters() : null;
         instance.sharedMaterial = sharedMaterial;
         if (instance.sharedMaterial)
         {
@@ -403,7 +414,6 @@ class GeometryInstance implements Renderable
         }
         instance.worldExtents = new instance.arrayConstructor(6);
         instance.worldExtentsUpdate = -1;
-        instance.worldUpdate = -1;
 
         instance.node = undefined;
         instance.renderUpdate = undefined;

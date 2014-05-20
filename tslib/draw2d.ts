@@ -39,6 +39,21 @@ class Draw2DGroup
     }
 };
 
+interface Draw2DSpriteParams
+{
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    texture?: Texture;
+    color?: any; // v4
+    rotation?: number;
+    textureRectangle?: any; // v4 (left, top, right, bottom)
+    scale?: number;
+    shear?: number;
+    origin?: any; // v2
+}
+
 //
 // Draw2DSprite
 //
@@ -54,9 +69,10 @@ class Draw2DSprite
     private _texture : Texture;
 
     //
-    // Assumption is that user will not be performing these actions frequently.
-    // To that end, we provide a function which performs the ssary side effects
-    // on call, to prevent an overhead for lazy evaluation.
+    // Assumption is that user will not be performing these actions
+    // frequently.  To that end, we provide a function which performs
+    // the necessary side effects on call, to prevent an overhead for
+    // lazy evaluation.
     //
     getTextureRectangle(dst)
     {
@@ -105,7 +121,7 @@ class Draw2DSprite
         }
     }
 
-    getColor(dst)
+    getColor(dst?)
     {
         if (dst === undefined)
         {
@@ -126,6 +142,24 @@ class Draw2DSprite
         data[9]  = color[1];
         data[10] = color[2];
         data[11] = color[3];
+    }
+
+    setColorRGB(r: number, g: number, b: number)
+    {
+        var data = this.data;
+        data[8]  = r;
+        data[9]  = g;
+        data[10] = b;
+    }
+
+    getAlpha() : number
+    {
+        return this.data[11];
+    }
+
+    setAlpha(alpha: number)
+    {
+        this.data[11] = alpha;
     }
 
     getTexture() : Texture
@@ -161,6 +195,11 @@ class Draw2DSprite
         var data = this.data;
         if (data[17] !== width)
         {
+            // Move the origin so that the sprite gets scaled around
+            // it, rather than scaled around the top left corner.
+
+            // originX = originX * (newwidth/2) / (oldwidth/2)
+            data[23] = data[23] * width / data[17];
             data[17] = width;
             this._invalidate();
         }
@@ -177,6 +216,8 @@ class Draw2DSprite
         var data = this.data;
         if (data[18] !== height)
         {
+            // originY = originY * (newheight/2) / (oldheight/2)
+            data[24] = data[24] * height / data[18];
             data[18] = height;
             this._invalidate();
         }
@@ -397,7 +438,7 @@ class Draw2DSprite
         data[5] = v - y; // v3y = centerY - y2
     }
 
-    static create(params: any): Draw2DSprite
+    static create(params: Draw2DSpriteParams): Draw2DSprite
     {
         if ((params.width === undefined || params.height === undefined) && !params.texture)
         {
@@ -427,6 +468,7 @@ class Draw2DSprite
         // 35,36 : x2, y2 // relative defined position of top-right vertex relative to center of sprite.
         //    (dependant on rotation and u2,v2)
         // 37 : Squared epsilon to consider rotations equal based on dimensions.
+
         var s = new Draw2DSprite();
         var data = s.data = new Draw2D.floatArray(38);
 
@@ -490,6 +532,7 @@ var Draw2DSpriteData = {
     function setFromRotatedRectangleFn(sprite, texture, rect, uvrect, color,
                                        rotation, origin)
     {
+        debug.assert(rect.length === 4);
         var x1 = rect[0];
         var y1 = rect[1];
         var x2 = rect[2];
@@ -511,6 +554,7 @@ var Draw2DSpriteData = {
             var cx, cy;
             if (origin)
             {
+                debug.assert(origin.length === 2);
                 cx = x1 + origin[0];
                 cy = y1 + origin[1];
             }
@@ -540,6 +584,7 @@ var Draw2DSpriteData = {
 
         if (color)
         {
+            debug.assert(color.length === 4);
             sprite[8]  = color[0];
             sprite[9]  = color[1];
             sprite[10] = color[2];
@@ -552,6 +597,7 @@ var Draw2DSpriteData = {
 
         if (uvrect && texture)
         {
+            debug.assert(uvrect.length === 4);
             var iwidth  = 1 / texture.width;
             var iheight = 1 / texture.height;
             sprite[12] = uvrect[0] * iwidth;
@@ -571,7 +617,7 @@ var Draw2DSpriteData = {
         // x1 y1 x2 y2 x3 y3 x4 y4 - vertices [0,8)
         // cr cg cb ca u1 v1 u2 v2 - normalized color + texture [8,16)
         return new Draw2D.floatArray(16);
-    },
+    }
 };
 
 //
@@ -605,8 +651,10 @@ interface Draw2DRenderTarget
 // }
 interface Draw2DParameters
 {
-    graphicsDevice : GraphicsDevice;
-    blendModes?    : { [name: string]: Technique; };
+    graphicsDevice    : GraphicsDevice;
+    blendModes?       : { [name: string]: Technique; };
+    initialGpuMemory? : number;
+    maxGpuMemory?     : number;
 }
 
 class Draw2D
@@ -638,10 +686,12 @@ class Draw2D
     sortMode                      : string;
     scaleMode                     : string;
     blendMode                     : string;
+    nomipmaps                     : boolean;  // Only used in debug
 
     // Disjoint stack of modes for nested begins.
     sortModeStack                 : string[];
     blendModeStack                : string[];
+    nomipmapsStack                : boolean[];  // Only used in debug
 
     // Set of render groups to be dispatched.
     drawGroups                    : Draw2DGroup[];
@@ -689,10 +739,13 @@ class Draw2D
     semantics                     : Semantics;
     renderTargetParams            : RenderTargetParameters;
 
-    blendModeTechniques           : {
-        additive : Technique;
-        alpha    : Technique;
-        opaque   : Technique;
+    private blendModeTechniques   : {
+        additive        : Technique;
+        additivenomip   : Technique;
+        alpha           : Technique;
+        alphanomip      : Technique;
+        opaque          : Technique;
+        opaquenomip     : Technique;
     };
 
     copyTechnique                 : Technique;
@@ -750,11 +803,18 @@ class Draw2D
         none  : 'none'
     };
 
-    // supported blend modes
+    // Supported blend modes.
     blend = {
-        additive : 'additive',
-        alpha    : 'alpha',
-        opaque   : 'opaque'
+        additive   : 'additive',
+        alpha      : 'alpha',
+        opaque     : 'opaque'
+    };
+
+    // Map from mode name to the "nomip" equivalent.
+    private nomipModes = {
+        additive   : 'additivenomip',
+        alpha      : 'alphanomip',
+        opaque     : 'opaquenomip'
     };
 
     drawStates = {
@@ -808,9 +868,9 @@ class Draw2D
     bufferSprite(buffer, sprite, index)
     {
         sprite._update(0);
-        /*jshint bitwise: false*/
+        /* tslint:disable:no-bitwise */
         index <<= 4;
-        /*jshint bitwise: true*/
+        /* tslint:enable:no-bitwise */
 
         var data = sprite.data;
         buffer[index]      = data[0];
@@ -1176,19 +1236,15 @@ class Draw2D
         }
     }
 
-    begin(blendMode?, sortMode?)
+    begin(blendMode?: string, sortMode?: string, nomipmaps?: boolean)
     {
         // Check sort mode is well defined (or undefined signifying default)
-        if (sortMode && !(sortMode in this.sort))
-        {
-            return false;
-        }
+        debug.assert(("undefined" === typeof sortMode) ||
+                     (sortMode in this.sort), "Bad sort mode");
 
         // Check blend mode is well defined (or undefined signifying default)
-        if (blendMode && !(blendMode in this.blend))
-        {
-            return false;
-        }
+        debug.assert(("undefined" === typeof blendMode) ||
+                     (blendMode in this.blend), "Bad blend mode");
 
         //if there are render states left in the stack
         //and begin has been called without an end
@@ -1220,14 +1276,36 @@ class Draw2D
         sortMode  = (sortMode)  ? sortMode  : (firstTime ? 'deferred' : this.sortMode);
         blendMode = (blendMode) ? blendMode : (firstTime ? 'opaque'   : this.blendMode);
 
+        // For the default modes, automatically select the nomip
+        // versions.  Custom modes will remain unchanged, so their
+        // techniques must have state that is consistent with
+        // 'nomipmaps'.  In debug mode, keep track of nomipmaps so
+        // that we can assert as sprites are rendered.
+
+        if (nomipmaps)
+        {
+            var nomipModes = this.nomipModes;
+            if (nomipModes.hasOwnProperty(blendMode))
+            {
+                blendMode = nomipModes[blendMode];
+            }
+        }
 
         if (!firstTime)
         {
             this.sortModeStack.push(this.sortMode);
             this.blendModeStack.push(this.blendMode);
+            if (debug)
+            {
+                this.nomipmapsStack.push(this.nomipmaps);
+            }
         }
         this.sortMode = sortMode;
         this.blendMode = blendMode;
+        if (debug)
+        {
+            this.nomipmaps = !!nomipmaps;
+        }
 
         this.prepareSortMode(sortMode);
         this.graphicsDevice.setTechnique(this.blendModeTechniques[blendMode]);
@@ -1488,6 +1566,20 @@ class Draw2D
 
     drawSpriteImmediate(sprite)
     {
+        /* tslint:disable:no-bitwise */
+        if (debug)
+        {
+            var _texture = sprite.getTexture();
+            if (_texture)
+            {
+                debug.assert(this.nomipmaps ||
+                             (0 === (_texture.width & (_texture.width - 1)) &&
+                              0 === (_texture.height & (_texture.height - 1))),
+                             "Cannot use mipmaps with NPOT textures");
+            }
+        }
+        /* tslint:enable:no-bitwise */
+
         var group = this.drawGroups[0];
         group.textures[0] = sprite._texture || this.defaultTexture;
         group.indices[0] = 0;
@@ -1516,7 +1608,9 @@ class Draw2D
         this.numGroups = 1;
 
         var drawSprite = this.drawSprite;
-        Draw2DSpriteData.setFromRotatedRectangle(drawSprite, texture, destRect, srcRect, color, rotation, params.origin);
+        Draw2DSpriteData.setFromRotatedRectangle(
+            drawSprite, texture, destRect, srcRect, color, rotation,
+            params.origin);
         this._bufferSprite(group, drawSprite);
 
         // Draw render group immediately.
@@ -1545,6 +1639,20 @@ class Draw2D
 
     drawSpriteDeferred(sprite)
     {
+        /* tslint:disable:no-bitwise */
+        if (debug)
+        {
+            var _texture = sprite.getTexture();
+            if (_texture)
+            {
+                debug.assert(this.nomipmaps ||
+                             (0 === (_texture.width & (_texture.width - 1)) &&
+                              0 === (_texture.height & (_texture.height - 1))),
+                             "Cannot use mipmaps with NPOT textures");
+            }
+        }
+        /* tslint:enable:no-bitwise */
+
         var texture = sprite._texture || this.defaultTexture;
 
         var group = this.drawGroups[0];
@@ -1629,6 +1737,20 @@ class Draw2D
 
     drawSpriteTextured(sprite)
     {
+        /* tslint:disable:no-bitwise */
+        if (debug)
+        {
+            var _texture = sprite.getTexture();
+            if (_texture)
+            {
+                debug.assert(this.nomipmaps ||
+                             (0 === (_texture.width & (_texture.width - 1)) &&
+                              0 === (_texture.height & (_texture.height - 1))),
+                             "Cannot use mipmaps with NPOT textures");
+            }
+        }
+        /* tslint:enable:no-bitwise */
+
         var texture = sprite._texture || this.defaultTexture;
 
         var group;
@@ -1786,6 +1908,7 @@ class Draw2D
 
         var performanceData = this.performanceData;
 
+        var texture : Texture;
         var i;
         for (i = 0; i < numGroups; i += 1)
         {
@@ -1815,7 +1938,9 @@ class Draw2D
                 var ilimit = vcount * 1.5;
                 var iindex = 0;
                 while (iindex < ilimit) {
-                    techniqueParameters['texture'] = textures[setIndex];
+                    texture = textures[setIndex];
+                    techniqueParameters['texture'] = texture;
+                    techniqueParameters['npottexture'] = texture;
 
                     // number of indices remaining to render.
                     var icount = ilimit - iindex;
@@ -1856,7 +1981,17 @@ class Draw2D
                     }
 
                     graphicsDevice.setTechniqueParameters(techniqueParameters);
-                    graphicsDevice.drawIndexed(graphicsDevice.PRIMITIVE_TRIANGLES, icount, iindex);
+
+                    /* tslint:disable:no-bitwise */
+                    if (icount === 6)
+                    {
+                        graphicsDevice.draw(graphicsDevice.PRIMITIVE_TRIANGLE_STRIP, 4, ((iindex / 6) << 2));
+                    }
+                    else
+                    {
+                        graphicsDevice.drawIndexed(graphicsDevice.PRIMITIVE_TRIANGLES, icount, iindex);
+                    }
+                    /* tslint:enable:no-bitwise */
 
                     iindex += icount;
                 }
@@ -1934,13 +2069,13 @@ class Draw2D
     }
 
     // always overallocate.
-    /*jshint bitwise: false*/
+    /* tslint:disable:no-bitwise */
     static makePow2(dim)
     {
         var index = Math.log(dim) / Math.log(2);
         return (1 << Math.ceil(index));
     }
-    /*jshint bitwise: true*/
+    /* tslint:enable:no-bitwise */
 
     createRenderTarget(params: Draw2DRenderTargetParams)
     {
@@ -1991,7 +2126,7 @@ class Draw2D
             }
             var makePow2 = Draw2D.makePow2;
             viewWidth = makePow2(viewWidth);
-            viewHeight =makePow2(viewHeight);
+            viewHeight = makePow2(viewHeight);
 
             if (!target.backBuffer)
             {
@@ -2136,7 +2271,7 @@ class Draw2D
     }
 
     // Constructor function
-    static create(params): Draw2D
+    static create(params: Draw2DParameters): Draw2D
     {
         var o = new Draw2D();
         var gd = o.graphicsDevice = params.graphicsDevice;
@@ -2147,6 +2282,12 @@ class Draw2D
         // Disjoint stack of modes for nested begins.
         o.sortModeStack  = [];
         o.blendModeStack = [];
+
+        if (debug)
+        {
+            o.nomipmaps = false;
+            o.nomipmapsStack = [];
+        }
 
         // Set of render groups to be dispatched.
         o.drawGroups = [Draw2DGroup.create()];
@@ -2183,6 +2324,9 @@ class Draw2D
         o.drawRaw = undefined;
 
         // Load embedded default shader and techniques
+
+        /* tslint:disable:whitespace */
+        /* tslint:disable:max-line-length */
         var shader = gd.createShader(
             {
                 "version": 1,
@@ -2191,15 +2335,22 @@ class Draw2D
                 {
                     "texture":
                     {
-                        "MinFilter": 9985,
-                        "MagFilter": 9729,
+                        "MinFilter": 9985 /* LINEAR_MIPMAP_NEAREST */,
+                        "MagFilter": 9729 /* LINEAR */,
+                        "WrapS": 33071,
+                        "WrapT": 33071
+                    },
+                    "npottexture":
+                    {
+                        "MinFilter": 9728, /* NEAREST */
+                        "MagFilter": 9729, /* LINEAR */
                         "WrapS": 33071,
                         "WrapT": 33071
                     },
                     "inputTexture0":
                     {
-                        "MinFilter": 9728,
-                        "MagFilter": 9729,
+                        "MinFilter": 9728, /* NEAREST */
+                        "MagFilter": 9729, /* LINEAR */
                         "WrapS": 33071,
                         "WrapT": 33071
                     }
@@ -2221,6 +2372,10 @@ class Draw2D
                         "type": "float"
                     },
                     "texture":
+                    {
+                        "type": "sampler2D"
+                    },
+                    "npottexture":
                     {
                         "type": "sampler2D"
                     },
@@ -2246,6 +2401,21 @@ class Draw2D
                             "programs": ["vp_draw2D","fp_draw2D"]
                         }
                     ],
+                    "opaquenomip":
+                    [
+                        {
+                            "parameters": ["clipSpace","npottexture"],
+                            "semantics": ["POSITION","COLOR","TEXCOORD0"],
+                            "states":
+                            {
+                                "DepthTestEnable": false,
+                                "DepthMask": false,
+                                "CullFaceEnable": false,
+                                "BlendEnable": false
+                            },
+                            "programs": ["vp_draw2D","fp_draw2D_nomips"]
+                        }
+                    ],
                     "alpha":
                     [
                         {
@@ -2262,6 +2432,22 @@ class Draw2D
                             "programs": ["vp_draw2D","fp_draw2D"]
                         }
                     ],
+                    "alphanomip":
+                    [
+                        {
+                            "parameters": ["clipSpace","npottexture"],
+                            "semantics": ["POSITION","COLOR","TEXCOORD0"],
+                            "states":
+                            {
+                                "DepthTestEnable": false,
+                                "DepthMask": false,
+                                "CullFaceEnable": false,
+                                "BlendEnable": true,
+                                "BlendFunc": [770,771]
+                            },
+                            "programs": ["vp_draw2D","fp_draw2D_nomips"]
+                        }
+                    ],
                     "additive":
                     [
                         {
@@ -2276,6 +2462,22 @@ class Draw2D
                                 "BlendFunc": [770,1]
                             },
                             "programs": ["vp_draw2D","fp_draw2D"]
+                        }
+                    ],
+                    "additivenomip":
+                    [
+                        {
+                            "parameters": ["clipSpace","npottexture"],
+                            "semantics": ["POSITION","COLOR","TEXCOORD0"],
+                            "states":
+                            {
+                                "DepthTestEnable": false,
+                                "DepthMask": false,
+                                "CullFaceEnable": false,
+                                "BlendEnable": true,
+                                "BlendFunc": [770,1]
+                            },
+                            "programs": ["vp_draw2D","fp_draw2D_nomips"]
                         }
                     ],
                     "copy":
@@ -2311,6 +2513,11 @@ class Draw2D
                         "type": "fragment",
                         "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying TZ_LOWP vec4 tz_Color;varying vec4 tz_TexCoord[1];\nvec4 _ret_0;vec4 _TMP0;uniform sampler2D texture;void main()\n{_TMP0=texture2D(texture,tz_TexCoord[0].xy);_ret_0=tz_Color*_TMP0;gl_FragColor=_ret_0;}"
                     },
+                    "fp_draw2D_nomips":
+                    {
+                        "type": "fragment",
+                        "code": "#ifdef GL_ES\n#define TZ_LOWP lowp\nprecision mediump float;\nprecision mediump int;\n#else\n#define TZ_LOWP\n#endif\nvarying TZ_LOWP vec4 tz_Color;varying vec4 tz_TexCoord[1];\nvec4 _ret_0;vec4 _TMP0;uniform sampler2D npottexture;void main()\n{_TMP0=texture2D(npottexture,tz_TexCoord[0].xy);_ret_0=tz_Color*_TMP0;gl_FragColor=_ret_0;}"
+                    },
                     "vp_draw2D":
                     {
                         "type": "vertex",
@@ -2319,15 +2526,29 @@ class Draw2D
                 }
             }
         );
+        /* tslint:enable:max-line-length */
+        /* tslint:enable:whitespace */
 
         // Mapping from blend mode name to Technique object.
         o.blendModeTechniques = {
-            additive: shader.getTechnique("additive"),
-            alpha: shader.getTechnique("alpha"),
-            opaque: shader.getTechnique("opaque")
+            additive       : shader.getTechnique("additive"),
+            additivenomip  : shader.getTechnique("additivenomip"),
+            alpha          : shader.getTechnique("alpha"),
+            alphanomip     : shader.getTechnique("alphanomip"),
+            opaque         : shader.getTechnique("opaque"),
+            opaquenomip    : shader.getTechnique("opaquenomip")
         };
 
-        // Append techniques and supported blend modes with user supplied techniques.
+        debug.assert(o.blendModeTechniques.additive);
+        debug.assert(o.blendModeTechniques.additivenomip);
+        debug.assert(o.blendModeTechniques.alpha);
+        debug.assert(o.blendModeTechniques.alphanomip);
+        debug.assert(o.blendModeTechniques.opaque);
+        debug.assert(o.blendModeTechniques.opaquenomip);
+
+        // Append techniques and supported blend modes with user
+        // supplied techniques.
+
         if (params.blendModes)
         {
             for (var name in params.blendModes)
@@ -2343,7 +2564,8 @@ class Draw2D
         // Blending techniques.
         o.techniqueParameters = gd.createTechniqueParameters({
             clipSpace: new Draw2D.floatArray(4),
-            texture: null
+            texture: null,
+            npottexture: null
         });
 
         // Current render target

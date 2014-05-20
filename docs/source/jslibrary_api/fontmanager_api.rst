@@ -240,7 +240,7 @@ The remapping only affects the loading URLs.
 
 **Syntax** ::
 
-    fontManager.setPathRemapping(remappingTable, gloablPrefix);
+    fontManager.setPathRemapping(remappingTable, globalPrefix);
 
 ``mappingTable``
     A remapping table that can be used to redirect specific paths.
@@ -252,6 +252,8 @@ The remapping only affects the loading URLs.
 .. index::
     pair: FontManager; calculateTextDimensions
 
+.. _fontmanager_calculatetextdimensions:
+
 `calculateTextDimensions`
 -------------------------
 
@@ -261,11 +263,12 @@ Calculate text dimensions of a block of text and a font.
 
 **Syntax** ::
 
-    var textBlockSize = fontManager.calculateTextDimensions(name, text, scale, spacing);
-    var width = textBlockSize.width;
-    var height = textBlockSize.height;
-    var linesWidth = textBlockSize.linesWidth;
-    var numGlyphs = textBlockSize.numGlyphs;
+    var dimensions = fontManager.calculateTextDimensions(name, text, scale, spacing);
+    var width = dimensions.width;
+    var height = dimensions.height;
+    var linesWidth = dimensions.linesWidth;
+    var numGlyphs = dimensions.numGlyphs;
+    var glyphCounts = dimensions.glyphCounts;
 
 ``name``
     The name used to load the font (or the remapped name).
@@ -279,7 +282,7 @@ Calculate text dimensions of a block of text and a font.
 ``spacing``
     Extra spacing between characters (in pixels).
 
-Returns an object with 3 properties:
+Returns an object with properties:
 
 ``width`` and ``height``
     The dimensions of the block of text (in pixels).
@@ -289,6 +292,13 @@ Returns an object with 3 properties:
 
 ``numGlyphs``
     The number of glyphs in the block of text.
+
+``glyphCounts`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
+    A map from page numbers to glyph counts, for the given string.
+    This is generally only used by the `drawTextRect` function, in
+    particular for fonts that require multiple texture pages.  It can
+    be passed into `drawTextRect` via the parameters object to avoid
+    recalculation.
 
 .. index::
     pair: FontManager; destroy
@@ -341,6 +351,8 @@ Methods
 .. index::
     pair: Font; calculateTextDimensions
 
+.. _font_calculatetextdimensions:
+
 `calculateTextDimensions`
 -------------------------
 
@@ -350,10 +362,13 @@ Calculate text dimensions of a block of text.
 
 **Syntax** ::
 
-    var textBlockSize = font.calculateTextDimensions(text, scale, spacing);
-    var width = textBlockSize.width;
-    var height = textBlockSize.height;
-    var numGlyphs = textBlockSize.numGlyphs;
+    var dimensions = font.calculateTextDimensions(text, scale, spacing,
+                                                  lineSpacing, dimensions);
+    var width = dimensions.width;
+    var height = dimensions.height;
+    var linesWidth = dimensions.linesWidth;
+    var numGlyphs = dimensions.numGlyphs;
+    var glyphCounts = dimensions.glyphCounts;
 
 ``text``
     Text to calculate dimensions for.
@@ -364,27 +379,53 @@ Calculate text dimensions of a block of text.
 ``spacing``
     Extra spacing between characters (in pixels).
 
-Returns an object with 3 properties:
+``lineSpacing`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
+    (Optional) extra spacing between lines (in pixels).
+
+``dimensions`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
+    (Optional) A dimensions object to overwrite, so avoid creation of
+    a new one.
+
+Returns an object with properties:
 
 ``width`` and ``height``
     The dimensions of the block of text (in pixels).
 
+``linesWidth`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
+    An array for the width (in pixels) of each line of text in ``text``
+
 ``numGlyphs``
     The number of glyphs in the block of text.
+
+``glyphCounts`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
+    A map from page numbers to glyph counts, for the given string.
+    This is generally only used by the `drawTextRect` function, in
+    particular for fonts that require multiple texture pages.  It can
+    be passed into `drawTextRect` via the parameters object to avoid
+    recalculation.
 
 
 .. _font_generatetextvertices:
 
 .. index::
-    pair: Font; generateTextVertices
+    pair: Font; generatePageTextVertices
 
-`generateTextVertices`
-----------------------
+.. _font_generatepagetextvertices:
+
+`generatePageTextVertices`
+--------------------------
+
+**Modified** :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`
+
+Replaces function previously called generateTextVertices
 
 **Summary**
 
-Generates vertices for a given text.
-This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to generate the vertices to be drawn.
+For a given bit of text, generates the vertices corresponding to a
+specific texture page.  This method is used internally by
+:ref:`drawTextRect <font_drawtextrect>` to generate the vertices to be
+drawn for a given texture page.  It is not recommended for external
+use and requires knowledge of the FontManager implementation details.
 
 **Syntax** ::
 
@@ -394,11 +435,15 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to gen
             scale: windowdef.textscale,
             spacing: windowdef.textspacing
         };
-    var vertices = font.generateTextVertices(text, textParameters);
-    if (vertices)
+    if (dimensions)
     {
-        var numVertices = (vertices.length / 4);
-        vertexBuffer.setData(vertices, 0, numVertices);
+        textParameters.dimensions = dimensions;
+    }
+    var drawCtx = font.generatePageTextVertices(text, textParameters, 0);
+    if (drawCtx.vertices)
+    {
+        var numVertices = (drawCtx.vertices.length / 4);
+        vertexBuffer.setData(drawCtx.vertices, 0, numVertices);
     }
 
 ``text``
@@ -425,7 +470,28 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to gen
     ``spacing``
         Extra spacing between characters. Defaults to `0`.
 
-Returns an array of numbers, 4 numbers per vertex: X, Y, U, V.
+    ``dimensions``
+        (Optional) A dimensions object to re-use, to avoid creating a
+        new one.  If set, this should have been calculated for the
+        given text via `calculateTextDimensions`.
+
+``pageIdx``
+    The index of the texture page to generate indices for.
+
+``drawCtx``
+    (Optional) A context object to re-use to avoid creating a new one.
+
+Returns a rendering context object containing internal information
+including an array of vertex data. The context object can be passed
+into drawTextVertices. The context has the following property:
+
+    ``vertices``
+            An array of numbers, 4 numbers per vertex: X, Y, U, V.
+
+            SDK 0.28.0 onwards the vertex order is: top left, top right, bottom left, bottom right
+
+            Prior to SDK 0.28.0 the vertex order was: top left, top right, bottom right, bottom left
+
 
 
 .. _font_drawtextvertices:
@@ -438,7 +504,7 @@ Returns an array of numbers, 4 numbers per vertex: X, Y, U, V.
 
 **Summary**
 
-Draws the given text vertices.
+Draws the given text vertices for a specific texture page.
 This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to draw the vertices generated by
 :ref:`generateTextVertices <font_generatetextvertices>`.
 
@@ -448,9 +514,9 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to dra
             rect: [x, y, width, height],
             alignment: windowdef.textalign,
             scale: windowdef.textscale,
-            spacing: windowdef.textspacing
+            spacing: windowdef.textspacing,
         };
-    var vertices = font.generateTextVertices(text, textParameters);
+    var vertices = font.generatePageTextVertices(text, textParameters, 0);
     if (vertices)
     {
         var numValues = vertices.length;
@@ -462,14 +528,17 @@ This method is used internally by :ref:`drawTextRect <font_drawtextrect>` to dra
             vertices[n + 1] = p[1];
         }
 
-        font.drawTextVertices(vertices, reuse);
+        font.drawTextVertices(vertices, 0, reuse);
     }
 
 ``vertices``
     Vertices to be drawn.
 
+``pageIdx`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
+    The index of the texture page that the vertices correspond to.
+
 ``reuse``
-    Optional boolean value to determine if the ``vertices`` object should be reused for subsequent calls to 
+    (Optional) boolean value to determine if the ``vertices`` object should be reused for subsequent calls to
     :ref:`generateTextVertices <font_generatetextvertices>`.
 
 
@@ -493,8 +562,13 @@ Draws text.
             rect: [x, y, width, height],
             alignment: windowdef.textalign,
             scale: windowdef.textscale,
-            spacing: windowdef.textspacing
+            spacing: windowdef.textspacing,
+            lineSpacing: windowdef.linespacing
         };
+    if (dimensions)
+    {
+        textParameters.dimensions = dimensions;
+    }
     font.drawTextRect(text, textParameters);
 
 ``text``
@@ -522,6 +596,14 @@ Draws text.
 
     ``spacing``
         Extra spacing between characters. Defaults to `0`.
+
+    ``lineSpacing`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
+        (Optional) Extra spacing between lines. Defaults to `0`.
+
+    ``dimensions`` (Added :ref:`SDK 0.28.0 <sdk_0_28_0_fontmanager>`)
+        (Optional).  A dimensions object, returned by
+        calculateTextDimensions, to save internal re-calculation of
+        various properties of the text.
 
 
 Properties

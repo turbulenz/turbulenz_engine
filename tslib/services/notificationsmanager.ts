@@ -58,7 +58,7 @@ class NotificationPromise
     {
         this.__errorCallback = callback;
 
-        var error = this.__error
+        var error = this.__error;
         if (error)
         {
             TurbulenzEngine.setTimeout(function () {
@@ -378,7 +378,7 @@ class NotificationsManager
 
             },
             requestHandler: this.requestHandler
-        });
+        }, 'notifications.usersettings');
     }
 
     requestGameNotificationKeys(successCallback?: (data: any) => void,
@@ -402,7 +402,7 @@ class NotificationsManager
                 }
             },
             requestHandler: this.requestHandler
-        });
+        }, 'notifications.keys');
     }
 
     onInit(): void
@@ -421,7 +421,9 @@ class NotificationsManager
     {
         if (!errorCallbackFn)
         {
+            /* tslint:disable:no-empty */
             errorCallbackFn = function () {};
+            /* tslint:enable:no-empty */
         }
 
         if (!TurbulenzServices.available())
@@ -473,7 +475,7 @@ class NotificationsManager
                     successCallbackFn(notificationsManager);
                 }
 
-            }, errorCallbackFn)
+            }, errorCallbackFn);
         }, errorCallbackFn);
 
         return notificationsManager;

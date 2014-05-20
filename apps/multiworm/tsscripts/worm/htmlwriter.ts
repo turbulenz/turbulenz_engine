@@ -243,7 +243,9 @@ class HtmlWriter
             leaderboardString += "None set";
         }
 
+        /* tslint:disable:no-string-literal */
         this.writeTextContent(this.leaderboardDivs[leaderboardName]['dataDiv'], leaderboardString);
+        /* tslint:enable:no-string-literal */
     }
 
     // (Re)Write achieved badge html content
@@ -255,8 +257,10 @@ class HtmlWriter
 
         badgeString += "Got this!";
 
+        /* tslint:disable:no-string-literal */
         this.writeTextContent(badgeDiv['dataDiv'], badgeString);
         this.writeTextContent(badgeDiv['descriptionDiv'], badge.description);
+        /* tslint:enable:no-string-literal */
     }
 
     // (Re)Write unachieved badge html content
@@ -280,8 +284,10 @@ class HtmlWriter
             badgeString += "Unachieved";
         }
 
+        /* tslint:disable:no-string-literal */
         this.writeTextContent(badgeDiv['dataDiv'], badgeString);
         this.writeTextContent(badgeDiv['descriptionDiv'], badgeDescription);
+        /* tslint:enable:no-string-literal */
     }
 
     // Writes text to element specified

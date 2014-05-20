@@ -223,6 +223,60 @@ Set the current color of the sprite.
 
 
 .. index::
+    pair: Draw2DSprite; setColorRGB
+
+`setColorRGB`
+-------------
+
+**Summary**
+
+Set the RGB elements of teh current color of the sprite.
+
+**Syntax** ::
+
+    sprite.setColorRGB(r, g, b);
+
+``r``, ``g``, ``b``
+    The values for the new color value of the sprite with normalized
+    values in the range `[0,1]`.
+
+
+.. index::
+    pair: Draw2DSprite; getAlpha
+
+`getAlpha`
+----------
+
+**Summary**
+
+Get the current alpha value of the sprite.
+
+**Syntax** ::
+
+    var alpha = sprite.getAlpha();
+
+The return value is the alpha value, as set in the final element of
+the array returned by the `getColor` method.
+
+
+.. index::
+    pair: Draw2DSprite; setAlpha
+
+`setAlpha`
+----------
+
+**Summary**
+
+Set the alpha value of the current sprite color.
+
+**Syntax** ::
+
+    sprite.setAlpha(alpha);
+
+``alpha``
+    A number to set as the new alpha value, equivalent to passing the same value in the last element of the argument to `setColor`.
+
+.. index::
     pair: Draw2DSprite; getTexture
 
 `getTexture`
@@ -478,16 +532,6 @@ Set the origin of the sprite.
 
 ``origin``
     The new origin for the sprite in pixels.
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -821,6 +865,12 @@ Begin a new drawing state.
     Otherwise when unspecified, the sort mode will be unchanged.
 
     This method will fail with `false` if sort mode is specified, but is not defined in the `draw2D.sort` dictionary.
+
+``nomipmaps`` (optional)
+    Disable runtime checks for NPOT textures (in debug mode only). For
+    the built-in blend modes, this flag also forces Techniques with
+    mipmaps disabled (default techniques require Sprite textures to
+    have power-of-2 dimensions).
 
 These calls may as hinted be nested: ::
 
@@ -1337,4 +1387,3 @@ Reset recorded performance data for this object.
 **Syntax** ::
 
     draw2D.resetPerformanceData();
-

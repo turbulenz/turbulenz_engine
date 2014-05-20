@@ -17,7 +17,7 @@ declare var Uint8ClampedArray:
     new (array: number[]): Uint8Array;
     new (buffer: ArrayBuffer, byteOffset?: number, length?: number): Uint8Array;
     BYTES_PER_ELEMENT: number;
-}
+};
 
 interface Float32Array
 {
@@ -123,6 +123,7 @@ interface Navigator
 {
     gamepads?: any[];
     webkitGamepads?: any[];
+    getGamepads?: { (): any[]; };
     webkitGetGamepads?: { (): any[]; };
 
     pointer: // TODO: Where is this type documented?

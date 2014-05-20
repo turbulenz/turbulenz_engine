@@ -5,7 +5,9 @@
 //
 class Motion
 {
+    /* tslint:disable:no-unused-variable */
     static version = 3;
+    /* tslint:enable:no-unused-variable */
 
     pi2 = 2 * Math.PI;
 
@@ -349,7 +351,7 @@ class Motion
     }
 
     // Motion Constructor function
-    static create(md: MathDevice, name:string): Motion
+    static create(md: MathDevice, name: string): Motion
     {
         var m = new Motion();
 

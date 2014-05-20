@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2011-2012 Turbulenz Limited
+# Copyright (c) 2011-2014 Turbulenz Limited
 
 """
 Init script for manipulating the Turbulenz Engine project.
@@ -73,8 +73,8 @@ def command_env():
     _easy_install('docutils>=0.9.1')
     _easy_install('Sphinx>=1.1.3')
 
-    _easy_install('turbulenz_tools>=1.0.2')
-    _easy_install('turbulenz_local>=1.1.2')
+    _easy_install('turbulenz_tools>=1.0.5')
+    _easy_install('turbulenz_local>=1.1.4')
 
     cmd = [os.path.join(env_bin, 'python'),
            os.path.join(TURBULENZROOT, 'scripts', 'install_nodejs.py'),
@@ -83,6 +83,11 @@ def command_env():
     if not TURBULENZOS in [ 'linux32', 'linux64' ]:
         cmd.append('-f')
     sh(cmd, console=True)
+
+    if TURBULENZOS == 'win32':
+        sh([os.path.join(env_bin, 'npm.cmd'), 'install', '-g', 'tslint@0.4.5'])
+    else:
+        sh([os.path.join(env_bin, 'npm'), 'install', '-g', 'tslint@0.4.5'])
 
 @command_no_arguments
 def command_env_clean():
@@ -204,6 +209,10 @@ def command_tools():
             proj_postfix = '-2012.vcxproj'
             sln_postfix = '-2012.sln'
             vs_version = '11.0'
+        elif vs_version_name == '2013':
+            proj_postfix = '-2013.vcxproj'
+            sln_postfix = '-2013.sln'
+            vs_version = '12.0'
         if devenv:
             base_cmd = [devenv, '/build', 'Release']
         elif msbuild:
@@ -248,6 +257,10 @@ def command_tools_clean():
             proj_postfix = '-2012.vcxproj'
             sln_postfix = '-2012.sln'
             vs_version = '11.0'
+        elif vs_version_name == '2013':
+            proj_postfix = '-2013.vcxproj'
+            sln_postfix = '-2013.sln'
+            vs_version = '12.0'
         if devenv:
             base_cmd = [devenv, '/clean', 'Release']
         elif msbuild:
@@ -311,6 +324,14 @@ def command_apps(options):
         modes = ['all']
     else:
         modes = args.mode
+
+    if 'plugin-debug' in modes:
+        warning('**DEPRICATED** plugin-debug has been depricated as a build mode. '
+            'Please use canvas-debug for debugging. Removing from list of modes.')
+        modes = [m for m in modes if m != 'plugin-debug']
+        if not modes:
+            error("No remaining modes to build.")
+            return
 
     options = ' '.join(args.options) if args.options else ''
 
@@ -466,12 +487,31 @@ def command_check_docs_links(args):
 
 @command_requires_env
 @command_with_arguments
-def command_check_ts(_args=None):
+def command_check_ts(tsfiles=None):
 
-    # If we get a TS linter, run it here
-
+    # Run the basic reference checks by building the jslib
     if 0 != command_jslib(['--refcheck']):
         return 1
+
+    # Run tslint on all the typescript source
+    if TURBULENZOS == 'win32':
+        tslint = 'tslint.cmd -c .tslintrc -f '
+    else:
+        tslint = 'tslint -c .tslintrc -f '
+    tsfiles = tsfiles or ['tslib/*.ts']
+
+    files = []
+    for pattern in tsfiles:
+        for f in iglob(pattern):
+            files.append(f)
+
+    for f in files:
+        try:
+            sh('%s %s' % (tslint, f), verbose=False)
+            ok(f)
+        except CalledProcessError as e:
+            warning(f)
+            echo(e.output)
 
     return 0
 

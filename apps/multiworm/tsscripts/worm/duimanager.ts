@@ -387,4 +387,5 @@ DynamicUIManager.prototype._newId = (function () {
 /**
  * The instance of the DynamicUI manager
  */
+/* tslint:disable:no-unused-variable */
 var TurbulenzUI = DynamicUIManager.create();

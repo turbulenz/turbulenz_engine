@@ -38,7 +38,9 @@ interface WebGLVideoSupportedExtensions
 // -----------------------------------------------------------------------------
 class TZWebGLTexture implements Texture
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Texture
     id                : number;
@@ -47,7 +49,6 @@ class TZWebGLTexture implements Texture
     height            : number;
     depth             : number;
     format            : number;
-    numDataLevels     : number;
     mipmaps           : boolean;
     cubemap           : boolean;
     dynamic           : boolean;
@@ -64,10 +65,10 @@ class TZWebGLTexture implements Texture
     setData(data: any,
             face?: number,
             level?: number,
-            x?:number,
-            y?:number,
-            w?:number,
-            h?:number)
+            x?: number,
+            y?: number,
+            w?: number,
+            h?: number)
     {
         var gd = this.gd;
         var target = this.target;
@@ -130,7 +131,7 @@ class TZWebGLTexture implements Texture
 
         gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-        if (this.mipmaps || 1 < this.numDataLevels)
+        if (this.mipmaps)
         {
             gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
         }
@@ -149,6 +150,105 @@ class TZWebGLTexture implements Texture
         return true;
     }
 
+    convertDataToRGBA(gl, data, internalFormat, gltype, srcStep)
+    {
+        var numPixels = (data.length / srcStep);
+        var rgbaData = new Uint8Array(numPixels * 4);
+        var offset = 0;
+        var n, value, r, g, b, a;
+        if (internalFormat === gl.LUMINANCE)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                r = data[n];
+                rgbaData[offset    ] = r;
+                rgbaData[offset + 1] = r;
+                rgbaData[offset + 2] = r;
+                rgbaData[offset + 3] = 0xff;
+            }
+        }
+        else if (internalFormat === gl.ALPHA)
+        {
+            debug.assert(srcStep === 1);
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                a = data[n];
+                rgbaData[offset    ] = 0xff;
+                rgbaData[offset + 1] = 0xff;
+                rgbaData[offset + 2] = 0xff;
+                rgbaData[offset + 3] = a;
+            }
+        }
+        else if (internalFormat === gl.LUMINANCE_ALPHA)
+        {
+            debug.assert(srcStep === 2);
+            for (n = 0; n < numPixels; n += 2, offset += 4)
+            {
+                r = data[n];
+                a = data[n + 1];
+                rgbaData[offset    ] = r;
+                rgbaData[offset + 1] = r;
+                rgbaData[offset + 2] = r;
+                rgbaData[offset + 3] = a;
+            }
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_5_6_5)
+        {
+            debug.assert(srcStep === 1);
+            /* tslint:disable:no-bitwise */
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 11) & 31);
+                g = ((value >> 5) & 63);
+                b = ((value) & 31);
+                rgbaData[offset    ] = ((r << 3) | (r >> 2));
+                rgbaData[offset + 1] = ((g << 2) | (g >> 4));
+                rgbaData[offset + 2] = ((b << 3) | (b >> 2));
+                rgbaData[offset + 3] = 0xff;
+            }
+            /* tslint:enable:no-bitwise */
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_5_5_5_1)
+        {
+            debug.assert(srcStep === 1);
+            /* tslint:disable:no-bitwise */
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 11) & 31);
+                g = ((value >> 6) & 31);
+                b = ((value >> 1) & 31);
+                a = ((value) & 1);
+                rgbaData[offset    ] = ((r << 3) | (r >> 2));
+                rgbaData[offset + 1] = ((g << 3) | (g >> 2));
+                rgbaData[offset + 2] = ((b << 3) | (b >> 2));
+                rgbaData[offset + 3] = (a ? 0xff : 0);
+            }
+            /* tslint:enable:no-bitwise */
+        }
+        else if (gltype === gl.UNSIGNED_SHORT_4_4_4_4)
+        {
+            debug.assert(srcStep === 1);
+            /* tslint:disable:no-bitwise */
+            for (n = 0; n < numPixels; n += 1, offset += 4)
+            {
+                value = data[n];
+                r = ((value >> 12) & 15);
+                g = ((value >> 8) & 15);
+                b = ((value >> 4) & 15);
+                a = ((value) & 15);
+                rgbaData[offset    ] = ((r << 4) | r);
+                rgbaData[offset + 1] = ((g << 4) | g);
+                rgbaData[offset + 2] = ((b << 4) | b);
+                rgbaData[offset + 3] = ((a << 4) | a);
+            }
+            /* tslint:enable:no-bitwise */
+        }
+        return rgbaData;
+    }
+
     updateData(data)
     {
         var gd = this.gd;
@@ -159,7 +259,26 @@ class TZWebGLTexture implements Texture
             return Math.floor(Math.log(a) / Math.LN2);
         }
 
-        var generateMipMaps = this.mipmaps && (this.numDataLevels !== (1 + Math.max(log2(this.width), log2(this.height))));
+        var numLevels, generateMipMaps;
+        if (this.mipmaps)
+        {
+            if (data instanceof Image)
+            {
+                numLevels = 1;
+                generateMipMaps = true;
+            }
+            else
+            {
+                numLevels = (1 + Math.max(log2(this.width), log2(this.height)));
+                generateMipMaps = false;
+            }
+        }
+        else
+        {
+            numLevels = 1;
+            generateMipMaps = false;
+        }
+
         var format = this.format;
         var internalFormat, gltype, srcStep, bufferData = null;
         var compressedTexturesExtension;
@@ -384,12 +503,117 @@ class TZWebGLTexture implements Texture
                 return;   // Unsupported format
             }
         }
+        else if (format === gd.PIXELFORMAT_RGBA32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                internalFormat = gl.RGBA;
+                gltype = gl.FLOAT;
+                srcStep = 4;
+                if (data && !data.src)
+                {
+                    if (data instanceof Float32Array)
+                    {
+                        bufferData = data;
+                    }
+                    else
+                    {
+                        bufferData = new Float32Array(data);
+                    }
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                internalFormat = gl.RGB;
+                gltype = gl.FLOAT;
+                srcStep = 3;
+                if (data && !data.src)
+                {
+                    if (data instanceof Float32Array)
+                    {
+                        bufferData = data;
+                    }
+                    else
+                    {
+                        bufferData = new Float32Array(data);
+                    }
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGBA16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                internalFormat = gl.RGBA;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                srcStep = 4;
+                if (data && !data.src)
+                {
+                    bufferData = data;
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                internalFormat = gl.RGB;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                srcStep = 3;
+                if (data && !data.src)
+                {
+                    bufferData = data;
+                }
+            }
+            else
+            {
+                return; // Unsupported format
+            }
+        }
         else
         {
             return;   //unknown/unsupported format
         }
 
-        var numLevels = (data && 0 < this.numDataLevels ? this.numDataLevels : 1);
+        if (gd.fixIE && !compressedTexturesExtension)
+        {
+            var expand = false;
+            if (gd.fixIE < "0.93")
+            {
+                expand = ((internalFormat !== gl.RGBA && internalFormat !== gl.RGB) ||
+                          (gltype !== gl.UNSIGNED_BYTE && gltype !== gl.FLOAT));
+            }
+            else if (gd.fixIE < "0.94")
+            {
+                expand = (gltype !== gl.UNSIGNED_BYTE && gltype !== gl.FLOAT);
+            }
+            if (expand)
+            {
+                if (bufferData)
+                {
+                    bufferData = this.convertDataToRGBA(gl, bufferData, internalFormat, gltype, srcStep);
+                }
+                internalFormat = gl.RGBA;
+                gltype = gl.UNSIGNED_BYTE;
+                srcStep = 4;
+            }
+        }
+
         var w = this.width, h = this.height, offset = 0, target, n, levelSize, levelData;
         if (this.cubemap)
         {
@@ -410,14 +634,7 @@ class TZWebGLTexture implements Texture
                         levelSize = (Math.floor((w + 3) / 4) * Math.floor((h + 3) / 4) * srcStep);
                         if (bufferData)
                         {
-                            if (numLevels === 1)
-                            {
-                                levelData = bufferData;
-                            }
-                            else
-                            {
-                                levelData = bufferData.subarray(offset, (offset + levelSize));
-                            }
+                            levelData = bufferData.subarray(offset, (offset + levelSize));
                         }
                         else
                         {
@@ -439,14 +656,7 @@ class TZWebGLTexture implements Texture
                         levelSize = (w * h * srcStep);
                         if (bufferData)
                         {
-                            if (numLevels === 1)
-                            {
-                                levelData = bufferData;
-                            }
-                            else
-                            {
-                                levelData = bufferData.subarray(offset, (offset + levelSize));
-                            }
+                            levelData = bufferData.subarray(offset, (offset + levelSize));
                             gl.texImage2D(faceTarget, n, internalFormat, w, h, 0, internalFormat, gltype, levelData);
                         }
                         else if (data)
@@ -461,6 +671,15 @@ class TZWebGLTexture implements Texture
                             {
                                 levelData = new Uint16Array(levelSize);
                             }
+                            else if (gltype === gl.FLOAT)
+                            {
+                                levelData = new Float32Array(levelSize);
+                            }
+                            else if (gd.halfFloatTextureExtension &&
+                                     gltype === gd.halfFloatTextureExtension.HALF_FLOAT_OES)
+                            {
+                                levelData = null;
+                            }
                             else
                             {
                                 levelData = new Uint8Array(levelSize);
@@ -469,6 +688,16 @@ class TZWebGLTexture implements Texture
                         }
                     }
                     offset += levelSize;
+                    if (bufferData && bufferData.length <= offset)
+                    {
+                        bufferData = null;
+                        data = null;
+                        if (0 === n && 1 < numLevels)
+                        {
+                            generateMipMaps = true;
+                            break;
+                        }
+                    }
                     w = (w > 1 ? Math.floor(w / 2) : 1);
                     h = (h > 1 ? Math.floor(h / 2) : 1);
                 }
@@ -541,6 +770,15 @@ class TZWebGLTexture implements Texture
                         {
                             levelData = new Uint16Array(levelSize);
                         }
+                        else if (gltype === gl.FLOAT)
+                        {
+                            levelData = new Float32Array(levelSize);
+                        }
+                        else if (gd.halfFloatTextureExtension &&
+                                 gltype === gd.halfFloatTextureExtension.HALF_FLOAT_OES)
+                        {
+                            levelData = null;
+                        }
                         else
                         {
                             levelData = new Uint8Array(levelSize);
@@ -549,6 +787,16 @@ class TZWebGLTexture implements Texture
                     }
                 }
                 offset += levelSize;
+                if (bufferData && bufferData.length <= offset)
+                {
+                    bufferData = null;
+                    data = null;
+                    if (0 === n && 1 < numLevels)
+                    {
+                        generateMipMaps = true;
+                        break;
+                    }
+                }
                 w = (w > 1 ? Math.floor(w / 2) : 1);
                 h = (h > 1 ? Math.floor(h / 2) : 1);
             }
@@ -729,6 +977,72 @@ class TZWebGLTexture implements Texture
                 return;   // Unsupported format
             }
         }
+        else if (format === gd.PIXELFORMAT_RGBA32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                glformat = gl.RGBA;
+                gltype = gl.FLOAT;
+                if (data instanceof Float32Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Float32Array(data);
+                }
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB32F)
+        {
+            if (gd.floatTextureExtension)
+            {
+                glformat = gl.RGB;
+                gltype = gl.FLOAT;
+                if (data instanceof Float32Array)
+                {
+                    bufferData = data;
+                }
+                else
+                {
+                    bufferData = new Float32Array(data);
+                }
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGBA16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                glformat = gl.RGBA;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                bufferData = data;
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
+        else if (format === gd.PIXELFORMAT_RGB16F)
+        {
+            if (gd.halfFloatTextureExtension)
+            {
+                glformat = gl.RGB;
+                gltype = gd.halfFloatTextureExtension.HALF_FLOAT_OES;
+                bufferData = data;
+            }
+            else
+            {
+                return;   // Unsupported format
+            }
+        }
         else
         {
             return;   //unknown/unsupported format
@@ -878,6 +1192,26 @@ class TZWebGLTexture implements Texture
                     (typedArray.length ===
                      this.width * this.height * this.depth);
             }
+            if (format === gd.PIXELFORMAT_RGBA32F)
+            {
+                return (typedArray instanceof Float32Array) &&
+                    (typedArray.length === 4 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGB32F)
+            {
+                return (typedArray instanceof Float32Array) &&
+                    (typedArray.length === 3 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGBA16F)
+            {
+                return (typedArray instanceof Uint16Array) &&
+                    (typedArray.length === 4 * this.width * this.height * this.depth);
+            }
+            if (format === gd.PIXELFORMAT_RGB16F)
+            {
+                return (typedArray instanceof Uint16Array) &&
+                    (typedArray.length === 3 * this.width * this.height * this.depth);
+            }
         }
         return false;
     }
@@ -888,8 +1222,7 @@ class TZWebGLTexture implements Texture
         tex.gd = gd;
         tex.mipmaps = params.mipmaps;
         tex.dynamic = params.dynamic;
-        tex.renderable = params.renderable;
-        tex.numDataLevels = 0;
+        tex.renderable = (params.renderable || false);
         tex.id = ++gd.counters.textures;
 
         var src = params.src;
@@ -986,7 +1319,15 @@ class TZWebGLTexture implements Texture
                             tex.format = format;
                             tex.cubemap = cubemap;
                             tex.depth = depth;
-                            tex.numDataLevels = numLevels;
+                            if (1 < numLevels)
+                            {
+                                if (!tex.mipmaps)
+                                {
+                                    tex.mipmaps = true;
+                                    debug.log("Mipmap levels provided for texture created without mipmaps enabled: " +
+                                              tex.name);
+                                }
+                            }
                             var result = tex.createGLTexture(data);
                             if (params.onload)
                             {
@@ -1096,6 +1437,7 @@ class TZWebGLTexture implements Texture
                     {
                         imageLoaded();
                         URL.revokeObjectURL(img.src);
+                        dataBlob = null;
                     };
                     src = URL.createObjectURL(dataBlob);
                 }
@@ -1146,12 +1488,14 @@ class TZWebGLTexture implements Texture
                             {
                                 if (xhrStatus === 200 || xhrStatus === 0)
                                 {
+                                    var blob = xhr.response;
                                     img.onload = function blobImageLoadedFn()
                                     {
                                         imageLoaded();
                                         URL.revokeObjectURL(img.src);
+                                        blob = null;
                                     };
-                                    img.src = URL.createObjectURL(xhr.response);
+                                    img.src = URL.createObjectURL(blob);
                                 }
                                 else
                                 {
@@ -1193,7 +1537,7 @@ class TZWebGLTexture implements Texture
             tex.height = params.height;
             tex.depth = params.depth;
             tex.format = format;
-            tex.cubemap = params.cubemap;
+            tex.cubemap = (params.cubemap || false);
             tex.name = params.name;
 
             var result = tex.createGLTexture(params.data);
@@ -1232,7 +1576,9 @@ class TZWebGLTexture implements Texture
 //
 class WebGLVideo implements Video
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Video
     looping      : boolean;
@@ -1469,7 +1815,7 @@ class WebGLVideo implements Video
             video = null;
             v.video = null;
             v.playing = false;
-        }
+        };
         video.addEventListener("error", loadingVideoFailed, false);
 
         var videoCanPlay = function videoCanPlayFn()
@@ -1486,7 +1832,7 @@ class WebGLVideo implements Video
 
             video.removeEventListener("progress", checkProgress);
             video.removeEventListener("canplaythrough", videoCanPlay);
-        }
+        };
         var checkProgress = function checkProgressFn()
         {
             if (0 < video.buffered.length && video.buffered.end(0) >= video.duration)
@@ -1511,7 +1857,9 @@ class WebGLVideo implements Video
 
 class WebGLRenderBuffer implements RenderBuffer
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // RenderBuffer
     id     : number;
@@ -1575,7 +1923,7 @@ class WebGLRenderBuffer implements RenderBuffer
             internalFormat = gl.DEPTH_COMPONENT16;
             attachment = gl.DEPTH_ATTACHMENT;
         }
-        else //if (gd.PIXELFORMAT_D24S8 === format)
+        else // if (gd.PIXELFORMAT_D24S8 === format)
         {
             internalFormat = gl.DEPTH_STENCIL;
             attachment = gl.DEPTH_STENCIL_ATTACHMENT;
@@ -1583,6 +1931,7 @@ class WebGLRenderBuffer implements RenderBuffer
         // else if (gd.PIXELFORMAT_S8 === format)
         // {
         //     internalFormat = gl.STENCIL_INDEX8;
+        //     attachment = gl.STENCIL_ATTACHMENT;
         // }
 
         gl.renderbufferStorage(gl.RENDERBUFFER, internalFormat, width, height);
@@ -1616,7 +1965,9 @@ class WebGLRenderBuffer implements RenderBuffer
 //
 class WebGLRenderTarget implements RenderTarget
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // RenderTarget
     id            : number;
@@ -1675,16 +2026,20 @@ class WebGLRenderTarget implements RenderTarget
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.glObject);
 
-        var drawBuffersExtension = gd.drawBuffersExtension;
-        if (drawBuffersExtension)
+        // Only call drawBuffers if we have more than one color attachment
+        if (this.colorTexture1)
         {
-            if (gd.WEBGL_draw_buffers)
+            var drawBuffersExtension = gd.drawBuffersExtension;
+            if (drawBuffersExtension)
             {
-                drawBuffersExtension.drawBuffersWEBGL(this.buffers);
-            }
-            else
-            {
-                drawBuffersExtension.drawBuffersEXT(this.buffers);
+                if (gd.WEBGL_draw_buffers)
+                {
+                    drawBuffersExtension.drawBuffersWEBGL(this.buffers);
+                }
+                else
+                {
+                    drawBuffersExtension.drawBuffersEXT(this.buffers);
+                }
             }
         }
 
@@ -1704,23 +2059,29 @@ class WebGLRenderTarget implements RenderTarget
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        var drawBuffersExtension = gd.drawBuffersExtension;
-        if (drawBuffersExtension)
+        // Only call drawBuffers if we have more than one color attachment
+        if (this.colorTexture1)
         {
-            var buffers = [gl.BACK];
+            var drawBuffersExtension = gd.drawBuffersExtension;
+            if (drawBuffersExtension)
+            {
+                var buffers = [gl.BACK];
 
-            if (gd.WEBGL_draw_buffers)
-            {
-                drawBuffersExtension.drawBuffersWEBGL(buffers);
-            }
-            else
-            {
-                drawBuffersExtension.drawBuffersEXT(buffers);
+                if (gd.WEBGL_draw_buffers)
+                {
+                    drawBuffersExtension.drawBuffersWEBGL(buffers);
+                }
+                else
+                {
+                    drawBuffersExtension.drawBuffersEXT(buffers);
+                }
             }
         }
 
-        gd.setViewport.apply(gd, this.oldViewportBox);
-        gd.setScissor.apply(gd, this.oldScissorBox);
+        var box = this.oldViewportBox;
+        gd.setViewport(box[0], box[1], box[2], box[3]);
+        box = this.oldScissorBox;
+        gd.setScissor(box[0], box[1], box[2], box[3]);
 
         if (this.colorTexture0)
         {
@@ -1744,7 +2105,113 @@ class WebGLRenderTarget implements RenderTarget
         }
     }
 
-    destroy()
+    private _updateColorAttachement(colorTexture: TZWebGLTexture, index: number): void
+    {
+        var glTexture = colorTexture.glTexture;
+        var gl = this.gd.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.glObject);
+        if (colorTexture.cubemap)
+        {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                    (gl.COLOR_ATTACHMENT0 + index),
+                                    (gl.TEXTURE_CUBE_MAP_POSITIVE_X + this.face),
+                                    glTexture, 0);
+        }
+        else
+        {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                    (gl.COLOR_ATTACHMENT0 + index),
+                                    gl.TEXTURE_2D,
+                                    glTexture, 0);
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    getWidth(): number
+    {
+        if (this.colorTexture0)
+        {
+            return this.colorTexture0.width;
+        }
+        else if (this.depthBuffer)
+        {
+            return this.depthBuffer.width;
+        }
+        else if (this.depthTexture)
+        {
+            return this.depthTexture.width;
+        }
+    }
+
+    getHeight(): number
+    {
+        if (this.colorTexture0)
+        {
+            return this.colorTexture0.height;
+        }
+        else if (this.depthBuffer)
+        {
+            return this.depthBuffer.height;
+        }
+        else if (this.depthTexture)
+        {
+            return this.depthTexture.height;
+        }
+    }
+
+    setColorTexture0(colorTexture0: Texture): void
+    {
+        var oldColorTexture0 = this.colorTexture0;
+        debug.assert(oldColorTexture0 &&
+                     colorTexture0 &&
+                     oldColorTexture0.width === colorTexture0.width &&
+                     oldColorTexture0.height === colorTexture0.height &&
+                     oldColorTexture0.format === colorTexture0.format &&
+                     oldColorTexture0.cubemap === colorTexture0.cubemap);
+        this.colorTexture0 = <TZWebGLTexture>(colorTexture0);
+        this._updateColorAttachement(this.colorTexture0, 0);
+    }
+
+    setColorTexture1(colorTexture1: Texture): void
+    {
+        var oldColorTexture1 = this.colorTexture1;
+        debug.assert(oldColorTexture1 &&
+                     colorTexture1 &&
+                     oldColorTexture1.width === colorTexture1.width &&
+                     oldColorTexture1.height === colorTexture1.height &&
+                     oldColorTexture1.format === colorTexture1.format &&
+                     oldColorTexture1.cubemap === colorTexture1.cubemap);
+        this.colorTexture1 = <TZWebGLTexture>(colorTexture1);
+        this._updateColorAttachement(this.colorTexture1, 1);
+    }
+
+    setColorTexture2(colorTexture2: Texture): void
+    {
+        var oldColorTexture2 = this.colorTexture2;
+        debug.assert(oldColorTexture2 &&
+                     colorTexture2 &&
+                     oldColorTexture2.width === colorTexture2.width &&
+                     oldColorTexture2.height === colorTexture2.height &&
+                     oldColorTexture2.format === colorTexture2.format &&
+                     oldColorTexture2.cubemap === colorTexture2.cubemap);
+        this.colorTexture2 = <TZWebGLTexture>(colorTexture2);
+        this._updateColorAttachement(this.colorTexture2, 2);
+    }
+
+    setColorTexture3(colorTexture3: Texture): void
+    {
+        var oldColorTexture3 = this.colorTexture3;
+        debug.assert(oldColorTexture3 &&
+                     colorTexture3 &&
+                     oldColorTexture3.width === colorTexture3.width &&
+                     oldColorTexture3.height === colorTexture3.height &&
+                     oldColorTexture3.format === colorTexture3.format &&
+                     oldColorTexture3.cubemap === colorTexture3.cubemap);
+        this.colorTexture3 = <TZWebGLTexture>(colorTexture3);
+        this._updateColorAttachement(this.colorTexture3, 3);
+    }
+
+    destroy(): void
     {
         var gd = this.gd;
         if (gd)
@@ -1825,11 +2292,17 @@ class WebGLRenderTarget implements RenderTarget
 
             if (colorTexture0.cubemap)
             {
-                gl.framebufferTexture2D(gl.FRAMEBUFFER, colorAttachment0, (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face), glTexture, 0);
+                gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                        colorAttachment0,
+                                        (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face),
+                                        glTexture, 0);
             }
             else
             {
-                gl.framebufferTexture2D(gl.FRAMEBUFFER, colorAttachment0, gl.TEXTURE_2D, glTexture, 0);
+                gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                        colorAttachment0,
+                                        gl.TEXTURE_2D,
+                                        glTexture, 0);
             }
 
             if (colorTexture1)
@@ -1837,11 +2310,17 @@ class WebGLRenderTarget implements RenderTarget
                 glTexture = colorTexture1.glTexture;
                 if (colorTexture1.cubemap)
                 {
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, (colorAttachment0 + 1), (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face), glTexture, 0);
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                            (colorAttachment0 + 1),
+                                            (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face),
+                                            glTexture, 0);
                 }
                 else
                 {
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, (colorAttachment0 + 1), gl.TEXTURE_2D, glTexture, 0);
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                            (colorAttachment0 + 1),
+                                            gl.TEXTURE_2D,
+                                            glTexture, 0);
                 }
 
                 if (colorTexture2)
@@ -1849,11 +2328,17 @@ class WebGLRenderTarget implements RenderTarget
                     glTexture = colorTexture2.glTexture;
                     if (colorTexture1.cubemap)
                     {
-                        gl.framebufferTexture2D(gl.FRAMEBUFFER, (colorAttachment0 + 2), (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face), glTexture, 0);
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                (colorAttachment0 + 2),
+                                                (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face),
+                                                glTexture, 0);
                     }
                     else
                     {
-                        gl.framebufferTexture2D(gl.FRAMEBUFFER, (colorAttachment0 + 2), gl.TEXTURE_2D, glTexture, 0);
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                (colorAttachment0 + 2),
+                                                gl.TEXTURE_2D,
+                                                glTexture, 0);
                     }
 
                     if (colorTexture3)
@@ -1861,11 +2346,17 @@ class WebGLRenderTarget implements RenderTarget
                         glTexture = colorTexture3.glTexture;
                         if (colorTexture1.cubemap)
                         {
-                            gl.framebufferTexture2D(gl.FRAMEBUFFER, (colorAttachment0 + 3), (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face), glTexture, 0);
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                    (colorAttachment0 + 3),
+                                                    (gl.TEXTURE_CUBE_MAP_POSITIVE_X + face),
+                                                    glTexture, 0);
                         }
                         else
                         {
-                            gl.framebufferTexture2D(gl.FRAMEBUFFER, (colorAttachment0 + 3), gl.TEXTURE_2D, glTexture, 0);
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                    (colorAttachment0 + 3),
+                                                    gl.TEXTURE_2D,
+                                                    glTexture, 0);
                         }
                     }
                 }
@@ -1972,7 +2463,9 @@ interface WebGLIndexWriteIterator extends IndexWriteIterator
 
 class WebGLIndexBuffer implements IndexBuffer
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // IndexBuffer
     id         : number;
@@ -2075,7 +2568,7 @@ class WebGLIndexBuffer implements IndexBuffer
         }
     }
 
-    setData(data, offset, numIndices)
+    setData(data, offset?, numIndices?)
     {
         if (offset === undefined)
         {
@@ -2085,6 +2578,9 @@ class WebGLIndexBuffer implements IndexBuffer
         {
             numIndices = this.numIndices;
         }
+        debug.assert(offset + numIndices <= this.numIndices,
+                     "IndexBuffer.setData: invalid 'offset' and/or " +
+                     "'numIndices' arguments");
 
         var gd = this.gd;
         var gl = gd.gl;
@@ -2199,9 +2695,11 @@ class WebGLIndexBuffer implements IndexBuffer
         ib.stride = stride;
 
         // Avoid dot notation lookup to prevent Google Closure complaining about transient being a keyword
+        /* tslint:disable:no-string-literal */
         ib['transient'] = (params['transient'] || false);
         ib.dynamic = (params.dynamic || ib['transient']);
         ib.usage = (ib['transient'] ? gl.STREAM_DRAW : (ib.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW));
+        /* tslint:enable:no-string-literal */
 
         ib.glBuffer = gl.createBuffer();
 
@@ -2227,7 +2725,9 @@ class WebGLIndexBuffer implements IndexBuffer
 //
 class WebGLSemantics implements Semantics
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Semantics
     length: number;
@@ -2271,7 +2771,9 @@ interface WebGLVertexWriteIterator extends VertexWriteIterator
 //
 class WebGLVertexBuffer implements VertexBuffer
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // VertexBuffer
     id          : number;
@@ -2900,7 +3402,9 @@ class WebGLVertexBuffer implements VertexBuffer
             var vertexAttribute = vertexAttributes[n];
             var attribute = attributes[n];
 
+            /* tslint:disable:no-bitwise */
             attributeMask |= (1 << attribute);
+            /* tslint:enable:no-bitwise */
 
             gl.vertexAttribPointer(attribute,
                                    vertexAttribute.numComponents,
@@ -3003,9 +3507,11 @@ class WebGLVertexBuffer implements VertexBuffer
         // Avoid dot notation lookup to prevent Google Closure complaining
         // about transient being a keyword
 
+        /* tslint:disable:no-string-literal */
         vb['transient'] = (params['transient'] || false);
         vb.dynamic = (params.dynamic || vb['transient']);
         vb.usage = (vb['transient'] ? gl.STREAM_DRAW : (vb.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW));
+        /* tslint:enable:no-string-literal */
         vb.glBuffer = gl.createBuffer();
 
         var bufferSize = (numVertices * strideInBytes);
@@ -3061,7 +3567,42 @@ interface PassState extends StateBase
 
 class WebGLPass implements Pass
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
+
+    // DO NOT CHANGE: This table is independent from the actual attribute index on GraphicsDevice.SEMANTIC_xxx
+    static semanticToAttr = {
+        POSITION: "ATTR0",
+        POSITION0: "ATTR0",
+        BLENDWEIGHT: "ATTR1",
+        BLENDWEIGHT0: "ATTR1",
+        NORMAL: "ATTR2",
+        NORMAL0: "ATTR2",
+        COLOR: "ATTR3",
+        COLOR0: "ATTR3",
+        COLOR1: "ATTR4",
+        SPECULAR: "ATTR4",
+        FOGCOORD: "ATTR5",
+        TESSFACTOR: "ATTR5",
+        PSIZE0: "ATTR6",
+        BLENDINDICES: "ATTR7",
+        BLENDINDICES0: "ATTR7",
+        TEXCOORD: "ATTR8",
+        TEXCOORD0: "ATTR8",
+        TEXCOORD1: "ATTR9",
+        TEXCOORD2: "ATTR10",
+        TEXCOORD3: "ATTR11",
+        TEXCOORD4: "ATTR12",
+        TEXCOORD5: "ATTR13",
+        TEXCOORD6: "ATTR14",
+        TEXCOORD7: "ATTR15",
+        TANGENT: "ATTR14",
+        TANGENT0: "ATTR14",
+        BINORMAL0: "ATTR15",
+        BINORMAL: "ATTR15",
+        PSIZE: "ATTR6"
+    };
 
     name: string;
     parameters: any;
@@ -3295,8 +3836,18 @@ class WebGLPass implements Pass
                 var attribute = gd['SEMANTIC_' + semanticName];
                 if (attribute !== undefined)
                 {
+                    /* tslint:disable:no-bitwise */
                     semanticsMask |= (1 << attribute);
-                    gl.bindAttribLocation(glProgram, attribute, ("ATTR" + attribute));
+                    /* tslint:enable:no-bitwise */
+                    if (0 === semanticName.indexOf("ATTR"))
+                    {
+                        gl.bindAttribLocation(glProgram, attribute, semanticName);
+                    }
+                    else
+                    {
+                        var attributeName = WebGLPass.semanticToAttr[semanticName];
+                        gl.bindAttribLocation(glProgram, attribute, attributeName);
+                    }
                 }
             }
 
@@ -3407,7 +3958,9 @@ class WebGLPass implements Pass
 //
 class WebGLTechnique implements Technique
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Technique
     id            : number;
@@ -3417,7 +3970,7 @@ class WebGLTechnique implements Technique
     passes        : WebGLPass[];
     numPasses     : number;
     numParameters : number;
-    device        : any;
+    device        : WebGLGraphicsDevice;
 
     getPass(id)
     {
@@ -3436,7 +3989,9 @@ class WebGLTechnique implements Technique
         }
         else
         {
+            /* tslint:disable:no-bitwise */
             id = (id | 0);
+            /* tslint:enable:no-bitwise */
             if (id < numPasses)
             {
                 return passes[id];
@@ -3445,7 +4000,7 @@ class WebGLTechnique implements Technique
         return null;
     }
 
-    activate(gd)
+    activate(gd: WebGLGraphicsDevice)
     {
         this.device = gd;
 
@@ -3891,7 +4446,9 @@ class WebGLTechnique implements Technique
 //
 class TZWebGLShader implements Shader
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Shader
     id             : number;
@@ -3945,7 +4502,9 @@ class TZWebGLShader implements Shader
         }
         else
         {
+            /* tslint:disable:no-bitwise */
             name = (name | 0);
+            /* tslint:enable:no-bitwise */
             var parameters = this.parameters;
             for (var p in parameters)
             {
@@ -4118,7 +4677,19 @@ class TZWebGLShader implements Shader
                 }
                 var glShader = gl.createShader(glShaderType);
 
-                gl.shaderSource(glShader, program.code);
+                var code = program.code;
+
+                if (gd.fixIE && gd.fixIE < "0.93")
+                {
+                    code = code.replace(/#.*\n/g, '');
+                    code = code.replace(/TZ_LOWP/g, '');
+                    if (-1 !== code.indexOf('texture2DProj'))
+                    {
+                        code = 'vec4 texture2DProj(sampler2D s, vec3 uv){ return texture2D(s, uv.xy / uv.z);}\n' + code;
+                    }
+                }
+
+                gl.shaderSource(glShader, code);
 
                 gl.compileShader(glShader);
 
@@ -4328,8 +4899,10 @@ var techniqueParameterBufferCreate =
             return techniqueParameterBufferWriter;
         };
 
+        /* tslint:disable:no-empty */
         Float32Array.prototype.unmap = function techniqueParameterBufferUnmap(writer) {
         };
+        /* tslint:enable:no-empty */
 
         Float32Array.prototype.setData = function techniqueParameterBufferSetData(data,
                                                                                   offset?: number,
@@ -4350,14 +4923,16 @@ var techniqueParameterBufferCreate =
     }
 
     return new Float32Array(params.numFloats);
-}
+};
 
 //
 // WebGLDrawParameters
 //
 class WebGLDrawParameters implements DrawParameters
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // DrawParameters
     technique       : WebGLTechnique;
@@ -4376,15 +4951,15 @@ class WebGLDrawParameters implements DrawParameters
     constructor()
     {
         // Streams, TechniqueParameters and Instances are stored as indexed properties
+        this.sortKey = 0;
+        this.technique = null;
         this.endStreams = 0;
         this.endTechniqueParameters = (16 * 3);
         this.endInstances = ((16 * 3) + 8);
-        this.firstIndex = 0;
-        this.count = 0;
-        this.sortKey = 0;
-        this.technique = null;
         this.indexBuffer = null;
         this.primitive = -1;
+        this.count = 0;
+        this.firstIndex = 0;
         this.userData = null;
 
         // Initialize for 1 Stream
@@ -4640,7 +5215,9 @@ interface WebGLCreationCounters
 
 class WebGLGraphicsDevice implements GraphicsDevice
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // GraphicsDevice
     PIXELFORMAT_A8           : number;
@@ -4657,6 +5234,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
     PIXELFORMAT_DXT3         : number;
     PIXELFORMAT_DXT5         : number;
     PIXELFORMAT_S8           : number;
+    PIXELFORMAT_RGBA32F      : number;
+    PIXELFORMAT_RGB32F       : number;
+    PIXELFORMAT_RGBA16F      : number;
+    PIXELFORMAT_RGB16F       : number;
 
     PRIMITIVE_POINTS         : number;
     PRIMITIVE_LINES          : number;
@@ -4739,11 +5320,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
     width: number;
     height: number;
     extensions: string;
-    shadingLanguageVersion: number;
+    shadingLanguageVersion: string;
 
     fullscreen: boolean;
 
-    rendererVersion: number;
+    rendererVersion: string;
     renderer: string;
     vendor: string;
     videoRam: number;
@@ -4781,12 +5362,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
     maxAnisotropy: number;
     WEBGL_draw_buffers: boolean;
     drawBuffersExtension: any;
+    floatTextureExtension: any;
+    halfFloatTextureExtension: any;
 
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
 
     metrics: WebGLMetrics;
 
     counters: WebGLCreationCounters;
+
+    fixIE: string;
 
     drawIndexed(primitive: number, numIndices: number, first?: number)
     {
@@ -4819,7 +5404,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         if (1 === numPasses)
         {
+            /* tslint:disable:no-bitwise */
             mask = (passes[0].semanticsMask & attributeMask);
+            /* tslint:enable:no-bitwise */
             if (mask !== this.clientStateMask)
             {
                 this.enableClientState(mask);
@@ -4838,7 +5425,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 var pass = passes[p];
 
+                /* tslint:disable:no-bitwise */
                 mask = (pass.semanticsMask & attributeMask);
+                /* tslint:enable:no-bitwise */
                 if (mask !== this.clientStateMask)
                 {
                     this.enableClientState(mask);
@@ -4874,7 +5463,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         if (1 === numPasses)
         {
+            /* tslint:disable:no-bitwise */
             mask = (passes[0].semanticsMask & attributeMask);
+            /* tslint:enable:no-bitwise */
             if (mask !== this.clientStateMask)
             {
                 this.enableClientState(mask);
@@ -4893,7 +5484,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 var pass = passes[p];
 
+                /* tslint:disable:no-bitwise */
                 mask = (pass.semanticsMask & attributeMask);
+                /* tslint:enable:no-bitwise */
                 if (mask !== this.clientStateMask)
                 {
                     this.enableClientState(mask);
@@ -4916,17 +5509,18 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var activeTechnique = this.activeTechnique;
         var passes = activeTechnique.passes;
         var numTechniqueParameters = arguments.length;
+        var t;
         if (1 === passes.length)
         {
             var parameters = passes[0].parameters;
-            for (var t = 0; t < numTechniqueParameters; t += 1)
+            for (t = 0; t < numTechniqueParameters; t += 1)
             {
                 this.setParametersImmediate(parameters, arguments[t]);
             }
         }
         else
         {
-            for (var t = 0; t < numTechniqueParameters; t += 1)
+            for (t = 0; t < numTechniqueParameters; t += 1)
             {
                 this.setParametersDeferred(this, passes, arguments[t]);
             }
@@ -5231,10 +5825,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
             numAttributes = (<WebGLVertexBuffer>vertexBuffer).numAttributes;
         }
 
+        /* tslint:disable:no-bitwise */
         this.attributeMask |=
             (<WebGLVertexBuffer>vertexBuffer).bindAttributes(numAttributes,
                                                              attributes,
                                                              offset);
+        /* tslint:enable:no-bitwise */
     }
 
     setIndexBuffer(indexBuffer: IndexBuffer)
@@ -5295,7 +5891,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var vertexBuffer = null;
         var pass = null;
         var passParameters = null;
-        var p = null;
         var indexFormat = 0;
         var indexStride = 0;
         var mask = 0;
@@ -5328,7 +5923,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 pass = technique.passes[0];
                 passParameters = pass.parameters;
 
+                /* tslint:disable:no-bitwise */
                 mask = (pass.semanticsMask & attributeMask);
+                /* tslint:enable:no-bitwise */
                 if (mask !== this.clientStateMask)
                 {
                     this.enableClientState(mask);
@@ -5377,7 +5974,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 attributeMask = this.attributeMask;
 
+                /* tslint:disable:no-bitwise */
                 mask = (pass.semanticsMask & attributeMask);
+                /* tslint:enable:no-bitwise */
                 if (mask !== this.clientStateMask)
                 {
                     this.enableClientState(mask);
@@ -5386,7 +5985,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
             lastDrawParameters = drawParameters;
 
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             if (indexBuffer)
             {
                 if (activeIndexBuffer !== indexBuffer)
@@ -5463,7 +6062,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     }
                 }
             }
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
         }
 
         this.activeIndexBuffer = activeIndexBuffer;
@@ -5541,7 +6140,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     this.setTechniqueCaching(technique);
                     setParameters = setParametersCaching;
 
+                    /* tslint:disable:no-bitwise */
                     mask = (passes[0].semanticsMask & attributeMask);
+                    /* tslint:enable:no-bitwise */
                     if (mask !== this.clientStateMask)
                     {
                         this.enableClientState(mask);
@@ -5597,7 +6198,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 attributeMask = this.attributeMask;
                 if (1 === numPasses)
                 {
+                    /* tslint:disable:no-bitwise */
                     mask = (passes[0].semanticsMask & attributeMask);
+                    /* tslint:enable:no-bitwise */
                     if (mask !== this.clientStateMask)
                     {
                         this.enableClientState(mask);
@@ -5607,7 +6210,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
             lastDrawParameters = drawParameters;
 
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             if (indexBuffer)
             {
                 if (activeIndexBuffer !== indexBuffer)
@@ -5802,7 +6405,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     }
                 }
             }
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
         }
 
         this.activeIndexBuffer = activeIndexBuffer;
@@ -5877,7 +6480,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 var attribute = semantics[n];
 
+                /* tslint:disable:no-bitwise */
                 deltaAttributeMask |= (1 << attribute);
+                /* tslint:enable:no-bitwise */
 
                 gl.vertexAttribPointer(attribute,
                                        vertexAttribute.numComponents,
@@ -5888,7 +6493,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 offset += vertexAttribute.stride;
             }
+            /* tslint:disable:no-bitwise */
             this.attributeMask |= deltaAttributeMask;
+            /* tslint:enable:no-bitwise */
 
             this.draw(this.immediatePrimitive, numVerticesWritten, 0);
         }
@@ -6044,10 +6651,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             for (n = 0; n < 16; n += 1)
             {
+                /* tslint:disable:no-bitwise */
                 if (clientStateMask & (1 << n))
                 {
                     gl.disableVertexAttribArray(n);
                 }
+                /* tslint:enable:no-bitwise */
             }
             this.clientStateMask = 0;
         }
@@ -6069,16 +6678,20 @@ class WebGLGraphicsDevice implements GraphicsDevice
             this.metrics.primitives = 0;
         }
 
+        /* tslint:disable:no-string-literal */
         return !(document.hidden || document['webkitHidden']);
+        /* tslint:enable:no-string-literal */
     }
 
     beginRenderTarget(renderTarget: RenderTarget): boolean
     {
+        debug.assert(!this.activeRenderTarget,
+                     "beginRenderTarget called before calling endRenderTarget on current render target");
         this.activeRenderTarget = <WebGLRenderTarget>renderTarget;
 
         if (debug)
         {
-            this.metrics.renderTargetChanges +=1;
+            this.metrics.renderTargetChanges += 1;
         }
 
         return (<WebGLRenderTarget>renderTarget).bind();
@@ -6095,9 +6708,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return false;
     }
 
+    /* tslint:disable:no-empty */
     endOcclusionQuery()
     {
     }
+    /* tslint:enable:no-empty */
 
     endFrame()
     {
@@ -6260,6 +6875,22 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             return false;
         }
+        else if ("TEXTURE_FLOAT" === name)
+        {
+            if (this.floatTextureExtension)
+            {
+                return true;
+            }
+            return false;
+        }
+        else if ("TEXTURE_HALF_FLOAT" === name)
+        {
+            if (this.halfFloatTextureExtension)
+            {
+                return true;
+            }
+            return false;
+        }
         else if ("INDEXFORMAT_UINT" === name)
         {
             if (gl.getExtension('OES_element_index_uint'))
@@ -6355,6 +6986,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 shaderType = gl.FRAGMENT_SHADER;
             }
 
+            if (!gl.getShaderPrecisionFormat)
+            {
+                return 0;
+            }
+
             var sp = gl.getShaderPrecisionFormat(shaderType, gl.HIGH_FLOAT);
             if (!sp || !sp.precision)
             {
@@ -6373,7 +7009,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return 0;
     }
 
-    loadTexturesArchive(params: any)
+    loadTexturesArchive(params: TextureArchiveParams)
     {
         var src = params.src;
         if (typeof TARLoader !== 'undefined')
@@ -6490,7 +7126,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    requestFullScreen(fullscreen:boolean): boolean
+    requestFullScreen(fullscreen: boolean): boolean
     {
         if (fullscreen)
         {
@@ -6511,6 +7147,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 canvas.mozRequestFullScreen();
             }
+            else if (canvas.msRequestFullscreen)
+            {
+                canvas.msRequestFullscreen();
+            }
             else if (canvas.requestFullScreen)
             {
                 canvas.requestFullScreen();
@@ -6522,9 +7162,18 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
         else
         {
+            /* tslint:disable:no-string-literal */
             if (document.webkitCancelFullScreen)
             {
                 document.webkitCancelFullScreen();
+            }
+            else if (document['mozCancelFullScreen'])
+            {
+                document['mozCancelFullScreen']();
+            }
+            else if (document.msExitFullscreen)
+            {
+                document.msExitFullscreen();
             }
             else if (document.cancelFullScreen)
             {
@@ -6534,6 +7183,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 document.exitFullscreen();
             }
+            /* tslint:enable:no-string-literal */
         }
         return true;
     }
@@ -6730,6 +7380,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var oldMask = this.clientStateMask;
         this.clientStateMask = mask;
 
+        /* tslint:disable:no-bitwise */
         var disableMask = (oldMask & (~mask));
         var enableMask  = ((~oldMask) & mask);
         var n;
@@ -6779,6 +7430,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             }
             while (enableMask);
         }
+        /* tslint:enable:no-bitwise */
     }
 
     setTexture(textureUnitIndex, texture, sampler)
@@ -6823,7 +7475,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    this.metrics.textureChanges +=1;
+                    this.metrics.textureChanges += 1;
                 }
             }
         }
@@ -6990,6 +7642,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 var canvasParams = {
                     alpha: false,
+                    depth: true,
                     stencil: true,
                     antialias: false
                 };
@@ -7000,10 +7653,20 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     canvasParams.antialias = true;
                 }
 
-                var alpha = params.alpha ;
+                var alpha = params.alpha;
                 if (alpha)
                 {
                     canvasParams.alpha = true;
+                }
+
+                if (params.depth === false)
+                {
+                    canvasParams.depth = false;
+                }
+
+                if (params.stencil === false)
+                {
+                    canvasParams.stencil = false;
                 }
 
                 var numContexts = contextList.length, i;
@@ -7017,13 +7680,15 @@ class WebGLGraphicsDevice implements GraphicsDevice
                             return context;
                         }
                     }
+                    /* tslint:disable:no-empty */
                     catch (ex)
                     {
                     }
+                    /* tslint:enable:no-empty */
                 }
             }
             return null;
-        }
+        };
 
         // TODO: Test if we can also use "webkit-3d" and "moz-webgl"
         var gl = getAvailableContext(canvas, params, ['webgl', 'experimental-webgl']);
@@ -7046,6 +7711,15 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.height = height;
 
         var extensions = gl.getSupportedExtensions();
+
+        var extensionsMap = {};
+        var numExtensions = extensions.length;
+        var n;
+        for (n = 0; n < numExtensions; n += 1)
+        {
+            extensionsMap[extensions[n]] = true;
+        }
+
         if (extensions)
         {
             extensions = extensions.join(' ');
@@ -7060,42 +7734,39 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.renderer = gl.getParameter(gl.RENDERER);
         gd.vendor = gl.getParameter(gl.VENDOR);
 
-        if (extensions.indexOf('WEBGL_compressed_texture_s3tc') !== -1)
+        /* tslint:disable:no-string-literal */
+        if (extensionsMap['WEBGL_compressed_texture_s3tc'])
         {
             gd.WEBGL_compressed_texture_s3tc = true;
-            if (extensions.indexOf('WEBKIT_WEBGL_compressed_texture_s3tc') !== -1)
-            {
-                gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
-            }
-            else if (extensions.indexOf('MOZ_WEBGL_compressed_texture_s3tc') !== -1)
-            {
-                gd.compressedTexturesExtension = gl.getExtension('MOZ_WEBGL_compressed_texture_s3tc');
-            }
-            else
-            {
-                gd.compressedTexturesExtension = gl.getExtension('WEBGL_compressed_texture_s3tc');
-            }
+            gd.compressedTexturesExtension = gl.getExtension('WEBGL_compressed_texture_s3tc');
         }
-        else if (extensions.indexOf('WEBKIT_WEBGL_compressed_textures') !== -1)
+        else if (extensionsMap['WEBKIT_WEBGL_compressed_texture_s3tc'])
+        {
+            gd.WEBGL_compressed_texture_s3tc = true;
+            gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
+        }
+        else if (extensionsMap['MOZ_WEBGL_compressed_texture_s3tc'])
+        {
+            gd.WEBGL_compressed_texture_s3tc = true;
+            gd.compressedTexturesExtension = gl.getExtension('MOZ_WEBGL_compressed_texture_s3tc');
+        }
+        else if (extensionsMap['WEBKIT_WEBGL_compressed_textures'])
         {
             gd.compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_textures');
         }
 
         var anisotropyExtension;
-        if (extensions.indexOf('EXT_texture_filter_anisotropic') !== -1)
+        if (extensionsMap['EXT_texture_filter_anisotropic'])
         {
-            if (extensions.indexOf('MOZ_EXT_texture_filter_anisotropic') !== -1)
-            {
-                anisotropyExtension = gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
-            }
-            else if (extensions.indexOf('WEBKIT_EXT_texture_filter_anisotropic') !== -1)
-            {
-                anisotropyExtension = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-            }
-            else
-            {
-                anisotropyExtension = gl.getExtension('EXT_texture_filter_anisotropic');
-            }
+            anisotropyExtension = gl.getExtension('EXT_texture_filter_anisotropic');
+        }
+        else if (extensionsMap['MOZ_EXT_texture_filter_anisotropic'])
+        {
+            anisotropyExtension = gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+        }
+        else if (extensionsMap['WEBKIT_EXT_texture_filter_anisotropic'])
+        {
+            anisotropyExtension = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
         }
         if (anisotropyExtension)
         {
@@ -7110,27 +7781,61 @@ class WebGLGraphicsDevice implements GraphicsDevice
         // Enable OES_element_index_uint extension
         gl.getExtension('OES_element_index_uint');
 
-        if (extensions.indexOf('WEBGL_draw_buffers') !== -1)
+        if (extensionsMap['WEBGL_draw_buffers'])
         {
             gd.WEBGL_draw_buffers = true;
             gd.drawBuffersExtension = gl.getExtension('WEBGL_draw_buffers');
         }
-        else if (extensions.indexOf('EXT_draw_buffers') !== -1)
+        else if (extensionsMap['EXT_draw_buffers'])
         {
             gd.drawBuffersExtension = gl.getExtension('EXT_draw_buffers');
         }
+        /* tslint:enable:no-string-literal */
 
-        gd.PRIMITIVE_POINTS         = gl.POINTS;
-        gd.PRIMITIVE_LINES          = gl.LINES;
-        gd.PRIMITIVE_LINE_LOOP      = gl.LINE_LOOP;
-        gd.PRIMITIVE_LINE_STRIP     = gl.LINE_STRIP;
-        gd.PRIMITIVE_TRIANGLES      = gl.TRIANGLES;
-        gd.PRIMITIVE_TRIANGLE_STRIP = gl.TRIANGLE_STRIP;
-        gd.PRIMITIVE_TRIANGLE_FAN   = gl.TRIANGLE_FAN;
+        // Enagle OES_texture_float extension
+        if (extensionsMap['OES_texture_float'])
+        {
+            gd.floatTextureExtension = gl.getExtension('OES_texture_float');
+        }
+        if (extensionsMap['WEBGL_color_buffer_float'])
+        {
+            gd.floatTextureExtension = gl.getExtension('WEBGL_color_buffer_float');
+        }
 
-        gd.INDEXFORMAT_UBYTE  = gl.UNSIGNED_BYTE;
-        gd.INDEXFORMAT_USHORT = gl.UNSIGNED_SHORT;
-        gd.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
+        // Enagle OES_texture_float extension
+        if (extensionsMap['OES_texture_half_float'])
+        {
+            gd.halfFloatTextureExtension = gl.getExtension('OES_texture_half_float');
+        }
+        if (extensionsMap['WEBGL_color_buffer_half_float'])
+        {
+            gl.getExtension('WEBGL_color_buffer_half_float');
+        }
+
+        var proto = WebGLGraphicsDevice.prototype;
+
+        proto.PRIMITIVE_POINTS         = gl.POINTS;
+        proto.PRIMITIVE_LINES          = gl.LINES;
+        proto.PRIMITIVE_LINE_LOOP      = gl.LINE_LOOP;
+        proto.PRIMITIVE_LINE_STRIP     = gl.LINE_STRIP;
+        proto.PRIMITIVE_TRIANGLES      = gl.TRIANGLES;
+        proto.PRIMITIVE_TRIANGLE_STRIP = gl.TRIANGLE_STRIP;
+        proto.PRIMITIVE_TRIANGLE_FAN   = gl.TRIANGLE_FAN;
+
+        proto.INDEXFORMAT_UBYTE  = gl.UNSIGNED_BYTE;
+        proto.INDEXFORMAT_USHORT = gl.UNSIGNED_SHORT;
+        proto.INDEXFORMAT_UINT   = gl.UNSIGNED_INT;
+
+        // Detect IE11 partial WebGL implementation...
+        var ieVersionIndex = (gd.vendor === 'Microsoft' ? gd.rendererVersion.indexOf('0.9') : -1);
+        if (-1 !== ieVersionIndex)
+        {
+            gd.fixIE = gd.rendererVersion.substr(ieVersionIndex, 4);
+        }
+        else
+        {
+            gd.fixIE = null;
+        }
 
         var getNormalizationScale = function getNormalizationScaleFn(format)
         {
@@ -7162,7 +7867,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 return 1;
             }
-        }
+        };
 
         var makeVertexformat =
             function makeVertexformatFn(n, c, s, f, name)
@@ -7253,26 +7958,117 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
             return attributeFormat;
+        };
+
+
+        if (gd.fixIE && gd.fixIE < "0.94")
+        {
+            proto.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4');
+            proto.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4');
+            proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,   8, gl.FLOAT, 'SHORT2');
+            proto.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4');
+            proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,   8, gl.FLOAT, 'USHORT2');
+            proto.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4');
+        }
+        else
+        {
+            proto.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
+            proto.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
+            proto.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
+            proto.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
+            proto.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
+            proto.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
+        }
+        if (gd.fixIE && gd.fixIE < "0.93")
+        {
+            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(0, 4,  16, gl.FLOAT, 'BYTE4N');
+            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'UBYTE4N');
+            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(0, 2,   8, gl.FLOAT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(0, 4,  16, gl.FLOAT, 'SHORT4N');
+            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(0, 2,   8, gl.FLOAT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(0, 4,  16, gl.FLOAT, 'USHORT4N');
+        }
+        else
+        {
+            proto.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
+            proto.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
+            proto.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
+            proto.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
+            proto.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
+            proto.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
+        }
+        proto.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
+        proto.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
+        proto.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
+        proto.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
+
+
+        var maxAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
+        if (maxAttributes < 16)
+        {
+            proto.SEMANTIC_ATTR0 =
+            proto.SEMANTIC_POSITION =
+            proto.SEMANTIC_POSITION0 = 0;
+
+            proto.SEMANTIC_ATTR1 =
+            proto.SEMANTIC_BLENDWEIGHT =
+            proto.SEMANTIC_BLENDWEIGHT0 = 1;
+
+            proto.SEMANTIC_ATTR2 =
+            proto.SEMANTIC_NORMAL =
+            proto.SEMANTIC_NORMAL0 = 2;
+
+            proto.SEMANTIC_ATTR3 =
+            proto.SEMANTIC_COLOR =
+            proto.SEMANTIC_COLOR0 = 3;
+
+            proto.SEMANTIC_ATTR7 =
+            proto.SEMANTIC_BLENDINDICES =
+            proto.SEMANTIC_BLENDINDICES0 = 4;
+
+            proto.SEMANTIC_ATTR8 =
+            proto.SEMANTIC_TEXCOORD =
+            proto.SEMANTIC_TEXCOORD0 = 5;
+
+            proto.SEMANTIC_ATTR9 =
+            proto.SEMANTIC_TEXCOORD1 = 6;
+
+            proto.SEMANTIC_ATTR14 =
+            proto.SEMANTIC_TEXCOORD6 =
+            proto.SEMANTIC_TANGENT =
+            proto.SEMANTIC_TANGENT0 = 7;
+
+            proto.SEMANTIC_ATTR15 =
+            proto.SEMANTIC_TEXCOORD7 =
+            proto.SEMANTIC_BINORMAL0 =
+            proto.SEMANTIC_BINORMAL = 8;
+
+            proto.SEMANTIC_ATTR10 =
+            proto.SEMANTIC_TEXCOORD2 = 9;
+
+            proto.SEMANTIC_ATTR11 =
+            proto.SEMANTIC_TEXCOORD3 = 10;
+
+            proto.SEMANTIC_ATTR12 =
+            proto.SEMANTIC_TEXCOORD4 = 11;
+
+            proto.SEMANTIC_ATTR13 =
+            proto.SEMANTIC_TEXCOORD5 = 12;
+
+            proto.SEMANTIC_ATTR4 =
+            proto.SEMANTIC_COLOR1 =
+            proto.SEMANTIC_SPECULAR = 13;
+
+            proto.SEMANTIC_ATTR5 =
+            proto.SEMANTIC_FOGCOORD =
+            proto.SEMANTIC_TESSFACTOR = 14;
+
+            proto.SEMANTIC_ATTR6 =
+            proto.SEMANTIC_PSIZE =
+            proto.SEMANTIC_PSIZE0 = 15;
         }
 
-        gd.VERTEXFORMAT_BYTE4    = makeVertexformat(0, 4,  4, gl.BYTE, 'BYTE4');
-        gd.VERTEXFORMAT_BYTE4N   = makeVertexformat(1, 4,  4, gl.BYTE, 'BYTE4N');
-        gd.VERTEXFORMAT_UBYTE4   = makeVertexformat(0, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4');
-        gd.VERTEXFORMAT_UBYTE4N  = makeVertexformat(1, 4,  4, gl.UNSIGNED_BYTE, 'UBYTE4N');
-        gd.VERTEXFORMAT_SHORT2   = makeVertexformat(0, 2,  4, gl.SHORT, 'SHORT2');
-        gd.VERTEXFORMAT_SHORT2N  = makeVertexformat(1, 2,  4, gl.SHORT, 'SHORT2N');
-        gd.VERTEXFORMAT_SHORT4   = makeVertexformat(0, 4,  8, gl.SHORT, 'SHORT4');
-        gd.VERTEXFORMAT_SHORT4N  = makeVertexformat(1, 4,  8, gl.SHORT, 'SHORT4N');
-        gd.VERTEXFORMAT_USHORT2  = makeVertexformat(0, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2');
-        gd.VERTEXFORMAT_USHORT2N = makeVertexformat(1, 2,  4, gl.UNSIGNED_SHORT, 'USHORT2N');
-        gd.VERTEXFORMAT_USHORT4  = makeVertexformat(0, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4');
-        gd.VERTEXFORMAT_USHORT4N = makeVertexformat(1, 4,  8, gl.UNSIGNED_SHORT, 'USHORT4N');
-        gd.VERTEXFORMAT_FLOAT1   = makeVertexformat(0, 1,  4, gl.FLOAT, 'FLOAT1');
-        gd.VERTEXFORMAT_FLOAT2   = makeVertexformat(0, 2,  8, gl.FLOAT, 'FLOAT2');
-        gd.VERTEXFORMAT_FLOAT3   = makeVertexformat(0, 3, 12, gl.FLOAT, 'FLOAT3');
-        gd.VERTEXFORMAT_FLOAT4   = makeVertexformat(0, 4, 16, gl.FLOAT, 'FLOAT4');
-
-        gd.DEFAULT_SAMPLER = {
+        proto.DEFAULT_SAMPLER = {
             minFilter : gl.LINEAR_MIPMAP_LINEAR,
             magFilter : gl.LINEAR,
             wrapS : gl.REPEAT,
@@ -7364,6 +8160,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             techniques: 0
         };
 
+        /* tslint:disable:no-bitwise */
         if (debug)
         {
             gd.metrics = <WebGLMetrics>{
@@ -7406,6 +8203,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             };
         }
+        /* tslint:enable:no-bitwise */
 
         // State handlers
         function setDepthTestEnable(enable)
@@ -7424,7 +8222,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7438,7 +8236,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7452,7 +8250,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7473,7 +8271,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7488,7 +8286,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7509,7 +8307,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7523,7 +8321,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7537,7 +8335,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7558,7 +8356,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7579,7 +8377,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7597,7 +8395,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7615,7 +8413,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7636,7 +8434,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7652,7 +8450,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7666,7 +8464,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7681,7 +8479,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7697,7 +8495,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7712,7 +8510,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7727,7 +8525,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7745,7 +8543,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7760,7 +8558,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7776,7 +8574,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7792,7 +8590,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7814,7 +8612,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7829,7 +8627,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7849,7 +8647,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7869,7 +8667,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7884,7 +8682,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7901,7 +8699,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -7916,7 +8714,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd.metrics.renderStateChanges +=1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8054,22 +8852,53 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 parse: pf,
                 defaultValues: dv
             };
+        };
+        addStateHandler("DepthTestEnable",
+                        setDepthTestEnable, resetDepthTestEnable, parseBoolean,
+                        [true]);
+        addStateHandler("DepthFunc",
+                        setDepthFunc, resetDepthFunc, parseEnum,
+                        [defaultDepthFunc]);
+        addStateHandler("DepthMask",
+                        setDepthMask, resetDepthMask, parseBoolean,
+                        [true]);
+        addStateHandler("BlendEnable",
+                        setBlendEnable, resetBlendEnable, parseBoolean,
+                        [false]);
+        addStateHandler("BlendFunc",
+                        setBlendFunc, resetBlendFunc, parseEnum2,
+                        [defaultBlendFuncSrc, defaultBlendFuncDst]);
+        addStateHandler("CullFaceEnable",
+                        setCullFaceEnable, resetCullFaceEnable, parseBoolean,
+                        [true]);
+        addStateHandler("CullFace",
+                        setCullFace, resetCullFace, parseEnum,
+                        [defaultCullFace]);
+        addStateHandler("FrontFace",
+                        setFrontFace, resetFrontFace, parseEnum,
+                        [defaultFrontFace]);
+        addStateHandler("ColorMask",
+                        setColorMask, resetColorMask, parseColorMask,
+                        [true, true, true, true]);
+        addStateHandler("StencilTestEnable",
+                        setStencilTestEnable, resetStencilTestEnable, parseBoolean,
+                        [false]);
+        addStateHandler("StencilFunc",
+                        setStencilFunc, resetStencilFunc, parseEnum3,
+                        [defaultStencilFunc, 0, 0xffffffff]);
+        addStateHandler("StencilOp",
+                        setStencilOp, resetStencilOp, parseEnum3,
+                        [defaultStencilOp, defaultStencilOp, defaultStencilOp]);
+        addStateHandler("PolygonOffsetFillEnable",
+                        setPolygonOffsetFillEnable, resetPolygonOffsetFillEnable, parseBoolean,
+                        [false]);
+        addStateHandler("PolygonOffset",
+                        setPolygonOffset, resetPolygonOffset, parseFloat2,
+                        [0, 0]);
+        if (!gd.fixIE)
+        {
+            addStateHandler("LineWidth", setLineWidth, resetLineWidth, parseFloat, [1]);
         }
-        addStateHandler("DepthTestEnable", setDepthTestEnable, resetDepthTestEnable, parseBoolean, [true]);
-        addStateHandler("DepthFunc", setDepthFunc, resetDepthFunc, parseEnum, [defaultDepthFunc]);
-        addStateHandler("DepthMask", setDepthMask, resetDepthMask, parseBoolean, [true]);
-        addStateHandler("BlendEnable", setBlendEnable, resetBlendEnable, parseBoolean, [false]);
-        addStateHandler("BlendFunc", setBlendFunc, resetBlendFunc, parseEnum2, [defaultBlendFuncSrc, defaultBlendFuncDst]);
-        addStateHandler("CullFaceEnable", setCullFaceEnable, resetCullFaceEnable, parseBoolean, [true]);
-        addStateHandler("CullFace", setCullFace, resetCullFace, parseEnum, [defaultCullFace]);
-        addStateHandler("FrontFace", setFrontFace, resetFrontFace, parseEnum, [defaultFrontFace]);
-        addStateHandler("ColorMask", setColorMask, resetColorMask, parseColorMask, [true, true, true, true]);
-        addStateHandler("StencilTestEnable", setStencilTestEnable, resetStencilTestEnable, parseBoolean, [false]);
-        addStateHandler("StencilFunc", setStencilFunc, resetStencilFunc, parseEnum3, [defaultStencilFunc, 0, 0xffffffff]);
-        addStateHandler("StencilOp", setStencilOp, resetStencilOp, parseEnum3, [defaultStencilOp, defaultStencilOp, defaultStencilOp]);
-        addStateHandler("PolygonOffsetFillEnable", setPolygonOffsetFillEnable, resetPolygonOffsetFillEnable, parseBoolean, [false]);
-        addStateHandler("PolygonOffset", setPolygonOffset, resetPolygonOffset, parseFloat2, [0, 0]);
-        addStateHandler("LineWidth", setLineWidth, resetLineWidth, parseFloat, [1]);
         gd.stateHandlers = stateHandlers;
 
         gd.syncState();
@@ -8082,10 +8911,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             Object.defineProperty(gd, "fullscreen", {
                 get : function getFullscreenFn() {
-                    return (document.fullscreenEnabled ||
-                            document.mozFullScreen ||
-                            document.webkitIsFullScreen ||
-                            false);
+                    return (document.fullscreenElement ||
+                            document.webkitFullscreenElement ||
+                            document.mozFullScreenElement ||
+                            document.msFullscreenElement ?
+                            true : false);
                 },
                 set : function setFullscreenFn(newFullscreen) {
                     gd.requestFullScreen(newFullscreen);
@@ -8094,9 +8924,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 configurable : false
             });
 
+            /* tslint:disable:no-empty */
             gd.checkFullScreen = function dummyCheckFullScreenFn()
             {
             };
+            /* tslint:enable:no-empty */
         }
         else
         {
@@ -8190,6 +9022,10 @@ WebGLGraphicsDevice.prototype.SEMANTIC_ATTR12 = 12;
 WebGLGraphicsDevice.prototype.SEMANTIC_ATTR13 = 13;
 WebGLGraphicsDevice.prototype.SEMANTIC_ATTR14 = 14;
 WebGLGraphicsDevice.prototype.SEMANTIC_ATTR15 = 15;
+
+// Add any new additions need to go into into src/engine/pixelformat.h
+// and engine/tslib/turbulenz.d.ts.
+
 WebGLGraphicsDevice.prototype.PIXELFORMAT_A8 = 0;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_L8 = 1;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_L8A8 = 2;
@@ -8203,3 +9039,8 @@ WebGLGraphicsDevice.prototype.PIXELFORMAT_D16 = 9;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT1 = 10;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT3 = 11;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_DXT5 = 12;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_S8 = 13;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA32F = 14;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB32F = 15;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA16F = 16;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB16F = 17;

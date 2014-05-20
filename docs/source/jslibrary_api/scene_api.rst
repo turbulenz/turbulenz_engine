@@ -280,11 +280,11 @@ See also :ref:`SceneNode.clone() <scenenode_clone>`.
 
 **Syntax** ::
 
-    var cloneNode = scene.cloneRootNode(rootNode, cloneName);
+    var cloneNode = scene.cloneRootNode(rootNode, cloneName, cloneTransform);
 
     //example usage:
     var redLightNode = scene.findNode("redLight-node");
-    var redLightNode2 = scene.cloneRootNode(redLightNode, "redLight-node2");
+    var redLightNode2 = scene.cloneRootNode(redLightNode, "redLight-node2", redLight2Transform);
 
 ``rootNode``
     A :ref:`SceneNode <scenenode>` object.
@@ -292,6 +292,9 @@ See also :ref:`SceneNode.clone() <scenenode_clone>`.
 
 ``cloneName``
     A JavaScript string.
+
+``cloneTransform`` (optional)
+    An optional :ref:`Matrix43 <m43object>` object to be set as the local transform of the new cloned node.
 
 Returns a :ref:`SceneNode <scenenode>` object.
 

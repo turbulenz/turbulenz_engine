@@ -1,11 +1,12 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2012-2014 Turbulenz Limited
 
-// Allows the 'debugger' event to be fired when a property of an Object, function, or Array element is read or/and written.
+// Allows the 'debugger' event to be fired when a property of an Object, function, or Array is read or/and written.
 // Use DebuggingTools.dataBreakpoint(someObjectOrArray, "somePropertyOrIndex", breakOnRead, breakOnWrite);
 // or DebuggingTools.dataBreakpoint(someObjectOrArray); // For all properties or all array elements.
 // Use the same arguments to DebuggingTools.clearDataBreakpoint() to clear it or no arguments for all breakpoints.
 // breakOnRead and breakOnWrite are optional. These can be toggle in the debugger too.
-// The same pattern could be used to log access to an object, which combined with stacktrace, would be useful for time dependent async debugging.
+// The same pattern could be used to log access to an object, which combined with stacktrace,
+// would be useful for time dependent async debugging.
 
 // Issues
 // * property delete does not tigger an event on watched object and will leak breakpoints
@@ -13,7 +14,7 @@
 // * Does not work on typed arrays or directly on Numbers/Strings etc
 // * Sealed objects
 
-/*jslint debug: true*/
+/* tslint:disable:no-debugger no-string-literal */
 
 var DebuggingTools = {
 
@@ -142,5 +143,5 @@ var DebuggingTools = {
 		    }
 	    }
 	    return matched;
-    },
+    }
 };

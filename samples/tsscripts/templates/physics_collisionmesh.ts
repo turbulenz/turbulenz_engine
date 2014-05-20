@@ -658,8 +658,10 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Build a convex hull duck
         shape = physicsDevice.createConvexHullShape({
-                points : duckMesh.physicsNodes[0].triangleArray.vertices,
-                margin : margin
+                points    : duckMesh.physicsNodes[0].triangleArray.vertices,
+                margin    : margin,
+                minExtent : mathDevice.v3Neg(halfExtents),
+                maxExtent : halfExtents
             });
 
         mathDevice.m43BuildTranslation(30, yhalfExtent, 0, position);

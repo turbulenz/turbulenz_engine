@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2012 Turbulenz Limited
+// Copyright (c) 2011-2014 Turbulenz Limited
 /*global Float32Array: false*/
 /*global Uint16Array: false*/
 /*global Uint32Array: false*/
@@ -300,21 +300,23 @@ class WebGLPhysicsPlaneShape implements PhysicsShape
 
         p.radius = maxValue;
 
+        var buffer = new Float32Array(6);
+
         if (abs(normal[0]) === 1)
         {
-            p.halfExtents = VMath.v3Build(abs(p.distance), maxValue, maxValue);
+            p.halfExtents = VMath.v3Build(abs(p.distance), maxValue, maxValue, buffer.subarray(0, 3));
         }
         else if (abs(normal[1]) === 1)
         {
-            p.halfExtents = VMath.v3Build(maxValue, abs(p.distance), maxValue);
+            p.halfExtents = VMath.v3Build(maxValue, abs(p.distance), maxValue, buffer.subarray(0, 3));
         }
         else if (abs(normal[2]) === 1)
         {
-            p.halfExtents = VMath.v3Build(maxValue, maxValue, abs(p.distance));
+            p.halfExtents = VMath.v3Build(maxValue, maxValue, abs(p.distance), buffer.subarray(0, 3));
         }
 
         p.center = undefined;
-        p.inertia = VMath.v3BuildZero();
+        p.inertia = VMath.v3BuildZero(buffer.subarray(3, 6));
 
         initShapeProperties(retp, "PLANE");
         return retp;
@@ -513,13 +515,15 @@ class WebGLPhysicsCapsuleShape implements PhysicsShape
 
         var massRatio = (1.0 / 12.0);
 
+        var buffer = new Float32Array(6);
+
         c.radius = maxRadius + margin;
         c.capsuleRadius = radius;
         c.halfHeight = halfHeight;
-        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         c.inertia = VMath.v3Build(massRatio * (ly + lz),
                                   massRatio * (lx + lz),
-                                  massRatio * (lx + ly));
+                                  massRatio * (lx + ly), buffer.subarray(3, 6));
         c.collisionRadius = radius + margin;
 
         c.center = undefined;
@@ -643,11 +647,13 @@ class WebGLPhysicsSphereShape implements PhysicsShape
         var radius = params.radius;
         var i = (0.4 * radius * radius);
 
+        var buffer = new Float32Array(6);
+
         s.sphereRadius = radius;
         s.radius = s.sphereRadius + margin;
         s.collisionRadius = radius + margin;
-        s.halfExtents = VMath.v3Build(radius + margin, radius + margin, radius + margin);
-        s.inertia = VMath.v3Build(i, i, i);
+        s.halfExtents = VMath.v3Build(radius + margin, radius + margin, radius + margin, buffer.subarray(0, 3));
+        s.inertia = VMath.v3Build(i, i, i, buffer.subarray(3, 6));
 
         s.center = undefined;
 
@@ -840,13 +846,15 @@ class WebGLPhysicsBoxShape implements PhysicsShape
         ly *= ly;
         lz *= lz;
 
+        var buffer = new Float32Array(6);
+
         b.center = undefined;
 
         b.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        b.halfExtents = VMath.v3Build(h0, h1, h2);
+        b.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         b.inertia = VMath.v3Build((1.0 / 12.0) * (ly + lz),
                                   (1.0 / 12.0) * (lx + lz),
-                                  (1.0 / 12.0) * (lx + ly));
+                                  (1.0 / 12.0) * (lx + ly), buffer.subarray(3, 6));
         b.collisionRadius = margin;
 
         initShapeProperties(retb, "BOX");
@@ -1025,13 +1033,15 @@ class WebGLPhysicsCylinderShape implements PhysicsShape
         var t1 = (((1.0 / 12.0) * height2) + ((1.0 / 4.0) * radius2));
         var t2 = ((1.0 / 2.0) * radius2);
 
+        var buffer = new Float32Array(6);
+
         c.center = undefined;
 
         c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         c.cylinderRadius = halfExtents[0];
         c.halfHeight = halfExtents[1];
-        c.inertia = VMath.v3Build(t1, t2, t1);
+        c.inertia = VMath.v3Build(t1, t2, t1, buffer.subarray(3, 6));
         c.collisionRadius = margin;
 
         initShapeProperties(retc, "CYLINDER");
@@ -1221,13 +1231,15 @@ class WebGLPhysicsConeShape implements PhysicsShape
 
         var massRatio = (1.0 / 12.0);
 
+        var buffer = new Float32Array(6);
+
         c.halfHeight = halfHeight;
         c.coneRadius = radius;
         c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         c.inertia = VMath.v3Build(massRatio * (ly + lz),
                                   massRatio * (lx + lz),
-                                  massRatio * (lx + ly));
+                                  massRatio * (lx + ly), buffer.subarray(3, 6));
         c.collisionRadius = margin;
 
         c.center = undefined;
@@ -1355,6 +1367,7 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
         if (numTriangles >= 8)
         {
             spatialMap = AABBTree.create(true);
+            extents = new Float32Array(6);
         }
 
         var i;
@@ -1427,7 +1440,6 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
             // If building AABBTree, store node
             if (spatialMap)
             {
-                extents = new Float32Array(6);
                 extents[0] = Math.min(v00, v10, v20);
                 extents[1] = Math.min(v01, v11, v21);
                 extents[2] = Math.min(v02, v12, v22);
@@ -1436,7 +1448,8 @@ class WebGLPhysicsTriangleArray implements PhysicsTriangleArray
                 extents[5] = Math.max(v02, v12, v22);
 
                 var triNode = {
-                    index: itri
+                    index: itri,
+                    spatialIndex: undefined
                 };
                 spatialMap.add(triNode, extents);
             }
@@ -2144,9 +2157,11 @@ class WebGLPhysicsTriangleMeshShape implements PhysicsShape
         var c1 = (0.5 * (e1 + e4));
         var c2 = (0.5 * (e2 + e5));
 
+        var buffer = new Float32Array(6);
+
         t.triangleArray = triangleArray;
         t.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        t.halfExtents = VMath.v3Build(h0, h1, h2);
+        t.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         if (c0 !== 0 || c1 !== 0 || c2 !== 0)
         {
             t.center = VMath.v3Build(c0, c1, c2);
@@ -2155,7 +2170,7 @@ class WebGLPhysicsTriangleMeshShape implements PhysicsShape
         {
             t.center = undefined;
         }
-        t.inertia = VMath.v3Build(0, 0, 0);
+        t.inertia = VMath.v3Build(0, 0, 0, buffer.subarray(3, 6));
         t.collisionRadius = margin;
 
         initShapeProperties(rett, "TRIANGLE_MESH");
@@ -2193,7 +2208,7 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
     points          : Float32Array;
 
     triangleArray   : WebGLPhysicsPrivateTriangleArray;
-    supportTopology : any; // Int32Array / Int16Array
+    supportTopology : any; // Uint32Array / Uint16Array
 
     private lastSupport: number;
 
@@ -2275,44 +2290,61 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
         var margin = (params.margin !== undefined) ? params.margin : 0.04;
         var points = params.points;
 
-        var min0 = points[0];
-        var min1 = points[1];
-        var min2 = points[2];
-        var max0 = min0;
-        var max1 = min1;
-        var max2 = min2;
-        var maxN = points.length;
-        var n;
-        var v0, v1, v2;
-        for (n = 3; n < maxN; n += 3)
+        var minExtent = params.minExtent;
+        var maxExtent = params.maxExtent;
+
+        var min0, min1, min2, max0, max1, max2;
+
+        if (!minExtent || !maxExtent)
         {
-            v0 = points[n];
-            v1 = points[n + 1];
-            v2 = points[n + 2];
-            if (min0 > v0)
+            min0 = points[0];
+            min1 = points[1];
+            min2 = points[2];
+            max0 = min0;
+            max1 = min1;
+            max2 = min2;
+            var maxN = points.length;
+            var n;
+            var v0, v1, v2;
+            for (n = 3; n < maxN; n += 3)
             {
-                min0 = v0;
+                v0 = points[n];
+                v1 = points[n + 1];
+                v2 = points[n + 2];
+                if (min0 > v0)
+                {
+                    min0 = v0;
+                }
+                else if (max0 < v0)
+                {
+                    max0 = v0;
+                }
+                if (min1 > v1)
+                {
+                    min1 = v1;
+                }
+                else if (max1 < v1)
+                {
+                    max1 = v1;
+                }
+                if (min2 > v2)
+                {
+                    min2 = v2;
+                }
+                else if (max2 < v2)
+                {
+                    max2 = v2;
+                }
             }
-            else if (max0 < v0)
-            {
-                max0 = v0;
-            }
-            if (min1 > v1)
-            {
-                min1 = v1;
-            }
-            else if (max1 < v1)
-            {
-                max1 = v1;
-            }
-            if (min2 > v2)
-            {
-                min2 = v2;
-            }
-            else if (max2 < v2)
-            {
-                max2 = v2;
-            }
+        }
+        else
+        {
+            min0 = minExtent[0];
+            min1 = minExtent[1];
+            min2 = minExtent[2];
+            max0 = maxExtent[0];
+            max1 = maxExtent[1];
+            max2 = maxExtent[2];
         }
 
         var h0 = ((0.5 * (max0 - min0)) + margin);
@@ -2331,9 +2363,11 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
 
         var massRatio = (1.0 / 12.0);
 
+        var buffer = new Float32Array(6);
+
         c.points = new Float32Array(points);
         c.radius = Math.sqrt((h0 * h0) + (h1 * h1) + (h2 * h2));
-        c.halfExtents = VMath.v3Build(h0, h1, h2);
+        c.halfExtents = VMath.v3Build(h0, h1, h2, buffer.subarray(0, 3));
         if (c0 !== 0 || c1 !== 0 || c2 !== 0)
         {
             c.center = VMath.v3Build(c0, c1, c2);
@@ -2344,7 +2378,7 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
         }
         c.inertia = VMath.v3Build(massRatio * (ly + lz),
                                   massRatio * (lx + lz),
-                                  massRatio * (lx + ly));
+                                  massRatio * (lx + ly), buffer.subarray(3, 6));
         c.collisionRadius = margin;
 
         // Generate triangle array for ray testing
@@ -2460,7 +2494,7 @@ class WebGLPhysicsConvexHullShape implements PhysicsShape
             }
 
             // Produce flattened array.
-            c.supportTopology = (size > 65536) ? new Int32Array(size) : new Int16Array(size);
+            c.supportTopology = (size > 65536) ? new Uint32Array(size) : new Uint16Array(size);
             var index = 0;
             for (n = 0; n < (maxN / 3); n += 1)
             {
@@ -2551,8 +2585,14 @@ class WebGLPhysicsPrivateBody
         this.friction    = (params.friction    !== undefined) ? params.friction    : 0.5;
         this.restitution = (params.restitution !== undefined) ? params.restitution : 0.0;
 
+        var buffer = new Float32Array(12 + 12 + 6 + 12 + 12 + 12 + 12);
+        var bufferIndex = 0;
+
         var xform = params.transform;
-        this.transform = (xform ? VMath.m43Copy(xform) : VMath.m43BuildIdentity());
+        this.transform = (xform ?
+                          VMath.m43Copy(xform, buffer.subarray(bufferIndex, (bufferIndex + 12))) :
+                          VMath.m43BuildIdentity(buffer.subarray(bufferIndex, (bufferIndex + 12))));
+        bufferIndex += 12;
 
         this.arbiters = [];
         // Tracks constraints that are inside of a space, and making use of this object.
@@ -2563,7 +2603,9 @@ class WebGLPhysicsPrivateBody
         // [w0, w1, w2]
         // [v0, v1, v2] <-- bias velocity
         // [w0, w1, w2] <-- bias velocity
-        this.velocity = new Float32Array(12);
+        this.velocity = buffer.subarray(bufferIndex, (bufferIndex + 12));
+        bufferIndex += 12;
+
         var vel = params.linearVelocity;
         if (vel)
         {
@@ -2582,15 +2624,22 @@ class WebGLPhysicsPrivateBody
         this.linearDamping  = (params.linearDamping  !== undefined) ? params.linearDamping  : 0.0;
         this.angularDamping = (params.angularDamping !== undefined) ? params.angularDamping : 0.0;
 
-        this.extents = new Float32Array(6);
+        this.extents = buffer.subarray(bufferIndex, (bufferIndex + 6));
+        bufferIndex += 6;
 
         // For continous collision detection
-        this.startTransform = VMath.m43BuildIdentity();
-        this.endTransform = VMath.m43BuildIdentity();
+        this.startTransform = VMath.m43BuildIdentity(buffer.subarray(bufferIndex, (bufferIndex + 12)));
+        bufferIndex += 12;
+
+        this.endTransform = VMath.m43BuildIdentity(buffer.subarray(bufferIndex, (bufferIndex + 12)));
+        bufferIndex += 12;
 
         // For kinematic objects.
-        this.prevTransform = VMath.m43Copy(this.transform);
-        this.newTransform = VMath.m43BuildIdentity();
+        this.prevTransform = VMath.m43Copy(this.transform, buffer.subarray(bufferIndex, (bufferIndex + 12)));
+        bufferIndex += 12;
+
+        this.newTransform = VMath.m43BuildIdentity(buffer.subarray(bufferIndex, (bufferIndex + 12)));
+        bufferIndex += 12;
 
         this.island = null;
         this.islandRoot = this;
@@ -4346,7 +4395,7 @@ class WebGLPhysicsCharacter implements PhysicsCharacter
                         to: end,
                         group: WebGLPhysicsDevice.prototype.FILTER_CHARACTER
                     },
-                                                                 this.onGroundConvexCallback
+                                                                 pc.onGroundConvexCallback
                                                                 );
                     return (result !== null);
                 }
@@ -6013,6 +6062,7 @@ var WebGLPhysicsContact =
 {
     contactPool: <WebGLPhysicsContact[]>[],
     contactPoolSize: 0,
+    contactPoolAllocationSize: 128,
 
     publicContacts: <WebGLPhysicsPublicContact[]>
         [WebGLPhysicsPublicContact.create(),
@@ -6022,16 +6072,24 @@ var WebGLPhysicsContact =
 
     allocate: function webglPhyssicsContactAllocateFn(): WebGLPhysicsContact
     {
-        var contact : WebGLPhysicsContact;
+        var contactPool = this.contactPool;
+
         if (this.contactPoolSize === 0)
         {
-            contact = new Float32Array(52);
+            var allocationSize = this.contactPoolAllocationSize;
+            var buffer = new Float32Array(52 * allocationSize);
+            var bufferIndex = buffer.length;
+            var n;
+            for (n = 0; n < allocationSize; n += 1)
+            {
+                bufferIndex -= 52;
+                contactPool[n] = buffer.subarray(bufferIndex, (bufferIndex + 52));
+            }
+            this.contactPoolSize = allocationSize;
         }
-        else
-        {
-            this.contactPoolSize -= 1;
-            contact = this.contactPool[this.contactPoolSize];
-        }
+
+        this.contactPoolSize -= 1;
+        var contact : WebGLPhysicsContact = contactPool[this.contactPoolSize];
 
         contact[51] = 1.0; // new contact
 
@@ -7558,6 +7616,7 @@ class WebGLPhysicsWorld implements PhysicsWorld
 
         s.staticSpatialMap = AABBTree.create(true);
         s.dynamicSpatialMap = AABBTree.create();
+        s.sleepingSpatialMap = AABBTree.create();
 
         s.collisionObjects = [];
         s.rigidBodies = [];
@@ -7636,6 +7695,7 @@ class WebGLPrivatePhysicsWorld
     maxGiveUpTimeStep              : number;
     staticSpatialMap               : AABBTree;
     dynamicSpatialMap              : AABBTree;
+    sleepingSpatialMap             : AABBTree;
     collisionObjects               : WebGLPhysicsCollisionObject[];
     rigidBodies                    : WebGLPhysicsRigidBody[];
     constraints                    : WebGLPhysicsConstraint[];
@@ -8448,7 +8508,7 @@ class WebGLPrivatePhysicsWorld
             {
                 if (!body.previouslyActive)
                 {
-                    this.staticSpatialMap.remove(body);
+                    this.sleepingSpatialMap.remove(body);
                     this.dynamicSpatialMap.add(body, extents);
                 }
                 else
@@ -8461,11 +8521,11 @@ class WebGLPrivatePhysicsWorld
                 if (body.previouslyActive)
                 {
                     this.dynamicSpatialMap.remove(body);
-                    this.staticSpatialMap.add(body, extents);
+                    this.sleepingSpatialMap.add(body, extents);
                 }
                 else
                 {
-                    this.staticSpatialMap.update(body, extents);
+                    this.sleepingSpatialMap.update(body, extents);
                 }
             }
 
@@ -8873,6 +8933,7 @@ class WebGLPrivatePhysicsWorld
     {
         var dynamicMap = this.dynamicSpatialMap;
         var staticMap = this.staticSpatialMap;
+        var sleepingMap = this.sleepingSpatialMap;
         var rigidBodies = this.activeBodies;
         var kinematics = this.activeKinematics;
         var constraints = this.activeConstraints;
@@ -9031,6 +9092,7 @@ class WebGLPrivatePhysicsWorld
             // Prepare broadphase
             staticMap.finalize();
             dynamicMap.finalize();
+            sleepingMap.finalize();
 
             // Perform broadphase
 
@@ -9045,7 +9107,7 @@ class WebGLPrivatePhysicsWorld
             // Get overlapping pairs of dynamic objects.
             var numDynDyn = dynamicMap.getOverlappingPairs(objects, 0);
 
-            // Get overlapping pairs of static <-> dynamic objects.
+            // Get overlapping pairs of static / sleeping <-> dynamic objects.
             var storageIndex = numDynDyn;
             var numPairs;
             limit = rigidBodies.length;
@@ -9053,6 +9115,7 @@ class WebGLPrivatePhysicsWorld
             {
                 body = rigidBodies[i];
                 numPairs = staticMap.getOverlappingNodes(body.extents, objects, storageIndex + 1);
+                numPairs += sleepingMap.getOverlappingNodes(body.extents, objects, storageIndex + 1 + numPairs);
                 // only include sublist if number of pairs is non-zero.
                 if (numPairs !== 0)
                 {
@@ -9069,7 +9132,7 @@ class WebGLPrivatePhysicsWorld
             {
                 body = kinematics[i];
 
-                numPairs = staticMap.getOverlappingNodes(body.extents, objects, storageIndex + 1);
+                numPairs = sleepingMap.getOverlappingNodes(body.extents, objects, storageIndex + 1);
                 // only include sublist if number of pairs is non-zero.
                 if (numPairs !== 0)
                 {
@@ -9365,6 +9428,7 @@ class WebGLPrivatePhysicsWorld
             // extents for continuous collisions and absolutely must be finalized.
             staticMap.finalize();
             dynamicMap.finalize();
+            sleepingMap.finalize();
 
             // Continuous collision detection.
             var slop = WebGLPhysicsConfig.CONTINUOUS_SLOP + WebGLPhysicsConfig.CONTACT_SLOP;
@@ -9429,6 +9493,7 @@ class WebGLPrivatePhysicsWorld
             {
                 objectA = unfrozen[i];
                 numPairs = staticMap.getOverlappingNodes(objectA.extents, objects, 0);
+                numPairs += sleepingMap.getOverlappingNodes(objectA.extents, objects, numPairs);
                 for (j = 0; j < numPairs; j += 1)
                 {
                     objectB = objects[j];
@@ -9698,6 +9763,7 @@ class WebGLPrivatePhysicsWorld
 
         this.staticSpatialMap.finalize();
         this.dynamicSpatialMap.finalize();
+        this.sleepingSpatialMap.finalize();
 
         function rayCallback(tree, obj, pRay, unusedAABBDistance, upperBound)
         {
@@ -9729,7 +9795,9 @@ class WebGLPrivatePhysicsWorld
             return resultObj;
         }
 
-        var ret = AABBTree.rayTest([this.staticSpatialMap, this.dynamicSpatialMap], pRay, rayCallback);
+        var ret = AABBTree.rayTest([this.staticSpatialMap, this.dynamicSpatialMap, this.sleepingSpatialMap],
+                                   pRay,
+                                   rayCallback);
         //delete additional factor property
         if (ret !== null)
         {
@@ -10157,11 +10225,13 @@ class WebGLPrivatePhysicsWorld
         // Find all objects intersecting swept shape AABB.
         this.staticSpatialMap.finalize();
         this.dynamicSpatialMap.finalize();
+        this.sleepingSpatialMap.finalize();
 
         var objects = this.persistantObjectsList;
         var triangles = this.persistantTrianglesList;
         var staticCount = this.staticSpatialMap.getOverlappingNodes(extents, objects, 0);
-        var limit = staticCount + this.dynamicSpatialMap.getOverlappingNodes(extents, objects, staticCount);
+        staticCount += this.dynamicSpatialMap.getOverlappingNodes(extents, objects, staticCount);
+        var limit = staticCount + this.sleepingSpatialMap.getOverlappingNodes(extents, objects, staticCount);
 
         var minResult = null;
         var i, j;
@@ -10383,9 +10453,13 @@ class WebGLPrivatePhysicsWorld
             activeList.pop();
             this.dynamicSpatialMap.remove(body);
         }
-        else
+        else if (body.collisionObject && !body.kinematic)
         {
             this.staticSpatialMap.remove(body);
+        }
+        else
+        {
+            this.sleepingSpatialMap.remove(body);
         }
 
         this.removeArbitersFromObject(body);

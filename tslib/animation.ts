@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2012 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 /*global TurbulenzEngine: false*/
 
 interface Bounds
@@ -18,6 +18,7 @@ interface Hierarchy
 interface Skeleton extends Hierarchy
 {
     invBoneLTMs: any[]; // m43[]
+    bindPoses?: any[]; // m43[]
 };
 
 // TODO: There is more we can add to this.  It can also be turned into
@@ -179,8 +180,6 @@ var Animation =
                                               mathDevice: MathDevice,
                                               asMatrix?: boolean): any
     {
-        var quatMulTranslate = mathDevice.quatMulTranslate;
-        var m43FromRTS = mathDevice.m43FromRTS;
         var m43FromRT = mathDevice.m43FromRT;
         var quatCopy = mathDevice.quatCopy;
         var v3Copy = mathDevice.v3Copy;
@@ -194,11 +193,14 @@ var Animation =
         {
             var m43Mul = mathDevice.m43Mul;
             var parentMatrix;
-            var matrix = m43FromRTS.call(mathDevice, joint.rotation, joint.translation, joint.scale);
+            var matrix = mathDevice.m43FromRTS(joint.rotation, joint.translation, joint.scale);
             while (parentIndex !== -1)
             {
                 parentJoint = output[parentIndex];
-                parentMatrix = m43FromRTS.call(mathDevice, parentJoint.rotation, parentJoint.translation, parentJoint.scale, parentMatrix);
+                parentMatrix = mathDevice.m43FromRTS(parentJoint.rotation,
+                                                     parentJoint.translation,
+                                                     parentJoint.scale,
+                                                     parentMatrix);
 
                 matrix = m43Mul.call(mathDevice, matrix, parentMatrix, matrix);
 
@@ -232,7 +234,12 @@ var Animation =
             {
                 parentJoint = output[parentIndex];
 
-                quatMulTranslate.call(mathDevice, parentJoint.rotation, parentJoint.translation, rotation, translation, rotation, translation);
+                mathDevice.quatMulTranslate(parentJoint.rotation,
+                                            parentJoint.translation,
+                                            rotation,
+                                            translation,
+                                            rotation,
+                                            translation);
 
                 parentIndex = hierarchyParents[parentIndex];
             }
@@ -254,7 +261,9 @@ var Animation =
 //
 class InterpolatorController implements ControllerBaseClass
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -337,7 +346,15 @@ class InterpolatorController implements ControllerBaseClass
                         return;
                     }
                 }
-                this.currentTime -= animLength;
+                if (0 !== animLength)
+                {
+                    this.currentTime -= animLength;
+                }
+                else
+                {
+                    this.currentTime = 0;
+                    break;
+                }
             }
             else
             {
@@ -349,6 +366,7 @@ class InterpolatorController implements ControllerBaseClass
                     }
                 }
                 this.currentTime = animLength;
+                break;
             }
         }
 
@@ -438,11 +456,19 @@ class InterpolatorController implements ControllerBaseClass
 
                     if (this.currentTime <= jointKeys[offset])
                     {
-                        jointOutput.rotation = mathDevice.quatBuild(jointKeys[offset + 1], jointKeys[offset + 2], jointKeys[offset + 3], jointKeys[offset + 4], jointOutput.rotation);
+                        jointOutput.rotation = mathDevice.quatBuild(jointKeys[offset + 1],
+                                                                    jointKeys[offset + 2],
+                                                                    jointKeys[offset + 3],
+                                                                    jointKeys[offset + 4],
+                                                                    jointOutput.rotation);
                     }
                     else if (this.currentTime >= jointKeys[endFrameOffset])
                     {
-                        jointOutput.rotation = mathDevice.quatBuild(jointKeys[endFrameOffset + 1], jointKeys[endFrameOffset + 2], jointKeys[endFrameOffset + 3], jointKeys[endFrameOffset + 4], jointOutput.rotation);
+                        jointOutput.rotation = mathDevice.quatBuild(jointKeys[endFrameOffset + 1],
+                                                                    jointKeys[endFrameOffset + 2],
+                                                                    jointKeys[endFrameOffset + 3],
+                                                                    jointKeys[endFrameOffset + 4],
+                                                                    jointOutput.rotation);
                     }
                     else
                     {
@@ -457,7 +483,8 @@ class InterpolatorController implements ControllerBaseClass
                         this.rotationEndFrames[j] = offset;
                         offsetMinusStride = offset - stride;
 
-                        delta = (this.currentTime - jointKeys[offsetMinusStride]) / (jointKeys[offset] - jointKeys[offsetMinusStride]);
+                        delta = (this.currentTime - jointKeys[offsetMinusStride]) /
+                                (jointKeys[offset] - jointKeys[offsetMinusStride]);
 
                         q1[0] = jointKeys[offsetMinusStride + 1];
                         q1[1] = jointKeys[offsetMinusStride + 2];
@@ -486,11 +513,17 @@ class InterpolatorController implements ControllerBaseClass
 
                     if (this.currentTime <= jointKeys[offset])
                     {
-                        jointOutput.translation = mathDevice.v3Build(jointKeys[offset + 1], jointKeys[offset + 2], jointKeys[offset + 3], jointOutput.translation);
+                        jointOutput.translation = mathDevice.v3Build(jointKeys[offset + 1],
+                                                                     jointKeys[offset + 2],
+                                                                     jointKeys[offset + 3],
+                                                                     jointOutput.translation);
                     }
                     else if (this.currentTime >= jointKeys[endFrameOffset])
                     {
-                        jointOutput.translation = mathDevice.v3Build(jointKeys[endFrameOffset + 1], jointKeys[endFrameOffset + 2], jointKeys[endFrameOffset + 3], jointOutput.translation);
+                        jointOutput.translation = mathDevice.v3Build(jointKeys[endFrameOffset + 1],
+                                                                     jointKeys[endFrameOffset + 2],
+                                                                     jointKeys[endFrameOffset + 3],
+                                                                     jointOutput.translation);
                     }
                     else
                     {
@@ -504,7 +537,8 @@ class InterpolatorController implements ControllerBaseClass
                         this.translationEndFrames[j] = offset;
                         offsetMinusStride = offset - stride;
 
-                        delta = (this.currentTime - jointKeys[offsetMinusStride]) / (jointKeys[offset] - jointKeys[offsetMinusStride]);
+                        delta = (this.currentTime - jointKeys[offsetMinusStride]) /
+                                (jointKeys[offset] - jointKeys[offsetMinusStride]);
 
                         v1[0] = jointKeys[offsetMinusStride + 1];
                         v1[1] = jointKeys[offsetMinusStride + 2];
@@ -531,11 +565,17 @@ class InterpolatorController implements ControllerBaseClass
 
                     if (this.currentTime <= jointKeys[offset])
                     {
-                        jointOutput.scale = mathDevice.v3Build(jointKeys[offset + 1], jointKeys[offset + 2], jointKeys[offset + 3], jointOutput.scale);
+                        jointOutput.scale = mathDevice.v3Build(jointKeys[offset + 1],
+                                                               jointKeys[offset + 2],
+                                                               jointKeys[offset + 3],
+                                                               jointOutput.scale);
                     }
                     else if (this.currentTime >= jointKeys[endFrameOffset])
                     {
-                        jointOutput.scale = mathDevice.v3Build(jointKeys[endFrameOffset + 1], jointKeys[endFrameOffset + 2], jointKeys[endFrameOffset + 3], jointOutput.scale);
+                        jointOutput.scale = mathDevice.v3Build(jointKeys[endFrameOffset + 1],
+                                                               jointKeys[endFrameOffset + 2],
+                                                               jointKeys[endFrameOffset + 3],
+                                                               jointOutput.scale);
                     }
                     else
                     {
@@ -549,7 +589,8 @@ class InterpolatorController implements ControllerBaseClass
                         this.scaleEndFrames[j] = offset;
                         offsetMinusStride = offset - stride;
 
-                        delta = (this.currentTime - jointKeys[offsetMinusStride]) / (jointKeys[offset] - jointKeys[offsetMinusStride]);
+                        delta = (this.currentTime - jointKeys[offsetMinusStride]) /
+                                (jointKeys[offset] - jointKeys[offsetMinusStride]);
 
                         v1[0] = jointKeys[offsetMinusStride + 1];
                         v1[1] = jointKeys[offsetMinusStride + 2];
@@ -946,7 +987,9 @@ InterpolatorController.prototype.scratchV3 = null;
 // Note it only overloads the output quat pos and not any bounds etc
 class OverloadedNodeController
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -1125,7 +1168,9 @@ class ReferenceController
 // input controllers across a period of time
 class TransitionController implements ControllerBaseClass
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -1197,15 +1242,16 @@ class TransitionController implements ControllerBaseClass
         var numJoints = this.startController.getHierarchy().numNodes;
         for (var j = 0; j < numJoints; j += 1)
         {
-            if (!output[j])
+            var joint = output[j];
+            if (!joint)
             {
-                output[j] = {};
+                output[j] = joint = {};
             }
             var j1 = startOutput[j];
             var j2 = endOutput[j];
 
-            output[j].rotation = quatSlerp.call(mathDevice, j1.rotation, j2.rotation, delta, output[j].rotation);
-            output[j].translation = v3Lerp.call(mathDevice, j1.translation, j2.translation, delta, output[j].translation);
+            joint.rotation = quatSlerp.call(mathDevice, j1.rotation, j2.rotation, delta, joint.rotation);
+            joint.translation = v3Lerp.call(mathDevice, j1.translation, j2.translation, delta, joint.translation);
 
             if (outputScale)
             {
@@ -1213,16 +1259,16 @@ class TransitionController implements ControllerBaseClass
                 {
                     if (scaleOnEnd)
                     {
-                        output[j].scale = v3Lerp.call(mathDevice, j1.scale, j2.scale, delta, output[j].scale);
+                        joint.scale = v3Lerp.call(mathDevice, j1.scale, j2.scale, delta, joint.scale);
                     }
                     else
                     {
-                        output[j].scale = v3Copy.call(mathDevice, j1.scale, output[j].scale);
+                        joint.scale = v3Copy.call(mathDevice, j1.scale, joint.scale);
                     }
                 }
                 else if (scaleOnEnd)
                 {
-                    output[j].scale = v3Copy.call(mathDevice, j2.scale, output[j].scale);
+                    joint.scale = v3Copy.call(mathDevice, j2.scale, joint.scale);
                 }
             }
         }
@@ -1301,7 +1347,8 @@ class TransitionController implements ControllerBaseClass
     setStartController(controller)
     {
         this.startController = controller;
-        this.outputChannels = AnimationChannels.union(this.startController.outputChannels, this.endController.outputChannels);
+        this.outputChannels = AnimationChannels.union(this.startController.outputChannels,
+                                                      this.endController.outputChannels);
         this.dirty = true;
         this.dirtyBounds = true;
     }
@@ -1309,7 +1356,8 @@ class TransitionController implements ControllerBaseClass
     setEndController(controller)
     {
         this.endController = controller;
-        this.outputChannels = AnimationChannels.union(this.startController.outputChannels, this.endController.outputChannels);
+        this.outputChannels = AnimationChannels.union(this.startController.outputChannels,
+                                                      this.endController.outputChannels);
         this.dirty = true;
         this.dirtyBounds = true;
     }
@@ -1366,7 +1414,9 @@ class TransitionController implements ControllerBaseClass
 // The BlendController blends between the animating state of input controllers given a user specified delta
 class BlendController implements ControllerBaseClass
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -1432,15 +1482,16 @@ class BlendController implements ControllerBaseClass
         var numJoints = startController.getHierarchy().numNodes;
         for (var j = 0; j < numJoints; j += 1)
         {
-            if (!output[j])
+            var joint = output[j];
+            if (!joint)
             {
-                output[j] = {};
+                output[j] = joint = {};
             }
             var j1 = startOutput[j];
             var j2 = endOutput[j];
 
-            output[j].rotation = quatSlerp.call(mathDevice, j1.rotation, j2.rotation, delta, output[j].rotation);
-            output[j].translation = v3Lerp.call(mathDevice, j1.translation, j2.translation, delta, output[j].translation);
+            joint.rotation = quatSlerp.call(mathDevice, j1.rotation, j2.rotation, delta, joint.rotation);
+            joint.translation = v3Lerp.call(mathDevice, j1.translation, j2.translation, delta, joint.translation);
 
             if (outputScale)
             {
@@ -1448,16 +1499,16 @@ class BlendController implements ControllerBaseClass
                 {
                     if (scaleOnEnd)
                     {
-                        output[j].scale = v3Lerp.call(mathDevice, j1.scale, j2.scale, delta, output[j].scale);
+                        joint.scale = v3Lerp.call(mathDevice, j1.scale, j2.scale, delta, joint.scale);
                     }
                     else
                     {
-                        output[j].scale = v3Copy.call(mathDevice, j1.scale, output[j].scale);
+                        joint.scale = v3Copy.call(mathDevice, j1.scale, joint.scale);
                     }
                 }
                 else if (scaleOnEnd)
                 {
-                    output[j].scale = v3Copy.call(mathDevice, j2.scale, output[j].scale);
+                    joint.scale = v3Copy.call(mathDevice, j2.scale, joint.scale);
                 }
             }
         }
@@ -1497,15 +1548,14 @@ class BlendController implements ControllerBaseClass
         var boundsEnd = endController.bounds;
 
         var mathDevice = this.mathDevice;
-        var v3Add = mathDevice.v3Add;
 
-        var centerSum = v3Add.call(mathDevice, boundsStart.center, boundsEnd.center);
+        var centerSum = mathDevice.v3Add(boundsStart.center, boundsEnd.center, this.bounds.center);
         var newCenter = mathDevice.v3ScalarMul(centerSum, 0.5, centerSum);
         this.bounds.center = newCenter;
-        var newExtent = mathDevice.v3Max(boundsStart.halfExtent, boundsEnd.halfExtent);
+        var newExtent = mathDevice.v3Max(boundsStart.halfExtent, boundsEnd.halfExtent, this.bounds.halfExtent);
         var centerOffset = mathDevice.v3Sub(boundsStart.center, newCenter);
         centerOffset = mathDevice.v3Abs(centerOffset, centerOffset);
-        this.bounds.halfExtent = v3Add.call(mathDevice, newExtent, centerOffset, newExtent);
+        this.bounds.halfExtent = mathDevice.v3Add(newExtent, centerOffset, newExtent);
 
         this.dirtyBounds = false;
     }
@@ -1606,7 +1656,9 @@ class BlendController implements ControllerBaseClass
 // The MaskController takes joints from various controllers based on a per joint mask
 class MaskController implements ControllerBaseClass
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -1661,21 +1713,22 @@ class MaskController implements ControllerBaseClass
             var numJoints = controller.getHierarchy().numNodes;
             for (var j = 0; j < numJoints; j += 1)
             {
-                if (!output[j])
+                var joint = output[j];
+                if (!joint)
                 {
-                    output[j] = {};
+                    output[j] = joint = {};
                 }
                 if (mask[j])
                 {
-                    output[j].rotation = mathDevice.quatCopy(controllerOutput[j].rotation, output[j].rotation);
-                    output[j].translation = mathDevice.v3Copy(controllerOutput[j].translation, output[j].translation);
+                    joint.rotation = mathDevice.quatCopy(controllerOutput[j].rotation, joint.rotation);
+                    joint.translation = mathDevice.v3Copy(controllerOutput[j].translation, joint.translation);
                     if (createScale)
                     {
-                        output[j].scale = mathDevice.v3BuildOne(output[j].scale);
+                        joint.scale = mathDevice.v3BuildOne(joint.scale);
                     }
                     else if (outputScale)
                     {
-                        output[j].scale = mathDevice.v3Copy(controllerOutput[j].scale, output[j].scale);
+                        joint.scale = mathDevice.v3Copy(controllerOutput[j].scale, joint.scale);
                     }
                 }
             }
@@ -1902,7 +1955,9 @@ class MaskController implements ControllerBaseClass
 // The PoseController allows the user to set a fixed set of joint transforms to pose a hierarchy
 class PoseController implements ControllerBaseClass
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -1917,6 +1972,7 @@ class PoseController implements ControllerBaseClass
     onFinishedCallback: { (controller: ControllerBaseClass): boolean; };
     // Controller Base End
 
+    /* tslint:disable:no-empty */
     addTime( delta )
     {
     }
@@ -1924,6 +1980,7 @@ class PoseController implements ControllerBaseClass
     update()
     {
     }
+    /* tslint:enable:no-empty */
 
     updateBounds()
     {
@@ -1932,37 +1989,31 @@ class PoseController implements ControllerBaseClass
         {
             // First generate ltms for the pose
             var md = this.mathDevice;
-            var m43Mul = md.m43Mul;
-            var m43Copy = md.m43Copy;
-            var m43FromRTS = md.m43FromRTS;
-            var m43FromRT = md.m43FromRT;
-            var m43Pos = md.m43Pos;
-
-
             var output = this.output;
             var numJoints = this.hierarchy.numNodes;
             var parents = this.hierarchy.parents;
             var ltms = [];
-            var jointMatrix;
+            var jointMatrix, joint;
             for (var j = 0; j < numJoints; j += 1)
             {
-                if (output[j].scale)
+                joint = output[j];
+                if (joint.scale)
                 {
-                    jointMatrix = m43FromRTS.call(md, output[j].rotation, output[j].translation, output[j].scale, jointMatrix);
+                    jointMatrix = md.m43FromRTS(joint.rotation, joint.translation, joint.scale, jointMatrix);
                 }
                 else
                 {
-                    jointMatrix = m43FromRT.call(md, output[j].rotation, output[j].translation, jointMatrix);
+                    jointMatrix = md.m43FromRT(joint.rotation, joint.translation, jointMatrix);
                 }
 
                 var parent = parents[j];
                 if (parent !== -1)
                 {
-                    ltms[j] = m43Mul.call(md, jointMatrix, ltms[parent], ltms[j]);
+                    ltms[j] = md.m43Mul(jointMatrix, ltms[parent], ltms[j]);
                 }
                 else
                 {
-                    ltms[j] = m43Copy.call(md, jointMatrix, ltms[j]);
+                    ltms[j] = md.m43Copy(jointMatrix, ltms[j]);
                 }
             }
 
@@ -1973,7 +2024,7 @@ class PoseController implements ControllerBaseClass
             for (j = 0; j < numJoints; j += 1)
             {
                 jointMatrix = ltms[j];
-                var pos = m43Pos.call(md, jointMatrix);
+                var pos = md.m43Pos(jointMatrix);
                 min = md.v3Min(min, pos);
                 max = md.v3Max(max, pos);
             }
@@ -1998,6 +2049,7 @@ class PoseController implements ControllerBaseClass
         return Animation.standardGetJointWorldTransform(this, jointId, this.mathDevice, asMatrix);
     }
 
+    /* tslint:disable:no-empty */
     setTime(time)
     {
     }
@@ -2005,6 +2057,7 @@ class PoseController implements ControllerBaseClass
     setRate(rate)
     {
     }
+    /* tslint:enable:no-empty */
 
     setOutputChannels(channels)
     {
@@ -2062,7 +2115,9 @@ class PoseController implements ControllerBaseClass
 //
 class NodeTransformController
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -2096,7 +2151,12 @@ class NodeTransformController
 
     setHierarchy(hierarchy, fromNode?)
     {
-        var matchJointHierarchy = function matchJointHierarchyFn(rootIndex, rootNode, nodesMap, numJoints, jointNames, jointParents)
+        var matchJointHierarchy = function matchJointHierarchyFn(rootIndex,
+                                                                 rootNode,
+                                                                 nodesMap,
+                                                                 numJoints,
+                                                                 jointNames,
+                                                                 jointParents)
         {
             nodesMap[rootIndex] = rootNode;
 
@@ -2128,7 +2188,12 @@ class NodeTransformController
                                 if (child.name === jointName)
                                 {
                                     foundChild = true;
-                                    nextIndex = matchJointHierarchy(nextIndex, child, nodesMap, numJoints, jointNames, jointParents);
+                                    nextIndex = matchJointHierarchy(nextIndex,
+                                                                    child,
+                                                                    nodesMap,
+                                                                    numJoints,
+                                                                    jointNames,
+                                                                    jointParents);
                                 }
                             }
                         }
@@ -2136,7 +2201,12 @@ class NodeTransformController
                     // and recurse if we never matched this node as a child
                     if (!foundChild)
                     {
-                        nextIndex = matchJointHierarchy(nextIndex, jointNode, nodesMap, numJoints, jointNames, jointParents);
+                        nextIndex = matchJointHierarchy(nextIndex,
+                                                        jointNode,
+                                                        nodesMap,
+                                                        numJoints,
+                                                        jointNames,
+                                                        jointParents);
                     }
                 }
             }
@@ -2169,6 +2239,8 @@ class NodeTransformController
                 if (rootNode)
                 {
                     j = matchJointHierarchy(j, rootNode, this.nodesMap, numJoints, jointNames, jointParents);
+                    // matchJointHierarchy returns the next joint to process but the loop will step to the node after
+                    j -= 1;
                 }
             }
         }
@@ -2197,9 +2269,6 @@ class NodeTransformController
 
         // convert the input interpolator quat pos data into skinning matrices
         var node;
-        var m43FromRTS = mathDevice.m43FromRTS;
-        var m43FromQuatPos = mathDevice.m43FromQuatPos;
-        var quatPosBuild = mathDevice.quatPosBuild;
 
         var interpOut = this.inputController.output;
         var interpChannels = this.inputController.outputChannels;
@@ -2217,12 +2286,15 @@ class NodeTransformController
 
             if (hasScale)
             {
-                jointMatrix = m43FromRTS.call(mathDevice, interpVal.rotation, interpVal.translation, interpVal.scale, jointMatrix);
+                jointMatrix = mathDevice.m43FromRTS(interpVal.rotation,
+                                                    interpVal.translation,
+                                                    interpVal.scale,
+                                                    jointMatrix);
             }
             else
             {
-                quatPos = quatPosBuild.call(mathDevice, interpVal.rotation, interpVal.translation, quatPos);
-                jointMatrix = m43FromQuatPos.call(mathDevice, quatPos, ltms[j]);
+                quatPos = mathDevice.quatPosBuild(interpVal.rotation, interpVal.translation, quatPos);
+                jointMatrix = mathDevice.m43FromQuatPos(quatPos, ltms[j]);
             }
 
             node = nodesMap[j];
@@ -2271,7 +2343,9 @@ interface SkinControllerBase
 //
 class SkinController implements SkinControllerBase
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -2376,7 +2450,9 @@ class SkinController implements SkinControllerBase
 //
 class GPUSkinController implements SkinControllerBase
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     // Controller Base
     mathDevice: MathDevice;
@@ -2470,11 +2546,16 @@ class GPUSkinController implements SkinControllerBase
             {
                 if (hasScale)
                 {
-                    convertedquatPos = md.m43FromRTS(interpVal.rotation, interpVal.translation, interpVal.scale, convertedquatPos);
+                    convertedquatPos = md.m43FromRTS(interpVal.rotation,
+                                                     interpVal.translation,
+                                                     interpVal.scale,
+                                                     convertedquatPos);
                 }
                 else
                 {
-                    convertedquatPos = md.m43FromRT(interpVal.rotation, interpVal.translation, convertedquatPos);
+                    convertedquatPos = md.m43FromRT(interpVal.rotation,
+                                                    interpVal.translation,
+                                                    convertedquatPos);
                 }
                 ltms[b] = ltm = md.m43Mul(convertedquatPos, ltms[parentIndex], ltms[b]);
             }
@@ -2532,7 +2613,9 @@ GPUSkinController.prototype.defaultBufferSize = undefined;
 // TODO: Extends SceneNode?
 class SkinnedNode
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     md: MathDevice;
     input: ControllerBaseClass;
@@ -2549,6 +2632,58 @@ class SkinnedNode
         this.skinController.dirty = true;
     }
 
+    setNodeHierarchyBoneMatricesAndBounds(node, extents, skinController): boolean
+    {
+        var isFullySkinned = (!node.lightInstances || node.lightInstances.length === 0);
+
+        var renderables = node.renderables;
+        if (renderables)
+        {
+            var numRenderables = renderables.length;
+            for (var i = 0; i < numRenderables; i += 1)
+            {
+                var renderable = renderables[i];
+                if (renderable.isSkinned())
+                {
+                    renderable.skinController = skinController;
+                    renderable.addCustomWorldExtents(extents);
+                }
+                else
+                {
+                    isFullySkinned = false;
+                }
+            }
+        }
+
+        var children = node.children;
+        if (children)
+        {
+            var numChildren = children.length;
+            for (var c = 0; c < numChildren; c += 1)
+            {
+                var childSkinned = this.setNodeHierarchyBoneMatricesAndBounds(children[c], extents, skinController);
+                if (!childSkinned)
+                {
+                    isFullySkinned = false;
+                }
+            }
+        }
+
+        if (isFullySkinned)
+        {
+            node.addCustomWorldExtents(extents);
+        }
+        else
+        {
+            if (node.getCustomWorldExtents())
+            {
+                node.removeCustomWorldExtents();
+            }
+        }
+
+        return isFullySkinned;
+    }
+
     update(updateSkinController)
     {
         // update the skin controller
@@ -2563,58 +2698,6 @@ class SkinnedNode
             {
                 this.input.updateBounds();
             }
-        }
-
-        function setNodeHierarchyBoneMatricesAndBoundsFn(node, extents, skinController)
-        {
-            var isFullySkinned = (!node.lightInstances || node.lightInstances.length === 0);
-
-            var renderables = node.renderables;
-            if (renderables)
-            {
-                var numRenderables = renderables.length;
-                for (var i = 0; i < numRenderables; i += 1)
-                {
-                    var renderable = renderables[i];
-                    if (renderable.isSkinned())
-                    {
-                        renderable.skinController = skinController;
-                        renderable.addCustomWorldExtents(extents);
-                    }
-                    else
-                    {
-                        isFullySkinned = false;
-                    }
-                }
-            }
-
-            var children = node.children;
-            if (children)
-            {
-                var numChildren = children.length;
-                for (var c = 0; c < numChildren; c += 1)
-                {
-                    var childSkinned = setNodeHierarchyBoneMatricesAndBoundsFn(children[c], extents, skinController);
-                    if (!childSkinned)
-                    {
-                        isFullySkinned = false;
-                    }
-                }
-            }
-
-            if (isFullySkinned)
-            {
-                node.addCustomWorldExtents(extents);
-            }
-            else
-            {
-                if (node.getCustomWorldExtents())
-                {
-                    node.removeCustomWorldExtents();
-                }
-            }
-
-            return isFullySkinned;
         }
 
         // calculate the bounds in world space
@@ -2678,7 +2761,7 @@ class SkinnedNode
             extents[5] = (c2 + h2);
         }
 
-        setNodeHierarchyBoneMatricesAndBoundsFn(this.node, extents, skinController);
+        this.setNodeHierarchyBoneMatricesAndBounds(this.node, extents, skinController);
     }
 
     getJointIndex(jointName)
@@ -2706,30 +2789,27 @@ class SkinnedNode
 
         // convert the input quat pos data into skinning matrices
         var md = this.md;
-        var m43FromRT = md.m43FromRT;
-        var m43FromRTS = md.m43FromRTS;
-        var m43Mul = md.m43Mul;
         var interpOut = this.input.output;
         var interpChannels = this.input.outputChannels;
         var hasScale = interpChannels.scale;
 
         var jointParents = this.skinController.skeleton.parents;
 
+        var jointOutput = interpOut[jointIndex];
+
         var boneMatrix;
         if (hasScale)
         {
-            boneMatrix = m43FromRTS.call(md,
-                                         interpOut[jointIndex].rotation,
-                                         interpOut[jointIndex].translation,
-                                         interpOut[jointIndex].scale,
-                                         dst);
+            boneMatrix = md.m43FromRTS(jointOutput.rotation,
+                                       jointOutput.translation,
+                                       jointOutput.scale,
+                                       dst);
         }
         else
         {
-            boneMatrix = m43FromRT.call(md,
-                                        interpOut[jointIndex].rotation,
-                                        interpOut[jointIndex].translation,
-                                        dst);
+            boneMatrix = md.m43FromRT(jointOutput.rotation,
+                                      jointOutput.translation,
+                                      dst);
         }
 
         var parentMatrix = this.scratchM43;
@@ -2737,22 +2817,21 @@ class SkinnedNode
         while (jointParents[jointIndex] !== -1)
         {
             jointIndex = jointParents[jointIndex];
+            jointOutput = interpOut[jointIndex];
             if (hasScale)
             {
-                parentMatrix = m43FromRTS.call(md,
-                                               interpOut[jointIndex].rotation,
-                                               interpOut[jointIndex].translation,
-                                               interpOut[jointIndex].scale,
-                                               parentMatrix);
+                parentMatrix = md.m43FromRTS(jointOutput.rotation,
+                                             jointOutput.translation,
+                                             jointOutput.scale,
+                                             parentMatrix);
             }
             else
             {
-                parentMatrix = m43FromRT.call(md,
-                                              interpOut[jointIndex].rotation,
-                                              interpOut[jointIndex].translation,
-                                              parentMatrix);
+                parentMatrix = md.m43FromRT(jointOutput.rotation,
+                                            jointOutput.translation,
+                                            parentMatrix);
             }
-            boneMatrix = m43Mul.call(md, boneMatrix, parentMatrix, boneMatrix);
+            boneMatrix = md.m43Mul(boneMatrix, parentMatrix, boneMatrix);
         }
         return boneMatrix;
     }

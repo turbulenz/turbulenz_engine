@@ -21,6 +21,12 @@
 TurbulenzEngine.onload = function onloadFn()
 {
     var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
+    // IE detection while WebGL implementation is incomplete
+    if (graphicsDevice && graphicsDevice.renderer === "Internet Explorer")
+    {
+        window.alert("The video sample is not supported on Internet Explorer");
+        return;
+    }
     var soundDevice = TurbulenzEngine.createSoundDevice({});
     var mathDevice = TurbulenzEngine.createMathDevice({});
     var requestHandler = RequestHandler.create({});
@@ -50,9 +56,7 @@ TurbulenzEngine.onload = function onloadFn()
         ]
     });
 
-    var source = soundDevice.createSource({
-        position: [0, 0, 0],
-        relative: true,
+    var source = soundDevice.createGlobalSource({
         looping: true
     });
     var sound;

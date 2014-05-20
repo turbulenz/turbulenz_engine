@@ -64,24 +64,17 @@ class UserDataManager
         };
 
         var dataSpec : UserDataManagerDataSpec = {
-            gameSessionId: that.gameSessionId,
+            gameSessionId: that.gameSessionId
         };
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.callOnBridge('userdata.getkeys', null, callbackFn);
-        }
-        else
-        {
-            this.service.request({
-                url: '/api/v1/user-data/get-keys',
-                method: 'GET',
-                data: dataSpec,
-                callback: getKeysCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: '/api/v1/user-data/get-keys',
+            method: 'GET',
+            data: dataSpec,
+            callback: getKeysCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'userdata.getkeys');
     }
 
     exists(key, callbackFn, errorCallbackFn)
@@ -112,24 +105,14 @@ class UserDataManager
             gameSessionId: that.gameSessionId
         };
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.callOnBridge('userdata.exists', key, function unpackResponse(exists)
-            {
-                callbackFn(key, exists);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: '/api/v1/user-data/exists/' + key,
-                method: 'GET',
-                data: dataSpec,
-                callback: existsCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: '/api/v1/user-data/exists/' + key,
+            method: 'GET',
+            data: dataSpec,
+            callback: existsCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'userdata.exists');
     }
 
     get(key, callbackFn, errorCallbackFn)
@@ -164,24 +147,14 @@ class UserDataManager
             gameSessionId: that.gameSessionId,
         };
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.callOnBridge('userdata.get', key, function unpackResponse(value)
-            {
-                callbackFn(key, value);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: '/api/v1/user-data/get/' + key,
-                method: 'GET',
-                data: dataSpec,
-                callback: getCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: '/api/v1/user-data/get/' + key,
+            method: 'GET',
+            data: dataSpec,
+            callback: getCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'userdata.get');
     }
 
     set(key, value, callbackFn, errorCallbackFn)
@@ -221,26 +194,14 @@ class UserDataManager
 
         var url = '/api/v1/user-data/set/' + key;
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            dataSpec.key = key;
-            TurbulenzServices.callOnBridge('userdata.set', dataSpec, function sendResponse()
-            {
-                callbackFn(key);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data : dataSpec,
-                callback: setCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data : dataSpec,
+            callback: setCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'userdata.set');
     }
 
     remove(key, callbackFn, errorCallbackFn?)
@@ -275,24 +236,14 @@ class UserDataManager
             gameSessionId: that.gameSessionId,
         };
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.callOnBridge('userdata.remove', key, function sendResponse()
-            {
-                callbackFn(key);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: '/api/v1/user-data/remove/' + key,
-                method: 'POST',
-                data: dataSpec,
-                callback: removeCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: '/api/v1/user-data/remove/' + key,
+            method: 'POST',
+            data: dataSpec,
+            callback: removeCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'userdata.remove');
     }
 
     removeAll(callbackFn, errorCallbackFn)
@@ -318,21 +269,14 @@ class UserDataManager
             gameSessionId: that.gameSessionId,
         };
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.callOnBridge('userdata.removeall', null, callbackFn);
-        }
-        else
-        {
-            this.service.request({
-                url: '/api/v1/user-data/remove-all',
-                method: 'POST',
-                data: dataSpec,
-                callback: removeAllCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: '/api/v1/user-data/remove-all',
+            method: 'POST',
+            data: dataSpec,
+            callback: removeAllCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'userdata.removeall');
     }
 
     // Constructor function

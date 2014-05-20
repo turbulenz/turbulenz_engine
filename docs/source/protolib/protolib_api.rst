@@ -19,6 +19,9 @@ The Protolib Object
 
 **2013-05-04** - 0.2.0 - First SDK release (SDK 0.26.0)
 
+**2014-01-29** - 0.2.1 - Behavior change to 2D text rendering sequence and
+addition/modification of advanced callbacks (SDK 0.28.0)
+
 **BETA**
 
 This feature is currently in beta and does not represent the final set of available APIs.
@@ -683,6 +686,10 @@ Draws the given texture to screen space.
 
 Draws the given text to screen space.
 
+**Updated 0.2.1**
+
+drawText renderers after :ref:`draw2DSprite <protolib-draw2dsprite>`.
+
 **Syntax** ::
 
     protolib.drawText({
@@ -725,7 +732,6 @@ Draws the given text to screen space.
 ``alignment`` (Optional)
     Use horizontalAlign and verticalAlign instead.
     A value in ``protolib.textAlignment``. Defines whether the position given refers to the top-left, top-middle or top-right of the text box. Defaults to ``protolib.textAlignment.LEFT``.
-
 
 3D
 ==
@@ -1373,59 +1379,68 @@ Advanced
 ========
 
 Advanced functionality of Protolib is to give developers more control of how the library works if they need to operate beyond the default behaviour.
-These functions should only be used by advanced users who understand the behaviour and need to extend it.
+These functions should only be used by advanced users who understand the behavior and need to extend it.
 
 .. _protolib-setpredraw:
 
 `setPreDraw`
 ------------
 
+**Updated 0.2.1**
+
 **Summary**
 
-Set a function to call, after the clear call of the renderer, but before any 3D or 2D rendering has happened in a frame.
-This function allows you to render before the scene has rendered.
-This function will be called during :ref:`protolib.endFrame <protolib-endframe>` function.
+Set a function to call, before any 3D or 2D rendering has happened in a frame, but after the scene and camera update.
+This function allows you to modify any state before the clear screen.
+This function will be called during :ref:`protolib.endFrame <protolib-endframe>` function,
+proceeding the :ref:`setPreRendererDraw <protolib-setprerendererdraw>` function call.
+Prior to 0.2.1 this function had the behavior described in setPreRendererDraw.
+Use setPreRendererDraw callback to use the previous behavior.
 
 **Syntax** ::
 
     function preDrawFn()
     {
-        // A 2D sprite to manually draw behind 3D content.
-        draw2D.begin();
-        draw2D.drawSprite(sprite);
-        draw2D.end();
+        // Manipulate scene before rendering
+        postUpdate.process(protolib.globals.scene);
     }
 
     protolib.setPreDraw(preDrawFn);
 
 ``callback``
-    The function to call after clearing the screen.
+    The function to call before rendering.
 
-.. _protolib-setpostdraw:
+.. _protolib-setprerendererdraw:
 
-`setPostDraw`
--------------
+`setPreRendererDraw`
+---------------------
+
+**Added 0.2.1**
 
 **Summary**
 
-Set a function to call, after the protolib has rendered the current frame, but before graphicsDevice.endFrame().
-This function allows you to render on top of the final scene content.
-This function will be called after 2D and 3D rendering, but before graphicsDevice.endFrame().
+Set a function to call, between the renderer clear call and before the scene rendering.
+This function allows you to render before the 3D scene content.
+This function will be called during :ref:`protolib.endFrame <protolib-endframe>` function, after the
+:ref:`setPreDraw <protolib-setpredraw>` function call and proceeding the
+:ref:`setPostRendererDraw <protolib-setPostRendererDraw>` function call.
 
 **Syntax** ::
 
-    function postDrawFn()
+    function preRendererDrawFn()
     {
-        // Draw a layer of debug on top of the scene
-        debug.draw();
+        // A 2D sprite to manually draw after the clear screen and behind 3D content.
+        draw2D.begin();
+        draw2D.drawSprite(sprite);
+        draw2D.end();
     }
 
-    protolib.setPostDraw(postDrawFn);
+    protolib.setPreRendererDraw(preRendererDrawFn);
 
 ``callback``
-    The function to call before graphicsDevice.endFrame().
+    The function to call after the clear, but before scene rendering.
 
-.. _protolib-setpostrendererdraw:
+.. _protolib-setPostRendererDraw:
 
 `setPostRendererDraw`
 ---------------------
@@ -1437,6 +1452,9 @@ This function will be called after 2D and 3D rendering, but before graphicsDevic
 Set a function to call, after the protolib has rendered the scene content, but before 2D sprites/text and before graphicsDevice.endFrame().
 This function allows you to render on top of the 3D scene content, but under the 2D content.
 This function will be called after 3D rendering, but before graphicsDevice.endFrame().
+This function will be called during :ref:`protolib.endFrame <protolib-endframe>` function, after the
+:ref:`setPreRendererDraw <protolib-setprerendererdraw>` function call and proceeding the
+:ref:`setPostDraw <protolib-setPostDraw>` function call.
 
 **Syntax** ::
 
@@ -1451,6 +1469,31 @@ This function will be called after 3D rendering, but before graphicsDevice.endFr
 ``callback``
     The function to call before 2D content rendering.
 
+.. _protolib-setpostdraw:
+
+`setPostDraw`
+-------------
+
+**Summary**
+
+Set a function to call, after the protolib has rendered the current frame, but before graphicsDevice.endFrame().
+This function allows you to render on top of the final scene content.
+This function will be called after 2D and 3D rendering, but before graphicsDevice.endFrame().
+This function will be called during :ref:`protolib.endFrame <protolib-endframe>` function, after the
+:ref:`setPostRendererDraw <protolib-setpostrendererdraw>` function call.
+
+**Syntax** ::
+
+    function postDrawFn()
+    {
+        // Draw a layer of debug on top of the scene
+        debug.draw();
+    }
+
+    protolib.setPostDraw(postDrawFn);
+
+``callback``
+    The function to call before graphicsDevice.endFrame().
 
 .. _meshwrapper:
 

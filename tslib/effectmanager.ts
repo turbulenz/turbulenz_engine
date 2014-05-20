@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 /*global Utilities: false*/
 
 "use strict";
@@ -23,7 +23,9 @@ interface EffectPrepareObject
 //
 class Effect
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     name: string;
     geometryType: { [type: string]: EffectPrepareObject; }; // TODO
@@ -60,9 +62,29 @@ class Effect
             hashArray.sort();
             return hashArray.join(',');
         }
-        else
+        else if (0 < numTextures)
         {
             return hashArray[0];
+        }
+        else
+        {
+            /* tslint:disable:no-string-literal */
+            var materialColor = material.techniqueParameters['materialColor'];
+            /* tslint:enable:no-string-literal */
+            if (materialColor)
+            {
+                var length = materialColor.length;
+                var n;
+                for (n = 0; n < length; n += 1)
+                {
+                    hashArray[n] = materialColor[n].toFixed(3).replace('.000', '');
+                }
+                return hashArray.join(',');
+            }
+            else
+            {
+                return material.name;
+            }
         }
     }
 
@@ -114,7 +136,9 @@ class Effect
 //
 class EffectManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     effects: any; // { [effectName: string]: Effect; };
 
@@ -146,7 +170,9 @@ class EffectManager
         var effect = this.effects[name];
         if (!effect)
         {
+            /* tslint:disable:no-string-literal */
             return this.effects["default"];
+            /* tslint:enable:no-string-literal */
         }
         return effect;
     }

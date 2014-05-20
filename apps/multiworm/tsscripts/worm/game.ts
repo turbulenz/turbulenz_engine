@@ -177,7 +177,7 @@ class Game
         {
             var worm = this.worms[myWormIndex];
 
-            var newWormDirection = this.newWormDirection
+            var newWormDirection = this.newWormDirection;
             if (newWormDirection !== null)
             {
                 worm.changeDirection(newWormDirection);

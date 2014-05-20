@@ -374,7 +374,27 @@ TurbulenzEngine.onload = function onloadFn()
 
         // Convert shape parameters
         var svgNode: SVGNode;
-        if (type === "path")
+
+        if (type === "svg")
+        {
+            svgNode = new SVGEmptyNode();
+            if (attributes.width && attributes.height && attributes.viewBox)
+            {
+                var width = parseFloat(attributes.width.value);
+                var height = parseFloat(attributes.height.value);
+                var viewBox =
+                    attributes.viewBox.value.split(" ").map(parseFloat);
+                // [minx, miny, width, height]
+
+                var xscale = width / viewBox[2];
+                var yscale = height / viewBox[3];
+
+                nodeParams.transform =
+                    "matrix(" + xscale + " 0 0 " + yscale + " " +
+                    viewBox[0] * -xscale + " " + viewBox[1] * -yscale + ")";
+            }
+        }
+        else if (type === "path")
         {
             var d = nodeParams.d;
             if (d)
@@ -693,7 +713,7 @@ TurbulenzEngine.onload = function onloadFn()
         {
             return 0;
         }
-        return baseVal.value
+        return baseVal.value;
     }
 
     function loadSVGfile(url)

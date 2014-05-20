@@ -392,9 +392,10 @@ TurbulenzEngine.onload = function onloadFn()
             else
             {
                 // Clone the original watercan model
-                watercans[numWaterCans] = scene.cloneRootNode(watercans[0], watercanNodeName + '-' + numWaterCans);
+                watercans[numWaterCans] = watercans[0].clone(watercanNodeName + '-' + numWaterCans);
                 watercans[numWaterCans].setLocalTransform(watercanTransforms[numWaterCans]);
                 watercans[numWaterCans].enableHierarchy(true);
+                scene.addRootNode(watercans[numWaterCans]);
                 numWaterCans += 1;
             }
         }
@@ -571,9 +572,8 @@ TurbulenzEngine.onload = function onloadFn()
     var loadAssetsBackground = function loadAssetsBackgroundFn()
     {
         if (soundDevice) {
-            soundSource = soundDevice.createSource({
-                // Ambient sound
-                relative: true
+            // Ambient sound
+            soundSource = soundDevice.createGlobalSource({
             });
 
             var soundURL;

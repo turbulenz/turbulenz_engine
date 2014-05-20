@@ -105,6 +105,44 @@ class NetworkLatencySimulator
 		}
 	}
 
+	addWebsocket(websocket)
+	{
+		var that = this;
+		var oldSend = websocket.send;
+		websocket.send = function sendFn(data)
+		{
+			var delayedSendTo = function delayedSendToFn()
+			{
+				if (websocket)
+				{
+					oldSend.call(websocket, data);
+				}
+			};
+			that.queueMessage(delayedSendTo, "send");
+		};
+
+		var oldOnMessage = websocket.onmessage;
+		websocket.onmessage = function onMessageFn(event)
+		{
+			var delayedOnMessage = function delayedOnMessageFn()
+			{
+				if (websocket)
+				{
+					oldOnMessage.call(websocket, event);
+				}
+			};
+
+			that.queueMessage(delayedOnMessage, "receive");
+		};
+
+		var oldClose = websocket.onclose;
+		websocket.onclose = function onCloseFn()
+		{
+			that.flushQueues();
+			oldClose.call(websocket);
+		};
+	}
+
 	addMultiplayerSession(multiplayerSession)
 	{
 		var that = this;

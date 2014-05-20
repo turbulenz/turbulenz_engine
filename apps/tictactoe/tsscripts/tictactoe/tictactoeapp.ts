@@ -457,13 +457,30 @@ class Application
                     var otherUser = currentGame.otherUser;
                     if (otherUser)
                     {
+                        var msgText = 'It\'s your turn';
+                        var roundEnd = currentGame.roundEnd;
+                        if (roundEnd)
+                        {
+                            if (roundEnd.winner)
+                            {
+                                msgText = 'You\'ve lost the game';
+                            }
+                            if (roundEnd.forfeit)
+                            {
+                                msgText = 'You\'ve won the game';
+                            }
+                            if (roundEnd.draw)
+                            {
+                                msgText = 'The game is a draw';
+                            }
+                        }
                         this.notificationsManager.sendInstantNotification({
                             key: 'your-turn',
                             msg: {
                                 data: {
                                     dataShareId: this.currentDataShare.id
                                 },
-                                text: 'It\'s your turn'
+                                text: msgText
                             },
                             recipient: otherUser
                         });
@@ -566,16 +583,23 @@ class Application
         this.graphicsDevice.setTechnique(this.fontTechnique);
         var currentGame = this.currentGame;
 
+        var currentUsername = this.userProfile.username;
+        this.segmentFont(0, 0, 'Hello ' + currentUsername);
+
+        var textSpacingY = this.textSpacingY;
+        var offsetY = textSpacingY;
+
         var roundEnd = currentGame.roundEnd;
         if (roundEnd)
         {
-            this.segmentFont(0, 0, 'Leave', this.leaveGame.bind(this), 'leave');
+            this.segmentFont(0, offsetY, 'Leave', this.leaveGame.bind(this), 'leave');
         }
         else
         {
-            this.segmentFont(0, 0, 'Back to lobby', this.toLobby.bind(this), 'toLobby');
-            this.segmentFont(20, 0, 'Forfeit', this.forfeitGame.bind(this), 'forfeitGame');
+            this.segmentFont(0, offsetY, 'Back to lobby', this.toLobby.bind(this), 'toLobby');
+            this.segmentFont(20, offsetY, 'Forfeit', this.forfeitGame.bind(this), 'forfeitGame');
         }
+        offsetY += textSpacingY;
 
         var users = currentGame.getUsers();
         var usersLength = users.length;
@@ -585,7 +609,6 @@ class Application
         var boardOffsetY = this.boardOffsetY;
         var boardSizeX = this.boardSizeX;
         var boardSizeY = this.boardSizeY;
-        var textSpacingY = this.textSpacingY;
 
         var offsetY = boardOffsetY + boardSizeY + textSpacingY * 2;
         for (usersIndex = 0; usersIndex < usersLength; usersIndex += 1)
@@ -693,9 +716,14 @@ class Application
         var textSpacingY = this.textSpacingY;
 
         var joinedDataShares = this.joinedDataShares;
+
+        var currentUsername = this.userProfile.username;
+        this.segmentFont(0, 0, 'Hello ' + currentUsername);
+        offsetY += textSpacingY;
+
         if (joinedDataShares && joinedDataShares.length > 0)
         {
-            this.segmentFont(0, 0, 'Playing:');
+            this.segmentFont(0, offsetY, 'Playing:');
             offsetY += textSpacingY;
 
             var joinedDataSharesIndex;

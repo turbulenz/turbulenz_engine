@@ -344,6 +344,7 @@ class Tools(object):
             '.mp4': copy,
             '.webm': copy,
             '.json': copy,
+            '.tar': copy,
             '.tga': tga2png,
             '.dae': dae2json,
             '.obj': obj2json,

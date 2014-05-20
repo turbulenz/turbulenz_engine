@@ -4,7 +4,9 @@
 
 class AssetTracker
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     assetsLoadedCount: number;
     loadingProgress: number;
@@ -44,7 +46,8 @@ class AssetTracker
 
         if (this.displayLog)
         {
-            Utilities.log(event.name + " (Asset Number " + this.assetsLoadedCount + ") Progress : " + this.loadingProgress);
+            Utilities.log(event.name +
+                          " (Asset Number " + this.assetsLoadedCount + ") Progress : " + this.loadingProgress);
         }
 
         if (this.callback)

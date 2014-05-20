@@ -1,5 +1,6 @@
 # Virtual env
 /env/
+node_modules
 
 # Compiled python files
 *.pyc
@@ -14,6 +15,8 @@ jslib-refcheck/
 
 # Temporary files
 *~
+.DS_Store
+TAGS
 
 # default local server folder
 /devserver/

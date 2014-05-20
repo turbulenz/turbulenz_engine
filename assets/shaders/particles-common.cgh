@@ -1,0 +1,427 @@
+// Copyright (c) 2013-2014 Turbulenz Limited
+
+// texture dimensions and reciprocals.
+float2 textureSize;
+float2 invTextureSize;
+
+// region offset + dimensions and reciprocals in texture
+float2 regionSize;
+float2 invRegionSize;
+float2 regionPos;
+
+float3 halfExtents;
+float3 center;
+float maxLifeTime;
+
+// Specific to updaters.
+// ----------------------------------------------------------------------------
+sampler2D previousState = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+float3 shift;
+float timeStep;
+float lifeStep;
+float maxSpeed;
+sampler2D creationState = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+float2 creationScale;
+
+// Specific to renderers.
+// ----------------------------------------------------------------------------
+float4x4 projection;
+float4x3 modelView;
+sampler2D mappingTable = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+float2 mappingSize;
+float2 invMappingSize;
+// region offset for mapping table.
+// for region size we can assume size = particle size / PARTICLE_DIM
+float2 mappingPos;
+
+sampler2D vParticleState = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+sampler2D fParticleState = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+// ----------------------------------------------------------------------------
+
+static const float2 PARTICLE_DIM = float2(3.0, 3.0);
+
+// Map p in [0,1]^2 to region.
+float2 particleRegionMap(float2 p)
+{
+    return (regionPos + (regionSize * p)) * invTextureSize;
+}
+float2 mappingRegionMap(float2 p)
+{
+    return (mappingPos + (regionSize * p / PARTICLE_DIM)) * invMappingSize;
+}
+// Map p in region to [0,1]^2
+float2 particleRegionUnmap(float2 p)
+{
+    return ((p * textureSize) - regionPos) * invRegionSize;
+}
+float2 mappingRegionUnmap(float2 p)
+{
+    return ((p * mappingSize) - mappingPos) * invRegionSize * PARTICLE_DIM;
+}
+
+// vertex shader for full (region) texture update pass.
+void vp_update(in float2 inPosition : POSITION,
+               out float4 outPosition : POSITION,
+               out float2 outParticle : TEXCOORD0)
+{
+    outPosition = float4((particleRegionMap(inPosition) * 2.0) - 1.0, 0.0, 1.0);
+    outParticle = inPosition;
+}
+void vp_update_mapping(in float2 inPosition : POSITION,
+                       out float4 outPosition : POSITION,
+                       out float2 outParticle : TEXCOORD0)
+{
+    outPosition = float4((mappingRegionMap(inPosition) * 2.0) - 1.0, 0.0, 1.0);
+    outParticle = inPosition;
+}
+
+// vertex shader for full texture update pass.
+void vp_update_full(in float2 inPosition   : POSITION,
+                    out float4 outPosition : POSITION,
+                    out float2 outParticle : TEXCOORD0)
+{
+    outPosition = float4((inPosition * 2.0) - 1.0, 0.0, 1.0);
+    outParticle = inPosition;
+}
+
+// ENCODE / DECODE METHODS
+// ----------------------------------------------------------------------------
+
+static const float BIT1 = 255.0 / 2.0;
+static const float BIT2 = 255.0 / 4.0;
+static const float BIT3 = 255.0 / 8.0;
+static const float BIT4 = 255.0 / 16.0;
+static const float BIT5 = 255.0 / 32.0;
+static const float BIT6 = 255.0 / 64.0;
+static const float BIT7 = 255.0 / 128.0;
+static const float BIT8 = 255.0 / 256.0;
+bool bitSet(float value, float BIT)
+{
+    return fract(value * BIT) >= 0.5;
+}
+
+float decodeUnsignedFloat(float4 pix)
+{
+    return saturate(dot(pix, float4(255.0/4294967296.0, 255.0/16777216.0, 255.0/65536.0, 255.0/256.0)));
+}
+
+float decodeSignedFloat(float4 pix)
+{
+    return (decodeUnsignedFloat(pix) - 0.5) * 2.0;
+}
+
+float extractUnsignedFloat(sampler2D tex, float2 uv)
+{
+    return decodeUnsignedFloat(tex2D(tex, uv));
+}
+
+float extractSignedFloat(sampler2D tex, float2 uv)
+{
+    return decodeSignedFloat(tex2D(tex, uv));
+}
+
+float4 encodeUnsignedFloat(float x)
+{
+    // TODO set proper max.
+    if (x >= 1.0)
+    {
+        return float4(1.0, 1.0, 1.0, 1.0);
+    }
+    else
+    {
+        float4 enc = frac(saturate(x) * float4(16777216.0, 65536.0, 256.0, 1.0)) * 256.0;
+        enc.yzw -= (enc.xyz / 256.0);
+        return (enc / 255.0);
+    }
+}
+
+float4 encodeSignedFloat(float x)
+{
+    return encodeUnsignedFloat((x * 0.5) + 0.5);
+}
+
+float3 extractSignedFloat3(sampler2D tex, float2 uv)
+{
+    return float3(extractSignedFloat(tex, uv),
+                  extractSignedFloat(tex, uv + float2(0, 1.0 * invTextureSize.y)),
+                  extractSignedFloat(tex, uv + float2(0, 2.0 * invTextureSize.y)));
+}
+
+float decodeHalfUnsignedFloat(float2 pix) {
+    return saturate(dot(pix, float2(255.0/65536.0, 255.0/256.0)));
+}
+
+float decodeHalfSignedFloat(float2 pix) {
+    return (decodeHalfUnsignedFloat(pix) - 0.5) * 2.0;
+}
+
+float extractHighHalfUnsignedFloat(sampler2D tex, float2 uv)
+{
+    return decodeHalfUnsignedFloat(tex2D(tex, uv).zw);
+}
+
+float2 encodeHalfUnsignedFloat(float x) {
+    if (x >= 1.0) return float2(1.0, 1.0);
+    else {
+        float2 enc = frac(saturate(x) * float2(256.0, 1.0)) * 256.0;
+        enc.y -= (enc.x / 256.0);
+        return (enc / 255.0);
+    }
+}
+
+// decode 1 byte pixel value into a float2 uniformnly distributed [0,1]^2
+float2 decodeByteUnsignedFloat2(float x) {
+    if (x >= 1.0) return float2(1.0, 1.0);
+    else {
+        float2 enc = frac(saturate(x) * float2(16.0, 1.0)) * 16.0;
+        enc.y -= (enc.x / 16.0);
+        return (floor(enc) / 15.0);
+    }
+}
+
+float2 decodeUnsignedFloat2(float4 pix) {
+    return float2(decodeHalfUnsignedFloat(pix.zw), decodeHalfUnsignedFloat(pix.xy));
+}
+
+
+// ----------------------------------------------------------------------------
+
+float3 transform43(float3 pt, float4x3 m) {
+    return (pt.x * m[0]) + (pt.y * m[1]) + (pt.z * m[2]) + m[3];
+}
+float3 transform43Rot(float3 pt, float4x3 m) {
+    return (pt.x * m[0]) + (pt.y * m[1]) + (pt.z * m[2]);
+}
+float3 transform43Scale(float3 pt, float4x3 m) {
+    return pt * float3(length(m[0]), length(m[1]), length(m[2]));
+}
+float3 transform43Pos(float3 pt, float4x3 m) {
+    return pt + m[3];
+}
+
+// PARTICLE METHODS
+// ----------------------------------------------------------------------------
+
+static const float2 PARTICLE_POS  = float2(0.5, 0.5);
+static const float2 PARTICLE_VEL  = float2(1.5, 0.5);
+static const float2 PARTICLE_LIFE = float2(2.5, 0.5);
+static const float2 PARTICLE_ANIM = float2(2.5, 1.5);
+static const float2 PARTICLE_DATA = float2(2.5, 2.5);
+
+// map non-normalised uv coordinate to pixel grid slots
+// (0,2 1,2 2,2)
+// (0,1 1,1 2,1)
+// (0,0 1,0 2,0) (assuming particle_dim is (3,3) of course)
+float2 getSlot(float2 uv)
+{
+    return mod(uv, PARTICLE_DIM);
+}
+
+float2 animationSize;
+sampler2D animation = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+// get particle uv [0,1]^2 from particle index [0,N) via mapping table
+bool zSorted;
+float2 getParticle(float index, sampler2D mappingTable)
+{
+    float x = mod(index, regionSize.x / PARTICLE_DIM.x);
+    float y = (index - x) * PARTICLE_DIM.x * invRegionSize.x;
+    if (zSorted)
+    {
+        float2 mappingUV = mappingRegionMap((float2(x, y) + 0.5) * PARTICLE_DIM * invRegionSize);
+        float2 particleUV = tex2D(mappingTable, mappingUV).xy * 255.0;
+        return (particleUV * PARTICLE_DIM * invRegionSize);
+    }
+    else
+    {
+        return float2(x, y) * PARTICLE_DIM * invRegionSize;
+    }
+}
+
+// extract float4 data for animation frame in given row at particular animation time.
+float4 getAnimation4(float t, float row)
+{
+    float s = (0.5 + row) / animationSize.y;
+    return tex2D(animation, float2(t, s));
+}
+
+// extract float2 data for animation frame in given row at particular animation time.
+float2 getAnimation2(float t, float row)
+{
+    float4 tex = getAnimation4(t, row);
+    return float2(decodeHalfUnsignedFloat(tex.zw), decodeHalfUnsignedFloat(tex.xy));
+}
+
+// extract float data for animation frame in given row at particular animation time.
+float getAnimation(float t, float row)
+{
+    float4 tex = getAnimation4(t, row);
+    return decodeUnsignedFloat(tex);
+}
+
+// return normalised position for particle
+float3 getPosition(sampler2D texture, float2 particle, float2 invTextureSize)
+{
+    return extractSignedFloat3(texture, particle + (PARTICLE_POS * invTextureSize));
+}
+
+// return normalised velocity for particle
+float3 getVelocity(sampler2D texture, float2 particle, float2 invTextureSize)
+{
+    return extractSignedFloat3(texture, particle + (PARTICLE_VEL * invTextureSize));
+}
+
+// get rotation matrix for rotation around z-axis
+float3x3 rotZ(float rad)
+{
+    float c = cos(rad);
+    float s = sin(rad);
+    return float3x3(c,s,0,
+                   -s,c,0,
+                    0,0,1);
+}
+
+// get rotation matrix for given spherical angles (phi, theta)
+// phi = azimuth, theta = inclination
+// phi in [0,1] -> [0,2pi]
+// theta in [0,1] -> [0,pi]
+float3x3 orientSpherical(float phi, float theta)
+{
+    float cp = cos(phi * 6.28318530718);
+    float sp = sin(phi * 6.28318530718);
+    float ct = cos(theta * 3.14159265359);
+    float st = sin(theta * 3.14159265359);
+    return float3x3(cp, sp*st, -sp*ct,
+                     0,   ct,     st,
+                    sp, -cp*st, cp*ct);
+}
+// non-normalized values
+float3x3 orientSpherical2(float2 pt)
+{
+    float cp = cos(pt.x);
+    float sp = sin(pt.x);
+    float ct = cos(pt.y);
+    float st = sin(pt.y);
+    return float3x3(cp, sp*st, -sp*ct,
+                     0,   ct,    st,
+                    sp, -cp*st, cp*ct);
+}
+
+// get orientation matrix to align z-axis with direction
+float3x3 orientTo(float3 at)
+{
+    float3 up = float3(0.0, 1.0, 0.0);
+    float3 right = cross(up, at);
+    if (dot(right, right) <= 0)
+    {
+        return float3x3(1.0,0.0,0.0, 0.0,0.0,-1.0, 0.0,1.0,0.0);
+    }
+    else
+    {
+        at = normalize(at);
+        right = normalize(right);
+        up = cross(at, right);
+        return transpose(float3x3(right, up, at));
+    }
+}
+
+// get 3x3 color matrix to adjust hue
+// taken from textureeffects.js (noting transposition)
+float3x3 getHueMatrix(float hue)
+{
+    float c = cos(hue);
+    float s = sin(hue);
+    return float3x3(
+        ( 0.7874 * c) + (-0.37123622308892930 * s) + 0.2126,
+        (-0.7152 * c) + (-0.49629029139540230 * s) + 0.7152,
+        (-0.0722 * c) + ( 0.86752651448433160 * s) + 0.0722,
+        (-0.2126 * c) + ( 0.20611404610069642 * s) + 0.2126,
+        ( 0.2848 * c) + ( 0.08105997779422341 * s) + 0.7152,
+        (-0.0722 * c) + (-0.28717402389491986 * s) + 0.0722,
+        (-0.2126 * c) + (-0.94858649227855510 * s) + 0.2126,
+        (-0.7152 * c) + ( 0.65841024698384920 * s) + 0.7152,
+        ( 0.9278 * c) + ( 0.29017624529470600 * s) + 0.0722
+    );
+}
+float3x4 getContrastMatrix(float c)
+{
+    float s = 0.5 * (1.0 - c);
+    return float3x4(
+        c, 0.0, 0.0, s,
+        0.0, c, 0.0, s,
+        0.0, 0.0, c, s
+    );
+}
+
+// return userData float4
+float4 getData(sampler2D texture, float2 particle, float2 invTextureSize)
+{
+    return tex2D(texture, particle + (PARTICLE_DATA * invTextureSize));
+}
+
+// return (currentLife, totalLife) normalised values
+float2 getLifePair(sampler2D texture, float2 particle, float2 invTextureSize)
+{
+    float4 life = tex2D(texture, particle + (PARTICLE_LIFE * invTextureSize));
+    return float2(decodeHalfUnsignedFloat(life.zw), decodeHalfUnsignedFloat(life.xy));
+}
+
+// return currentLife
+float getLife(sampler2D texture, float2 particle, float2 invTextureSize)
+{
+    float4 life = tex2D(texture, particle + (PARTICLE_LIFE * invTextureSize));
+    return decodeHalfUnsignedFloat(life.zw);
+}
+
+// return animation time for particle with given life
+float getAnimationTime(sampler2D texture, float2 particle, float2 invTextureSize, float2 life)
+{
+    float4 c01 = tex2D(texture, particle + (PARTICLE_ANIM * invTextureSize));
+    return decodeHalfUnsignedFloat(c01.xy) - ((life.x / life.y) * decodeHalfUnsignedFloat(c01.zw));
+}
+
+// return boolean for if this particle should be gathered from creationState instead of previousState
+// takes non-normalised uv of particle
+bool createdParticle(float2 particle)
+{
+    float2 flag = tex2D(creationState, (particle + PARTICLE_LIFE) * invRegionSize * creationScale).xy;
+    return dot(flag, flag) > 0;
+}
+

@@ -29,7 +29,9 @@ Welcome to the Turbulenz documentation!
     jslibrary_api/low_level_api
     jslibrary_api/physics2d_api
     jslibrary_api/physics3d_api
+    jslibrary_api/lowlevelparticles_api
     jslibrary_api/high_level_api
+    jslibrary_api/highlevelparticles_api
     turbulenz_services/index
     protolib/index
     tools/index

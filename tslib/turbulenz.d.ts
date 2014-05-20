@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 // -----------------------------------------------------------------------------
 // MathDevice
@@ -299,7 +299,7 @@ interface MathDevice
     quatEqual(q1, q2, precision?);
 
     // quatPos
-    quatPosBuild(x, y, z, w, px, py, pz, dst?);
+    quatPosBuild(x, y, z?, w?, px?, py?, pz?, dst?);
     quatPosTransformVector(qp, n, dst?);
     quatPosTransformPoint(qp, p);
     quatPosMul(qp1, qp2);
@@ -429,7 +429,6 @@ interface Texture
     height: number;
     depth: number;
     format: number;
-    numDataLevels: number;
     mipmaps: boolean;
     cubemap: boolean;
     dynamic: boolean;
@@ -437,9 +436,17 @@ interface Texture
 
     // Methods
 
-    setData(data: any, face?: number, level?: number, x?:number, y?:number, w?:number, h?:number);
+    setData(data: any, face?: number, level?: number, x?: number, y?: number, w?: number, h?: number);
     typedArrayIsValid(array: any);
     destroy();
+}
+
+interface TextureArchiveParams
+{
+    src: string;
+    mipmaps?: boolean;
+    ontextureload?: { (texture: Texture): void; };
+    onload?: { (success: boolean, status: number): void; };
 }
 
 interface RenderTargetParameters
@@ -468,7 +475,13 @@ interface RenderTarget
 
     // Methods
 
-    destroy();
+    getWidth(): number;
+    getHeight(): number;
+    setColorTexture0(colorTexture0: Texture): void;
+    setColorTexture1(colorTexture1: Texture): void;
+    setColorTexture2(colorTexture2: Texture): void;
+    setColorTexture3(colorTexture3: Texture): void;
+    destroy(): void;
 }
 
 interface Semantics
@@ -622,6 +635,10 @@ interface GraphicsDevice
     PIXELFORMAT_DXT3         : number;
     PIXELFORMAT_DXT5         : number;
     PIXELFORMAT_S8           : number;
+    PIXELFORMAT_RGBA32F      : number;
+    PIXELFORMAT_RGB32F       : number;
+    PIXELFORMAT_RGBA16F      : number;
+    PIXELFORMAT_RGB16F       : number;
 
     //
     PRIMITIVE_POINTS         : number;
@@ -715,11 +732,11 @@ interface GraphicsDevice
     width: number;
     height: number;
     extensions: string;
-    shadingLanguageVersion: number;
+    shadingLanguageVersion: string;
 
     fullscreen: boolean;
 
-    rendererVersion: number;
+    rendererVersion: string;
     renderer: string;
     vendor: string;
     videoRam: number;
@@ -776,7 +793,7 @@ interface GraphicsDevice
               semantics: Semantics): VertexWriteIterator;
     endDraw(writer: VertexWriteIterator): void;
 
-    loadTexturesArchive(params: any): void;
+    loadTexturesArchive(params: TextureArchiveParams): void;
 
     // Returns 'any', since the output may be a data url (string) in
     // the case of compressed images, or number[].
@@ -1108,8 +1125,6 @@ interface SoundFilter
 }
 
 // SoundSource
-
-// TODO: Are any of these required?
 interface SoundSourceParameters
 {
     position?    : any; // v3
@@ -1154,6 +1169,37 @@ interface SoundSource
     destroy(): void;
 }
 
+// SoundGlobalSource
+interface SoundGlobalSourceParameters
+{
+    gain?        : number;
+    looping?     : boolean;
+    pitch?       : number;
+}
+
+interface SoundGlobalSource
+{
+    gain        : number;
+    looping     : boolean;
+    pitch       : number;
+    playing     : boolean;
+    paused      : boolean;
+    tell        : number;
+
+    play(sound: Sound, position?: number): boolean;
+    stop(): void;
+    pause(): void;
+    resume(position?: number): boolean;
+    rewind(): boolean;
+    seek(seek: number): boolean;
+    clear(): void;
+    setAuxiliarySendFilter(index: number,
+                           effectSlot: SoundEffectSlot,
+                           filter: SoundFilter): boolean;
+    setDirectFilter(filter: SoundFilter): boolean;
+    destroy(): void;
+}
+
 // SoundArchiveParameters
 
 interface SoundArchiveParameters
@@ -1165,6 +1211,19 @@ interface SoundArchiveParameters
 }
 
 // SoundDevice
+
+interface SoundDeviceParameters
+{
+    deviceSpecifier?   : string;
+    linearDistance?    : boolean;
+    frequency?         : number;
+    dopplerFactor?     : number;
+    dopplerVelocity?   : number;
+    speedOfSound?      : number;
+    listenerTransform? : any; // m43
+    listenerVelocity?  : any; // v3
+    listenerGain?      : number;
+}
 
 interface SoundDevice
 {
@@ -1186,6 +1245,7 @@ interface SoundDevice
     alcMaxAuxiliarySends  : number;
 
     createSource(params: SoundSourceParameters): SoundSource;
+    createGlobalSource(params: SoundGlobalSourceParameters): SoundGlobalSource;
     createSound(params: SoundParameters): Sound;
     loadSoundsArchive(params: SoundArchiveParameters): void;
     createEffect(params: SoundEffectParameters): SoundEffect;
@@ -1283,18 +1343,19 @@ interface TurbulenzRequestCallback
 
 interface TurbulenzEngine
 {
-    version            : string;
-    time               : number;
+    version              : string;
+    time                 : number;
 
-    onload             : { (engine: TurbulenzEngine): void; };
-    onunload           : { (): void; };
-    onerror            : { (msg: string): void; };
-    onwarning          : { (msg: string): void; };
+    onload               : { (engine: TurbulenzEngine): void; };
+    onunload             : { (): void; };
+    onerror              : { (msg: string): void; };
+    onwarning            : { (msg: string): void; };
+    onperformancewarning : { (msg: string): void; };
 
-    canvas?            : any;
-    VMath?             : any;
+    canvas?              : any;
+    VMath?               : any;
 
-    encryptionEnabled? : boolean;
+    encryptionEnabled?   : boolean;
 
     // Methods
 
@@ -1326,7 +1387,7 @@ interface TurbulenzEngine
     createPhysicsDevice(params: any): PhysicsDevice;
     getPhysicsDevice(): PhysicsDevice;
 
-    createSoundDevice(params: any): SoundDevice;
+    createSoundDevice(params: SoundDeviceParameters): SoundDevice;
     getSoundDevice(): SoundDevice;
 
     createNetworkDevice(params: any): NetworkDevice;
@@ -1350,4 +1411,5 @@ interface TurbulenzEngine
 // TurbulenzEngine global
 // -----------------------------------------------------------------------------
 
+/* tslint:disable:no-unused-variable */
 declare var TurbulenzEngine : TurbulenzEngine;

@@ -131,7 +131,9 @@ class SceneLoader
 
             function begetFn(o)
             {
+                /* tslint:disable:no-empty */
                 var F = function () { };
+                /* tslint:enable:no-empty */
                 F.prototype = o;
                 return new F();
             }

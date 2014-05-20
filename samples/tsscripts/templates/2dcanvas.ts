@@ -33,7 +33,7 @@ TurbulenzEngine.onload = function onloadFn()
         var graphicsDevice = TurbulenzEngine.createGraphicsDevice(graphicsDeviceParameters);
     }
 
-    var canvas, ctx, crateImage, stonesImage, stonesPattern;
+    var canvas, crateImage, stonesImage, stonesPattern;
 
     var requestHandlerParameters = {};
     var requestHandler = RequestHandler.create(requestHandlerParameters);
@@ -104,8 +104,7 @@ TurbulenzEngine.onload = function onloadFn()
     {
         canvas = Canvas.create(graphicsDevice);
     }
-
-    ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d');
 
     // Set the initial previous frametime for the first loop
     var previousFrameTime = TurbulenzEngine.time;
@@ -246,7 +245,7 @@ TurbulenzEngine.onload = function onloadFn()
         {
             deviceWidth = canvas.width;
             deviceHeight = canvas.height;
-            ok =true;
+            ok = true;
         }
         else
         {

@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Turbulenz Limited
+// Copyright (c) 2012-2014 Turbulenz Limited
 
 /*global
 
@@ -482,9 +482,9 @@ class Physics2DDebugDraw
             }
         }
         verts.push(x2, y2);
-        /*jshint bitwise: false*/
+        /* tslint:disable:no-bitwise */
         var vCount = (verts.length >> 1);
-        /*jshint bitwise: true*/
+        /* tslint:enable:no-bitwise */
 
         var numVertices = this._numVertices;
         var vindex = (numVertices * 6);
@@ -753,12 +753,12 @@ class Physics2DDebugDraw
             return;
         }
 
-        /*jshint bitwise: false*/
+        /* tslint:disable:no-bitwise */
         var color = this._colors[shape.body._type |
                                 (body.sleeping ? 4 : 0) |
                                 (shape.sensor ? 8 : 0) |
                                 (body._bullet ? 16 : 0)];
-        /*jshint bitwise: true*/
+        /* tslint:enable:no-bitwise */
 
         if (shape._type === (/*TYPE_CIRCLE*/0))
         {
@@ -1062,7 +1062,7 @@ class Physics2DDebugDraw
             ret[2] = b;
             ret[3] = a;
             return ret;
-        }
+        };
 
         var bulletColor                  = v4Build(1.0, 1.0, 1.0, 1.0);
         var staticColor                  = v4Build(1.0, 0.5, 0.5, 1.0);
@@ -1134,6 +1134,8 @@ class Physics2DDebugDraw
         colors[(/*TYPE_KINEMATIC*/1) + 12] = sleepingKinematicSensorColor;
 
         // Load embedded default shader and techniques
+        /* tslint:disable:whitespace */
+        /* tslint:disable:max-line-length */
         var shader = gd.createShader(
             {
                 "version": 1,
@@ -1180,6 +1182,8 @@ class Physics2DDebugDraw
                 }
             }
         );
+        /* tslint:enable:max-line-length */
+        /* tslint:enable:whitespace */
 
         o._techniqueParams = gd.createTechniqueParameters({
             clipSpace : new Physics2DDevice.prototype.floatArray(4)
@@ -1287,14 +1291,19 @@ Physics2DPulleyConstraint.prototype._drawLink = function _drawLinkFn(debug, x1, 
         var minY1 = (midY - (ny * (jointMin * 0.5)));
         var minX2 = (midX + (nx * (jointMin * 0.5)));
         var minY2 = (midY + (ny * (jointMin * 0.5)));
-        var maxX1 = (midX - (nx * (jointMax * 0.5)));
-        var maxY1 = (midY - (ny * (jointMax * 0.5)));
-        var maxX2 = (midX + (nx * (jointMax * 0.5)));
-        var maxY2 = (midY + (ny * (jointMax * 0.5)));
 
         debug.drawLine(minX1, minY1, minX2, minY2, colSA);
-        debug.drawLine(maxX1, maxY1, minX1, minY1, colSB);
-        debug.drawLine(maxX2, maxY2, minX2, minY2, colSB);
+
+        if (isFinite(jointMax))
+        {
+            var maxX1 = (midX - (nx * (jointMax * 0.5)));
+            var maxY1 = (midY - (ny * (jointMax * 0.5)));
+            var maxX2 = (midX + (nx * (jointMax * 0.5)));
+            var maxY2 = (midY + (ny * (jointMax * 0.5)));
+
+            debug.drawLine(maxX1, maxY1, minX1, minY1, colSB);
+            debug.drawLine(maxX2, maxY2, minX2, minY2, colSB);
+        }
 
         if (!this._stiff)
         {
@@ -1421,14 +1430,19 @@ Physics2DDistanceConstraint.prototype._draw = function distanceDrawFn(debug)
         var minY1 = (midY - (ny * (jointMin * 0.5)));
         var minX2 = (midX + (nx * (jointMin * 0.5)));
         var minY2 = (midY + (ny * (jointMin * 0.5)));
-        var maxX1 = (midX - (nx * (jointMax * 0.5)));
-        var maxY1 = (midY - (ny * (jointMax * 0.5)));
-        var maxX2 = (midX + (nx * (jointMax * 0.5)));
-        var maxY2 = (midY + (ny * (jointMax * 0.5)));
 
         debug.drawLine(minX1, minY1, minX2, minY2, colSA);
-        debug.drawLine(maxX1, maxY1, minX1, minY1, colSB);
-        debug.drawLine(maxX2, maxY2, minX2, minY2, colSB);
+
+        if (isFinite(jointMax))
+        {
+            var maxX1 = (midX - (nx * (jointMax * 0.5)));
+            var maxY1 = (midY - (ny * (jointMax * 0.5)));
+            var maxX2 = (midX + (nx * (jointMax * 0.5)));
+            var maxY2 = (midY + (ny * (jointMax * 0.5)));
+
+            debug.drawLine(maxX1, maxY1, minX1, minY1, colSB);
+            debug.drawLine(maxX2, maxY2, minX2, minY2, colSB);
+        }
 
         if (!this._stiff)
         {

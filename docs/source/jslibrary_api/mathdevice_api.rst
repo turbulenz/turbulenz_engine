@@ -3872,6 +3872,31 @@ Creates a 3x4 matrix initialized to the transposed multiplication of two 4x3 mat
 Returns a :ref:`Matrix34 <m34object>` object.
 
 .. index::
+    pair: MathDevice; m43MulM33
+
+`m43MulM33`
+-----------
+
+**Summary**
+
+Creates a 4x3 matrix initialized to the multiplication of a 4x3 matrix by a 3x3 matrix.
+
+**Syntax** ::
+
+    destination = mathDevice.m43MulM33(matrixA, matrixB, destination);
+
+``matrixA``
+    A :ref:`Matrix43 <m43object>` object.
+
+``matrixB``
+    A :ref:`Matrix33 <m33object>` object.
+
+``destination`` (:ref:`Optional <mathdevice_optional_dst>`)
+
+Returns a :ref:`Matrix43 <m43object>` object.
+
+
+.. index::
     pair: MathDevice; m43MulM44
 
 `m43MulM44`
@@ -3888,8 +3913,11 @@ Creates a 4x4 matrix initialized to the multiplication of a 4x3 matrix by a 4x4 
     //example usage:
     var worldViewProjection = mathDevice.m43MulM44(worldTransform, viewProjection);
 
-``matrixA``, ``matrixB``
+``matrixA``
     A :ref:`Matrix43 <m43object>` object.
+
+``matrixB``
+    A :ref:`Matrix44 <m44object>` object.
 
 ``destination`` (:ref:`Optional <mathdevice_optional_dst>`)
 

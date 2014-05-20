@@ -458,7 +458,8 @@ class Application
 
         if (!graphicsDevice.shadingLanguageVersion)
         {
-            this.errorCallback("No shading language support detected.\nPlease check your graphics drivers are up to date.");
+            this.errorCallback("No shading language support detected.\n" +
+                               "Please check your graphics drivers are up to date.");
             graphicsDevice = null;
             return false;
         }
@@ -495,7 +496,7 @@ class Application
 
         managers.textureManager = TextureManager.create(graphicsDevice, requestHandler, null, errorCallback);
         managers.shaderManager = ShaderManager.create(graphicsDevice, requestHandler, null, errorCallback);
-        managers.effectManager = EffectManager.create()
+        managers.effectManager = EffectManager.create();
         managers.fontManager = FontManager.create(graphicsDevice, requestHandler, null, errorCallback);
 
         return true;
@@ -1231,7 +1232,7 @@ class Application
                     other.latencyHistory = latencyHistory = [];
                     other.nextLatencyHistory = nextLatencyHistory = 0;
                 }
-                /*jshint bitwise: false*/
+                /* tslint:disable:no-bitwise */
                 var numLatencies = latencyHistory.length;
                 if (32 <= numLatencies)
                 {
@@ -1261,7 +1262,7 @@ class Application
                         latency = ((latencyHistory[medianIndex - 1] + latencyHistory[medianIndex]) * 0.5);
                     }
                 }
-                /*jshint bitwise: true*/
+                /* tslint:enable:no-bitwise */
 
                 other.latency = latency;
                 other.time = ((pongData.pong * 0.001) + (0.5 * latency));

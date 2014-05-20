@@ -67,8 +67,6 @@ class SimpleButtonManager
 
         var onMouseOver = (x: number, y: number) =>
         {
-            var mouseX = x;
-            var mouseY = y;
             SimpleButtonManager.loopButtons((button: SimpleButton) => {
                 button.hovering = this.checkOverlap(x, y, button);
             });

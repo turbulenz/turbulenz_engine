@@ -1,0 +1,41 @@
+// Copyright (c) 2013-2014 Turbulenz Limited
+
+sampler2D src = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Nearest;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+// dimension of input texture and destination rectangle in target
+float2 dim;
+float4 dst;
+
+void vp_copy(in float2 inPosition   : POSITION,
+             out float4 outPosition : POSITION,
+             out float2 outUV       : TEXCOORD0)
+{
+    float2 xy = dst.xy * 2.0 - 1.0;
+    float2 wh = (dst.zw * 2.0 - 1.0) - xy;
+    outPosition = float4(xy + wh * inPosition, 0, 1);
+    outUV = inPosition;
+}
+
+float4 fp_copy(float2 UV : TEXCOORD0) : COLOR
+{
+    return tex2D(src, UV);
+}
+
+technique copy
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_copy();
+        FragmentProgram = compile latest fp_copy();
+    }
+}

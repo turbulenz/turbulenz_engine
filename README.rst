@@ -564,8 +564,8 @@ History
 The Engine was created and is maintained by `Turbulenz Limited <http://biz.turbulenz.com>`__ and was open sourced
 in April 2013.
 
-The latest release is 1.1 which is tagged in the repository or a tarball/zip can be can be downloaded from
-`here <https://github.com/turbulenz/turbulenz_engine/archive/release_1.1.tar.gz>`__
+The latest release is 1.3.1 which is tagged in the repository or a tarball/zip can be can be downloaded from
+`here <https://github.com/turbulenz/turbulenz_engine/archive/release_1.3.1.tar.gz>`__
 
 A full history of changes can be found in the `Changelog <docs/source/changelog.rst>`__
 
@@ -621,7 +621,7 @@ Pre-requisites for building the tools cgfx2json and NvTriStrip via ``python mana
 
 - OpenGL development libraries, these are included on Windows and Mac OSX with the compiler toolchains. For
   debian based linux distributions the libgl1-mesa-dev package will provide the required files (e.g. ``sudo
-  apt-get install libg1-mesa-dev``), for other linux distributions find the package supplying GL/gl.h and libGL.so
+  apt-get install libgl1-mesa-dev``), for other linux distributions find the package supplying GL/gl.h and libGL.so
 
 
 Setup Guide
@@ -908,6 +908,7 @@ Now you can create the mesh example HTML file and place it at the root of the Tu
         <script src="jslib/webgl/graphicsdevice.js"></script>
         <script src="jslib/webgl/inputdevice.js"></script>
         <script src="jslib/webgl/sounddevice.js"></script>
+        <script src="jslib/webgl/mathdevice.js"></script>
 
         <script src="jslib/aabbtree.js"></script>
         <script src="jslib/assettracker.js"></script>

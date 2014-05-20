@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2011 Turbulenz Limited
+// Copyright (c) 2010-2014 Turbulenz Limited
 
 /*exported renderingCommonSortKeyFn*/
 /*exported renderingCommonCreateRendererInfoFn*/
@@ -22,7 +22,7 @@ var renderingCommonGetTechniqueIndexFn = <{
         dataStore.numTechniques += 1;
     }
     return techniqueIndex;
-}
+};
 
 renderingCommonGetTechniqueIndexFn.techniquesIndexMap = {};
 renderingCommonGetTechniqueIndexFn.numTechniques = 0;
@@ -30,12 +30,14 @@ renderingCommonGetTechniqueIndexFn.numTechniques = 0;
 //
 // renderingCommonSortKeyFn
 //
+/* tslint:disable:no-unused-variable */
 function renderingCommonSortKeyFn(techniqueIndex, materialIndex, nodeIndex?)
+/* tslint:enable:no-unused-variable */
 {
     var sortKey = ((techniqueIndex * 0x10000) + (materialIndex % 0x10000));
     if (nodeIndex)
     {
-        sortKey += (1.0 / (1.0 + nodeIndex))
+        sortKey += (1.0 / (1.0 + nodeIndex));
     }
     return sortKey;
 }
@@ -43,7 +45,9 @@ function renderingCommonSortKeyFn(techniqueIndex, materialIndex, nodeIndex?)
 //
 // renderingCommonCreateRendererInfoFn
 //
+/* tslint:disable:no-unused-variable */
 function renderingCommonCreateRendererInfoFn(renderable)
+/* tslint:enable:no-unused-variable */
 {
     var rendererInfo = {
         far: renderable.sharedMaterial.meta.far
@@ -62,8 +66,9 @@ function renderingCommonCreateRendererInfoFn(renderable)
 //
 // renderingCommonAddDrawParameterFastestFn
 //
-var renderingCommonAddDrawParameterFastestFn =
-    function renderingCommonAddDrawParameterFastestFnFn(drawParameters)
+/* tslint:disable:no-unused-variable */
+function renderingCommonAddDrawParameterFastestFn(drawParameters)
+/* tslint:enable:no-unused-variable */
 {
     var array = this.array;
     array[array.length] = drawParameters;

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 
 //
 // DefaultRendering
@@ -31,9 +31,12 @@ interface DefaultRenderingRendererInfo
 
 class DefaultRendering
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
 
     static numPasses = 3;
+    /* tslint:enable:no-unused-variable */
+
     static passIndex : DefaultRenderingPassIndex = {
         opaque: 0,
         decal: 1,
@@ -43,6 +46,7 @@ class DefaultRendering
     static nextRenderinfoID = 0;
     static nextSkinID = 0;
 
+    static v4One = new Float32Array([1.0, 1.0, 1.0, 1.0]);
     static identityUVTransform = new Float32Array([1, 0, 0, 1, 0, 0]);
 
     md                        : MathDevice;
@@ -67,9 +71,11 @@ class DefaultRendering
 
     loadTechniquesFn          : { (shaderManager: ShaderManager): void; };
 
+    /* tslint:disable:no-empty */
     updateShader(/* sm */)
     {
     }
+    /* tslint:enable:no-empty */
 
     sortRenderablesAndLights(camera, scene)
     {
@@ -95,7 +101,7 @@ class DefaultRendering
         var numVisibleRenderables = visibleRenderables.length;
         if (numVisibleRenderables > 0)
         {
-            var renderable, pass, passIndex;
+            var renderable, passIndex;
             var n = 0;
             do
             {
@@ -176,12 +182,14 @@ class DefaultRendering
         {
             this.eyePositionUpdated = false;
         }
+        /* tslint:disable:no-string-literal */
         this.globalTechniqueParameters['time'] = currentTime;
+        /* tslint:enable:no-string-literal */
         this.camera = camera;
         this.scene = scene;
     }
 
-    updateBuffers(/* gd, deviceWidth, deviceHeight */): boolean
+    updateBuffers(gd?, deviceWidth?, deviceHeight?): boolean
     {
         return true;
     }
@@ -246,6 +254,7 @@ class DefaultRendering
         this.lightPosition[2] = pos[2];
     }
 
+    /* tslint:disable:no-string-literal */
     setGlobalLightColor(color)
     {
         this.globalTechniqueParameters['lightColor'] = color;
@@ -260,6 +269,7 @@ class DefaultRendering
     {
         this.globalTechniqueParameters['diffuse'] = tex;
     }
+    /* tslint:enable:no-string-literal */
 
     setWireframe(wireframeEnabled, wireframeInfo)
     {
@@ -294,10 +304,16 @@ class DefaultRendering
         var sharedMaterial = geometryInstance.sharedMaterial;
         var techniqueParameters = geometryInstance.techniqueParameters;
 
+        if (!sharedMaterial.techniqueParameters.materialColor &&
+            !techniqueParameters.materialColor)
+        {
+            sharedMaterial.techniqueParameters.materialColor = DefaultRendering.v4One;
+        }
+
         if (!sharedMaterial.techniqueParameters.uvTransform &&
             !techniqueParameters.uvTransform)
         {
-            techniqueParameters.uvTransform = DefaultRendering.identityUVTransform;
+            sharedMaterial.techniqueParameters.uvTransform = DefaultRendering.identityUVTransform;
         }
 
         // NOTE: the way this functions is called, 'this' is an
@@ -471,21 +487,17 @@ class DefaultRendering
         var debugUpdate = function debugUpdateFn(camera)
         {
             var matrix = this.node.world;
-            var techniqueParameters = this.techniqueParameters;
-            techniqueParameters.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix,
-                                                                   techniqueParameters.worldViewProjection);
-            techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix,
-                                                                               techniqueParameters.worldInverseTranspose);
+            var tp = this.techniqueParameters;
+            tp.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, tp.worldViewProjection);
+            tp.worldInverseTranspose = md.m33InverseTranspose(matrix, tp.worldInverseTranspose);
         };
 
         var debugSkinnedUpdate = function debugSkinnedUpdateFn(camera)
         {
             var matrix = this.node.world;
-            var techniqueParameters = this.techniqueParameters;
-            techniqueParameters.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix,
-                                                                   techniqueParameters.worldViewProjection);
-            techniqueParameters.worldInverseTranspose = md.m33InverseTranspose(matrix,
-                                                                               techniqueParameters.worldInverseTranspose);
+            var tp = this.techniqueParameters;
+            tp.worldViewProjection = md.m43MulM44(matrix, camera.viewProjectionMatrix, tp.worldViewProjection);
+            tp.worldInverseTranspose = md.m33InverseTranspose(matrix, tp.worldInverseTranspose);
 
             var skinController = this.skinController;
             if (skinController)

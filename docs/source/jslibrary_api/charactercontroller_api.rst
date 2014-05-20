@@ -129,6 +129,21 @@ Method
     characterController.setDead(true);
 
 
+.. index::
+    pair: CharacterController; destroy
+
+`destroy`
+---------
+
+**Summary**
+
+Releases the CharacterController resources; the object will be invalid after the method is called.
+
+**Syntax** ::
+
+    characterController.destroy();
+
+
 Properties
 ==========
 
@@ -145,6 +160,21 @@ The version number of the CharacterController implementation.
 **Syntax** ::
 
     var versionNumber = characterController.version;
+
+
+.. index::
+    pair: CharacterController; matrix
+
+`matrix`
+--------
+
+**Summary**
+
+    A :ref:`m43 matrix <m43object>` representing the position and orientation of the character.
+
+**Syntax** ::
+
+    var characterPosition = mathDevice.m43Pos(characterController.matrix);
 
 
 .. index::

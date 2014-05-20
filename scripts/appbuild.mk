@@ -1,3 +1,5 @@
+help:
+
 ############################################################
 # Basic variables and checks
 ############################################################
@@ -153,23 +155,28 @@ define _create_html_rule
 
   $(call _mkdir_rule,$(dir $($(1)_out_html_deps)))
 
+  # JSLIBFILES and PROTOLIBFILES are dependencies of deps, which
+  # ensure they get updated during a canvas-debug build (when there
+  # are only html files to build).
+
   # Command to build <app>_out_html_deps file
-  $($(1)_out_html_deps) : $($(1)_js) $($(1)_html) $(external_scriptfiles) \
-   | install_libraries $(call _dir_marker,$(dir $($(1)_out_html_deps)))
+  $($(1)_out_html_deps) : \
+   $($(1)_js) $($(1)_html) $(JSLIBFILES) $(external_scriptfiles) \
+	$(PROTOLIBFILES) $(call _dir_marker,$(dir $($(1)_out_html_deps)))
 	@echo "[HTML ] (dep)" $$@
 	$(CMDPREFIX)$(MAKEHTML) $(TEMPLATE_FLAGS)    \
       --mode=$(MODE) -M --MF $$@     \
       -o $($(1)_out_html) $($(1)_js) $($(1)_html)
 
   # Command to build the final html file
-  $($(1)_out_html) : $($(1)_js) $($(1)_html) $(external_scriptfiles) $(makehtml_version) \
-   | install_libraries
+  $($(1)_out_html) : $($(1)_js) $($(1)_html) \
+    $(external_scriptfiles) $(makehtml_version)
 	@echo "[HTML ]" $$@
 	$(CMDPREFIX)$(MAKEHTML) $(TEMPLATE_FLAGS) --mode=$(MODE)  \
       -o $$@ $($(1)_js) $($(1)_html)                          \
       --code $($(1)_out_code)
 
-  # Include the deps
+  # Include the deps if this is a build
   ifneq (,$(filter build $(1),$(MAKECMDGOALS)))
     -include $($(1)_out_html_deps)
   endif
@@ -194,8 +201,8 @@ define _create_code_rule
   $(call _mkdir_rule,$(dir $($(1)_out_code_deps)))
 
   # Command to build <app>_out_tzjs_deps
-  $($(1)_out_code_deps) : $($(1)_js) $(external_scriptfiles) \
-   | install_libraries $(call _dir_marker,$(dir $($(1)_out_code_deps)))
+  $($(1)_out_code_deps) : $($(1)_js) $(JSLIBFILES) $(external_scriptfiles) \
+    $(PROTOLIBFILES) $(call _dir_marker,$(dir $($(1)_out_code_deps)))
 	@echo "[TZJS ] (dep)" $$@
 	$(CMDPREFIX)$(MAKETZJS) $(TEMPLATE_FLAGS)         \
       --mode=$(MODE)                      \
@@ -210,8 +217,8 @@ define _create_code_rule
   endif
 
   # Command to build the final html file
-  $($(1)_out_code) : $($(1)_js) $(external_scriptfiles) $(maketzjs_version) \
-   | install_libraries
+  $($(1)_out_code) : $($(1)_js) $(JSLIBFILES) $(external_scriptfiles) \
+    $(PROTOLIBFILES) $(maketzjs_version)
 	@echo "[TZJS ]" $$@
 	$(CMDPREFIX)$(MAKETZJS) $(TEMPLATE_FLAGS)         \
       $(COMPACTOR_FLAGS)                  \
@@ -278,11 +285,10 @@ help :
 	@echo ""
 	@echo " Usage:"
 	@echo ""
+	@echo "   make [<options>] <target>"
+	@echo ""
 	@echo "   make [<options>] build"
 	@echo "   make [<options>] clean"
-	@echo "   make distclean"
-	@echo "   make install_jslib"
-	@echo "   make install_protolib"
 	@echo ""
 	@echo " Targets:"
 	@echo ""
@@ -292,21 +298,18 @@ help :
 	@echo ""
 	@echo "   distclean       - Remove all output and intermediate build files"
 	@echo ""
-	@echo "   install_jslib   - Install jslib into the current directory.  This"
-	@echo "                     recursively copies all files from TZROOT/jslib,"
-	@echo "                     taking care not to overwrite any files that have"
-	@echo "                     been changed (safe to run at every build)."
+	@echo "   jslib           - Install jslib into the current directory."
 	@echo ""
-	@echo "   install_protolib - Install protolib into the current directory.  This"
-	@echo "                     recursively copies all files from TZROOT/protolib,"
-	@echo "                     taking care not to overwrite any files that have"
-	@echo "                     been changed (safe to run at every build)."
+	@echo "   protolib        - Install protolib into current directory (if"
+	@echo "                     enabled by USE_PROTOLIB=1 in Makefile)"
+	@echo ""
+	@echo "   install_libraries - Install jslib and protolib (if used)"
 	@echo ""
 	@echo " Options:"
 	@echo ""
-	@echo "   JSAPPS=app        - Build/clean only app (multiple apps in quotes)"
+	@echo "   JSAPPS=app      - Build/clean only app (multiple apps in quotes)"
 	@echo ""
-	@echo "   MODE=mode       - Set build mode: plugin(-debug), canvas(-debug)"
+	@echo "   MODE=mode       - Set build mode: plugin, canvas(-debug)"
 	@echo "                     or 'all' for all modes.  (default: all)"
 	@echo ""
 	@echo "   COMPACTOR=comp  - Set compactor (uglifyjs|yui|none)."
@@ -316,17 +319,13 @@ help :
 	@echo ""
 
 ############################################################
-# 'install_jslib' target
+# JSLIBFILES, jslib PHONY target
 ############################################################
 
-JSLIBDIR ?= $(TZROOT)/jslib
+JSLIBDIR ?= $(realpath $(TZROOT))/jslib
+
 _jslib_src_files := $(shell $(FIND) $(JSLIBDIR) -iname '*.js')
-
-.PHONY: install_jslib
-.PHONY: do_install_jslib
-
-install_jslib:
-	$(MAKE) do_install_jslib
+JSLIBFILES := # to be filled in by _copy_jslib_file rule
 
 # 1 - src
 # 2 - dst
@@ -338,7 +337,7 @@ define _copy_jslib_file
 	@echo [CP   ] $(1) $(2)
 	$(CMDPREFIX)$(CP) $(1) $(2)
 
-  do_install_jslib: $(2)
+  JSLIBFILES += $(2)
 
 endef
 
@@ -346,47 +345,46 @@ $(foreach s,$(_jslib_src_files),$(eval                          \
   $(call _copy_jslib_file,$(s),$(subst $(JSLIBDIR),jslib,$(s))) \
 ))
 
+.PHONY : jslib
+jslib : $(JSLIBFILES)
+
 ############################################################
-# 'install_protolib' target
+# PROTOLIBFILES
 ############################################################
 
-PROTOLIBDIR ?= $(TZROOT)/protolib
-_protolib_src_files := $(shell $(FIND) $(PROTOLIBDIR) -iname '*.js')
+ifeq (1,$(USE_PROTOLIB))
+  PROTOLIBDIR ?= $(TZROOT)/protolib
+  _protolib_src_files := $(shell $(FIND) $(PROTOLIBDIR) -iname '*.js')
+  PROTOLIBFILES := # filled in by copy rule
 
-.PHONY: install_protolib
-.PHONY: do_install_protolib
+  # 1 - src
+  # 2 - dst
+  define _copy_protolib_file
 
-install_protolib:
-	$(MAKE) do_install_protolib
+    $(call _mkdir_rule,$(dir $(2)))
 
-# 1 - src
-# 2 - dst
-define _copy_protolib_file
+    $(2): $(1) |$(call _dir_marker,$(dir $(2)))
+	  @echo [CP   ] $(1) $(2)
+	  $(CMDPREFIX)$(CP) $(1) $(2)
 
-  $(call _mkdir_rule,$(dir $(2)))
+    PROTOLIBFILES += $(2)
 
-  $(2): $(1) |$(call _dir_marker,$(dir $(2)))
-	@echo [CP   ] $(1) $(2)
-	$(CMDPREFIX)$(CP) $(1) $(2)
+  endef
 
-  do_install_protolib: $(2)
+  $(foreach s,$(_protolib_src_files),$(eval                          \
+    $(call _copy_protolib_file,$(s),$(subst $(PROTOLIBDIR),protolib,$(s))) \
+  ))
+endif
 
-endef
-
-$(foreach s,$(_protolib_src_files),$(eval                          \
-  $(call _copy_protolib_file,$(s),$(subst $(PROTOLIBDIR),protolib,$(s))) \
-))
+.PHONY: protolib
+protolib : $(PROTOLIBFILES)
 
 ############################################################
 # 'install_libraries' target
 ############################################################
 
-ifeq ($(USE_PROTOLIB),1)
-PROTOLIB_DEPS := install_protolib
-endif
-
 .PHONY : install_libraries
-install_libraries : install_jslib $(PROTOLIB_DEPS)
+install_libraries : jslib protolib
 
 ############################################################
 # Main Logic
@@ -397,8 +395,8 @@ install_libraries : install_jslib $(PROTOLIB_DEPS)
 # if MODE == 'plugin-debug':
 #   ...
 ifeq ($(MODE),plugin-debug)
-  HTML_EXT:=debug.html
-  CODE_EXT:=
+ HTML_EXT:=debug.html
+ CODE_EXT:=
 endif
 
 ifeq ($(MODE),plugin)
@@ -441,11 +439,11 @@ ifeq ($(MODE),all)
     make_flags += -j$(NUMBER_OF_PROCESSORS)
   endif
 
-  $(run_all_targets) :
+  $(run_all_targets) : $(JSLIBFILES)
 	$(MAKE) $(make_flags) MODE=plugin $@
-	$(MAKE) $(make_flags) MODE=plugin-debug $@
 	$(MAKE) $(make_flags) MODE=canvas $@
 	$(MAKE) $(make_flags) MODE=canvas-debug $@
+# $(MAKE) $(make_flags) MODE=plugin-debug $@
 
   # Make sure no other apps are discovered
   TEMPLATES_DIR := no-such-dir
@@ -489,6 +487,12 @@ ifneq (,$(TSAPPS))
   # Tidy up after _handle_tsapp
   EXTERNAL_SCRIPTFILES := $(sort $(EXTERNAL_SCRIPTFILES))
 endif
+
+# Make all output files from TSLIBS depends on the base .d.ts files
+
+$(foreach tsl,$(TSLIBS), $(eval \
+    $(_$(tsl)_out_js) : $(TS_BASE_FILES) \
+))
 
 $(call log,JSFILES = $(JSFILES))
 

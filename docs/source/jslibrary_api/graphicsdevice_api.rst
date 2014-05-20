@@ -844,6 +844,9 @@ It should only be called between beginFrame/endFrame.
 ``renderTarget``
     A :ref:`RenderTarget <rendertarget>` object to render to.
 
+.. note::
+    Calls to `beginRenderTarget` cannot be nested.
+
 .. _graphicsdevice_endrendertarget:
 
 .. index::
@@ -1110,6 +1113,8 @@ See also :ref:`maxSupported <graphicsdevice_maxsupported>`.
 * "TEXTURE_DXT3"
 * "TEXTURE_DXT5"
 * "TEXTURE_ETC1"
+* "TEXTURE_HALF_FLOAT"
+* "TEXTURE_FLOAT"
 * "INDEXFORMAT_UINT" : If INDEXFORMAT_UINT can be used with IndexBuffers.
 * "FILEFORMAT_WEBM"
 * "FILEFORMAT_MP4"
@@ -1574,11 +1579,17 @@ Valid vertex format values, required when creating vertex buffers.
     :columns: 3
 
     - VERTEXFORMAT_BYTE4
+    - VERTEXFORMAT_BYTE4N
     - VERTEXFORMAT_UBYTE4
+    - VERTEXFORMAT_UBYTE4N
     - VERTEXFORMAT_SHORT2
+    - VERTEXFORMAT_SHORT2N
     - VERTEXFORMAT_SHORT4
+    - VERTEXFORMAT_SHORT4N
     - VERTEXFORMAT_USHORT2
+    - VERTEXFORMAT_USHORT2N
     - VERTEXFORMAT_USHORT4
+    - VERTEXFORMAT_USHORT4N
     - VERTEXFORMAT_FLOAT1
     - VERTEXFORMAT_FLOAT2
     - VERTEXFORMAT_FLOAT3
@@ -1618,6 +1629,10 @@ Valid pixel format values, required when creating textures.
     - PIXELFORMAT_DXT1
     - PIXELFORMAT_DXT3
     - PIXELFORMAT_DXT5
+    - PIXELFORMAT_RGBA32F
+    - PIXELFORMAT_RGB32F
+    - PIXELFORMAT_RGBA16F
+    - PIXELFORMAT_RGB16F
 
 **Syntax** ::
 

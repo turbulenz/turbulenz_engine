@@ -3,6 +3,8 @@
 
 .. highlight:: javascript
 
+.. _defaultrendering:
+
 ---------------------------
 The DefaultRendering Object
 ---------------------------
@@ -90,7 +92,7 @@ The following TechniqueParameters properties are supported for the scene rendera
 * `glow_map`
     Texture that will provide the emissive color
 * `env_map`
-    Texture that will provide the skybox color
+    Cubemap texture that will provide the skybox color
 * `alpha_map`
     Texture that will provide the alpha component
 
@@ -400,6 +402,9 @@ The version number of the DefaultRendering implementation.
 **Syntax** ::
 
     var versionNumber = DefaultRendering.version;
+
+.. index::
+    pair: DefaultRenderer; passIndex
 
 `passIndex`
 -----------

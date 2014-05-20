@@ -291,7 +291,8 @@ class HTMLControls
                     return;
                 }
                 var sliderVal = <number><any>(slider.slider("value"));
-                if (value === undefined || isNaN(value) || sliderVal === undefined || isNaN(sliderVal) || (sliderVal === value))
+                if (value === undefined || isNaN(value) ||
+                    sliderVal === undefined || isNaN(sliderVal) || (sliderVal === value))
                 {
                     // Don't update if not changed
                     return;

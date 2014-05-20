@@ -384,7 +384,8 @@ class SoundTARLoader
                 }
             };
             xhr.open("GET", params.src, true);
-            if (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType"))
+            if (typeof xhr.responseType === "string" ||
+                (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType")))
             {
                 xhr.responseType = "arraybuffer";
             }

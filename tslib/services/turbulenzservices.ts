@@ -113,6 +113,7 @@ interface ServiceErrorCB
 
 class ServiceRequester
 {
+    static locationOrigin : string;
     running               : boolean;
     discardRequests       : boolean;
     serviceStatusObserver : Observer;
@@ -127,8 +128,51 @@ class ServiceRequester
     //     neverDiscard - Never discard the request. Always queues the request
     //                    for when the service is again available. (Ignores
     //                    server preference)
-    request(params)
+    request(params, serviceAction? : string)
     {
+        // If there is a specific services domain set prefix any relative api urls
+        var servicesDomain = TurbulenzServices.servicesDomain;
+        if (servicesDomain)
+        {
+            if (params.url.indexOf('http') !== 0)
+            {
+                if (params.url[0] === '/')
+                {
+                    params.url = servicesDomain + params.url;
+                }
+                else
+                {
+                    params.url = servicesDomain + '/' + params.url;
+                }
+            }
+            if (window.location)
+            {
+                if (servicesDomain !== ServiceRequester.locationOrigin)
+                {
+                    params.enableCORSCredentials = true;
+                }
+            }
+        }
+
+        // If the bridgeServices are available send to call
+        if (TurbulenzServices.bridgeServices)
+        {
+            //TurbulenzServices.addSignature(dataSpec, url);
+            var processed = TurbulenzServices.callOnBridge(serviceAction ? serviceAction : params.url, params,
+                function unpackResponse(response)
+                {
+                    if (params.callback)
+                    {
+                        params.callback(response, response.status);
+                    }
+                });
+            // Processed indicates we are offline and the bridge has fully dealt with the service call
+            if (processed)
+            {
+                return true;
+            }
+        }
+
         var discardRequestFn = function discardRequestFn()
         {
             if (params.callback)
@@ -230,8 +274,15 @@ class ServiceRequester
         return true;
     }
 
-    static create(serviceName:string , params?): ServiceRequester
+    static create(serviceName: string, params?): ServiceRequester
     {
+        // If the ServiceRequest locationOrigin hasn't been set yet then set it.
+        if (typeof(ServiceRequester.locationOrigin) === undefined &&
+            typeof(window.location) !== undefined)
+        {
+            ServiceRequester.locationOrigin = window.location.protocol + '//' + window.location.host;
+        }
+
         var serviceRequester = new ServiceRequester();
 
         if (!params)
@@ -267,7 +318,9 @@ class TurbulenzServices
         // un-paused and buffers up events while paused
 
         argsQueue: [],
+        /* tslint:disable:no-empty */
         handler: function nopFn() {},
+        /* tslint:enable:no-empty */
         context: <any>undefined,
         paused: true,
         onEvent: function onEventFn(handler, context) {
@@ -315,6 +368,9 @@ class TurbulenzServices
 
     static bridgeServices : boolean;
     static mode : string;
+    static servicesDomain : string;
+    static offline : boolean;
+    static syncing : boolean;
 
     static available() : boolean
     {
@@ -326,7 +382,19 @@ class TurbulenzServices
 
     static addBridgeEvents()
     {
-        var turbulenz = window.top.Turbulenz;
+        var turbulenz = window.Turbulenz;
+        if (!turbulenz)
+        {
+            try
+            {
+                turbulenz = window.top.Turbulenz;
+            }
+            /* tslint:disable:no-empty */
+            catch (e)
+            {
+            }
+            /* tslint:enable:no-empty */
+        }
         var turbulenzData = (turbulenz && turbulenz.Data) || {};
         var sessionToJoin = turbulenzData.joinMultiplayerSessionId;
         var that = this;
@@ -349,6 +417,20 @@ class TurbulenzServices
             }
 
             that.bridgeServices = !!config.bridgeServices;
+
+            if (config.servicesDomain)
+            {
+                that.servicesDomain = config.servicesDomain;
+            }
+
+            if (config.syncing)
+            {
+                that.syncing = true;
+            }
+            if (config.offline)
+            {
+                that.offline = true;
+            }
         };
 
         // This should go once we have fully moved to the new system
@@ -366,9 +448,13 @@ class TurbulenzServices
         // 0 is reserved value for no registered callback
         this.responseIndex = 0;
         TurbulenzBridge.on("bridgeservices.response", function (jsondata) { that.routeResponse(jsondata); });
+        TurbulenzBridge.on("bridgeservices.sync.start", function () { that.syncing = true; });
+        TurbulenzBridge.on("bridgeservices.sync.end", function () { that.syncing = false; });
+        TurbulenzBridge.on("bridgeservices.offline.start", function () { that.offline = true; });
+        TurbulenzBridge.on("bridgeservices.offline.end", function () { that.offline = false; });
     }
 
-    static callOnBridge(event, data, callback)
+    static callOnBridge(event, data, callback) : boolean
     {
         var request = {
             data: data,
@@ -380,7 +466,8 @@ class TurbulenzServices
             this.responseHandlers[this.responseIndex] = callback;
             request.key = this.responseIndex;
         }
-        TurbulenzBridge.emit('bridgeservices.' + event, JSON.stringify(request));
+        var resultJSON = TurbulenzBridge.emit('bridgeservices.' + event, JSON.stringify(request));
+        return resultJSON && JSON.parse(resultJSON).fullyProcessed;
     }
 
     static addSignature(data, url)
@@ -405,10 +492,11 @@ class TurbulenzServices
         }
     }
 
+    /* tslint:disable:no-empty */
     static defaultErrorCallback : ServiceErrorCB =
         function(errorMsg: string, httpStatus?: number)
     {
-    }
+    };
 
     static onServiceUnavailable(serviceName: string, callContext?)
     {
@@ -417,6 +505,7 @@ class TurbulenzServices
     static onServiceAvailable(serviceName: string, callContext?)
     {
     }
+    /* tslint:enable:no-empty */
 
     static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn?, options?)
     {
@@ -572,7 +661,17 @@ class TurbulenzServices
                     }
                 },
                 requestHandler: requestHandler
-            });
+            }, 'profile.user');
+        }
+        else
+        {
+            // No Turbulenz services.  Make the error callback
+            // asynchronously.
+
+            TurbulenzEngine.setTimeout(function () {
+                errorCallbackFn("Error: createUserProfile: Turbulenz Services "
+                                + "unavailable");
+            }, 0.001);
         }
 
         return userProfile;
@@ -671,7 +770,7 @@ class TurbulenzServices
             },
             requestHandler: requestHandler,
             encrypt: true
-        });
+        }, 'custommetrics.addevent');
     }
 
     static sendCustomMetricEventBatch(eventBatch: CustomMetricEventBatch,
@@ -773,7 +872,7 @@ class TurbulenzServices
             },
             requestHandler: requestHandler,
             encrypt: true
-        });
+        }, 'custommetrics.addeventbatch');
     }
 
     static services = {};
@@ -913,13 +1012,38 @@ class TurbulenzServices
             }
         };
 
+        var params = <any>{
+            url: serviceUrl,
+            method: 'GET',
+            callback: servicesStatusCB
+        };
+
+        var servicesDomain = TurbulenzServices.servicesDomain;
+        if (servicesDomain)
+        {
+            if (serviceUrl.indexOf('http') !== 0)
+            {
+                if (serviceUrl[0] === '/')
+                {
+                    params.url = servicesDomain + serviceUrl;
+                }
+                else
+                {
+                    params.url = servicesDomain + '/' + serviceUrl;
+                }
+            }
+            if (window.location)
+            {
+                if (servicesDomain !== ServiceRequester.locationOrigin)
+                {
+                    params.enableCORSCredentials = true;
+                }
+            }
+        }
+
         pollServiceStatus = function pollServiceStatusFn()
         {
-            Utilities.ajax({
-                url: serviceUrl,
-                method: 'GET',
-                callback: servicesStatusCB
-            });
+            Utilities.ajax(params);
         };
 
         pollServiceStatus();

@@ -613,17 +613,16 @@ to load and run the game.  The tools support several build 'modes':
     file, since it must be loaded and run by the browsers own
     JavaScript engine.
 
-**plugin-debug** and **canvas-debug**
+**canvas-debug**
 
-    Intended for debugging during development, corresponding to
-    *debug* versions of *plugin* and *canvas* respectively.  In these
-    modes there is very little transformation of the JavaScript code.
-    A single command (using the :ref:`makehtml` tool) takes a .js
-    :ref:`template file <templating>`, and optionally a .html file, as input and produces a .html
-    file that loads the game.  In these modes the code always runs
-    using the browsers JavaScript engine, allowing standard web
-    development tools to be used to debug the code (see
-    :ref:`debugging`).
+    Intended for debugging during development.  In these modes there
+    is very little transformation of the JavaScript code.  A single
+    command (using the :ref:`makehtml` tool) takes a .js
+    :ref:`template file <templating>`, and optionally a .html file, as
+    input and produces a .html file that loads the game.  In these
+    modes the code always runs using the browsers JavaScript engine,
+    allowing standard web development tools to be used to debug the
+    code (see :ref:`debugging`).
 
 .. _getting_started_local_development_server:
 
@@ -632,11 +631,12 @@ The Local Development Server
 
 .. TODO: Going to need maintenance if/when devserver role changes.
 
-The Turbulenz SDK comes with a small server (referred to as
-the :ref:`local development server <local_introduction>`), intended to be run on the developer's
-machine.  This *local development server* is capable of serving files,
-emulating the Turbulenz online services, recording metrics about the
-game code and data as well as managing and deploying game projects.
+The Turbulenz SDK comes with a small server (referred to as the
+:ref:`local development server <local_introduction>`), intended to be
+run on the developer's machine.  This *local development server* is
+capable of serving files, emulating the Turbulenz online services,
+recording metrics about the game code and data as well as managing and
+deploying game projects.
 
 While it is sometimes possible to launch games directly from the file
 system, we recommend that developers use the local development server
@@ -702,11 +702,11 @@ With the local server still running:
 
 5. Open a Turbulenz Environment prompt and change directory to your
    new folder.  Enter the following command to build an html page that
-   runs your app in *plugin-debug* mode::
+   runs your app in *canvas-debug* mode::
 
-     makehtml --mode plugin-debug -t . myfirstapp.js -o myfirstapp.debug.html
+     makehtml --mode canvas-debug -t . myfirstapp.js -o myfirstapp.canvas.debug.html
 
-   A file ``myfirstapp.debug.html`` should have been created in the
+   A file ``myfirstapp.canvas.debug.html`` should have been created in the
    current directory.
 
    .. NOTE::
@@ -726,7 +726,7 @@ components represent Red, Green, Blue and Alpha values).  Re-run the
 build step (5) and click *reload* in the browser.
 
 This example shows the :ref:`makehtml` tool being used to build the
-application in *plugin-debug* mode referred to above.  The other modes
+application in *canvas-debug* mode referred to above.  The other modes
 can be built as follows.
 
 **plugin**
@@ -745,12 +745,6 @@ to a .js file (since the browser will load it directly)::
 
     maketzjs --mode canvas -t . -o myfirstapp.canvas.js myfirstapp.js
     makehtml --mode canvas -t . -o myfirstapp.canvas.html --code myfirstapp.canvas.js myfirstapp.js
-
-**canvas-debug**
-
-Similar to *plugin-debug* mode.  A single command creates the HTML page::
-
-    makehtml --mode canvas-debug -t . myfirstapp.js -o myfirstapp.canvas.debug.html
 
 This application simply clears the screen each frame, but it
 illustrates the process of building and running code with the
@@ -826,11 +820,11 @@ system.
 
 JavaScript library code referenced using the technique above is
 handled in one of two ways depending on the build mode.  In
-*plugin-debug* and *canvas-debug* modes, the html created by
-:ref:`makehtml` contains ``<script>`` tags that cause the code to be
-loaded directly into the page.  When using *plugin* and *canvas*
-modes, the .js files are concatenated into one self-contained file
-that can be loaded with a single request to the server.
+*canvas-debug* mode, the html created by :ref:`makehtml` contains
+``<script>`` tags that cause the code to be loaded directly into the
+page.  When using *plugin* and *canvas* modes, the .js files are
+concatenated into one self-contained file that can be loaded with a
+single request to the server.
 
 .. _getting_started_shutdown:
 
@@ -1177,8 +1171,6 @@ this topic.
 TypeScript
 ----------
 
-**EXPERIMENTAL**
-
 **Added SDK 0.25.0**
 
 Building apps in TypeScript that use the type definitions specified by Turbulenz libraries require a few additional tools provided outside the SDK.
@@ -1204,11 +1196,15 @@ Installation
 To compile apps written in TypeScript for Turbulenz you require the TypeScript compiler.
 You will need the **tsc** command to be callable from the Turbulenz environment.
 
+.. NOTE::
+
+  TypeScript compiler is included in the Turbulenz environment as part of the open source repository.
+
 1) Install TypeScript from the instructions on `typescriptlang.org downloads <http://www.typescriptlang.org/#Download>`_
 2) Start the :ref:`Turbulenz environment <getting_started_run_env>` on your platform.
 3) Check the compiler by running the following command in the root Turbulenz SDK directory::
 
-      tsc tslib/camera.ts
+      tsc tslib/debug.ts
 
   This command will generate the JavaScript for the camera object in the same directory (tslib).
   If the compiler worked, the command should complete with no errors and you can delete the output file after reading it.
@@ -1227,9 +1223,9 @@ Varying degrees of support are available for the following IDEs/Editors:
 More information can be found
 `here <http://blogs.msdn.com/b/interoperability/archive/2012/10/01/sublime-text-vi-emacs-typescript-enabled.aspx>`_
 
-**Visual Studio 2012**
+**Visual Studio 2012/2013**
 
-The most complete TypeScript support is for `Visual Studio 2012 <http://www.microsoft.com/en-us/download/details.aspx?id=34790>`_.
+The most complete TypeScript support is for `Visual Studio 2012/2013 <http://www.microsoft.com/en-us/download/details.aspx?id=34790>`_.
 
 **Sublime Text 2**
 
@@ -1246,7 +1242,7 @@ Compiling
 
 .. NOTE::
 
-  The commands specified in this section were written for use with tsc version 0.8.3. For the latest commands, see the `latest project information <http://typescript.codeplex.com/>`_
+  The commands specified in this section were written for use with tsc version 0.9.1. For the latest commands, see the `latest project information <http://typescript.codeplex.com/>`_
 
 **Basic compilation**
 
@@ -1256,7 +1252,7 @@ To compile a .ts file to JavaScript simply type:
 
   tsc filename.ts
 
-This will output filename.js with errors listed on the command line.
+This will output filename.js and any errors will be listed on the command line.
 The output JavaScript file will be located in the same directory as the source file.
 To specify a different filename/location, use the --out command e.g.
 ::
@@ -1298,6 +1294,26 @@ The jslib-modular directory has groups of definitions for the following:
   * utilities.d.ts: Low level shared functions
   * vmath.d.ts: Turbulenz Math library implementation
   * webgl.d.ts: Additional declarations for the GraphicsDevice
+
+**Added SDK 0.26.0**
+
+*jlib-modular*
+
+  * capturedevices.d.ts: Declarations for the CaptureDevice
+
+**Added SDK 0.27.0**
+
+*jlib-modular*
+
+  * spatialgrid.d.ts: SpacialGrid implementation
+  * svg.d.ts: SVG rendering declarations
+
+**Added SDK 0.28.0**
+
+*jlib-modular*
+
+  * particlesystem.d.ts: Components of the GPU Particle System
+
 
 Using this method you will generate JavaScript files for your application, which you can use in conjunction with jslib.
 To explain how to do this, we will convert SampleApp to TypeScript and combine it with the jslib-modular declarations.
@@ -1363,9 +1379,9 @@ Depending which file(s) you change you there are certain files you may or may no
 Changes to this pattern of files require rebuilding the following:
 
 * **scripts/\*.js** -> \*.canvas.js, \*.tzjs
-* **templates/\*.js** -> \*.canvas.js, \*.tzjs, \*.canvas.debug.html. \*.canvas.release.html, \*.debug.html, \*.release.html
-* **templates/\*.html** -> \*.canvas.debug.html. \*.canvas.release.html, \*.debug.html, \*.release.html
-* **jslib/\*.js** -> \*.canvas.js, \*.tzjs, \*.canvas.debug.html. \*.canvas.release.html, \*.debug.html, \*.release.html
+* **templates/\*.js** -> \*.canvas.js, \*.tzjs, \*.canvas.debug.html. \*.canvas.release.html, \*.release.html
+* **templates/\*.html** -> \*.canvas.debug.html. \*.canvas.release.html, \*.release.html
+* **jslib/\*.js** -> \*.canvas.js, \*.tzjs, \*.canvas.debug.html. \*.canvas.release.html, \*.release.html
 
 **TypeScript:**
 
@@ -1403,14 +1419,14 @@ Assumed variables:
 
   ::
 
-    tsc -c --out scripts --declaration tsscripts/TYPESCRIPTNAME.ts [../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
+    tsc --outDir scripts -d tsscripts/TYPESCRIPTNAME.ts [../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
 
   To rebuild sample templates (per sample), you must know what the sample uses and include dependencies via the \*.d.ts files in jslib-modular.
   The SAMPLESCRIPT files will includes things like the shared scripts that the sample needs.
 
   ::
 
-    tsc -c --out templates tsscripts/templates/SAMPLENAME.ts [../jslib-modular/JSLIBMODULARDEP.d.ts ..] [scripts/SAMPLESCRIPT.d.ts ..] [OTHERDEP.d.ts ..]
+    tsc --outDir templates tsscripts/templates/SAMPLENAME.ts [../jslib-modular/JSLIBMODULARDEP.d.ts ..] [scripts/SAMPLESCRIPT.d.ts ..] [OTHERDEP.d.ts ..]
 
   Once the updated JavaScript has been generated, you must rebuild the required JavaScript files.
 
@@ -1430,11 +1446,6 @@ Assumed variables:
 
     maketzjs --mode canvas -t templates -t . -o SAMPLENAME.canvas.js SAMPLENAME.js -u ../external/uglifyjs/bin/uglifyjs
     makehtml --mode canvas -t templates -t . --code SAMPLENAME.canvas.js -o SAMPLENAME.canvas.release.html SAMPLENAME.js SAMPLENAME.html
-
-  **Plugin-Debug**
-  ::
-
-    makehtml --mode plugin-debug -t templates -t . -o SAMPLENAME.debug.html SAMPLENAME.js SAMPLENAME.html
 
   **Plugin-Release**
   ::
@@ -1473,7 +1484,7 @@ Assumed variables:
 
   For generating a combined JavaScript file and definition::
 
-      tsc -c --out scripts/APPNAME.js --declaration [tsscripts/APPNAME/APPFILE.ts ..] [../../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
+      tsc --out scripts/APPNAME.js -d [tsscripts/APPNAME/APPFILE.ts ..] [../../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
 
   .. NOTE::
 
@@ -1481,7 +1492,7 @@ Assumed variables:
 
   For generating the template from the APPNAME_entry.ts file::
 
-      tsc -c --out templates/APPNAME.js tsscripts/APPNAME/APPNAME_entry.ts scripts/APPNAME.d.ts [../../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
+      tsc --out templates/APPNAME.js tsscripts/APPNAME/APPNAME_entry.ts scripts/APPNAME.d.ts [../../jslib-modular/JSLIBMODULARDEP.d.ts ..] [OTHERDEP.d.ts ..]
 
   .. NOTE::
 
@@ -1506,11 +1517,6 @@ Assumed variables:
     maketzjs --mode canvas -t templates -t . -o APPNAME.canvas.js APPNAME.js -u ../../external/uglifyjs/bin/uglifyjs
     makehtml --mode canvas -t templates -t . --code APPNAME.canvas.js -o APPNAME.canvas.release.html APPNAME.js APPNAME.html
 
-  **Plugin-Debug**
-  ::
-
-    makehtml --mode plugin-debug -t templates -t . -o APPNAME.debug.html APPNAME.js APPNAME.html
-
   **Plugin-Release**
   ::
 
@@ -1524,7 +1530,3 @@ Assumed variables:
   .. NOTE::
 
       Apps that use the default template should omit the APPNAME.html for each makehtml command.
-
-
-
-

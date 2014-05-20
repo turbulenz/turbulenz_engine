@@ -96,12 +96,12 @@ var VMath : MathDevice =
         }
     },
 
-    /*jshint bitwise: false*/
+    /* tslint:disable:no-bitwise */
     truncate : function truncateFn(value)
     {
         return (value | 0);
     },
-    /*jshint bitwise: true*/
+    /* tslint:enable:no-bitwise */
 
     //
     // Vector2
@@ -112,7 +112,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(2);
         }
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = 0.0;
         dst[1] = 0.0;
         return dst;
@@ -124,7 +124,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(2);
         }
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = 1.0;
         dst[1] = 1.0;
         return dst;
@@ -136,7 +136,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(2);
         }
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = 1.0;
         dst[1] = 0.0;
         return dst;
@@ -148,7 +148,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(2);
         }
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = 0.0;
         dst[1] = 1.0;
         return dst;
@@ -162,7 +162,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isNumber(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = a;
         dst[1] = b;
         return dst;
@@ -174,8 +174,8 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(2);
         }
-        debug.assert(debug.isVec2(src));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(2 === src.length);
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = src[0];
         dst[1] = src[1];
         return dst;
@@ -195,7 +195,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(2);
         }
         debug.assert(debug.isVec2(a));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = -a[0];
         dst[1] = -a[1];
         return dst;
@@ -209,7 +209,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec2(a));
         debug.assert(debug.isVec2(b));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = a[0] + b[0];
         dst[1] = a[1] + b[1];
         return dst;
@@ -224,7 +224,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec2(a));
         debug.assert(debug.isVec2(b));
         debug.assert(debug.isVec2(c));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = a[0] + b[0] + c[0];
         dst[1] = a[1] + b[1] + c[1];
         return dst;
@@ -241,7 +241,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec2(b));
         debug.assert(debug.isVec2(c));
         debug.assert(debug.isVec2(d));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
 
         dst[0] = a[0] + b[0] + c[0] + d[0];
         dst[1] = a[1] + b[1] + c[1] + d[1];
@@ -257,7 +257,7 @@ var VMath : MathDevice =
 
         debug.assert(debug.isVec2(a));
         debug.assert(debug.isVec2(b));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
 
         dst[0] = (a[0] - b[0]);
         dst[1] = (a[1] - b[1]);
@@ -273,7 +273,7 @@ var VMath : MathDevice =
 
         debug.assert(debug.isVec2(a));
         debug.assert(debug.isVec2(b));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
 
         dst[0] = (a[0] * b[0]);
         dst[1] = (a[1] * b[1]);
@@ -290,7 +290,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec2(a));
         debug.assert(debug.isVec2(b));
         debug.assert(debug.isVec2(c));
-        debug.assert(debug.isVec2(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
 
         dst[0] = (a[0] * b[0]) + c[0];
         dst[1] = (a[1] * b[1]) + c[1];
@@ -606,7 +606,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(3);
         }
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 0.0;
         res[1] = 0.0;
         res[2] = 0.0;
@@ -620,7 +620,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(3);
         }
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 1.0;
         res[1] = 1.0;
         res[2] = 1.0;
@@ -634,7 +634,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(3);
         }
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 1.0;
         res[1] = 0.0;
         res[2] = 0.0;
@@ -648,7 +648,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(3);
         }
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 0.0;
         res[1] = 1.0;
         res[2] = 0.0;
@@ -662,7 +662,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(3);
         }
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 0.0;
         res[1] = 0.0;
         res[2] = 1.0;
@@ -679,7 +679,7 @@ var VMath : MathDevice =
         debug.assert(debug.isNumber(a));
         debug.assert(debug.isNumber(b));
         debug.assert(debug.isNumber(c));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = a;
         res[1] = b;
         res[2] = c;
@@ -693,7 +693,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(3);
         }
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = src[0];
         res[1] = src[1];
         res[2] = src[2];
@@ -715,7 +715,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
         dst[0] = -a[0];
         dst[1] = -a[1];
         dst[2] = -a[2];
@@ -731,7 +731,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = (a[0] + b[0]);
         res[1] = (a[1] + b[1]);
         res[2] = (a[2] + b[2]);
@@ -747,7 +747,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
         debug.assert(debug.isVec3(c));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
         dst[0] = a[0] + b[0] + c[0];
         dst[1] = a[1] + b[1] + c[1];
         dst[2] = a[2] + b[2] + c[2];
@@ -764,7 +764,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec3(b));
         debug.assert(debug.isVec3(c));
         debug.assert(debug.isVec3(d));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
         dst[0] = a[0] + b[0] + c[0] + d[0];
         dst[1] = a[1] + b[1] + c[1] + d[1];
         dst[2] = a[2] + b[2] + c[2] + d[2];
@@ -780,7 +780,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = (a[0] - b[0]);
         res[1] = (a[1] - b[1]);
         res[2] = (a[2] - b[2]);
@@ -795,7 +795,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
         dst[0] = (a[0] * b[0]);
         dst[1] = (a[1] * b[1]);
         dst[2] = (a[2] * b[2]);
@@ -811,7 +811,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
         debug.assert(debug.isVec3(c));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
         dst[0] = (a[0] * b[0]) + c[0];
         dst[1] = (a[1] * b[1]) + c[1];
         dst[2] = (a[2] * b[2]) + c[2];
@@ -834,7 +834,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
         var a0 = a[0];
         var a1 = a[1];
         var a2 = a[2];
@@ -872,7 +872,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         var rcp = VMath.reciprocal;
         dst[0] = rcp(a[0]);
@@ -889,7 +889,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         var a0 = a[0];
         var a1 = a[1];
@@ -919,7 +919,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isVec3(a));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         var abs = Math.abs;
         res[0] = abs(a[0]);
@@ -937,7 +937,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         var max = Math.max;
         res[0] = max(a[0], b[0]);
@@ -955,7 +955,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         var min = Math.min;
         res[0] = min(a[0], b[0]);
@@ -1059,7 +1059,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         dst[0] = m[0] ? a[0] : b[0];
         dst[1] = m[1] ? a[1] : b[1];
@@ -1075,7 +1075,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isNumber(a));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         dst[0] = a;
         dst[1] = a;
@@ -1092,7 +1092,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         var max = Math.max;
         dst[0] = max(a[0], b);
@@ -1110,7 +1110,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         var min = Math.min;
         dst[0] = min(a[0], b);
@@ -1128,7 +1128,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         dst[0] = (a[0] + b);
         dst[1] = (a[1] + b);
@@ -1145,7 +1145,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         dst[0] = (a[0] - b);
         dst[1] = (a[1] - b);
@@ -1163,7 +1163,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         if (b === 0)
         {
@@ -1189,7 +1189,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
         debug.assert(debug.isNumber(c));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         dst[0] = a[0] + b[0] * c;
         dst[1] = a[1] + b[1] * c;
@@ -1251,7 +1251,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
         debug.assert(debug.isNumber(t));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         res[0] =  (a[0] + ((b[0] - a[0]) * t));
         res[1] =  (a[1] + ((b[1] - a[1]) * t));
@@ -1270,7 +1270,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(4);
         }
-        debug.assert(debug.isVec4(res));
+        debug.assert(debug.isMathType(res) && debug.isVec4(res));
 
         res[0] = 0.0;
         res[1] = 0.0;
@@ -1286,7 +1286,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(4);
         }
-        debug.assert(debug.isVec4(res));
+        debug.assert(debug.isMathType(res) && debug.isVec4(res));
 
         res[0] = 1.0;
         res[1] = 1.0;
@@ -1306,7 +1306,7 @@ var VMath : MathDevice =
         debug.assert(debug.isNumber(b));
         debug.assert(debug.isNumber(c));
         debug.assert(debug.isNumber(d));
-        debug.assert(debug.isVec4(res));
+        debug.assert(debug.isMathType(res) && debug.isVec4(res));
 
         res[0] = a;
         res[1] = b;
@@ -1322,7 +1322,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(4);
         }
-        debug.assert(debug.isVec4(res));
+        debug.assert(debug.isMathType(res) && debug.isVec4(res));
 
         res[0] = src[0];
         res[1] = src[1];
@@ -1347,7 +1347,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(4);
         }
         debug.assert(debug.isVec4(a));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = -a[0];
         dst[1] = -a[1];
@@ -1365,7 +1365,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = (a[0] + b[0]);
         dst[1] = (a[1] + b[1]);
@@ -1383,7 +1383,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
         debug.assert(debug.isVec4(c));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = a[0] + b[0] + c[0];
         dst[1] = a[1] + b[1] + c[1];
@@ -1403,7 +1403,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec4(b));
         debug.assert(debug.isVec4(c));
         debug.assert(debug.isVec4(d));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = a[0] + b[0] + c[0] + d[0];
         dst[1] = a[1] + b[1] + c[1] + d[1];
@@ -1421,7 +1421,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = (a[0] - b[0]);
         dst[1] = (a[1] - b[1]);
@@ -1438,7 +1438,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = (a[0] * b[0]);
         dst[1] = (a[1] * b[1]);
@@ -1456,7 +1456,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
         debug.assert(debug.isVec4(c));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = (a[0] * b[0]) + c[0];
         dst[1] = (a[1] * b[1]) + c[1];
@@ -1503,7 +1503,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(4);
         }
         debug.assert(debug.isVec4(a));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         var rcp = VMath.reciprocal;
         dst[0] = rcp(a[0]);
@@ -1521,7 +1521,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(4);
         }
         debug.assert(debug.isVec4(a));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         var a0 = a[0];
         var a1 = a[1];
@@ -1554,7 +1554,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(4);
         }
         debug.assert(debug.isVec4(a));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         var abs = Math.abs;
         dst[0] = abs(a[0]);
@@ -1573,7 +1573,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         var max = Math.max;
         dst[0] = max(a[0], b[0]);
@@ -1592,7 +1592,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         var min = Math.min;
         dst[0] = min(a[0], b[0]);
@@ -1717,7 +1717,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = m[0] ? a[0] : b[0];
         dst[1] = m[1] ? a[1] : b[1];
@@ -1735,7 +1735,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(4);
         }
         debug.assert(debug.isNumber(a));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = a;
         dst[1] = a;
@@ -1753,7 +1753,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         var max = Math.max;
         dst[0] = max(a[0], b);
@@ -1772,7 +1772,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         var min = Math.min;
         dst[0] = min(a[0], b);
@@ -1791,7 +1791,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = (a[0] + b);
         dst[1] = (a[1] + b);
@@ -1809,7 +1809,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isNumber(b));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = (a[0] - b);
         dst[1] = (a[1] - b);
@@ -1834,7 +1834,7 @@ var VMath : MathDevice =
             {
                 dst = new VMathArrayConstructor(4);
             }
-            debug.assert(debug.isVec4(dst));
+            debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
             dst[0] = (a[0] * b);
             dst[1] = (a[1] * b);
@@ -1854,7 +1854,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
         debug.assert(debug.isNumber(c));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = a[0] + b[0] * c;
         dst[1] = a[1] + b[1] * c;
@@ -1933,7 +1933,7 @@ var VMath : MathDevice =
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
         debug.assert(debug.isNumber(t));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = (a[0] + ((b[0] - a[0]) * t));
         dst[1] = (a[1] + ((b[1] - a[1]) * t));
@@ -1959,7 +1959,7 @@ var VMath : MathDevice =
         debug.assert(debug.isNumber(a3));
         debug.assert(debug.isNumber(a4));
         debug.assert(debug.isNumber(a5));
-        debug.assert(debug.isAABB(res));
+        debug.assert(debug.isMathType(res) && debug.isAABB(res));
 
         res[0] = a0;
         res[1] = a1;
@@ -1980,7 +1980,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(6);
         }
-        debug.assert(debug.isAABB(res));
+        debug.assert(debug.isMathType(res) && debug.isAABB(res));
 
         res[0] = float_max;
         res[1] = float_max;
@@ -1999,7 +1999,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(6);
         }
-        debug.assert(debug.isAABB(res));
+        debug.assert(debug.isMathType(res) && debug.isAABB(res));
 
         res[0] = aabb[0];
         res[1] = aabb[1];
@@ -2013,7 +2013,7 @@ var VMath : MathDevice =
 
     aabbSet : function aabbSet(dst, src)
     {
-        debug.assert(debug.isAABB(dst));
+        debug.assert(debug.isMathType(dst) && debug.isAABB(dst));
 
         dst[0] = src[0];
         dst[1] = src[1];
@@ -2035,7 +2035,7 @@ var VMath : MathDevice =
         {
             return aabb.slice(0, 3);
         }
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         dst[0] = aabb[0];
         dst[1] = aabb[1];
@@ -2050,7 +2050,7 @@ var VMath : MathDevice =
         {
             return aabb.slice(3, 6);
         }
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         dst[0] = aabb[3];
         dst[1] = aabb[4];
@@ -2088,7 +2088,10 @@ var VMath : MathDevice =
             var d0 = plane[0];
             var d1 = plane[1];
             var d2 = plane[2];
-            if ((d0 * (d0 < 0 ? aabb[0] : aabb[3]) + d1 * (d1 < 0 ? aabb[1] : aabb[4]) + d2 * (d2 < 0 ? aabb[2] : aabb[5])) < plane[3])
+            var distance = (d0 * (d0 < 0 ? aabb[0] : aabb[3]) +
+                            d1 * (d1 < 0 ? aabb[1] : aabb[4]) +
+                            d2 * (d2 < 0 ? aabb[2] : aabb[5]));
+            if (distance < plane[3])
             {
                 return false;
             }
@@ -2109,7 +2112,10 @@ var VMath : MathDevice =
             var d0 = plane[0];
             var d1 = plane[1];
             var d2 = plane[2];
-            if ((d0 * (d0 > 0 ? aabb[0] : aabb[3]) + d1 * (d1 > 0 ? aabb[1] : aabb[4]) + d2 * (d2 > 0 ? aabb[2] : aabb[5])) < plane[3])
+            var distance = (d0 * (d0 > 0 ? aabb[0] : aabb[3]) +
+                            d1 * (d1 > 0 ? aabb[1] : aabb[4]) +
+                            d2 * (d2 > 0 ? aabb[2] : aabb[5]));
+            if (distance < plane[3])
             {
                 return false;
             }
@@ -2127,7 +2133,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isAABB(a));
         debug.assert(debug.isAABB(b));
-        debug.assert(debug.isAABB(dst));
+        debug.assert(debug.isMathType(dst) && debug.isAABB(dst));
 
         dst[0] = a[0] < b[0] ? a[0] : b[0];
         dst[1] = a[1] < b[1] ? a[1] : b[1];
@@ -2145,7 +2151,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(6);
         }
-        debug.assert(debug.isAABB(dst));
+        debug.assert(debug.isMathType(dst) && debug.isAABB(dst));
         debug.assert(aabbArray.length > 0);
 
         VMath.aabbCopy(aabbArray[0], dst);
@@ -2214,7 +2220,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isAABB(aabb));
         debug.assert(debug.isMtx43(matrix));
-        debug.assert(debug.isAABB(dst));
+        debug.assert(debug.isMathType(dst) && debug.isAABB(dst));
 
         var cX = (aabb[0] + aabb[3]) * 0.5;
         var cY = (aabb[1] + aabb[4]) * 0.5;
@@ -2262,7 +2268,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isAABB(a));
         debug.assert(debug.isAABB(b));
-        debug.assert(debug.isAABB(dst));
+        debug.assert(debug.isMathType(dst) && debug.isAABB(dst));
 
         dst[0] = a[0] > b[0] ? a[0] : b[0];
         dst[1] = a[1] > b[1] ? a[1] : b[1];
@@ -2390,7 +2396,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(9);
         }
-        debug.assert(debug.isMtx33(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
         res[0] = 1.0;
         res[1] = 0.0;
@@ -2420,7 +2426,7 @@ var VMath : MathDevice =
                 {
                     res = new VMathArrayConstructor(9);
                 }
-                debug.assert(debug.isMtx33(res));
+                debug.assert(debug.isMathType(res) && debug.isMtx33(res));
             }
             else
             {
@@ -2444,7 +2450,7 @@ var VMath : MathDevice =
             {
                 res = new VMathArrayConstructor(9);
             }
-            debug.assert(debug.isMtx33(res));
+            debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
             res[0] = r[0];
             res[1] = r[1];
@@ -2467,7 +2473,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(9);
         }
-        debug.assert(debug.isMtx33(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
         res[0] = m[0];
         res[1] = m[1];
@@ -2491,7 +2497,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(axis) || debug.isVec4(axis));
         debug.assert(debug.isNumber(angle));
-        debug.assert(debug.isMtx33(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
         var s = Math.sin(angle);
         var c = Math.cos(angle);
@@ -2527,7 +2533,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(9);
         }
         debug.assert(debug.isQuat(q));
-        debug.assert(debug.isMtx33(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
         var qx = q[0];
         var qy = q[1];
@@ -2565,7 +2571,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx33(m));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         res[0] = m[0];
         res[1] = m[1];
@@ -2581,7 +2587,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx33(m));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         res[0] = m[3];
         res[1] = m[4];
@@ -2597,7 +2603,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx33(m));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         res[0] = m[6];
         res[1] = m[7];
@@ -2642,7 +2648,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(9);
         }
         debug.assert(debug.isMtx33(m));
-        debug.assert(debug.isMtx33(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -2690,50 +2696,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(9);
         }
         debug.assert(debug.isMtx33(m));
-        debug.assert(debug.isMtx33(dst));
-
-        var det = VMath.m33Determinant(m);
-        if (det === 0.0)
-        {
-            dst[0] = dst[1] = dst[2] = 0.0;
-            dst[3] = dst[4] = dst[5] = 0.0;
-            dst[6] = dst[7] = dst[8] = 0.0;
-            return dst;
-        }
-        else
-        {
-            var m0 = m[0];
-            var m1 = m[1];
-            var m2 = m[2];
-            var m3 = m[3];
-            var m4 = m[4];
-            var m5 = m[5];
-            var m6 = m[6];
-            var m7 = m[7];
-            var m8 = m[8];
-
-            var detrecp = 1.0 / det;
-            dst[0] = ((m4 * m8 + m5 * (-m7)) * detrecp);
-            dst[1] = ((m7 * m2 + m8 * (-m1)) * detrecp);
-            dst[2] = ((m1 * m5 - m2 *   m4)  * detrecp);
-            dst[3] = ((m5 * m6 + m3 * (-m8)) * detrecp);
-            dst[4] = ((m8 * m0 + m6 * (-m2)) * detrecp);
-            dst[5] = ((m3 * m2 - m0 *   m5)  * detrecp);
-            dst[6] = ((m3 * m7 + m4 * (-m6)) * detrecp);
-            dst[7] = ((m6 * m1 + m7 * (-m0)) * detrecp);
-            dst[8] = ((m0 * m4 - m3 *   m1)  * detrecp);
-            return dst;
-        }
-    },
-
-    m33InverseTranspose : function m33InverseTransposeFn(m, dst?)
-    {
-        if (dst === undefined)
-        {
-            dst = new VMathArrayConstructor(9);
-        }
-        debug.assert(debug.isMtx33(m) || debug.isMtx43(m));
-        debug.assert(debug.isMtx33(dst) || debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -2744,30 +2707,81 @@ var VMath : MathDevice =
         var m6 = m[6];
         var m7 = m[7];
         var m8 = m[8];
-        var det = (m0 * (m4 * m8 - m5 * m7) +
-                   m1 * (m5 * m6 - m3 * m8) +
-                   m2 * (m3 * m7 - m4 * m6));
+
+        var d4857 = (m4 * m8 - m5 * m7);
+        var d5638 = (m5 * m6 - m3 * m8);
+        var d3746 = (m3 * m7 - m4 * m6);
+        var det = (m0 * d4857 +
+                   m1 * d5638 +
+                   m2 * d3746);
         if (det === 0.0)
         {
             dst[0] = dst[1] = dst[2] = 0.0;
             dst[3] = dst[4] = dst[5] = 0.0;
             dst[6] = dst[7] = dst[8] = 0.0;
-            return dst;
         }
         else
         {
             var detrecp = 1.0 / det;
-            dst[0] = ((m4 * m8 + m5 * (-m7)) * detrecp);
-            dst[3] = ((m7 * m2 + m8 * (-m1)) * detrecp);
-            dst[6] = ((m1 * m5 - m2 *   m4)  * detrecp);
-            dst[1] = ((m5 * m6 + m3 * (-m8)) * detrecp);
-            dst[4] = ((m8 * m0 + m6 * (-m2)) * detrecp);
-            dst[7] = ((m3 * m2 - m0 *   m5)  * detrecp);
-            dst[2] = ((m3 * m7 + m4 * (-m6)) * detrecp);
-            dst[5] = ((m6 * m1 + m7 * (-m0)) * detrecp);
-            dst[8] = ((m0 * m4 - m3 *   m1)  * detrecp);
-            return dst;
+            dst[0] = (d4857 * detrecp);
+            dst[1] = ((m7 * m2 - m8 * m1) * detrecp);
+            dst[2] = ((m1 * m5 - m2 * m4) * detrecp);
+            dst[3] = (d5638 * detrecp);
+            dst[4] = ((m8 * m0 - m6 * m2) * detrecp);
+            dst[5] = ((m3 * m2 - m0 * m5) * detrecp);
+            dst[6] = (d3746 * detrecp);
+            dst[7] = ((m6 * m1 - m7 * m0) * detrecp);
+            dst[8] = ((m0 * m4 - m3 * m1) * detrecp);
         }
+        return dst;
+    },
+
+    m33InverseTranspose : function m33InverseTransposeFn(m, dst?)
+    {
+        var res = dst;
+        if (res === undefined)
+        {
+            res = new VMathArrayConstructor(9);
+        }
+        debug.assert(debug.isMtx33(m) || debug.isMtx43(m));
+        debug.assert(debug.isMathType(res) &&
+                     (debug.isMtx33(res) || debug.isMtx43(res)));
+
+        var m0 = m[0];
+        var m1 = m[1];
+        var m2 = m[2];
+        var m3 = m[3];
+        var m4 = m[4];
+        var m5 = m[5];
+        var m6 = m[6];
+        var m7 = m[7];
+        var m8 = m[8];
+        var d4857 = (m4 * m8 - m5 * m7);
+        var d5638 = (m5 * m6 - m3 * m8);
+        var d3746 = (m3 * m7 - m4 * m6);
+        var det = (m0 * d4857 +
+                   m1 * d5638 +
+                   m2 * d3746);
+        if (det === 0.0)
+        {
+            res[0] = res[1] = res[2] = 0.0;
+            res[3] = res[4] = res[5] = 0.0;
+            res[6] = res[7] = res[8] = 0.0;
+        }
+        else
+        {
+            var detrecp = 1.0 / det;
+            res[0] = (d4857 * detrecp);
+            res[3] = ((m7 * m2 - m8 * m1) * detrecp);
+            res[6] = ((m1 * m5 - m2 * m4) * detrecp);
+            res[1] = (d5638 * detrecp);
+            res[4] = ((m8 * m0 - m6 * m2) * detrecp);
+            res[7] = ((m3 * m2 - m0 * m5) * detrecp);
+            res[2] = (d3746 * detrecp);
+            res[5] = ((m6 * m1 - m7 * m0) * detrecp);
+            res[8] = ((m0 * m4 - m3 * m1) * detrecp);
+        }
+        return res;
     },
 
     m33Mul : function m33MulFn(a, b, dst?)
@@ -2796,7 +2810,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(9);
         }
-        debug.assert(debug.isMtx33(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
         dst[0] = (b0 * a0 + b3 * a1 + b6 * a2);
         dst[1] = (b1 * a0 + b4 * a1 + b7 * a2);
@@ -2821,7 +2835,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isVec3(v) || debug.isVec4(v));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         var v0 = v[0];
         var v1 = v[1];
@@ -2862,7 +2876,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx33(a));
         debug.assert(debug.isMtx43(b));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         var a0 = a[0];
         var a1 = a[1];
@@ -2911,7 +2925,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx33(a));
         debug.assert(debug.isMtx44(b));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         var a0  = a[0];
         var a1  = a[1];
@@ -2969,7 +2983,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx33(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
         for (var n = 0; n < 9; n += 1)
         {
@@ -2986,7 +3000,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx33(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
         for (var n = 0; n < 9; n += 1)
         {
@@ -3003,7 +3017,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx33(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
         for (var n = 0; n < 9; n += 1)
         {
@@ -3021,7 +3035,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(12);
         }
-        debug.assert(debug.isMtx34(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx34(res));
 
         res[0] = 1.0;
         res[1] = 0.0;
@@ -3046,7 +3060,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx34(m));
-        debug.assert(debug.isVec3(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
 
         dst[0] = m[3];
         dst[1] = m[7];
@@ -3062,7 +3076,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx34(m));
         debug.assert(debug.isVec3(scale));
-        debug.assert(debug.isMtx34(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx34(dst));
 
         var sx = scale[0];
         var sy = scale[1];
@@ -3094,7 +3108,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(12);
         }
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         res[0] = 1.0;
         res[1] = 0.0;
@@ -3133,7 +3147,7 @@ var VMath : MathDevice =
             {
                 res = new VMathArrayConstructor(12);
             }
-            debug.assert(debug.isMtx43(res));
+            debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
             res[0] = arguments[0];
             res[1] = arguments[1];
@@ -3155,7 +3169,7 @@ var VMath : MathDevice =
             {
                 res = new VMathArrayConstructor(12);
             }
-            debug.assert(debug.isMtx43(res));
+            debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
             res[0] = r[0];
             res[1] = r[1];
@@ -3185,7 +3199,7 @@ var VMath : MathDevice =
             {
                 res = new VMathArrayConstructor(12);
             }
-            debug.assert(debug.isMtx43(res));
+            debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
             res[9] = x;
             res[10] = y;
@@ -3199,7 +3213,7 @@ var VMath : MathDevice =
                 res = new VMathArrayConstructor(12);
             }
             debug.assert(debug.isVec3(x));
-            debug.assert(debug.isMtx43(res));
+            debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
             res[9] = x[0];
             res[10] = x[1];
@@ -3226,7 +3240,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(12);
         }
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         res[0] = m[0];
         res[1] = m[1];
@@ -3253,7 +3267,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isVec3(v));
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         res[0] = m[0];
         res[1] = m[1];
@@ -3293,7 +3307,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(axis) || debug.isVec4(axis));
         debug.assert(debug.isNumber(angle));
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         res[0] = tx * axisX + c;
         res[1] = tx * axisY - sz;
@@ -3322,7 +3336,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(12);
         }
         debug.assert(debug.isQuatPos(qp));
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         var qx = qp[0];
         var qy = qp[1];
@@ -3390,7 +3404,7 @@ var VMath : MathDevice =
         debug.assert(debug.isQuat(quat));
         debug.assert(debug.isVec3(pos) || debug.isVec4(pos));
         debug.assert(debug.isVec3(scale));
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         res[0] = sx * (1.0 - yy - zz);
         res[1] = sx * (xy - zw);
@@ -3432,7 +3446,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isQuat(quat));
         debug.assert(debug.isVec3(pos) || debug.isVec4(pos));
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         res[0] =  1.0 - yy - zz;
         res[1] =  xy - zw;
@@ -3458,7 +3472,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx43(m));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         res[0] = m[0];
         res[1] = m[1];
@@ -3474,7 +3488,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx43(m));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         res[0] = m[3];
         res[1] = m[4];
@@ -3490,7 +3504,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx43(m));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         res[0] = m[6];
         res[1] = m[7];
@@ -3506,7 +3520,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(3);
         }
         debug.assert(debug.isMtx43(m));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         res[0] = m[9];
         res[1] = m[10];
@@ -3586,7 +3600,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(12);
         }
         debug.assert(debug.isMtx43(m));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -3710,7 +3724,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(12);
         }
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         dst[0] = right[0];
         dst[1] = right[1];
@@ -3743,7 +3757,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(12);
         }
         debug.assert(debug.isMtx43(m));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -3758,9 +3772,12 @@ var VMath : MathDevice =
         var m10 = m[10];
         var m11 = m[11];
 
-        var det = (m0 * (m4 * m8 - m5 * m7) +
-                   m1 * (m5 * m6 - m3 * m8) +
-                   m2 * (m3 * m7 - m4 * m6));
+        var d4857 = (m4 * m8 - m5 * m7);
+        var d5638 = (m5 * m6 - m3 * m8);
+        var d3746 = (m3 * m7 - m4 * m6);
+        var det = (m0 * d4857 +
+                   m1 * d5638 +
+                   m2 * d3746);
         if (det === 0.0)
         {
             return dst;
@@ -3771,19 +3788,19 @@ var VMath : MathDevice =
             {
                 dst = new VMathArrayConstructor(12);
             }
-            var detrecp = 1.0 / det;
-            dst[0] = ((m4 * m8 + m5 * (-m7)) * detrecp);
-            dst[1] = ((m7 * m2 + m8 * (-m1)) * detrecp);
-            dst[2] = ((m1 * m5 - m2 *   m4)  * detrecp);
-            dst[3] = ((m5 * m6 + m3 * (-m8)) * detrecp);
-            dst[4] = ((m8 * m0 + m6 * (-m2)) * detrecp);
-            dst[5] = ((m3 * m2 - m0 *   m5)  * detrecp);
-            dst[6] = ((m3 * m7 + m4 * (-m6)) * detrecp);
-            dst[7] = ((m6 * m1 + m7 * (-m0)) * detrecp);
-            dst[8] = ((m0 * m4 - m3 *   m1)  * detrecp);
-            dst[9]  = ((m3 * (m10 * m8  - m7 * m11) + m4  * (m6 * m11 - m9 * m8) + m5  * (m9 * m7 - m6 * m10)) * detrecp);
-            dst[10] = ((m6 * (m2  * m10 - m1 * m11) + m7  * (m0 * m11 - m9 * m2) + m8  * (m9 * m1 - m0 * m10)) * detrecp);
-            dst[11] = ((m9 * (m2  * m4  - m1 * m5)  + m10 * (m0 * m5  - m3 * m2) + m11 * (m3 * m1 - m0 * m4))  * detrecp);
+            var rdet = 1.0 / det;
+            dst[0] = (d4857 * rdet);
+            dst[1] = ((m7 * m2 - m8 * m1) * rdet);
+            dst[2] = ((m1 * m5 - m2 * m4) * rdet);
+            dst[3] = (d5638 * rdet);
+            dst[4] = ((m8 * m0 - m6 * m2) * rdet);
+            dst[5] = ((m3 * m2 - m0 * m5) * rdet);
+            dst[6] = (d3746 * rdet);
+            dst[7] = ((m6 * m1 - m7 * m0) * rdet);
+            dst[8] = ((m0 * m4 - m3 * m1) * rdet);
+            dst[9]  = ((m3 * (m10 * m8  - m7 * m11) + m4  * (m6 * m11 - m9 * m8) + m5  * (m9 * m7 - m6 * m10)) * rdet);
+            dst[10] = ((m6 * (m2  * m10 - m1 * m11) + m7  * (m0 * m11 - m9 * m2) + m8  * (m9 * m1 - m0 * m10)) * rdet);
+            dst[11] = ((m9 * (m2  * m4  - m1 * m5)  + m10 * (m0 * m5  - m3 * m2) + m11 * (m3 * m1 - m0 * m4))  * rdet);
             return dst;
         }
     },
@@ -3806,7 +3823,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(scale));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         var sx = scale[0];
         var sy = scale[1];
@@ -3837,7 +3854,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(v) || debug.isVec4(v));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         var v0 = v[0];
         var v1 = v[1];
@@ -3857,7 +3874,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(v) || debug.isVec4(v));
-        debug.assert(debug.isVec3(res));
+        debug.assert(debug.isMathType(res) && debug.isVec3(res));
 
         var v0 = v[0];
         var v1 = v[1];
@@ -3900,7 +3917,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx43(b));
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         res[0] =  (b0 * a0 + b3 * a1 + b6 * a2);
         res[1] =  (b1 * a0 + b4 * a1 + b7 * a2);
@@ -3914,6 +3931,56 @@ var VMath : MathDevice =
         res[9]  = (b0 * a9 + b3 * a10 + b6 * a11 + b[9]);
         res[10] = (b1 * a9 + b4 * a10 + b7 * a11 + b[10]);
         res[11] = (b2 * a9 + b5 * a10 + b8 * a11 + b[11]);
+
+        return res;
+    },
+
+    m43MulM33 : function m43MulM33Fn(a, b, dst?)
+    {
+        var a0  = a[0];
+        var a1  = a[1];
+        var a2  = a[2];
+        var a3  = a[3];
+        var a4  = a[4];
+        var a5  = a[5];
+        var a6  = a[6];
+        var a7  = a[7];
+        var a8  = a[8];
+        var a9  = a[9];
+        var a10 = a[10];
+        var a11 = a[11];
+
+        var b0  = b[0];
+        var b1  = b[1];
+        var b2  = b[2];
+        var b3  = b[3];
+        var b4  = b[4];
+        var b5  = b[5];
+        var b6  = b[6];
+        var b7  = b[7];
+        var b8  = b[8];
+
+        var res = dst;
+        if (res === undefined)
+        {
+            res = new VMathArrayConstructor(12);
+        }
+        debug.assert(debug.isMtx43(a));
+        debug.assert(debug.isMtx33(b));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
+
+        res[0] =  (b0 * a0 + b3 * a1 + b6 * a2);
+        res[1] =  (b1 * a0 + b4 * a1 + b7 * a2);
+        res[2] =  (b2 * a0 + b5 * a1 + b8 * a2);
+        res[3] =  (b0 * a3 + b3 * a4 + b6 * a5);
+        res[4] =  (b1 * a3 + b4 * a4 + b7 * a5);
+        res[5] =  (b2 * a3 + b5 * a4 + b8 * a5);
+        res[6] =  (b0 * a6 + b3 * a7 + b6 * a8);
+        res[7] =  (b1 * a6 + b4 * a7 + b7 * a8);
+        res[8] =  (b2 * a6 + b5 * a7 + b8 * a8);
+        res[9]  = (b0 * a9 + b3 * a10 + b6 * a11);
+        res[10] = (b1 * a9 + b4 * a10 + b7 * a11);
+        res[11] = (b2 * a9 + b5 * a10 + b8 * a11);
 
         return res;
     },
@@ -3953,7 +4020,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx44(b));
-        debug.assert(debug.isMtx44(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx44(res));
 
         res[0] =  (b0 * a0 + b4 * a1 + b8  * a2);
         res[1] =  (b1 * a0 + b5 * a1 + b9  * a2);
@@ -3983,7 +4050,7 @@ var VMath : MathDevice =
             res = new VMathArrayConstructor(12);
         }
         debug.assert(debug.isMtx43(m));
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -4049,7 +4116,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx43(b));
-        debug.assert(debug.isMtx43(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
         res[0] =  (b0 * a0 + b3 * a1 + b6 * a2);
         res[1] =  (b0 * a3 + b3 * a4 + b6 * a5);
@@ -4075,7 +4142,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(o) || debug.isVec4(o));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -4118,7 +4185,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(o) || debug.isVec4(o));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         var m0 = m[0];
         var m1 = m[1];
@@ -4161,7 +4228,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(s));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         var xf = (0.5 / s[0]);
         var yf = (0.5 / s[1]);
@@ -4204,7 +4271,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         for (var n = 0; n < 12; n += 1)
         {
@@ -4221,7 +4288,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         for (var n = 0; n < 12; n += 1)
         {
@@ -4238,7 +4305,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx43(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
         for (var n = 0; n < 12; n += 1)
         {
@@ -4255,7 +4322,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(16);
         }
-        debug.assert(debug.isMtx44(res));
+        debug.assert(debug.isMathType(res) && debug.isMtx44(res));
 
         res[0] =  1.0;
         res[1] =  0.0;
@@ -4296,7 +4363,7 @@ var VMath : MathDevice =
             {
                 res = new VMathArrayConstructor(16);
             }
-            debug.assert(debug.isMtx44(res));
+            debug.assert(debug.isMathType(res) && debug.isMtx44(res));
 
             res[0] =  arguments[0];
             res[1] =  arguments[1];
@@ -4322,7 +4389,7 @@ var VMath : MathDevice =
             {
                 res = new VMathArrayConstructor(16);
             }
-            debug.assert(debug.isMtx44(res));
+            debug.assert(debug.isMathType(res) && debug.isMtx44(res));
 
             res[0] =  r[0];
             res[1] =  r[1];
@@ -4351,7 +4418,7 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(16);
         }
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         dst[0] =  m[0];
         dst[1] =  m[1];
@@ -4380,7 +4447,7 @@ var VMath : MathDevice =
             return m.slice(0, 4);
         }
         debug.assert(debug.isMtx44(m));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = m[0];
         dst[1] = m[1];
@@ -4396,7 +4463,7 @@ var VMath : MathDevice =
             return m.slice(4, 8);
         }
         debug.assert(debug.isMtx44(m));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = m[4];
         dst[1] = m[5];
@@ -4412,7 +4479,7 @@ var VMath : MathDevice =
             return m.slice(8, 12);
         }
         debug.assert(debug.isMtx44(m));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = m[8];
         dst[1] = m[9];
@@ -4428,7 +4495,7 @@ var VMath : MathDevice =
             return m.slice(12);
         }
         debug.assert(debug.isMtx44(m));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         dst[0] = m[12];
         dst[1] = m[13];
@@ -4495,7 +4562,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isVec3(scale));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         dst[0] =  m[0]  * scale[0];
         dst[1] =  m[1]  * scale[0];
@@ -4529,7 +4596,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isVec4(v));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         if (v3 !== 1.0)
         {
@@ -4590,7 +4657,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx44(a));
         debug.assert(debug.isMtx44(b));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         dst[0] = (b0 * a0  + b4 * a1  + b8  * a2  + b12 * a3);
         dst[1] = (b1 * a0  + b5 * a1  + b9  * a2  + b13 * a3);
@@ -4636,7 +4703,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(16);
         }
         debug.assert(debug.isMtx44(m));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         var A0 = (( m0 *  m5) - ( m1 *  m4));
         var A1 = (( m0 *  m6) - ( m2 *  m4));
@@ -4703,7 +4770,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(16);
         }
         debug.assert(debug.isMtx44(m));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         dst[0] = m[0];
         dst[1] = m[4];
@@ -4734,7 +4801,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         for (var n = 0; n < 16; n += 1)
         {
@@ -4751,7 +4818,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         for (var n = 0; n < 16; n += 1)
         {
@@ -4768,7 +4835,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isNumber(s));
-        debug.assert(debug.isMtx44(dst));
+        debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
         for (var n = 0; n < 16; n += 1)
         {
@@ -4789,7 +4856,7 @@ var VMath : MathDevice =
         debug.assert(debug.isNumber(y));
         debug.assert(debug.isNumber(z));
         debug.assert(debug.isNumber(w));
-        debug.assert(debug.isQuat(res));
+        debug.assert(debug.isMathType(res) && debug.isQuat(res));
 
         res[0] = x;
         res[1] = y;
@@ -4805,7 +4872,7 @@ var VMath : MathDevice =
         {
             res = new VMathArrayConstructor(4);
         }
-        debug.assert(debug.isQuat(res));
+        debug.assert(debug.isMathType(res) && debug.isQuat(res));
 
         res[0] = src[0];
         res[1] = src[1];
@@ -4859,7 +4926,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isQuat(q1));
         debug.assert(debug.isQuat(q2));
-        debug.assert(debug.isQuat(dst));
+        debug.assert(debug.isMathType(dst) && debug.isQuat(dst));
 
         // Note quaternion multiplication is the opposite way around from our matrix multiplication
         //var v1 = q1; // use full quats to avoid copy
@@ -4978,7 +5045,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(4);
         }
         debug.assert(debug.isQuat(q));
-        debug.assert(debug.isQuat(dst));
+        debug.assert(debug.isMathType(dst) && debug.isQuat(dst));
 
         dst[0] = -q[0];
         dst[1] = -q[1];
@@ -4997,7 +5064,7 @@ var VMath : MathDevice =
         debug.assert(debug.isQuat(q1));
         debug.assert(debug.isQuat(q2));
         debug.assert(debug.isNumber(t));
-        debug.assert(debug.isQuat(dst));
+        debug.assert(debug.isMathType(dst) && debug.isQuat(dst));
 
         var q1x = q1[0];
         var q1y = q1[1];
@@ -5028,7 +5095,7 @@ var VMath : MathDevice =
         debug.assert(debug.isQuat(q1));
         debug.assert(debug.isQuat(q2));
         debug.assert(debug.isNumber(t));
-        debug.assert(debug.isQuat(res));
+        debug.assert(debug.isMathType(res) && debug.isQuat(res));
 
         var q1x = q1[0];
         var q1y = q1[1];
@@ -5177,7 +5244,7 @@ var VMath : MathDevice =
         }
         debug.assert(debug.isVec3(axis) || debug.isVec4(axis));
         debug.assert(debug.isNumber(angle));
-        debug.assert(debug.isQuat(res));
+        debug.assert(debug.isMathType(res) && debug.isQuat(res));
 
         res[0] = axis[0] * s;
         res[1] = axis[1] * s;
@@ -5194,7 +5261,7 @@ var VMath : MathDevice =
             dst = new VMathArrayConstructor(4);
         }
         debug.assert(debug.isQuat(q));
-        debug.assert(debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
         var q3 = q[3];
         var angle = Math.acos(q3) * 2.0;
@@ -5277,7 +5344,8 @@ var VMath : MathDevice =
         {
             dst = new VMathArrayConstructor(3);
         }
-        debug.assert(debug.isVec3(dst) || debug.isVec4(dst));
+        debug.assert(debug.isMathType(dst) &&
+                     (debug.isVec3(dst) || debug.isVec4(dst)));
 
         dst[0] = rx;
         dst[1] = ry;
@@ -5304,7 +5372,7 @@ var VMath : MathDevice =
     },
 
     // quatPos
-    quatPosBuild : function quatPosBuildFn(x, y, z, w, px, py, pz, dst?)
+    quatPosBuild : function quatPosBuildFn(x, y, z?, w?, px?, py?, pz?, dst?)
     {
         var res;
         if (arguments.length < 7)
@@ -5316,7 +5384,7 @@ var VMath : MathDevice =
             }
             debug.assert(debug.isQuat(x));
             debug.assert(debug.isVec3(y) || debug.isVec4(y));
-            debug.assert(debug.isQuatPos(res));
+            debug.assert(debug.isMathType(res) && debug.isQuatPos(res));
 
             res[0] = x[0];
             res[1] = x[1];
@@ -5333,7 +5401,7 @@ var VMath : MathDevice =
             {
                 res = new VMathArrayConstructor(7);
             }
-            debug.assert(debug.isQuatPos(res));
+            debug.assert(debug.isMathType(res) && debug.isQuatPos(res));
 
             res[0] = x;
             res[1] = y;
@@ -5803,6 +5871,7 @@ if (typeof Float32Array !== "undefined")
     VMath.FLOAT_MAX = testVector[0];
     VMathArrayConstructor = Float32Array;
 }
+VMath.arrayConstructor = VMathArrayConstructor;
 
 // If the plugin has a 'getNativeMathDevice' method then VMath should
 // replace the standard MathDevice.

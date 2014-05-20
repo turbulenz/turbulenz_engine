@@ -17,7 +17,9 @@ interface BadgeManagerDataSpec
 //badges is created by Turbulenzservices.createBadges
 class BadgeManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     gameSession: GameSession;
     gameSessionId: string;
@@ -52,7 +54,7 @@ class BadgeManager
             method: 'GET',
             callback: cb,
             requestHandler: this.requestHandler
-        });
+        }, 'badge.read');
     }
 
     awardUserBadge(badge_key, callbackFn, errorCallbackFn)
@@ -110,25 +112,14 @@ class BadgeManager
             dataSpec.current = current;
         }
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            TurbulenzServices.callOnBridge('badge.add', dataSpec, function unpackResponse(response)
-            {
-                cb(response, response.status);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data : dataSpec,
-                callback: cb,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data : dataSpec,
+            callback: cb,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'badge.add');
     }
 
     // list all badges (just queries the yaml file)
@@ -159,7 +150,7 @@ class BadgeManager
             method: 'GET',
             callback: cb,
             requestHandler: this.requestHandler
-        });
+        }, 'badge.meta');
     }
 
     errorCallbackFn()

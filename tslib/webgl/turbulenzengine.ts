@@ -45,7 +45,7 @@ declare var WebGLPhysicsDevice : WebGLPhysicsDeviceConstructor;
 
 class WebGLTurbulenzEngine implements TurbulenzEngine
 {
-    version = '0.27.0.0';
+    version = '0.28.0.0';
 
     time               : number;
 
@@ -83,6 +83,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     resizeCanvas: { (): void; };
     base64Encode: { (bytes: any): string; };
+    handleZeroTimeoutMessages: { (event): void; };
 
     setInterval(f, t): any
     {
@@ -137,7 +138,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
     }
 
-    createSoundDevice(params): WebGLSoundDevice
+    createSoundDevice(params: SoundDeviceParameters): WebGLSoundDevice
     {
         if (this.soundDevice)
         {
@@ -203,16 +204,18 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             testVector[0] = VMath.FLOAT_MAX;
             VMath.FLOAT_MAX = testVector[0];
         }
+        /* tslint:disable:no-empty */
         catch (e)
         {
         }
+        /* tslint:enable:no-empty */
 
-        return VMath;
+        return WebGLMathDevice;
     }
 
     createNativeMathDevice(params): MathDevice
     {
-        return VMath;
+        return WebGLMathDevice;
     }
 
     getGraphicsDevice(): WebGLGraphicsDevice
@@ -247,12 +250,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
     getMathDevice(): MathDevice
     {
-        return VMath;
+        return WebGLMathDevice;
     }
 
     getNativeMathDevice(): MathDevice
     {
-        return VMath;
+        return WebGLMathDevice;
     }
 
     getObjectStats()
@@ -260,6 +263,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         return null;
     }
 
+    /* tslint:disable:no-empty */
     flush()
     {
 
@@ -269,6 +273,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
     {
 
     }
+    /* tslint:enable:no-empty */
 
     encrypt(msg: string): string
     {
@@ -298,6 +303,14 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
     onwarning(msg)
     {
         console.warn(msg);
+    }
+
+    onperformancewarning(msg)
+    {
+        if (debug)
+        {
+            console.warn(msg);
+        }
     }
 
     getSystemInfo()
@@ -431,6 +444,12 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         if (this.resizeCanvas)
         {
             window.removeEventListener('resize', this.resizeCanvas, false);
+            delete this.resizeCanvas;
+        }
+        if (this.handleZeroTimeoutMessages)
+        {
+            window.removeEventListener("message", this.handleZeroTimeoutMessages, true);
+            delete this.handleZeroTimeoutMessages;
         }
     }
 
@@ -465,9 +484,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         return this.unloading;
     }
 
+    /* tslint:disable:no-empty */
     enableProfiling()
     {
     }
+    /* tslint:enable:no-empty */
 
     startProfiling()
     {
@@ -575,9 +596,11 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 configurable : false
             });
 
+            /* tslint:disable:no-empty */
             tz.updateTime = function ()
             {
             };
+            /* tslint:enable:no-empty */
         }
         else
         {
@@ -608,7 +631,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
 
             var clearZeroTimeout = function clearZeroTimeoutFn(timeout)
             {
-                var id = timeout;
+                var id = timeout.id;
                 var numTimeouts = timeouts.length;
                 for (var n = 0; n < numTimeouts; n += 1)
                 {
@@ -635,6 +658,9 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                     }
                 }
             };
+
+            tz.handleZeroTimeoutMessages = handleZeroTimeoutMessages;
+
             window.addEventListener("message", handleZeroTimeoutMessages, true);
 
             tz.setTimeout = function (f, t)
@@ -773,7 +799,8 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             {
                 if (document.fullscreenElement === canvas ||
                     document.mozFullScreenElement === canvas ||
-                    document.webkitFullscreenElement === canvas)
+                    document.webkitFullscreenElement === canvas ||
+                    document.msFullscreenElement === canvas)
                 {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;
@@ -828,10 +855,9 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             userLocale: (navigator.language || navigator.userLanguage).replace('-', '_')
         };
 
-        var looksLikeNetbook = function looksLikeNetbookFn(): boolean
+        function looksLikeNetbook(): boolean
         {
-            var minScreenDim =
-                Math.min(window.screen.height, window.screen.width)
+            var minScreenDim = Math.min(window.screen.height, window.screen.width);
             return minScreenDim < 900;
         }
 
@@ -881,64 +907,84 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             }
             else
             {
-                osIndex = userAgent.indexOf('Linux');
+                osIndex = userAgent.indexOf('Tizen');
                 if (osIndex !== -1)
                 {
-                    systemInfo.osName = 'Linux';
-                    if (navigator.platform.indexOf('64') !== -1)
+                    systemInfo.osName = 'Tizen';
+                    if (navigator.platform.indexOf('arm'))
                     {
-                        systemInfo.architecture = 'x86_64';
+                        systemInfo.architecture = 'arm';
                     }
-                    else if (navigator.platform.indexOf('x86') !== -1)
+                    if (-1 !== userAgent.indexOf('Mobile'))
                     {
-                        systemInfo.architecture = 'x86';
+                        systemInfo.platformProfile = "smartphone";
                     }
-                    if (looksLikeNetbook())
+                    else
                     {
                         systemInfo.platformProfile = "tablet";
-                        if (debug)
-                        {
-                            debug.log("Setting platformProfile to 'tablet'");
-                        }
                     }
                 }
                 else
                 {
-                    osIndex = userAgent.indexOf('Android');
-                    if (-1 !== osIndex)
+                    osIndex = userAgent.indexOf('Linux');
+                    if (osIndex !== -1)
                     {
-                        systemInfo.osName = 'Android';
-                        if (navigator.platform.indexOf('arm'))
+                        systemInfo.osName = 'Linux';
+                        if (navigator.platform.indexOf('64') !== -1)
                         {
-                            systemInfo.architecture = 'arm';
+                            systemInfo.architecture = 'x86_64';
                         }
-                        else if (navigator.platform.indexOf('x86'))
+                        else if (navigator.platform.indexOf('x86') !== -1)
                         {
                             systemInfo.architecture = 'x86';
                         }
-                        if (-1 !== userAgent.indexOf('Mobile'))
-                        {
-                            systemInfo.platformProfile = "smartphone";
-                        }
-                        else
+                        if (looksLikeNetbook())
                         {
                             systemInfo.platformProfile = "tablet";
+                            if (debug)
+                            {
+                                debug.log("Setting platformProfile to 'tablet'");
+                            }
                         }
                     }
                     else
                     {
-                        if (-1 !== userAgent.indexOf("iPhone") ||
-                            -1 !== userAgent.indexOf("iPod"))
+                        osIndex = userAgent.indexOf('Android');
+                        if (-1 !== osIndex)
                         {
-                            systemInfo.osName = 'iOS';
-                            systemInfo.architecture = 'arm';
-                            systemInfo.platformProfile = 'smartphone';
+                            systemInfo.osName = 'Android';
+                            if (navigator.platform.indexOf('arm'))
+                            {
+                                systemInfo.architecture = 'arm';
+                            }
+                            else if (navigator.platform.indexOf('x86'))
+                            {
+                                systemInfo.architecture = 'x86';
+                            }
+                            if (-1 !== userAgent.indexOf('Mobile'))
+                            {
+                                systemInfo.platformProfile = "smartphone";
+                            }
+                            else
+                            {
+                                systemInfo.platformProfile = "tablet";
+                            }
                         }
-                        else if (-1 !== userAgent.indexOf("iPad"))
+                        else
                         {
-                            systemInfo.osName = 'iOS';
-                            systemInfo.architecture = 'arm';
-                            systemInfo.platformProfile = 'tablet';
+                            if (-1 !== userAgent.indexOf("iPhone") ||
+                                -1 !== userAgent.indexOf("iPod"))
+                            {
+                                systemInfo.osName = 'iOS';
+                                systemInfo.architecture = 'arm';
+                                systemInfo.platformProfile = 'smartphone';
+                            }
+                            else if (-1 !== userAgent.indexOf("iPad"))
+                            {
+                                systemInfo.osName = 'iOS';
+                                systemInfo.architecture = 'arm';
+                                systemInfo.platformProfile = 'tablet';
+                            }
                         }
                     }
                 }
@@ -955,7 +1001,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             var valueToChar = b64ConversionTable;
             var n, chr1, chr2, chr3, enc1, enc2, enc3, enc4;
 
-            /*jshint bitwise: false*/
+            /* tslint:disable:no-bitwise */
             n = 0;
             while (n < numBytes)
             {
@@ -997,7 +1043,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 output += valueToChar[enc3];
                 output += valueToChar[enc4];
             }
-            /*jshint bitwise: true*/
+            /* tslint:enable:no-bitwise */
 
             return output;
         };

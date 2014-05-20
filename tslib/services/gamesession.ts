@@ -31,7 +31,9 @@ interface GameSessionPlayerData
 
 class GameSession
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     post_delay = 1000;
 
@@ -83,20 +85,13 @@ class GameSession
 
             dataSpec = {'gameSessionId': this.gameSessionId};
 
-            if (TurbulenzServices.bridgeServices)
-            {
-                TurbulenzServices.callOnBridge('gamesession.destroy', dataSpec, callbackFn);
-            }
-            else
-            {
-                Utilities.ajax({
-                    url: '/api/v1/games/destroy-session',
-                    method: 'POST',
-                    data: dataSpec,
-                    callback: callbackFn,
-                    requestHandler: this.requestHandler
-                });
-            }
+            this.service.request({
+                url: '/api/v1/games/destroy-session',
+                method: 'POST',
+                data: dataSpec,
+                callback: callbackFn,
+                requestHandler: this.requestHandler
+            }, 'gamesession.destroy');
         }
         else
         {
@@ -182,30 +177,22 @@ class GameSession
     {
         var gameSession = new GameSession();
         var gameSlug = window.gameSlug;
-        var turbulenz = window.top.Turbulenz;
+        var turbulenz = window.Turbulenz;
+        if (!turbulenz)
+        {
+            try
+            {
+                turbulenz = window.top.Turbulenz;
+            }
+            /* tslint:disable:no-empty */
+            catch (e)
+            {
+            }
+            /* tslint:enable:no-empty */
+        }
         var turbulenzData = (turbulenz && turbulenz.Data) || {};
         var mode = turbulenzData.mode || TurbulenzServices.mode;
         var createSessionURL = '/api/v1/games/create-session/' + gameSlug;
-        var gameSessionRequestCallback = function gameSessionRequestCallbackFn(jsonResponse, status)
-        {
-            if (status === 200)
-            {
-                gameSession.mappingTable = jsonResponse.mappingTable;
-                gameSession.gameSessionId = jsonResponse.gameSessionId;
-
-                if (sessionCreatedFn)
-                {
-                    sessionCreatedFn(gameSession);
-                }
-
-                TurbulenzBridge.createdGameSession(gameSession.gameSessionId);
-            }
-            else
-            {
-                gameSession.errorCallbackFn("TurbulenzServices.createGameSession error with HTTP status " + status + ": " + jsonResponse.msg, status);
-            }
-        };
-
         gameSession.info = {
             sessionData: {},
             playerSessionData: {}
@@ -238,16 +225,51 @@ class GameSession
 
         if (!TurbulenzServices.available())
         {
-            // Call sessionCreatedFn on a timeout to get the same behaviour as the AJAX call
             if (sessionCreatedFn)
             {
-                TurbulenzEngine.setTimeout(function sessionCreatedCall()
-                                           {
-                                               sessionCreatedFn(gameSession);
-                                           }, 0);
+                // On a timeout so it happens asynchronously, like an
+                // ajax call.
+
+                TurbulenzEngine.setTimeout(function sessionCreatedCall() {
+                    sessionCreatedFn(gameSession);
+                }, 0);
             }
             return gameSession;
         }
+
+        var gameSessionRequestCallback = function gameSessionRequestCallbackFn(jsonResponse, status)
+        {
+            if (status === 200)
+            {
+                gameSession.mappingTable = jsonResponse.mappingTable;
+                gameSession.gameSessionId = jsonResponse.gameSessionId;
+
+                if (sessionCreatedFn)
+                {
+                    sessionCreatedFn(gameSession);
+                }
+
+                TurbulenzBridge.createdGameSession(gameSession.gameSessionId);
+            }
+            else if (404 === status)
+            {
+                // Treat this case as the equivalent of services being
+                // unavailable.
+
+                window.gameSlug = undefined;
+                gameSession.gameSlug = undefined;
+
+                if (sessionCreatedFn)
+                {
+                    sessionCreatedFn(gameSession);
+                }
+            }
+            else
+            {
+                gameSession.errorCallbackFn("TurbulenzServices.createGameSession error with HTTP status " +
+                                            status + ": " + jsonResponse.msg, status);
+            }
+        };
 
         if (mode)
         {
@@ -270,7 +292,7 @@ class GameSession
             callback: gameSessionRequestCallback,
             requestHandler: requestHandler,
             neverDiscard: true
-        });
+        }, 'gamesession.create');
 
         return gameSession;
     }

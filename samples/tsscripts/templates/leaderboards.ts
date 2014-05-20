@@ -218,13 +218,17 @@ TurbulenzEngine.onload = function onloadFn()
 
         function drawAvatar(url)
         {
-            var texture = avatarCache.request(url);
+            var texture = avatarCache.get(url);
             if (texture)
             {
                 draw2D.draw({
                     texture : texture,
                     destinationRectangle : [xOffset, yOffset, xOffset + 1, yOffset + 1]
                 });
+            }
+            else if (!avatarCache.isLoading(url))
+            {
+                avatarCache.request(url);
             }
 
             yOffset += 2;
@@ -689,7 +693,7 @@ TurbulenzEngine.onload = function onloadFn()
         leaderboardManager.set(leaderboardKeys[currentLeaderboardIndex],
                                scoreOnClick, scoresSetFn, scoresSetErrorFn);
         scoreOnClick += 10;
-    }
+    };
 
     inputDevice.addEventListener('mousewheel', onMouseWheel);
     inputDevice.addEventListener("keyup", keyUp);

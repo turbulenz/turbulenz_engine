@@ -69,6 +69,26 @@ If you call this function again it will fail. To get the previously created devi
     .. note::
         This option is only supported in canvas mode.
 
+``stencil``
+    Setting this option to false disables the availability of the stencil buffer.
+    This can potentially save graphics memory if not required.
+    If this option is set to false, do not attempt to make calls that act on the stencil buffer.
+    It is recommended to disable both the stencil and depth buffer together.
+    Defaults to true.
+
+    .. note::
+        This option is only supported in canvas mode.
+
+``depth``
+    Setting this option to false disables the availability of the depth buffer.
+    This can potentially save graphics memory if not required.
+    If this option is set to false, do not attempt to make calls that act on the depth buffer.
+    It is recommended to disable both the stencil and depth buffer together.
+    Defaults to true.
+
+    .. note::
+        This option is only supported in canvas mode.
+
 
 .. index::
     pair: TurbulenzEngine; getGraphicsDevice
@@ -417,7 +437,7 @@ Returns immediately.
 
         var onLoadedData = function onLoadedDataFn(responseText, status)
         {
-            if (!responseText || status !== 200)
+            if (responseText && status === 200)
             {
                 var obj = JSON.parse(responseText);
             }
@@ -538,10 +558,10 @@ Clears a delay set by :ref:`tz_settimeout`.
 
 **Syntax** ::
 
-    TurbulenzEngine.clearTimeout(intervalID);
+    TurbulenzEngine.clearTimeout(timeoutID);
 
-``intervalID``
-    The intervalID returned by a call to ``TurbulenzEngine.setInterval``.
+``timeoutID``
+    The ID returned by a call to ``TurbulenzEngine.setTimeout``.
 
 .. index::
     pair: TurbulenzEngine; clearInterval
@@ -1035,16 +1055,16 @@ developers regularly run in plugin mode to catch coding errors.
 
 **Syntax** ::
 
-    function onErrorFn(message)
+    var onError = function onError(message)
     {
         globalErrors += 1;
         if (alertErrors)
         {
             alert("ERROR FROM ENGINE: " + message);
         }
-    }
+    };
 
-    TurbulenzEngine.onerror = onErrorFn;
+    TurbulenzEngine.onerror = onError;
 
 
 .. index::
@@ -1065,15 +1085,15 @@ execution.
 
 **Syntax** ::
 
-    function onWarningFn(message)
+    var onWarning = function onWarningFn(message)
     {
         if (alertWarnings)
         {
             alert("WARNING FROM ENGINE: " + message);
         }
-    }
+    };
 
-    TurbulenzEngine.onwarning = onWarningFn;
+    TurbulenzEngine.onwarning = onWarning;
 
 The following code will result in a warning message ::
 
@@ -1083,6 +1103,46 @@ The following code will result in a warning message ::
         depthBuffer    : myDepthBuffer
     };
     var renderTarget = graphicsDevice.createRenderTarget(renderTargetParams);
+
+
+.. index::
+   pair: TurbulenzEngine; onperformancewarning
+
+.. _turbulenzengine_onperformancewarning:
+
+`onperformancewarning`
+----------------------
+
+**Summary**
+
+A callback to receive messages when the engine detects that some
+certain classes of potential performance problems.  Note that this
+warning is currently *only triggered in canvas-debug builds*.
+
+This can be used to detect problems such as the use of non-optimal
+array types in math code.  In particular, developers targetting lower
+powered devices (such as tablets and phones) are recommended to make
+use of this callback, and pay particular attention to code that
+triggers this it each frame.
+
+**Syntax** ::
+
+    var onPerformanceWarning = function onPerformanceWarningFn(message)
+    {
+        if (alertWarnings)
+        {
+            alert("WARNING FROM ENGINE: " + message);
+        }
+    };
+
+    TurbulenzEngine.onwarning = onPerformanceWarning;
+
+The following code will result in a performance warning ::
+
+    var v3 = [ 1, 2, 3 ];  // less optimal than mathDevice.v3Build(1, 2, 3);
+    var m43 = mathDevice.m43Build( ... );
+    vec = mathDevice.m43TransformVector(m43, v3);
+
 
 `canvas`
 --------

@@ -29,18 +29,36 @@ TurbulenzEngine.onload = function onloadFn()
 
     var plDiv = document.getElementById("pl_details");
 
-    plDiv.innerHTML = "<h3>Turbulenz Engine Details<\/h3>";
+    var write = function(msg, elt?)
+    {
+        if (!elt)
+        {
+            elt = plDiv;
+        }
 
-    plDiv.innerHTML +=
+        if (elt)
+        {
+            plDiv.innerHTML += msg;
+        }
+        else
+        {
+            window.console.log(msg);
+        }
+    };
+
+
+    write("<h3>Turbulenz Engine Details<\/h3>");
+
+    write(
         "<ul>" +
         "<li>Version: " + TurbulenzEngine.version + "<\/li>" +
-        "<\/ul>";
+        "<\/ul>");
 
     var sysDiv = document.getElementById("sys_details");
 
-    sysDiv.innerHTML = "<h3>System Details<\/h3>";
+    write("<h3>System Details<\/h3>", sysDiv);
 
-    sysDiv.innerHTML +=
+    write(
         "<ul>" +
         "<li>CpuDescription: "     + systemInfo.cpuDescription + "<\/li>" +
         "<li>CpuVendor: "          + systemInfo.cpuVendor + "<\/li>" +
@@ -54,14 +72,15 @@ TurbulenzEngine.onload = function onloadFn()
         "<li>OSVersionMinor: "     + systemInfo.osVersionMinor + "<\/li>" +
         "<li>OSVersionBuild: "     + systemInfo.osVersionBuild + "<\/li>" +
         "<li>UserLocale: "         + systemInfo.userLocale + "<\/li>" +
-        "<\/ul>";
+        "<\/ul>",
+        sysDiv);
 
     var gdDiv = document.getElementById("gd_details");
 
-    gdDiv.innerHTML = "<h3>Graphics Device Details<\/h3>";
+    write("<h3>Graphics Device Details<\/h3>", gdDiv);
     if (graphicsDevice)
     {
-        gdDiv.innerHTML +=
+        write(
             "<ul>" +
             "<li>Vendor: "           + graphicsDevice.vendor          + "<\/li>" +
             "<li>Renderer: "         + graphicsDevice.renderer        + "<\/li>" +
@@ -74,6 +93,8 @@ TurbulenzEngine.onload = function onloadFn()
             "<li>TEXTURE_DXT3: " + graphicsDevice.isSupported("TEXTURE_DXT3") + " <\/li>" +
             "<li>TEXTURE_DXT5: " + graphicsDevice.isSupported("TEXTURE_DXT5") + " <\/li>" +
             "<li>TEXTURE_ETC1: " + graphicsDevice.isSupported("TEXTURE_ETC1") + " <\/li>" +
+            "<li>TEXTURE_HALF_FLOAT: " + graphicsDevice.isSupported("TEXTURE_HALF_FLOAT") + " <\/li>" +
+            "<li>TEXTURE_FLOAT: " + graphicsDevice.isSupported("TEXTURE_FLOAT") + " <\/li>" +
             "<li>INDEXFORMAT_UINT: " + graphicsDevice.isSupported("INDEXFORMAT_UINT") + " <\/li>" +
             "<li>VERTEX_SHADER_PRECISION: " + graphicsDevice.maxSupported("VERTEX_SHADER_PRECISION") + "-bits<\/li>" +
             "<li>FRAGMENT_SHADER_PRECISION: " + graphicsDevice.maxSupported("FRAGMENT_SHADER_PRECISION") + "-bits<\/li>" +
@@ -92,33 +113,34 @@ TurbulenzEngine.onload = function onloadFn()
             "<li>FILEFORMAT_DDS: " + graphicsDevice.isSupported("FILEFORMAT_DDS") + " <\/li>" +
             "<li>FILEFORMAT_TGA: " + graphicsDevice.isSupported("FILEFORMAT_TGA") + " <\/li>" +
             "<li>Extensions: " + graphicsDevice.extensions + "<\/li>" +
-            "<\/ul>";
+            "<\/ul>",
+            gdDiv);
     }
     else
     {
-        gdDiv.innerHTML +=
+        write(
             "<ul>" +
             "<li>No GraphicsDevice support<\/li>" +
-            "<\/ul>";
+            "<\/ul>", gdDiv);
     }
 
     var pdDiv = document.getElementById("pd_details");
 
-    pdDiv.innerHTML = "<h3>Physics Device Details<\/h3>";
+    write("<h3>Physics Device Details<\/h3>", pdDiv);
 
     var gravity = dynamicsWorld.gravity;
-    pdDiv.innerHTML +=
+    write(
         "<ul>" +
         "<li>Vendor: " + physicsDevice.vendor + "<\/li>" +
         "<li>Version: " + physicsDevice.version + "<\/li>" +
         "<li>MaxSubSteps: "  + dynamicsWorld.maxSubSteps  + "<\/li>" +
         "<li>FixedTimeStep: " + dynamicsWorld.fixedTimeStep + "<\/li>" +
         "<li>Gravity: [" + gravity[0] + ", " + gravity[1] + ", " + gravity[2] + "]<\/li>" +
-        "<\/ul>";
+        "<\/ul>", pdDiv);
 
     var sdDiv = document.getElementById("sd_details");
 
-    sdDiv.innerHTML = "<h3>Sound Device Details<\/h3>";
+    write("<h3>Sound Device Details<\/h3>", sdDiv);
 
     if (soundDevice)
     {
@@ -132,7 +154,7 @@ TurbulenzEngine.onload = function onloadFn()
 
         var velocity = soundDevice.listenerVelocity;
 
-        sdDiv.innerHTML +=
+        write(
             "<ul>" +
             "<li>Vendor: " + soundDevice.vendor + "<\/li>" +
             "<li>Renderer: " + soundDevice.renderer + "<\/li>" +
@@ -149,21 +171,21 @@ TurbulenzEngine.onload = function onloadFn()
             "<li>FILEFORMAT_MP3: " + soundDevice.isSupported("FILEFORMAT_MP3") + " <\/li>" +
             "<li>FILEFORMAT_WAV: " + soundDevice.isSupported("FILEFORMAT_WAV") + " <\/li>" +
             "<li>Extensions: " + soundDevice.extensions + "<\/li>" +
-            "<\/ul>";
+            "<\/ul>", sdDiv);
     }
     else
     {
-        sdDiv.innerHTML +=
+        write(
             "<ul>" +
             "<li>No SoundDevice support<\/li>" +
-            "<\/ul>";
+            "<\/ul>", sdDiv);
     }
 
     var idDiv = document.getElementById("id_details");
 
-    idDiv.innerHTML = "<h3>Input Device Details<\/h3>";
-    idDiv.innerHTML +=
+    write("<h3>Input Device Details<\/h3>", idDiv);
+    write(
         "<ul>" +
         "<li>POINTER_LOCK: " + inputDevice.isSupported("POINTER_LOCK") + "<\/li>" +
-        "<\/ul>";
+        "<\/ul>", idDiv);
 };

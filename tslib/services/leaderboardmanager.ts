@@ -9,7 +9,9 @@
 //
 class LeaderboardManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     getTypes = {
         top: 'top',
@@ -76,7 +78,7 @@ class LeaderboardManager
             data : dataSpec,
             callback: getOverviewCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'leaderboard.read');
     }
 
     getAggregates(spec, callbackFn, errorCallbackFn)
@@ -114,7 +116,7 @@ class LeaderboardManager
             data : dataSpec,
             callback: getAggregatesCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'leaderboard.aggregates');
     }
 
     getRaw(key, spec, callbackFn, errorCallbackFn): boolean
@@ -143,7 +145,7 @@ class LeaderboardManager
             data: spec,
             callback: getCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'leaderboard.read');
         return true;
     }
 
@@ -300,26 +302,14 @@ class LeaderboardManager
         };
         var url = '/api/v1/leaderboards/scores/set/' + key;
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            dataSpec.key = key;
-            TurbulenzServices.callOnBridge('leaderboard.set', dataSpec, function unpackResponse(response)
-            {
-                setCallback(response, response.status);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data : dataSpec,
-                callback: setCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data : dataSpec,
+            callback: setCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'leaderboard.set');
     }
 
     // ONLY available on Local and Hub
@@ -366,7 +356,7 @@ class LeaderboardManager
             method: 'POST',
             callback: resetCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'leaderboard.removeall');
     }
 
     static create(requestHandler: RequestHandler,
@@ -423,12 +413,14 @@ class LeaderboardManager
                 }
                 else
                 {
-                    leaderboardManager.errorCallbackFn("TurbulenzServices.createLeaderboardManager error with HTTP status " + status + ": " + jsonResponse.msg, status);
+                    leaderboardManager.errorCallbackFn("TurbulenzServices.createLeaderboardManager " +
+                                                       "error with HTTP status " + status + ": " +
+                                                       jsonResponse.msg, status);
                 }
             },
             requestHandler: requestHandler,
             neverDiscard: true
-        });
+        }, 'leaderboard.meta');
 
         return leaderboardManager;
     }
@@ -822,7 +814,7 @@ class LeaderboardResult
         leaderboardResult.key = key;
 
         // patch up friendsOnly for frontend
-        spec.friendsOnly = (0 != spec.friendsonly);
+        spec.friendsOnly = (0 !== spec.friendsonly);
         delete spec.friendsonly;
         // store the original spec used to create the results
         leaderboardResult.originalSpec = spec;

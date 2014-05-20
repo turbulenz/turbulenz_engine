@@ -202,7 +202,7 @@ On iOS, the Developer Client is not able to intercept arbitrary URLs
 in the same way as on Android.  By default, it is configured to open
 in response to URLs with the `tblz` and `tblzs` schemes.  Internally,
 these are translated into `http` and `https`.  The Turbulenz servers
-automatically generates URLs of the appropriate form when viewed from
+automatically generate URLs of the appropriate form when viewed from
 the iOS browser.
 
 .. NOTE::
@@ -217,8 +217,71 @@ Developer Workflow
 Run the Developer Client from Xcode to capture the log output into the
 debug console.
 
+Several development options are available from the appropriate section
+of the iOS Settings menu, including a in-app development menu.
+
 It is possible to hard-code URLs into the Developer Client (see the
 comments at the top of the file `ViewController.mm` in the Xcode
 project).  When this is done, the hard-coded URL will be used whenever
-the app is run from Xcode or and launched via the Turbulenz
-Developer Client icon in the home screen.
+the app is run from Xcode or and launched via the Turbulenz Developer
+Client icon in the home screen.  This allows developers to create
+standalone apps that wrap a specific game.
+
+Payment Services
+================
+
+(The information here relates to features that are not currently
+available in production.  This material is provided as reference for
+developers who are interested in enabling in-app purchases in their
+Turbulenz applications, via 3rd party app stores).
+
+Applications that have been packaged for distribution on mobile app
+stores can make use of the same payment API as they woudl when running
+in the browser, and the engine automatically forwards requests for
+payment to the underlying system.
+
+For example, when running on an Android device, if the user attempts
+to purchase an offering called 'grenade-pack', the engine will call
+the underlying Google Play APIs and attempt to initiate a transaction
+for a Google Play SKU called 'grenade-pack'.  If purchase is
+successful, a signed receipt is passed to the Turbulenz back-end, the
+receipt is securely validated, and the set of items owned by the user
+is updated appropriately.
+
+This system requires that developers register the set of in-app
+purchases for the app they are intending to distribute, with the
+platform holders developer console.  For example, in the case above, a
+developer wishing to publish an Android APK called
+'com.gamestudio.gameapp' with an in-app purchase called 'grenade-pack'
+would be required to register that the 'grenade-pack' purchase for the
+'com.gamestudio.gameapp' application, as well as specifying the
+'grenade-pack' offering to the Turbulenz back end in the usual way.
+
+The Turbulenz servers require a table that translates between
+Turbulenz *offerings* and *SKUs* or *Products* on the native platform.
+in the example above, the Google Play billing system does not allow
+hyphen characters, so developers might create a SKU called
+'grenade_pack' and pass the appropriate map to the Turbulenz back end.
+
+.. NOTE::
+
+  The details of this mapping and how it is specified have not been
+  finalized at this time.  For now, names are translated automatically
+  by replacing hyphens with underscore characters.
+
+---------------------
+Android (Google Play)
+---------------------
+
+Developers should use SKU names with hyphens replaced by underscores,
+as in the note above.
+
+---
+iOS
+---
+
+Developers should use Product IDs similar to those on Android, and
+prefixed with the application bundle ID, as recommended by Apple.
+e.g. 'grenade-pack' in the example application
+'com.gamestudio.gameapp' can be purchased as the product
+'com.gamestudio.gameapp.grenade_pack' via the iOS AppStore.

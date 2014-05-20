@@ -22,7 +22,19 @@ class TurbulenzBridge
      */
     static _initInstance()
     {
-        var Turbulenz = window.top.Turbulenz;
+        var Turbulenz = window.Turbulenz;
+        if (!Turbulenz)
+        {
+            try
+            {
+                Turbulenz = window.top.Turbulenz;
+            }
+            /* tslint:disable:no-empty */
+            catch (e)
+            {
+            }
+            /* tslint:enable:no-empty */
+        }
 
         if (Turbulenz && Turbulenz.Services)
         {
@@ -60,22 +72,27 @@ class TurbulenzBridge
         return (this._bridge !== undefined);
     }
 
-    static emit(serviceName: string, request?: string, arg?: any)
+    static emit(serviceName: string, request?: string, arg?: any) : string
     {
+        return "";
     }
 
+    /* tslint:disable:no-empty */
     static on(serviceName: string, cb: { (data: string) : void; })
     {
     }
 
     //off: function offFn() {},
 
-    static addListener() {}
+    static addListener()
+    {
+    }
 
     static setListener(eventName: string,
                        listener: { (params: string): void; })
     {
     }
+    /* tslint:enable:no-empty */
 
     /**
      * Message that passes game configuration information from the hosting site

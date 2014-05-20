@@ -1,0 +1,106 @@
+/*{% extends "base/base_template.html" %}*/
+
+/*{% block tz_app_header %}*/
+    <link rel="stylesheet" type="text/css" href="css/base_template.css">
+    <link rel="shortcut icon" href="img/favicon.ico">
+    <link rel="Stylesheet" type="text/css" href="css/jquery-ui-1.8.2.custom.css"/>
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+/*{% endblock %}*/
+
+/*{% block tz_app_title %}*/GPU ParticleSystem - Samples - Turbulenz Engine/*{% endblock %}*/
+/*{% block tz_app_title_name %}*/GPU ParticleSystem/*{% endblock %}*/
+
+/*{% block tz_app_html_controls %}*/
+<style type="text/css">
+    #sidebar {
+        bottom: 85px;
+    }
+</style>
+<div class="html-control control-output-pair">Simulation Speed:
+    <input type="text" id="speedSliderinput" size="4" value="0" class="control-textfield">
+</div>
+<div class="html-control control-slider">
+    <div id="speedSlider" class="sliderinput"></div>
+</div>
+
+<div class="html-control control-output-pair">Instances created / s:
+    <input type="text" id="instanceSliderinput" size="4" value="0" class="control-textfield">
+</div>
+<div class="html-control control-slider">
+    <div id="instanceSlider" class="sliderinput"></div>
+</div>
+
+<div class="html-control control-button-pair">
+    <span class="control-title">Particle Counts</span>
+    <span class="control-button-small">
+        <input type="button" id="button-decrease-particles" value="-">
+        <input type="button" id="button-increase-particles" value="+">
+    </span>
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Move Systems</span>
+    <input type="checkbox" id="move-systems"/>
+</div>
+
+<div class="html-control control-checkbox">
+    <span class="control-title">Draw Extents</span>
+    <input type="checkbox" id="draw-extents"/>
+</div>
+
+<div class="html-control text">
+    Clear the scene of all instances.
+</div>
+<div class="html-control control-button">
+    <input type="button" id="button-clear" value="Clear">
+</div>
+
+<div class="html-control text">
+    Destroy all state associated with archetype.
+</div>
+<div class="html-control control-button">
+    <input type="button" id="button-destroy-1" value="Destroy 1">
+</div>
+<div class="html-control control-button">
+    <input type="button" id="button-destroy-2" value="Destroy 2">
+</div>
+
+<div class="html-control text">
+    Replace archetype with another in-place.
+</div>
+<div class="html-control control-button">
+    <input type="button" id="button-replace-1-2" value="Replace 1 to 2">
+</div>
+<div class="html-control control-button">
+    <input type="button" id="button-replace-2-1" value="Replace 2 to 1">
+</div>
+
+<div class="engine-control">
+<table cellspacing="0">
+<tbody>
+<tr>
+    <td class="key">FPS:</td>
+    <td id="fps"></td>
+</tr>
+<tr>
+    <td class="key">Minimap:</td>
+</tr>
+<tr>
+    <td class="key">Green</td>
+    <td>Active instances</td>
+</tr>
+<tr>
+    <td class="key">Yellow</td>
+    <td>Inactive, but allocated instances</td>
+</tr>
+<tr>
+    <td class="key">Red</td>
+    <td>Inactive, non-allocated instances</td>
+</tr>
+<table cellspacing="0">
+</tbody>
+</table>
+</div>
+/*{% endblock %}*/
+

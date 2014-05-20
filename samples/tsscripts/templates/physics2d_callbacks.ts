@@ -264,7 +264,7 @@ TurbulenzEngine.onload = function onloadFn()
         });
         border.addShape(topBar);
         // Set as a deterministic handler operating on all objects (undefined mask).
-        topBar.addEventListener('preSolve', oneWayListener([0, 1]), undefined, true);
+        topBar.addEventListener('preSolve', oneWayListener(mathDevice.v2Build(0, 1)), undefined, true);
 
         // Set up sensor bar at bottom of border to teleport bodies.
         var sensorBar = phys2D.createPolygonShape({
@@ -328,7 +328,7 @@ TurbulenzEngine.onload = function onloadFn()
             sensor : true
         });
         // light tunnel in left direction [-1, 0]
-        var listener = lightTunnelListener([0, stageHeight / 4], [-1, 0]);
+        var listener = lightTunnelListener(mathDevice.v2Build(0, stageHeight / 4), mathDevice.v2Build(-1, 0));
         lightShape.addEventListener('begin', listener);
         lightShape.addEventListener('progress', listener);
 
@@ -384,13 +384,13 @@ TurbulenzEngine.onload = function onloadFn()
         });
         platform.addShape(topBar);
         // Set as a deterministic handler operating on all objects (undefined mask).
-        topBar.addEventListener('preSolve', oneWayListener([0, -1]), undefined, true);
+        topBar.addEventListener('preSolve', oneWayListener(mathDevice.v2Build(0, -1)), undefined, true);
         var bottomBar = phys2D.createPolygonShape({
             vertices : phys2D.createRectangleVertices(11, 15 - thickness, 17, 15)
         });
         platform.addShape(bottomBar);
         // Set as a deterministic handler operating on all objects (undefined mask).
-        bottomBar.addEventListener('preSolve', oneWayListener([0, -1]), undefined, true);
+        bottomBar.addEventListener('preSolve', oneWayListener(mathDevice.v2Build(0, -1)), undefined, true);
 
         world.addRigidBody(platform);
 

@@ -1,4 +1,11 @@
-/*{# Copyright (c) 2010-2013 Turbulenz Limited #}*/
+/*{# Copyright (c) 2010-2014 Turbulenz Limited #}*/
+/*
+ * @title: Multiple animations
+ * @description:
+ * This sample demonstrates how the Turbulenz engine can render a high number of animated skinned characters each
+ * one with their own separate animation.
+ * You can use the slider to increase or decrease the number of character to animate and render at the same time.
+*/
 
 /*{{ javascript("jslib/aabbtree.js") }}*/
 /*{{ javascript("jslib/camera.js") }}*/
@@ -385,7 +392,7 @@ TurbulenzEngine.onload = function onloadFn()
                         {
                             // Create the first instance of the node, from the material name 'refNode'
                             nodeName = node.name + "_" + refNode;
-                            newNode = scene.cloneRootNode(node, nodeName);
+                            newNode = node.clone(nodeName);
 
                             // Sets the material on this node and its children
                             setMaterialHierarchy(scene, newNode, refNode);
@@ -396,7 +403,7 @@ TurbulenzEngine.onload = function onloadFn()
                         else
                         {
                             // Clone the reference node
-                            newNode = scene.cloneRootNode(refNode, refNode.name + currentNodeIndex);
+                            newNode = refNode.clone(refNode.name + currentNodeIndex);
                         }
 
                         // CharacterAngle is the random angle of rotation
@@ -411,6 +418,9 @@ TurbulenzEngine.onload = function onloadFn()
                         matrix = m43FromAxisRotation.call(mathDevice, worldUp, characterAngle * deg2Rad);
                         m43SetPos.call(mathDevice, matrix, nodePos);
                         newNode.setLocalTransform(matrix);
+
+                        scene.addRootNode(newNode);
+
                         // Set the grid position identifiers for our nodes
                         // We can find the node grid position later
                         newNode.gridX = i;

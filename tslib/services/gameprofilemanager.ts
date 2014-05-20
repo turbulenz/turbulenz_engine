@@ -12,7 +12,9 @@ interface GameProfileErrorFn
 
 class GameProfileManager
 {
+    /* tslint:disable:no-unused-variable */
     static version = 1;
+    /* tslint:enable:no-unused-variable */
 
     maxValueSize = 1024;
     maxGetListUsernames = 64;
@@ -56,30 +58,19 @@ class GameProfileManager
 
         var dataSpec = {
             value: value,
-            gameSessionId: that.gameSessionId,
+            gameSessionId: that.gameSessionId
         };
 
         var url = '/api/v1/game-profile/set';
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            TurbulenzServices.callOnBridge('gameprofile.set', dataSpec, function unpackResponse(response)
-            {
-                setCallback(response, response.status);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data : dataSpec,
-                callback: setCallback,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data : dataSpec,
+            callback: setCallback,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'gameprofile.set');
 
         return true;
     }
@@ -99,10 +90,12 @@ class GameProfileManager
             else
             {
                 var errorCallback = errorCallbackFn || that.errorCallbackFn;
+                /* tslint:disable:no-trailing-comma */
                 errorCallback("GameProfileManager.remove failed with status " + status + ": " + jsonResponse.msg,
                               status,
                               that.remove,
                               [callbackFn]);
+                /* tslint:enable:no-trailing-comma */
             }
         }
 
@@ -112,25 +105,14 @@ class GameProfileManager
 
         var url = '/api/v1/game-profile/remove';
 
-        if (TurbulenzServices.bridgeServices)
-        {
-            TurbulenzServices.addSignature(dataSpec, url);
-            TurbulenzServices.callOnBridge('gameprofile.remove', dataSpec, function unpackResponse(response)
-            {
-                removeCallbackFn(response, response.status);
-            });
-        }
-        else
-        {
-            this.service.request({
-                url: url,
-                method: 'POST',
-                data: dataSpec,
-                callback: removeCallbackFn,
-                requestHandler: this.requestHandler,
-                encrypt: true
-            });
-        }
+        this.service.request({
+            url: url,
+            method: 'POST',
+            data: dataSpec,
+            callback: removeCallbackFn,
+            requestHandler: this.requestHandler,
+            encrypt: true
+        }, 'gameprofile.remove');
 
         return true;
     }
@@ -190,7 +172,7 @@ class GameProfileManager
             data: dataSpec,
             callback: getCallback,
             requestHandler: this.requestHandler
-        });
+        }, 'gameprofile.read');
 
         return true;
     }
