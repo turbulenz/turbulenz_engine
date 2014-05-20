@@ -972,8 +972,29 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                         }
                         else
                         {
-                            if (-1 !== userAgent.indexOf("iPhone") ||
-                                -1 !== userAgent.indexOf("iPod"))
+                            if (-1 !== userAgent.indexOf('CrOS'))
+                            {
+                                systemInfo.osName = 'Chrome OS';
+                                if (navigator.platform.indexOf('arm'))
+                                {
+                                    systemInfo.architecture = 'arm';
+                                }
+                                else if (navigator.platform.indexOf('x86'))
+                                {
+                                    systemInfo.architecture = 'x86';
+                                }
+                                if (systemInfo.architecture === 'arm' ||
+                                    looksLikeNetbook())
+                                {
+                                    systemInfo.platformProfile = "tablet";
+                                    if (debug)
+                                    {
+                                        debug.log("Setting platformProfile to 'tablet'");
+                                    }
+                                }
+                            }
+                            else if (-1 !== userAgent.indexOf("iPhone") ||
+                                     -1 !== userAgent.indexOf("iPod"))
                             {
                                 systemInfo.osName = 'iOS';
                                 systemInfo.architecture = 'arm';
