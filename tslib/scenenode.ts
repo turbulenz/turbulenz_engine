@@ -385,20 +385,22 @@ class SceneNode
         //private function, used by the Scene
 
         //Update both world transform and world extents
-        this.updateWorldExtents();
-
-        var worldExtents = this.worldExtents;
-        if (worldExtents)
+        var sceneUpdated = this.updateWorldExtents();
+        if (!sceneUpdated)
         {
-            debug.assert(this.spatialIndex === undefined);
-            if (this.dynamic)
+            var worldExtents = this.worldExtents;
+            if (worldExtents)
             {
-                scene.dynamicSpatialMap.add(this, worldExtents);
-            }
-            else
-            {
-                scene.staticSpatialMap.add(this, worldExtents);
-                scene.staticNodesChangeCounter += 1;
+                debug.assert(this.spatialIndex === undefined);
+                if (this.dynamic)
+                {
+                    scene.dynamicSpatialMap.add(this, worldExtents);
+                }
+                else
+                {
+                    scene.staticSpatialMap.add(this, worldExtents);
+                    scene.staticNodesChangeCounter += 1;
+                }
             }
         }
 
@@ -1158,8 +1160,10 @@ class SceneNode
     //
     //updateWorldExtents
     //
-    updateWorldExtents()
+    updateWorldExtents(): boolean
     {
+        var sceneUpdated = false;
+
         if (this.dirtyWorld)
         {
             this.updateWorldTransform();
@@ -1199,10 +1203,13 @@ class SceneNode
             if (scene)
             {
                 this._updateSpatialMap(scene);
+                sceneUpdated = true;
             }
 
             this.checkUpdateRequired();
         }
+
+        return sceneUpdated;
     }
 
     //

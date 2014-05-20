@@ -216,6 +216,7 @@ class AABBTree
             if (this.numExternalNodes > 1)
             {
                 var nodes = this.nodes;
+                debug.assert(nodes[index].externalNode === externalNode);
 
                 nodes[index].clear();
 
@@ -275,6 +276,7 @@ class AABBTree
             var needsRebound = this.needsRebound;
             var nodes = this.nodes;
             var node = nodes[index];
+            debug.assert(node.externalNode === externalNode);
             var nodeExtents = node.extents;
 
             var doUpdate = (needsRebuild ||
