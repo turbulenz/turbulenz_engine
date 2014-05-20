@@ -7812,6 +7812,13 @@ class WebGLGraphicsDevice implements GraphicsDevice
             gl.getExtension('WEBGL_color_buffer_half_float');
         }
 
+        if (extensionsMap['WEBGL_debug_renderer_info'])
+        {
+            var debugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            gd.vendor = gl.getParameter(debugRendererInfo.UNMASKED_VENDOR_WEBGL);
+            gd.renderer = gl.getParameter(debugRendererInfo.UNMASKED_RENDERER_WEBGL);
+        }
+
         var proto = WebGLGraphicsDevice.prototype;
 
         proto.PRIMITIVE_POINTS         = gl.POINTS;
