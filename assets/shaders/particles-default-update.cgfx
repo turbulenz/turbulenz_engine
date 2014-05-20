@@ -40,10 +40,10 @@ float wrap(float x)
     return x;
 }
 
-float4 fp_update_state_base(float2 inParticle, bool wrapPositions, float4 wPos)
+float4 fp_update_state_base(bool wrapPositions, float4 wPos)
 {
-    float2 particle = floor(wPos.xy - regionPos);
-    float2 index = floor(particle / PARTICLE_DIM) * PARTICLE_DIM;
+    float2 particle = floor(wPos.xy - regionPos);                  // N^2 [0, regionSize)  (regionSize is 3N)
+    float2 index = floor(particle / PARTICLE_DIM) * PARTICLE_DIM;  // (3N)^2 [0, regionSize)
 
     if (createdParticle(index))
     {
@@ -51,21 +51,20 @@ float4 fp_update_state_base(float2 inParticle, bool wrapPositions, float4 wPos)
         return tex2D(creationState, (particle + 0.5) * creationScale);
     }
 
-    if (getLifeI(previousState, index + regionPos, invTextureSize) <= 0.0)
+    if (deadParticle(previousState, index + regionPos, invTextureSize))
     {
         // Dead particle, skip simulation
         return float4(0.0);
     }
 
-    float2 slot = particle - index;
-    float indexX = slot.x;
-    float indexY = slot.y;
-    if (indexX == 0.0)
+    float2 inParticle = wPos.xy * invTextureSize; // (0, 1) uv (1/2) index of fragment in output/previousState.
+    float2 slot = particle - index; // N^2 [0, 3)
+    if (slot.x == 0.0)
     {
-        // position
+        // position fragment
         float p = decodeSignedFloat(tex2D(previousState, inParticle));
-        float v = decodeSignedFloat(tex2D(previousState, inParticle + float2(1,0) * invTextureSize));
-        p += (v * timeStep * maxSpeed / halfExtents[indexY]) + shift[indexY];
+        float v = decodeSignedFloat(tex2D(previousState, inParticle + float2(1.0, 0.0) * invTextureSize));
+        p += (v * timeStep * maxSpeed / halfExtents[slot.y]) + shift[slot.y];
         if (wrapPositions)
         {
             return encodeSignedFloat(wrap(p));
@@ -75,11 +74,11 @@ float4 fp_update_state_base(float2 inParticle, bool wrapPositions, float4 wPos)
             return encodeSignedFloat(p);
         }
     }
-    else if (indexX == 1.0)
+    else if (slot.x == 1.0)
     {
-        // velocity
+        // velocity fragment
         float v = decodeSignedFloat(tex2D(previousState, inParticle));
-        float a = acceleration[indexY];
+        float a = acceleration[slot.y];
         float4 data = getDataI(previousState, index + regionPos, invTextureSize);
         if (bitSet(data.w, BIT1))
         {
@@ -88,14 +87,14 @@ float4 fp_update_state_base(float2 inParticle, bool wrapPositions, float4 wPos)
                                                index + regionPos,
                                                invTextureSize,
                                                getLifePairI(previousState, index + regionPos, invTextureSize));
-            a += getAccelerationNoise(noiseUV, animTime)[indexY];
+            a += getAccelerationNoise(noiseUV, animTime)[slot.y];
         }
         float d = 1.0 - min(1.0, timeStep * drag);
         return encodeSignedFloat(d * (v + a * timeStep / maxSpeed));
     }
     else
     {
-        if (indexY == 0.0)
+        if (slot.y == 0.0)
         {
             // life
             float4 pix = tex2D(previousState, inParticle);
@@ -113,16 +112,47 @@ float4 fp_update_state_base(float2 inParticle, bool wrapPositions, float4 wPos)
 float4 fp_update_state(float2 inParticle : TEXCOORD0,
                        float4 inWPos     : WPOS) : COLOR
 {
-    return fp_update_state_base(inParticle, false, inWPos);
+    return fp_update_state_base(false, inWPos);
 }
 
 float4 fp_update_state_wrap(float2 inParticle : TEXCOORD0,
                             float4 inWPos     : WPOS) : COLOR
 {
-    return fp_update_state_base(inParticle, true, inWPos);
+    return fp_update_state_base(true, inWPos);
+}
+
+float4 fp_debug(float2 inParticle: TEXCOORD0,
+                float4 inWPos    : WPOS): COLOR
+{
+    inParticle = particleRegionMap(inParticle);
+    float2 slot = mod(floor(inParticle / invTextureSize), 3);
+    if (slot.x == 0 || slot.x == 1)
+    {
+        return float4(decodeUnsignedFloat(tex2D(previousState, inParticle)).xxx, 0.25);
+    }
+    else
+    {
+        float2 val = decodeUnsignedFloat2(tex2D(previousState, inParticle));
+        return float4(val.x, val.y, 0.0, 0.25);
+    }
 }
 
 // --------------------------------------------------------------
+
+technique debug
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
+
+        VertexProgram   = compile latest vp_update();
+        FragmentProgram = compile latest fp_debug();
+    }
+}
 
 technique clamped
 {
@@ -147,75 +177,5 @@ technique wrapped
         BlendEnable     = false;
         VertexProgram   = compile latest vp_update();
         FragmentProgram = compile latest fp_update_state_wrap();
-    }
-}
-
-
-void vp_debug(in  float2 inUV: POSITION,
-              out float4 outPosition: POSITION)
-{
-    outPosition = float4(inUV * 2.0 - 1.0, 0.0, 1.0);
-}
-
-float4 fp_debug(in float4 wPos: WPOS): COLOR
-{
-    float2 slot = floor(fmod(wPos.xy, 3.0));
-    return((slot.y == 0.0 ? float4(1, 0, 0, 1) :
-            slot.y == 1.0 ? float4(0, 1, 0, 1) :
-            slot.y == 2.0 ? float4(0, 0, 1, 1) :
-            float4(1, 1, 1, 1))
-    +      (slot.x == 0.0 ? float4(1, 0, 0, 1) :
-            slot.x == 1.0 ? float4(0, 1, 0, 1) :
-            slot.x == 2.0 ? float4(0, 0, 1, 1) :
-            float4(1, 1, 1, 1))) * 0.5;
-}
-
-void vp_copy(in  float2 inUV: POSITION,
-              out float4 outPosition: POSITION,
-              out float2 outUV: TEXCOORD0)
-{
-    inUV = (inUV * 5 + 7) * (1.0 / (3.0 * 160.0));
-    outPosition = float4(inUV * 2.0 - 1.0, 0.0, 1.0);
-    outUV = inUV;
-}
-
-sampler2D tex = sampler_state
-{
-    MinFilter = Nearest;
-    MagFilter = Nearest;
-    WrapS = ClampToEdge;
-    WrapT = ClampToEdge;
-};
-
-float4 fp_copy(in float2 uv: TEXCOORD0): COLOR
-{
-    return tex2D(tex, uv);
-}
-
-technique debug
-{
-    pass
-    {
-        DepthTestEnable = false;
-        DepthMask       = false;
-        CullFaceEnable  = false;
-        BlendEnable     = false;
-
-        VertexProgram   = compile latest vp_debug();
-        FragmentProgram = compile latest fp_debug();
-    }
-}
-
-technique copy
-{
-    pass
-    {
-        DepthTestEnable = false;
-        DepthMask       = false;
-        CullFaceEnable  = false;
-        BlendEnable     = false;
-
-        VertexProgram   = compile latest vp_copy();
-        FragmentProgram = compile latest fp_copy();
     }
 }

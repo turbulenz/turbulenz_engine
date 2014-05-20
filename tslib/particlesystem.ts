@@ -5640,6 +5640,21 @@ class ParticleSystem
         }
     }
 
+    renderDebug(shaderManager)
+    {
+        var gd = this.graphicsDevice;
+        gd.setStream(ParticleSystem.fullTextureVertices, ParticleSystem.fullTextureSemantics);
+        var shader = shaderManager.get("shaders/particles-default-update.cgfx");
+        gd.setTechnique(shader.getTechnique("debug"));
+        gd.setTechniqueParameters(gd.createTechniqueParameters({
+            previousState : this.stateContext.renderTargets[this.currentState].colorTexture0,
+            regionPos: this.updateParameters.regionPos,
+            invTextureSize: this.updateParameters.invTextureSize,
+            regionSize: this.updateParameters.regionSize
+        }));
+        gd.draw(gd.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
+    }
+
     queryPosition(id: number, dst?: FloatArray): FloatArray
     {
         if (dst === undefined)
@@ -5698,11 +5713,6 @@ class ParticleSystem
         gd.setTechniqueParameters(this.renderParameters);
         gd.setTechniqueParameters(view.parameters);
         gd.draw(geom.primitive, geom.particleStride * this.maxParticles, 0);
-    }
-
-    renderDebug(): void
-    {
-        // TODO
     }
 }
 

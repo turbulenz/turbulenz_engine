@@ -128,7 +128,7 @@ static const float BIT7 = 255.0 / 128.0;
 static const float BIT8 = 255.0 / 256.0;
 bool bitSet(float value, float BIT)
 {
-    return fract(value * BIT) >= 0.5;
+    return frac(value * BIT) >= 0.5;
 }
 
 float decodeUnsignedFloat(float4 pix)
@@ -171,11 +171,11 @@ float4 encodeSignedFloat(float x)
     return encodeUnsignedFloat((x * 0.5) + 0.5);
 }
 
-float3 extractSignedFloat3(sampler2D tex, float2 uv)
+float3 extractSignedFloat3(sampler2D tex, float2 uv, float2 invTextureSize)
 {
     return float3(extractSignedFloat(tex, uv),
-                  extractSignedFloat(tex, uv + float2(0, 1.0 * invTextureSize.y)),
-                  extractSignedFloat(tex, uv + float2(0, 2.0 * invTextureSize.y)));
+                  extractSignedFloat(tex, uv + float2(0.0, 1.0) * invTextureSize),
+                  extractSignedFloat(tex, uv + float2(0.0, 2.0) * invTextureSize));
 }
 
 float decodeHalfUnsignedFloat(float2 pix) {
@@ -277,9 +277,9 @@ float2 getParticle(float index, sampler2D mappingTable)
 
 float2 getParticleI(float index, sampler2D mappingTable)
 {
-    index *= PARTICLE_DIM.x;
-    float y = floor(index * invRegionSize.x);
-    float x = index - y * regionSize.x;
+    float i = index * PARTICLE_DIM.x;
+    float y = floor(i * invRegionSize.x);
+    float x = i - y * regionSize.x;
     if (zSorted)
     {
         float2 mappingUV = mappingRegionMap((float2(x / PARTICLE_DIM.x, y) + 0.5) * PARTICLE_DIM * invRegionSize);
@@ -288,7 +288,7 @@ float2 getParticleI(float index, sampler2D mappingTable)
     }
     else
     {
-        return float2(x, y * PARTICLE_DIM.x);
+        return float2(x, y * PARTICLE_DIM.y);
     }
 }
 
@@ -316,21 +316,21 @@ float getAnimation(float t, float row)
 // return normalised position for particle
 float3 getPositionI(sampler2D texture, float2 index, float2 invTextureSize)
 {
-    return extractSignedFloat3(texture, (index + PARTICLE_POS) * invTextureSize);
+    return extractSignedFloat3(texture, (index + PARTICLE_POS) * invTextureSize, invTextureSize);
 }
 float3 getPosition(sampler2D texture, float2 particle, float2 invTextureSize)
 {
-    return extractSignedFloat3(texture, particle + (PARTICLE_POS * invTextureSize));
+    return extractSignedFloat3(texture, particle + (PARTICLE_POS * invTextureSize), invTextureSize);
 }
 
 // return normalised velocity for particle
 float3 getVelocityI(sampler2D texture, float2 index, float2 invTextureSize)
 {
-    return extractSignedFloat3(texture, (index + PARTICLE_VEL) * invTextureSize);
+    return extractSignedFloat3(texture, (index + PARTICLE_VEL) * invTextureSize, invTextureSize);
 }
 float3 getVelocity(sampler2D texture, float2 particle, float2 invTextureSize)
 {
-    return extractSignedFloat3(texture, particle + (PARTICLE_VEL * invTextureSize));
+    return extractSignedFloat3(texture, particle + (PARTICLE_VEL * invTextureSize), invTextureSize);
 }
 
 // get rotation matrix for rotation around z-axis
@@ -462,10 +462,16 @@ float getAnimationTime(sampler2D texture, float2 particle, float2 invTextureSize
 }
 
 // return boolean for if this particle should be gathered from creationState instead of previousState
-// takes non-normalised uv of particle
+// takes non-normalised uv of particle base relative to region start.
 bool createdParticle(float2 index)
 {
-    float2 flag = tex2D(creationState, (index + PARTICLE_LIFE) * creationScale).xy;
-    return dot(flag, flag) > 0;
+    float2 flag = tex2D(creationState, (index + PARTICLE_LIFE) * creationScale).xy; // total life time
+    return dot(flag, flag) != 0.0;
 }
 
+// return boolean for if this particle is dead
+bool deadParticle(sampler2D texture, float2 index, float2 invTextureSize)
+{
+    float2 flag = tex2D(texture, (index + PARTICLE_LIFE) * invTextureSize).zw; // current life time
+    return dot(flag, flag) == 0.0;
+}
