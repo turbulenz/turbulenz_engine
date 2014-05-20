@@ -7695,11 +7695,6 @@ class Physics2DBoxTreeBroadphase implements Physics2DBroadphase
         this.dynamicTree.finalize();
     }
 
-    validate(): void
-    {
-        this._validate();
-    }
-
     perform(lambda, thisObject)
     {
         this._validate();
@@ -9702,7 +9697,6 @@ interface Physics2DBroadphase
     update(handle, aabb, isStatic?: boolean): void;
     remove(handle): void;
     clear(callback, thisObject): void;
-    validate(): void;
     perform(lambda, thisObject): void;
 };
 
