@@ -18,14 +18,14 @@ float4 fp_prepare_sort(float2 INParticle : TEXCOORD0) : COLOR
 {
     float2 uv = tex2D(mappingTable, mappingRegionMap(INParticle)).xy;
     float2 particleUV = particleRegionMap(uv * 255.0 * PARTICLE_DIM * invRegionSize);
-    if (getLife(fParticleState, particleUV, invTextureSize) <= 0)
+    if (getLife(fParticleState, particleUV * textureSize) <= 0)
     {
         // maximum order depth (move to back of "list")
         return float4(uv, 1.0, 1.0);
     }
     else
     {
-        float3 pos = getPosition(fParticleState, particleUV, invTextureSize);
+        float3 pos = getPosition(fParticleState, particleUV * textureSize);
         float z = (pos.x * modelView[0].z) + (pos.y * modelView[1].z) + (pos.z * modelView[2].z);
         z = (z + zBound) / (2 * zBound);
         return float4(uv, encodeHalfUnsignedFloat(z));

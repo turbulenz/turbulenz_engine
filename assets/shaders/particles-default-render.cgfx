@@ -92,28 +92,30 @@ float getAlphaNoise(float2 uv, float t) {
 
 // -----------------------------------------------------------------------------
 
-float2 quadVertex[4] = {float2(-1,-1), float2(1,-1), float2(1,1), float2(-1,1)};
+float2 quadVertex[4] = {float2(-1.0, -1.0),
+                        float2( 1.0, -1.0),
+                        float2( 1.0,  1.0),
+                        float2(-1.0,  1.0)};
 void vp_render( in float2 inData     : POSITION,
                out float4 outPosition: POSITION,
-               out float2 outParticle: TEXCOORD0,
-               out float2 outUV      : TEXCOORD1,
+               out float2 outUV      : TEXCOORD0,
                out float4 outColor   : COLOR)
 {
-    float2 particle = particleRegionMap(getParticle(inData.y, mappingTable));
-    float life = getLife(vParticleState, particle, invTextureSize) * maxLifeTime;
-    if (life <= 0)
+    float2 regionIndex = getParticle(inData.y, mappingTable) + regionPos;
+    float life = getLife(vParticleState, regionIndex) * maxLifeTime;
+    if (life == 0.0)
     {
-        outPosition = float4(0, 0, 0, 0);
+        outPosition = float4(0.0);
+        outUV       = float2(0.0);
+        outColor    = float4(0.0);
         return;
     }
 
-    float4 data = getData(vParticleState, particle, invTextureSize);
-    float animTime = getAnimationTime(vParticleState, particle, invTextureSize,
-                                      getLifePair(vParticleState, particle, invTextureSize));
+    float4 data = getData(vParticleState, regionIndex);
+    float animTime = getAnimationTime(vParticleState, regionIndex, getLifePair(vParticleState, regionIndex));
 
     float2 noiseUV = decodeByteUnsignedFloat2(data.z);
-
-    float3 particlePos = getPosition(vParticleState, particle, invTextureSize) * halfExtents;
+    float3 particlePos = getPosition(vParticleState, regionIndex) * halfExtents;
     float3 pos = particlePos + center;
 
     particlePos = halfExtents - abs(particlePos);
@@ -156,7 +158,7 @@ void vp_render( in float2 inData     : POSITION,
     else if (bitSet(data.w, BIT7))
     {
         // velocity orientated verts
-        float3x3 orient = orientTo(getVelocity(vParticleState, particle, invTextureSize));
+        float3x3 orient = orientTo(getVelocity(vParticleState, regionIndex));
         pos += mul(mul(orient, rot), (right * inPosition.x + up * inPosition.y));
         pos = transform43Rot(pos, modelView);
     }
@@ -168,7 +170,6 @@ void vp_render( in float2 inData     : POSITION,
     }
 
     outPosition = mul(float4(transform43Pos(pos, modelView), 1.0), projection);
-    outParticle = particle;
 
     float4 texuv = getUV(animTime);
     // swap y-coordinates to avoid texture-flip
@@ -184,9 +185,8 @@ void vp_render( in float2 inData     : POSITION,
     outColor.w = saturate(outColor.w * fadeOutAlpha);
 }
 
-float4 fp_render(float2 inParticle: TEXCOORD0,
-                 float2 inUV      : TEXCOORD1,
-                 float4 inColor   : COLOR) : COLOR
+float4 fp_render(float2 inUV   : TEXCOORD0,
+                 float4 inColor: COLOR): COLOR
 {
     return tex2D(texture, inUV) * inColor;
 }

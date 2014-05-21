@@ -8,7 +8,7 @@ float drag;
 sampler2D noiseTexture = sampler_state
 {
     MinFilter = LinearMipMapNearest;
-    magFilter = Linear;
+    MagFilter = Linear;
     WrapS = Wrap;
     WrapT = Wrap;
 };
@@ -26,46 +26,39 @@ float3 getAccelerationNoise(float2 uv, float t)
 
 // --------------------------------------------------------------
 
+// wrap x to be within -1.0 to 1.0
 float wrap(float x)
 {
     x = fmod(x + 1.0, 2.0) - 1.0;
-    if (x > 1)
-    {
-        x -= 2;
-    }
-    else if (x < -1)
-    {
-        x += 2;
-    }
-    return x;
+    return x + (step(1.0, -x) - step(1.0, x)) * 2.0;
 }
 
-float4 fp_update_state_base(float2 inParticle, bool wrapPositions)
+float4 fp_update_state_base(bool wrapPositions, float4 wPos)
 {
-    float2 particle = inParticle * regionSize;
-    float2 index = floor(particle / PARTICLE_DIM) * PARTICLE_DIM;
+    float2 particle = floor(wPos.xy - regionPos);                          // N^2 [0, regionSize)  (regionSize is 3N)
+    float2 index = floor(particle * (1.0 / PARTICLE_DIM)) * PARTICLE_DIM;  // (3N)^2 [0, regionSize)
+
     if (createdParticle(index))
     {
         // Newly created particle, no simulation to be performed.
-        return tex2D(creationState, inParticle * creationScale);
+        return tex2D(creationState, (particle + 0.5) * creationScale);
     }
 
-    float2 pIndex = index * invRegionSize;
-    if (getLife(previousState, particleRegionMap(pIndex), invTextureSize) <= 0)
+    float2 regionIndex = index + regionPos;
+    if (deadParticle(previousState, regionIndex))
     {
-        // Dead particle, skip simulation
-        return tex2D(previousState, particleRegionMap(inParticle));
+        // Dead particle
+        return float4(0.0);
     }
 
-    float2 slot = getSlot(particle);
-    float indexY = ceil(slot.y) - 1;
-    if (slot.x <= 1)
+    float2 slot = particle - index; // N^2 [0, 3)
+    float2 inParticle = wPos.xy * invTextureSize; // (0, 1) uv (1/2) index of fragment in output/previousState.
+    if (slot.x == 0.0)
     {
-        // position
-        float p = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
-        float2 vt = inParticle + float2(invRegionSize.x, 0);
-        float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(vt)));
-        p += (v * timeStep * maxSpeed / halfExtents[indexY]) + shift[indexY];
+        // position fragment
+        float p = decodeSignedFloat(tex2D(previousState, inParticle));
+        float v = decodeSignedFloat(tex2D(previousState, inParticle + float2(invTextureSize.x, 0.0)));
+        p += (v * timeStep * maxSpeed / halfExtents[slot.y]) + shift[slot.y];
         if (wrapPositions)
         {
             return encodeSignedFloat(wrap(p));
@@ -75,49 +68,48 @@ float4 fp_update_state_base(float2 inParticle, bool wrapPositions)
             return encodeSignedFloat(p);
         }
     }
-    else if (slot.x <= 2)
+    else if (slot.x == 1.0)
     {
-        // velocity
-        float v = decodeSignedFloat(tex2D(previousState, particleRegionMap(inParticle)));
-        float a = acceleration[indexY];
-        float4 data = getData(previousState, particleRegionMap(pIndex), invTextureSize);
+        // velocity fragment
+        float v = decodeSignedFloat(tex2D(previousState, inParticle));
+        float a = acceleration[slot.y];
+        float4 data = getData(previousState, regionIndex);
         if (bitSet(data.w, BIT1))
         {
             float2 noiseUV = decodeByteUnsignedFloat2(data.z);
-
-            float animTime = getAnimationTime(previousState, particleRegionMap(pIndex), invTextureSize,
-                                              getLifePair(previousState, particleRegionMap(pIndex), invTextureSize));
-
-            a += getAccelerationNoise(noiseUV, animTime)[indexY];
+            float animTime = getAnimationTime(previousState,
+                                              regionIndex,
+                                              getLifePair(previousState, regionIndex));
+            a += getAccelerationNoise(noiseUV, animTime)[slot.y];
         }
         float d = 1.0 - min(1.0, timeStep * drag);
         return encodeSignedFloat(d * (v + a * timeStep / maxSpeed));
     }
     else
     {
-        if (slot.y <= 1)
+        if (slot.y == 0.0)
         {
             // life
-            float4 pix = tex2D(previousState, particleRegionMap(inParticle));
+            float4 pix = tex2D(previousState, inParticle);
             float life = decodeHalfUnsignedFloat(pix.zw);
             return float4(pix.xy, encodeHalfUnsignedFloat(life - lifeStep));
         }
         else
         {
             // user store.
-            return tex2D(previousState, particleRegionMap(inParticle));
+            return tex2D(previousState, inParticle);
         }
     }
 }
 
-float4 fp_update_state(float2 inParticle : TEXCOORD0) : COLOR
+float4 fp_update_state(float4 inWPos: WPOS): COLOR
 {
-    return fp_update_state_base(inParticle, false);
+    return fp_update_state_base(false, inWPos);
 }
 
-float4 fp_update_state_wrap(float2 inParticle : TEXCOORD0) : COLOR
+float4 fp_update_state_wrap(float4 inWPos: WPOS): COLOR
 {
-    return fp_update_state_base(inParticle, true);
+    return fp_update_state_base(true, inWPos);
 }
 
 // --------------------------------------------------------------
@@ -147,4 +139,3 @@ technique wrapped
         FragmentProgram = compile latest fp_update_state_wrap();
     }
 }
-

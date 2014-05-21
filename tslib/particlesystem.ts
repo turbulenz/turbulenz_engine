@@ -5190,8 +5190,8 @@ class ParticleSystem
         var uv  = ctx.uvRectangle;
         var ts  = VMath.v2Build(tex.width, tex.height);
         var its = VMath.v2Reciprocal(ts);
-        var rp  = VMath.v2Build(uv[0] * tex.width, uv[1] * tex.height);
-        var rs  = VMath.v2Build(uv[2] * tex.width, uv[3] * tex.height);
+        var rp  = VMath.v2Build(Math.round(uv[0] * tex.width), Math.round(uv[1] * tex.height));
+        var rs  = VMath.v2Build(Math.round(uv[2] * tex.width), Math.round(uv[3] * tex.height));
         var irs = VMath.v2Reciprocal(rs);
 
         var parameters;
@@ -5618,8 +5618,8 @@ class ParticleSystem
         var targets = this.stateContext.renderTargets;
         var tex = parameters["previousState"] = targets[this.currentState].colorTexture0;
         var scale = parameters["creationScale"];
-        scale[0] = this.particleSize[0] * ParticleSystem.PARTICLE_DIMX / ParticleSystem.createdTexture.width;
-        scale[1] = this.particleSize[1] * ParticleSystem.PARTICLE_DIMY / ParticleSystem.createdTexture.height;
+        scale[0] = 1.0 / ParticleSystem.createdTexture.width;
+        scale[1] = 1.0 / ParticleSystem.createdTexture.height;
 
         gd.setStream(ParticleSystem.fullTextureVertices, ParticleSystem.fullTextureSemantics);
         gd.beginRenderTarget(targets[1 - this.currentState]);
@@ -5638,6 +5638,11 @@ class ParticleSystem
         {
             updater.update(this.updateParameters, this.cpuF32, this.cpuU32, this.tracked, this.numTracked);
         }
+    }
+
+    renderDebug()
+    {
+        // TODO
     }
 
     queryPosition(id: number, dst?: FloatArray): FloatArray
@@ -5698,11 +5703,6 @@ class ParticleSystem
         gd.setTechniqueParameters(this.renderParameters);
         gd.setTechniqueParameters(view.parameters);
         gd.draw(geom.primitive, geom.particleStride * this.maxParticles, 0);
-    }
-
-    renderDebug(): void
-    {
-        // TODO
     }
 }
 
