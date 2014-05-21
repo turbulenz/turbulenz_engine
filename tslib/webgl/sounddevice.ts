@@ -144,7 +144,7 @@ class WebGLSound implements Sound
                 {
                     if (onload)
                     {
-                        onload(null, 0);
+                        onload(null, undefined);
                     }
                     return null;
                 }
@@ -207,7 +207,7 @@ class WebGLSound implements Sound
                     {
                         if (onload)
                         {
-                            onload(null, 0);
+                            onload(null, undefined);
                         }
                         return null;
                     }
@@ -442,7 +442,7 @@ class WebGLSound implements Sound
                     {
                         if (onload)
                         {
-                            onload(null, 0);
+                            onload(null, undefined);
                         }
                         return null;
                     }
@@ -507,7 +507,7 @@ class WebGLSound implements Sound
                 {
                     if (onload)
                     {
-                        onload(null, 0);
+                        onload(null, undefined);
                     }
                     return null;
                 }
@@ -557,7 +557,7 @@ class WebGLSound implements Sound
 
         if (onload)
         {
-            onload(null, 0);
+            onload(null, undefined);
         }
 
         return null;
