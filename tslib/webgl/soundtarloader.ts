@@ -212,7 +212,7 @@ class SoundTARLoader
                     this.soundsLoading += 1;
                     sd.createSound({
                         src : fileName,
-                        data : (sd.audioContext ?
+                        data : (sd.audioContext && (WebGLSound.prototype.forceUncompress || uncompress) ?
                                 bytes.buffer.slice(offset, (offset + header.length)) :
                                 bytes.subarray(offset, (offset + header.length))),
                         uncompress : uncompress,
