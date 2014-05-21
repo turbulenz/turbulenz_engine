@@ -1016,11 +1016,12 @@ interface SoundParameters
     uncompress? : boolean;
 
     name?       : string;
-    data?       : SoundDataFn;
+    data?       : any; // SoundDataFn; TODO: Align this, the
+                       // implementation and the docs.
     channels?   : number;
     frequency?  : number;
 
-    onload?     : { (sound: Sound): void; };
+    onload?     : { (sound: Sound, status: number): void; };
 }
 
 interface Sound

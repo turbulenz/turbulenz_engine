@@ -115,7 +115,7 @@ class WebGLSound implements Sound
         }
     }
 
-    static create(sd: WebGLSoundDevice, params: any): WebGLSound
+    static create(sd: WebGLSoundDevice, params: SoundParameters): WebGLSound
     {
         var sound = new WebGLSound();
 
@@ -1900,24 +1900,24 @@ class WebGLSoundDevice implements SoundDevice
     update: { (): void; };
 
     // Public API
-    createSource(params)
+    createSource(params: SoundSourceParameters): SoundSource
     {
         this.lastSourceID += 1;
         return WebGLSoundSource.create(this, this.lastSourceID, params);
     }
 
-    createGlobalSource(params)
+    createGlobalSource(params: SoundGlobalSourceParameters): SoundGlobalSource
     {
         this.lastSourceID += 1;
         return WebGLSoundGlobalSource.create(this, this.lastSourceID, params);
     }
 
-    createSound(params)
+    createSound(params: SoundParameters): Sound
     {
         return WebGLSound.create(this, params);
     }
 
-    loadSoundsArchive(params: SoundArchiveParameters)
+    loadSoundsArchive(params: SoundArchiveParameters): boolean
     {
         var src = params.src;
         if (typeof SoundTARLoader !== 'undefined')

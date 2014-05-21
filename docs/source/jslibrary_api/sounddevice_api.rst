@@ -14,7 +14,8 @@ Provides 3D sound support using OpenAL.
 Constructor
 ===========
 
-A SoundDevice object can be constructed with :ref:`TurbulenzEngine.createSoundDevice <tz_createsounddevice>`.
+A SoundDevice object can be constructed with
+:ref:`TurbulenzEngine.createSoundDevice <tz_createsounddevice>`.
 
 Methods
 =======
