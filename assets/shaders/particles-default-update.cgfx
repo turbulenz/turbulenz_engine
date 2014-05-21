@@ -26,24 +26,17 @@ float3 getAccelerationNoise(float2 uv, float t)
 
 // --------------------------------------------------------------
 
+// wrap x to be within -1.0 to 1.0
 float wrap(float x)
 {
     x = fmod(x + 1.0, 2.0) - 1.0;
-    if (x > 1)
-    {
-        x -= 2;
-    }
-    else if (x < -1)
-    {
-        x += 2;
-    }
-    return x;
+    return x + (step(1.0, -x) - step(1.0, x)) * 2.0;
 }
 
 float4 fp_update_state_base(bool wrapPositions, float4 wPos)
 {
-    float2 particle = floor(wPos.xy - regionPos);                  // N^2 [0, regionSize)  (regionSize is 3N)
-    float2 index = floor(particle / PARTICLE_DIM) * PARTICLE_DIM;  // (3N)^2 [0, regionSize)
+    float2 particle = floor(wPos.xy - regionPos);                          // N^2 [0, regionSize)  (regionSize is 3N)
+    float2 index = floor(particle * (1.0 / PARTICLE_DIM)) * PARTICLE_DIM;  // (3N)^2 [0, regionSize)
 
     if (createdParticle(index))
     {
@@ -51,19 +44,20 @@ float4 fp_update_state_base(bool wrapPositions, float4 wPos)
         return tex2D(creationState, (particle + 0.5) * creationScale);
     }
 
-    if (deadParticle(previousState, index + regionPos, invTextureSize))
+    float2 regionIndex = index + regionPos;
+    if (deadParticle(previousState, regionIndex))
     {
-        // Dead particle, skip simulation
+        // Dead particle
         return float4(0.0);
     }
 
-    float2 inParticle = wPos.xy * invTextureSize; // (0, 1) uv (1/2) index of fragment in output/previousState.
     float2 slot = particle - index; // N^2 [0, 3)
+    float2 inParticle = wPos.xy * invTextureSize; // (0, 1) uv (1/2) index of fragment in output/previousState.
     if (slot.x == 0.0)
     {
         // position fragment
         float p = decodeSignedFloat(tex2D(previousState, inParticle));
-        float v = decodeSignedFloat(tex2D(previousState, inParticle + float2(1.0, 0.0) * invTextureSize));
+        float v = decodeSignedFloat(tex2D(previousState, inParticle + float2(invTextureSize.x, 0.0)));
         p += (v * timeStep * maxSpeed / halfExtents[slot.y]) + shift[slot.y];
         if (wrapPositions)
         {
@@ -79,14 +73,13 @@ float4 fp_update_state_base(bool wrapPositions, float4 wPos)
         // velocity fragment
         float v = decodeSignedFloat(tex2D(previousState, inParticle));
         float a = acceleration[slot.y];
-        float4 data = getDataI(previousState, index + regionPos, invTextureSize);
+        float4 data = getData(previousState, regionIndex);
         if (bitSet(data.w, BIT1))
         {
             float2 noiseUV = decodeByteUnsignedFloat2(data.z);
-            float animTime = getAnimationTimeI(previousState,
-                                               index + regionPos,
-                                               invTextureSize,
-                                               getLifePairI(previousState, index + regionPos, invTextureSize));
+            float animTime = getAnimationTime(previousState,
+                                              regionIndex,
+                                              getLifePair(previousState, regionIndex));
             a += getAccelerationNoise(noiseUV, animTime)[slot.y];
         }
         float d = 1.0 - min(1.0, timeStep * drag);
@@ -109,50 +102,17 @@ float4 fp_update_state_base(bool wrapPositions, float4 wPos)
     }
 }
 
-float4 fp_update_state(float2 inParticle : TEXCOORD0,
-                       float4 inWPos     : WPOS) : COLOR
+float4 fp_update_state(float4 inWPos: WPOS): COLOR
 {
     return fp_update_state_base(false, inWPos);
 }
 
-float4 fp_update_state_wrap(float2 inParticle : TEXCOORD0,
-                            float4 inWPos     : WPOS) : COLOR
+float4 fp_update_state_wrap(float4 inWPos: WPOS): COLOR
 {
     return fp_update_state_base(true, inWPos);
 }
 
-float4 fp_debug(float2 inParticle: TEXCOORD0,
-                float4 inWPos    : WPOS): COLOR
-{
-    inParticle = particleRegionMap(inParticle);
-    float2 slot = mod(floor(inParticle / invTextureSize), 3);
-    if (slot.x == 0 || slot.x == 1)
-    {
-        return float4(decodeUnsignedFloat(tex2D(previousState, inParticle)).xxx, 0.25);
-    }
-    else
-    {
-        float2 val = decodeUnsignedFloat2(tex2D(previousState, inParticle));
-        return float4(val.x, val.y, 0.0, 0.25);
-    }
-}
-
 // --------------------------------------------------------------
-
-technique debug
-{
-    pass
-    {
-        DepthTestEnable = false;
-        DepthMask       = false;
-        CullFaceEnable  = false;
-        BlendEnable     = true;
-        BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
-
-        VertexProgram   = compile latest vp_update();
-        FragmentProgram = compile latest fp_debug();
-    }
-}
 
 technique clamped
 {

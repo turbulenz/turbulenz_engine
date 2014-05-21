@@ -5640,19 +5640,9 @@ class ParticleSystem
         }
     }
 
-    renderDebug(shaderManager)
+    renderDebug()
     {
-        var gd = this.graphicsDevice;
-        gd.setStream(ParticleSystem.fullTextureVertices, ParticleSystem.fullTextureSemantics);
-        var shader = shaderManager.get("shaders/particles-default-update.cgfx");
-        gd.setTechnique(shader.getTechnique("debug"));
-        gd.setTechniqueParameters(gd.createTechniqueParameters({
-            previousState : this.stateContext.renderTargets[this.currentState].colorTexture0,
-            regionPos: this.updateParameters.regionPos,
-            invTextureSize: this.updateParameters.invTextureSize,
-            regionSize: this.updateParameters.regionSize
-        }));
-        gd.draw(gd.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
+        // TODO
     }
 
     queryPosition(id: number, dst?: FloatArray): FloatArray
