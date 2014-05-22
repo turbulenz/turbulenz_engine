@@ -5542,7 +5542,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     //Internal
 
-    setParametersImmediate(parameters, techniqueParameters)
+    setParametersImmediate(parameters: { [name: string]: PassParameter },
+                           techniqueParameters: WebGLTechniqueParameters): void
     {
         var gl = this.gl;
 
@@ -5620,7 +5621,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
-    setParametersCaching(parameters: PassParameter[], techniqueParameters)
+    setParametersCaching(parameters: { [name: string]: PassParameter },
+                         techniqueParameters: WebGLTechniqueParameters): void
     {
         var gl = this.gl;
 
@@ -5703,12 +5705,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAYMULTIPASS
-    setParametersCachingMultiPass(gd, passes, techniqueParameters)
+    setParametersCachingMultiPass(gd: WebGLGraphicsDevice,
+                                  passes: WebGLPass[],
+                                  techniqueParameters: WebGLTechniqueParameters): void
     {
         gd.setParametersCaching(passes[0].parameters, techniqueParameters);
     }
 
-    setParametersDeferred(gd, passes, techniqueParameters)
+    setParametersDeferred(gd: WebGLGraphicsDevice,
+                          passes: WebGLPass[],
+                          techniqueParameters: WebGLTechniqueParameters): void
     {
         var numPasses = passes.length;
         var min = Math.min;
@@ -5894,15 +5900,15 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         var activeIndexBuffer = this.activeIndexBuffer;
         var attributeMask = this.attributeMask;
-        var lastTechnique = null;
+        var lastTechnique: WebGLTechnique = null;
         var lastEndStreams = -1;
         var lastDrawParameters = null;
         var techniqueParameters = null;
         var v = 0;
         var streamsMatch = false;
         var vertexBuffer = null;
-        var pass = null;
-        var passParameters = null;
+        var pass: WebGLPass = null;
+        var passParameters: { [name: string]: PassParameter } = null;
         var indexFormat = 0;
         var indexStride = 0;
         var mask = 0;
@@ -5917,7 +5923,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         for (var n = 0; n < numDrawParameters; n += 1)
         {
             var drawParameters = drawParametersArray[n];
-            var technique = drawParameters.technique;
+            var technique: WebGLTechnique = drawParameters.technique;
             var endTechniqueParameters = drawParameters.endTechniqueParameters;
             var endStreams = drawParameters.endStreams;
             var endInstances = drawParameters.endInstances;
@@ -6107,16 +6113,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var activeIndexBuffer = this.activeIndexBuffer;
         var attributeMask = this.attributeMask;
         var setParameters = null;
-        var lastTechnique = null;
+        var lastTechnique: WebGLTechnique = null;
         var lastEndStreams = -1;
         var lastDrawParameters = null;
         var techniqueParameters = null;
         var v = 0;
         var streamsMatch = false;
         var vertexBuffer = null;
-        var passes = null;
+        var passes: WebGLPass[] = null;
         var p = null;
-        var pass = null;
+        var pass: WebGLPass = null;
         var indexFormat = 0;
         var indexStride = 0;
         var numPasses = 0;
@@ -6132,7 +6138,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         for (var n = 0; n < numDrawParameters; n += 1)
         {
             var drawParameters = <WebGLDrawParameters>(drawParametersArray[n]);
-            var technique = drawParameters.technique;
+            var technique: WebGLTechnique = drawParameters.technique;
             var endTechniqueParameters = drawParameters.endTechniqueParameters;
             var endStreams = drawParameters.endStreams;
             var endInstances = drawParameters.endInstances;
