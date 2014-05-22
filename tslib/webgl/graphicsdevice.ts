@@ -3537,13 +3537,20 @@ class WebGLVertexBuffer implements VertexBuffer
 // Pass
 //
 
-// TODO: Remove the '?'s.  How should we handle creating instances of
-// this?
+interface WebGLShaderParameter extends ShaderParameter
+{
+    numValues : number;
+    values  : any;
+    sampler : any;
+};
+
 interface PassParameter
 {
-    info?: any;
-    textureUnit?: number;
-    location?: number;
+    info: WebGLShaderParameter;
+    value: any;
+    location: WebGLUniformLocation;
+    textureUnit: number;
+    dirty?: number;
 };
 
 interface StateBase
@@ -3605,7 +3612,8 @@ class WebGLPass implements Pass
     };
 
     name: string;
-    parameters: any;
+    parameters: { [name: string]: PassParameter };
+    parametersArray: PassParameter[];
 
     glProgram: WebGLProgram;
     semanticsMask: number;
@@ -3622,75 +3630,74 @@ class WebGLPass implements Pass
         this.dirty = false;
 
         // Set parameters
-        var parameters = this.parameters;
-        for (var p in parameters)
+        var parameters = this.parametersArray;
+        var numParameters = parameters.length;
+        var n;
+        for (n = 0; n < numParameters; n += 1)
         {
-            if (parameters.hasOwnProperty(p))
+            var parameter = parameters[n];
+            if (parameter.dirty)
             {
-                var parameter = parameters[p];
-                if (parameter.dirty)
+                parameter.dirty = 0;
+
+                var paramInfo = parameter.info;
+                var location = parameter.location;
+                if (paramInfo &&
+                    null !== location)
                 {
-                    parameter.dirty = 0;
+                    var parameterValues = paramInfo.values;
 
-                    var paramInfo = parameter.info;
-                    var location = parameter.location;
-                    if (paramInfo &&
-                        null !== location)
+                    var numColumns;
+                    if (paramInfo.type === 'float')
                     {
-                        var parameterValues = paramInfo.values;
-
-                        var numColumns;
-                        if (paramInfo.type === 'float')
+                        numColumns = paramInfo.columns;
+                        if (4 === numColumns)
                         {
-                            numColumns = paramInfo.columns;
-                            if (4 === numColumns)
-                            {
-                                gl.uniform4fv(location, parameterValues);
-                            }
-                            else if (3 === numColumns)
-                            {
-                                gl.uniform3fv(location, parameterValues);
-                            }
-                            else if (2 === numColumns)
-                            {
-                                gl.uniform2fv(location, parameterValues);
-                            }
-                            else if (1 === paramInfo.rows)
-                            {
-                                gl.uniform1f(location, parameterValues[0]);
-                            }
-                            else //if (1 === numColumns)
-                            {
-                                gl.uniform1fv(location, parameterValues);
-                            }
+                            gl.uniform4fv(location, parameterValues);
                         }
-                        else if (paramInfo.sampler !== undefined)
+                        else if (3 === numColumns)
                         {
-                            gd.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                            gl.uniform3fv(location, parameterValues);
                         }
-                        else
+                        else if (2 === numColumns)
                         {
-                            numColumns = paramInfo.columns;
-                            if (4 === numColumns)
-                            {
-                                gl.uniform4iv(location, parameterValues);
-                            }
-                            else if (3 === numColumns)
-                            {
-                                gl.uniform3iv(location, parameterValues);
-                            }
-                            else if (2 === numColumns)
-                            {
-                                gl.uniform2iv(location, parameterValues);
-                            }
-                            else if (1 === paramInfo.rows)
-                            {
-                                gl.uniform1i(location, parameterValues[0]);
-                            }
-                            else //if (1 === numColumns)
-                            {
-                                gl.uniform1iv(location, parameterValues);
-                            }
+                            gl.uniform2fv(location, parameterValues);
+                        }
+                        else if (1 === paramInfo.rows)
+                        {
+                            gl.uniform1f(location, parameterValues[0]);
+                        }
+                        else //if (1 === numColumns)
+                        {
+                            gl.uniform1fv(location, parameterValues);
+                        }
+                    }
+                    else if (paramInfo.sampler !== undefined)
+                    {
+                        gd.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                    }
+                    else
+                    {
+                        numColumns = paramInfo.columns;
+                        if (4 === numColumns)
+                        {
+                            gl.uniform4iv(location, parameterValues);
+                        }
+                        else if (3 === numColumns)
+                        {
+                            gl.uniform3iv(location, parameterValues);
+                        }
+                        else if (2 === numColumns)
+                        {
+                            gl.uniform2iv(location, parameterValues);
+                        }
+                        else if (1 === paramInfo.rows)
+                        {
+                            gl.uniform1i(location, parameterValues[0]);
+                        }
+                        else //if (1 === numColumns)
+                        {
+                            gl.uniform1iv(location, parameterValues);
                         }
                     }
                 }
@@ -3789,6 +3796,7 @@ class WebGLPass implements Pass
     {
         delete this.glProgram;
         delete this.semanticsMask;
+        delete this.parametersArray;
         delete this.parameters;
         delete this.states;
         delete this.statesSet;
@@ -3871,30 +3879,35 @@ class WebGLPass implements Pass
         // Set parameters
         var numTextureUnits = 0;
         var passParameters = {};
+        var passParametersArray = [];
         pass.parameters = passParameters;
+        pass.parametersArray = passParametersArray;
         var numParameters = parameterNames ? parameterNames.length : 0;
-        for (p = 0; p < numParameters; p += 1)
+        var n;
+        for (n = 0; n < numParameters; n += 1)
         {
-            var parameterName = parameterNames[p];
-
-            var parameter : PassParameter = {};
-            passParameters[parameterName] = parameter;
+            var parameterName = parameterNames[n];
 
             var paramInfo = parameters[parameterName];
-            parameter.info = paramInfo;
+
+            var parameter : PassParameter = {
+                info : paramInfo,
+                value: null,
+                location: null,
+                textureUnit: undefined
+            };
+
             if (paramInfo)
             {
-                parameter.location = null;
                 if (paramInfo.sampler)
                 {
                     parameter.textureUnit = numTextureUnits;
                     numTextureUnits += 1;
                 }
-                else
-                {
-                    parameter.textureUnit = undefined;
-                }
             }
+
+            passParameters[parameterName] = parameter;
+            passParametersArray[n] = parameter;
         }
         pass.numTextureUnits = numTextureUnits;
         pass.numParameters = numParameters;
@@ -4091,7 +4104,7 @@ class WebGLTechnique implements Technique
     {
         var gl = gd.gl;
 
-        function make_sampler_setter(pass, parameter) {
+        function make_sampler_setter(pass: WebGLPass, parameter: PassParameter) {
             return function (parameterValues) {
                 if (this.device)
                 {
@@ -4106,7 +4119,7 @@ class WebGLTechnique implements Technique
             };
         }
 
-        function make_float_uniform_setter(pass, parameter) {
+        function make_float_uniform_setter(pass: WebGLPass, parameter: PassParameter) {
 
             var paramInfo = parameter.info;
             var location = parameter.location;
@@ -4200,7 +4213,7 @@ class WebGLTechnique implements Technique
             }
         }
 
-        function make_int_uniform_setter(pass, parameter) {
+        function make_int_uniform_setter(pass: WebGLPass, parameter: PassParameter) {
             var paramInfo = parameter.info;
             var location = parameter.location;
 
@@ -4461,7 +4474,7 @@ class TZWebGLShader implements Shader
     techniques     : {}; // Technique[];
 
     numParameters  : number;
-    parameters     : any;
+    parameters     : { [name: string]: WebGLShaderParameter };
 
     samplers       : any;
 
@@ -5607,7 +5620,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
-    setParametersCaching(parameters, techniqueParameters)
+    setParametersCaching(parameters: PassParameter[], techniqueParameters)
     {
         var gl = this.gl;
 
@@ -5768,7 +5781,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
-    setTechniqueCaching(technique)
+    setTechniqueCaching(technique: WebGLTechnique)
     {
         var pass = technique.passes[0];
 
@@ -5787,13 +5800,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
             this.setPass(pass);
         }
 
-        var parameters = pass.parameters;
-        for (var p in parameters)
+        var parameters = pass.parametersArray;
+        var numParameters = parameters.length;
+        var n;
+        for (n = 0; n < numParameters; n += 1)
         {
-            if (parameters.hasOwnProperty(p))
-            {
-                parameters[p].value = null;
-            }
+            parameters[n].value = null;
         }
     }
 
