@@ -245,7 +245,6 @@ class CascadedShadowMapping
             shadowSize: 0.0,
             invShadowSize: 0.0,
             shadowMapTexture: null,
-            shadowSplitDistances: md.v4BuildZero(),
             worldShadowProjection0: null,
             viewShadowProjection0: null,
             shadowScaleOffset0: null,
