@@ -35,8 +35,10 @@ float wrap(float x)
 
 float4 fp_update_state_base(bool wrapPositions, float4 wPos)
 {
-    float2 particle = floor(wPos.xy - regionPos);                          // N^2 [0, regionSize)  (regionSize is 3N)
-    float2 index = floor(particle * (1.0 / PARTICLE_DIM)) * PARTICLE_DIM;  // (3N)^2 [0, regionSize)
+    float2 particle = floor(wPos.xy - regionPos);                  // N^2 [0, regionSize)  (regionSize is 3N)
+
+    // Note: IE11 bug, cannot do * (1.0 / PARTICLE_DIM) as this breaks!
+    float2 index = floor(particle / PARTICLE_DIM) * PARTICLE_DIM;  // (3N)^2 [0, regionSize)
 
     if (createdParticle(index))
     {
