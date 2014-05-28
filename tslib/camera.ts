@@ -9,17 +9,12 @@ class Camera
     static version = 1;
     /* tslint:enable:no-unused-variable */
 
-    static _frustumPoints = []; // v4[]
-
     md                   : MathDevice;
     matrix               : any;   // m43
     viewMatrix           : any;   // m43
     projectionMatrix     : any;   // m44
     viewProjectionMatrix : any;   // m44
     frustumPlanes        : any[]; // v4[]
-
-    // updateProjectionMatrix(): void;
-    // updateFrustumPlanes(): void;
 
     viewOffsetX = 0.0;
     viewOffsetY = 0.0;
@@ -35,6 +30,12 @@ class Camera
     nearPlane = 1.0;
     farPlane  = 1000.0;
 
+    // On prototype
+    _frustumPoints: any[];
+    _tempZAxis: any; // v3
+    _tempYAxis: any; // v3
+    _tempXAxis: any; // v3
+
     constructor(md: MathDevice)
     {
         this.md = md;
@@ -49,11 +50,11 @@ class Camera
     lookAt(lookAt, up, eyePosition)
     {
         var md = this.md;
-        var zaxis = md.v3Sub(eyePosition, lookAt);
+        var zaxis = md.v3Sub(eyePosition, lookAt, this._tempZAxis);
         md.v3Normalize(zaxis, zaxis);
-        var xaxis = md.v3Cross(md.v3Normalize(up, up), zaxis);
+        var xaxis = md.v3Cross(md.v3Normalize(up, up), zaxis, this._tempXAxis);
         md.v3Normalize(xaxis, xaxis);
-        var yaxis = md.v3Cross(zaxis, xaxis);
+        var yaxis = md.v3Cross(zaxis, xaxis, this._tempYAxis);
         this.matrix = md.m43Build(xaxis, yaxis, zaxis, eyePosition, this.matrix);
     }
 
@@ -371,7 +372,7 @@ class Camera
 
     getFrustumExtents(extents, farClip, nearClip?)
     {
-        var frustumPoints = this.getFrustumPoints(farClip, nearClip, Camera._frustumPoints);
+        var frustumPoints = this.getFrustumPoints(farClip, nearClip, this._frustumPoints);
         var frustumPoint = frustumPoints[0];
         var min0 = frustumPoint[0];
         var min1 = frustumPoint[1];
@@ -421,10 +422,20 @@ class Camera
     // Constructor function
     static create(md: MathDevice): Camera
     {
-        var c = new Camera(md);
-        return c;
+        if (!Camera.prototype._tempZAxis)
+        {
+            Camera.prototype._tempZAxis = md.v3BuildZero();
+            Camera.prototype._tempYAxis = md.v3BuildZero();
+            Camera.prototype._tempXAxis = md.v3BuildZero();
+        }
+        return new Camera(md);
     }
 }
+
+Camera.prototype._frustumPoints = []; // v4[]
+Camera.prototype._tempZAxis = null; // v3
+Camera.prototype._tempYAxis = null; // v3
+Camera.prototype._tempXAxis = null; // v3
 
 //
 // CameraController
