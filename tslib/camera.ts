@@ -35,6 +35,17 @@ class Camera
     nearPlane = 1.0;
     farPlane  = 1000.0;
 
+    constructor(md: MathDevice)
+    {
+        this.md = md;
+        this.matrix = md.m43BuildIdentity();
+        this.viewMatrix = md.m43BuildIdentity();
+        this.updateProjectionMatrix();
+        this.viewProjectionMatrix = this.projectionMatrix.slice();
+        this.frustumPlanes = [];
+        this.updateFrustumPlanes();
+    }
+
     lookAt(lookAt, up, eyePosition)
     {
         var md = this.md;
@@ -410,14 +421,7 @@ class Camera
     // Constructor function
     static create(md: MathDevice): Camera
     {
-        var c = new Camera();
-        c.md = md;
-        c.matrix = md.m43BuildIdentity();
-        c.viewMatrix = md.m43BuildIdentity();
-        c.updateProjectionMatrix();
-        c.viewProjectionMatrix = c.projectionMatrix.slice();
-        c.frustumPlanes = [];
-        c.updateFrustumPlanes();
+        var c = new Camera(md);
         return c;
     }
 }
