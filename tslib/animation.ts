@@ -1434,6 +1434,9 @@ class BlendController implements ControllerBaseClass
     controllers: ControllerBaseClass[];
     blendDelta: number;
 
+    // prototype
+    scratchV3            : any; // v3
+
     addTime(delta)
     {
         this.dirty = true;
@@ -1550,7 +1553,7 @@ class BlendController implements ControllerBaseClass
         var newCenter = mathDevice.v3ScalarMul(centerSum, 0.5, centerSum);
         this.bounds.center = newCenter;
         var newExtent = mathDevice.v3Max(boundsStart.halfExtent, boundsEnd.halfExtent, this.bounds.halfExtent);
-        var centerOffset = mathDevice.v3Sub(boundsStart.center, newCenter);
+        var centerOffset = mathDevice.v3Sub(boundsStart.center, newCenter, this.scratchV3);
         centerOffset = mathDevice.v3Abs(centerOffset, centerOffset);
         this.bounds.halfExtent = mathDevice.v3Add(newExtent, centerOffset, newExtent);
 
@@ -1645,10 +1648,16 @@ class BlendController implements ControllerBaseClass
         c.dirty = true;
         c.dirtyBounds = true;
 
+        if (c.scratchV3 === null)
+        {
+            BlendController.prototype.scratchV3 = md.v3BuildZero();
+        }
 
         return c;
     }
 }
+
+BlendController.prototype.scratchV3 = null;
 
 // The MaskController takes joints from various controllers based on a per joint mask
 class MaskController implements ControllerBaseClass
