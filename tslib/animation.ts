@@ -1451,9 +1451,6 @@ class BlendController implements ControllerBaseClass
     update()
     {
         var mathDevice = this.mathDevice;
-        var quatSlerp = mathDevice.quatSlerp;
-        var v3Lerp = mathDevice.v3Lerp;
-        var v3Copy = mathDevice.v3Copy;
 
         // Decide the pair of controllers we'll blend between and the delta
         var controllers = this.controllers;
@@ -1490,8 +1487,8 @@ class BlendController implements ControllerBaseClass
             var j1 = startOutput[j];
             var j2 = endOutput[j];
 
-            joint.rotation = quatSlerp.call(mathDevice, j1.rotation, j2.rotation, delta, joint.rotation);
-            joint.translation = v3Lerp.call(mathDevice, j1.translation, j2.translation, delta, joint.translation);
+            joint.rotation = mathDevice.quatSlerp(j1.rotation, j2.rotation, delta, joint.rotation);
+            joint.translation = mathDevice.v3Lerp(j1.translation, j2.translation, delta, joint.translation);
 
             if (outputScale)
             {
@@ -1499,16 +1496,16 @@ class BlendController implements ControllerBaseClass
                 {
                     if (scaleOnEnd)
                     {
-                        joint.scale = v3Lerp.call(mathDevice, j1.scale, j2.scale, delta, joint.scale);
+                        joint.scale = mathDevice.v3Lerp(j1.scale, j2.scale, delta, joint.scale);
                     }
                     else
                     {
-                        joint.scale = v3Copy.call(mathDevice, j1.scale, joint.scale);
+                        joint.scale = mathDevice.v3Copy(j1.scale, joint.scale);
                     }
                 }
                 else if (scaleOnEnd)
                 {
-                    joint.scale = v3Copy.call(mathDevice, j2.scale, joint.scale);
+                    joint.scale = mathDevice.v3Copy(j2.scale, joint.scale);
                 }
             }
         }
