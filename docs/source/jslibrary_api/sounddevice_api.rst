@@ -115,7 +115,7 @@ which case the name will be the ``src`` e.g. "sounds/duck.ogg" if ``name`` is no
     // For a procedural sound (without a src parameter)
     soundDevice.createSound({
         name : "Beep1",
-        data   : SoundManager.prototype.beep(4000, 400, 1),
+        data   : SoundManager.beep(4000, 400, 1),
         channels : 1,
         frequency : 4000,
         onload : function (proceduralSound)

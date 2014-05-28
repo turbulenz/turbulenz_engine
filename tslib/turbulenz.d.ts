@@ -1016,8 +1016,7 @@ interface SoundParameters
     uncompress? : boolean;
 
     name?       : string;
-    data?       : any; // SoundDataFn; TODO: Align this, the
-                       // implementation and the docs.
+    data?       : any; // number[];
     channels?   : number;
     frequency?  : number;
 
