@@ -419,6 +419,82 @@ class Camera
         extents[5] = max2;
     }
 
+    clampAABBToFrustum(extents, threshold): boolean
+    {
+        var frustumPlanes = this.frustumPlanes;
+
+        var minGridX = extents[0];
+        var minGridY = extents[1];
+        var minGridZ = extents[2];
+        var maxGridX = extents[3];
+        var maxGridY = extents[4];
+        var maxGridZ = extents[5];
+
+        var abs = Math.abs;
+        var n = 0;
+        do
+        {
+            var plane = frustumPlanes[n];
+            var d0 = plane[0];
+            var d1 = plane[1];
+            var d2 = plane[2];
+            var maxDistance = (d0 * (d0 < 0 ? minGridX : maxGridX) +
+                               d1 * (d1 < 0 ? minGridY : maxGridY) +
+                               d2 * (d2 < 0 ? minGridZ : maxGridZ) - plane[3]);
+            if (maxDistance < threshold)
+            {
+                return false;
+            }
+            else
+            {
+                if (maxDistance < abs(d0) * (maxGridX - minGridX))
+                {
+                    if (d0 < 0)
+                    {
+                        maxGridX = minGridX - (maxDistance / d0);
+                    }
+                    else
+                    {
+                        minGridX = maxGridX - (maxDistance / d0);
+                    }
+                }
+                if (maxDistance < abs(d1) * (maxGridY - minGridY))
+                {
+                    if (d1 < 0)
+                    {
+                        maxGridY = minGridY - (maxDistance / d1);
+                    }
+                    else
+                    {
+                        minGridY = maxGridY - (maxDistance / d1);
+                    }
+                }
+                if (maxDistance < abs(d2) * (maxGridZ - minGridZ))
+                {
+                    if (d2 < 0)
+                    {
+                        maxGridZ = minGridZ - (maxDistance / d2);
+                    }
+                    else
+                    {
+                        minGridZ = maxGridZ - (maxDistance / d2);
+                    }
+                }
+            }
+            n += 1;
+        }
+        while (n < 6);
+
+        extents[0] = minGridX;
+        extents[1] = minGridY;
+        extents[2] = minGridZ;
+        extents[3] = maxGridX;
+        extents[4] = maxGridY;
+        extents[5] = maxGridZ;
+
+        return true;
+    }
+
     // Constructor function
     static create(md: MathDevice): Camera
     {

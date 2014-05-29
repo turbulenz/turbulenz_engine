@@ -259,6 +259,29 @@ Returns true if the given axis-aligned bounding box is visible from the camera.
     The :ref:`extents <extents>` of the bounding box.
 
 
+.. index::
+    pair: Camera; clampAABBToFrustum
+
+`clampAABBToFrustum`
+--------------------
+
+**Summary**
+
+Clamps the given axis-aligned bounding box to the frustum planes and returns true
+if the clamped bounding box is visible from the camera.
+
+**Syntax** ::
+
+    camera.updateFrustumPlanes();
+    var isVisible = camera.clampAABBToFrustum(extents, threshold);
+
+``extents``
+    The :ref:`extents <extents>` of the bounding box to be clamped.
+
+``threshold``
+    The minimum positive distance to a plane for the bounding box to be considered visible.
+
+
 Properties
 ==========
 
