@@ -1841,6 +1841,20 @@ class Physics2DCustomConstraint extends Physics2DConstraint
 //
 ///*PULLEY_DATA_SIZE*/37
 
+interface Physics2DPulleyConstraintParams extends Physics2DConstraintParams {
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    bodyC: Physics2DRigidBody;
+    bodyD: Physics2DRigidBody;
+    anchorA?: any;
+    anchorB?: any;
+    anchorC?: any;
+    anchorD?: any;
+    ratio?: number;
+    lowerBound?: number;
+    upperBound?: number;
+}
+
 class Physics2DPulleyConstraint extends Physics2DConstraint
 {
     type = "PULLEY";
@@ -2565,7 +2579,7 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
     //   lowerBound, upperBound, ratio
     //   .. common constraint params
     // }
-    static create(params): Physics2DPulleyConstraint
+    static create(params: Physics2DPulleyConstraintParams): Physics2DPulleyConstraint
     {
         var p = new Physics2DPulleyConstraint();
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*PULLEY_DATA_SIZE*/37));
@@ -2625,6 +2639,13 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
 ///*MOTOR_JMAX*/9   // Maximum impulse (maxForce derived)
 //
 ///*MOTOR_DATA_SIZE*/10
+
+interface Physics2DMotorConstraintParams extends Physics2DConstraintParams {
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    ratio?: number;
+    rate?: number;
+}
 
 class Physics2DMotorConstraint extends Physics2DConstraint
 {
@@ -2767,7 +2788,7 @@ class Physics2DMotorConstraint extends Physics2DConstraint
         return false;
     }
 
-    static create(params): Physics2DMotorConstraint
+    static create(params: Physics2DMotorConstraintParams): Physics2DMotorConstraint
     {
         var p = new Physics2DMotorConstraint();
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*MOTOR_DATA_SIZE*/10));
@@ -2823,6 +2844,16 @@ Physics2DMotorConstraint.prototype._sleepComputation =
 ///*LINE_SCALE*/32     // Direction scaling of axis.
 //
 ///*LINE_DATA_SIZE*/33
+
+interface Physics2DLineConstraintParams extends Physics2DConstraintParams {
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    axis: any;
+    anchorA?: any;
+    anchorB?: any;
+    lowerBound?: number;
+    upperBound?: number;
+}
 
 class Physics2DLineConstraint extends Physics2DConstraint
 {
@@ -3289,7 +3320,7 @@ class Physics2DLineConstraint extends Physics2DConstraint
     //   lowerBound, upperBound
     //   .. common constraint params
     // }
-    static create(params): Physics2DLineConstraint
+    static create(params: Physics2DLineConstraintParams): Physics2DLineConstraint
     {
         var p = new Physics2DLineConstraint();
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*LINE_DATA_SIZE*/33));
@@ -3355,6 +3386,15 @@ Physics2DLineConstraint.prototype._sleepComputation =
 ///*DIST_CX2*/23       // (RANCHOR2 cross NORMAL)
 //
 ///*DIST_DATA_SIZE*/24
+
+interface Physics2DDistanceConstraintParams extends Physics2DConstraintParams {
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    anchorA?: any;
+    anchorB?: any;
+    lowerBound?: number;
+    upperBound?: number;
+}
 
 class Physics2DDistanceConstraint extends Physics2DConstraint
 {
@@ -3750,7 +3790,7 @@ class Physics2DDistanceConstraint extends Physics2DConstraint
     //   lowerBound, upperBound
     //   .. common constraint params
     // }
-    static create(params): Physics2DDistanceConstraint
+    static create(params:Physics2DDistanceConstraintParams): Physics2DDistanceConstraint
     {
         var p = new Physics2DDistanceConstraint();
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*DIST_DATA_SIZE*/24));
@@ -3813,6 +3853,14 @@ Physics2DDistanceConstraint.prototype._sleepComputation =
 ///*ANGLE_SCALE*/13   // Scaling for impulse direction.
 //
 ///*ANGLE_DATA_SIZE*/14
+
+interface Physics2DAngleConstraintParams extends Physics2DConstraintParams {
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    ratio?: number;
+    lowerBound?: number;
+    upperBound?: number;
+}
 
 class Physics2DAngleConstraint extends Physics2DConstraint
 {
@@ -4120,7 +4168,7 @@ class Physics2DAngleConstraint extends Physics2DConstraint
     //   lowerBound, upperBound, ratio
     //   ... common constraint params
     // }
-    static create(params): Physics2DAngleConstraint
+    static create(params:Physics2DAngleConstraintParams): Physics2DAngleConstraint
     {
         var p = new Physics2DAngleConstraint();
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*ANGLE_DATA_SIZE*/14));
@@ -4173,6 +4221,14 @@ Physics2DAngleConstraint.prototype._sleepComputation =
 ///*WELD_BIAS*/25     // Bias for soft constraint (x, y, w) (maxError derived).
 //
 ///*WELD_DATA_SIZE*/28
+
+interface Physics2DWeldConstraintParams extends Physics2DConstraintParams {
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    anchorA?: any;
+    anchorB?: any;
+    phase?: number;
+}
 
 class Physics2DWeldConstraint extends Physics2DConstraint
 {
@@ -4541,7 +4597,7 @@ class Physics2DWeldConstraint extends Physics2DConstraint
     //   phase
     //   ... common constraint params
     // }
-    static create(params): Physics2DWeldConstraint
+    static create(params: Physics2DWeldConstraintParams): Physics2DWeldConstraint
     {
         var p = new Physics2DWeldConstraint();
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*WELD_DATA_SIZE*/28));
@@ -4596,6 +4652,13 @@ Physics2DWeldConstraint.prototype._sleepComputation =
 ///*POINT_BIAS*/20     // Bias for soft constraint (x, y) (maxError derived).
 //
 ///*POINT_DATA_SIZE*/22
+
+interface Physics2DPointConstraintParams extends Physics2DConstraintParams {
+    bodyA: Physics2DRigidBody;
+    bodyB: Physics2DRigidBody;
+    anchorA?: any;
+    anchorB?: any;
+}
 
 class Physics2DPointConstraint extends Physics2DConstraint
 {
@@ -4909,7 +4972,7 @@ class Physics2DPointConstraint extends Physics2DConstraint
     //   ... common constraint params
     // }
 
-    static create(params): Physics2DPointConstraint
+    static create(params: Physics2DPointConstraintParams): Physics2DPointConstraint
     {
         var p = new Physics2DPointConstraint();
         var data = p._data = new Physics2DDevice.prototype.floatArray((/*POINT_DATA_SIZE*/22));
@@ -4974,6 +5037,14 @@ interface Physics2DShapeCallbackStore
     type: number;
     deterministic: boolean;
 };
+
+interface Physics2DShapeParams {
+    sensor?: boolean;
+    material?: Physics2DMaterial;
+    group?: number;
+    mask?: number;
+    userData?: any;
+}
 
 class Physics2DShape
 {
@@ -5115,7 +5186,7 @@ class Physics2DShape
         to._events = []; // onBegin, onEnd, onProgress combined.
     }
 
-    init(shape: Physics2DShape, params): void
+    init(shape: Physics2DShape, params: Physics2DShapeParams): void
     {
         shape._material = params.material || Physics2DMaterial.create();
         shape._group = (params.group !== undefined) ? params.group : 1;
@@ -5259,6 +5330,11 @@ class Physics2DShape
 ///*CIRCLE_WORLD*/9     // World position of circle origin (x, y)
 //
 ///*CIRCLE_DATA_SIZE*/11
+
+interface Physics2DCircleParams extends Physics2DShapeParams {
+    radius: number;
+    origin?: any;
+}
 
 class Physics2DCircle extends Physics2DShape
 {
@@ -5508,7 +5584,7 @@ class Physics2DCircle extends Physics2DShape
     //      origin: [##, ##] = [0, 0],
     //      ... common shape props.
     // }
-    static create(params): Physics2DCircle
+    static create(params: Physics2DCircleParams): Physics2DCircle
     {
         var c = new Physics2DCircle();
         c._type = (/*TYPE_CIRCLE*/0);
@@ -5552,6 +5628,10 @@ class Physics2DCircle extends Physics2DShape
 ///*POLY_CROSS1*/10    // World cross-projection of vertex to its edge.
 ///*POLY_CROSS2*/11   // World cross-projection of 'next' vertex to this edge.
 ///*POLY_LENGTH*/12   // Length of edge startinga t this vertex.
+
+interface Physics2DPolygonParams extends Physics2DShapeParams {
+    vertices: any[];
+}
 
 class Physics2DPolygon extends Physics2DShape
 {
@@ -6056,7 +6136,7 @@ class Physics2DPolygon extends Physics2DShape
     //      ... common shape props.
     // }
     // inVertices optionally replacing params.vertices
-    static create(params, inVertices?): Physics2DPolygon
+    static create(params: Physics2DPolygonParams, inVertices?): Physics2DPolygon
     {
         var p = new Physics2DPolygon();
         p._type = (/*TYPE_POLYGON*/1);
@@ -6101,6 +6181,25 @@ class Physics2DPolygon extends Physics2DShape
 ///*TYPE_DYNAMIC*/0
 ///*TYPE_KINEMATIC*/1
 ///*TYPE_STATIC*/2
+
+interface Physics2DRigidBodyParams {
+    type?: string;
+    shapes?: Physics2DShape[];
+    mass?: number;
+    inertia?: number;
+    sleeping?: boolean;
+    bullet?: boolean;
+    position?: any;
+    rotation?: number;
+    velocity?: any;
+    angularVelocity?: number;
+    force?: any;
+    torque?: number;
+    linearDrag?: number;
+    angularDrag?: number;
+    surfaceVelocity?: any;
+    userData?: any;
+}
 
 class Physics2DRigidBody
 {
@@ -7091,7 +7190,7 @@ class Physics2DRigidBody
     //      linearDrag = 0.05,
     //      angularDrag = 0.05
     // }
-    static create(params): Physics2DRigidBody
+    static create(params:Physics2DRigidBodyParams): Physics2DRigidBody
     {
         var b = new Physics2DRigidBody();
         var data = b._data = new Physics2DDevice.prototype.floatArray((/*BODY_DATA_SIZE*/25));
@@ -7473,7 +7572,7 @@ class Physics2DBoxTreeBroadphaseHandle
     }
 }
 
-class Physics2DBoxTreeBroadphase
+class Physics2DBoxTreeBroadphase implements Physics2DBroadphase
 {
     static version = 1;
 
@@ -9598,9 +9697,15 @@ interface Physics2DBroadphase
     update(handle, aabb, isStatic?: boolean): void;
     remove(handle): void;
     clear(callback, thisObject): void;
-    validate(): void;
     perform(lambda, thisObject): void;
 };
+
+interface Physics2DWorldParams {
+    broadphase?: Physics2DBroadphase;
+    gravity?: any;
+    velocityIterations?: number;
+    positionIterations?: number;
+}
 
 //
 // Physics2D World
@@ -12148,7 +12253,7 @@ class Physics2DWorld
         }
     }
 
-    static create(params): Physics2DWorld
+    static create(params: Physics2DWorldParams): Physics2DWorld
     {
         var w = new Physics2DWorld();
         w.simulatedTime = 0;
@@ -14020,22 +14125,22 @@ class Physics2DDevice
         return Physics2DMaterial.defaultMaterial;
     }
 
-    createCircleShape(params): Physics2DCircle
+    createCircleShape(params: Physics2DCircleParams): Physics2DCircle
     {
         return Physics2DCircle.create(params);
     }
 
-    createPolygonShape(params): Physics2DPolygon
+    createPolygonShape(params: Physics2DPolygonParams): Physics2DPolygon
     {
         return Physics2DPolygon.create(params, null);
     }
 
-    createRigidBody(params): Physics2DRigidBody
+    createRigidBody(params: Physics2DRigidBodyParams): Physics2DRigidBody
     {
         return Physics2DRigidBody.create(params);
     }
 
-    createWorld(params): Physics2DWorld
+    createWorld(params:Physics2DWorldParams): Physics2DWorld
     {
         return Physics2DWorld.create(params);
     }
@@ -14060,37 +14165,37 @@ class Physics2DDevice
         return Physics2DCollisionUtils.create();
     }
 
-    createPointConstraint(params): Physics2DPointConstraint
+    createPointConstraint(params: Physics2DPointConstraintParams): Physics2DPointConstraint
     {
         return Physics2DPointConstraint.create(params);
     }
 
-    createWeldConstraint(params): Physics2DWeldConstraint
+    createWeldConstraint(params: Physics2DWeldConstraintParams): Physics2DWeldConstraint
     {
         return Physics2DWeldConstraint.create(params);
     }
 
-    createAngleConstraint(params): Physics2DAngleConstraint
+    createAngleConstraint(params: Physics2DAngleConstraintParams): Physics2DAngleConstraint
     {
         return Physics2DAngleConstraint.create(params);
     }
 
-    createDistanceConstraint(params): Physics2DDistanceConstraint
+    createDistanceConstraint(params: Physics2DDistanceConstraintParams): Physics2DDistanceConstraint
     {
         return Physics2DDistanceConstraint.create(params);
     }
 
-    createLineConstraint(params): Physics2DLineConstraint
+    createLineConstraint(params: Physics2DLineConstraintParams): Physics2DLineConstraint
     {
         return Physics2DLineConstraint.create(params);
     }
 
-    createMotorConstraint(params): Physics2DMotorConstraint
+    createMotorConstraint(params: Physics2DMotorConstraintParams): Physics2DMotorConstraint
     {
         return Physics2DMotorConstraint.create(params);
     }
 
-    createPulleyConstraint(params): Physics2DPulleyConstraint
+    createPulleyConstraint(params: Physics2DPulleyConstraintParams): Physics2DPulleyConstraint
     {
         return Physics2DPulleyConstraint.create(params);
     }
