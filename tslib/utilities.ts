@@ -52,28 +52,40 @@ var Utilities : Utilities = {
     //
     log: function logFn(a: any, b: any)
     {
-        var console = window.console;
-        if (console)
+        // plugin does not have a "console" object
+        // web workers do not have a "window" object
+        var consoleObj;
+
+        if (typeof console !== 'undefined')
+        {
+            consoleObj = console;
+        }
+        if (typeof window !== 'undefined')
+        {
+            consoleObj = window.console;
+        }
+
+        if (consoleObj)
         {
             // "console.log.apply" will crash when using the plugin on Chrome...
             switch (arguments.length)
             {
             case 1:
-                console.log(arguments[0]);
+                consoleObj.log(arguments[0]);
                 break;
             case 2:
-                console.log(arguments[0], arguments[1]);
+                consoleObj.log(arguments[0], arguments[1]);
                 break;
             case 3:
-                console.log(arguments[0], arguments[1], arguments[2]);
+                consoleObj.log(arguments[0], arguments[1], arguments[2]);
                 break;
             case 4:
-                console.log(arguments[0], arguments[1], arguments[2], arguments[3]);
+                consoleObj.log(arguments[0], arguments[1], arguments[2], arguments[3]);
                 break;
             default:
                 // Note: this will fail if using printf-style string formatting
                 var args = [].splice.call(arguments, 0);
-                console.log(args.join(' '));
+                consoleObj.log(args.join(' '));
                 break;
             }
         }
