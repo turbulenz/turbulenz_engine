@@ -44,7 +44,9 @@ class ShaderManager
     {
         if (!errorCallback)
         {
+            /* tslint:disable:no-empty */
             errorCallback = function (/* e */) {};
+            /* tslint:enable:no-empty */
         }
 
         var defaultShaderName = "default";
@@ -56,6 +58,8 @@ class ShaderManager
         }
         else
         {
+            /* tslint:disable:max-line-length */
+            /* tslint:disable:whitespace */
             var shaderParams =
                 {
                     "version": 1,
@@ -107,6 +111,8 @@ class ShaderManager
                         }
                     }
                 };
+            /* tslint:enable:max-line-length */
+            /* tslint:enable:whitespace */
 
             defaultShader = gd.createShader(shaderParams);
             if (!defaultShader)
@@ -223,18 +229,26 @@ class ShaderManager
                             {
                                 preprocessShader(shaderParameters);
                             }
-                            var s = gd.createShader(shaderParameters);
-                            if (s)
+
+                            function shaderCreated(shader)
                             {
-                                shaders[path] = s;
-                            }
-                            else
-                            {
-                                delete shaders[path];
+                                if (shader)
+                                {
+                                    shaders[path] = shader;
+                                }
+                                else
+                                {
+                                    delete shaders[path];
+                                }
+
+                                delete loadingShader[path];
+                                delete loadedObservers[path];
+                                numLoadingShaders -= 1;
+
+                                observer.notify(shader);
                             }
 
-                            observer.notify(s);
-                            delete loadedObservers[path];
+                            gd.createShader(shaderParameters, shaderCreated);
                         }
                         else
                         {
@@ -243,10 +257,12 @@ class ShaderManager
                                 log.innerHTML += "ShaderManager.load:&nbsp;'" + path + "' failed to load<br>";
                             }
                             delete shaders[path];
-                        }
-                        delete loadingShader[path];
+                            delete loadingShader[path];
+                            delete loadedObservers[path];
+                            numLoadingShaders -= 1;
 
-                        numLoadingShaders -= 1;
+                            observer.notify(null);
+                        }
                     };
 
                     rh.request({
@@ -299,7 +315,8 @@ class ShaderManager
 
            @param {string} path Path or name of the shader
 
-           @return {Shader} object, returns the default shader if the shader is not yet loaded or the shader file didn't exist
+           @return {Shader} object, returns the default shader if the shader is not yet loaded or
+           the shader file didn't exist
         */
         var getShader = function getShaderFn(path)
         {
