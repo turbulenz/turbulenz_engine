@@ -222,30 +222,30 @@ class ShaderManager
 
                     var shaderLoaded = function shaderLoadedFn(shaderText /*, status, callContext */)
                     {
+                        function shaderCreated(shader)
+                        {
+                            if (shader)
+                            {
+                                shaders[path] = shader;
+                            }
+                            else
+                            {
+                                delete shaders[path];
+                            }
+
+                            delete loadingShader[path];
+                            delete loadedObservers[path];
+                            numLoadingShaders -= 1;
+
+                            observer.notify(shader);
+                        }
+
                         if (shaderText)
                         {
                             var shaderParameters = JSON.parse(shaderText);
                             if (doPreprocess)
                             {
                                 preprocessShader(shaderParameters);
-                            }
-
-                            function shaderCreated(shader)
-                            {
-                                if (shader)
-                                {
-                                    shaders[path] = shader;
-                                }
-                                else
-                                {
-                                    delete shaders[path];
-                                }
-
-                                delete loadingShader[path];
-                                delete loadedObservers[path];
-                                numLoadingShaders -= 1;
-
-                                observer.notify(shader);
                             }
 
                             gd.createShader(shaderParameters, shaderCreated);
