@@ -749,7 +749,7 @@ interface GraphicsDevice
     createVertexBuffer(params: VertexBufferParameters): VertexBuffer;
     createIndexBuffer(params: IndexBufferParameters): IndexBuffer;
     createTexture(params: TextureParameters): Texture;
-    createShader(params: any): Shader;
+    createShader(params: any, onload?: { (shader: Shader): void; }): Shader;
     createSemantics(attributes: any[]): Semantics;
     createDrawParameters(): DrawParameters;
     createTechniqueParameters(params?: any): TechniqueParameters;

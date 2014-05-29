@@ -4655,7 +4655,7 @@ class TZWebGLShader implements Shader
         }
     }
 
-    static create(gd, params): TZWebGLShader
+    static create(gd, params, onload?): TZWebGLShader
     {
         var gl = gd.gl;
 
@@ -4834,12 +4834,38 @@ class TZWebGLShader implements Shader
         // Techniques and passes
         var shaderTechniques = {};
         var numTechniques = 0;
+        var numLoadedTechniques = 0;
         shader.techniques = shaderTechniques;
+
+        function createTechniqueLoader(techniqueName)
+        {
+            return function () {
+                shaderTechniques[techniqueName] = WebGLTechnique.create(gd,
+                                                                        shader,
+                                                                        techniqueName,
+                                                                        techniques[techniqueName]);
+                numLoadedTechniques += 1;
+                if (numLoadedTechniques >= numTechniques)
+                {
+                    onload(shader);
+                }
+            };
+        }
+
         for (p in techniques)
         {
             if (techniques.hasOwnProperty(p))
             {
-                shaderTechniques[p] = WebGLTechnique.create(gd, shader, p, techniques[p]);
+                if (onload)
+                {
+                    shaderTechniques[p] = null;
+
+                    TurbulenzEngine.setTimeout(createTechniqueLoader(p), 0);
+                }
+                else
+                {
+                    shaderTechniques[p] = WebGLTechnique.create(gd, shader, p, techniques[p]);
+                }
                 numTechniques += 1;
             }
         }
@@ -6940,9 +6966,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return WebGLVideo.create(params);
     }
 
-    createShader(params: any): TZWebGLShader
+    createShader(params: any, onload?: { (shader: Shader): void; }): TZWebGLShader
     {
-        return TZWebGLShader.create(this, params);
+        return TZWebGLShader.create(this, params, onload);
     }
 
     createTechniqueParameterBuffer(params): TechniqueParameterBuffer
