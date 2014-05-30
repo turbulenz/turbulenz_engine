@@ -323,7 +323,14 @@ class CascadedShadowMapping
         this.numMainFrustumSidePlanes = 0;
         this.numMainFrustumPlanes = 0;
         this.mainFrustumNearPlaneIndex = -1;
-        this.mainFrustumPlanes = [];
+        this.mainFrustumPlanes = [
+            new Float32Array(4),
+            new Float32Array(4),
+            new Float32Array(4),
+            new Float32Array(4),
+            new Float32Array(4),
+            new Float32Array(4)
+        ];
         this.numSplitFrustumPlanes = 0;
         this.splitFrustumPlanes = [];
         this.intersectingPlanes = [];
