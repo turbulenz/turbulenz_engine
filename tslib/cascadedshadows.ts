@@ -2262,15 +2262,8 @@ class CascadedShadowMapping
                 if (occludersDrawArray.length)
                 {
                     /* tslint:disable:no-string-literal */
-                    gtp['viewTranspose'] = md.m43Transpose(splitCamera.viewMatrix,
-                                                           gtp['viewTranspose']);
-                    gtp['shadowProjectionTranspose'] = md.m44Transpose(splitCamera.projectionMatrix,
-                                                                       gtp['shadowProjectionTranspose']);
-                    gtp['shadowDepth'] = md.v4Build(0,
-                                                    0,
-                                                    split.shadowDepthScale,
-                                                    split.shadowDepthOffset,
-                                                    gtp['shadowDepth']);
+                    gtp['viewProjectionTranspose'] = md.m44Transpose(splitCamera.viewProjectionMatrix,
+                                                                     gtp['viewProjectionTranspose']);
                     /* tslint:enable:no-string-literal */
 
                     gd.drawArray(occludersDrawArray, globalTechniqueParametersArray, 0);

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 Turbulenz Limited
+// Copyright (c) 2013-2014 Turbulenz Limited
 
 #include "skinning.cgh"
 
@@ -6,9 +6,7 @@
 // Uniform variables
 //
 float4x3 world;
-float3x4 viewTranspose;
-float4x4 shadowProjectionTranspose;
-float4 shadowDepth;
+float4x4 viewProjectionTranspose;
 
 
 float4 uvScaleOffset;
@@ -76,8 +74,7 @@ float log_conv(float x0, float X, float y0, float Y)
 // Vertex programs
 //
 void vp(in float3 INPosition : POSITION,
-        out float4 OUTPosition : POSITION,
-        out float  OUTDepth    : TEXCOORD0)
+        out float4 OUTPosition : POSITION)
 {
     float4 worldPosition = float4(((INPosition.x * world[0]) +
                                    (INPosition.y * world[1]) +
@@ -85,25 +82,16 @@ void vp(in float3 INPosition : POSITION,
                                    world[3]),
                                   1.0);
 
-    float4 viewPosition;
-    viewPosition.x = dot(worldPosition, viewTranspose[0]);
-    viewPosition.y = dot(worldPosition, viewTranspose[1]);
-    viewPosition.z = dot(worldPosition, viewTranspose[2]);
-    viewPosition.w = 1.0;
-
-    OUTPosition.x = dot(viewPosition, shadowProjectionTranspose[0]);
-    OUTPosition.y = dot(viewPosition, shadowProjectionTranspose[1]);
-    OUTPosition.z = dot(viewPosition, shadowProjectionTranspose[2]);
-    OUTPosition.w = dot(viewPosition, shadowProjectionTranspose[3]);
-
-    OUTDepth = ((shadowDepth.z * viewPosition.z) + shadowDepth.w);
+    OUTPosition.x = dot(worldPosition, viewProjectionTranspose[0]);
+    OUTPosition.y = dot(worldPosition, viewProjectionTranspose[1]);
+    OUTPosition.z = dot(worldPosition, viewProjectionTranspose[2]);
+    OUTPosition.w = dot(worldPosition, viewProjectionTranspose[3]);
 }
 
 void vp_skinned(in float3 INPosition : POSITION,
                 in float4 INIndices  : BLENDINDICES,
                 in float4 INWeights  : BLENDWEIGHT,
-                out float4 OUTPosition : POSITION,
-                out float  OUTDepth    : TEXCOORD0)
+                out float4 OUTPosition : POSITION)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
@@ -119,18 +107,10 @@ void vp_skinned(in float3 INPosition : POSITION,
                                    world[3]),
                                   1.0);
 
-    float4 viewPosition;
-    viewPosition.x = dot(worldPosition, viewTranspose[0]);
-    viewPosition.y = dot(worldPosition, viewTranspose[1]);
-    viewPosition.z = dot(worldPosition, viewTranspose[2]);
-    viewPosition.w = 1.0;
-
-    OUTPosition.x = dot(viewPosition, shadowProjectionTranspose[0]);
-    OUTPosition.y = dot(viewPosition, shadowProjectionTranspose[1]);
-    OUTPosition.z = dot(viewPosition, shadowProjectionTranspose[2]);
-    OUTPosition.w = dot(viewPosition, shadowProjectionTranspose[3]);
-
-    OUTDepth = ((shadowDepth.z * viewPosition.z) + shadowDepth.w);
+    OUTPosition.x = dot(worldPosition, viewProjectionTranspose[0]);
+    OUTPosition.y = dot(worldPosition, viewProjectionTranspose[1]);
+    OUTPosition.z = dot(worldPosition, viewProjectionTranspose[2]);
+    OUTPosition.w = dot(worldPosition, viewProjectionTranspose[3]);
 }
 
 void vp_blur(in float4 INPosition : POSITION,
@@ -145,9 +125,9 @@ void vp_blur(in float4 INPosition : POSITION,
 //
 // Fragment programs
 //
-float4 fp(in float INDepth : TEXCOORD0) : COLOR
+float4 fp(in float4 INPosition : WPOS) : COLOR
 {
-    return float4(EncodeFloatRGB24(INDepth), 1.0);
+    return float4(EncodeFloatRGB24(INPosition.z), 1.0);
 }
 
 float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
@@ -199,6 +179,20 @@ technique rigid
     }
 }
 
+technique rigid_nocull
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+
+        VertexProgram   = compile glslv vp();
+        FragmentProgram = compile glslf fp();
+    }
+}
 technique skinned
 {
     pass
@@ -208,6 +202,21 @@ technique skinned
         DepthMask       = true;
         CullFaceEnable  = true;
         CullFace        = Back;
+        BlendEnable     = false;
+
+        VertexProgram   = compile glslv vp_skinned();
+        FragmentProgram = compile glslf fp();
+    }
+}
+
+technique skinned_nocull
+{
+    pass
+    {
+        DepthTestEnable = true;
+        DepthFunc       = LEqual;
+        DepthMask       = true;
+        CullFaceEnable  = false;
         BlendEnable     = false;
 
         VertexProgram   = compile glslv vp_skinned();
