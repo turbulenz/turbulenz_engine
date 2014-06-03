@@ -5876,7 +5876,7 @@ VMath.arrayConstructor = VMathArrayConstructor;
 // If the plugin has a 'getNativeMathDevice' method then VMath should
 // replace the standard MathDevice.
 
-if (TurbulenzEngine.hasOwnProperty('VMath'))
-{
+// WebWorkers can import vmath without a TurbulenzEngine variable defined
+if (typeof TurbulenzEngine !== 'undefined' && TurbulenzEngine.hasOwnProperty('VMath')) {
     TurbulenzEngine.VMath = VMath;
 }

@@ -62,7 +62,7 @@ For the complete set of available options, see the output of
 .. cmdoption:: --mode=MODE, -m MODE
 
     Generate a file for use in the given run mode. Supported
-    modes include: *plugin*, *canvas*.
+    modes include: *plugin*, *canvas*, *webworker*, *webworker-debug*.
 
 .. cmdoption:: --hybrid
 

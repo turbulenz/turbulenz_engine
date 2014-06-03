@@ -101,11 +101,27 @@ var debug : TurbulenzDebug = {
             msg = "ASSERT: " + msg;
         }
 
-        window.console.log(msg);
+        // plugin does not have a "console" object
+        // web workers do not have a "window" object
+        var consoleObj;
 
-        if (stackTrace)
+        if (typeof console !== 'undefined')
         {
-            window.console.log(stackTrace);
+            consoleObj = console;
+        }
+        if (typeof window !== 'undefined')
+        {
+            consoleObj = window.console;
+        }
+
+        if (consoleObj)
+        {
+            consoleObj.log(msg);
+
+            if (stackTrace)
+            {
+                consoleObj.log(stackTrace);
+            }
         }
 
         throw msg;
