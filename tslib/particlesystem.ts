@@ -7299,8 +7299,8 @@ class DefaultParticleEmitter
                         nz = normal[2];
                         if (nx == 0 && nz == 0)
                         {
-                            rx = tz = 1;
-                            rz = tx = ty = 0;
+                            rz = tx = 1;
+                            rx = tz = ty = 0;
                         }
                         else
                         {
