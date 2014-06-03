@@ -60,6 +60,7 @@ class SoundTARLoader
     onerror: { (status: number): void; };
     soundsLoading: number;
     src: string;
+    archiveDecode: { (bytes: any): any; };
 
     processBytes(bytes)
     {
@@ -242,6 +243,7 @@ class SoundTARLoader
         loader.onload = params.onload;
         loader.onerror = params.onerror;
         loader.soundsLoading = 0;
+        loader.archiveDecode = params.archiveDecode;
 
         var src = params.src;
         if (src)
@@ -345,8 +347,12 @@ class SoundTARLoader
                             // entries in the archive was not supported or
                             // couldn't be loaded as a sound.
 
-                            var archiveResult =
-                                loader.processBytes(new Uint8Array(buffer));
+                            var bytes = new Uint8Array(buffer);
+                            if (loader.archiveDecode)
+                            {
+                                bytes = loader.archiveDecode(bytes);
+                            }
+                            var archiveResult = loader.processBytes(bytes);
 
                             // Wait until all sounds have been loaded (or
                             // failed) and return the result.

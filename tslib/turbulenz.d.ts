@@ -1204,10 +1204,11 @@ interface SoundGlobalSource
 
 interface SoundArchiveParameters
 {
-    src         : string;
-    onsoundload : { (sound: Sound): void; };
-    onload      : { (success: boolean, status: number): void; };
-    uncompress  : boolean;
+    src            : string;
+    archiveDecode? : { (bytes: any): any };
+    onsoundload    : { (sound: Sound): void; };
+    onload         : { (success: boolean, status: number): void; };
+    uncompress     : boolean;
 }
 
 // SoundDevice
