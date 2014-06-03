@@ -4675,9 +4675,9 @@ class ParticleSystem
             // No restrictions for sorting, can make optimise use of space.
             // Find square like texture size fitting maxParticles
             // to aid in shared packing of textures.
-            if (maxParticles > 66536)
+            if (maxParticles > 65536)
             {
-                maxParticles = 66536;
+                maxParticles = 65536;
             }
             if (maxParticles <= 1)
             {
