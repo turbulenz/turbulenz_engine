@@ -38,7 +38,7 @@ class CascadedShadowSplit
     needsBlur: boolean;
 
     overlappingRenderables: Renderable[];
-    overlappingExtents: any[]; // AABB
+    overlappingExtents: Float32Array[]; // AABB
     occludersDrawArray: DrawParameters[];
 
     worldShadowProjection: any; // m34
@@ -202,8 +202,8 @@ class CascadedShadowMapping
     frustumPoints       : any[];
     visibleNodes        : SceneNode[];
     numOccludees        : number;
-    occludeesExtents    : any[];
-    occludersExtents    : any[];
+    occludeesExtents    : Float32Array[];
+    occludersExtents    : Float32Array[];
 
     shadowMappingShader : Shader;
     rigidTechnique      : Technique;
@@ -832,7 +832,7 @@ class CascadedShadowMapping
     private _isInsidePlanesAABB(extents: any,
                                 planes: any[],
                                 numPlanes: number,
-                                overlappingExtents: any[],
+                                overlappingExtents: Float32Array[],
                                 numOverlappingRenderables: number): boolean
     {
         var abs = Math.abs;
@@ -1872,11 +1872,11 @@ class CascadedShadowMapping
     }
 
     private _filterOccluders(overlappingRenderables: Renderable[],
-                             overlappingExtents: any[],
+                             overlappingExtents: Float32Array[],
                              numOverlappingRenderables: number,
                              occludersDrawArray: DrawParameters[],
-                             occludeesExtents: any[],
-                             occludersExtents: any[],
+                             occludeesExtents: Float32Array[],
+                             occludersExtents: Float32Array[],
                              frameIndex: number): number
     {
         var numOccludees = 0;
@@ -1927,7 +1927,7 @@ class CascadedShadowMapping
 
     private _updateOccludeesLimits(split: CascadedShadowSplit,
                                    viewMatrix: any,
-                                   occludeesExtents: any[]): void
+                                   occludeesExtents: Float32Array[]): void
     {
         var numOccludees = this.numOccludees;
 
@@ -2060,8 +2060,8 @@ class CascadedShadowMapping
 
     private _updateOccludersLimits(split: CascadedShadowSplit,
                                    viewMatrix: any,
-                                   occludersDrawArray: any[],
-                                   occludersExtents: any[],
+                                   occludersDrawArray: DrawParameters[],
+                                   occludersExtents: Float32Array[],
                                    numOccluders: number): number
     {
         var r0 = -viewMatrix[0];
