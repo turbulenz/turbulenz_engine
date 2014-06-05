@@ -1734,13 +1734,12 @@ class CascadedShadowMapping
         worldShadowProjection[5] = shadowProjection[5];
         worldShadowProjection[6] = shadowProjection[9];
         worldShadowProjection[7] = shadowProjection[13];
-        worldShadowProjection[8] = viewMatrix[2] * shadowDepthScale;
-        worldShadowProjection[9] = viewMatrix[5] * shadowDepthScale;
-        worldShadowProjection[10] = viewMatrix[8] * shadowDepthScale;
-        worldShadowProjection[11] = (viewMatrix[11] * shadowDepthScale) + shadowDepthOffset;
+        worldShadowProjection[8] = shadowProjection[2] * shadowDepthScale;
+        worldShadowProjection[9] = shadowProjection[6] * shadowDepthScale;
+        worldShadowProjection[10] = shadowProjection[10] * shadowDepthScale;
+        worldShadowProjection[11] = (shadowProjection[14] * shadowDepthScale) + shadowDepthOffset;
 
         var viewToShadowProjection = md.m43MulM44(mainCameraMatrix, shadowProjection, this.tempMatrix44);
-        var viewToShadowMatrix = md.m43Mul(mainCameraMatrix, viewMatrix, this.tempMatrix43);
 
         var viewShadowProjection = split.viewShadowProjection;
         viewShadowProjection[0] = viewToShadowProjection[0];
@@ -1751,10 +1750,10 @@ class CascadedShadowMapping
         viewShadowProjection[5] = viewToShadowProjection[5];
         viewShadowProjection[6] = viewToShadowProjection[9];
         viewShadowProjection[7] = viewToShadowProjection[13];
-        viewShadowProjection[8] = viewToShadowMatrix[2] * shadowDepthScale;
-        viewShadowProjection[9] = viewToShadowMatrix[5] * shadowDepthScale;
-        viewShadowProjection[10] = viewToShadowMatrix[8] * shadowDepthScale;
-        viewShadowProjection[11] = (viewToShadowMatrix[11] * shadowDepthScale) + shadowDepthOffset;
+        viewShadowProjection[8] = viewToShadowProjection[2] * shadowDepthScale;
+        viewShadowProjection[9] = viewToShadowProjection[6] * shadowDepthScale;
+        viewShadowProjection[10] = viewToShadowProjection[10] * shadowDepthScale;
+        viewShadowProjection[11] = (viewToShadowProjection[14] * shadowDepthScale) + shadowDepthOffset;
 
         var invSize = (1.0 / this.size);
         var shadowScaleOffset = split.shadowScaleOffset;
@@ -2131,10 +2130,8 @@ class CascadedShadowMapping
         var distanceRange = (maxLightDistance - minLightDistance);
         if (0.001 < distanceRange)
         {
-            var maxDepthReciprocal = (1.0 / distanceRange);
-
-            split.shadowDepthScale = -maxDepthReciprocal;
-            split.shadowDepthOffset = -minLightDistance * maxDepthReciprocal;
+            split.shadowDepthScale = 0.5;
+            split.shadowDepthOffset = 0.5;
         }
         else
         {
