@@ -1283,53 +1283,66 @@ class CascadedShadowMapping
 
         var planes = mainCamera.frustumPlanes;
 
-        nearPlane[3] = nearDistance + startDistance;
-        this._findPlanesIntersection(planes[0], planes[2], nearPlane, frustumPoints[0]);
-        this._findPlanesIntersection(planes[0], planes[3], nearPlane, frustumPoints[1]);
-        this._findPlanesIntersection(planes[1], planes[2], nearPlane, frustumPoints[2]);
-        this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[3]);
-
-        nearPlane[3] = nearDistance + endDistance;
-        this._findPlanesIntersection(planes[0], planes[2], nearPlane, frustumPoints[4]);
-        this._findPlanesIntersection(planes[0], planes[3], nearPlane, frustumPoints[5]);
-        this._findPlanesIntersection(planes[1], planes[2], nearPlane, frustumPoints[6]);
-        this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[7]);
-
-        nearPlane[3] = nearDistance;
-
         var mainCameraMatrix = mainCamera.matrix;
         var ax = -mainCameraMatrix[6];
         var ay = -mainCameraMatrix[7];
         var az = -mainCameraMatrix[8];
-        var sx = mainCameraMatrix[9];
-        var sy = mainCameraMatrix[10];
-        var sz = mainCameraMatrix[11];
-        var n;
-        for (n = 0; n < 8; n += 1)
+
+        if (Math.abs((ax * nearPlane[0]) + (ay * nearPlane[1]) + (az * nearPlane[2])) > Math.SQRT1_2)
         {
-            var p = frustumPoints[n];
-            var dx = (p[0] - sx);
-            var dy = (p[1] - sy);
-            var dz = (p[2] - sz);
-            var d = ((ax * dx) + (ay * dy) + (az * dz));
-            if (d > maxDistance)
+            // Worst case scenario, camera facing the light, change maps to overlapping regions
+            var sideCameraMaxDistance = this.sideCamera.farPlane;
+            mainCamera.getFrustumPoints(maxDistance * (endDistance / sideCameraMaxDistance),
+                                        maxDistance * (startDistance / sideCameraMaxDistance),
+                                        frustumPoints);
+        }
+        else
+        {
+            nearPlane[3] = nearDistance + startDistance;
+            this._findPlanesIntersection(planes[0], planes[2], nearPlane, frustumPoints[0]);
+            this._findPlanesIntersection(planes[0], planes[3], nearPlane, frustumPoints[1]);
+            this._findPlanesIntersection(planes[1], planes[2], nearPlane, frustumPoints[2]);
+            this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[3]);
+
+            nearPlane[3] = nearDistance + endDistance;
+            this._findPlanesIntersection(planes[0], planes[2], nearPlane, frustumPoints[4]);
+            this._findPlanesIntersection(planes[0], planes[3], nearPlane, frustumPoints[5]);
+            this._findPlanesIntersection(planes[1], planes[2], nearPlane, frustumPoints[6]);
+            this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[7]);
+
+            nearPlane[3] = nearDistance;
+
+            var sx = mainCameraMatrix[9];
+            var sy = mainCameraMatrix[10];
+            var sz = mainCameraMatrix[11];
+
+            var n;
+            for (n = 0; n < 8; n += 1)
             {
-                // "d" includes "Math.sqrt((dx * dx) + (dy * dy) + (dz * dz))" and the cosine of the angle
-                var a = (maxDistance / d);
-                dx *= a;
-                dy *= a;
-                dz *= a;
-                p[0] = sx + dx;
-                p[1] = sy + dy;
-                p[2] = sz + dz;
-            }
-            d = ((p[0] * floorPlane[0]) + (p[1] * floorPlane[1]) + (p[2] * floorPlane[2]) - floorPlane[3]);
-            if (d < 0)
-            {
-                var dp = -d / ((dx * floorPlane[0]) + (dy * floorPlane[1]) + (dz * floorPlane[2]));
-                p[0] += dx * dp;
-                p[1] += dy * dp;
-                p[2] += dz * dp;
+                var p = frustumPoints[n];
+                var dx = (p[0] - sx);
+                var dy = (p[1] - sy);
+                var dz = (p[2] - sz);
+                var d = ((ax * dx) + (ay * dy) + (az * dz));
+                if (d > maxDistance)
+                {
+                    // "d" includes "Math.sqrt((dx * dx) + (dy * dy) + (dz * dz))" and the cosine of the angle
+                    var a = (maxDistance / d);
+                    dx *= a;
+                    dy *= a;
+                    dz *= a;
+                    p[0] = sx + dx;
+                    p[1] = sy + dy;
+                    p[2] = sz + dz;
+                }
+                d = ((p[0] * floorPlane[0]) + (p[1] * floorPlane[1]) + (p[2] * floorPlane[2]) - floorPlane[3]);
+                if (d < 0)
+                {
+                    var dp = -d / ((dx * floorPlane[0]) + (dy * floorPlane[1]) + (dz * floorPlane[2]));
+                    p[0] += dx * dp;
+                    p[1] += dy * dp;
+                    p[2] += dz * dp;
+                }
             }
         }
 
