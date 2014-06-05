@@ -8532,7 +8532,14 @@ class ParticleManager
         var context = archetype.context;
 
         this.removeInstanceFromScene(instance);
-        if (!instance.parent)
+        var parent = instance.parent;
+        if (parent)
+        {
+            children = parent.children;
+            debug.assert(children.indexOf(instance) !== -1);
+            children.splice(children.indexOf(instance), 1);
+        }
+        else
         {
             this.releaseSynchronizer(instance);
         }
@@ -8541,7 +8548,7 @@ class ParticleManager
         renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
         if (renderable.system)
         {
-            if (!instance.parent)
+            if (!parent)
             {
                 debug.assert(context.systemPool.indexOf(renderable.system) === -1);
                 context.systemPool.push(renderable.system);
