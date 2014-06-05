@@ -5831,6 +5831,7 @@ class ParticleView
 
         if (this.system)
         {
+            debug.assert(this.system.views.indexOf(this) !== -1);
             this.system.views.splice(this.system.views.indexOf(this), 1);
             if (this.system.zSorted)
             {
@@ -5852,6 +5853,7 @@ class ParticleView
             return;
         }
 
+        debug.assert(system.views.indexOf(this) === -1);
         system.views.push(this);
         if (system.zSorted)
         {
@@ -7121,10 +7123,12 @@ class DefaultParticleEmitter
     static eventFun(event, emitter, system)
     {
         system.createParticle(event.particle);
+        debug.assert(DefaultParticleEmitter.eventPool.indexOf(event) === -1);
         DefaultParticleEmitter.eventPool.push(event);
     }
     static recycleFun(event)
     {
+        debug.assert(DefaultParticleEmitter.eventPool.indexOf(event) === -1);
         DefaultParticleEmitter.eventPool.push(event);
     }
 
@@ -8296,6 +8300,7 @@ class ParticleManager
         }
 
         context = <any>{};
+        debug.assert(this.archetypes.indexOf(archetype) === -1);
         this.archetypes.push(archetype);
 
         var textureManager = this.textureManager;
@@ -8440,11 +8445,13 @@ class ParticleManager
         }
         instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
 
+        debug.assert(instance !== parentInstance);
         instance.parent = parentInstance;
         if (!parentInstance.children)
         {
             parentInstance.children = [];
         }
+        debug.assert(parentInstance.children.indexOf(instance) === -1);
         parentInstance.children.push(instance);
 
         instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
@@ -8453,6 +8460,7 @@ class ParticleManager
         {
             this.queue.insert(instance, timeout);
         }
+        debug.assert(context.instances.indexOf(instance) === -1);
         context.instances.push(instance);
 
         return instance;
@@ -8484,6 +8492,7 @@ class ParticleManager
         {
             this.queue.insert(instance, timeout);
         }
+        debug.assert(context.instances.indexOf(instance) === -1);
         context.instances.push(instance);
 
         var emitters = instance.synchronizer.emitters;
@@ -8516,14 +8525,21 @@ class ParticleManager
             {
                 this.destroyInstance(children[i]);
             }
-            instance.children = null;
+            instance.children.length = 0;
         }
 
         var archetype = instance.archetype;
         var context = archetype.context;
 
         this.removeInstanceFromScene(instance);
-        if (!instance.parent)
+        var parent = instance.parent;
+        if (parent)
+        {
+            children = parent.children;
+            debug.assert(children.indexOf(instance) !== -1);
+            children.splice(children.indexOf(instance), 1);
+        }
+        else
         {
             this.releaseSynchronizer(instance);
         }
@@ -8532,8 +8548,9 @@ class ParticleManager
         renderable.releaseViews(this.viewPool.push.bind(this.viewPool));
         if (renderable.system)
         {
-            if (!instance.parent)
+            if (!parent)
             {
+                debug.assert(context.systemPool.indexOf(renderable.system) === -1);
                 context.systemPool.push(renderable.system);
             }
             renderable.setSystem(null);
@@ -8543,7 +8560,9 @@ class ParticleManager
         instance.system = null;
 
         var instances = context.instances;
+        debug.assert(instances.indexOf(instance) !== -1);
         instances.splice(instances.indexOf(instance), 1);
+        debug.assert(context.instancePool.indexOf(instance) === -1);
         context.instancePool.push(instance);
 
         if (instance.queued && !removedFromQueue)
@@ -8725,6 +8744,7 @@ class ParticleManager
             {
                 if (!instance.parent)
                 {
+                    debug.assert(context.systemPool.indexOf(renderable.system) === -1);
                     context.systemPool.push(renderable.system);
                 }
                 renderable.setSystem(null);
@@ -8809,6 +8829,7 @@ class ParticleManager
             return;
         }
 
+        debug.assert(this.archetypes.indexOf(archetype) !== -1);
         this.archetypes.splice(this.archetypes.indexOf(archetype), 1);
 
         var instances = context.instances;
@@ -8910,10 +8931,12 @@ class ParticleManager
             synchronizer.removeEmitter(emitter);
 
             emitter.reset();
+            debug.assert(this.emitters[emitter.name].pool.indexOf(emitter) === -1);
             this.emitters[emitter.name].pool.push(emitter);
         }
 
         synchronizer.reset();
+        debug.assert(this.synchronizers[synchronizer.name].pool.indexOf(synchronizer) === -1);
         this.synchronizers[synchronizer.name].pool.push(synchronizer);
     }
 
