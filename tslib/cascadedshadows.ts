@@ -200,6 +200,7 @@ class CascadedShadowMapping
     splitFrustumPlanes  : any[];
     intersectingPlanes  : any[];
     frustumPoints       : any[];
+    clampedFrustumPoints: any[];
     visibleNodes        : SceneNode[];
     numOccludees        : number;
     occludeesExtents    : Float32Array[];
@@ -329,12 +330,14 @@ class CascadedShadowMapping
             new Float32Array(4),
             new Float32Array(4),
             new Float32Array(4),
+            new Float32Array(4),
             new Float32Array(4)
         ];
         this.numSplitFrustumPlanes = 0;
         this.splitFrustumPlanes = [];
         this.intersectingPlanes = [];
         this.frustumPoints = [];
+        this.clampedFrustumPoints = [];
         this.visibleNodes = [];
         this.numOccludees = 0;
         this.occludeesExtents = [];
@@ -497,11 +500,71 @@ class CascadedShadowMapping
         return false;
     }
 
-    updateShadowMap(lightDirection: any, camera: Camera, scene: Scene, maxDistance: number): void
+    private _addPoint(p: any, points: any[], numPoints: number): number
+    {
+        // Only add point if not already present, there are few points so complexity is not an issue
+        var n;
+        for (n = 0; n < numPoints; n += 1)
+        {
+            var op = points[n];
+            if (p[0] === op[0] &&
+                p[1] === op[1] &&
+                p[2] === op[2])
+            {
+                return numPoints;
+            }
+        }
+        points[numPoints] = this.md.v3Copy(p, points[numPoints]);
+        return (numPoints + 1);
+    }
+
+    private _intersect(s: any, e: any, plane: any, points: any[], numPoints: number): number
+    {
+        var sd = ((s[0] * plane[0]) + (s[1] * plane[1]) + (s[2] * plane[2]) - plane[3]);
+        if (sd >= 0)
+        {
+            numPoints = this._addPoint(s, points, numPoints);
+        }
+        var ed = ((e[0] * plane[0]) + (e[1] * plane[1]) + (e[2] * plane[2]) - plane[3]);
+        if (ed >= 0)
+        {
+            numPoints = this._addPoint(e, points, numPoints);
+        }
+        if ((sd * ed) < 0)
+        {
+            var d0 = (e[0] - s[0]);
+            var d1 = (e[1] - s[1]);
+            var d2 = (e[2] - s[2]);
+            var dp = -sd / ((d0 * plane[0]) + (d1 * plane[1]) + (d2 * plane[2]));
+            d0 *= dp;
+            d1 *= dp;
+            d2 *= dp;
+            points[numPoints] = this.md.v3Build((s[0] + d0), (s[1] + d1), (s[2] + d2), points[numPoints]);
+            numPoints += 1;
+        }
+        return numPoints;
+    }
+
+    private _clampFrustumPoints(frustumPoints: any[], floorPlane: any): number
+    {
+        var clampedFrustumPoints = this.clampedFrustumPoints;
+        var numPoints = 0;
+        numPoints = this._intersect(frustumPoints[0], frustumPoints[4], floorPlane, clampedFrustumPoints, numPoints);
+        numPoints = this._intersect(frustumPoints[1], frustumPoints[5], floorPlane, clampedFrustumPoints, numPoints);
+        numPoints = this._intersect(frustumPoints[2], frustumPoints[6], floorPlane, clampedFrustumPoints, numPoints);
+        numPoints = this._intersect(frustumPoints[3], frustumPoints[7], floorPlane, clampedFrustumPoints, numPoints);
+        numPoints = this._intersect(frustumPoints[4], frustumPoints[5], floorPlane, clampedFrustumPoints, numPoints);
+        numPoints = this._intersect(frustumPoints[5], frustumPoints[6], floorPlane, clampedFrustumPoints, numPoints);
+        numPoints = this._intersect(frustumPoints[6], frustumPoints[7], floorPlane, clampedFrustumPoints, numPoints);
+        numPoints = this._intersect(frustumPoints[7], frustumPoints[4], floorPlane, clampedFrustumPoints, numPoints);
+        return numPoints;
+    }
+
+    updateShadowMap(lightDirection: any, camera: Camera, scene: Scene, maxDistance: number, floorPlane: any): void
     {
         var md = this.md;
 
-        this._extractMainFrustumPlanes(camera, lightDirection, maxDistance);
+        this._extractMainFrustumPlanes(camera, lightDirection, maxDistance, floorPlane);
 
         var cameraMatrix = camera.matrix;
         var cameraRight = md.m43Right(cameraMatrix, this.tempV3Right);
@@ -513,11 +576,14 @@ class CascadedShadowMapping
         var frustumPoints = this.frustumPoints;
         frustumPoints = camera.getFrustumPoints(maxDistance, camera.nearPlane, frustumPoints);
 
+        var numClampedFrustumPoints = this._clampFrustumPoints(frustumPoints, floorPlane);
+
         var sideCamera = this._updateSideCamera(cameraRight,
                                                 cameraUp,
                                                 cameraAt,
                                                 direction,
-                                                frustumPoints);
+                                                this.clampedFrustumPoints,
+                                                numClampedFrustumPoints);
         var sideCameraMaxDistance = sideCamera.farPlane;
 
         var up;
@@ -550,9 +616,9 @@ class CascadedShadowMapping
 
             frustumPoints = this._getSideCameraFrustumPoints(splitEnd,
                                                              splitStart,
-                                                             frustumPoints,
                                                              camera,
-                                                             maxDistance);
+                                                             maxDistance,
+                                                             floorPlane);
 
             this._updateSplit(split,
                               xaxis,
@@ -573,9 +639,9 @@ class CascadedShadowMapping
 
                 frustumPoints = this._getSideCameraFrustumPoints(splitEnd,
                                                                  splitStart,
-                                                                 frustumPoints,
                                                                  camera,
-                                                                 maxDistance);
+                                                                 maxDistance,
+                                                                 floorPlane);
 
                 this._updateSplit(split,
                                   xaxis,
@@ -695,7 +761,7 @@ class CascadedShadowMapping
         return res;
     }
 
-    private _extractMainFrustumPlanes(camera: Camera, lightDirection: any, maxDistance: number): void
+    private _extractMainFrustumPlanes(camera: Camera, lightDirection: any, maxDistance: number, floorPlane: any): void
     {
         // This is crap...
         var oldFarPlane = camera.farPlane;
@@ -779,6 +845,12 @@ class CascadedShadowMapping
             numPlanes += 1;
         }
 
+        p = planeNormalize(floorPlane[0], floorPlane[1], floorPlane[2], floorPlane[3], planes[numPlanes]); // floor
+        if ((d0 * p[0]) + (d1 * p[1]) + (d2 * p[2]) <= 0)
+        {
+            planes[numPlanes] = p;
+            numPlanes += 1;
+        }
         this.numMainFrustumPlanes = numPlanes;
 
         camera.farPlane = oldFarPlane;
@@ -1092,7 +1164,8 @@ class CascadedShadowMapping
                               cameraUp: any,
                               cameraAt: any,
                               lightDirection: any,
-                              frustumPoints: any[]): Camera
+                              frustumPoints: any[],
+                              numFrustumPoints: number): Camera
     {
         var md = this.md;
 
@@ -1132,7 +1205,7 @@ class CascadedShadowMapping
         var minWindowZ = Number.MAX_VALUE;
         var maxWindowZ = -Number.MAX_VALUE;
         var n, p, dx, dy, dz;
-        for (n = 0; n < 8; n += 1)
+        for (n = 0; n < numFrustumPoints; n += 1)
         {
             p = frustumPoints[n];
             dx = ((r0 * p[0]) + (r1 * p[1]) + (r2 * p[2]));
@@ -1200,10 +1273,11 @@ class CascadedShadowMapping
 
     private _getSideCameraFrustumPoints(endDistance: number,
                                         startDistance: number,
-                                        frustumPoints: any[],
                                         mainCamera: Camera,
-                                        maxDistance: number)
+                                        maxDistance: number,
+                                        floorPlane: any): any[]
     {
+        var frustumPoints = this.frustumPoints;
         var nearPlane = this.sideCameraNearPlane;
         var nearDistance = nearPlane[3];
 
@@ -1242,9 +1316,20 @@ class CascadedShadowMapping
             {
                 // "d" includes "Math.sqrt((dx * dx) + (dy * dy) + (dz * dz))" and the cosine of the angle
                 var a = (maxDistance / d);
-                p[0] = sx + a * dx;
-                p[1] = sy + a * dy;
-                p[2] = sz + a * dz;
+                dx *= a;
+                dy *= a;
+                dz *= a;
+                p[0] = sx + dx;
+                p[1] = sy + dy;
+                p[2] = sz + dz;
+            }
+            d = ((p[0] * floorPlane[0]) + (p[1] * floorPlane[1]) + (p[2] * floorPlane[2]) - floorPlane[3]);
+            if (d < 0)
+            {
+                var dp = -d / ((dx * floorPlane[0]) + (dy * floorPlane[1]) + (dz * floorPlane[2]));
+                p[0] += dx * dp;
+                p[1] += dy * dp;
+                p[2] += dz * dp;
             }
         }
 
