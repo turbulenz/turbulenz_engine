@@ -1205,7 +1205,8 @@ interface SoundGlobalSource
 interface SoundArchiveParameters
 {
     src            : string;
-    archiveDecode? : { (bytes: any): any };
+    decodearchive? : { (bytes: any): any };
+    decodesound?   : { (filename: string, data: any): any };
     onsoundload    : { (sound: Sound): void; };
     onload         : { (success: boolean, status: number): void; };
     uncompress     : boolean;
