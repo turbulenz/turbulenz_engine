@@ -616,6 +616,7 @@ class CascadedShadowMapping
 
             frustumPoints = this._getSideCameraFrustumPoints(splitEnd,
                                                              splitStart,
+                                                             direction,
                                                              camera,
                                                              maxDistance,
                                                              floorPlane);
@@ -639,6 +640,7 @@ class CascadedShadowMapping
 
                 frustumPoints = this._getSideCameraFrustumPoints(splitEnd,
                                                                  splitStart,
+                                                                 direction,
                                                                  camera,
                                                                  maxDistance,
                                                                  floorPlane);
@@ -1273,6 +1275,7 @@ class CascadedShadowMapping
 
     private _getSideCameraFrustumPoints(endDistance: number,
                                         startDistance: number,
+                                        lightDirection: any,
                                         mainCamera: Camera,
                                         maxDistance: number,
                                         floorPlane: any): any[]
@@ -1288,12 +1291,13 @@ class CascadedShadowMapping
         var ay = -mainCameraMatrix[7];
         var az = -mainCameraMatrix[8];
 
-        if (Math.abs((ax * nearPlane[0]) + (ay * nearPlane[1]) + (az * nearPlane[2])) > Math.SQRT1_2)
+        if (Math.abs((ax * lightDirection[0]) + (ay * lightDirection[1]) + (az * lightDirection[2])) > Math.SQRT1_2)
         {
             // Worst case scenario, camera facing the light, change maps to overlapping regions
             var sideCameraMaxDistance = this.sideCamera.farPlane;
             mainCamera.getFrustumPoints(maxDistance * (endDistance / sideCameraMaxDistance),
-                                        maxDistance * (startDistance / sideCameraMaxDistance),
+                                        Math.max(mainCamera.nearPlane,
+                                                 maxDistance * (startDistance / sideCameraMaxDistance)),
                                         frustumPoints);
         }
         else
