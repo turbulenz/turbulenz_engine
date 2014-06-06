@@ -17,6 +17,11 @@ interface FontDimensions
         [pageIdx: number]: number;
         length: number;
     };
+    glyphIndices  : // number[]
+    {
+        [pageIdx: number]: number;
+        length: number;
+    };
 }
 
 interface FontGlyph
@@ -130,6 +135,7 @@ class Font
         var numLines = 0;
         var linesWidth = [];
         var glyphCounts = [];
+        var glyphIndices = [];
 
         var textLength = text.length;
         var lineWidth = 0;
@@ -184,6 +190,8 @@ class Font
                     glyphCounts[pageIdx] += 1;
                 }
             }
+
+            glyphIndices.push(c);
         }
 
         linesWidth[numLines] = lineWidth;
@@ -199,6 +207,7 @@ class Font
             dimensions.numGlyphs = numGlyphs;
             dimensions.linesWidth = linesWidth;
             dimensions.glyphCounts = glyphCounts;
+            dimensions.glyphIndices = glyphIndices;
             return dimensions;
         }
 
@@ -207,7 +216,8 @@ class Font
             height: height,
             numGlyphs: numGlyphs,
             linesWidth: linesWidth,
-            glyphCounts: glyphCounts
+            glyphCounts: glyphCounts,
+            glyphIndices: glyphIndices
         };
     }
 
@@ -220,15 +230,27 @@ class Font
                              drawCtx?: FontDrawPageContext)
     : FontDrawPageContext
     {
-        var scale = (params.scale || 1.0);
-        var extraSpacing = (params.spacing ? (params.spacing * scale) : 0);
         var dimensions : FontDimensions = params.dimensions;
         if (!dimensions)
         {
+            var scale = (params.scale || 1.0);
+            var extraSpacing = (params.spacing ? (params.spacing * scale) : 0);
             dimensions =
                 this.calculateTextDimensions(text, scale, extraSpacing);
         }
+        return this.generatePageGlyphVertices(dimensions, params, pageIdx, drawCtx);
+    }
 
+    generatePageGlyphVertices(dimensions : FontDimensions,
+                              params: FontDrawParameters,
+                              pageIdx: number,
+                              drawCtx?: FontDrawPageContext)
+    : FontDrawPageContext
+    {
+        var scale = (params.scale || 1.0);
+        var extraSpacing = (params.spacing ? (params.spacing * scale) : 0);
+
+        var glyphIndices = dimensions.glyphIndices;
         var glyphCounts = dimensions.glyphCounts;
         var numGlyphs = glyphCounts[pageIdx];
         var vertices : Float32Array; // = reusableArrays[numGlyphs];
@@ -290,7 +312,7 @@ class Font
         {
             x += ((rectWidth - lineWidth));
         }
-        var textLength = text.length;
+        var textLength = glyphIndices.length;
         var line = 0;
         var i;
         var glyphPageIdx: number;
@@ -299,7 +321,7 @@ class Font
 
         for (i = 0; i < textLength; i += 1)
         {
-            c = text.charCodeAt(i);
+            c = glyphIndices[i];
             if (c === 10)
             {
                 y += lineHeight;
@@ -374,7 +396,7 @@ class Font
                             var kerning = kernings[c];
                             if (kerning && i < (textLength - 1))
                             {
-                                var amount = kerning[text.charCodeAt(i + 1)];
+                                var amount = kerning[glyphIndices[i + 1]];
                                 if (amount)
                                 {
                                     x += (amount * scale);
@@ -409,16 +431,6 @@ class Font
             var extraSpacing = params.spacing ? (params.spacing * scale) : 0;
             dimensions =
                 this.calculateTextDimensions(text, scale, extraSpacing);
-
-            // TODO: not nice, but avoids calling
-            // calculateTextDimensions again without corrupting
-            // params.
-
-            var origParams = params;
-            params = <FontDrawParameters><any>{
-                dimensions: dimensions
-            };
-            (<any>params).__proto__ = origParams;
         }
 
         var totalNumGlyphs = dimensions.numGlyphs;
@@ -439,8 +451,8 @@ class Font
             numGlyphs = glyphCounts[pageIdx];
             if (numGlyphs)
             {
-                pageCtx = this.generatePageTextVertices(text, params, pageIdx,
-                                                        pageCtx);
+                pageCtx = this.generatePageGlyphVertices(dimensions, params, pageIdx,
+                                                         pageCtx);
                 this.drawTextVertices(pageCtx, pageIdx, true);
 
                 totalNumGlyphs -= numGlyphs;
