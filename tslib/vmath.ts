@@ -2412,39 +2412,16 @@ var VMath : MathDevice =
     },
 
     // Matrix33
-    m33Build : function m33BuildFn(r, u, a, dst?)
+    m33Build : function m33BuildFn(a0, a1, a2,
+                                   a3?, a4?, a5?,
+                                   a6?, a7?, a8?,
+                                   dst?)
     {
         var res;
-        var length = arguments.length;
-        if (length >= 9)
+        if (typeof a4 === "number")
         {
-            // Can NOT use dst because it will overwrite the input value...
-            if (length > 9)
-            {
-                res = arguments[9];
-                if (res === undefined)
-                {
-                    res = new VMathArrayConstructor(9);
-                }
-                debug.assert(debug.isMathType(res) && debug.isMtx33(res));
-            }
-            else
-            {
-                res = new VMathArrayConstructor(9);
-            }
+            debug.assert(typeof a8 === "number");
 
-            res[0] = arguments[0];
-            res[1] = arguments[1];
-            res[2] = arguments[2];
-            res[3] = arguments[3];
-            res[4] = arguments[4];
-            res[5] = arguments[5];
-            res[6] = arguments[6];
-            res[7] = arguments[7];
-            res[8] = arguments[8];
-        }
-        else
-        {
             res = dst;
             if (res === undefined)
             {
@@ -2452,15 +2429,38 @@ var VMath : MathDevice =
             }
             debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
-            res[0] = r[0];
-            res[1] = r[1];
-            res[2] = r[2];
-            res[3] = u[0];
-            res[4] = u[1];
-            res[5] = u[2];
-            res[6] = a[0];
-            res[7] = a[1];
-            res[8] = a[2];
+            res[0] = a0;
+            res[1] = a1;
+            res[2] = a2;
+            res[3] = a3;
+            res[4] = a4;
+            res[5] = a5;
+            res[6] = a6;
+            res[7] = a7;
+            res[8] = a8;
+        }
+        else
+        {
+            debug.assert(a0.length >= 3 &&
+                         a1.length >= 3 &&
+                         a2.length >= 3);
+
+            res = a3;
+            if (res === undefined)
+            {
+                res = new VMathArrayConstructor(9);
+            }
+            debug.assert(debug.isMathType(res) && debug.isMtx33(res));
+
+            res[0] = a0[0];
+            res[1] = a0[1];
+            res[2] = a0[2];
+            res[3] = a1[0];
+            res[4] = a1[1];
+            res[5] = a1[2];
+            res[6] = a2[0];
+            res[7] = a2[1];
+            res[8] = a2[2];
         }
 
         return res;
@@ -3126,44 +3126,16 @@ var VMath : MathDevice =
         return res;
     },
 
-    m43Build : function m43BuildFn(r, u, a, p, dst?,
-                                   a21?, a02?, a12?, a22?, a03?, a13?, a23?,
-                                   _dst?)
+    m43Build : function m43BuildFn(a0, a1, a2, a3,
+                                   a4?, a5?, a6?, a7?,
+                                   a8?, a9?, a10?, a11?,
+                                   dst?)
     {
         var res;
-        var length = arguments.length;
-        if (length >= 12)
+        if (typeof a5 === "number")
         {
-            // Can NOT use dst because it will overwrite the input value...
-            if (length > 12)
-            {
-                res = arguments[12];
-                if (res === undefined)
-                {
-                    res = new VMathArrayConstructor(12);
-                }
-            }
-            else
-            {
-                res = new VMathArrayConstructor(12);
-            }
-            debug.assert(debug.isMathType(res) && debug.isMtx43(res));
+            debug.assert(typeof a11 === "number");
 
-            res[0] = arguments[0];
-            res[1] = arguments[1];
-            res[2] = arguments[2];
-            res[3] = arguments[3];
-            res[4] = arguments[4];
-            res[5] = arguments[5];
-            res[6] = arguments[6];
-            res[7] = arguments[7];
-            res[8] = arguments[8];
-            res[9] = arguments[9];
-            res[10] = arguments[10];
-            res[11] = arguments[11];
-        }
-        else
-        {
             res = dst;
             if (res === undefined)
             {
@@ -3171,18 +3143,45 @@ var VMath : MathDevice =
             }
             debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
-            res[0] = r[0];
-            res[1] = r[1];
-            res[2] = r[2];
-            res[3] = u[0];
-            res[4] = u[1];
-            res[5] = u[2];
-            res[6] = a[0];
-            res[7] = a[1];
-            res[8] = a[2];
-            res[9] = p[0];
-            res[10] = p[1];
-            res[11] = p[2];
+            res[0] = a0;
+            res[1] = a1;
+            res[2] = a2;
+            res[3] = a3;
+            res[4] = a4;
+            res[5] = a5;
+            res[6] = a6;
+            res[7] = a7;
+            res[8] = a8;
+            res[9] = a9;
+            res[10] = a10;
+            res[11] = a11;
+        }
+        else
+        {
+            debug.assert(a0.length >= 3 &&
+                         a1.length >= 3 &&
+                         a2.length >= 3 &&
+                         a3.length >= 3);
+
+            res = a4;
+            if (res === undefined)
+            {
+                res = new VMathArrayConstructor(12);
+            }
+            debug.assert(debug.isMathType(res) && debug.isMtx43(res));
+
+            res[0] = a0[0];
+            res[1] = a0[1];
+            res[2] = a0[2];
+            res[3] = a1[0];
+            res[4] = a1[1];
+            res[5] = a1[2];
+            res[6] = a2[0];
+            res[7] = a2[1];
+            res[8] = a2[2];
+            res[9]  = a3[0];
+            res[10] = a3[1];
+            res[11] = a3[2];
         }
 
         return res;
@@ -3190,9 +3189,8 @@ var VMath : MathDevice =
 
     m43BuildTranslation : function m43BuildTranslationFn(x, y?, z?, dst?)
     {
-        // Can NOT use p or dst because it will overwrite the input value...
         var res;
-        if (3 <= arguments.length)
+        if (typeof z === "number")
         {
             res = dst;
             if (res === undefined)
@@ -3207,12 +3205,13 @@ var VMath : MathDevice =
         }
         else
         {
+            debug.assert(debug.isVec3(x));
+
             res = y;
             if (res === undefined)
             {
                 res = new VMathArrayConstructor(12);
             }
-            debug.assert(debug.isVec3(x));
             debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
             res[9] = x[0];
@@ -4344,46 +4343,17 @@ var VMath : MathDevice =
         return res;
     },
 
-    m44Build : function m44BuildFn(r, u, a, p, dst?)
+    m44Build : function m44BuildFn(a0, a1, a2, a3,
+                                   a4?, a5?, a6?, a7?,
+                                   a8?, a9?, a10?, a11?,
+                                   a12?, a13?, a14?, a15?,
+                                   dst?)
     {
         var res;
-        var length = arguments.length;
-        if (length >= 16)
+        if (typeof a5 === "number")
         {
-            // Can NOT use dst because it will overwrite the input value...
-            if (length > 16)
-            {
-                res = arguments[16];
-                if (res === undefined)
-                {
-                    res = new VMathArrayConstructor(16);
-                }
-            }
-            else
-            {
-                res = new VMathArrayConstructor(16);
-            }
-            debug.assert(debug.isMathType(res) && debug.isMtx44(res));
+            debug.assert(typeof a15 === "number");
 
-            res[0] =  arguments[0];
-            res[1] =  arguments[1];
-            res[2] =  arguments[2];
-            res[3] =  arguments[3];
-            res[4] =  arguments[4];
-            res[5] =  arguments[5];
-            res[6] =  arguments[6];
-            res[7] =  arguments[7];
-            res[8] =  arguments[8];
-            res[9] =  arguments[9];
-            res[10] = arguments[10];
-            res[11] = arguments[11];
-            res[12] = arguments[12];
-            res[13] = arguments[13];
-            res[14] = arguments[14];
-            res[15] = arguments[15];
-        }
-        else
-        {
             res = dst;
             if (res === undefined)
             {
@@ -4391,22 +4361,53 @@ var VMath : MathDevice =
             }
             debug.assert(debug.isMathType(res) && debug.isMtx44(res));
 
-            res[0] =  r[0];
-            res[1] =  r[1];
-            res[2] =  r[2];
-            res[3] =  r[3];
-            res[4] =  u[0];
-            res[5] =  u[1];
-            res[6] =  u[2];
-            res[7] =  u[3];
-            res[8] =  a[0];
-            res[9] =  a[1];
-            res[10] = a[2];
-            res[11] = a[3];
-            res[12] = p[0];
-            res[13] = p[1];
-            res[14] = p[2];
-            res[15] = p[3];
+            res[0] =  a0;
+            res[1] =  a1;
+            res[2] =  a2;
+            res[3] =  a3;
+            res[4] =  a4;
+            res[5] =  a5;
+            res[6] =  a6;
+            res[7] =  a7;
+            res[8] =  a8;
+            res[9] =  a9;
+            res[10] = a10;
+            res[11] = a11;
+            res[12] = a12;
+            res[13] = a13;
+            res[14] = a14;
+            res[15] = a15;
+        }
+        else
+        {
+            debug.assert(debug.isVec4(a0) &&
+                         debug.isVec4(a1) &&
+                         debug.isVec4(a2) &&
+                         debug.isVec4(a3));
+
+            res = a4;
+            if (res === undefined)
+            {
+                res = new VMathArrayConstructor(16);
+            }
+            debug.assert(debug.isMathType(res) && debug.isMtx44(res));
+
+            res[0] =  a0[0];
+            res[1] =  a0[1];
+            res[2] =  a0[2];
+            res[3] =  a0[3];
+            res[4] =  a1[0];
+            res[5] =  a1[1];
+            res[6] =  a1[2];
+            res[7] =  a1[3];
+            res[8] =  a2[0];
+            res[9] =  a2[1];
+            res[10] = a2[2];
+            res[11] = a2[3];
+            res[12] = a3[0];
+            res[13] = a3[1];
+            res[14] = a3[2];
+            res[15] = a3[3];
         }
 
         return res;
@@ -5375,8 +5376,30 @@ var VMath : MathDevice =
     quatPosBuild : function quatPosBuildFn(x, y, z?, w?, px?, py?, pz?, dst?)
     {
         var res;
-        if (arguments.length < 7)
+        if (typeof w === "number")
         {
+            debug.assert(typeof pz === "number");
+
+            res = dst;
+            if (res === undefined)
+            {
+                res = new VMathArrayConstructor(7);
+            }
+            debug.assert(debug.isMathType(res) && debug.isQuatPos(res));
+
+            res[0] = x;
+            res[1] = y;
+            res[2] = z;
+            res[3] = w;
+            res[4] = px;
+            res[5] = py;
+            res[6] = pz;
+        }
+        else
+        {
+            debug.assert(debug.isVec4(x) &&
+                         debug.isVec3(y));
+
             res = z;
             if (res === undefined)
             {
@@ -5394,23 +5417,7 @@ var VMath : MathDevice =
             res[5] = y[1];
             res[6] = y[2];
         }
-        else
-        {
-            res = dst;
-            if (res === undefined)
-            {
-                res = new VMathArrayConstructor(7);
-            }
-            debug.assert(debug.isMathType(res) && debug.isQuatPos(res));
 
-            res[0] = x;
-            res[1] = y;
-            res[2] = z;
-            res[3] = w;
-            res[4] = px;
-            res[5] = py;
-            res[6] = pz;
-        }
         return res;
     },
 
