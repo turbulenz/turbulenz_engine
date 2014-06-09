@@ -41,7 +41,6 @@ class CascadedShadowSplit
     overlappingExtents: Float32Array[]; // AABB
     occludersDrawArray: DrawParameters[];
 
-    worldShadowProjection: any; // m34
     viewShadowProjection: any; // m34
     shadowScaleOffset: any; // v4
 
@@ -88,7 +87,6 @@ class CascadedShadowSplit
         this.overlappingExtents = [];
         this.occludersDrawArray = [];
 
-        this.worldShadowProjection = md.m34BuildIdentity();
         this.viewShadowProjection = md.m34BuildIdentity();
         this.shadowScaleOffset = md.v4BuildZero();
 
@@ -97,21 +95,7 @@ class CascadedShadowSplit
 
     setAsDummy()
     {
-        var m = this.worldShadowProjection;
-        m[0] = 0.0;
-        m[1] = 0.0;
-        m[2] = 0.0;
-        m[3] = 1.0;
-        m[4] = 0.0;
-        m[5] = 0.0;
-        m[6] = 0.0;
-        m[7] = 1.0;
-        m[8] = 0.0;
-        m[9] = 0.0;
-        m[10] = 0.0;
-        m[11] = 1.0;
-
-        m = this.viewShadowProjection;
+        var m = this.viewShadowProjection;
         m[0] = 0.0;
         m[1] = 0.0;
         m[2] = 0.0;
@@ -695,7 +679,6 @@ class CascadedShadowMapping
         while (0 === split.occludersDrawArray.length);
 
         /* tslint:disable:no-string-literal */
-        techniqueParameters['worldShadowProjection0'] = split.worldShadowProjection;
         techniqueParameters['viewShadowProjection0'] = split.viewShadowProjection;
         techniqueParameters['shadowScaleOffset0'] = split.shadowScaleOffset;
         /* tslint:enable:no-string-literal */
@@ -713,7 +696,6 @@ class CascadedShadowMapping
         while (0 === split.occludersDrawArray.length);
 
         /* tslint:disable:no-string-literal */
-        techniqueParameters['worldShadowProjection1'] = split.worldShadowProjection;
         techniqueParameters['viewShadowProjection1'] = split.viewShadowProjection;
         techniqueParameters['shadowScaleOffset1'] = split.shadowScaleOffset;
         /* tslint:enable:no-string-literal */
@@ -731,7 +713,6 @@ class CascadedShadowMapping
         while (0 === split.occludersDrawArray.length);
 
         /* tslint:disable:no-string-literal */
-        techniqueParameters['worldShadowProjection2'] = split.worldShadowProjection;
         techniqueParameters['viewShadowProjection2'] = split.viewShadowProjection;
         techniqueParameters['shadowScaleOffset2'] = split.shadowScaleOffset;
         /* tslint:enable:no-string-literal */
@@ -749,7 +730,6 @@ class CascadedShadowMapping
         while (0 === split.occludersDrawArray.length);
 
         /* tslint:disable:no-string-literal */
-        techniqueParameters['worldShadowProjection3'] = split.worldShadowProjection;
         techniqueParameters['viewShadowProjection3'] = split.viewShadowProjection;
         techniqueParameters['shadowScaleOffset3'] = split.shadowScaleOffset;
         /* tslint:enable:no-string-literal */
@@ -1754,20 +1734,6 @@ class CascadedShadowMapping
 
         var shadowDepthScale = split.shadowDepthScale;
         var shadowDepthOffset = (shadowDepthScale ? split.shadowDepthOffset : 1.0);
-
-        var worldShadowProjection = split.worldShadowProjection;
-        worldShadowProjection[0] = shadowProjection[0];
-        worldShadowProjection[1] = shadowProjection[4];
-        worldShadowProjection[2] = shadowProjection[8];
-        worldShadowProjection[3] = shadowProjection[12];
-        worldShadowProjection[4] = shadowProjection[1];
-        worldShadowProjection[5] = shadowProjection[5];
-        worldShadowProjection[6] = shadowProjection[9];
-        worldShadowProjection[7] = shadowProjection[13];
-        worldShadowProjection[8] = shadowProjection[2] * shadowDepthScale;
-        worldShadowProjection[9] = shadowProjection[6] * shadowDepthScale;
-        worldShadowProjection[10] = shadowProjection[10] * shadowDepthScale;
-        worldShadowProjection[11] = (shadowProjection[14] * shadowDepthScale) + shadowDepthOffset;
 
         var viewToShadowProjection = md.m43MulM44(mainCameraMatrix, shadowProjection, this.tempMatrix44);
 
