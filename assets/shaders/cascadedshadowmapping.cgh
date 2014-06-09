@@ -1,0 +1,163 @@
+// Copyright (c) 2014 Turbulenz Limited
+
+float3x4 viewShadowProjection0;
+float4 shadowScaleOffset0;
+float3x4 viewShadowProjection1;
+float4 shadowScaleOffset1;
+float3x4 viewShadowProjection2;
+float4 shadowScaleOffset2;
+float3x4 viewShadowProjection3;
+float4 shadowScaleOffset3;
+float invShadowSize;
+
+
+sampler2D shadowMapTexture = sampler_state
+{
+    MinFilter = Linear;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
+
+float Decode(float4 rgba)
+{
+    if (rgba.w > (1.0 / 255.0))
+    {
+        return saturate(dot(rgba.xyz, float3(255.0/16777216.0, 255.0/65536.0, 255.0/256.0)));
+    }
+    else
+    {
+        return 1.0;
+    }
+}
+
+float DecodeAndTest(float4 rgba, float depth)
+{
+    if (rgba.w > (1.0 / 255.0))
+    {
+        return float(saturate(dot(rgba.xyz, float3(255.0/16777216.0, 255.0/65536.0, 255.0/256.0))) >= depth);
+    }
+    else
+    {
+        return 1.0;
+    }
+}
+
+
+float CalculatePCFShadowAttenuation(float3 viewPosition, float bias)
+{
+    float4 viewPositionH = float4(viewPosition, 1.0);
+
+    float4 shadowDepth;
+    float4 shadowScaleOffset;
+
+    float shadowSpaceLimit = (1.0 - (1.0 * invShadowSize));
+    float shadowSpaceX = dot(viewPositionH, viewShadowProjection0[0]);
+    float shadowSpaceY = dot(viewPositionH, viewShadowProjection0[1]);
+    if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
+    {
+        shadowDepth = viewShadowProjection0[2];
+        shadowScaleOffset = shadowScaleOffset0;
+    }
+    else
+    {
+        shadowSpaceX = dot(viewPositionH, viewShadowProjection1[0]);
+        shadowSpaceY = dot(viewPositionH, viewShadowProjection1[1]);
+        if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
+        {
+            shadowDepth = viewShadowProjection1[2];
+            shadowScaleOffset = shadowScaleOffset1;
+        }
+        else
+        {
+            shadowSpaceX = dot(viewPositionH, viewShadowProjection2[0]);
+            shadowSpaceY = dot(viewPositionH, viewShadowProjection2[1]);
+            if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
+            {
+                shadowDepth = viewShadowProjection2[2];
+                shadowScaleOffset = shadowScaleOffset2;
+            }
+            else
+            {
+                shadowSpaceX = dot(viewPositionH, viewShadowProjection3[0]);
+                shadowSpaceY = dot(viewPositionH, viewShadowProjection3[1]);
+                if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
+                {
+                    shadowDepth = viewShadowProjection3[2];
+                    shadowScaleOffset = shadowScaleOffset3;
+                }
+                else
+                {
+                    return 1.0;
+                }
+            }
+        }
+    }
+
+    float2 shadowuv = (float2(shadowSpaceX, shadowSpaceY) * shadowScaleOffset.xy + shadowScaleOffset.zw);
+    float depth = (min(dot(viewPositionH, shadowDepth), Decode(float4(1.0, 1.0, 1.0, 1.0))) + bias);
+
+    return (DecodeAndTest(tex2D(shadowMapTexture, shadowuv), depth) +
+            DecodeAndTest(tex2D(shadowMapTexture, shadowuv + float2(-invShadowSize,  0.0)), depth) +
+            DecodeAndTest(tex2D(shadowMapTexture, shadowuv + float2( 0.0, -invShadowSize)), depth) +
+            DecodeAndTest(tex2D(shadowMapTexture, shadowuv + float2( invShadowSize,  0.0)), depth) +
+            DecodeAndTest(tex2D(shadowMapTexture, shadowuv + float2( 0.0,  invShadowSize)), depth)) * (1.0 / 5.0);
+}
+
+float CalculateShadowAttenuation(float3 viewPosition, float bias)
+{
+    float4 viewPositionH = float4(viewPosition, 1.0);
+
+    float4 shadowDepth;
+    float4 shadowScaleOffset;
+
+    float shadowSpaceLimit = (1.0 - (1.0 * invShadowSize));
+    float shadowSpaceX = dot(viewPositionH, viewShadowProjection0[0]);
+    float shadowSpaceY = dot(viewPositionH, viewShadowProjection0[1]);
+    if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
+    {
+        shadowDepth = viewShadowProjection0[2];
+        shadowScaleOffset = shadowScaleOffset0;
+    }
+    else
+    {
+        shadowSpaceX = dot(viewPositionH, viewShadowProjection1[0]);
+        shadowSpaceY = dot(viewPositionH, viewShadowProjection1[1]);
+        if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
+        {
+            shadowDepth = viewShadowProjection1[2];
+            shadowScaleOffset = shadowScaleOffset1;
+        }
+        else
+        {
+            shadowSpaceX = dot(viewPositionH, viewShadowProjection2[0]);
+            shadowSpaceY = dot(viewPositionH, viewShadowProjection2[1]);
+            if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
+            {
+                shadowDepth = viewShadowProjection2[2];
+                shadowScaleOffset = shadowScaleOffset2;
+            }
+            else
+            {
+                shadowSpaceX = dot(viewPositionH, viewShadowProjection3[0]);
+                shadowSpaceY = dot(viewPositionH, viewShadowProjection3[1]);
+                if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
+                {
+                    shadowDepth = viewShadowProjection3[2];
+                    shadowScaleOffset = shadowScaleOffset3;
+                }
+                else
+                {
+                    return 1.0;
+                }
+            }
+        }
+    }
+
+    float2 shadowuv = (float2(shadowSpaceX, shadowSpaceY) * shadowScaleOffset.xy + shadowScaleOffset.zw);
+    float depth = (min(dot(viewPositionH, shadowDepth), Decode(float4(1.0, 1.0, 1.0, 1.0))) + bias);
+
+    return DecodeAndTest(tex2D(shadowMapTexture, shadowuv), depth);
+}
+
