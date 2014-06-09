@@ -42,7 +42,7 @@ class CascadedShadowSplit
     occludersDrawArray: DrawParameters[];
 
     viewShadowProjection: any; // m34
-    shadowScaleOffset: any; // v4
+    shadowOffset: any; // v2
 
     constructor(md, x, y)
     {
@@ -88,7 +88,7 @@ class CascadedShadowSplit
         this.occludersDrawArray = [];
 
         this.viewShadowProjection = md.m34BuildIdentity();
-        this.shadowScaleOffset = md.v4BuildZero();
+        this.shadowOffset = md.v2BuildZero();
 
         return this;
     }
@@ -109,11 +109,9 @@ class CascadedShadowSplit
         m[10] = 0.0;
         m[11] = 1.0;
 
-        var v = this.shadowScaleOffset;
+        var v = this.shadowOffset;
         v[0] = 0.0;
         v[1] = 0.0;
-        v[2] = 0.0;
-        v[3] = 0.0;
     }
 };
 
@@ -230,18 +228,14 @@ class CascadedShadowMapping
             shadowSize: 0.0,
             invShadowSize: 0.0,
             shadowMapTexture: null,
-            worldShadowProjection0: null,
             viewShadowProjection0: null,
-            shadowScaleOffset0: null,
-            worldShadowProjection1: null,
+            shadowOffset0: null,
             viewShadowProjection1: null,
-            shadowScaleOffset1: null,
-            worldShadowProjection2: null,
+            shadowOffset1: null,
             viewShadowProjection2: null,
-            shadowScaleOffset2: null,
-            worldShadowProjection3: null,
+            shadowOffset2: null,
             viewShadowProjection3: null,
-            shadowScaleOffset3: null
+            shadowOffset3: null
         });
 
         this.quadPrimitive = gd.PRIMITIVE_TRIANGLE_STRIP;
@@ -680,7 +674,7 @@ class CascadedShadowMapping
 
         /* tslint:disable:no-string-literal */
         techniqueParameters['viewShadowProjection0'] = split.viewShadowProjection;
-        techniqueParameters['shadowScaleOffset0'] = split.shadowScaleOffset;
+        techniqueParameters['shadowOffset0'] = split.shadowOffset;
         /* tslint:enable:no-string-literal */
 
         do
@@ -697,7 +691,7 @@ class CascadedShadowMapping
 
         /* tslint:disable:no-string-literal */
         techniqueParameters['viewShadowProjection1'] = split.viewShadowProjection;
-        techniqueParameters['shadowScaleOffset1'] = split.shadowScaleOffset;
+        techniqueParameters['shadowOffset1'] = split.shadowOffset;
         /* tslint:enable:no-string-literal */
 
         do
@@ -714,7 +708,7 @@ class CascadedShadowMapping
 
         /* tslint:disable:no-string-literal */
         techniqueParameters['viewShadowProjection2'] = split.viewShadowProjection;
-        techniqueParameters['shadowScaleOffset2'] = split.shadowScaleOffset;
+        techniqueParameters['shadowOffset2'] = split.shadowOffset;
         /* tslint:enable:no-string-literal */
 
         do
@@ -731,7 +725,7 @@ class CascadedShadowMapping
 
         /* tslint:disable:no-string-literal */
         techniqueParameters['viewShadowProjection3'] = split.viewShadowProjection;
-        techniqueParameters['shadowScaleOffset3'] = split.shadowScaleOffset;
+        techniqueParameters['shadowOffset3'] = split.shadowOffset;
         /* tslint:enable:no-string-literal */
     }
 
@@ -1752,10 +1746,9 @@ class CascadedShadowMapping
         viewShadowProjection[11] = (viewToShadowProjection[14] * shadowDepthScale) + shadowDepthOffset;
 
         var invSize = (1.0 / this.size);
-        var shadowScaleOffset = split.shadowScaleOffset;
-        shadowScaleOffset[1] = shadowScaleOffset[0] = 0.25;
-        shadowScaleOffset[2] = (split.viewportX * invSize) + 0.25;
-        shadowScaleOffset[3] = (split.viewportY * invSize) + 0.25;
+        var shadowOffset = split.shadowOffset;
+        shadowOffset[0] = (split.viewportX * invSize) + 0.25;
+        shadowOffset[1] = (split.viewportY * invSize) + 0.25;
 
         if (occludersDrawArray.length)
         {

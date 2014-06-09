@@ -1,13 +1,13 @@
 // Copyright (c) 2014 Turbulenz Limited
 
 float3x4 viewShadowProjection0;
-float4 shadowScaleOffset0;
+float2 shadowOffset0;
 float3x4 viewShadowProjection1;
-float4 shadowScaleOffset1;
+float2 shadowOffset1;
 float3x4 viewShadowProjection2;
-float4 shadowScaleOffset2;
+float2 shadowOffset2;
 float3x4 viewShadowProjection3;
-float4 shadowScaleOffset3;
+float2 shadowOffset3;
 float invShadowSize;
 
 
@@ -50,7 +50,7 @@ float CalculatePCFShadowAttenuation(float3 viewPosition, float bias)
     float4 viewPositionH = float4(viewPosition, 1.0);
 
     float4 shadowDepth;
-    float4 shadowScaleOffset;
+    float2 shadowOffset;
 
     float shadowSpaceLimit = (1.0 - (1.0 * invShadowSize));
     float shadowSpaceX = dot(viewPositionH, viewShadowProjection0[0]);
@@ -58,7 +58,7 @@ float CalculatePCFShadowAttenuation(float3 viewPosition, float bias)
     if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
     {
         shadowDepth = viewShadowProjection0[2];
-        shadowScaleOffset = shadowScaleOffset0;
+        shadowOffset = shadowOffset0;
     }
     else
     {
@@ -67,7 +67,7 @@ float CalculatePCFShadowAttenuation(float3 viewPosition, float bias)
         if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
         {
             shadowDepth = viewShadowProjection1[2];
-            shadowScaleOffset = shadowScaleOffset1;
+            shadowOffset = shadowOffset1;
         }
         else
         {
@@ -76,7 +76,7 @@ float CalculatePCFShadowAttenuation(float3 viewPosition, float bias)
             if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
             {
                 shadowDepth = viewShadowProjection2[2];
-                shadowScaleOffset = shadowScaleOffset2;
+                shadowOffset = shadowOffset2;
             }
             else
             {
@@ -85,7 +85,7 @@ float CalculatePCFShadowAttenuation(float3 viewPosition, float bias)
                 if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
                 {
                     shadowDepth = viewShadowProjection3[2];
-                    shadowScaleOffset = shadowScaleOffset3;
+                    shadowOffset = shadowOffset3;
                 }
                 else
                 {
@@ -95,7 +95,7 @@ float CalculatePCFShadowAttenuation(float3 viewPosition, float bias)
         }
     }
 
-    float2 shadowuv = (float2(shadowSpaceX, shadowSpaceY) * shadowScaleOffset.xy + shadowScaleOffset.zw);
+    float2 shadowuv = (float2(shadowSpaceX, shadowSpaceY) * 0.25 + shadowOffset.xy);
     float depth = (min(dot(viewPositionH, shadowDepth), Decode(float4(1.0, 1.0, 1.0, 1.0))) + bias);
 
     return (DecodeAndTest(tex2D(shadowMapTexture, shadowuv), depth) +
@@ -110,7 +110,7 @@ float CalculateShadowAttenuation(float3 viewPosition, float bias)
     float4 viewPositionH = float4(viewPosition, 1.0);
 
     float4 shadowDepth;
-    float4 shadowScaleOffset;
+    float2 shadowOffset;
 
     float shadowSpaceLimit = (1.0 - (1.0 * invShadowSize));
     float shadowSpaceX = dot(viewPositionH, viewShadowProjection0[0]);
@@ -118,7 +118,7 @@ float CalculateShadowAttenuation(float3 viewPosition, float bias)
     if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
     {
         shadowDepth = viewShadowProjection0[2];
-        shadowScaleOffset = shadowScaleOffset0;
+        shadowOffset = shadowOffset0;
     }
     else
     {
@@ -127,7 +127,7 @@ float CalculateShadowAttenuation(float3 viewPosition, float bias)
         if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
         {
             shadowDepth = viewShadowProjection1[2];
-            shadowScaleOffset = shadowScaleOffset1;
+            shadowOffset = shadowOffset1;
         }
         else
         {
@@ -136,7 +136,7 @@ float CalculateShadowAttenuation(float3 viewPosition, float bias)
             if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
             {
                 shadowDepth = viewShadowProjection2[2];
-                shadowScaleOffset = shadowScaleOffset2;
+                shadowOffset = shadowOffset2;
             }
             else
             {
@@ -145,7 +145,7 @@ float CalculateShadowAttenuation(float3 viewPosition, float bias)
                 if (abs(shadowSpaceX) < shadowSpaceLimit && abs(shadowSpaceY) < shadowSpaceLimit)
                 {
                     shadowDepth = viewShadowProjection3[2];
-                    shadowScaleOffset = shadowScaleOffset3;
+                    shadowOffset = shadowOffset3;
                 }
                 else
                 {
@@ -155,7 +155,7 @@ float CalculateShadowAttenuation(float3 viewPosition, float bias)
         }
     }
 
-    float2 shadowuv = (float2(shadowSpaceX, shadowSpaceY) * shadowScaleOffset.xy + shadowScaleOffset.zw);
+    float2 shadowuv = (float2(shadowSpaceX, shadowSpaceY) * 0.25 + shadowOffset.xy);
     float depth = (min(dot(viewPositionH, shadowDepth), Decode(float4(1.0, 1.0, 1.0, 1.0))) + bias);
 
     return DecodeAndTest(tex2D(shadowMapTexture, shadowuv), depth);
