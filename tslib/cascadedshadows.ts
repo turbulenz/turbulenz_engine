@@ -5,6 +5,32 @@
 //
 /*global renderingCommonCreateRendererInfoFn: false, Camera: false*/
 
+interface CascadedShadowRendererInfo
+{
+    far: boolean;
+    shadowMappingFullyVisible: number;
+    shadowMappingUpdate: Function;
+};
+
+class CascadedShadowOccluder
+{
+    drawParameters: DrawParameters;
+    rendererInfo: CascadedShadowRendererInfo;
+
+    constructor(drawParameters: DrawParameters,
+                rendererInfo: CascadedShadowRendererInfo)
+    {
+        this.drawParameters = drawParameters;
+        this.rendererInfo = rendererInfo;
+    }
+
+    clear(): void
+    {
+        this.drawParameters = null;
+        this.rendererInfo = null;
+    }
+};
+
 class CascadedShadowSplit
 {
     viewportX: number;
@@ -39,7 +65,10 @@ class CascadedShadowSplit
 
     overlappingRenderables: Renderable[];
     overlappingExtents: Float32Array[]; // AABB
-    occludersDrawArray: DrawParameters[];
+
+    numOccluders: number;
+    occluders: CascadedShadowOccluder[];
+    occludersToDraw: DrawParameters[];
 
     viewShadowProjection: any; // m34
     shadowOffset: any; // v2
@@ -85,7 +114,10 @@ class CascadedShadowSplit
 
         this.overlappingRenderables = [];
         this.overlappingExtents = [];
-        this.occludersDrawArray = [];
+
+        this.numOccluders = 0;
+        this.occluders = [];
+        this.occludersToDraw = [];
 
         this.viewShadowProjection = md.m34BuildIdentity();
         this.shadowOffset = md.v2BuildZero();
@@ -630,7 +662,7 @@ class CascadedShadowMapping
 
             splitStart = splitEnd;
 
-            if (0 === split.occludersDrawArray.length &&
+            if (0 === split.occludersToDraw.length &&
                 (n + 1) < numSplits)
             {
                 splitEnd = (splitEnd + (sideCameraMaxDistance * splitDistances[n + 1])) / 2.0;
@@ -670,7 +702,7 @@ class CascadedShadowMapping
             }
             split = splits[n];
         }
-        while (0 === split.occludersDrawArray.length);
+        while (0 === split.occludersToDraw.length);
 
         /* tslint:disable:no-string-literal */
         techniqueParameters['viewShadowProjection0'] = split.viewShadowProjection;
@@ -687,7 +719,7 @@ class CascadedShadowMapping
             }
             split = splits[n];
         }
-        while (0 === split.occludersDrawArray.length);
+        while (0 === split.occludersToDraw.length);
 
         /* tslint:disable:no-string-literal */
         techniqueParameters['viewShadowProjection1'] = split.viewShadowProjection;
@@ -704,7 +736,7 @@ class CascadedShadowMapping
             }
             split = splits[n];
         }
-        while (0 === split.occludersDrawArray.length);
+        while (0 === split.occludersToDraw.length);
 
         /* tslint:disable:no-string-literal */
         techniqueParameters['viewShadowProjection2'] = split.viewShadowProjection;
@@ -721,7 +753,7 @@ class CascadedShadowMapping
             }
             split = splits[n];
         }
-        while (0 === split.occludersDrawArray.length);
+        while (0 === split.occludersToDraw.length);
 
         /* tslint:disable:no-string-literal */
         techniqueParameters['viewShadowProjection3'] = split.viewShadowProjection;
@@ -1507,7 +1539,7 @@ class CascadedShadowMapping
         // Now prepare draw array
         var overlappingRenderables = split.overlappingRenderables;
         var overlappingExtents = split.overlappingExtents;
-        var occludersDrawArray = split.occludersDrawArray;
+        var occluders = split.occluders;
         var numOverlappingRenderables = split.numOverlappingRenderables;
         var numStaticOverlappingRenderables = split.numStaticOverlappingRenderables;
 
@@ -1526,29 +1558,24 @@ class CascadedShadowMapping
             var numOccluders = this._filterOccluders(overlappingRenderables,
                                                      overlappingExtents,
                                                      numOverlappingRenderables,
-                                                     occludersDrawArray,
+                                                     occluders,
                                                      occludeesExtents,
                                                      occludersExtents,
                                                      (scene.frameIndex - 1));
 
             numOccluders = this._updateOccludersLimits(split,
                                                        viewMatrix,
-                                                       occludersDrawArray,
+                                                       occluders,
                                                        occludersExtents,
                                                        numOccluders);
 
-            occludersDrawArray.length = numOccluders;
+            split.numOccluders = numOccluders;
 
             if (0 < numOccluders)
             {
                 this._updateOccludeesLimits(split,
                                             viewMatrix,
                                             occludeesExtents);
-
-                if (1 < numOccluders)
-                {
-                    occludersDrawArray.sort(this._sortNegative);
-                }
 
                 split.needsBlur = true;
             }
@@ -1573,7 +1600,8 @@ class CascadedShadowMapping
         var maxLightDistanceY = split.maxLightDistanceY;
 
         var numPreviousSplitPoints = previousSplitPoints.length;
-        if (numPreviousSplitPoints && occludersDrawArray.length)
+        if (numPreviousSplitPoints &&
+            split.numOccluders)
         {
             // Calculate previous split window compared to current one
             var roffset = viewMatrix[9];
@@ -1639,12 +1667,6 @@ class CascadedShadowMapping
                 {
                     maxLightDistanceY = Math.min(maxLightDistanceY, previousMinWindowY);
                 }
-            }
-
-            if (minLightDistanceX >= maxLightDistanceX ||
-                minLightDistanceY >= maxLightDistanceY)
-            {
-                occludersDrawArray.length = 0;
             }
         }
 
@@ -1724,6 +1746,34 @@ class CascadedShadowMapping
 
         camera.updateProjectionMatrix();
         camera.updateViewProjectionMatrix();
+        camera.updateFrustumPlanes();
+
+        var occludersToDraw = split.occludersToDraw;
+        if (minLightDistanceX >= maxLightDistanceX ||
+            minLightDistanceY >= maxLightDistanceY)
+        {
+            if (occludersToDraw.length !== 0)
+            {
+                split.needsRedraw = true;
+            }
+            occludersToDraw.length = 0;
+        }
+        else if (split.needsRedraw)
+        {
+            var numOccludersToDraw = this._filterRedundantOccuders(occluders,
+                                                                   occludersExtents,
+                                                                   occludersToDraw,
+                                                                   camera.frustumPlanes,
+                                                                   (scene.frameIndex - 1),
+                                                                   split.numOccluders);
+            occludersToDraw.length = numOccludersToDraw;
+
+            if (1 < numOccludersToDraw)
+            {
+                occludersToDraw.sort(this._sortNegative);
+            }
+        }
+
         var shadowProjection = camera.viewProjectionMatrix;
 
         var shadowDepthScale = split.shadowDepthScale;
@@ -1750,9 +1800,9 @@ class CascadedShadowMapping
         shadowOffset[0] = (split.viewportX * invSize) + 0.25;
         shadowOffset[1] = (split.viewportY * invSize) + 0.25;
 
-        if (occludersDrawArray.length)
+        if (occludersToDraw.length)
         {
-            frustumPoints = split.camera.getFrustumFarPoints(split.camera.farPlane, this.frustumPoints);
+            frustumPoints = camera.getFrustumFarPoints(camera.farPlane, this.frustumPoints);
             for (n = 0; n < 4; n += 1)
             {
                 previousSplitPoints.push(frustumPoints[n]);
@@ -1947,7 +1997,7 @@ class CascadedShadowMapping
     private _filterOccluders(overlappingRenderables: Renderable[],
                              overlappingExtents: Float32Array[],
                              numOverlappingRenderables: number,
-                             occludersDrawArray: DrawParameters[],
+                             occluders: CascadedShadowOccluder[],
                              occludeesExtents: Float32Array[],
                              occludersExtents: Float32Array[],
                              frameIndex: number): number
@@ -1967,6 +2017,7 @@ class CascadedShadowMapping
                     if (!rendererInfo)
                     {
                         rendererInfo = renderingCommonCreateRendererInfoFn(renderable);
+                        rendererInfo.shadowMappingFullyVisible = -1;
                     }
 
                     shadowMappingUpdate = rendererInfo.shadowMappingUpdate;
@@ -1980,7 +2031,19 @@ class CascadedShadowMapping
                         numDrawParameters = drawParametersArray.length;
                         for (drawParametersIndex = 0; drawParametersIndex < numDrawParameters; drawParametersIndex += 1)
                         {
-                            occludersDrawArray[numOccluders] = drawParametersArray[drawParametersIndex];
+                            var drawParameters = drawParametersArray[drawParametersIndex];
+                            var occluder: CascadedShadowOccluder = occluders[numOccluders];
+                            if (!occluder)
+                            {
+                                occluder = new CascadedShadowOccluder(drawParameters,
+                                                                      rendererInfo);
+                                occluders[numOccluders] = occluder;
+                            }
+                            else
+                            {
+                                occluder.drawParameters = drawParameters;
+                                occluder.rendererInfo = rendererInfo;
+                            }
                             occludersExtents[numOccluders] = extents;
                             numOccluders += 1;
                         }
@@ -2131,7 +2194,7 @@ class CascadedShadowMapping
 
     private _updateOccludersLimits(split: CascadedShadowSplit,
                                    viewMatrix: any,
-                                   occludersDrawArray: DrawParameters[],
+                                   occluders: CascadedShadowOccluder[],
                                    occludersExtents: Float32Array[],
                                    numOccluders: number): number
     {
@@ -2252,8 +2315,12 @@ class CascadedShadowMapping
             numOccluders -= 1;
             if (n < numOccluders)
             {
-                occludersDrawArray[n] = occludersDrawArray[numOccluders];
                 occludersExtents[n] = occludersExtents[numOccluders];
+
+                var discardedOccluder = occluders[n];
+                occluders[n] = occluders[numOccluders];
+                occluders[numOccluders] = discardedOccluder;
+                discardedOccluder.clear();
             }
             else
             {
@@ -2280,6 +2347,62 @@ class CascadedShadowMapping
 
         return numOccluders;
     }
+
+    // Filter out occluders fully included on previous splits
+    private _filterRedundantOccuders(occluders: CascadedShadowOccluder[],
+                                     occludersExtents: Float32Array[],
+                                     occludersToDraw: DrawParameters[],
+                                     frustumPlanes: any[],
+                                     frameIndex: number,
+                                     numOccluders: number): number
+    {
+        var numPlanes = frustumPlanes.length;
+        var numToDraw = 0;
+        for (var n = 0; n < numOccluders; n += 1)
+        {
+            var occluder = occluders[n];
+            var rendererInfo = occluder.rendererInfo;
+            if (rendererInfo.shadowMappingFullyVisible !== frameIndex)
+            {
+                var extents = occludersExtents[n];
+                var n0 = extents[0];
+                var n1 = extents[1];
+                var n2 = extents[2];
+                var p0 = extents[3];
+                var p1 = extents[4];
+                var p2 = extents[5];
+
+                var i = 0;
+                do
+                {
+                    var plane = frustumPlanes[i];
+                    var d0 = plane[0];
+                    var d1 = plane[1];
+                    var d2 = plane[2];
+                    var distance = (d0 * (d0 > 0 ? n0 : p0) +
+                                    d1 * (d1 > 0 ? n1 : p1) +
+                                    d2 * (d2 > 0 ? n2 : p2) -
+                                    plane[3]);
+                    if (distance < -0.01)
+                    {
+                        break;
+                    }
+                    i += 1;
+                }
+                while (i < numPlanes);
+
+                if (i >= numPlanes)
+                {
+                    rendererInfo.shadowMappingFullyVisible = frameIndex;
+                }
+
+                occludersToDraw[numToDraw] = occluder.drawParameters;
+                numToDraw += 1;
+            }
+        }
+        return numToDraw;
+    }
+
 
     drawShadowMap(): void
     {
@@ -2311,7 +2434,7 @@ class CascadedShadowMapping
             gd.clear(clearColor, 1.0, 0);
         }
 
-        var n, split, splitCamera, occludersDrawArray;
+        var n, split, splitCamera, occludersToDraw;
         for (n = 0; n < numSplits; n += 1)
         {
             split = splits[n];
@@ -2329,15 +2452,15 @@ class CascadedShadowMapping
 
                 splitCamera = split.camera;
 
-                occludersDrawArray = split.occludersDrawArray;
-                if (occludersDrawArray.length)
+                occludersToDraw = split.occludersToDraw;
+                if (occludersToDraw.length)
                 {
                     /* tslint:disable:no-string-literal */
                     gtp['viewProjectionTranspose'] = md.m44Transpose(splitCamera.viewProjectionMatrix,
                                                                      gtp['viewProjectionTranspose']);
                     /* tslint:enable:no-string-literal */
 
-                    gd.drawArray(occludersDrawArray, globalTechniqueParametersArray, 0);
+                    gd.drawArray(occludersToDraw, globalTechniqueParametersArray, 0);
                 }
             }
         }
