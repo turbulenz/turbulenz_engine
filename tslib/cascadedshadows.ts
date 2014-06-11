@@ -73,6 +73,8 @@ class CascadedShadowSplit
     viewShadowProjection: any; // m34
     shadowOffset: any; // v2
 
+    frustumPoints: any[];
+
     constructor(md, x, y)
     {
         this.viewportX = x;
@@ -121,6 +123,8 @@ class CascadedShadowSplit
 
         this.viewShadowProjection = md.m34BuildIdentity();
         this.shadowOffset = md.v2BuildZero();
+
+        this.frustumPoints = [];
 
         return this;
     }
@@ -213,7 +217,8 @@ class CascadedShadowMapping
     numSplitFrustumPlanes: number;
     splitFrustumPlanes  : any[];
     intersectingPlanes  : any[];
-    frustumPoints       : any[];
+    farFrustumPoints    : any[];
+    tempFrustumPoints   : any[];
     clampedFrustumPoints: any[];
     visibleNodes        : SceneNode[];
     numOccludees        : number;
@@ -346,7 +351,8 @@ class CascadedShadowMapping
         this.numSplitFrustumPlanes = 0;
         this.splitFrustumPlanes = [];
         this.intersectingPlanes = [];
-        this.frustumPoints = [];
+        this.farFrustumPoints = [];
+        this.tempFrustumPoints = [];
         this.clampedFrustumPoints = [];
         this.visibleNodes = [];
         this.numOccludees = 0;
@@ -555,6 +561,27 @@ class CascadedShadowMapping
         return numPoints;
     }
 
+    private _intersectEnd(x: number, y: number, z: number, e: any, plane: any, points: any[], numPoints: number): void
+    {
+        var sd = ((x * plane[0]) + (y * plane[1]) + (z * plane[2]) - plane[3]);
+        var ed = ((e[0] * plane[0]) + (e[1] * plane[1]) + (e[2] * plane[2]) - plane[3]);
+        if ((sd * ed) < 0)
+        {
+            var d0 = (e[0] - x);
+            var d1 = (e[1] - y);
+            var d2 = (e[2] - z);
+            var dp = -sd / ((d0 * plane[0]) + (d1 * plane[1]) + (d2 * plane[2]));
+            d0 *= dp;
+            d1 *= dp;
+            d2 *= dp;
+            points[numPoints] = this.md.v3Build((x + d0), (y + d1), (z + d2), points[numPoints]);
+        }
+        else
+        {
+            points[numPoints] = this.md.v3Build(e[0], e[1], e[2], points[numPoints]);
+        }
+    }
+
     private _clampFrustumPoints(frustumPoints: any[], floorPlane: any): number
     {
         var clampedFrustumPoints = this.clampedFrustumPoints;
@@ -602,9 +629,10 @@ class CascadedShadowMapping
 
         var direction = md.v3Normalize(lightDirection, this.tempV3Direction);
 
-        var frustumPoints = camera.getFrustumPoints(maxDistance, camera.nearPlane, this.frustumPoints);
+        camera.getFrustumFarPoints(camera.farPlane, this.farFrustumPoints);
+        camera.getFrustumPoints(maxDistance, camera.nearPlane, this.tempFrustumPoints);
 
-        var numClampedFrustumPoints = this._clampFrustumPoints(frustumPoints, floorPlane);
+        var numClampedFrustumPoints = this._clampFrustumPoints(this.tempFrustumPoints, floorPlane);
 
         var sideCamera = this._updateSideCamera(cameraRight,
                                                 cameraUp,
@@ -1306,11 +1334,10 @@ class CascadedShadowMapping
                                         maxDistance: number,
                                         floorPlane: any): number
     {
-        var frustumPoints = this.frustumPoints;
+        var farFrustumPoints = this.farFrustumPoints;
+        var frustumPoints = this.tempFrustumPoints;
         var nearPlane = this.sideCameraNearPlane;
         var nearDistance = nearPlane[3];
-
-        var planes = mainCamera.frustumPlanes;
 
         var mainCameraMatrix = mainCamera.matrix;
         var ax = -mainCameraMatrix[6];
@@ -1328,44 +1355,25 @@ class CascadedShadowMapping
         }
         else
         {
+            var x = mainCameraMatrix[9];
+            var y = mainCameraMatrix[10];
+            var z = mainCameraMatrix[11];
+
             nearPlane[3] = nearDistance + startDistance;
-            this._findPlanesIntersection(planes[0], planes[2], nearPlane, frustumPoints[0]);
-            this._findPlanesIntersection(planes[0], planes[3], nearPlane, frustumPoints[1]);
-            this._findPlanesIntersection(planes[1], planes[2], nearPlane, frustumPoints[2]);
-            this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[3]);
+
+            this._intersectEnd(x, y, z, farFrustumPoints[0], nearPlane, frustumPoints, 0);
+            this._intersectEnd(x, y, z, farFrustumPoints[1], nearPlane, frustumPoints, 1);
+            this._intersectEnd(x, y, z, farFrustumPoints[2], nearPlane, frustumPoints, 2);
+            this._intersectEnd(x, y, z, farFrustumPoints[3], nearPlane, frustumPoints, 3);
 
             nearPlane[3] = nearDistance + endDistance;
-            this._findPlanesIntersection(planes[0], planes[2], nearPlane, frustumPoints[4]);
-            this._findPlanesIntersection(planes[0], planes[3], nearPlane, frustumPoints[5]);
-            this._findPlanesIntersection(planes[1], planes[2], nearPlane, frustumPoints[6]);
-            this._findPlanesIntersection(planes[1], planes[3], nearPlane, frustumPoints[7]);
+
+            this._intersectEnd(x, y, z, farFrustumPoints[0], nearPlane, frustumPoints, 4);
+            this._intersectEnd(x, y, z, farFrustumPoints[1], nearPlane, frustumPoints, 5);
+            this._intersectEnd(x, y, z, farFrustumPoints[2], nearPlane, frustumPoints, 6);
+            this._intersectEnd(x, y, z, farFrustumPoints[3], nearPlane, frustumPoints, 7);
 
             nearPlane[3] = nearDistance;
-
-            var sx = mainCameraMatrix[9];
-            var sy = mainCameraMatrix[10];
-            var sz = mainCameraMatrix[11];
-
-            var n;
-            for (n = 0; n < 8; n += 1)
-            {
-                var p = frustumPoints[n];
-                var dx = (p[0] - sx);
-                var dy = (p[1] - sy);
-                var dz = (p[2] - sz);
-                var d = ((ax * dx) + (ay * dy) + (az * dz));
-                if (d > maxDistance)
-                {
-                    // "d" includes "Math.sqrt((dx * dx) + (dy * dy) + (dz * dz))" and the cosine of the angle
-                    var a = (maxDistance / d);
-                    dx *= a;
-                    dy *= a;
-                    dz *= a;
-                    p[0] = sx + dx;
-                    p[1] = sy + dy;
-                    p[2] = sz + dz;
-                }
-            }
         }
 
         return this._clampSideFrustumPoints(frustumPoints, floorPlane);
@@ -1802,7 +1810,7 @@ class CascadedShadowMapping
 
         if (occludersToDraw.length)
         {
-            frustumPoints = camera.getFrustumFarPoints(camera.farPlane, this.frustumPoints);
+            frustumPoints = camera.getFrustumFarPoints(camera.farPlane, split.frustumPoints);
             for (n = 0; n < 4; n += 1)
             {
                 previousSplitPoints.push(frustumPoints[n]);
