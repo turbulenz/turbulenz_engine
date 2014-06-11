@@ -524,7 +524,7 @@ interface VertexBuffer
 
     // Methods
 
-    setData(data: any, offset: number, numVertices: number): void;
+    setData(data: any, offset?: number, numVertices?: number): void;
     map(offset?: number, count?: number): VertexWriteIterator;
     unmap(writer: VertexWriteIterator): void;
     destroy(): void;
