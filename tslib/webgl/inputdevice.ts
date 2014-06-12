@@ -1045,8 +1045,8 @@ class WebGLInputDevice implements InputDevice
         var canvasRect = canvasElement.getBoundingClientRect();
 
         var isGameTouch = (event.target === canvasElement);
-        var positionX = event.pageX - canvasRect.left;
-        var positionY = event.pageY - canvasRect.top;
+        var positionX = event.clientX - canvasRect.left;
+        var positionY = event.clientY - canvasRect.top;
 
         var touch = pointerIdToTouch[pointerId];
         if (touch)
@@ -1183,8 +1183,8 @@ class WebGLInputDevice implements InputDevice
             force           : (w3Touch.force || w3Touch.webkitForce || 0),
             identifier      : w3Touch.identifier,
             isGameTouch     : (w3Touch.target === canvasElement),
-            positionX       : (w3Touch.pageX - canvasRect.left),
-            positionY       : (w3Touch.pageY - canvasRect.top),
+            positionX       : (w3Touch.clientX - canvasRect.left),
+            positionY       : (w3Touch.clientY - canvasRect.top),
             radiusX         : (w3Touch.radiusX || w3Touch.webkitRadiusX || 1),
             radiusY         : (w3Touch.radiusY || w3Touch.webkitRadiusY || 1),
             rotationAngle   : (w3Touch.rotationAngle || w3Touch.webkitRotationAngle || 0)
