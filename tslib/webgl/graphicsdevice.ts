@@ -4975,10 +4975,14 @@ class WebGLDrawParameters implements DrawParameters
     static version = 1;
     /* tslint:enable:no-unused-variable */
 
+    _indexBuffer: WebGLIndexBuffer;
+    _dirty: boolean;
+    _vao: any;
+
     // DrawParameters
     technique       : WebGLTechnique;
     primitive       : number;
-    indexBuffer     : WebGLIndexBuffer;
+    indexBuffer     :WebGLIndexBuffer; // Just for declaration, it is a getter/setter
     count           : number;
     firstIndex      : number;
     sortKey         : number;
@@ -4997,11 +5001,14 @@ class WebGLDrawParameters implements DrawParameters
         this.endStreams = 0;
         this.endTechniqueParameters = (16 * 3);
         this.endInstances = ((16 * 3) + 8);
-        this.indexBuffer = null;
         this.primitive = -1;
         this.count = 0;
         this.firstIndex = 0;
         this.userData = null;
+
+        this._indexBuffer = null;
+        this._dirty = true;
+        this._vao = null;
 
         // Initialize for 1 Stream
         this[0] = null;
@@ -5022,7 +5029,6 @@ class WebGLDrawParameters implements DrawParameters
         this[((16 * 3) + 8) + 6] = undefined;
         this[((16 * 3) + 8) + 7] = undefined;
 */
-
         return this;
     }
 
@@ -5060,7 +5066,11 @@ class WebGLDrawParameters implements DrawParameters
         {
             indx *= 3;
 
-            this[indx] = vertexBuffer;
+            if (this[indx] !== vertexBuffer)
+            {
+                this[indx] = vertexBuffer;
+                this._dirty = true;
+            }
 
             var endStreams = this.endStreams;
             if (vertexBuffer)
@@ -5086,7 +5096,11 @@ class WebGLDrawParameters implements DrawParameters
     {
         if (indx < 16)
         {
-            this[(indx * 3) + 1] = semantics;
+            if (this[(indx * 3) + 1] !== semantics)
+            {
+                this[(indx * 3) + 1] = semantics;
+                this._dirty = true;
+            }
         }
     }
 
@@ -5094,7 +5108,11 @@ class WebGLDrawParameters implements DrawParameters
     {
         if (indx < 16)
         {
-            this[(indx * 3) + 2] = offset;
+            if (this[(indx * 3) + 2] !== offset)
+            {
+                this[(indx * 3) + 2] = offset;
+                this._dirty = true;
+            }
         }
     }
 
@@ -5171,6 +5189,22 @@ class WebGLDrawParameters implements DrawParameters
         return new WebGLDrawParameters();
     }
 }
+
+Object.defineProperty(WebGLDrawParameters.prototype, "indexBuffer", {
+    get : function getIndexBufferFn() {
+        return this._indexBuffer;
+    },
+    set : function setIndexBufferFn(indexBuffer) {
+        if (this._indexBuffer !== indexBuffer)
+        {
+            this._indexBuffer = indexBuffer;
+            this._dirty = true;
+        }
+    },
+    enumerable : true,
+    configurable : false
+});
+
 
 //
 // WebGLGraphicsDevice
@@ -5408,6 +5442,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     drawBuffersExtension: any;
     floatTextureExtension: any;
     halfFloatTextureExtension: any;
+    vertexArrayObjectExtension: any;
 
     supportedVideoExtensions: WebGLVideoSupportedExtensions;
 
@@ -6054,7 +6089,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             var endTechniqueParameters = drawParameters.endTechniqueParameters;
             var endStreams = drawParameters.endStreams;
             var endInstances = drawParameters.endInstances;
-            var indexBuffer = drawParameters.indexBuffer;
+            var indexBuffer = drawParameters._indexBuffer;
             var primitive = drawParameters.primitive;
             var count = drawParameters.count;
             var firstIndex = drawParameters.firstIndex;
@@ -6210,6 +6245,250 @@ class WebGLGraphicsDevice implements GraphicsDevice
         this.activeIndexBuffer = activeIndexBuffer;
     }
 
+    drawArrayVAO(drawParametersArray: WebGLDrawParameters[],
+                 globalTechniqueParametersArray: TechniqueParameters[],
+                 sortMode?: number)
+    {
+        var gl = this.gl;
+        var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
+
+        var numDrawParameters = drawParametersArray.length;
+        if (numDrawParameters > 1 && sortMode)
+        {
+            if (sortMode > 0)
+            {
+                drawParametersArray.sort(this._drawArraySortPositive);
+            }
+            else //if (sortMode < 0)
+            {
+                drawParametersArray.sort(this._drawArraySortNegative);
+            }
+        }
+
+        var globalsArray = this._techniqueParametersArray;
+        var numGlobalParameters = this._createTechniqueParametersArray(globalTechniqueParametersArray, globalsArray);
+
+        var vertexArrayObjectExtension = this.vertexArrayObjectExtension;
+
+        var drawArrayId = (++this._drawArrayId);
+        var activeIndexBuffer = this.activeIndexBuffer;
+        var lastTechnique: WebGLTechnique = null;
+        var lastEndStreams = -1;
+        var lastDrawParameters = null;
+        var techniqueParameters = null;
+        var v = 0;
+        var streamsMatch = false;
+        var vertexBuffer = null;
+        var pass: WebGLPass = null;
+        var passParameters: { [name: string]: PassParameter } = null;
+        var indexFormat = 0;
+        var indexStride = 0;
+        var t = 0;
+
+        if (activeIndexBuffer)
+        {
+            indexFormat = activeIndexBuffer.format;
+            indexStride = activeIndexBuffer.stride;
+        }
+
+        for (var n = 0; n < numDrawParameters; n += 1)
+        {
+            var drawParameters = drawParametersArray[n];
+            var technique: WebGLTechnique = drawParameters.technique;
+            var endTechniqueParameters = drawParameters.endTechniqueParameters;
+            var endStreams = drawParameters.endStreams;
+            var endInstances = drawParameters.endInstances;
+            var indexBuffer = drawParameters._indexBuffer;
+            var primitive = drawParameters.primitive;
+            var count = drawParameters.count;
+            var firstIndex = drawParameters.firstIndex;
+
+            if (lastTechnique !== technique)
+            {
+                lastTechnique = technique;
+
+                this.setTechniqueCaching(technique, drawArrayId);
+
+                pass = technique.passes[0];
+                passParameters = pass.parameters;
+
+                if (technique.checkProperties)
+                {
+                    technique.checkProperties(this);
+                }
+
+                this.setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
+            }
+
+            for (t = (16 * 3); t < endTechniqueParameters; t += 1)
+            {
+                techniqueParameters = drawParameters[t];
+                if (techniqueParameters)
+                {
+                    this.setParametersCaching(passParameters, techniqueParameters);
+                }
+            }
+
+            streamsMatch = (lastEndStreams === endStreams &&
+                            lastDrawParameters._indexBuffer === indexBuffer);
+            for (v = 0; streamsMatch && v < endStreams; v += 3)
+            {
+                streamsMatch = (lastDrawParameters[v]     === drawParameters[v]     &&
+                                lastDrawParameters[v + 1] === drawParameters[v + 1] &&
+                                lastDrawParameters[v + 2] === drawParameters[v + 2]);
+            }
+
+            if (!streamsMatch)
+            {
+                lastEndStreams = endStreams;
+
+                if (drawParameters._dirty)
+                {
+                    drawParameters._dirty = false;
+
+                    if (drawParameters._vao)
+                    {
+                        vertexArrayObjectExtension.deleteVertexArrayOES(drawParameters._vao);
+                    }
+
+                    drawParameters._vao = vertexArrayObjectExtension.createVertexArrayOES();
+
+                    vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
+
+                    this.attributeMask = 0;
+
+                    for (v = 0; v < endStreams; v += 3)
+                    {
+                        vertexBuffer = drawParameters[v];
+                        if (vertexBuffer)
+                        {
+                            this.setStream(vertexBuffer, drawParameters[v + 1], drawParameters[v + 2]);
+                        }
+                    }
+
+                    this.clientStateMask = (~this.attributeMask) & 0xf;
+                    this.enableClientState(this.attributeMask);
+
+                    if (indexBuffer)
+                    {
+                        gl.bindBuffer(ELEMENT_ARRAY_BUFFER, indexBuffer.glBuffer);
+                    }
+                }
+                else
+                {
+                    vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
+                }
+            }
+            else
+            {
+                if (drawParameters._dirty)
+                {
+                    drawParameters._dirty = false;
+                    if (drawParameters._vao !== lastDrawParameters._vao)
+                    {
+                        if (drawParameters._vao)
+                        {
+                            vertexArrayObjectExtension.deleteVertexArrayOES(drawParameters._vao);
+                        }
+                        drawParameters._vao = lastDrawParameters._vao;
+                    }
+                }
+            }
+
+            lastDrawParameters = drawParameters;
+
+            /* tslint:disable:no-bitwise */
+            if (indexBuffer)
+            {
+                if (activeIndexBuffer !== indexBuffer)
+                {
+                    activeIndexBuffer = indexBuffer;
+
+                    indexFormat = indexBuffer.format;
+                    indexStride = indexBuffer.stride;
+
+                    if (debug)
+                    {
+                        this.metrics.indexBufferChanges += 1;
+                    }
+                }
+
+                firstIndex *= indexStride;
+
+                t = ((16 * 3) + 8);
+                if (t < endInstances)
+                {
+                    do
+                    {
+                        this.setParametersCaching(passParameters, drawParameters[t]);
+
+                        gl.drawElements(primitive, count, indexFormat, firstIndex);
+
+                        if (debug)
+                        {
+                            this.metrics.addPrimitives(primitive, count);
+                        }
+
+                        t += 1;
+                    }
+                    while (t < endInstances);
+                }
+                else
+                {
+                    gl.drawElements(primitive, count, indexFormat, firstIndex);
+
+                    if (debug)
+                    {
+                        this.metrics.addPrimitives(primitive, count);
+                    }
+                }
+            }
+            else
+            {
+                t = ((16 * 3) + 8);
+                if (t < endInstances)
+                {
+                    do
+                    {
+                        this.setParametersCaching(passParameters, drawParameters[t]);
+
+                        gl.drawArrays(primitive, firstIndex, count);
+
+                        if (debug)
+                        {
+                            this.metrics.addPrimitives(primitive, count);
+                        }
+
+                        t += 1;
+                    }
+                    while (t < endInstances);
+                }
+                else
+                {
+                    gl.drawArrays(primitive, firstIndex, count);
+
+                    if (debug)
+                    {
+                        this.metrics.addPrimitives(primitive, count);
+                    }
+                }
+            }
+            /* tslint:enable:no-bitwise */
+        }
+
+        vertexArrayObjectExtension.bindVertexArrayOES(null);
+
+        if (this.activeIndexBuffer !== activeIndexBuffer &&
+            this.activeIndexBuffer)
+        {
+            gl.bindBuffer(ELEMENT_ARRAY_BUFFER, this.activeIndexBuffer.glBuffer);
+        }
+
+        this.clientStateMask = 0;
+        this.attributeMask = 0;
+    }
+
+
     // This version suports technique with multiple passes but it is slower
     drawArrayMultiPass(drawParametersArray, globalTechniqueParametersArray, sortMode)
     {
@@ -6267,7 +6546,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             var endTechniqueParameters = drawParameters.endTechniqueParameters;
             var endStreams = drawParameters.endStreams;
             var endInstances = drawParameters.endInstances;
-            var indexBuffer = drawParameters.indexBuffer;
+            var indexBuffer = drawParameters._indexBuffer;
             var primitive = drawParameters.primitive;
             var count = drawParameters.count;
             var firstIndex = drawParameters.firstIndex;
@@ -7984,6 +8263,13 @@ class WebGLGraphicsDevice implements GraphicsDevice
         if (extensionsMap['WEBGL_color_buffer_half_float'])
         {
             gl.getExtension('WEBGL_color_buffer_half_float');
+        }
+
+        // Enagle OES_vertex_array_object extension
+        if (extensionsMap['OES_vertex_array_object'])
+        {
+            gd.vertexArrayObjectExtension = gl.getExtension('OES_vertex_array_object');
+            gd.drawArray = gd.drawArrayVAO;
         }
 
         if (extensionsMap['WEBGL_debug_renderer_info'])
