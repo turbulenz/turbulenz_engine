@@ -1096,102 +1096,6 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
             source._gainNode = gainNode;
             gainNode.connect(masterGainNode);
 
-            Object.defineProperty(source, "gain", {
-                get : function getGainFn() {
-                    return this._gain;
-                },
-                set : function setGainFn(newGain) {
-                    if (this._gain !== newGain)
-                    {
-                        this._gain = newGain;
-                        this._gainNode.gain.value = newGain;
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "looping", {
-                get : function getLoopingFn() {
-                    return this._looping;
-                },
-                set : function setLoopingFn(newLooping) {
-                    this._looping = newLooping;
-                    var audio = this.audio;
-                    if (audio)
-                    {
-                        audio.loop = newLooping;
-                    }
-                    else
-                    {
-                        var bufferNode = this.bufferNode;
-                        if (bufferNode)
-                        {
-                            bufferNode.loop = newLooping;
-                        }
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "pitch", {
-                get : function getPitchFn() {
-                    return this._pitch;
-                },
-                set : function setPitchFn(newPitch) {
-                    this._pitch = newPitch;
-                    var audio = this.audio;
-                    if (audio)
-                    {
-                        audio.playbackRate = newPitch;
-                    }
-                    else
-                    {
-                        var bufferNode = this.bufferNode;
-                        if (bufferNode)
-                        {
-                            if (bufferNode.playbackRate)
-                            {
-                                bufferNode.playbackRate.value = newPitch;
-                            }
-                        }
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "tell", {
-                get : function tellFn() {
-                    if (this.playing)
-                    {
-                        var audio = this.audio;
-                        if (audio)
-                        {
-                            return audio.currentTime;
-                        }
-                        else
-                        {
-                            if (this.paused)
-                            {
-                                return (this.playPaused - this.playStart);
-                            }
-                            else
-                            {
-                                return (audioContext.currentTime - this.playStart);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
             source.loopAudio = function loopAudioFn() {
                 source.stop();
             };
@@ -1216,39 +1120,8 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
                 }
             };
 
-            Object.defineProperty(source, "gain", {
-                get : function getGainFn() {
-                    return this._gain;
-                },
-                set : function setGainFn(newGain) {
-                    if (this._gain !== newGain)
-                    {
-                        this._gain = newGain;
-                        this.updateAudioVolume();
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
             if (sd.loopingSupported)
             {
-                Object.defineProperty(source, "looping", {
-                    get : function getLoopingFn() {
-                        return this._looping;
-                    },
-                    set : function setLoopingFn(newLooping) {
-                        this._looping = newLooping;
-                        var audio = this.audio;
-                        if (audio)
-                        {
-                            audio.loop = newLooping;
-                        }
-                    },
-                    enumerable : true,
-                    configurable : false
-                });
-
                 source.loopAudio = function loopAudioFn() {
                     source.stop();
                 };
@@ -1273,38 +1146,6 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
                     }
                 };
             }
-
-            Object.defineProperty(source, "pitch", {
-                get : function getPitchFn() {
-                    return this._pitch;
-                },
-                set : function setPitchFn(newPitch) {
-                    this._pitch = newPitch;
-                    var audio = this.audio;
-                    if (audio)
-                    {
-                        audio.playbackRate = newPitch;
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "tell", {
-                get : function tellFn() {
-                    if (this.playing)
-                    {
-                        var audio = this.audio;
-                        if (audio)
-                        {
-                            return audio.currentTime;
-                        }
-                    }
-                    return 0;
-                },
-                enumerable : true,
-                configurable : false
-            });
         }
 
         return source;
@@ -1488,190 +1329,6 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             source.updateRelativePosition = source._updateRelativePositionWebAudio;
 
-            Object.defineProperty(source, "position", {
-                get : function getPositionFn() {
-                    return this._position.slice();
-                },
-                set : function setPositionFn(newPosition) {
-                    var oldPosition = this._position;
-                    if (oldPosition[0] !== newPosition[0] ||
-                        oldPosition[1] !== newPosition[1] ||
-                        oldPosition[2] !== newPosition[2])
-                    {
-                        oldPosition[0] = newPosition[0];
-                        oldPosition[1] = newPosition[1];
-                        oldPosition[2] = newPosition[2];
-                        if (!this.relative)
-                        {
-                            this._pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
-                        }
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "direction", {
-                get : function getDirectionFn() {
-                    return this._direction.slice();
-                },
-                set : function setDirectionFn(newDirection) {
-                    this._direction = VMath.v3Copy(newDirection, this._direction);
-                    this._pannerNode.setOrientation(newDirection[0], newDirection[1], newDirection[2]);
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "velocity", {
-                get : function getVelocityFn() {
-                    return this._velocity.slice();
-                },
-                set : function setVelocityFn(newVelocity) {
-                    this._velocity = VMath.v3Copy(newVelocity, this._velocity);
-                    this._pannerNode.setVelocity(newVelocity[0], newVelocity[1], newVelocity[2]);
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "gain", {
-                get : function getGainFn() {
-                    return this._gain;
-                },
-                set : function setGainFn(newGain) {
-                    if (this._gain !== newGain)
-                    {
-                        this._gain = newGain;
-                        this._gainNode.gain.value = newGain;
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "looping", {
-                get : function getLoopingFn() {
-                    return this._looping;
-                },
-                set : function setLoopingFn(newLooping) {
-                    this._looping = newLooping;
-                    var audio = this.audio;
-                    if (audio)
-                    {
-                        audio.loop = newLooping;
-                    }
-                    else
-                    {
-                        var bufferNode = this.bufferNode;
-                        if (bufferNode)
-                        {
-                            bufferNode.loop = newLooping;
-                        }
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "pitch", {
-                get : function getPitchFn() {
-                    return this._pitch;
-                },
-                set : function setPitchFn(newPitch) {
-                    this._pitch = newPitch;
-                    var audio = this.audio;
-                    if (audio)
-                    {
-                        audio.playbackRate = newPitch;
-                    }
-                    else
-                    {
-                        var bufferNode = this.bufferNode;
-                        if (bufferNode)
-                        {
-                            if (bufferNode.playbackRate)
-                            {
-                                bufferNode.playbackRate.value = newPitch;
-                            }
-                        }
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "tell", {
-                get : function tellFn() {
-                    if (this.playing)
-                    {
-                        var audio = this.audio;
-                        if (audio)
-                        {
-                            return audio.currentTime;
-                        }
-                        else
-                        {
-                            if (this.paused)
-                            {
-                                return (this.playPaused - this.playStart);
-                            }
-                            else
-                            {
-                                return (audioContext.currentTime - this.playStart);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "minDistance", {
-                get : function getMinDistanceFn() {
-                    return this._pannerNode.refDistance;
-                },
-                set : function setMinDistanceFn(minDistance) {
-                    if (this._pannerNode.maxDistance === minDistance)
-                    {
-                        minDistance = this._pannerNode.maxDistance * 0.999;
-                    }
-                    this._pannerNode.refDistance = minDistance;
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "maxDistance", {
-                get : function getMaxDistanceFn() {
-                    return this._pannerNode.maxDistance;
-                },
-                set : function setMaxDistanceFn(maxDistance) {
-                    if (this._pannerNode.refDistance === maxDistance)
-                    {
-                        maxDistance = this._pannerNode.refDistance * 1.001;
-                    }
-                    this._pannerNode.maxDistance = maxDistance;
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "rollOff", {
-                get : function getRolloffFactorFn() {
-                    return this._pannerNode.rolloffFactor;
-                },
-                set : function setRolloffFactorFn(rollOff) {
-                    this._pannerNode.rolloffFactor = rollOff;
-                },
-                enumerable : true,
-                configurable : false
-            });
-
             source.loopAudio = function loopAudioFn() {
                 source.stop();
             };
@@ -1700,72 +1357,8 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
 
             source.updateRelativePosition = source._updateRelativePositionHTML5;
 
-            Object.defineProperty(source, "position", {
-                get : function getPositionFn() {
-                    return this._position.slice();
-                },
-                set : function setPositionFn(newPosition) {
-                    this._position = VMath.v3Copy(newPosition, this._position);
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "direction", {
-                get : function getDirectionFn() {
-                    return this._direction.slice();
-                },
-                set : function setDirectionFn(newDirection) {
-                    this._direction = VMath.v3Copy(newDirection, this._direction);
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "velocity", {
-                get : function getVelocityFn() {
-                    return this._velocity.slice();
-                },
-                set : function setVelocityFn(newVelocity) {
-                    this._velocity = VMath.v3Copy(newVelocity, this._velocity);
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "gain", {
-                get : function getGainFn() {
-                    return this._gain;
-                },
-                set : function setGainFn(newGain) {
-                    if (this._gain !== newGain)
-                    {
-                        this._gain = newGain;
-                        this.updateAudioVolume();
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
             if (sd.loopingSupported)
             {
-                Object.defineProperty(source, "looping", {
-                    get : function getLoopingFn() {
-                        return this._looping;
-                    },
-                    set : function setLoopingFn(newLooping) {
-                        this._looping = newLooping;
-                        var audio = this.audio;
-                        if (audio)
-                        {
-                            audio.loop = newLooping;
-                        }
-                    },
-                    enumerable : true,
-                    configurable : false
-                });
-
                 source.loopAudio = function loopAudioFn() {
                     source.stop();
                 };
@@ -1791,37 +1384,6 @@ class WebGLSoundSource extends WebGLSoundGlobalSource implements SoundSource
                 };
             }
 
-            Object.defineProperty(source, "pitch", {
-                get : function getPitchFn() {
-                    return this._pitch;
-                },
-                set : function setPitchFn(newPitch) {
-                    this._pitch = newPitch;
-                    var audio = this.audio;
-                    if (audio)
-                    {
-                        audio.playbackRate = newPitch;
-                    }
-                },
-                enumerable : true,
-                configurable : false
-            });
-
-            Object.defineProperty(source, "tell", {
-                get : function tellFn() {
-                    if (this.playing)
-                    {
-                        var audio = this.audio;
-                        if (audio)
-                        {
-                            return audio.currentTime;
-                        }
-                    }
-                    return 0;
-                },
-                enumerable : true,
-                configurable : false
-            });
         }
 
         source.relative = (params.relative || false);
@@ -2246,11 +1808,279 @@ class WebGLSoundDevice implements SoundDevice
             listener.speedOfSound = sd.speedOfSound;
 
             sd.update = sd._updateWebAudio;
+
+            // Set setters and getters WebGLSoundGlobalSource
+            Object.defineProperty(WebGLSoundGlobalSource.prototype, "gain", {
+                get : function getGainFn() {
+                    return this._gain;
+                },
+                set : function setGainFn(newGain) {
+                    if (this._gain !== newGain)
+                    {
+                        this._gain = newGain;
+                        this._gainNode.gain.value = newGain;
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundGlobalSource.prototype, "pitch", {
+                get : function getPitchFn() {
+                    return this._pitch;
+                },
+                set : function setPitchFn(newPitch) {
+                    this._pitch = newPitch;
+                    var audio = this.audio;
+                    if (audio)
+                    {
+                        audio.playbackRate = newPitch;
+                    }
+                    else
+                    {
+                        var bufferNode = this.bufferNode;
+                        if (bufferNode)
+                        {
+                            if (bufferNode.playbackRate)
+                            {
+                                bufferNode.playbackRate.value = newPitch;
+                            }
+                        }
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundGlobalSource.prototype, "tell", {
+                get : function tellFn() {
+                    if (this.playing)
+                    {
+                        var audio = this.audio;
+                        if (audio)
+                        {
+                            return audio.currentTime;
+                        }
+                        else
+                        {
+                            if (this.paused)
+                            {
+                                return (this.playPaused - this.playStart);
+                            }
+                            else
+                            {
+                                return (audioContext.currentTime - this.playStart);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundGlobalSource.prototype, "looping", {
+                get : function getLoopingFn() {
+                    return this._looping;
+                },
+                set : function setLoopingFn(newLooping) {
+                    this._looping = newLooping;
+                    var audio = this.audio;
+                    if (audio)
+                    {
+                        audio.loop = newLooping;
+                    }
+                    else
+                    {
+                        var bufferNode = this.bufferNode;
+                        if (bufferNode)
+                        {
+                            bufferNode.loop = newLooping;
+                        }
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            // Set setters and getters WebGLSoundSource
+            Object.defineProperty(WebGLSoundSource.prototype, "position", {
+                get : function getPositionFn() {
+                    return this._position.slice();
+                },
+                set : function setPositionFn(newPosition) {
+                    var oldPosition = this._position;
+                    if (oldPosition[0] !== newPosition[0] ||
+                        oldPosition[1] !== newPosition[1] ||
+                        oldPosition[2] !== newPosition[2])
+                    {
+                        oldPosition[0] = newPosition[0];
+                        oldPosition[1] = newPosition[1];
+                        oldPosition[2] = newPosition[2];
+                        if (!this.relative)
+                        {
+                            this._pannerNode.setPosition(newPosition[0], newPosition[1], newPosition[2]);
+                        }
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundSource.prototype, "direction", {
+                get : function getDirectionFn() {
+                    return this._direction.slice();
+                },
+                set : function setDirectionFn(newDirection) {
+                    this._direction = VMath.v3Copy(newDirection, this._direction);
+                    this._pannerNode.setOrientation(newDirection[0], newDirection[1], newDirection[2]);
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundSource.prototype, "velocity", {
+                get : function getVelocityFn() {
+                    return this._velocity.slice();
+                },
+                set : function setVelocityFn(newVelocity) {
+                    this._velocity = VMath.v3Copy(newVelocity, this._velocity);
+                    this._pannerNode.setVelocity(newVelocity[0], newVelocity[1], newVelocity[2]);
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundSource.prototype, "minDistance", {
+                get : function getMinDistanceFn() {
+                    return this._pannerNode.refDistance;
+                },
+                set : function setMinDistanceFn(minDistance) {
+                    if (this._pannerNode.maxDistance === minDistance)
+                    {
+                        minDistance = this._pannerNode.maxDistance * 0.999;
+                    }
+                    this._pannerNode.refDistance = minDistance;
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundSource.prototype, "maxDistance", {
+                get : function getMaxDistanceFn() {
+                    return this._pannerNode.maxDistance;
+                },
+                set : function setMaxDistanceFn(maxDistance) {
+                    if (this._pannerNode.refDistance === maxDistance)
+                    {
+                        maxDistance = this._pannerNode.refDistance * 1.001;
+                    }
+                    this._pannerNode.maxDistance = maxDistance;
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundSource.prototype, "rollOff", {
+                get : function getRolloffFactorFn() {
+                    return this._pannerNode.rolloffFactor;
+                },
+                set : function setRolloffFactorFn(rollOff) {
+                    this._pannerNode.rolloffFactor = rollOff;
+                },
+                enumerable : true,
+                configurable : false
+            });
         }
         else
         {
             sd.update = sd._updateHTML5;
             WebGLSound.prototype.forceUncompress = false;
+
+            // Set setters and getters WebGLSoundGlobalSource
+            Object.defineProperty(WebGLSoundGlobalSource.prototype, "gain", {
+                get : function getGainFn() {
+                    return this._gain;
+                },
+                set : function setGainFn(newGain) {
+                    if (this._gain !== newGain)
+                    {
+                        this._gain = newGain;
+                        this.updateAudioVolume();
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundGlobalSource.prototype, "pitch", {
+                get : function getPitchFn() {
+                    return this._pitch;
+                },
+                set : function setPitchFn(newPitch) {
+                    this._pitch = newPitch;
+                    var audio = this.audio;
+                    if (audio)
+                    {
+                        audio.playbackRate = newPitch;
+                    }
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundGlobalSource.prototype, "tell", {
+                get : function tellFn() {
+                    if (this.playing)
+                    {
+                        var audio = this.audio;
+                        if (audio)
+                        {
+                            return audio.currentTime;
+                        }
+                    }
+                    return 0;
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            // Set setters and getters WebGLSoundSource
+            Object.defineProperty(WebGLSoundSource.prototype, "position", {
+                get : function getPositionFn() {
+                    return this._position.slice();
+                },
+                set : function setPositionFn(newPosition) {
+                    this._position = VMath.v3Copy(newPosition, this._position);
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundSource.prototype, "direction", {
+                get : function getDirectionFn() {
+                    return this._direction.slice();
+                },
+                set : function setDirectionFn(newDirection) {
+                    this._direction = VMath.v3Copy(newDirection, this._direction);
+                },
+                enumerable : true,
+                configurable : false
+            });
+
+            Object.defineProperty(WebGLSoundSource.prototype, "velocity", {
+                get : function getVelocityFn() {
+                    return this._velocity.slice();
+                },
+                set : function setVelocityFn(newVelocity) {
+                    this._velocity = VMath.v3Copy(newVelocity, this._velocity);
+                },
+                enumerable : true,
+                configurable : false
+            });
         }
 
         sd._listenerTransform = (params.listenerTransform ?
@@ -2332,6 +2162,25 @@ class WebGLSoundDevice implements SoundDevice
 
             // Check for looping support
             sd.loopingSupported = (typeof audio.loop === 'boolean');
+
+            if (sd.loopingSupported)
+            {
+                Object.defineProperty(WebGLSoundGlobalSource.prototype, "looping", {
+                    get : function getLoopingFn() {
+                        return this._looping;
+                    },
+                    set : function setLoopingFn(newLooping) {
+                        this._looping = newLooping;
+                        var audio = this.audio;
+                        if (audio)
+                        {
+                            audio.loop = newLooping;
+                        }
+                    },
+                    enumerable : true,
+                    configurable : false
+                });
+            }
         }
 
         // Check for supported extensions
