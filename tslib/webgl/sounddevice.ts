@@ -346,7 +346,7 @@ class WebGLSound implements Sound
                 {
                     if (onload)
                     {
-                        onload(null, 0);
+                        onload(null, undefined);
                         onload = null;
                     }
                 };
