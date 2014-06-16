@@ -169,6 +169,8 @@ TurbulenzEngine.onload = function onloadFn()
             "<li>ListenerVelocity: [" + velocity[0] + ", " + velocity[1] + ", " + velocity[2] + "]<\/li>" +
             "<li>FILEFORMAT_OGG: " + soundDevice.isSupported("FILEFORMAT_OGG") + " <\/li>" +
             "<li>FILEFORMAT_MP3: " + soundDevice.isSupported("FILEFORMAT_MP3") + " <\/li>" +
+            "<li>FILEFORMAT_M4A: " + soundDevice.isSupported("FILEFORMAT_M4A") + " <\/li>" +
+            "<li>FILEFORMAT_AAC: " + soundDevice.isSupported("FILEFORMAT_AAC") + " <\/li>" +
             "<li>FILEFORMAT_WAV: " + soundDevice.isSupported("FILEFORMAT_WAV") + " <\/li>" +
             "<li>Extensions: " + soundDevice.extensions + "<\/li>" +
             "<\/ul>", sdDiv);

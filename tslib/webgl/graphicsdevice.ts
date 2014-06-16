@@ -33,6 +33,7 @@ interface WebGLVideoSupportedExtensions
 {
     webm?: boolean;
     mp4?: boolean;
+    m4v?: boolean;
 };
 
 // -----------------------------------------------------------------------------
@@ -7348,7 +7349,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             return ("webm" in this.supportedVideoExtensions);
         }
-        else if ("FILEFORMAT_MP4" === name)
+        else if ("FILEFORMAT_MP4" === name ||
+                 "FILEFORMAT_M4V" === name)
         {
             return ("mp4" in this.supportedVideoExtensions);
         }
@@ -9432,6 +9434,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             if (video.canPlayType('video/mp4'))
             {
                 supportedVideoExtensions.mp4 = true;
+                supportedVideoExtensions.m4v = true;
             }
         }
         gd.supportedVideoExtensions = supportedVideoExtensions;

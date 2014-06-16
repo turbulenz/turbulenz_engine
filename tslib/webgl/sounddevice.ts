@@ -396,9 +396,21 @@ class WebGLSound implements Sound
                         }
                         else
                         {
-                            // Assume it's an mp3?
-                            extension = 'mp3';
-                            dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
+                            if (extension === 'm4a' ||
+                                extension === 'mp4')
+                            {
+                                dataBlob = new Blob([dataArray], {type: "audio/mp4"});
+                            }
+                            else if (extension === 'aac')
+                            {
+                                dataBlob = new Blob([dataArray], {type: "audio/aac"});
+                            }
+                            else
+                            {
+                                // Assume it's an mp3?
+                                extension = 'mp3';
+                                dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
+                            }
                         }
                         debug.assert(dataArray.length === dataBlob.size,
                                     "Blob constructor does not support typed arrays.");
@@ -425,9 +437,21 @@ class WebGLSound implements Sound
                         }
                         else
                         {
-                            // Assume it's an mp3?
-                            extension = 'mp3';
-                            soundPath = 'data:audio/mpeg;base64,';
+                            if (extension === 'm4a' ||
+                                extension === 'mp4')
+                            {
+                                soundPath = 'data:audio/mp4;base64,';
+                            }
+                            else if (extension === 'aac')
+                            {
+                                soundPath = 'data:audio/aac;base64,';
+                            }
+                            else
+                            {
+                                // Assume it's an mp3?
+                                extension = 'mp3';
+                                soundPath = 'data:audio/mpeg;base64,';
+                            }
                         }
 
                         // Mangle data into a data URI
@@ -1412,6 +1436,9 @@ interface WebGLSoundDeviceExtensions
 {
     ogg: boolean;
     mp3: boolean;
+    mp4: boolean;
+    m4a: boolean;
+    aac: boolean;
     wav: boolean;
 }
 
@@ -1612,6 +1639,15 @@ class WebGLSoundDevice implements SoundDevice
         else if ("FILEFORMAT_MP3" === name)
         {
             return this.supportedExtensions.mp3;
+        }
+        else if ("FILEFORMAT_M4A" === name ||
+                 "FILEFORMAT_MP4" === name)
+        {
+            return this.supportedExtensions.m4a;
+        }
+        else if ("FILEFORMAT_AAC" === name)
+        {
+            return this.supportedExtensions.aac;
         }
         else if ("FILEFORMAT_WAV" === name)
         {
@@ -2187,6 +2223,9 @@ class WebGLSoundDevice implements SoundDevice
         var supportedExtensions : WebGLSoundDeviceExtensions = {
             ogg: false,
             mp3: false,
+            mp4: false,
+            m4a: false,
+            aac: false,
             wav: false,
         };
         if (audio.canPlayType('application/ogg'))
@@ -2196,6 +2235,15 @@ class WebGLSoundDevice implements SoundDevice
         if (audio.canPlayType('audio/mp3'))
         {
             supportedExtensions.mp3 = true;
+        }
+        if (audio.canPlayType('audio/mp4'))
+        {
+            supportedExtensions.mp4 = true;
+            supportedExtensions.m4a = true;
+        }
+        if (audio.canPlayType('audio/aac'))
+        {
+            supportedExtensions.aac = true;
         }
         if (audio.canPlayType('audio/wav'))
         {
