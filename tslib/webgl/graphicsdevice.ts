@@ -7085,6 +7085,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         this.resetStates();
 
+        var canvas = gl.canvas;
+        var width = (gl.drawingBufferWidth || canvas.width);
+        var height = (gl.drawingBufferHeight || canvas.height);
+        this.width = width;
+        this.height = height;
+
         this.setScissor(0, 0, this.width, this.height);
         this.setViewport(0, 0, this.width, this.height);
 
@@ -7167,18 +7173,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             this.fps = (this.numFrames / (diffTime * 0.001));
             this.numFrames = 0;
             this.previousFrameTime = currentFrameTime;
-        }
-
-        var canvas = gl.canvas;
-        var width = (gl.drawingBufferWidth || canvas.width);
-        var height = (gl.drawingBufferHeight || canvas.height);
-        if (this.width !== width ||
-            this.height !== height)
-        {
-            this.width = width;
-            this.height = height;
-            this.setViewport(0, 0, width, height);
-            this.setScissor(0, 0, width, height);
         }
 
         // Remove any references to external technique parameters
