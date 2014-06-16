@@ -126,6 +126,8 @@ interface Navigator
     getGamepads?: { (): any[]; };
     webkitGetGamepads?: { (): any[]; };
 
+    hardwareConcurrency?: number;
+
     pointer: // TODO: Where is this type documented?
     {
         isLocked: boolean;
