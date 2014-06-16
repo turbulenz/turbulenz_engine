@@ -3415,6 +3415,10 @@ class WebGLVertexBuffer implements VertexBuffer
 
             offset += vertexAttribute.stride;
         }
+        if (debug)
+        {
+            gd.metrics.vertexAttributesChanges += numAttributes;
+        }
         return attributeMask;
     }
 
@@ -5268,8 +5272,10 @@ interface WebGLMetrics
     renderTargetChanges: number;
     textureChanges: number;
     renderStateChanges: number;
+    vertexAttributesChanges: number;
     vertexBufferChanges: number;
     indexBufferChanges: number;
+    vertexArrayObjectChanges: number;
     techniqueChanges: number;
     drawCalls: number;
     primitives: number;
@@ -6271,25 +6277,18 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var vertexArrayObjectExtension = this.vertexArrayObjectExtension;
 
         var drawArrayId = (++this._drawArrayId);
-        var activeIndexBuffer = this.activeIndexBuffer;
         var lastTechnique: WebGLTechnique = null;
         var lastEndStreams = -1;
         var lastDrawParameters = null;
         var techniqueParameters = null;
         var v = 0;
-        var streamsMatch = false;
+        var vaoMatch = false;
         var vertexBuffer = null;
         var pass: WebGLPass = null;
         var passParameters: { [name: string]: PassParameter } = null;
         var indexFormat = 0;
         var indexStride = 0;
         var t = 0;
-
-        if (activeIndexBuffer)
-        {
-            indexFormat = activeIndexBuffer.format;
-            indexStride = activeIndexBuffer.stride;
-        }
 
         for (var n = 0; n < numDrawParameters; n += 1)
         {
@@ -6329,16 +6328,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
 
-            streamsMatch = (lastEndStreams === endStreams &&
-                            lastDrawParameters._indexBuffer === indexBuffer);
-            for (v = 0; streamsMatch && v < endStreams; v += 3)
+            vaoMatch = (lastEndStreams === endStreams &&
+                        lastDrawParameters._indexBuffer === indexBuffer);
+            for (v = 0; vaoMatch && v < endStreams; v += 3)
             {
-                streamsMatch = (lastDrawParameters[v]     === drawParameters[v]     &&
-                                lastDrawParameters[v + 1] === drawParameters[v + 1] &&
-                                lastDrawParameters[v + 2] === drawParameters[v + 2]);
+                vaoMatch = (lastDrawParameters[v]     === drawParameters[v]     &&
+                            lastDrawParameters[v + 1] === drawParameters[v + 1] &&
+                            lastDrawParameters[v + 2] === drawParameters[v + 2]);
             }
 
-            if (!streamsMatch)
+            if (!vaoMatch)
             {
                 lastEndStreams = endStreams;
 
@@ -6355,6 +6354,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                     vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
 
+                    this.bindedVertexBuffer = null;
                     this.attributeMask = 0;
 
                     for (v = 0; v < endStreams; v += 3)
@@ -6378,6 +6378,19 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
                 }
+
+                if (indexBuffer &&
+                    (!lastDrawParameters ||
+                     lastDrawParameters._indexBuffer !== indexBuffer))
+                {
+                    indexFormat = indexBuffer.format;
+                    indexStride = indexBuffer.stride;
+                }
+
+                if (debug)
+                {
+                    this.metrics.vertexArrayObjectChanges += 1;
+                }
             }
             else
             {
@@ -6390,9 +6403,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
                         {
                             vertexArrayObjectExtension.deleteVertexArrayOES(drawParameters._vao);
                         }
-                        drawParameters._vao = lastDrawParameters._vao;
                     }
                 }
+                drawParameters._vao = lastDrawParameters._vao;
             }
 
             lastDrawParameters = drawParameters;
@@ -6400,19 +6413,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             /* tslint:disable:no-bitwise */
             if (indexBuffer)
             {
-                if (activeIndexBuffer !== indexBuffer)
-                {
-                    activeIndexBuffer = indexBuffer;
-
-                    indexFormat = indexBuffer.format;
-                    indexStride = indexBuffer.stride;
-
-                    if (debug)
-                    {
-                        this.metrics.indexBufferChanges += 1;
-                    }
-                }
-
                 firstIndex *= indexStride;
 
                 t = ((16 * 3) + 8);
@@ -6478,12 +6478,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         vertexArrayObjectExtension.bindVertexArrayOES(null);
 
-        if (this.activeIndexBuffer !== activeIndexBuffer &&
-            this.activeIndexBuffer)
-        {
-            gl.bindBuffer(ELEMENT_ARRAY_BUFFER, this.activeIndexBuffer.glBuffer);
-        }
-
+        this.activeIndexBuffer = null;
+        this.bindedVertexBuffer = null;
         this.clientStateMask = 0;
         this.attributeMask = 0;
     }
@@ -7099,8 +7095,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
             this.metrics.renderTargetChanges = 0;
             this.metrics.textureChanges = 0;
             this.metrics.renderStateChanges = 0;
+            this.metrics.vertexAttributesChanges = 0;
             this.metrics.vertexBufferChanges = 0;
             this.metrics.indexBufferChanges = 0;
+            this.metrics.vertexArrayObjectChanges = 0;
             this.metrics.techniqueChanges = 0;
             this.metrics.drawCalls = 0;
             this.metrics.primitives = 0;
@@ -8628,8 +8626,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 renderTargetChanges: 0,
                 textureChanges: 0,
                 renderStateChanges: 0,
+                vertexAttributesChanges: 0,
                 vertexBufferChanges: 0,
                 indexBufferChanges: 0,
+                vertexArrayObjectChanges: 0,
                 techniqueChanges: 0,
                 drawCalls: 0,
                 primitives: 0,
