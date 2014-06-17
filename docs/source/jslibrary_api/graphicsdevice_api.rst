@@ -1118,6 +1118,7 @@ See also :ref:`maxSupported <graphicsdevice_maxsupported>`.
 * "INDEXFORMAT_UINT" : If INDEXFORMAT_UINT can be used with IndexBuffers.
 * "FILEFORMAT_WEBM"
 * "FILEFORMAT_MP4"
+* "FILEFORMAT_M4V"
 * "FILEFORMAT_JPG"
 * "FILEFORMAT_PNG"
 * "FILEFORMAT_DDS"

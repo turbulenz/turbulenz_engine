@@ -389,6 +389,8 @@ Used to check if a feature is supported.
 
 * "FILEFORMAT_OGG"
 * "FILEFORMAT_MP3"
+* "FILEFORMAT_M4A"
+* "FILEFORMAT_ACC"
 * "FILEFORMAT_WAV"
 
 Returns a boolean.
