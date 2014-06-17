@@ -1834,9 +1834,7 @@ class WebGLSoundDevice implements SoundDevice
 
             // HTML5 + WebAudio just does not work on Android or iOS
             // and it seems to crash Chrome and perform poorly on Firefox...
-            //WebGLSound.prototype.forceUncompress = (TurbulenzEngine.getSystemInfo().platformProfile !== 'desktop' ||
-            //                                        !audioContext.createMediaElementSource);
-            WebGLSound.prototype.forceUncompress = true;
+            WebGLSound.prototype.forceUncompress = !audioContext.createMediaElementSource;
 
             WebGLSound.prototype.audioContext = audioContext;
             WebGLSoundSource.prototype.audioContext = audioContext;
