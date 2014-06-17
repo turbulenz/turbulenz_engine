@@ -8,7 +8,6 @@
 float4x3 world;
 float4x4 viewProjectionTranspose;
 
-
 float4 uvScaleOffset;
 float2 pixelOffset;
 
@@ -23,6 +22,12 @@ sampler2D shadowMap = sampler_state
 //
 // Utils
 //
+float4 EncodeClampedFloatRGB32(float v)
+{
+    float3 enc = frac(v * float3(65536.0, 256.0, 1.0)) * 256.0;
+    enc.yz -= (enc.xy / 256.0);
+    return float4(enc / 255.0, 1.0);
+}
 
 float3 EncodeFloatRGB24(float v)
 {
@@ -127,7 +132,7 @@ void vp_blur(in float4 INPosition : POSITION,
 //
 float4 fp(in float4 INPosition : WPOS) : COLOR
 {
-    return float4(EncodeFloatRGB24(INPosition.z), 1.0);
+    return EncodeClampedFloatRGB32(INPosition.z);
 }
 
 float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
@@ -193,6 +198,7 @@ technique rigid_nocull
         FragmentProgram = compile glslf fp();
     }
 }
+
 technique skinned
 {
     pass
