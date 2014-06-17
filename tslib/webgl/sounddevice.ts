@@ -346,7 +346,7 @@ class WebGLSound implements Sound
                 {
                     if (onload)
                     {
-                        onload(null, 0);
+                        onload(null, undefined);
                         onload = null;
                     }
                 };
@@ -364,100 +364,110 @@ class WebGLSound implements Sound
 
                 if (data)
                 {
-                    var dataArray;
-                    if (data instanceof Uint8Array)
+                    if (typeof Blob !== "undefined" &&
+                        data instanceof Blob)
                     {
-                        dataArray = data;
+                        debug.assert(typeof URL !== "undefined" && URL.createObjectURL);
+                        sound.blob = data;
+                        soundPath = URL.createObjectURL(data);
                     }
                     else
                     {
-                        dataArray = new Uint8Array(data);
-                    }
-
-                    // Check extension based on data
-                    if (typeof Blob !== "undefined" && typeof URL !== "undefined" && URL.createObjectURL)
-                    {
-                        var dataBlob;
-                        if (dataArray[0] === 79 &&
-                            dataArray[1] === 103 &&
-                            dataArray[2] === 103 &&
-                            dataArray[3] === 83)
+                        var dataArray;
+                        if (data instanceof Uint8Array)
                         {
-                            extension = 'ogg';
-                            dataBlob = new Blob([dataArray], {type: "audio/ogg"});
-                        }
-                        else if (dataArray[0] === 82 &&
-                                 dataArray[1] === 73 &&
-                                 dataArray[2] === 70 &&
-                                 dataArray[3] === 70)
-                        {
-                            extension = 'wav';
-                            dataBlob = new Blob([dataArray], {type: "audio/wav"});
+                            dataArray = data;
                         }
                         else
                         {
-                            if (extension === 'm4a' ||
-                                extension === 'mp4')
+                            dataArray = new Uint8Array(data);
+                        }
+
+                        // Check extension based on data
+                        if (typeof Blob !== "undefined" && typeof URL !== "undefined" && URL.createObjectURL)
+                        {
+                            var dataBlob;
+                            if (dataArray[0] === 79 &&
+                                dataArray[1] === 103 &&
+                                dataArray[2] === 103 &&
+                                dataArray[3] === 83)
                             {
-                                dataBlob = new Blob([dataArray], {type: "audio/mp4"});
+                                extension = 'ogg';
+                                dataBlob = new Blob([dataArray], {type: "audio/ogg"});
                             }
-                            else if (extension === 'aac')
+                            else if (dataArray[0] === 82 &&
+                                     dataArray[1] === 73 &&
+                                     dataArray[2] === 70 &&
+                                     dataArray[3] === 70)
                             {
-                                dataBlob = new Blob([dataArray], {type: "audio/aac"});
+                                extension = 'wav';
+                                dataBlob = new Blob([dataArray], {type: "audio/wav"});
                             }
                             else
                             {
-                                // Assume it's an mp3?
-                                extension = 'mp3';
-                                dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
+                                if (extension === 'm4a' ||
+                                    extension === 'mp4')
+                                {
+                                    dataBlob = new Blob([dataArray], {type: "audio/mp4"});
+                                }
+                                else if (extension === 'aac')
+                                {
+                                    dataBlob = new Blob([dataArray], {type: "audio/aac"});
+                                }
+                                else
+                                {
+                                    // Assume it's an mp3?
+                                    extension = 'mp3';
+                                    dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
+                                }
                             }
-                        }
-                        debug.assert(dataArray.length === dataBlob.size,
-                                    "Blob constructor does not support typed arrays.");
-                        sound.blob = dataBlob;
-                        soundPath = URL.createObjectURL(dataBlob);
-                    }
-                    else
-                    {
-                        if (dataArray[0] === 79 &&
-                            dataArray[1] === 103 &&
-                            dataArray[2] === 103 &&
-                            dataArray[3] === 83)
-                        {
-                            extension = 'ogg';
-                            soundPath = 'data:audio/ogg;base64,';
-                        }
-                        else if (dataArray[0] === 82 &&
-                                 dataArray[1] === 73 &&
-                                 dataArray[2] === 70 &&
-                                 dataArray[3] === 70)
-                        {
-                            extension = 'wav';
-                            soundPath = 'data:audio/wav;base64,';
+                            debug.assert(dataArray.length === dataBlob.size,
+                                        "Blob constructor does not support typed arrays.");
+                            sound.blob = dataBlob;
+                            soundPath = URL.createObjectURL(dataBlob);
                         }
                         else
                         {
-                            if (extension === 'm4a' ||
-                                extension === 'mp4')
+                            if (dataArray[0] === 79 &&
+                                dataArray[1] === 103 &&
+                                dataArray[2] === 103 &&
+                                dataArray[3] === 83)
                             {
-                                soundPath = 'data:audio/mp4;base64,';
+                                extension = 'ogg';
+                                soundPath = 'data:audio/ogg;base64,';
                             }
-                            else if (extension === 'aac')
+                            else if (dataArray[0] === 82 &&
+                                     dataArray[1] === 73 &&
+                                     dataArray[2] === 70 &&
+                                     dataArray[3] === 70)
                             {
-                                soundPath = 'data:audio/aac;base64,';
+                                extension = 'wav';
+                                soundPath = 'data:audio/wav;base64,';
                             }
                             else
                             {
-                                // Assume it's an mp3?
-                                extension = 'mp3';
-                                soundPath = 'data:audio/mpeg;base64,';
+                                if (extension === 'm4a' ||
+                                    extension === 'mp4')
+                                {
+                                    soundPath = 'data:audio/mp4;base64,';
+                                }
+                                else if (extension === 'aac')
+                                {
+                                    soundPath = 'data:audio/aac;base64,';
+                                }
+                                else
+                                {
+                                    // Assume it's an mp3?
+                                    extension = 'mp3';
+                                    soundPath = 'data:audio/mpeg;base64,';
+                                }
                             }
-                        }
 
-                        // Mangle data into a data URI
-                        soundPath = soundPath +
-                            (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(
-                                    dataArray);
+                            // Mangle data into a data URI
+                            soundPath = soundPath +
+                                (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(
+                                        dataArray);
+                        }
                     }
                 }
                 else if (typeof URL !== "undefined" && URL.createObjectURL)
