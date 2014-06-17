@@ -19,6 +19,7 @@ sampler2D shadowMapTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
+static const float MaxShadowDepth = ((255.0/16777216.0) + (255.0/65536.0) + (255.0/256.0));
 
 float Decode(float4 rgba)
 {
@@ -96,7 +97,7 @@ float CalculatePCFShadowAttenuation(float3 viewPosition, float bias)
     }
 
     float2 shadowuv = (float2(shadowSpaceX, shadowSpaceY) * 0.25 + shadowOffset.xy);
-    float depth = (min(dot(viewPositionH, shadowDepth), Decode(float4(1.0, 1.0, 1.0, 1.0))) + bias);
+    float depth = (min(dot(viewPositionH, shadowDepth), MaxShadowDepth) + bias);
 
     return (DecodeAndTest(tex2D(shadowMapTexture, shadowuv), depth) +
             DecodeAndTest(tex2D(shadowMapTexture, shadowuv + float2(-invShadowSize,  0.0)), depth) +
@@ -156,7 +157,7 @@ float CalculateShadowAttenuation(float3 viewPosition, float bias)
     }
 
     float2 shadowuv = (float2(shadowSpaceX, shadowSpaceY) * 0.25 + shadowOffset.xy);
-    float depth = (min(dot(viewPositionH, shadowDepth), Decode(float4(1.0, 1.0, 1.0, 1.0))) + bias);
+    float depth = (min(dot(viewPositionH, shadowDepth), MaxShadowDepth) + bias);
 
     return DecodeAndTest(tex2D(shadowMapTexture, shadowuv), depth);
 }
