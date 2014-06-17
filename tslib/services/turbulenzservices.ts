@@ -243,19 +243,31 @@ class ServiceRequester
                 // An error occurred so return false to avoid calling the success callback
                 return false;
             }
-            else
+
+            if (status === 403)
             {
-                // call the old custom error handler
-                if (oldResponseFilter)
+                var responseObj = JSON.parse(responseJSON);
+                var statusObj = responseObj.data;
+                if (statusObj.invalidGameSession)
                 {
-                    return oldResponseFilter.call(params.requestHandler,
-                                                  callContext,
-                                                  makeRequest,
-                                                  responseJSON,
-                                                  status);
+                    if (TurbulenzServices.onGameSessionClosed)
+                    {
+                        TurbulenzServices.onGameSessionClosed();
+                    }
+                    else
+                    {
+                        Utilities.log('Game session closed');
+                    }
+                    return false;
                 }
-                return true;
             }
+
+            // call the old custom error handler
+            if (oldResponseFilter)
+            {
+                return oldResponseFilter.call(params.requestHandler, callContext, makeRequest, responseJSON, status);
+            }
+            return true;
         };
 
         Utilities.ajax(params);
@@ -297,6 +309,8 @@ class ServiceRequester
 //
 class TurbulenzServices
 {
+
+    static onGameSessionClosed: { () : void; };
 
     static multiplayerJoinRequestQueue = {
 
@@ -493,10 +507,10 @@ class TurbulenzServices
     }
     /* tslint:enable:no-empty */
 
-    static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn?)
+    static createGameSession(requestHandler, sessionCreatedFn, errorCallbackFn?, options?)
     {
         return GameSession.create(requestHandler, sessionCreatedFn,
-                                  errorCallbackFn);
+                                  errorCallbackFn, options);
     }
 
     static createMappingTable(requestHandler, gameSession,

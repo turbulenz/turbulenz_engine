@@ -21,6 +21,7 @@ class Application
     invalidateButtons: boolean;
     intervalID: number;
     hasShutdown: boolean;
+    hasGameSessionClosed: boolean;
 
     currentDataShare: DataShare;
     joinedDataShares: DataShare[];
@@ -143,7 +144,18 @@ class Application
             TurbulenzServices.createUserProfile(requestHandler, profileRecievedFn);
         }
 
-        this.gameSession = TurbulenzServices.createGameSession(requestHandler, sessionCreated);
+        TurbulenzServices.onGameSessionClosed = () =>
+        {
+            this.hasGameSessionClosed = true;
+        };
+
+        var gameSessionOptions = {
+            closeExistingSessions: true
+        };
+        this.gameSession = TurbulenzServices.createGameSession(requestHandler,
+                sessionCreated,
+                null,
+                gameSessionOptions);
 
         this.intervalID = TurbulenzEngine.setInterval(this.loadingUpdate.bind(this), 100);
     }
@@ -159,7 +171,7 @@ class Application
             this.joinedGames[createdDataShare.id] = currentGame;
 
             this.invalidateButtons = true;
-        }
+        };
         this.dataShareManager.createDataShare(dataShareCreated);
     }
 
@@ -806,10 +818,15 @@ class Application
 
         graphicsDevice.clear(this.clearColor);
 
-        if (this.userProfile.guest)
+        if (this.hasGameSessionClosed)
         {
             this.graphicsDevice.setTechnique(this.fontTechnique);
-            this.segmentFont(0, 0, 'Sorry, guests must register before they can play tic-tac-toe');
+            this.segmentFont(0, 0, 'Game session closed. Looks like you have started playing somewhere else.');
+        }
+        else if (this.userProfile.guest)
+        {
+            this.graphicsDevice.setTechnique(this.fontTechnique);
+            this.segmentFont(0, 0, 'Sorry, guests must register before they can play tic-tac-toe.');
         }
         else if (this.currentGame)
         {
@@ -947,6 +964,9 @@ class Application
         var mathDevice = application.mathDevice = TurbulenzEngine.createMathDevice({});
         var inputDevice = application.inputDevice = TurbulenzEngine.createInputDevice({});
         var requestHandler = application.requestHandler = RequestHandler.create({});
+
+        application.hasShutdown = false;
+        application.hasGameSessionClosed = false;
 
         application.fontManager = FontManager.create(graphicsDevice, requestHandler);
         application.shaderManager = ShaderManager.create(graphicsDevice, requestHandler);

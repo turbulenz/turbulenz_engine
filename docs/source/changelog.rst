@@ -10,6 +10,12 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-05-20
+
+- Added closeExistingSessions option to TurbulenzServices.createGameSession function.
+- Added TurbulenzServices.onGameSessionClosed property to detect when a gamesession has been closed remotely.
+- Added closeExistingSessions option to the Tic-Tac-Toe app.
+
 2014-04-03
 
 - Added addWebsocket function to the NetworkLatencySimulator
@@ -84,6 +90,9 @@ Version 1.3
 - PhysicsManager optimisations
 - Update protolib library (version 0.2.1):
 
+- Added closeExistingSessions option to TurbulenzServices.createGameSession function.
+- Added TurbulenzServices.onGameSessionClosed property to detect when a gamesession has been closed remotely.
+- Added closeExistingSessions option to the Tic-Tac-Toe app.
   * Corrected 2D text rendering order
   * Added additional advanced callbacks/modified call back behavior
 
