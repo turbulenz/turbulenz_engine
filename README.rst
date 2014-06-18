@@ -23,6 +23,7 @@ Games
 * `Space Ark <https://turbulenz.com/games/space-ark>`__ - 3D
 * `Apathy <http://apathy.plankhead.com/>`__ - `src <https://github.com/Zacqary/Apathy>`__ - 2D
 * Salty Dogs - `src <https://github.com/zacqary/salty-dogs>`__
+* `Gargantia Sky Courier <http://fly.gargantia.jp>`__ - `src <https://github.com/turbulenz/gargantia_editor>`__ - 3D
 
 Apps
 ----
