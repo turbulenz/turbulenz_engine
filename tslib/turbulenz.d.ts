@@ -524,7 +524,7 @@ interface VertexBuffer
 
     // Methods
 
-    setData(data: any, offset: number, numVertices: number): void;
+    setData(data: any, offset?: number, numVertices?: number): void;
     map(offset?: number, count?: number): VertexWriteIterator;
     unmap(writer: VertexWriteIterator): void;
     destroy(): void;
@@ -1204,10 +1204,12 @@ interface SoundGlobalSource
 
 interface SoundArchiveParameters
 {
-    src         : string;
-    onsoundload : { (sound: Sound): void; };
-    onload      : { (success: boolean, status: number): void; };
-    uncompress  : boolean;
+    src            : string;
+    decodearchive? : { (bytes: any): any };
+    decodesound?   : { (filename: string, data: any): any };
+    onsoundload    : { (sound: Sound): void; };
+    onload         : { (success: boolean, status: number): void; };
+    uncompress     : boolean;
 }
 
 // SoundDevice

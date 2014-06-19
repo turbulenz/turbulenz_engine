@@ -29,10 +29,19 @@ class SoundManager
     load                : { (path: string, uncompress?: boolean,
                              onSoundLoaded? : SoundManagerOnSoundLoadedFn)
                             : void; };
+    loadArchive         : { (path: string,
+                             uncompress?: boolean,
+                             onsoundloaded? : { (sound: Sound): void; },
+                             onarchiveloaded? : { (success: boolean,
+                                                   status: number): void; },
+                             decodearchive?: { (data: any): any; })
+                            : void; };
+
     map                 : { (dst: string, src: string): void; };
     get(path: string) : Sound { debug.abort("this method should be overridden");
                                 return <Sound><any>{}; }
     remove              : { (path: string): void; };
+    removeArchive       : { (path: string): void; };
     reload              : { (path: string): void; };
 
     // TODO: A lot of these can just be made regular methods accessing
@@ -128,6 +137,8 @@ class SoundManager
 
         var sounds = {};
         var loadingSound = {};
+        var archives = {};
+        var loadingArchives: { [path: string]: Observer } = {};
         var loadedObservers = {};
         var numLoadingSounds = 0;
         var pathRemapping = null;
@@ -219,6 +230,107 @@ class SoundManager
             return sound;
         };
 
+        var loadArchive = function loadArchiveFn(
+            path: string,
+            uncompress?: boolean,
+            onsoundloaded? : { (sound: Sound): void; },
+            onarchiveloaded? : { (success: boolean, status: number): void; },
+            decodearchive?: { (data: any): any; })
+        {
+            debug.assert(path, "invalid arg path");
+
+            var archive = archives[path];
+            if (!archive)
+            {
+                if (!loadingArchives[path])
+                {
+                    var observer = Observer.create();
+
+                    loadingArchives[path] = observer;
+                    numLoadingSounds += 1;
+
+                    if (onarchiveloaded)
+                    {
+                        observer.subscribe(onarchiveloaded);
+                    }
+
+                    var soundsInArchive = [];
+                    var soundLoaded = function soundLoadedFn(sound)
+                    {
+                        if (sound)
+                        {
+                            var soundName = sound.name;
+
+                            if (!sound[soundName])
+                            {
+                                sounds[soundName] = sound;
+                                soundsInArchive.push(soundName);
+                            }
+
+                            if (onsoundloaded)
+                            {
+                                onsoundloaded(sound);
+                            }
+                        }
+                    };
+
+                    var archiveLoaded =
+                        function archiveLoadedFn(success: boolean,
+                                                 status: number)
+                    {
+                        delete loadingArchives[path];
+                        archives[path] = soundsInArchive;
+                        numLoadingSounds -= 1;
+
+                        observer.notify(success, status);
+                    }
+
+                    var requestArchive = function requestArchiveFn(url, onload)
+                    {
+                        sd.loadSoundsArchive({
+                            src : url,
+                            decodearchive: decodearchive,
+                            onsoundload: soundLoaded,
+                            onload: onload,
+                            uncompress: uncompress
+                        })
+                    };
+
+                    rh.request({
+                        src: ((pathRemapping && pathRemapping[path]) || (pathPrefix + path)),
+                        requestFn: requestArchive,
+                        onload: archiveLoaded
+                    });
+                }
+                else if (onarchiveloaded)
+                {
+                    loadingArchives[path].subscribe(onarchiveloaded);
+                }
+            }
+            else if (onarchiveloaded)
+            {
+                // the callback should always be called asynchronously
+                TurbulenzEngine.setTimeout(function soundAlreadyLoadedFn() {
+                    onarchiveloaded(true, 200);
+                }, 0.001);
+            }
+        };
+
+        var removeArchive = function removeArchiveFn(path: string)
+        {
+            var archive = archives[path];
+            if (archive)
+            {
+                var numSounds = archive.length;
+                var i;
+
+                for (i = 0 ; i < numSounds ; i += 1)
+                {
+                    removeSound(archive[i]);
+                }
+            }
+        };
+
         /**
            Alias one sound to another name
 
@@ -301,6 +413,12 @@ class SoundManager
                 return loadSound(path, uncompress);
             };
 
+            sm.loadArchive = function loadArchiveLogFn(path, uncompress?)
+            {
+                log.innerHTML += "SoundManager.loadArchive:&nbsp;'" + path + "'";
+                return loadArchive(path, uncompress);
+            };
+
             sm.map = function mapSoundLogFn(dst, src)
             {
                 log.innerHTML += "SoundManager.map:&nbsp;'" + src + "' -> '" + dst + "'";
@@ -319,6 +437,12 @@ class SoundManager
                 removeSound(path);
             };
 
+            sm.removeArchive = function removeArchiveLogFn(path)
+            {
+                log.innerHTML += "SoundManager.removeArchive:&nbsp;'" + path + "'";
+                removeArchive(path);
+            }
+
             sm.reload = function reloadSoundLogFn(path)
             {
                 log.innerHTML += "SoundManager. reload:&nbsp;'" + path + "'";
@@ -328,9 +452,11 @@ class SoundManager
         else
         {
             sm.load = loadSound;
+            sm.loadArchive = loadArchive;
             sm.map = mapSound;
             sm.get = getSound;
             sm.remove = removeSound;
+            sm.removeArchive = removeArchive;
             sm.reload = reloadSound;
         }
 

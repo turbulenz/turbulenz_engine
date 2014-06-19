@@ -3171,7 +3171,7 @@ class WebGLVertexBuffer implements VertexBuffer
         }
     }
 
-    setData(data, offset, numVertices)
+    setData(data, offset?: number, numVertices?: number)
     {
         if (offset === undefined)
         {

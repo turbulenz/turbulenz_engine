@@ -60,6 +60,8 @@ class SoundTARLoader
     onerror: { (status: number): void; };
     soundsLoading: number;
     src: string;
+    decodearchive: { (bytes: any): any; };
+    decodesound: { (filename: string, data: any): any; };
 
     processBytes(bytes)
     {
@@ -157,6 +159,7 @@ class SoundTARLoader
 
         var sd = this.sd;
         var uncompress = this.uncompress;
+        var decodesound = this.decodesound;
         var onsoundload = this.onsoundload;
         var result = true;
 
@@ -186,6 +189,8 @@ class SoundTARLoader
             if (0 < header.length)
             {
                 var fileName;
+                var data;
+
                 if (header.fileName === "././@LongLink")
                 {
                     // name in next chunk
@@ -209,15 +214,31 @@ class SoundTARLoader
                 if ('' === header.fileType || '0' === header.fileType)
                 {
                     //console.log('Loading "' + fileName + '" (' + header.length + ')');
-                    this.soundsLoading += 1;
-                    sd.createSound({
-                        src : fileName,
-                        data : (sd.audioContext && (WebGLSound.prototype.forceUncompress || uncompress) ?
-                                bytes.buffer.slice(offset, (offset + header.length)) :
-                                bytes.subarray(offset, (offset + header.length))),
-                        uncompress : uncompress,
-                        onload : onload
-                    });
+
+                    // If there is a 'decodesound' callback, allow it
+                    // to process the data before we create a sound
+                    // from it.  'decodesound' has the option of
+                    // ignoring this sound by returning 'null'.
+
+                    data =
+                        (sd.audioContext && (WebGLSound.prototype.forceUncompress || uncompress))?
+                        (bytes.buffer.slice(offset, (offset + header.length))) :
+                        (bytes.subarray(offset, (offset + header.length)));
+                    if (decodesound)
+                    {
+                        data = decodesound(fileName, data);
+                    }
+
+                    if (data)
+                    {
+                        this.soundsLoading += 1;
+                        sd.createSound({
+                            src : fileName,
+                            data : data,
+                            uncompress : uncompress,
+                            onload : onload
+                        });
+                    }
                 }
                 offset += (Math.floor((header.length + 511) / 512) * 512);
             }
@@ -242,6 +263,8 @@ class SoundTARLoader
         loader.onload = params.onload;
         loader.onerror = params.onerror;
         loader.soundsLoading = 0;
+        loader.decodearchive = params.decodearchive;
+        loader.decodesound = params.decodesound;
 
         var src = params.src;
         if (src)
@@ -345,8 +368,12 @@ class SoundTARLoader
                             // entries in the archive was not supported or
                             // couldn't be loaded as a sound.
 
-                            var archiveResult =
-                                loader.processBytes(new Uint8Array(buffer));
+                            var bytes = new Uint8Array(buffer);
+                            if (loader.decodearchive)
+                            {
+                                bytes = loader.decodearchive(bytes);
+                            }
+                            var archiveResult = loader.processBytes(bytes);
 
                             // Wait until all sounds have been loaded (or
                             // failed) and return the result.

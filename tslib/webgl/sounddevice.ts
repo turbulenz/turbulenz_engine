@@ -1524,6 +1524,8 @@ class WebGLSoundDevice implements SoundDevice
             SoundTARLoader.create({
                 sd: this,
                 src : src,
+                decodearchive: params.decodearchive,
+                decodesound: params.decodesound,
                 uncompress : params.uncompress,
                 onsoundload : function tarSoundLoadedFn(sound)
                 {
