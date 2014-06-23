@@ -29,11 +29,13 @@ help:
 
 TSC := tsc
 
-MODULAR ?= 0
+MODULAR ?= 1
 REFCHECK ?= 0
+ONESHOT ?= 0
 
 TS_MODULAR ?= $(MODULAR)
 TS_REFCHECK ?= $(REFCHECK)
+TS_ONESHOT ?= $(ONESHOT)
 TS_OUTPUT_DIR := jslib$(if $(filter $(MODULAR),1),-modular)
 TS_OUTPUT_DIR := $(TS_OUTPUT_DIR)$(if $(filter $(REFCHECK),1),-refcheck)
 TS_SRC_DIR := tslib

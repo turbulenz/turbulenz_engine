@@ -22,6 +22,11 @@ interface Console
     profiles: any[];
 };
 
+declare var WebGLPhysicsDevice :
+{
+    create(): PhysicsDevice;
+};
+
 //
 // WebGLTurbulenzEngine
 //
@@ -58,7 +63,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
     private unloading: boolean;
     private networkDevice: WebGLNetworkDevice;
     private inputDevice: WebGLInputDevice;
-    private physicsDevice: WebGLPhysicsDevice;
+    private physicsDevice: PhysicsDevice;
     private soundDevice: WebGLSoundDevice;
     private graphicsDevice: WebGLGraphicsDevice;
 
@@ -97,7 +102,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         }
     }
 
-    createPhysicsDevice(params): WebGLPhysicsDevice
+    createPhysicsDevice(params): PhysicsDevice
     {
         if (this.physicsDevice)
         {
@@ -211,7 +216,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
         return graphicsDevice;
     }
 
-    getPhysicsDevice(): WebGLPhysicsDevice
+    getPhysicsDevice(): PhysicsDevice
     {
         return this.physicsDevice;
     }
