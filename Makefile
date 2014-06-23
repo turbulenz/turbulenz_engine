@@ -29,7 +29,7 @@ help:
 
 TSC := tsc
 
-MODULAR ?= 1
+MODULAR ?= 0
 REFCHECK ?= 0
 ONESHOT ?= 0
 
