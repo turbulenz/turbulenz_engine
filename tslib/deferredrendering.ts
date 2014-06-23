@@ -1816,7 +1816,7 @@ class DeferredRendering
 
             if (dst === undefined)
             {
-                dst = new VMathArrayConstructor(9);
+                dst = new Float32Array(9);
             }
 
             dst[0] = (b0 * a0 + b3 * a1 + b6 * a2);

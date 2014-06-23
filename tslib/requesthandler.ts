@@ -34,6 +34,12 @@ interface RequestHandlerCallContext
     responseFilter? : RequestHandlerResponseFilter;
 }
 
+interface RequestHandlerHandlers
+{
+    eventOnload: any[];
+    [index: string]: any[];
+}
+
 class RequestHandler
 {
     initialRetryTime: number;
@@ -53,8 +59,7 @@ class RequestHandler
     onRequestTimeout: { (reason: number,
                          callContext: RequestHandlerCallContext): void; };
 
-    handlers: { eventOnload: any[];
-                [index: string]: any[]; };
+    handlers: RequestHandlerHandlers;
 
     responseFilter: { (callContext: RequestHandlerCallContext,
                        makeRequest: { (): void; },
@@ -353,7 +358,7 @@ class RequestHandler
         rh.onRequestTimeout = params.onRequestTimeout || function onRequestTimeoutFn(/* callContext */) {};
         /* tslint:enable:no-empty */
 
-        var handlers = { eventOnload: [] };
+        var handlers = <RequestHandlerHandlers>({ eventOnload: [] });
         rh.handlers = handlers;
 
         return rh;

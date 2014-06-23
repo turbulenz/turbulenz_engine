@@ -7,10 +7,6 @@
 // Vector math library
 //
 
-// Must be 'any' until Array constructor is understood to return an
-// Array (not just any[]).
-var VMathArrayConstructor : any = Array;
-
 // Ensure there is a slice function available for Float32Arrays
 
 if ((typeof Float32Array !== "undefined") &&
@@ -110,7 +106,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = 0.0;
@@ -122,7 +118,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = 1.0;
@@ -134,7 +130,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = 1.0;
@@ -146,7 +142,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
         dst[0] = 0.0;
@@ -158,7 +154,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(debug.isNumber(a));
         debug.assert(debug.isNumber(b));
@@ -172,7 +168,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(2 === src.length);
         debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
@@ -192,7 +188,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(debug.isVec2(a));
         debug.assert(debug.isMathType(dst) && debug.isVec2(dst));
@@ -205,7 +201,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(debug.isVec2(a));
         debug.assert(debug.isVec2(b));
@@ -219,7 +215,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         debug.assert(debug.isVec2(a));
         debug.assert(debug.isVec2(b));
@@ -234,7 +230,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         debug.assert(debug.isVec2(a));
@@ -252,7 +248,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         debug.assert(debug.isVec2(a));
@@ -268,7 +264,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         debug.assert(debug.isVec2(a));
@@ -284,7 +280,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         debug.assert(debug.isVec2(a));
@@ -325,7 +321,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         var rcp = VMath.reciprocal;
@@ -338,7 +334,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         var a0 = a[0];
         var a1 = a[1];
@@ -361,7 +357,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         var abs = Math.abs;
         dst[0] = abs(a[0]);
@@ -373,7 +369,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         var max = Math.max;
         dst[0] = max(a[0], b[0]);
@@ -385,7 +381,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         var min = Math.min;
         dst[0] = min(a[0], b[0]);
@@ -453,7 +449,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         dst[0] = m[0] ? a[0] : b[0];
         dst[1] = m[1] ? a[1] : b[1];
@@ -465,7 +461,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         dst[0] = a;
@@ -478,7 +474,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         var max = Math.max;
@@ -492,7 +488,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         var min = Math.min;
@@ -506,7 +502,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         dst[0] = (a[0] + b);
@@ -519,7 +515,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
 
         dst[0] = (a[0] - b);
@@ -532,7 +528,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         if (b === 0)
         {
@@ -551,7 +547,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         dst[0] = a[0] + b[0] * c;
         dst[1] = a[1] + b[1] * c;
@@ -589,7 +585,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(2);
+            dst = new Float32Array(2);
         }
         dst[0] = (a[0] + ((b[0] - a[0]) * t));
         dst[1] = (a[1] + ((b[1] - a[1]) * t));
@@ -604,7 +600,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 0.0;
@@ -618,7 +614,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 1.0;
@@ -632,7 +628,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 1.0;
@@ -646,7 +642,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 0.0;
@@ -660,7 +656,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = 0.0;
@@ -674,7 +670,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isNumber(a));
         debug.assert(debug.isNumber(b));
@@ -691,7 +687,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
         res[0] = src[0];
@@ -712,7 +708,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
@@ -727,7 +723,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -742,7 +738,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -758,7 +754,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -776,7 +772,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -791,7 +787,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -806,7 +802,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -830,7 +826,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -869,7 +865,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
@@ -886,7 +882,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -916,7 +912,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -933,7 +929,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -951,7 +947,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -1055,7 +1051,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -1072,7 +1068,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isNumber(a));
         debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
@@ -1088,7 +1084,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
@@ -1106,7 +1102,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
@@ -1124,7 +1120,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
@@ -1141,7 +1137,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
@@ -1159,7 +1155,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isNumber(b));
@@ -1184,7 +1180,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -1246,7 +1242,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isVec3(a));
         debug.assert(debug.isVec3(b));
@@ -1268,7 +1264,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(4);
+            res = new Float32Array(4);
         }
         debug.assert(debug.isMathType(res) && debug.isVec4(res));
 
@@ -1284,7 +1280,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(4);
+            res = new Float32Array(4);
         }
         debug.assert(debug.isMathType(res) && debug.isVec4(res));
 
@@ -1300,7 +1296,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(4);
+            res = new Float32Array(4);
         }
         debug.assert(debug.isNumber(a));
         debug.assert(debug.isNumber(b));
@@ -1320,7 +1316,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(4);
+            res = new Float32Array(4);
         }
         debug.assert(debug.isMathType(res) && debug.isVec4(res));
 
@@ -1344,7 +1340,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
@@ -1361,7 +1357,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1378,7 +1374,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1397,7 +1393,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1417,7 +1413,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1434,7 +1430,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1451,7 +1447,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1500,7 +1496,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
@@ -1518,7 +1514,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
@@ -1551,7 +1547,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
@@ -1569,7 +1565,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1588,7 +1584,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1713,7 +1709,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1732,7 +1728,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isNumber(a));
         debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
@@ -1749,7 +1745,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isNumber(b));
@@ -1768,7 +1764,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isNumber(b));
@@ -1787,7 +1783,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isNumber(b));
@@ -1805,7 +1801,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isNumber(b));
@@ -1832,7 +1828,7 @@ var VMath : MathDevice =
         {
             if (dst === undefined)
             {
-                dst = new VMathArrayConstructor(4);
+                dst = new Float32Array(4);
             }
             debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
 
@@ -1849,7 +1845,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1928,7 +1924,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isVec4(a));
         debug.assert(debug.isVec4(b));
@@ -1951,7 +1947,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(6);
+            res = new Float32Array(6);
         }
         debug.assert(debug.isNumber(a0));
         debug.assert(debug.isNumber(a1));
@@ -1978,7 +1974,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(6);
+            res = new Float32Array(6);
         }
         debug.assert(debug.isMathType(res) && debug.isAABB(res));
 
@@ -1997,7 +1993,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(6);
+            res = new Float32Array(6);
         }
         debug.assert(debug.isMathType(res) && debug.isAABB(res));
 
@@ -2129,7 +2125,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(6);
+            dst = new Float32Array(6);
         }
         debug.assert(debug.isAABB(a));
         debug.assert(debug.isAABB(b));
@@ -2149,7 +2145,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(6);
+            dst = new Float32Array(6);
         }
         debug.assert(debug.isMathType(dst) && debug.isAABB(dst));
         debug.assert(aabbArray.length > 0);
@@ -2216,7 +2212,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(6);
+            dst = new Float32Array(6);
         }
         debug.assert(debug.isAABB(aabb));
         debug.assert(debug.isMtx43(matrix));
@@ -2264,7 +2260,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(6);
+            dst = new Float32Array(6);
         }
         debug.assert(debug.isAABB(a));
         debug.assert(debug.isAABB(b));
@@ -2394,7 +2390,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(9);
+            res = new Float32Array(9);
         }
         debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
@@ -2425,7 +2421,7 @@ var VMath : MathDevice =
             res = dst;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(9);
+                res = new Float32Array(9);
             }
             debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
@@ -2448,7 +2444,7 @@ var VMath : MathDevice =
             res = a3;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(9);
+                res = new Float32Array(9);
             }
             debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
@@ -2471,7 +2467,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(9);
+            res = new Float32Array(9);
         }
         debug.assert(debug.isMathType(res) && debug.isMtx33(res));
 
@@ -2493,7 +2489,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(9);
+            res = new Float32Array(9);
         }
         debug.assert(debug.isVec3(axis) || debug.isVec4(axis));
         debug.assert(debug.isNumber(angle));
@@ -2530,7 +2526,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(9);
+            res = new Float32Array(9);
         }
         debug.assert(debug.isQuat(q));
         debug.assert(debug.isMathType(res) && debug.isMtx33(res));
@@ -2568,7 +2564,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -2584,7 +2580,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -2600,7 +2596,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -2645,7 +2641,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            dst = new Float32Array(9);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
@@ -2693,7 +2689,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            dst = new Float32Array(9);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
@@ -2741,7 +2737,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(9);
+            res = new Float32Array(9);
         }
         debug.assert(debug.isMtx33(m) || debug.isMtx43(m));
         debug.assert(debug.isMathType(res) &&
@@ -2808,7 +2804,7 @@ var VMath : MathDevice =
 
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            dst = new Float32Array(9);
         }
         debug.assert(debug.isMathType(dst) && debug.isMtx33(dst));
 
@@ -2831,7 +2827,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isVec3(v) || debug.isVec4(v));
@@ -2872,7 +2868,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx33(a));
         debug.assert(debug.isMtx43(b));
@@ -2921,7 +2917,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMtx33(a));
         debug.assert(debug.isMtx44(b));
@@ -2979,7 +2975,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            dst = new Float32Array(9);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isNumber(s));
@@ -2996,7 +2992,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            dst = new Float32Array(9);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isNumber(s));
@@ -3013,7 +3009,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(9);
+            dst = new Float32Array(9);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isNumber(s));
@@ -3033,7 +3029,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isMathType(res) && debug.isMtx34(res));
 
@@ -3057,7 +3053,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isMtx34(m));
         debug.assert(debug.isMathType(dst) && debug.isVec3(dst));
@@ -3072,7 +3068,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx34(m));
         debug.assert(debug.isVec3(scale));
@@ -3106,7 +3102,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
@@ -3139,7 +3135,7 @@ var VMath : MathDevice =
             res = dst;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(12);
+                res = new Float32Array(12);
             }
             debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
@@ -3166,7 +3162,7 @@ var VMath : MathDevice =
             res = a4;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(12);
+                res = new Float32Array(12);
             }
             debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
@@ -3195,7 +3191,7 @@ var VMath : MathDevice =
             res = dst;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(12);
+                res = new Float32Array(12);
             }
             debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
@@ -3210,7 +3206,7 @@ var VMath : MathDevice =
             res = y;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(12);
+                res = new Float32Array(12);
             }
             debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
@@ -3237,7 +3233,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isMathType(res) && debug.isMtx43(res));
 
@@ -3262,7 +3258,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isMtx33(m));
         debug.assert(debug.isVec3(v));
@@ -3302,7 +3298,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isVec3(axis) || debug.isVec4(axis));
         debug.assert(debug.isNumber(angle));
@@ -3332,7 +3328,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isQuatPos(qp));
         debug.assert(debug.isMathType(res) && debug.isMtx43(res));
@@ -3398,7 +3394,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isQuat(quat));
         debug.assert(debug.isVec3(pos) || debug.isVec4(pos));
@@ -3441,7 +3437,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isQuat(quat));
         debug.assert(debug.isVec3(pos) || debug.isVec4(pos));
@@ -3468,7 +3464,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -3484,7 +3480,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -3500,7 +3496,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -3516,7 +3512,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isMathType(res) && debug.isVec3(res));
@@ -3596,7 +3592,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
@@ -3721,7 +3717,7 @@ var VMath : MathDevice =
 
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
 
@@ -3753,7 +3749,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isMathType(dst) && debug.isMtx43(dst));
@@ -3785,7 +3781,7 @@ var VMath : MathDevice =
         {
             if (dst === undefined)
             {
-                dst = new VMathArrayConstructor(12);
+                dst = new Float32Array(12);
             }
             var rdet = 1.0 / det;
             dst[0] = (d4857 * rdet);
@@ -3818,7 +3814,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(scale));
@@ -3849,7 +3845,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(v) || debug.isVec4(v));
@@ -3869,7 +3865,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(3);
+            res = new Float32Array(3);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(v) || debug.isVec4(v));
@@ -3912,7 +3908,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx43(b));
@@ -3962,7 +3958,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx33(b));
@@ -4015,7 +4011,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(16);
+            res = new Float32Array(16);
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx44(b));
@@ -4046,7 +4042,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isMathType(res) && debug.isMtx43(res));
@@ -4111,7 +4107,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(12);
+            res = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(a));
         debug.assert(debug.isMtx43(b));
@@ -4137,7 +4133,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(o) || debug.isVec4(o));
@@ -4180,7 +4176,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(o) || debug.isVec4(o));
@@ -4223,7 +4219,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isVec3(s));
@@ -4266,7 +4262,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isNumber(s));
@@ -4283,7 +4279,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isNumber(s));
@@ -4300,7 +4296,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(12);
+            dst = new Float32Array(12);
         }
         debug.assert(debug.isMtx43(m));
         debug.assert(debug.isNumber(s));
@@ -4319,7 +4315,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(16);
+            res = new Float32Array(16);
         }
         debug.assert(debug.isMathType(res) && debug.isMtx44(res));
 
@@ -4357,7 +4353,7 @@ var VMath : MathDevice =
             res = dst;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(16);
+                res = new Float32Array(16);
             }
             debug.assert(debug.isMathType(res) && debug.isMtx44(res));
 
@@ -4388,7 +4384,7 @@ var VMath : MathDevice =
             res = a4;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(16);
+                res = new Float32Array(16);
             }
             debug.assert(debug.isMathType(res) && debug.isMtx44(res));
 
@@ -4417,7 +4413,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
 
@@ -4559,7 +4555,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isVec3(scale));
@@ -4593,7 +4589,7 @@ var VMath : MathDevice =
         var v3 = v[3];
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isVec4(v));
@@ -4654,7 +4650,7 @@ var VMath : MathDevice =
 
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMtx44(a));
         debug.assert(debug.isMtx44(b));
@@ -4701,7 +4697,7 @@ var VMath : MathDevice =
 
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
@@ -4768,7 +4764,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isMathType(dst) && debug.isMtx44(dst));
@@ -4798,7 +4794,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isNumber(s));
@@ -4815,7 +4811,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isNumber(s));
@@ -4832,7 +4828,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(16);
+            dst = new Float32Array(16);
         }
         debug.assert(debug.isMtx44(m));
         debug.assert(debug.isNumber(s));
@@ -4851,7 +4847,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(4);
+            res = new Float32Array(4);
         }
         debug.assert(debug.isNumber(x));
         debug.assert(debug.isNumber(y));
@@ -4871,7 +4867,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(4);
+            res = new Float32Array(4);
         }
         debug.assert(debug.isMathType(res) && debug.isQuat(res));
 
@@ -4923,7 +4919,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isQuat(q1));
         debug.assert(debug.isQuat(q2));
@@ -5043,7 +5039,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isQuat(q));
         debug.assert(debug.isMathType(dst) && debug.isQuat(dst));
@@ -5060,7 +5056,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isQuat(q1));
         debug.assert(debug.isQuat(q2));
@@ -5091,7 +5087,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(4);
+            res = new Float32Array(4);
         }
         debug.assert(debug.isQuat(q1));
         debug.assert(debug.isQuat(q2));
@@ -5241,7 +5237,7 @@ var VMath : MathDevice =
         var res = dst;
         if (res === undefined)
         {
-            res = new VMathArrayConstructor(4);
+            res = new Float32Array(4);
         }
         debug.assert(debug.isVec3(axis) || debug.isVec4(axis));
         debug.assert(debug.isNumber(angle));
@@ -5259,7 +5255,7 @@ var VMath : MathDevice =
     {
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(4);
+            dst = new Float32Array(4);
         }
         debug.assert(debug.isQuat(q));
         debug.assert(debug.isMathType(dst) && debug.isVec4(dst));
@@ -5343,7 +5339,7 @@ var VMath : MathDevice =
 
         if (dst === undefined)
         {
-            dst = new VMathArrayConstructor(3);
+            dst = new Float32Array(3);
         }
         debug.assert(debug.isMathType(dst) &&
                      (debug.isVec3(dst) || debug.isVec4(dst)));
@@ -5383,7 +5379,7 @@ var VMath : MathDevice =
             res = dst;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(7);
+                res = new Float32Array(7);
             }
             debug.assert(debug.isMathType(res) && debug.isQuatPos(res));
 
@@ -5403,7 +5399,7 @@ var VMath : MathDevice =
             res = z;
             if (res === undefined)
             {
-                res = new VMathArrayConstructor(7);
+                res = new Float32Array(7);
             }
             debug.assert(debug.isQuat(x));
             debug.assert(debug.isVec3(y) || debug.isVec4(y));
@@ -5678,12 +5674,12 @@ var VMath : MathDevice =
         var h1 = halfExtents[1];
         var h2 = halfExtents[2];
 
-        var out_center = new VMathArrayConstructor(3);
+        var out_center = new Float32Array(3);
         out_center[0] = m0 * c0 + m3 * c1 + m6 * c2 + matrix[9];
         out_center[1] = m1 * c0 + m4 * c1 + m7 * c2 + matrix[10];
         out_center[2] = m2 * c0 + m5 * c1 + m8 * c2 + matrix[11];
 
-        var out_halfext = new VMathArrayConstructor(3);
+        var out_halfext = new Float32Array(3);
         out_halfext[0] = abs(m0) * h0 + abs(m3) * h1 + abs(m6) * h2;
         out_halfext[1] = abs(m1) * h0 + abs(m4) * h1 + abs(m7) * h2;
         out_halfext[2] = abs(m2) * h0 + abs(m5) * h1 + abs(m8) * h2;
@@ -5701,7 +5697,7 @@ var VMath : MathDevice =
     {
         if (output === undefined)
         {
-            output = new VMathArrayConstructor(4);
+            output = new Float32Array(4);
         }
 
         var a = plane[0];
@@ -5876,14 +5872,14 @@ if (typeof Float32Array !== "undefined")
     testVector[0] = VMath.FLOAT_MAX;
 
     VMath.FLOAT_MAX = testVector[0];
-    VMathArrayConstructor = Float32Array;
 }
-VMath.arrayConstructor = VMathArrayConstructor;
 
 // If the plugin has a 'getNativeMathDevice' method then VMath should
 // replace the standard MathDevice.
 
 // WebWorkers can import vmath without a TurbulenzEngine variable defined
-if (typeof TurbulenzEngine !== 'undefined' && TurbulenzEngine.hasOwnProperty('VMath')) {
+if (typeof TurbulenzEngine !== 'undefined' &&
+    TurbulenzEngine.hasOwnProperty('VMath'))
+{
     TurbulenzEngine.VMath = VMath;
 }

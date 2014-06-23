@@ -2031,7 +2031,7 @@ class ForwardRendering
 
                     flareSemantics = gd.createSemantics(['POSITION', 'TEXCOORD']);
 
-                    flareVertexData = new VMathArrayConstructor(6 * (3 + 2));
+                    flareVertexData = new Float32Array(6 * (3 + 2));
 
                     flareMatrix = md.m43BuildIdentity();
                 }

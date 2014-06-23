@@ -1488,7 +1488,11 @@ class WebGLPhysicsPrivateTriangleArray
         var triangles = this.triangles;
         var spatialMap = this.spatialMap;
 
-        function rayCallback(tree, triangle, ray, unusedAABBDistance, upperBound)
+        function rayCallback(tree: AABBTree,
+                             triangle: { index: number; },
+                             ray: AABBTreeRay,
+                             unusedAABBDistance: number,
+                             upperBound: number): AABBTreeRayTestResult
         {
             var dir = ray.direction;
             var dir0 = dir[0];

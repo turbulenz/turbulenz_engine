@@ -130,11 +130,11 @@ class StoreManager
     getItemsSortedDict(items: StoreItemList): StoreItemList
     {
         // sort items by index and add keys to item objects
-        var itemsArray = [];
-        var sortedItemsDict = {};
+        var itemsArray : StoreItem[] = [];
+        var sortedItemsDict : StoreItemList = {};
 
-        var itemKey;
-        var item;
+        var itemKey : string;
+        var item : StoreItem;
         for (itemKey in items)
         {
             if (items.hasOwnProperty(itemKey))

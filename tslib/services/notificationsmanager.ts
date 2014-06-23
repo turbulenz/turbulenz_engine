@@ -197,7 +197,7 @@ class NotificationsManager
             throw new Error('Notification recipient is null');
         }
 
-        var params = {
+        var notifyparams = {
             token: token,
             session: this.gameSession,
             key: key,
@@ -206,7 +206,9 @@ class NotificationsManager
             noNotification: params.noNotification
         };
 
-        TurbulenzBridge.triggerSendInstantNotification(JSON.stringify(params));
+        TurbulenzBridge.triggerSendInstantNotification(
+            JSON.stringify(notifyparams)
+        );
 
         return promise;
     }
@@ -241,7 +243,7 @@ class NotificationsManager
 
         this.notificationPromises[token] = promise;
 
-        var params = {
+        var notifyparams = {
             token: token,
             session: this.gameSession,
             key: key,
@@ -250,7 +252,9 @@ class NotificationsManager
             noNotification: params.noNotification
         };
 
-        TurbulenzBridge.triggerSendDelayedNotification(JSON.stringify(params));
+        TurbulenzBridge.triggerSendDelayedNotification(
+            JSON.stringify(notifyparams)
+        );
 
         return promise;
     }

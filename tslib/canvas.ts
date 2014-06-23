@@ -1138,10 +1138,10 @@ class CanvasContext
         this.imageTechnique = shader.getTechnique("image");
 
         var compositeOperations = this.compositeOperations;
-        var flatTechniques = {};
-        var textureTechniques = {};
-        var patternTechniques = {};
-        var gradientTechniques = {};
+        var flatTechniques : { [name: string]: Technique } = {};
+        var textureTechniques : { [name: string]: Technique} = {};
+        var patternTechniques : { [name: string]: Technique} = {};
+        var gradientTechniques : { [name: string]: Technique} = {};
         this.flatTechniques = flatTechniques;
         this.textureTechniques = textureTechniques;
         this.patternTechniques = patternTechniques;

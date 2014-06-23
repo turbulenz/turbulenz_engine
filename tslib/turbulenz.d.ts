@@ -932,10 +932,10 @@ interface ConvexSweepTestParameters extends RayTestParameters
 
 interface RayHit
 {
-    collisionObject : PhysicsCollisionObject;
-    body            : PhysicsRigidBody;
-    hitPoint        : any; // v3
-    hitNormal       : any; // v3
+    collisionObject? : PhysicsCollisionObject;
+    body?            : PhysicsRigidBody;
+    hitPoint         : any; // v3
+    hitNormal        : any; // v3
 }
 
 interface PhysicsWorld
@@ -975,7 +975,6 @@ interface PhysicsDevice
     FILTER_USER_MAX: number;
     FILTER_ALL: number;
 
-    version: number;
     vendor: string;
 
     // Methods

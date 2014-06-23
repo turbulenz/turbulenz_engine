@@ -596,19 +596,25 @@ class Font
 
   @since TurbulenzEngine 0.1.0
 */
+
+interface FontManagerFonts
+{
+    [name: string]: Font;
+}
+
 class FontManager
 {
     /* tslint:disable:no-unused-variable */
     static version = 1;
     /* tslint:enable:no-unused-variable */
 
-    fonts: { [name: string]: Font; };
+    fonts: FontManagerFonts;
 
     load: { (path: string, onFontLoaded?: { (font): void; }): Font; };
     map: { (dst: string, src: string): void; };
     remove: { (path: string): void; };
     get(path: string): Font { debug.abort("empty method"); return undefined; }
-    getAll: { (): { [name: string]: Font; }; };
+    getAll: { (): FontManagerFonts; };
 
     getNumPendingFonts: { (): number; };
     isFontLoaded: { (path: string): boolean; };
@@ -677,7 +683,7 @@ class FontManager
             /* tslint:enable:no-empty */
         }
 
-        var fonts = {};
+        var fonts : FontManagerFonts = {};
         var loadingFont = {};
         var loadedObservers = {};
         var loadingPages = {};
@@ -1281,7 +1287,7 @@ class FontManager
 
            @return {object}
         */
-        fm.getAll = function getAllFontsFn()
+        fm.getAll = function getAllFontsFn(): FontManagerFonts
         {
             return fonts;
         };
@@ -1367,7 +1373,9 @@ class FontManager
 
            @return {object} Width and height of the text
         */
-        fm.calculateTextDimensions = function calculateTextDimensionsFn(path, text, scale, spacing)
+        fm.calculateTextDimensions =
+            function calculateTextDimensionsFn(path, text, scale, spacing)
+        : FontDimensions
         {
             var font = fonts[path];
             if (font)
@@ -1377,11 +1385,12 @@ class FontManager
             else
             {
                 return {
-                    width: 0,
-                    height: 0,
-                    numGlyphs: 0,
-                    linesWidth: [],
-                    glyphCounts: []
+                    width        : 0,
+                    height       : 0,
+                    numGlyphs    : 0,
+                    linesWidth   : [],
+                    glyphCounts  : [],
+                    glyphIndices : []
                 };
             }
         };
@@ -1405,6 +1414,11 @@ class FontManager
         {
             if (fonts)
             {
+                var textures : Texture[];
+                var numTextures : number;
+                var textureIdx : number;
+                var texture: Texture;
+
                 var p;
                 for (p in fonts)
                 {
@@ -1413,11 +1427,23 @@ class FontManager
                         var font = fonts[p];
                         if (font)
                         {
-                            var texture = font.texture;
-                            if (texture)
+                            textures = font.textures;
+                            if (textures)
                             {
-                                texture.destroy();
-                                font.texture = null;
+                                numTextures = textures.length;
+
+                                for (textureIdx = 0 ;
+                                     textureIdx < numTextures ;
+                                     textureIdx += 1)
+                                {
+                                    texture = textures[textureIdx];
+                                    if (texture)
+                                    {
+                                        texture.destroy();
+                                        textures[textureIdx] = null;
+                                    }
+                                }
+                                font.textures = null;
                             }
                         }
                     }

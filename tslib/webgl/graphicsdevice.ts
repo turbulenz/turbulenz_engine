@@ -1102,7 +1102,7 @@ class TZWebGLTexture implements Texture
         {
             if (this.depth > 1)
             {
-                (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                (<WebGLTurbulenzEngine><any>TurbulenzEngine).callOnError(
                     "3D texture mipmap generation unsupported");
                 return;
             }
@@ -1359,7 +1359,7 @@ class TZWebGLTexture implements Texture
                 }
                 else
                 {
-                    (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                    (<WebGLTurbulenzEngine><any>TurbulenzEngine).callOnError(
                         'Missing image loader required for ' + src);
 
                     tex = TZWebGLTexture.create(gd, {
@@ -1447,12 +1447,14 @@ class TZWebGLTexture implements Texture
                     if (extension === '.jpg' || extension === '.jpeg')
                     {
                         src = 'data:image/jpeg;base64,' +
-                            (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
+                            (<WebGLTurbulenzEngine><any>TurbulenzEngine)
+                            .base64Encode(data);
                     }
                     else if (extension === '.png')
                     {
                         src = 'data:image/png;base64,' +
-                            (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(data);
+                            (<WebGLTurbulenzEngine><any>TurbulenzEngine)
+                            .base64Encode(data);
                     }
                 }
                 img.src = src;
@@ -2284,7 +2286,7 @@ class WebGLRenderTarget implements RenderTarget
             var glTexture = colorTexture0.glTexture;
             if (glTexture === undefined)
             {
-                (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                (<WebGLTurbulenzEngine><any>TurbulenzEngine).callOnError(
                     "Color texture is not a Texture");
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 gl.deleteFramebuffer(glObject);
@@ -2375,7 +2377,7 @@ class WebGLRenderTarget implements RenderTarget
         }
         else
         {
-            (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+            (<WebGLTurbulenzEngine><any>TurbulenzEngine).callOnError(
                 "No RenderBuffers or Textures specified for this RenderTarget");
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             gl.deleteFramebuffer(glObject);
@@ -2732,6 +2734,7 @@ class WebGLSemantics implements Semantics
 
     // Semantics
     length: number;
+    [index: number]: any;
 
     static create(gd: WebGLGraphicsDevice, attributes: any[]): WebGLSemantics
     {
@@ -2909,8 +2912,9 @@ class WebGLVertexBuffer implements VertexBuffer
                             }
                             else
                             {
-                                (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
-                                    'Missing values for attribute ' + a);
+                                (<WebGLTurbulenzEngine><any>TurbulenzEngine)
+                                    .callOnError(
+                                        'Missing values for attribute ' + a);
                                 return null;
                             }
                         }
@@ -3003,7 +3007,8 @@ class WebGLVertexBuffer implements VertexBuffer
                                 }
                                 else
                                 {
-                                    (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                                    (<WebGLTurbulenzEngine><any>TurbulenzEngine)
+                                        .callOnError(
                                         'Missing values for attribute ' + a);
                                     return null;
                                 }
@@ -3087,8 +3092,9 @@ class WebGLVertexBuffer implements VertexBuffer
                                 }
                                 else
                                 {
-                                    (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
-                                        'Missing values for attribute ' + a);
+                                    (<WebGLTurbulenzEngine><any>TurbulenzEngine)
+                                        .callOnError(
+                                            'Missing values for attribute ' + a);
                                     return null;
                                 }
                             }
@@ -3883,8 +3889,8 @@ class WebGLPass implements Pass
 
         // Set parameters
         var numTextureUnits = 0;
-        var passParameters = {};
-        var passParametersArray = [];
+        var passParameters : { [name: string]: PassParameter } = {};
+        var passParametersArray : PassParameter[] = [];
         pass.parameters = passParameters;
         pass.parametersArray = passParametersArray;
         var numParameters = parameterNames ? parameterNames.length : 0;
@@ -3960,8 +3966,11 @@ class WebGLPass implements Pass
                     }
                     else
                     {
-                        (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
-                            'Unknown value for state ' + s + ': ' + states[s]);
+                        (<WebGLTurbulenzEngine><any>TurbulenzEngine)
+                            .callOnError(
+                                'Unknown value for state ' + s + ': ' +
+                                    states[s]
+                            );
                     }
                 }
             }
@@ -4565,7 +4574,7 @@ class TZWebGLShader implements Shader
                 if (!compiled)
                 {
                     var compilerInfo = gl.getShaderInfoLog(compiledProgram);
-                    (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
+                    (<WebGLTurbulenzEngine><any>TurbulenzEngine).callOnError(
                         'Program "' + p + '" failed to compile: ' + compilerInfo);
                 }
             }
@@ -4585,8 +4594,10 @@ class TZWebGLShader implements Shader
                     if (!linked)
                     {
                         var linkerInfo = gl.getProgramInfoLog(glProgram);
-                        (<WebGLTurbulenzEngine>TurbulenzEngine).callOnError(
-                            'Program "' + p + '" failed to link: ' + linkerInfo);
+                        (<WebGLTurbulenzEngine><any>TurbulenzEngine)
+                            .callOnError(
+                                'Program "' + p + '" failed to link: ' +
+                                    linkerInfo);
                     }
                 }
             }
@@ -4887,6 +4898,8 @@ class TZWebGLShader implements Shader
 //
 class WebGLTechniqueParameters implements TechniqueParameters
 {
+    [paramName: string]: any;
+
     static create(params: any): TechniqueParameters
     {
         var techniqueParameters = new WebGLTechniqueParameters();
@@ -4987,13 +5000,14 @@ class WebGLDrawParameters implements DrawParameters
     // DrawParameters
     technique       : WebGLTechnique;
     primitive       : number;
-    indexBuffer     :WebGLIndexBuffer; // Just for declaration, it is a getter/setter
+    indexBuffer     : WebGLIndexBuffer; // (getter/setter)
     count           : number;
     firstIndex      : number;
     sortKey         : number;
     userData        : any;
+    [idx: number]   : any;
 
-    // WebGLDrawParameters
+    // WebGLDrawParameters (internal)
     endStreams: number;
     endTechniqueParameters: number;
     endInstances: number;

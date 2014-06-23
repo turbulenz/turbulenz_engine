@@ -273,7 +273,7 @@ class WebGLInputDevice implements InputDevice
     convertToUnicode(keyCodeArray: number[]): { [code: number]: string }
     {
         var keyCodeToUnicode = this.keyCodeToUnicode;
-        var result = {};
+        var result : { [code: number]: string; } = {};
         var length = keyCodeArray.length;
         var i;
         var keyCode;

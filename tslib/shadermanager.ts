@@ -5,6 +5,11 @@
 
 "use strict";
 
+interface ShaderManagerShaders
+{
+    [path: string]: Shader;
+}
+
 //
 // ShaderManager
 //
@@ -15,7 +20,7 @@ class ShaderManager
     load: (path: string, callback?: { (shader: Shader): void; }) => Shader;
     map: (dst: string, src: string) => void;
     get(path: string) : Shader { debug.abort("abstract method"); return null; }
-    getAll: () => { [path: string]: Shader; };
+    getAll: () => ShaderManagerShaders;
     remove: (path: string) => void;
     reload: (path: string, callback: { (shader: Shader): void; }) => void;
     reloadAll: () => void;
@@ -121,7 +126,7 @@ class ShaderManager
             }
         }
 
-        var shaders = {};
+        var shaders : ShaderManagerShaders = {};
         var loadingShader = {};
         var loadedObservers = {};
         var numLoadingShaders = 0;
@@ -434,7 +439,7 @@ class ShaderManager
 
            @return {object}
         */
-        sm.getAll = function getAllShadersFn()
+        sm.getAll = function getAllShadersFn(): ShaderManagerShaders
         {
             return shaders;
         };

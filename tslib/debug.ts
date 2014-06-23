@@ -14,12 +14,6 @@ interface IErrorStackResult
     stack: string;
 }
 
-declare var VMathArrayConstructor : Function;
-declare var TurbulenzEngine :
-{
-    onperformancewarning : { (msg: string): void; };
-};
-
 // The debug object is only available in debug modes.  The build tools
 // will automatically include it or prevent it from being included
 // based on the build mode.
@@ -163,7 +157,7 @@ var debug : TurbulenzDebug = {
 
     isMathType : function isMathTypeFn(v)
     {
-        if (v instanceof VMathArrayConstructor)
+        if (v instanceof Float32Array)
         {
             return true;
         }
@@ -174,9 +168,8 @@ var debug : TurbulenzDebug = {
         if (TurbulenzEngine.onperformancewarning)
         {
             TurbulenzEngine.onperformancewarning(
-                "Object is not of type " + VMathArrayConstructor.toString() +
-                ".  If this message appears frequently, performance of your" +
-                " game may be affected.");
+                "Object is not of type Float32Array.  If this message appears "
+                + "frequently, performance of your game may be affected.");
         }
 
         return true;

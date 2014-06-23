@@ -27,7 +27,7 @@ help:
 # TSLIB build modules
 ############################################################
 
-TSC := node $(BUILDDIR)/../typescript/0.9.1/tsc.js
+TSC := tsc
 
 MODULAR ?= 0
 REFCHECK ?= 0
@@ -43,6 +43,7 @@ platform_src := $(TS_SRC_DIR)/base.d.ts $(TS_SRC_DIR)/turbulenz.d.ts
 
 # debug
 debug_src := $(TS_SRC_DIR)/debug.ts
+debug_deps := platform
 
 # vmath
 vmath_src := $(TS_SRC_DIR)/vmath.ts
