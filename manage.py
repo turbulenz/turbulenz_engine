@@ -142,11 +142,13 @@ def command_jslib(options):
     if "all" == mode:
         if 0 != command_jslib(options + [ '--modular' ]):
             return 1
-        mode = "crude"
+        return command_jslib(options + [ '--crude' ])
     elif "modular" == mode:
         cmd += " MODULAR=1"
     elif "refcheck" == mode:
         cmd += " REFCHECK=1"
+    elif "crude" == mode:
+        cmd += " ONESHOT=1"
 
     # Select the appropriate target based on whether we are syntax
     # checking or doing a full build.
