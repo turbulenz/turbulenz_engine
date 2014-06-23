@@ -61,7 +61,6 @@ physics_canvas_nodecls := 1
 # platform_canvas - everything in webgl except the physicsdevice
 platform_canvas_src := \
   $(filter-out %physicsdevice.ts,$(wildcard $(TS_SRC_DIR)/webgl/*.ts))
-platform_canvas_tscflags := $(TS_SRC_DIR)/external/webgl.d.ts
 platform_canvas_deps := vmath platform
 platform_canvas_nodecls := 1
 

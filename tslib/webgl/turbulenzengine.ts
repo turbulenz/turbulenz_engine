@@ -23,23 +23,6 @@ interface Console
 };
 
 //
-// Dummy WebGLPhysicsDevice
-//
-// physics_canvas is a distinct module that may or may not be
-// available.  We dont have all the type info at this point.
-
-interface WebGLPhysicsDevice extends PhysicsDevice
-{
-};
-
-interface WebGLPhysicsDeviceConstructor
-{
-    new(): WebGLPhysicsDevice;
-    create(): WebGLPhysicsDevice;
-};
-declare var WebGLPhysicsDevice : WebGLPhysicsDeviceConstructor;
-
-//
 // WebGLTurbulenzEngine
 //
 
