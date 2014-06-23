@@ -764,7 +764,8 @@ class OnlineTexturePacker
 //
 // MinHeap
 //
-// Min binary heap using pairs of key/value and a given comparison function return true if key1 < key2
+// Min binary heap using pairs of key/value and a given comparison
+// function return true if key1 < key2
 //
 class MinHeap<K,T>
 {
@@ -972,7 +973,7 @@ class TimeoutQueue<T>
     }
     constructor()
     {
-        this.heap = new MinHeap(TimeoutQueue.compare);
+        this.heap = new MinHeap<number, T>(TimeoutQueue.compare);
         this.time = 0.0;
     }
 
@@ -1286,6 +1287,16 @@ interface Attribute
     storage            : AttributeStorage;
 }
 
+interface ParticleTextureUVs
+{
+    [name: string]: Array< Array<number> >;
+}
+
+interface ParticleTextureSizes
+{
+    [name: string]: Array<number>;
+}
+
 //
 // Interface for intermediate parse result of a particle defined animation.
 // (Internal to ParticleBuilder)
@@ -1295,8 +1306,8 @@ interface Particle
     name        : string;
     fps         : number;
     animation   : Array<Snapshot>;
-    textureUVs  : { [name: string]: Array<Array<number>> };
-    textureSizes: { [name: string]: Array<number> };
+    textureUVs  : ParticleTextureUVs;
+    textureSizes: ParticleTextureSizes;
 }
 interface Snapshot
 {
@@ -1545,7 +1556,7 @@ class Types {
     // Result is an object with all the fields of to,
     // and with all the fields of from with values copied from from.
     // in a deep-copy.
-    static copyFields(from: { [name: string]: any }, to: { [name: string]: any }, json = true)
+    static copyFields(from: {}, to: {}, json = true)
     {
         if (!from) return to;
         if (!to) to = {};
@@ -1562,10 +1573,12 @@ class Types {
 //
 // Parser (private helper of ParticleBuilder)
 //
-class Parser {
-    private static interpolators: { [name: string]: (params: any) => Interpolator } = {
-        "none": function (_): Interpolator
-        {
+class Parser
+{
+    private static interpolators: {
+        [name: string]: (params: any) => Interpolator } = {
+            "none": function (_): Interpolator
+            {
             return {
                 type: "none",
                 offsets: [-1],
@@ -1996,12 +2009,16 @@ class Parser {
                 return Parser.typeAttr.bind(null, error, "system attribute" + printNames + " " + n + " field", type);
             };
 
-        var defaultValue = Parser.maybeField(defn, "default", typeAttr("default").bind(null, false),
-                                     Parser.defaultAttr.bind(null, type, 0));
-        var defaultInterpolator = Parser.maybeField(defn, "default-interpolation", parseInterpolator,
-                                     Parser.interpolators["linear"].bind(null));
+        var defaultValue = Parser.maybeField< Array<number> >
+            (defn, "default",
+             typeAttr("default").bind(null, false),
+             Parser.defaultAttr.bind(null, type, 0));
+        var defaultInterpolator = Parser.maybeField<Interpolator>
+            (defn, "default-interpolation",
+             parseInterpolator,
+             Parser.interpolators["linear"].bind(null));
 
-        var parseMinMax = function (n)
+        var parseMinMax = function (n) : Array<number>
             {
                 // Can't type check for null type.
                 if (type === null)
@@ -2014,14 +2031,18 @@ class Parser {
                     case "tFloat":
                     case "tFloat2":
                     case "tFloat4":
-                        return Parser.maybeField(defn, n, typeAttr(n).bind(null, true),
-                                                 Parser.defaultAttr.bind(null, type, null));
+                    return Parser.maybeField< Array<number> >(
+                        defn, n, typeAttr(n).bind(null, true),
+                        Parser.defaultAttr.bind(null, type, null)
+                    );
                     default:
-                        if (defn.hasOwnProperty(n))
-                        {
-                            error.error(n + " is not accepted for system texture attribute" + printName);
-                            return null;
-                        }
+                    if (defn.hasOwnProperty(n))
+                    {
+                        error.error(
+                            n + " is not accepted for system texture attribute"
+                            + printName);
+                        return null;
+                    }
                 }
             };
         var minValue = parseMinMax("min");
@@ -2212,8 +2233,8 @@ class Parser {
                 }
             }
         }
-        var textureUVs = {};
-        var textureSizes = {};
+        var textureUVs : ParticleTextureUVs = {};
+        var textureSizes : ParticleTextureSizes = {};
         var count = textures.length;
         var i, j;
         for (i = 0; i < count; i += 1)
@@ -4957,7 +4978,6 @@ class ParticleSystem
     private static sharedDefaultUpdater: ParticleUpdater;
     private static sharedDefaultRenderer: ParticleRenderer;
 
-    private constructor() {}
     static create(params: {
         graphicsDevice      : GraphicsDevice;
 
@@ -5701,7 +5721,7 @@ class ParticleSystem
         gd.setStream(geom.vertexBuffer, geom.semantics);
         gd.setTechnique(renderer.technique);
         gd.setTechniqueParameters(this.renderParameters);
-        gd.setTechniqueParameters(view.parameters);
+        gd.setTechniqueParameters(<TechniqueParameters><any>view.parameters);
         gd.draw(geom.primitive, geom.particleStride * this.maxParticles, 0);
     }
 }
@@ -5743,7 +5763,6 @@ class ParticleView
     private mergePass : number = 0;
     private mergeStage: number = 0;
 
-    private constructor() {}
     static create(params: {
         graphicsDevice      : GraphicsDevice;
         system?             : ParticleSystem;
@@ -5754,14 +5773,15 @@ class ParticleView
         ret.graphicsDevice = params.graphicsDevice;
 
         // per-view parameters
-        ret.parameters = <ParticleViewParameters>ret.graphicsDevice.createTechniqueParameters({
-            modelView     : VMath.m43BuildIdentity(),
-            projection    : VMath.m44BuildIdentity(),
-            mappingTable  : null,
-            mappingSize   : VMath.v2BuildZero(),
-            invMappingSize: VMath.v2BuildZero(),
-            mappingPos    : VMath.v2BuildZero()
-        });
+        ret.parameters = <ParticleViewParameters><any>
+            ret.graphicsDevice.createTechniqueParameters({
+                modelView     : VMath.m43BuildIdentity(),
+                projection    : VMath.m44BuildIdentity(),
+                mappingTable  : null,
+                mappingSize   : VMath.v2BuildZero(),
+                invMappingSize: VMath.v2BuildZero(),
+                mappingPos    : VMath.v2BuildZero()
+            });
 
         var sharedRenderContext = params.sharedRenderContext;
         ret.renderContextShared = <boolean><any>(sharedRenderContext);
@@ -5810,16 +5830,18 @@ class ParticleView
         ParticleView.prepareSortTechnique = shader.getTechnique("prepare_sort");
         ParticleView.mergeSortTechnique   = shader.getTechnique("sort_pass");
 
-        ParticleView.prepareSortParameters = <PrepareSortParameters>gd.createTechniqueParameters({
-            zBound        : 0
-        });
-        ParticleView.mergeSortParameters = <MergeSortParameters>gd.createTechniqueParameters({
-            cpass         : 0,
-            PmS           : 0,
-            twoStage      : 0,
-            twoStage_PmS_1: 0,
-            mappingTable  : null
-        });
+        ParticleView.prepareSortParameters = <PrepareSortParameters><any>
+            gd.createTechniqueParameters({
+                zBound        : 0
+            });
+        ParticleView.mergeSortParameters = <MergeSortParameters><any>
+            gd.createTechniqueParameters({
+                cpass         : 0,
+                PmS           : 0,
+                twoStage      : 0,
+                twoStage_PmS_1: 0,
+                mappingTable  : null
+            });
     }
 
     setSystem(system: ParticleSystem): void
@@ -5943,8 +5965,8 @@ class ParticleView
         gd.beginRenderTarget(targets[1 - this.currentMapping]);
         gd.setTechnique(ParticleView.prepareSortTechnique);
         gd.setTechniqueParameters(this.system.renderParameters);
-        gd.setTechniqueParameters(this.parameters);
-        gd.setTechniqueParameters(prepareParameters);
+        gd.setTechniqueParameters(<TechniqueParameters><any>this.parameters);
+        gd.setTechniqueParameters(<TechniqueParameters><any>prepareParameters);
         gd.draw(gd.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
         gd.endRenderTarget();
         this.currentMapping = 1 - this.currentMapping;
@@ -5953,7 +5975,7 @@ class ParticleView
         var mergeParameters = ParticleView.mergeSortParameters;
         gd.setTechnique(ParticleView.mergeSortTechnique);
         gd.setTechniqueParameters(this.system.renderParameters);
-        gd.setTechniqueParameters(this.parameters);
+        gd.setTechniqueParameters(<TechniqueParameters><any>this.parameters);
 
         var i = this.system.maxSortSteps;
         while (i > 0)
@@ -5968,7 +5990,7 @@ class ParticleView
             mergeParameters.mappingTable   = targets[this.currentMapping].colorTexture0;
 
             gd.beginRenderTarget(targets[1 - this.currentMapping]);
-            gd.setTechniqueParameters(mergeParameters);
+            gd.setTechniqueParameters(<TechniqueParameters><any>mergeParameters);
             gd.draw(gd.PRIMITIVE_TRIANGLE_STRIP, 4, 0);
             gd.endRenderTarget();
             this.currentMapping = 1 - this.currentMapping;
@@ -6322,7 +6344,8 @@ class ParticleRenderable
         VMath.m43Mul(this.world, camera.viewMatrix, view.parameters["modelView"]);
         view.update(null, camera.projectionMatrix);
 
-        this.drawParameters[0].setTechniqueParameters(this.parametersIndex + 1, view.parameters);
+        this.drawParameters[0].setTechniqueParameters(
+            this.parametersIndex + 1, <TechniqueParameters><any>view.parameters);
     }
 
     setLazyView(view: () => ParticleView): void
@@ -6495,9 +6518,9 @@ class DefaultParticleSynchronizer
         {
             return function () { return x; };
         }
-        function maybe(n, x, y)
+        var maybe = function maybeFn(n, x, y) : number
         {
-            return Parser.maybeField(delta, n, x(n), y);
+            return Parser.maybeField<number>(delta, n, x(n), y);
         }
 
         Parser.extraFields(error, "default synchronizer archetype", delta,
@@ -6646,7 +6669,7 @@ class DefaultParticleSynchronizer
     })
     {
         var ret = new DefaultParticleSynchronizer();
-        ret.events = new TimeoutQueue();
+        ret.events = new TimeoutQueue<DefaultParticleSynchronizerEvent>();
         ret.emitters  = [];
         ret.fixedTimeStep = params.fixedTimeStep;
         ret.maxSubSteps = (params.maxSubSteps !== undefined ? params.maxSubSteps : 3);
@@ -7779,7 +7802,7 @@ class ParticleManager
         ret.getViewCb = ret.getView.bind(ret);
         ret.viewPool = [];
 
-        ret.queue = new TimeoutQueue();
+        ret.queue = new TimeoutQueue<ParticleInstance>();
 
         ret.registerGeometry("default", function (gd, num)
             {
@@ -8307,8 +8330,8 @@ class ParticleManager
         var system = this.getAnimationSystem(archetype.animationSystem);
 
         // Gather particle animations, tweaks, mappings and textures to pack.
-        var textures = {};
-        var mapping = {};
+        var textures : { [name: string]: any; } = {};
+        var mapping : { [name: string]: number[][]; } = {};
         var toPack  = {};
         var tweaks  = [];
         var animations = [], particle, count, i;
@@ -9619,4 +9642,3 @@ class ParticleManager
         return (allZero ? null : delta);
     }
 }
-
