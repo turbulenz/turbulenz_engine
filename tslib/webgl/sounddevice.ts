@@ -76,7 +76,76 @@ class WebGLSound implements Sound
         }
     }
 
-    _initializeFromData(data: any, extension: string, onload: { (sound: Sound, status: number): void; }): void
+    private _readUint32(data: Uint8Array, n: number): number
+    {
+        /* tslint:disable:no-bitwise */
+        return (data[n + 0] |
+                (data[n + 1] << 8) |
+                (data[n + 2] << 16) |
+                (data[n + 3] << 24));
+        /* tslint:enable:no-bitwise */
+    }
+
+    private _readUint64(data: Uint8Array, n: number): number
+    {
+        /* tslint:disable:no-bitwise */
+        var low = (data[n + 0] |
+                   (data[n + 1] << 8) |
+                   (data[n + 2] << 16) |
+                   (data[n + 3] << 24));
+        var high = (data[n + 4] |
+                    (data[n + 5] << 8) |
+                    (data[n + 6] << 16) |
+                    (data[n + 7] << 24));
+        /* tslint:enable:no-bitwise */
+        return (high ?
+                ((high * 4294967296) + low) :
+                low);
+    }
+
+    private _findOggInfo(data: Uint8Array)
+    {
+        var end = (data.length - 15);
+        var n;
+        for (n = 4; n < end; n += 1)
+        {
+            // Look for 'vorbis' marker
+            if (data[n + 0] === 118 &&
+                data[n + 1] === 111 &&
+                data[n + 2] === 114 &&
+                data[n + 3] === 98 &&
+                data[n + 4] === 105 &&
+                data[n + 5] === 115 &&
+                data[n - 1] === 1)
+            {
+                this.channels = data[n + 10];
+                this.frequency = this._readUint32(data, (n + 11));
+                this.bitrate = this._readUint32(data, (n + 11 + 8));
+                break;
+            }
+        }
+        if (this.frequency)
+        {
+            for (n = (data.length - 28); n >= 0; n -= 1)
+            {
+                // Look for 'OggS' marker
+                if (data[n + 0] === 79 &&
+                    data[n + 1] === 103 &&
+                    data[n + 2] === 103 &&
+                    data[n + 3] === 83)
+                {
+                    var numSamples = this._readUint64(data, (n + 6));
+                    if (numSamples)
+                    {
+                        this.length = (numSamples / this.frequency);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private _initializeFromData(data: any, extension: string, onload: { (sound: Sound, status: number): void; }): void
     {
         if (typeof Blob !== "undefined" &&
             data instanceof Blob)
@@ -110,6 +179,7 @@ class WebGLSound implements Sound
                     dataArray[2] === 103 &&
                     dataArray[3] === 83)
                 {
+                    this._findOggInfo(dataArray);
                     extension = 'ogg';
                     dataBlob = new Blob([dataArray], {type: "audio/ogg"});
                 }
@@ -152,6 +222,7 @@ class WebGLSound implements Sound
                         dataArray[2] === 103 &&
                         dataArray[3] === 83)
                 {
+                    this._findOggInfo(dataArray);
                     extension = 'ogg';
                     url = 'data:audio/ogg;base64,';
                 }
@@ -503,12 +574,8 @@ class WebGLSound implements Sound
                         }
                     };
                     xhr.open('GET', soundPath, true);
-                    if (typeof URL !== "undefined" && URL.createObjectURL)
-                    {
-                        xhr.responseType = 'blob';
-                    }
-                    else if (typeof xhr.responseType === "string" ||
-                             (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType")))
+                    if (typeof xhr.responseType === "string" ||
+                        (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType")))
                     {
                         xhr.responseType = "arraybuffer";
                     }
