@@ -10789,6 +10789,7 @@ class WebGLPhysicsDevice implements PhysicsDevice
 {
     static version     = 1;
 
+    version            = WebGLPhysicsDevice.version; //
     vendor             = "Turbulenz";
     FILTER_DYNAMIC     : number; // 1 (on prototype)
     FILTER_STATIC      : number; // 2 (on prototype)
