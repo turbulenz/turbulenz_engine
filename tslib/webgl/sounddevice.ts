@@ -145,6 +145,74 @@ class WebGLSound implements Sound
         }
     }
 
+    private _syncsafe(value: number): number
+    {
+        var ret = 0;
+        /* tslint:disable:no-bitwise */
+        ret |= ((value & 0x7F000000) >> 24);
+        ret |= ((value & 0x007F0000) >>  9);
+        ret |= ((value & 0x00007F00) <<  6);
+        ret |= ((value & 0x0000007F) << 21);
+        /* tslint:enable:no-bitwise */
+        return ret;
+    }
+
+    static MP3BitRates = [0, 32000, 40000, 48000, 56000, 64000, 80000, 96000,
+                          112000, 128000, 160000, 192000, 224000, 256000, 320000, 0];
+    static MP3Frequencies = [44100, 48000, 32000, 0];
+
+    private _findMp3Info(data: Uint8Array)
+    {
+        var end = data.length;
+        var n;
+
+        // Ignore ID3v1 'TAG' from the end
+        n = (end - 128);
+        if (data[n + 0] === 84 &&
+            data[n + 1] === 65 &&
+            data[n + 2] === 71)
+        {
+            end -= 128;
+        }
+
+        // Ignore ID3v1 'TAG+' from the end
+        n = (end - 227);
+        if (data[n + 0] === 84 &&
+            data[n + 1] === 65 &&
+            data[n + 2] === 71 &&
+            data[n + 3] === 43)
+        {
+            end -= 227;
+        }
+
+        // Ignore ID3v2 'ID3' from the beginning
+        n = 0;
+        if (data[n + 0] === 73 &&
+            data[n + 1] === 68 &&
+            data[n + 2] === 51)
+        {
+            var size = this._readUint32(data, 6);
+            size = this._syncsafe(size);
+            n += 10 + size;
+        }
+
+        // Check that it is a MPEG 1 Layer 3
+        /* tslint:disable:no-bitwise */
+        if (data[n + 0] === 0xff &&
+            (data[n + 1] >> 5) === 0x7 &&
+            ((data[n + 1] >> 3) & 0x3) === 0x3 &&
+            ((data[n + 1] >> 1) & 0x3) === 0x1)
+        {
+            var bitrate = WebGLSound.MP3BitRates[(data[n + 2] >> 4)];
+            var frequency = WebGLSound.MP3Frequencies[((data[n + 2] >> 2) & 0x3)];
+            this.bitrate = bitrate;
+            this.frequency = frequency;
+            this.length = (end - n) / (bitrate / 8);
+            this.channels = ((data[n + 3] >> 6) === 0x3 ? 1 : 2);
+        }
+        /* tslint:enable:no-bitwise */
+    }
+
     private _initializeFromData(data: any, extension: string, onload: { (sound: Sound, status: number): void; }): void
     {
         if (typeof Blob !== "undefined" &&
@@ -205,6 +273,7 @@ class WebGLSound implements Sound
                     else
                     {
                         // Assume it's an mp3?
+                        this._findMp3Info(dataArray);
                         extension = 'mp3';
                         dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
                     }
@@ -248,6 +317,7 @@ class WebGLSound implements Sound
                     else
                     {
                         // Assume it's an mp3?
+                        this._findMp3Info(dataArray);
                         extension = 'mp3';
                         url = 'data:audio/mpeg;base64,';
                     }
