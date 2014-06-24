@@ -309,7 +309,8 @@ class HTMLControls
                     value = max;
                 }
 
-                input.val(value);
+
+                input.val(<string><any>value);
 
                 control.value = value;
                 control.fn();
@@ -343,7 +344,7 @@ class HTMLControls
                     slide: createSliderCallback(id)
                 });
 
-                input.val(<number><any>slider.slider("value"));
+                input.val(<string><any>slider.slider("value"));
                 input.change(createInputCallback(control, id));
             }
         }

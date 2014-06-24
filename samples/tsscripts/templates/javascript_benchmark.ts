@@ -831,7 +831,9 @@ TurbulenzEngine.onload = function onloadFn()
             var test = testList[i];
             var name = test.name;
             var targetIterations = test.estimatedRuns;
-            window.$('#' + name + 'iter').val((targetIterations && !quickTest) ? targetIterations : defaultIterations);
+            window.$('#' + name + 'iter').val
+            (<string><any>(
+                (targetIterations && !quickTest) ? targetIterations : defaultIterations));
         }
     };
 
