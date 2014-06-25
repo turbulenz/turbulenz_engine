@@ -288,6 +288,19 @@ class DeferredRendering
         }
     }
 
+    _createLightInstanceTechniqueParameters(gd)
+    {
+        var md = this.md;
+        return gd.createTechniqueParameters({
+            world: undefined,
+            worldViewTranspose: md.m43BuildIdentity(),
+            lightOrigin: md.v3BuildZero(),
+            lightColor: undefined,
+            lightExtents: undefined,
+            lightViewInverseTranspose: md.m43BuildIdentity()
+        });
+    }
+
     update(gd, camera, scene, currentTime)
     {
         scene.updateVisibleNodes(camera);
@@ -347,7 +360,7 @@ class DeferredRendering
                     tp = lightInstance.techniqueParameters;
                     if (!tp)
                     {
-                        tp = gd.createTechniqueParameters();
+                        tp = this._createLightInstanceTechniqueParameters(gd);
                         lightInstance.techniqueParameters = tp;
                     }
 
@@ -409,7 +422,7 @@ class DeferredRendering
                     tp = lightInstance.techniqueParameters;
                     if (!tp)
                     {
-                        tp = gd.createTechniqueParameters();
+                        tp = this._createLightInstanceTechniqueParameters(gd);
                         lightInstance.techniqueParameters = tp;
                     }
 
@@ -479,7 +492,7 @@ class DeferredRendering
                     tp = lightInstance.techniqueParameters;
                     if (!tp)
                     {
-                        tp = gd.createTechniqueParameters();
+                        tp = this._createLightInstanceTechniqueParameters(gd);
                         lightInstance.techniqueParameters = tp;
                     }
 
@@ -552,7 +565,7 @@ class DeferredRendering
                 tp = lightInstance.techniqueParameters;
                 if (!tp)
                 {
-                    tp = gd.createTechniqueParameters();
+                    tp = this._createLightInstanceTechniqueParameters(gd);
                     lightInstance.techniqueParameters = tp;
                 }
 
@@ -1683,9 +1696,23 @@ class DeferredRendering
         dr.passIndex = {opaque: 0, decal: 1, transparent: 2, shadow: 3};
         dr.sharedUserData = [{ passIndex: 0 }, { passIndex: 1 }, { passIndex: 2 }, { passIndex: 3 }];
 
-        dr.globalTechniqueParameters = gd.createTechniqueParameters();
-        dr.sharedTechniqueParameters = gd.createTechniqueParameters();
+        dr.globalTechniqueParameters = gd.createTechniqueParameters({
+            viewProjection: null,
+            eyePosition: md.v3BuildZero(),
+            viewDepth: md.v4BuildZero(),
+            time: 0,
+        });
+        dr.sharedTechniqueParameters = gd.createTechniqueParameters({
+            normalTexture: null,
+            depthTexture: null,
+            viewProjection: null,
+            maxDepth: 0
+        });
         dr.mixTechniqueParameters = gd.createTechniqueParameters({
+            albedoTexture: null,
+            specularTexture: null,
+            diffuseLightingTexture: null,
+            specularLightingTexture: null,
             lightingScale: 2.0
         });
 
@@ -1701,12 +1728,12 @@ class DeferredRendering
             dynamic: false,
             data: [
                 0.0,  0.0,  0.0,
-                    -1.0, -1.0,  1.0,
+               -1.0, -1.0,  1.0,
                 1.0, -1.0,  1.0,
                 1.0,  1.0,  1.0,
                 0.0,  0.0,  0.0,
-                    -1.0,  1.0,  1.0,
-                    -1.0, -1.0,  1.0,
+               -1.0,  1.0,  1.0,
+               -1.0, -1.0,  1.0,
                 1.0,  1.0,  1.0
             ]
         });
@@ -1717,19 +1744,19 @@ class DeferredRendering
             dynamic: false,
             data: [
                 1.0,  1.0,  1.0,
-                    -1.0,  1.0,  1.0,
+               -1.0,  1.0,  1.0,
                 1.0, -1.0,  1.0,
-                    -1.0, -1.0,  1.0,
-                    -1.0, -1.0, -1.0,
-                    -1.0,  1.0,  1.0,
-                    -1.0,  1.0, -1.0,
+               -1.0, -1.0,  1.0,
+               -1.0, -1.0, -1.0,
+               -1.0,  1.0,  1.0,
+               -1.0,  1.0, -1.0,
                 1.0,  1.0,  1.0,
                 1.0,  1.0, -1.0,
                 1.0, -1.0,  1.0,
                 1.0, -1.0, -1.0,
-                    -1.0, -1.0, -1.0,
+               -1.0, -1.0, -1.0,
                 1.0,  1.0, -1.0,
-                    -1.0,  1.0, -1.0
+               -1.0,  1.0, -1.0
             ]
         });
 
@@ -1738,9 +1765,9 @@ class DeferredRendering
             attributes: ['FLOAT2', 'FLOAT2'],
             dynamic: false,
             data: [
-                    -1.0,  1.0, 0.0, 1.0,
+               -1.0,  1.0, 0.0, 1.0,
                 1.0,  1.0, 1.0, 1.0,
-                    -1.0, -1.0, 0.0, 0.0,
+               -1.0, -1.0, 0.0, 0.0,
                 1.0, -1.0, 1.0, 0.0
             ]
         });
@@ -1942,7 +1969,9 @@ class DeferredRendering
                     drawParameters.sortKey = renderingCommonSortKeyFn(this.shadowTechniqueIndex,
                                                                       geometryInstance.geometry.vertexBuffer.id);
 
-                    var shadowTechniqueParameters = gd.createTechniqueParameters();
+                    var shadowTechniqueParameters = gd.createTechniqueParameters({
+                        world: null
+                    });
                     geometryInstance.shadowTechniqueParameters = shadowTechniqueParameters;
                     drawParameters.setTechniqueParameters(0, shadowTechniqueParameters);
                 }
