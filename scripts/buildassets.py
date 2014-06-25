@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2013 Turbulenz Limited
+# Copyright (c) 2013-2014 Turbulenz Limited
 
 from sys import argv, stdout
 from json import loads as load_json, dumps as dump_json
@@ -394,7 +394,7 @@ class AssetInfo(object):
         else:
             self.path = normpath(yaml_info['path'])
             deps = yaml_info.get('deps', [])
-            self.deps = [ normpath(d) for d in deps ]
+            self.deps = [normpath(d) for d in deps]
             self.deps.append(self.path)
             self.install = yaml_info.get('install', True)
             self.args = yaml_info.get('args')
@@ -413,7 +413,7 @@ def build_asset(asset_info, source_list, tools, build_path, verbose):
     create_dir(dirname(dst_path))
 
     source = source_list.get_source(src)
-    deps = [ source_list.get_source(path) for path in asset_info.deps ]
+    deps = [source_list.get_source(path) for path in asset_info.deps]
     if any([dep.has_changed() for dep in deps]) or asset_tool.has_changed() or not path_exists(dst_path) \
             or asset_tool.check_external_deps(source.asset_path, dst_path, asset_info.args):
         stdout.write('[%s] %s\n' % (asset_tool.name.upper(), src))
@@ -514,7 +514,7 @@ def main():
 
     args = parser.parse_args(argv[1:])
 
-    assets_paths = [ normpath(p) for p in args.assets_path ]
+    assets_paths = [normpath(p) for p in args.assets_path]
     base_build_path = normpath(args.build_path)
     create_dir(base_build_path)
     create_dir(args.install_path)
@@ -559,7 +559,7 @@ def main():
                     # build it. This could iterate down the remaining list in case the head isn't buildable but
                     # things later in the list are
                     asset_info = self.asset_list[0]
-                    deps = [ source_list.get_source(path) for path in asset_info.deps if path != asset_info.path ]
+                    deps = [source_list.get_source(path) for path in asset_info.deps if path != asset_info.path]
                     if any([not d.built for d in deps]):
                         self.mutex.release()
                         sleep(0.01)
@@ -591,14 +591,14 @@ def main():
             if asset in assets_to_build:
                 continue
             for dep in asset.deps:
-                if dep != asset.path and dep not in [ a.path for a in assets_to_build ]:
+                if dep != asset.path and dep not in [a.path for a in assets_to_build]:
                     break
             else:
                 assets_to_build.append(asset)
         if num_assets_sorted == len(assets_to_build):
-            assets_left = [ a for a in asset_build_info if a not in assets_to_build ]
+            assets_left = [a for a in asset_build_info if a not in assets_to_build]
             error('Detected cyclic dependencies between assets within - \n%s' %
-                '\n'.join([ a.path for a in assets_left ]))
+                  '\n'.join([a.path for a in assets_left]))
             return 1
 
 
@@ -638,9 +638,7 @@ def main():
     print 'Installing assets and building mapping table...'
     mapping = install(asset_build_info, args.install_path)
     with open('mapping_table.json', 'w') as f:
-        f.write(dump_json({
-                'urnmapping': mapping
-            }))
+        f.write(dump_json({'urnmapping': mapping}))
 
     # Cleanup any built files no longer referenced by the new mapping table
     remove_old_build_files(asset_build_info, base_build_path)
