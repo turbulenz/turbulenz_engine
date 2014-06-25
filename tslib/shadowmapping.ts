@@ -512,6 +512,34 @@ class ShadowMapping
         return (a.sortKey - b.sortKey);
     }
 
+    private _adjustCameraPosition(camera: Camera,
+                                  minWindowX: number,
+                                  maxWindowX: number,
+                                  minWindowY: number,
+                                  maxWindowY: number): void
+    {
+        var matrix = camera.matrix;
+        var r0 = -matrix[0];
+        var r1 = -matrix[1];
+        var r2 = -matrix[2];
+
+        var u0 = -matrix[3];
+        var u1 = -matrix[4];
+        var u2 = -matrix[5];
+
+        var ox = (minWindowX + maxWindowX) / 2.0;
+        var oy = (minWindowY + maxWindowY) / 2.0;
+        var origin0 = ox * r0 + oy * u0;
+        var origin1 = ox * r1 + oy * u1;
+        var origin2 = ox * r2 + oy * u2;
+
+        matrix[9]  += origin0;
+        matrix[10] += origin1;
+        matrix[11] += origin2;
+
+        camera.updateViewMatrix();
+    }
+
     drawShadowMap(cameraMatrix, minExtentsHigh, lightInstance)
     {
         var md = this.md;
@@ -521,7 +549,6 @@ class ShadowMapping
 
         var shadowMapInfo = lightInstance.shadowMapInfo;
         var camera = shadowMapInfo.camera;
-        var viewMatrix = camera.viewMatrix;
         var origin = lightInstance.lightOrigin;
 
         var halfExtents = light.halfExtents;
@@ -693,9 +720,14 @@ class ShadowMapping
                 {
                     maxLightDistanceY = lightViewWindowY;
                 }
-                minimalViewWindowX = Math.max(Math.abs(maxLightDistanceX), Math.abs(minLightDistanceX));
+                this._adjustCameraPosition(camera,
+                                           minLightDistanceX,
+                                           maxLightDistanceX,
+                                           minLightDistanceY,
+                                           maxLightDistanceY);
+                minimalViewWindowX = (maxLightDistanceX - minLightDistanceX) / 2.0;
                 minimalViewWindowX += 2 * borderPadding * minimalViewWindowX;
-                minimalViewWindowY = Math.max(Math.abs(maxLightDistanceY), Math.abs(minLightDistanceY));
+                minimalViewWindowY = (maxLightDistanceY - minLightDistanceY) / 2.0;
                 minimalViewWindowY += 2 * borderPadding * minimalViewWindowY;
                 if (lightViewWindowX > minimalViewWindowX)
                 {
@@ -788,6 +820,7 @@ class ShadowMapping
 
         camera.updateProjectionMatrix();
         camera.updateViewProjectionMatrix();
+        var viewMatrix = camera.viewMatrix;
         var shadowProjection = camera.viewProjectionMatrix;
 
         var maxDepthReciprocal = (1.0 / (maxLightDistance - minLightDistance));
