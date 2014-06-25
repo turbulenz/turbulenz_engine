@@ -4887,22 +4887,23 @@ class TZWebGLShader implements Shader
 //
 class WebGLTechniqueParameters implements TechniqueParameters
 {
-    static create(params: any): TechniqueParameters
+    constructor(params: any)
     {
-        var techniqueParameters = new WebGLTechniqueParameters();
-
         if (params)
         {
             for (var p in params)
             {
                 if (params.hasOwnProperty(p))
                 {
-                    techniqueParameters[p] = params[p];
+                    this[p] = params[p];
                 }
             }
         }
+    }
 
-        return techniqueParameters;
+    static create(params: any): TechniqueParameters
+    {
+        return new WebGLTechniqueParameters(params);
     }
 }
 
