@@ -170,7 +170,7 @@ def command_no_arguments(fn):
     return new
 
 def command_with_arguments(fn):
-    def new(arguments = None, *args, **kwargs):
+    def new(arguments=None, *args, **kwargs):
         return fn(arguments or [], *args, **kwargs)
     return new
 

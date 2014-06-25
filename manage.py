@@ -66,8 +66,7 @@ def command_env():
     _easy_install('simplejson>=2.1.5')
     _easy_install('PyYAML>=3.10')
 
-    _easy_install('logilab-common==0.60.0')
-    _easy_install('pylint==1.0.0')
+    _easy_install('pylint==1.2.1')
 
     _easy_install('roman>=1.4.0')
     _easy_install('docutils>=0.9.1')
@@ -80,7 +79,7 @@ def command_env():
            os.path.join(TURBULENZROOT, 'scripts', 'install_nodejs.py'),
            '--prefix', env_dir,
            '--typescript']
-    if not TURBULENZOS in [ 'linux32', 'linux64' ]:
+    if not TURBULENZOS in ['linux32', 'linux64']:
         cmd.append('-f')
     sh(cmd, console=True)
 
@@ -100,7 +99,7 @@ def command_env_clean():
 def command_jslib(options):
 
     parser = argparse.ArgumentParser(description=" Builds or cleans specified app(s), by name or path. If no app is"
-                                                 " given, builds or cleans all the listed apps (except samples).")
+                                     " given, builds or cleans all the listed apps (except samples).")
     parser.add_argument('--clean', action='store_true', help="Clean jslib (completely removes directory!)")
     parser.add_argument('--outdir', default=None, help="Build jslib to an alternative directory")
     parser.add_argument('--closure', action='store_true', help="Verify the generated .js files with closure")
@@ -140,7 +139,7 @@ def command_jslib(options):
 
     # If mode == "all", run the modular build, then crude
     if "all" == mode:
-        if 0 != command_jslib(options + [ '--modular' ]):
+        if 0 != command_jslib(options + ['--modular']):
             return 1
         mode = "crude"
     elif "modular" == mode:
@@ -173,7 +172,7 @@ def command_jslib(options):
 @command_requires_env
 @command_with_arguments
 def command_jslib_clean(options):
-    command_jslib([ '--clean' ] + options)
+    command_jslib(['--clean'] + options)
 
 def _get_num_cpus():
     import multiprocessing
@@ -282,21 +281,21 @@ def command_tools_clean():
 @command_requires_env
 @command_with_arguments
 def command_apps(options):
-    app_dirs = [ 'samples',
-                 'apps/inputapp',
-                 'apps/multiworm',
-                 'apps/sampleapp',
-                 'apps/templateapp',
-                 'apps/viewer',
-                 'apps/tictactoe',
-                 'apps/protolibsampleapp' ]
-    app_dirs = [ os.path.join(TURBULENZROOT, p) for p in app_dirs ]
+    app_dirs = ['samples',
+                'apps/inputapp',
+                'apps/multiworm',
+                'apps/sampleapp',
+                'apps/templateapp',
+                'apps/viewer',
+                'apps/tictactoe',
+                'apps/protolibsampleapp']
+    app_dirs = [os.path.join(TURBULENZROOT, p) for p in app_dirs]
     all_apps = {}
     for d in app_dirs:
         all_apps[os.path.split(d)[1]] = d
 
     parser = argparse.ArgumentParser(description=" Builds or cleans specified app(s), by name or path. If no app is"
-                                                 " given, builds or cleans all the listed apps (except samples).")
+                                     " given, builds or cleans all the listed apps (except samples).")
     parser.add_argument('--clean', action='store_true', help="Clean specified apps (same as apps-clean)")
     parser.add_argument('--refcheck', action='store_true', help="Build with reference checking")
     parser.add_argument('--verbose', action='store_true', help="Display verbose build output")
@@ -312,11 +311,11 @@ def command_apps(options):
 
     if args.app == 'all_apps':
         # If no app given, build all apps except samples
-        apps = [ app for app in all_apps.keys() if app != 'samples' ]
+        apps = [app for app in all_apps.keys() if app != 'samples']
     else:
         if args.app not in all_apps and not os.path.exists(args.app):
             print "ERROR: app name not recognised: %s" % args.app
-        apps = [ args.app ]
+        apps = [args.app]
 
     if not args.mode:
         modes = ['canvas-debug', 'canvas']
@@ -326,8 +325,8 @@ def command_apps(options):
         modes = args.mode
 
     if 'plugin-debug' in modes:
-        warning('**DEPRICATED** plugin-debug has been depricated as a build mode. '
-            'Please use canvas-debug for debugging. Removing from list of modes.')
+        warning('**DEPRECATED** plugin-debug has been deprecated as a build mode. '
+                'Please use canvas-debug for debugging. Removing from list of modes.')
         modes = [m for m in modes if m != 'plugin-debug']
         if not modes:
             error("No remaining modes to build.")
@@ -382,7 +381,7 @@ def command_apps(options):
             app_assets = os.path.abspath(os.path.join(app_dir, 'assets'))
             if os.path.isdir(app_assets):
                 buildassets_cmd.extend(['--assets-path', app_assets])
-            buildassets_cmd.extend(['--assets-path', os.path.join(TURBULENZROOT, 'assets') ])
+            buildassets_cmd.extend(['--assets-path', os.path.join(TURBULENZROOT, 'assets')])
 
             if args.verbose:
                 buildassets_cmd.append('--verbose')
@@ -409,7 +408,7 @@ def command_apps(options):
 @command_requires_env
 @command_with_arguments
 def command_apps_clean(options):
-    command_apps([ '--clean' ] + (options or []))
+    command_apps(['--clean'] + (options or []))
 
 #######################################################################################################################
 

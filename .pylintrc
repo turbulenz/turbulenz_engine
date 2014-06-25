@@ -47,7 +47,7 @@ load-plugins=
 # R0903: Too few public methods (%r/%r)
 # C0111: Missing docstring
 # W0142: Used * or ** magic
-disable=C0111,I0011,W0613,E0611,R0903,W0142,R0801,W1401,C0303
+disable=C0111,I0011,W0613,E0611,R0903,W0142,R0801,W1401,C0326
 
 
 [REPORTS]
