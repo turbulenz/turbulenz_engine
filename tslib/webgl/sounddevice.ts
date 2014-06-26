@@ -1878,7 +1878,7 @@ class WebGLSoundDevice implements SoundDevice
         }
 
         audio.pause();
-        audio.src = "";
+        //audio.src = "";
 
         if (this._audioPool.length < 8)
         {
