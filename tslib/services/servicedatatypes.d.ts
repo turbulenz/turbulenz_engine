@@ -190,7 +190,7 @@ interface Transaction
 //
 interface TransactionPaymentParameters
 {
-    basket             : BasketItemList;
+    basket             : string;
     providerData       : string;
     providerSignature? : string;
 }
