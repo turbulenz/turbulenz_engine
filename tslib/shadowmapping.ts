@@ -286,7 +286,7 @@ class ShadowMapping
         var node = lightInstance.node;
         var matrix = node.world;
         var origin = lightInstance.lightOrigin;
-        var target, up, frustumWorld, p0, p1, p2;
+        var target, up, frustumWorld, p0, p1, p2, direction;
         var halfExtents = light.halfExtents;
 
         var shadowMapInfo = lightInstance.shadowMapInfo;
@@ -316,7 +316,6 @@ class ShadowMapping
             var nodeAt = md.m43At(matrix, this.tempV3At);
             var nodePos = md.m43Pos(matrix, this.tempV3Pos);
             var abs = Math.abs;
-            var direction;
 
             if (light.point)
             {
@@ -364,7 +363,6 @@ class ShadowMapping
         // could we put this on the lightInstance?
         this.lookAt(camera, target, up, origin);
         camera.updateViewMatrix();
-        var viewMatrix = camera.viewMatrix;
 
         if (!lightInstance.lightDepth || light.dynamic)
         {
@@ -425,18 +423,30 @@ class ShadowMapping
             }
             else // directional
             {
-                var m0 = viewMatrix[0];
-                var m1 = viewMatrix[1];
-                var m3 = viewMatrix[3];
-                var m4 = viewMatrix[4];
-                var m6 = viewMatrix[6];
-                var m7 = viewMatrix[7];
-                lightViewWindowX = ((m0 < 0 ? -m0 : m0) * halfExtents0 +
-                                    (m3 < 0 ? -m3 : m3) * halfExtents1 +
-                                    (m6 < 0 ? -m6 : m6) * halfExtents2);
-                lightViewWindowY = ((m1 < 0 ? -m1 : m1) * halfExtents0 +
-                                    (m4 < 0 ? -m4 : m4) * halfExtents1 +
-                                    (m7 < 0 ? -m7 : m7) * halfExtents2);
+                direction = light.direction;
+                var lightUp;
+                if (direction[0] < direction[2] && direction[1] < direction[2])
+                {
+                    lightUp = md.v3Build(0, 1, 0, this.tempV3AxisY);
+                }
+                else
+                {
+                    lightUp = md.v3Build(0, 0, 1, this.tempV3AxisY);
+                }
+                var xaxis = md.v3Cross(lightUp, direction, this.tempV3AxisX);
+                var yaxis = md.v3Cross(direction, xaxis, this.tempV3AxisY);
+                var x0 = xaxis[0];
+                var x1 = xaxis[1];
+                var x2 = xaxis[2];
+                var y0 = yaxis[0];
+                var y1 = yaxis[1];
+                var y2 = yaxis[2];
+                lightViewWindowX = ((x0 < 0 ? -x0 : x0) * halfExtents0 +
+                                    (x1 < 0 ? -x1 : x1) * halfExtents1 +
+                                    (x2 < 0 ? -x2 : x2) * halfExtents2);
+                lightViewWindowY = ((y0 < 0 ? -y0 : y0) * halfExtents0 +
+                                    (y1 < 0 ? -y1 : y1) * halfExtents1 +
+                                    (y2 < 0 ? -y2 : y2) * halfExtents2);
                 lightDepth = md.v3Length(md.v3Sub(target, origin));
             }
 
@@ -490,7 +500,7 @@ class ShadowMapping
                                                      occludersDrawArray,
                                                      occludersExtents);
             numOccluders = this._updateOccludersLimits(lightInstance,
-                                                       viewMatrix,
+                                                       camera.viewMatrix,
                                                        camera.frustumPlanes,
                                                        occludersDrawArray,
                                                        occludersExtents,
