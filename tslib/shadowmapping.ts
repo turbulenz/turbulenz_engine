@@ -696,7 +696,7 @@ class ShadowMapping
 
         if (0 < minLightDistance)
         {
-            var borderPadding = (3 / shadowMapSize);
+            var borderPadding = ((this.blurEnabled ? 3 : 1) / shadowMapSize);
             var minLightDistanceX = lightInstance.minLightDistanceX;
             var maxLightDistanceX = lightInstance.maxLightDistanceX;
             var minLightDistanceY = lightInstance.minLightDistanceY;
