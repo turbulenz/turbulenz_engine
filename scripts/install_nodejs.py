@@ -10,6 +10,9 @@ from gzip import GzipFile
 import StringIO
 import argparse
 
+NODEJS_VERSION = 'v0.10.29'
+TYPESCRIPT_VERSION = '1.0.1'
+
 NODEJS_DIST = 'http://nodejs.org/dist'
 PLATFORM = sys.platform
 
@@ -158,9 +161,9 @@ def typescript_install(version, prefix):
 #
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', default='v0.8.14')
+    parser.add_argument('--version', default=NODEJS_VERSION)
     parser.add_argument('--typescript', action='store_true', help='Install TypeScript compiler package')
-    parser.add_argument('--typescript-version', default='1.0.1')
+    parser.add_argument('--typescript-version', default=TYPESCRIPT_VERSION)
     parser.add_argument('-f', '--force', action='store_true')
     parser.add_argument('--allow-system-node', action='store_true',
                         help='Allow use of an existing node install')
