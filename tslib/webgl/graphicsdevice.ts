@@ -4988,7 +4988,7 @@ class WebGLDrawParameters implements DrawParameters
     // DrawParameters
     technique       : WebGLTechnique;
     primitive       : number;
-    indexBuffer     :WebGLIndexBuffer; // Just for declaration, it is a getter/setter
+    indexBuffer     : WebGLIndexBuffer; // Just for declaration, it is a getter/setter
     count           : number;
     firstIndex      : number;
     sortKey         : number;
@@ -5432,7 +5432,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     immediateVertexBuffer: WebGLVertexBuffer;
     immediatePrimitive: number;
-    immediateSemantics: WebGLSemantics;
+    immediateSemantics: number[];
 
     numFrames: number;
     previousFrameTime: number;
@@ -9414,7 +9414,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             'transient': true
         });
         gd.immediatePrimitive = -1;
-        gd.immediateSemantics = WebGLSemantics.create(gd, []);
+        gd.immediateSemantics = [];
 
         gd.fps = 0;
         gd.numFrames = 0;
