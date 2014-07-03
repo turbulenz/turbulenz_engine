@@ -78,8 +78,8 @@ def nodejs_install_binary_win32(version, filename, prefix):
             tardata = gzipfile.read()
         with tarfile.open(fileobj=StringIO.StringIO(tardata), mode='r') as tarobj:
             entries = tarobj.getmembers()
-            npmfiles = [ (e.name.replace(depsprefix, moduledir), e) for e in entries
-                            if e.isfile() and e.name.startswith(npmprefix) ]
+            npmfiles = [(e.name.replace(depsprefix, moduledir), e) for e in entries
+                        if e.isfile() and e.name.startswith(npmprefix)]
             for target, npmfile in npmfiles:
                 tarentry = tarobj.extractfile(npmfile)
                 if not os.path.exists(os.path.dirname(target)):
@@ -103,7 +103,7 @@ def nodejs_install_binary_unix(version, platform, prefix):
 
         download(url, filename)
 
-        excludes = [ 'ChangeLog', 'LICENSE', 'README*' ]
+        excludes = ['ChangeLog', 'LICENSE', 'README*']
         tar_cmd = 'tar -xzf %s --strip-components 1 -C %s %s' \
             % (filename, prefix, ' '.join(['--exclude "%s"' % e for e in excludes]))
 

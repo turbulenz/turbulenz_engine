@@ -36,37 +36,30 @@ class WebGLSound implements Sound
     compressed   : boolean;
 
     // WebGLSound
-    forceUncompress: boolean;
-    audioContext : any; // TODO
     buffer       : any; // TODO
     data         : any; // TODO
-    audio        : HTMLAudioElement;
     blob         : Blob;
+    url          : string;
+
+    // on prototype
+    forceUncompress: boolean;
+    audioContext : any; // TODO
+
 
     destroy()
     {
-        if (this.buffer)
-        {
-            this.buffer = null;
-        }
-        else if (this.audio)
-        {
-            var src = this.audio.src;
-            if (src.indexOf("blob:") === 0)
-            {
-                URL.revokeObjectURL(src);
-            }
-            this.audio = null;
-        }
+        this.buffer = null;
+        this.data = null;
         if (this.blob)
         {
+            URL.revokeObjectURL(this.url);
             this.blob = null;
         }
+        this.url = null;
     }
 
-    static audioLoaded(sound: WebGLSound, onload: any): void
+    static audioLoaded(sound: WebGLSound, audio: HTMLAudioElement): void
     {
-        var audio = sound.audio;
         sound.frequency = ((<any>audio).sampleRate || (<any>audio).mozSampleRate || 0);
         sound.channels = ((<any>audio).channels || (<any>audio).mozChannels || 0);
         sound.bitrate = (sound.frequency * sound.channels * 2 * 8);
@@ -80,38 +73,266 @@ class WebGLSound implements Sound
             {
                 sound.length = audio.buffered.end(0);
             }
+        }
+    }
 
-            if (onload)
+    private _readUint32(data: Uint8Array, n: number): number
+    {
+        /* tslint:disable:no-bitwise */
+        return (data[n + 0] |
+                (data[n + 1] << 8) |
+                (data[n + 2] << 16) |
+                (data[n + 3] << 24));
+        /* tslint:enable:no-bitwise */
+    }
+
+    private _readUint64(data: Uint8Array, n: number): number
+    {
+        /* tslint:disable:no-bitwise */
+        var low = (data[n + 0] |
+                   (data[n + 1] << 8) |
+                   (data[n + 2] << 16) |
+                   (data[n + 3] << 24));
+        var high = (data[n + 4] |
+                    (data[n + 5] << 8) |
+                    (data[n + 6] << 16) |
+                    (data[n + 7] << 24));
+        /* tslint:enable:no-bitwise */
+        return (high ?
+                ((high * 4294967296) + low) :
+                low);
+    }
+
+    private _findOggInfo(data: Uint8Array)
+    {
+        var end = (data.length - 15);
+        var n;
+        for (n = 4; n < end; n += 1)
+        {
+            // Look for 'vorbis' marker
+            if (data[n + 0] === 118 &&
+                data[n + 1] === 111 &&
+                data[n + 2] === 114 &&
+                data[n + 3] === 98 &&
+                data[n + 4] === 105 &&
+                data[n + 5] === 115 &&
+                data[n - 1] === 1)
             {
-                if (sound.length)
-                {
-                    onload(sound, 200);
-                }
-                else
-                {
-                    onload(null, 0);
-                }
-                onload = null;
+                this.channels = data[n + 10];
+                this.frequency = this._readUint32(data, (n + 11));
+                this.bitrate = this._readUint32(data, (n + 11 + 8));
+                break;
             }
+        }
+        if (this.frequency)
+        {
+            for (n = (data.length - 28); n >= 0; n -= 1)
+            {
+                // Look for 'OggS' marker
+                if (data[n + 0] === 79 &&
+                    data[n + 1] === 103 &&
+                    data[n + 2] === 103 &&
+                    data[n + 3] === 83)
+                {
+                    var numSamples = this._readUint64(data, (n + 6));
+                    if (numSamples)
+                    {
+                        this.length = (numSamples / this.frequency);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private _syncsafe(value: number): number
+    {
+        var ret = 0;
+        /* tslint:disable:no-bitwise */
+        ret |= ((value & 0x7F000000) >> 24);
+        ret |= ((value & 0x007F0000) >>  9);
+        ret |= ((value & 0x00007F00) <<  6);
+        ret |= ((value & 0x0000007F) << 21);
+        /* tslint:enable:no-bitwise */
+        return ret;
+    }
+
+    static MP3BitRates = [0, 32000, 40000, 48000, 56000, 64000, 80000, 96000,
+                          112000, 128000, 160000, 192000, 224000, 256000, 320000, 0];
+    static MP3Frequencies = [44100, 48000, 32000, 0];
+
+    private _findMp3Info(data: Uint8Array)
+    {
+        var end = data.length;
+        var n;
+
+        // Ignore ID3v1 'TAG' from the end
+        n = (end - 128);
+        if (data[n + 0] === 84 &&
+            data[n + 1] === 65 &&
+            data[n + 2] === 71)
+        {
+            end -= 128;
+        }
+
+        // Ignore ID3v1 'TAG+' from the end
+        n = (end - 227);
+        if (data[n + 0] === 84 &&
+            data[n + 1] === 65 &&
+            data[n + 2] === 71 &&
+            data[n + 3] === 43)
+        {
+            end -= 227;
+        }
+
+        // Ignore ID3v2 'ID3' from the beginning
+        n = 0;
+        if (data[n + 0] === 73 &&
+            data[n + 1] === 68 &&
+            data[n + 2] === 51)
+        {
+            var size = this._readUint32(data, 6);
+            size = this._syncsafe(size);
+            n += 10 + size;
+        }
+
+        // Check that it is a MPEG 1 Layer 3
+        /* tslint:disable:no-bitwise */
+        if (data[n + 0] === 0xff &&
+            (data[n + 1] >> 5) === 0x7 &&
+            ((data[n + 1] >> 3) & 0x3) === 0x3 &&
+            ((data[n + 1] >> 1) & 0x3) === 0x1)
+        {
+            var bitrate = WebGLSound.MP3BitRates[(data[n + 2] >> 4)];
+            var frequency = WebGLSound.MP3Frequencies[((data[n + 2] >> 2) & 0x3)];
+            this.bitrate = bitrate;
+            this.frequency = frequency;
+            this.length = (end - n) / (bitrate / 8);
+            this.channels = ((data[n + 3] >> 6) === 0x3 ? 1 : 2);
+        }
+        /* tslint:enable:no-bitwise */
+    }
+
+    private _initializeFromData(data: any, extension: string, onload: { (sound: Sound, status: number): void; }): void
+    {
+        if (typeof Blob !== "undefined" &&
+            data instanceof Blob)
+        {
+            debug.assert(typeof URL !== "undefined" && URL.createObjectURL);
+            if (data.type === 'audio/x-mpg')
+            {
+                data = data.slice(0, data.size, 'audio/mpeg');
+            }
+            this.blob = data;
+            this.url = URL.createObjectURL(data);
         }
         else
         {
-            // Make sure the data is actually loaded
-            var forceLoading = function forceLoadingFn()
+            var dataArray;
+            if (data instanceof Uint8Array)
             {
-                audio.pause();
-                audio.removeEventListener('play', forceLoading, false);
-                audio.volume = 1;
+                dataArray = data;
+            }
+            else
+            {
+                dataArray = new Uint8Array(data);
+            }
 
-                if (onload)
+            // Check extension based on data
+            if (typeof Blob !== "undefined" && typeof URL !== "undefined" && URL.createObjectURL)
+            {
+                var dataBlob;
+                if (dataArray[0] === 79 &&
+                    dataArray[1] === 103 &&
+                    dataArray[2] === 103 &&
+                    dataArray[3] === 83)
                 {
-                    onload(sound, 200);
-                    onload = null;
+                    this._findOggInfo(dataArray);
+                    extension = 'ogg';
+                    dataBlob = new Blob([dataArray], {type: "audio/ogg"});
                 }
-            };
-            audio.addEventListener('play', forceLoading, false);
-            audio.volume = 0;
-            audio.play();
+                else if (dataArray[0] === 82 &&
+                         dataArray[1] === 73 &&
+                         dataArray[2] === 70 &&
+                         dataArray[3] === 70)
+                {
+                    extension = 'wav';
+                    dataBlob = new Blob([dataArray], {type: "audio/wav"});
+                }
+                else
+                {
+                    if (extension === 'm4a' ||
+                        extension === 'mp4')
+                    {
+                        dataBlob = new Blob([dataArray], {type: "audio/mp4"});
+                    }
+                    else if (extension === 'aac')
+                    {
+                        dataBlob = new Blob([dataArray], {type: "audio/aac"});
+                    }
+                    else
+                    {
+                        // Assume it's an mp3?
+                        this._findMp3Info(dataArray);
+                        extension = 'mp3';
+                        dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
+                    }
+                }
+                debug.assert(dataArray.length === dataBlob.size,
+                             "Blob constructor does not support typed arrays.");
+                this.blob = dataBlob;
+                this.url = URL.createObjectURL(dataBlob);
+            }
+            else
+            {
+                var url;
+                if (dataArray[0] === 79 &&
+                        dataArray[1] === 103 &&
+                        dataArray[2] === 103 &&
+                        dataArray[3] === 83)
+                {
+                    this._findOggInfo(dataArray);
+                    extension = 'ogg';
+                    url = 'data:audio/ogg;base64,';
+                }
+                else if (dataArray[0] === 82 &&
+                        dataArray[1] === 73 &&
+                        dataArray[2] === 70 &&
+                        dataArray[3] === 70)
+                {
+                    extension = 'wav';
+                    url = 'data:audio/wav;base64,';
+                }
+                else
+                {
+                    if (extension === 'm4a' ||
+                            extension === 'mp4')
+                    {
+                        url = 'data:audio/mp4;base64,';
+                    }
+                    else if (extension === 'aac')
+                    {
+                        url = 'data:audio/aac;base64,';
+                    }
+                    else
+                    {
+                        // Assume it's an mp3?
+                        this._findMp3Info(dataArray);
+                        extension = 'mp3';
+                        url = 'data:audio/mpeg;base64,';
+                    }
+                }
+
+                // Mangle data into a data URI
+                this.url = url +
+                           (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(
+                            dataArray);
+            }
+        }
+
+        if (onload)
+        {
+            onload(this, 200);
         }
     }
 
@@ -127,6 +348,10 @@ class WebGLSound implements Sound
         sound.bitrate = 0;
         sound.length = 0;
         sound.compressed = (!params.uncompress);
+        sound.buffer = null;
+        sound.data = null;
+        sound.blob = null;
+        sound.url = null;
 
         var onload = params.onload;
         var data = params.data;
@@ -260,7 +485,6 @@ class WebGLSound implements Sound
                     };
                     xhr.open("GET", soundPath, true);
                     xhr.responseType = "arraybuffer";
-                    xhr.setRequestHeader("Content-Type", "text/plain");
                     xhr.send(null);
                 }
 
@@ -333,154 +557,24 @@ class WebGLSound implements Sound
         }
         else
         {
-            var audio;
             if (soundPath)
             {
                 var extension = soundPath.slice(-3);
-
-                audio = new Audio();
-                audio.preload = 'auto';
-                audio.autobuffer = true;
-
-                audio.onerror = function loadingSoundFailedFn(/* e */)
+                if (!sd.supportedExtensions[extension])
                 {
                     if (onload)
                     {
                         onload(null, undefined);
-                        onload = null;
                     }
-                };
-
-                sound.audio = audio;
-
-                var checkLoaded = function checkLoadedFn() {
-                    if (3 <= audio.readyState)
-                    {
-                        WebGLSound.audioLoaded(sound, onload);
-                        return true;
-                    }
-                    return false;
-                };
+                    return null;
+                }
 
                 if (data)
                 {
-                    if (typeof Blob !== "undefined" &&
-                        data instanceof Blob)
-                    {
-                        debug.assert(typeof URL !== "undefined" && URL.createObjectURL);
-                        sound.blob = data;
-                        soundPath = URL.createObjectURL(data);
-                    }
-                    else
-                    {
-                        var dataArray;
-                        if (data instanceof Uint8Array)
-                        {
-                            dataArray = data;
-                        }
-                        else
-                        {
-                            dataArray = new Uint8Array(data);
-                        }
-
-                        // Check extension based on data
-                        if (typeof Blob !== "undefined" && typeof URL !== "undefined" && URL.createObjectURL)
-                        {
-                            var dataBlob;
-                            if (dataArray[0] === 79 &&
-                                dataArray[1] === 103 &&
-                                dataArray[2] === 103 &&
-                                dataArray[3] === 83)
-                            {
-                                extension = 'ogg';
-                                dataBlob = new Blob([dataArray], {type: "audio/ogg"});
-                            }
-                            else if (dataArray[0] === 82 &&
-                                     dataArray[1] === 73 &&
-                                     dataArray[2] === 70 &&
-                                     dataArray[3] === 70)
-                            {
-                                extension = 'wav';
-                                dataBlob = new Blob([dataArray], {type: "audio/wav"});
-                            }
-                            else
-                            {
-                                if (extension === 'm4a' ||
-                                    extension === 'mp4')
-                                {
-                                    dataBlob = new Blob([dataArray], {type: "audio/mp4"});
-                                }
-                                else if (extension === 'aac')
-                                {
-                                    dataBlob = new Blob([dataArray], {type: "audio/aac"});
-                                }
-                                else
-                                {
-                                    // Assume it's an mp3?
-                                    extension = 'mp3';
-                                    dataBlob = new Blob([dataArray], {type: "audio/mpeg"});
-                                }
-                            }
-                            debug.assert(dataArray.length === dataBlob.size,
-                                        "Blob constructor does not support typed arrays.");
-                            sound.blob = dataBlob;
-                            soundPath = URL.createObjectURL(dataBlob);
-                        }
-                        else
-                        {
-                            if (dataArray[0] === 79 &&
-                                dataArray[1] === 103 &&
-                                dataArray[2] === 103 &&
-                                dataArray[3] === 83)
-                            {
-                                extension = 'ogg';
-                                soundPath = 'data:audio/ogg;base64,';
-                            }
-                            else if (dataArray[0] === 82 &&
-                                     dataArray[1] === 73 &&
-                                     dataArray[2] === 70 &&
-                                     dataArray[3] === 70)
-                            {
-                                extension = 'wav';
-                                soundPath = 'data:audio/wav;base64,';
-                            }
-                            else
-                            {
-                                if (extension === 'm4a' ||
-                                    extension === 'mp4')
-                                {
-                                    soundPath = 'data:audio/mp4;base64,';
-                                }
-                                else if (extension === 'aac')
-                                {
-                                    soundPath = 'data:audio/aac;base64,';
-                                }
-                                else
-                                {
-                                    // Assume it's an mp3?
-                                    extension = 'mp3';
-                                    soundPath = 'data:audio/mpeg;base64,';
-                                }
-                            }
-
-                            // Mangle data into a data URI
-                            soundPath = soundPath +
-                                (<WebGLTurbulenzEngine>TurbulenzEngine).base64Encode(
-                                        dataArray);
-                        }
-                    }
+                    sound._initializeFromData(data, extension, onload);
                 }
-                else if (typeof URL !== "undefined" && URL.createObjectURL)
+                else
                 {
-                    if (!sd.supportedExtensions[extension])
-                    {
-                        if (onload)
-                        {
-                            onload(null, undefined);
-                        }
-                        return null;
-                    }
-
                     xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = function () {
                         if (xhr.readyState === 4)
@@ -500,7 +594,9 @@ class WebGLSound implements Sound
                                 // before the message is sent (weird!).
                                 // In order to address this we fail any completely empty responses.
                                 // Hopefully, nobody will get a valid response with no headers and no body!
-                                if (xhr.getAllResponseHeaders() === "" && !xhr.response)
+                                if (xhr.getAllResponseHeaders() === "" &&
+                                    !xhr.response &&
+                                    !xhr.responseText)
                                 {
                                     if (onload)
                                     {
@@ -511,14 +607,31 @@ class WebGLSound implements Sound
                                 {
                                     if (xhrStatus === 200 || xhrStatus === 0)
                                     {
-                                        sound.blob = xhr.response;
-                                        if (sound.blob.type === 'audio/x-mpg')
+                                        var data;
+                                        if (xhr.responseType === "blob" ||
+                                            xhr.responseType === "arraybuffer")
                                         {
-                                            sound.blob = sound.blob.slice(0, sound.blob.size, 'audio/mpeg');
+                                            data = xhr.response;
                                         }
-                                        audio.src = URL.createObjectURL(sound.blob);
-
-                                        sd.addLoadingSound(checkLoaded);
+                                        else if ((<any>xhr).mozResponseArrayBuffer)
+                                        {
+                                            data = (<any>xhr).mozResponseArrayBuffer;
+                                        }
+                                        else
+                                        {
+                                            /* tslint:disable:no-bitwise */
+                                            var text = xhr.responseText;
+                                            var numChars = text.length;
+                                            data = [];
+                                            data.length = numChars;
+                                            for (var i = 0; i < numChars; i += 1)
+                                            {
+                                                data[i] = (text.charCodeAt(i) & 0xff);
+                                            }
+                                            /* tslint:enable:no-bitwise */
+                                        }
+                                        debug.assert(data);
+                                        sound._initializeFromData(data, extension, onload);
                                     }
                                     else if (onload)
                                     {
@@ -531,24 +644,21 @@ class WebGLSound implements Sound
                         }
                     };
                     xhr.open('GET', soundPath, true);
-                    xhr.responseType = 'blob';
-                    xhr.send();
-
-                    return sound;
-                }
-
-                if (!sd.supportedExtensions[extension])
-                {
-                    if (onload)
+                    if (typeof xhr.responseType === "string" ||
+                        (xhr.hasOwnProperty && xhr.hasOwnProperty("responseType")))
                     {
-                        onload(null, undefined);
+                        xhr.responseType = "arraybuffer";
                     }
-                    return null;
+                    else if (xhr.overrideMimeType)
+                    {
+                        xhr.overrideMimeType("text/plain; charset=x-user-defined");
+                    }
+                    else
+                    {
+                        xhr.setRequestHeader("Content-Type", "text/plain; charset=x-user-defined");
+                    }
+                    xhr.send();
                 }
-
-                audio.src = soundPath;
-
-                sd.addLoadingSound(checkLoaded);
 
                 return sound;
             }
@@ -556,35 +666,22 @@ class WebGLSound implements Sound
             {
                 if (data)
                 {
-                    audio = new Audio();
+                    numSamples = data.length;
+                    numChannels = (params.channels || 1);
+                    samplerRate = params.frequency;
 
-                    if (audio.mozSetup)
+                    sound.data = data;
+                    sound.frequency = samplerRate;
+                    sound.channels = numChannels;
+                    sound.bitrate = (samplerRate * numChannels * 2 * 8);
+                    sound.length = (numSamples / (samplerRate * numChannels));
+
+                    if (onload)
                     {
-                        numSamples = data.length;
-                        numChannels = (params.channels || 1);
-                        samplerRate = params.frequency;
-
-                        audio.mozSetup(numChannels, samplerRate);
-
-                        sound.data = data;
-                        sound.frequency = samplerRate;
-                        sound.channels = numChannels;
-                        sound.bitrate = (samplerRate * numChannels * 2 * 8);
-                        sound.length = (numSamples / (samplerRate * numChannels));
-
-                        sound.audio = audio;
-
-                        if (onload)
-                        {
-                            onload(sound, 200);
-                        }
-
-                        return sound;
+                        onload(sound, 200);
                     }
-                    else
-                    {
-                        audio = null;
-                    }
+
+                    return sound;
                 }
             }
         }
@@ -653,83 +750,94 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
 
         this.sound = <WebGLSound>sound;
 
-        var soundAudio = (<WebGLSound>sound).audio;
-        if (soundAudio)
+        var audioContext = this.audioContext;
+
+        if ((<WebGLSound>sound).buffer)
         {
-            if ((<WebGLSound>sound).data)
+            var bufferNode = this._createBufferNode(<WebGLSound>sound);
+
+            if (0 < seek)
             {
-                soundAudio = new Audio();
-                soundAudio.mozSetup(sound.channels, sound.frequency);
+                var buffer = (<WebGLSound>sound).buffer;
+                if (bufferNode.loop)
+                {
+                    bufferNode.start(0, seek, buffer.duration);
+                }
+                else
+                {
+                    bufferNode.start(0, seek, (buffer.duration - seek));
+                }
+                this.playStart = (audioContext.currentTime - seek);
             }
             else
             {
-                soundAudio = <HTMLAudioElement>(soundAudio.cloneNode(true));
+                bufferNode.start(0);
+                this.playStart = audioContext.currentTime;
+            }
+        }
+        else
+        {
+            var audioItem: WebGLAudioPoolItem = this.sd._allocateAudioElement();
+            var audio = audioItem.audio;
+
+            if ((<WebGLSound>sound).data)
+            {
+                audio.mozSetup(sound.channels, sound.frequency);
             }
 
-            this.audio = soundAudio;
+            this.audio = audio;
 
-            soundAudio.loop = this._looping;
+            audio.loop = this._looping;
 
-            soundAudio.addEventListener('ended', this.loopAudio, false);
+            audio.addEventListener('ended', this.loopAudio, false);
+
+            var mediaNode = audioItem.mediaNode;
+            if (mediaNode)
+            {
+                mediaNode.connect(this._gainNode);
+            }
+            this.mediaNode = mediaNode;
+
+            if (this.updateAudioVolume)
+            {
+                this.updateAudioVolume();
+            }
+
+            if ((<WebGLSound>sound).data)
+            {
+                (<any>audio).mozWriteAudio((<WebGLSound>sound).data);
+            }
+            else
+            {
+                audio.src = (<WebGLSound>sound).url;
+
+                audio.play();
+
+                if (sound.length === 0)
+                {
+                    var checkLoaded = function checkLoadedFn() {
+                        if (3 <= audio.readyState)
+                        {
+                            WebGLSound.audioLoaded(<WebGLSound>sound, audio);
+                            return true;
+                        }
+                        return false;
+                    };
+
+                    this.sd.addLoadingSound(checkLoaded);
+                }
+            }
 
             if (0.05 < seek)
             {
                 try
                 {
-                    soundAudio.currentTime = seek;
+                    audio.currentTime = seek;
                 }
                 catch (e)
                 {
                     // It seems there is no reliable way of seeking
                 }
-            }
-        }
-
-        var audioContext = this.audioContext;
-        if (audioContext)
-        {
-            if (soundAudio)
-            {
-                this._createMediaNode(<WebGLSound>sound, soundAudio);
-            }
-            else
-            {
-                var bufferNode = this._createBufferNode(<WebGLSound>sound);
-
-                if (0 < seek)
-                {
-                    var buffer = (<WebGLSound>sound).buffer;
-                    if (bufferNode.loop)
-                    {
-                        bufferNode.start(0, seek, buffer.duration);
-                    }
-                    else
-                    {
-                        bufferNode.start(0, seek, (buffer.duration - seek));
-                    }
-                    this.playStart = (audioContext.currentTime - seek);
-                }
-                else
-                {
-                    bufferNode.start(0);
-                    this.playStart = audioContext.currentTime;
-                }
-            }
-        }
-
-        if (soundAudio)
-        {
-            if ((<WebGLSound>sound).data)
-            {
-                (<any>soundAudio).mozWriteAudio((<WebGLSound>sound).data);
-            }
-            else
-            {
-                if (this.updateAudioVolume)
-                {
-                    this.updateAudioVolume();
-                }
-                soundAudio.play();
             }
         }
 
@@ -750,17 +858,10 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
         var audio = this.audio;
         if (audio)
         {
-            this.audio = null;
-
-            var mediaNode = this.mediaNode;
-            if (mediaNode)
-            {
-                this.mediaNode = null;
-                mediaNode.disconnect();
-            }
-
-            audio.pause();
             audio.removeEventListener('ended', this.loopAudio, false);
+            this.sd._releaseAudioElement(this.audio, this.mediaNode);
+            this.audio = null;
+            this.mediaNode = null;
         }
         else
         {
@@ -1088,14 +1189,6 @@ class WebGLSoundGlobalSource implements SoundGlobalSource
         }
 
         return true;
-    }
-
-    _createMediaNode(sound: WebGLSound, audio: HTMLAudioElement): void
-    {
-        var mediaNode = this.audioContext.createMediaElementSource(audio);
-        mediaNode.connect(this._gainNode);
-
-        this.mediaNode = mediaNode;
     }
 
     static create(sd: WebGLSoundDevice, id: number,
@@ -1452,6 +1545,12 @@ interface WebGLSoundDeviceExtensions
     wav: boolean;
 }
 
+interface WebGLAudioPoolItem
+{
+    audio: HTMLAudioElement;
+    mediaNode: any; // window.AudioContext.createMediaElementSource()
+}
+
 //
 // WebGLSoundDevice
 //
@@ -1495,6 +1594,8 @@ class WebGLSoundDevice implements SoundDevice
     lastSourceID         : number;
     loopingSupported     : boolean;
     supportedExtensions  : WebGLSoundDeviceExtensions;
+    _audioPool: WebGLAudioPoolItem[];
+
 
     update: { (): void; };
 
@@ -1746,6 +1847,48 @@ class WebGLSoundDevice implements SoundDevice
         return this.supportedExtensions[extension];
     }
 
+    _allocateAudioElement(): WebGLAudioPoolItem
+    {
+        if (this._audioPool.length)
+        {
+            return this._audioPool.pop();
+        }
+        else
+        {
+            var audio = new Audio();
+            audio.preload = 'auto';
+            audio.autobuffer = true;
+
+            var mediaNode = (this.audioContext ?
+                             this.audioContext.createMediaElementSource(audio) :
+                             null);
+
+            return <WebGLAudioPoolItem>{
+                audio: audio,
+                mediaNode: mediaNode
+            };
+        }
+    }
+
+    _releaseAudioElement(audio: HTMLAudioElement, mediaNode: any): void
+    {
+        if (mediaNode)
+        {
+            mediaNode.disconnect();
+        }
+
+        audio.pause();
+        //audio.src = "";
+
+        if (this._audioPool.length < 8)
+        {
+            this._audioPool.push(<WebGLAudioPoolItem>{
+                audio: audio,
+                mediaNode: mediaNode
+            });
+        }
+    }
+
     destroy()
     {
         var loadingInterval = this.loadingInterval;
@@ -1834,8 +1977,6 @@ class WebGLSoundDevice implements SoundDevice
                 return null;
             }
 
-            // HTML5 + WebAudio just does not work on Android or iOS
-            // and it seems to crash Chrome and perform poorly on Firefox...
             WebGLSound.prototype.forceUncompress = !audioContext.createMediaElementSource;
 
             WebGLSound.prototype.audioContext = audioContext;
@@ -2261,7 +2402,22 @@ class WebGLSoundDevice implements SoundDevice
         }
         sd.supportedExtensions = supportedExtensions;
 
-        audio = null;
+        sd._audioPool = [];
+        // Reuse audio element
+        if (sd.audioContext)
+        {
+            sd._audioPool.push({
+                audio: audio,
+                mediaNode: sd.audioContext.createMediaElementSource(audio)
+            });
+        }
+        else
+        {
+            sd._audioPool.push({
+                audio: audio,
+                mediaNode: null
+            });
+        }
 
         return sd;
     }

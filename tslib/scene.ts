@@ -4299,31 +4299,21 @@ class Scene
                 }
                 var indicesPerVertex = (maxOffset + 1);
 
-                if (0 < maxOffset)
+                var vertexSourcesCompare = function (vertexSourceA, vertexSourceB)
                 {
-                    var vertexSourcesCompare = function (vertexSourceA, vertexSourceB)
+                    var semanticA = vertexSourceA.semantic;
+                    if (typeof semanticA === 'string')
                     {
-                        if (vertexSourceA.offset === vertexSourceB.offset)
-                        {
-                            var semanticA = vertexSourceA.semantic;
-                            if (typeof semanticA === 'string')
-                            {
-                                semanticA = gd['SEMANTIC_' + semanticA];
-                            }
-                            var semanticB = vertexSourceB.semantic;
-                            if (typeof semanticB === 'string')
-                            {
-                                semanticB = gd['SEMANTIC_' + semanticB];
-                            }
-                            return (semanticA - semanticB);
-                        }
-                        else
-                        {
-                            return (vertexSourceA.offset - vertexSourceB.offset);
-                        }
-                    };
-                    vertexSources.sort(vertexSourcesCompare);
-                }
+                        semanticA = gd['SEMANTIC_' + semanticA];
+                    }
+                    var semanticB = vertexSourceB.semantic;
+                    if (typeof semanticB === 'string')
+                    {
+                        semanticB = gd['SEMANTIC_' + semanticB];
+                    }
+                    return (semanticA - semanticB);
+                };
+                vertexSources.sort(vertexSourcesCompare);
 
                 var numVertexSources = vertexSources.length;
                 var semanticsNames = [];

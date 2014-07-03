@@ -4917,22 +4917,23 @@ class WebGLTechniqueParameters implements TechniqueParameters
 {
     [paramName: string]: any;
 
-    static create(params: any): TechniqueParameters
+    constructor(params: any)
     {
-        var techniqueParameters = new WebGLTechniqueParameters();
-
         if (params)
         {
             for (var p in params)
             {
                 if (params.hasOwnProperty(p))
                 {
-                    techniqueParameters[p] = params[p];
+                    this[p] = params[p];
                 }
             }
         }
+    }
 
-        return techniqueParameters;
+    static create(params: any): TechniqueParameters
+    {
+        return new WebGLTechniqueParameters(params);
     }
 }
 
@@ -5462,7 +5463,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     immediateVertexBuffer: WebGLVertexBuffer;
     immediatePrimitive: number;
-    immediateSemantics: WebGLSemantics;
+    immediateSemantics: number[];
 
     numFrames: number;
     previousFrameTime: number;
@@ -9444,7 +9445,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             'transient': true
         });
         gd.immediatePrimitive = -1;
-        gd.immediateSemantics = WebGLSemantics.create(gd, []);
+        gd.immediateSemantics = [];
 
         gd.fps = 0;
         gd.numFrames = 0;
