@@ -2753,27 +2753,37 @@ class WebGLSemantics implements Semantics
     length: number;
     [index: number]: any;
 
-    static create(gd: WebGLGraphicsDevice, attributes: any[]): WebGLSemantics
+    constructor(gd: WebGLGraphicsDevice, semantics: any[])
     {
-        var semantics = new WebGLSemantics();
-
-        var numAttributes = attributes.length;
-        semantics.length = numAttributes;
-        for (var i = 0; i < numAttributes; i += 1)
+        var numSemantics = semantics.length;
+        this.length = numSemantics;
+        for (var i = 0; i < numSemantics; i += 1)
         {
-            var attribute = attributes[i];
-            if (typeof attribute === "string")
+            var semantic = semantics[i];
+            if (typeof semantic === "string")
             {
-                semantics[i] = gd['SEMANTIC_' + attribute];
+                this[i] = gd['SEMANTIC_' + semantic];
             }
             else
             {
-                semantics[i] = attribute;
+                this[i] = semantic;
             }
         }
-
-        return semantics;
     }
+
+    static create(gd: WebGLGraphicsDevice, semantics: any[]): WebGLSemantics
+    {
+        return new WebGLSemantics(gd, semantics);
+    }
+}
+
+//
+// WebGLSemanticOffset
+//
+interface WebGLSemanticOffset
+{
+    vertexBuffer: WebGLVertexBuffer;
+    offset: number;
 }
 
 //
@@ -3414,23 +3424,25 @@ class WebGLVertexBuffer implements VertexBuffer
         return scaledValues;
     }
 
-    bindAttributes(numAttributes, attributes, offset)
+    bindAttributes(semantics: WebGLSemantics, offset: number): number
     {
-        var gd = this.gd;
-        var gl = gd.gl;
+        var numAttributes = Math.min(semantics.length, this.numAttributes);
         var vertexAttributes = this.attributes;
         var stride = this.strideInBytes;
+        var gd = this.gd;
+        var gl = gd.gl;
         var attributeMask = 0;
         for (var n = 0; n < numAttributes; n += 1)
         {
-            var vertexAttribute = vertexAttributes[n];
-            var attribute = attributes[n];
+            var semantic = semantics[n];
 
             /* tslint:disable:no-bitwise */
-            attributeMask |= (1 << attribute);
+            attributeMask |= (1 << semantic);
             /* tslint:enable:no-bitwise */
 
-            gl.vertexAttribPointer(attribute,
+            var vertexAttribute = vertexAttributes[n];
+
+            gl.vertexAttribPointer(semantic,
                                    vertexAttribute.numComponents,
                                    vertexAttribute.format,
                                    vertexAttribute.normalized,
@@ -3446,16 +3458,59 @@ class WebGLVertexBuffer implements VertexBuffer
         return attributeMask;
     }
 
-    setAttributes(attributes: WebGLGraphicsDeviceVertexFormat[])
+    bindAttributesCached(semantics: WebGLSemantics, offset: number): number
+    {
+        var numAttributes = Math.min(semantics.length, this.numAttributes);
+        var vertexAttributes = this.attributes;
+        var stride = this.strideInBytes;
+        var gd = this.gd;
+        var gl = gd.gl;
+        var semanticsOffsets = gd._semanticsOffsets;
+        var attributeMask = 0;
+        for (var n = 0; n < numAttributes; n += 1)
+        {
+            var semantic = semantics[n];
+
+            /* tslint:disable:no-bitwise */
+            attributeMask |= (1 << semantic);
+            /* tslint:enable:no-bitwise */
+
+            var vertexAttribute = vertexAttributes[n];
+
+            var semanticsOffset = semanticsOffsets[semantic];
+            if (semanticsOffset.vertexBuffer !== this ||
+                semanticsOffset.offset !== offset)
+            {
+                semanticsOffset.vertexBuffer = this;
+                semanticsOffset.offset = offset;
+
+                gl.vertexAttribPointer(semantic,
+                                       vertexAttribute.numComponents,
+                                       vertexAttribute.format,
+                                       vertexAttribute.normalized,
+                                       stride,
+                                       offset);
+
+                if (debug)
+                {
+                    gd.metrics.vertexAttributesChanges += 1;
+                }
+            }
+
+            offset += vertexAttribute.stride;
+        }
+        return attributeMask;
+    }
+
+    setAttributes(attributes: WebGLGraphicsDeviceVertexFormat[]): number
     {
         var gd = this.gd;
 
         var numAttributes = attributes.length;
         this.numAttributes = numAttributes;
-
         this.attributes = [];
-        var stride = 0, numValuesPerVertex = 0, hasSingleFormat = true;
 
+        var stride = 0, numValuesPerVertex = 0, hasSingleFormat = true;
         for (var i = 0; i < numAttributes; i += 1)
         {
             var format = attributes[i];
@@ -3475,6 +3530,7 @@ class WebGLVertexBuffer implements VertexBuffer
                 }
             }
         }
+
         this.strideInBytes = stride;
         this.stride = numValuesPerVertex;
         this.hasSingleFormat = hasSingleFormat;
@@ -3869,20 +3925,20 @@ class WebGLPass implements Pass
             for (s = 0; s < numSemantics; s += 1)
             {
                 var semanticName = semanticNames[s];
-                var attribute = gd['SEMANTIC_' + semanticName];
-                if (attribute !== undefined)
+                var semantic = gd['SEMANTIC_' + semanticName];
+                if (semantic !== undefined)
                 {
                     /* tslint:disable:no-bitwise */
-                    semanticsMask |= (1 << attribute);
+                    semanticsMask |= (1 << semantic);
                     /* tslint:enable:no-bitwise */
                     if (0 === semanticName.indexOf("ATTR"))
                     {
-                        gl.bindAttribLocation(glProgram, attribute, semanticName);
+                        gl.bindAttribLocation(glProgram, semantic, semanticName);
                     }
                     else
                     {
                         var attributeName = WebGLPass.semanticToAttr[semanticName];
-                        gl.bindAttribLocation(glProgram, attribute, attributeName);
+                        gl.bindAttribLocation(glProgram, semantic, attributeName);
                     }
                 }
             }
@@ -5461,6 +5517,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     bindedVertexBuffer: WebGLVertexBuffer;
     activeRenderTarget: WebGLRenderTarget;
 
+    _semanticsOffsets: WebGLSemanticOffset[];
+
     immediateVertexBuffer: WebGLVertexBuffer;
     immediatePrimitive: number;
     immediateSemantics: number[];
@@ -6035,18 +6093,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         this.bindVertexBuffer((<WebGLVertexBuffer>vertexBuffer).glBuffer);
 
-        var attributes = semantics;
-        var numAttributes = attributes.length;
-        if (numAttributes > (<WebGLVertexBuffer>vertexBuffer).numAttributes)
-        {
-            numAttributes = (<WebGLVertexBuffer>vertexBuffer).numAttributes;
-        }
-
         /* tslint:disable:no-bitwise */
         this.attributeMask |=
-            (<WebGLVertexBuffer>vertexBuffer).bindAttributes(numAttributes,
-                                                             attributes,
-                                                             offset);
+            (<WebGLVertexBuffer>vertexBuffer).bindAttributesCached((<WebGLSemantics>semantics), offset);
         /* tslint:enable:no-bitwise */
     }
 
@@ -6316,7 +6365,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var techniqueParameters = null;
         var v = 0;
         var vaoMatch = false;
-        var vertexBuffer = null;
+        var attributeMask = 0;
+        var vertexBuffer: WebGLVertexBuffer = null;
+        var semantics: WebGLSemantics = null;
+        var offset = 0;
         var pass: WebGLPass = null;
         var passParameters: { [name: string]: PassParameter } = null;
         var indexFormat = 0;
@@ -6387,20 +6439,41 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                     vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
 
-                    this.bindedVertexBuffer = null;
-                    this.attributeMask = 0;
-
+                    attributeMask = 0;
                     for (v = 0; v < endStreams; v += 3)
                     {
                         vertexBuffer = drawParameters[v];
                         if (vertexBuffer)
                         {
-                            this.setStream(vertexBuffer, drawParameters[v + 1], drawParameters[v + 2]);
+                            semantics = drawParameters[v + 1];
+
+                            offset = drawParameters[v + 2];
+                            if (offset)
+                            {
+                                offset *= vertexBuffer.strideInBytes;
+                            }
+                            else
+                            {
+                                offset = 0;
+                            }
+
+                            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.glBuffer);
+
+                            /* tslint:disable:no-bitwise */
+                            attributeMask |= vertexBuffer.bindAttributes(semantics, offset);
+                            /* tslint:enable:no-bitwise */
+
+                            if (debug)
+                            {
+                                this.metrics.vertexBufferChanges += 1;
+                            }
                         }
                     }
 
-                    this.clientStateMask = (~this.attributeMask) & 0xf;
-                    this.enableClientState(this.attributeMask);
+                    /* tslint:disable:no-bitwise */
+                    this.clientStateMask = (~attributeMask) & 0xf;
+                    /* tslint:enable:no-bitwise */
+                    this.enableClientState(attributeMask);
 
                     if (indexBuffer)
                     {
@@ -6511,10 +6584,17 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         vertexArrayObjectExtension.bindVertexArrayOES(null);
 
+        // Reset vertex state
         this.activeIndexBuffer = null;
         this.bindedVertexBuffer = null;
         this.clientStateMask = 0;
         this.attributeMask = 0;
+
+        var semanticsOffsets = this._semanticsOffsets;
+        for (n = 0; n < 16; n += 1)
+        {
+            semanticsOffsets[n].vertexBuffer = null;
+        }
     }
 
 
@@ -6552,7 +6632,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var techniqueParameters = null;
         var v = 0;
         var streamsMatch = false;
-        var vertexBuffer = null;
+        var vertexBuffer: WebGLVertexBuffer = null;
         var passes: WebGLPass[] = null;
         var p = null;
         var pass: WebGLPass = null;
@@ -6870,17 +6950,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             var n;
             var immediateSemantics = this.immediateSemantics;
-            var attributes = semantics;
-            var numAttributes = attributes.length;
+            var numAttributes = semantics.length;
             immediateSemantics.length = numAttributes;
             for (n = 0; n < numAttributes; n += 1)
             {
-                var attribute = attributes[n];
-                if (typeof attribute === "string")
+                var semantic = semantics[n];
+                if (typeof semantic === "string")
                 {
-                    attribute = this['SEMANTIC_' + attribute];
+                    semantic = this['SEMANTIC_' + semantic];
                 }
-                immediateSemantics[n] = attribute;
+                immediateSemantics[n] = semantic;
             }
 
             var immediateVertexBuffer = this.immediateVertexBuffer;
@@ -6922,6 +7001,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
             var vertexAttributes = immediateVertexBuffer.attributes;
 
+            var semanticsOffsets = this._semanticsOffsets;
+
             var semantics = this.immediateSemantics;
             var numSemantics = semantics.length;
             var deltaAttributeMask = 0;
@@ -6929,13 +7010,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 var vertexAttribute = vertexAttributes[n];
 
-                var attribute = semantics[n];
+                var semantic = semantics[n];
 
                 /* tslint:disable:no-bitwise */
-                deltaAttributeMask |= (1 << attribute);
+                deltaAttributeMask |= (1 << semantic);
                 /* tslint:enable:no-bitwise */
 
-                gl.vertexAttribPointer(attribute,
+                // Clear semantics offset cache because this VertexBuffer changes formats
+                semanticsOffsets[semantic].vertexBuffer = null;
+
+                gl.vertexAttribPointer(semantic,
                                        vertexAttribute.numComponents,
                                        vertexAttribute.format,
                                        vertexAttribute.normalized,
@@ -7214,6 +7298,13 @@ class WebGLGraphicsDevice implements GraphicsDevice
             techniqueParametersArray[n] = null;
         }
 
+        // Reset semantics offsets cache
+        var semanticsOffsets = this._semanticsOffsets;
+        for (n = 0; n < 16; n += 1)
+        {
+            semanticsOffsets[n].vertexBuffer = null;
+        }
+
         this.checkFullScreen();
     }
 
@@ -7245,9 +7336,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return n;
     }
 
-    createSemantics(attributes: any[]): WebGLSemantics
+    createSemantics(semantics: any[]): WebGLSemantics
     {
-        return WebGLSemantics.create(this, attributes);
+        return WebGLSemantics.create(this, semantics);
     }
 
     createVertexBuffer(params: VertexBufferParameters): WebGLVertexBuffer
@@ -9437,6 +9528,15 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd.activeIndexBuffer = null;
         gd.bindedVertexBuffer = null;
         gd.activeRenderTarget = null;
+
+        gd._semanticsOffsets = [];
+        for (n = 0; n < 16; n += 1)
+        {
+            gd._semanticsOffsets[n] = <WebGLSemanticOffset>{
+                vertexBuffer: null,
+                offset: 0
+            };
+        }
 
         gd.immediateVertexBuffer = <WebGLVertexBuffer>gd.createVertexBuffer({
             numVertices: (256 * 1024 / 16),
