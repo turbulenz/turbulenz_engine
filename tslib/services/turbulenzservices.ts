@@ -248,7 +248,7 @@ class ServiceRequester
             {
                 var responseObj = JSON.parse(responseJSON);
                 var statusObj = responseObj.data;
-                if (statusObj.invalidGameSession)
+                if (statusObj && statusObj.invalidGameSession)
                 {
                     if (TurbulenzServices.onGameSessionClosed)
                     {
