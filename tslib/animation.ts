@@ -957,10 +957,17 @@ class InterpolatorController implements ControllerBaseClass
         i.output = output;
         i.outputChannels = { };
         var numJoints = hierarchy.numNodes;
+        var buffer = new Float32Array(numJoints * (4 + 3));
+        var offset = 0;
         for (var j = 0; j < numJoints; j += 1)
         {
-            output[j] = {};
+            output[j] = {
+                rotation: buffer.subarray(offset, (offset + 4)),
+                translation: buffer.subarray((offset + 4), (offset + 4 + 3))
+            };
+            offset += (4 + 3);
         }
+
         i.rate = 1.0;
         i.currentTime = 0.0;
         i.looping = false;
@@ -1483,10 +1490,6 @@ class BlendController implements ControllerBaseClass
         for (var j = 0; j < numJoints; j += 1)
         {
             var joint = output[j];
-            if (!joint)
-            {
-                output[j] = joint = {};
-            }
             var j1 = startOutput[j];
             var j2 = endOutput[j];
 
@@ -1643,7 +1646,20 @@ class BlendController implements ControllerBaseClass
         c.mathDevice = md;
         c.bounds = { center: md.v3BuildZero(), halfExtent: md.v3BuildZero() };
 
-        c.output = [];
+        var numJoints = c.getHierarchy().numNodes;
+        var output = [];
+        c.output = output;
+        var buffer = new Float32Array(numJoints * (4 + 3));
+        var offset = 0;
+        for (var j = 0; j < numJoints; j += 1)
+        {
+            output[j] = {
+                rotation: buffer.subarray(offset, (offset + 4)),
+                translation: buffer.subarray((offset + 4), (offset + 4 + 3))
+            };
+            offset += (4 + 3);
+        }
+
         c.blendDelta = 0;
         c.dirty = true;
         c.dirtyBounds = true;
