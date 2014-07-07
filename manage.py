@@ -90,7 +90,7 @@ def command_env():
 
 @command_no_arguments
 def command_env_clean():
-    rmdir(os.path.join(TURBULENZROOT, ENV))
+    rmdir(os.path.join(TURBULENZROOT, ENV), False)
 
 #######################################################################################################################
 
@@ -357,9 +357,9 @@ def command_apps(options):
                 if 0 != call(cmd, shell=True):
                     return 1
 
-            rmdir('%s/_build' % app_dir)
-            rmdir('%s/staticmax' % app_dir)
-            rm('%s/mapping_table.json' % app_dir)
+            rmdir('%s/_build' % app_dir, False)
+            rmdir('%s/staticmax' % app_dir, False)
+            rm('%s/mapping_table.json' % app_dir, False)
 
         elif args.refcheck:
             make_cmd = "%s -C %s jslib TS_REFCHECK=1 -j %s" \
@@ -440,8 +440,8 @@ def command_docs(args):
 
 @command_no_arguments
 def command_docs_clean():
-    rmdir(os.path.join(TURBULENZROOT, 'build', 'docs', 'doctrees'))
-    rmdir(os.path.join(TURBULENZROOT, 'build', 'docs'))
+    rmdir(os.path.join(TURBULENZROOT, 'build', 'docs', 'doctrees'), False)
+    rmdir(os.path.join(TURBULENZROOT, 'build', 'docs'), False)
 
 @command_requires_env
 @command_no_arguments
