@@ -6945,6 +6945,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     beginDraw(primitive: number, numVertices: number, formats: any[],
               semantics: Semantics): WebGLVertexWriteIterator
     {
+        debug.assert("number" === typeof primitive);
         this.immediatePrimitive = primitive;
         if (numVertices)
         {

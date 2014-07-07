@@ -1239,12 +1239,12 @@ class Draw2D
     begin(blendMode?: string, sortMode?: string, nomipmaps?: boolean)
     {
         // Check sort mode is well defined (or undefined signifying default)
-        debug.assert(("undefined" === typeof sortMode) ||
-                     (sortMode in this.sort), "Bad sort mode");
+        debug.assert((!sortMode) || (sortMode in this.sort),
+                     "Bad sort mode");
 
         // Check blend mode is well defined (or undefined signifying default)
-        debug.assert(("undefined" === typeof blendMode) ||
-                     (blendMode in this.blend), "Bad blend mode");
+        debug.assert((!blendMode) || (blendMode in this.blend),
+                     "Bad blend mode");
 
         //if there are render states left in the stack
         //and begin has been called without an end

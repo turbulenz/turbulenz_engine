@@ -730,7 +730,7 @@ WebGLMathDevice =
     {
         debug.assert(debug.isMathType(a));
         debug.assert(debug.isMathType(b));
-        debug.assert(debug.isNumber(precision));
+        debug.assert(undefined === precision || debug.isNumber(precision));
         return this._vmath.v4Equal(a, b, precision);
     },
 
@@ -1524,7 +1524,7 @@ WebGLMathDevice =
     {
         debug.assert(debug.isMathType(q1));
         debug.assert(debug.isMathType(q2));
-        debug.assert(debug.isNumber(precision));
+        debug.assert(undefined === precision || debug.isNumber(precision));
         return this._vmath.quatIsSimilar(q1, q2, precision);
     },
 
