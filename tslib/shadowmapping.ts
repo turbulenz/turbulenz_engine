@@ -887,14 +887,13 @@ class ShadowMapping
 
         /* tslint:disable:no-string-literal */
         var shadowMapTechniqueParameters = this.techniqueParameters;
-        shadowMapTechniqueParameters['viewTranspose'] = md.m43Transpose(viewMatrix,
-                                                        shadowMapTechniqueParameters['viewTranspose']);
-        shadowMapTechniqueParameters['shadowProjectionTranspose'] = md.m44Transpose(camera.projectionMatrix,
+        shadowMapTechniqueParameters['shadowProjectionTranspose'] = md.m44Transpose(shadowProjection,
                                                             shadowMapTechniqueParameters['shadowProjectionTranspose']);
-        shadowMapTechniqueParameters['shadowDepth'] =
-            md.v4Build(0, 0, -maxDepthReciprocal,
-                       -minLightDistance * maxDepthReciprocal,
-                       shadowMapTechniqueParameters['shadowDepth']);
+        shadowMapTechniqueParameters['shadowDepth'] = md.v4Build(-viewMatrix[2] * maxDepthReciprocal,
+                                                                 -viewMatrix[5] * maxDepthReciprocal,
+                                                                 -viewMatrix[8] * maxDepthReciprocal,
+                                                                 (-viewMatrix[11] - minLightDistance) * maxDepthReciprocal,
+                                                                 shadowMapTechniqueParameters['shadowDepth']);
         /* tslint:enable:no-string-literal */
 
         gd.drawArray(occludersDrawArray, [shadowMapTechniqueParameters], 0);

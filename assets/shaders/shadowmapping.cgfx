@@ -6,7 +6,6 @@
 // Uniform variables
 //
 float4x3 world;
-float3x4 viewTranspose;
 float4x4 shadowProjectionTranspose;
 float4 shadowDepth;
 
@@ -73,24 +72,17 @@ void vp(in float3 INPosition : POSITION,
         out float4 OUTPosition : POSITION,
         out float  OUTDepth    : TEXCOORD0)
 {
-    float4 worldPosition = float4(((INPosition.x * world[0]) +
-                                   (INPosition.y * world[1]) +
-                                   (INPosition.z * world[2]) +
-                                   world[3]),
-                                  1.0);
+    float3 worldPosition = float3((INPosition.x * world[0]) +
+                                  (INPosition.y * world[1]) +
+                                  (INPosition.z * world[2]) +
+                                  world[3]);
 
-    float4 viewPosition;
-    viewPosition.x = dot(worldPosition, viewTranspose[0]);
-    viewPosition.y = dot(worldPosition, viewTranspose[1]);
-    viewPosition.z = dot(worldPosition, viewTranspose[2]);
-    viewPosition.w = 1.0;
+    OUTPosition.x = dot(worldPosition, shadowProjectionTranspose[0].xyz) + shadowProjectionTranspose[0].w;
+    OUTPosition.y = dot(worldPosition, shadowProjectionTranspose[1].xyz) + shadowProjectionTranspose[1].w;
+    OUTPosition.z = dot(worldPosition, shadowProjectionTranspose[2].xyz) + shadowProjectionTranspose[2].w;
+    OUTPosition.w = dot(worldPosition, shadowProjectionTranspose[3].xyz) + shadowProjectionTranspose[3].w;
 
-    OUTPosition.x = dot(viewPosition, shadowProjectionTranspose[0]);
-    OUTPosition.y = dot(viewPosition, shadowProjectionTranspose[1]);
-    OUTPosition.z = dot(viewPosition, shadowProjectionTranspose[2]);
-    OUTPosition.w = dot(viewPosition, shadowProjectionTranspose[3]);
-
-    OUTDepth = ((shadowDepth.z * viewPosition.z) + shadowDepth.w);
+    OUTDepth = (dot(worldPosition, shadowDepth.xyz) + shadowDepth.w);
 }
 
 void vp_skinned(in float3 INPosition : POSITION,
@@ -101,30 +93,22 @@ void vp_skinned(in float3 INPosition : POSITION,
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
-    float4 skinTempPosition = float4(INPosition, 1.0);
     float3 Position;
-    Position.x = dot(skinTempPosition, skinMatrix[0]);
-    Position.y = dot(skinTempPosition, skinMatrix[1]);
-    Position.z = dot(skinTempPosition, skinMatrix[2]);
+    Position.x = dot(INPosition, skinMatrix[0].xyz) + skinMatrix[0].w;
+    Position.y = dot(INPosition, skinMatrix[1].xyz) + skinMatrix[1].w;
+    Position.z = dot(INPosition, skinMatrix[2].xyz) + skinMatrix[2].w;
 
-    float4 worldPosition = float4(((Position.x * world[0]) +
-                                   (Position.y * world[1]) +
-                                   (Position.z * world[2]) +
-                                   world[3]),
-                                  1.0);
+    float3 worldPosition = float3((Position.x * world[0]) +
+                                  (Position.y * world[1]) +
+                                  (Position.z * world[2]) +
+                                  world[3]);
 
-    float4 viewPosition;
-    viewPosition.x = dot(worldPosition, viewTranspose[0]);
-    viewPosition.y = dot(worldPosition, viewTranspose[1]);
-    viewPosition.z = dot(worldPosition, viewTranspose[2]);
-    viewPosition.w = 1.0;
+    OUTPosition.x = dot(worldPosition, shadowProjectionTranspose[0].xyz) + shadowProjectionTranspose[0].w;
+    OUTPosition.y = dot(worldPosition, shadowProjectionTranspose[1].xyz) + shadowProjectionTranspose[1].w;
+    OUTPosition.z = dot(worldPosition, shadowProjectionTranspose[2].xyz) + shadowProjectionTranspose[2].w;
+    OUTPosition.w = dot(worldPosition, shadowProjectionTranspose[3].xyz) + shadowProjectionTranspose[3].w;
 
-    OUTPosition.x = dot(viewPosition, shadowProjectionTranspose[0]);
-    OUTPosition.y = dot(viewPosition, shadowProjectionTranspose[1]);
-    OUTPosition.z = dot(viewPosition, shadowProjectionTranspose[2]);
-    OUTPosition.w = dot(viewPosition, shadowProjectionTranspose[3]);
-
-    OUTDepth = ((shadowDepth.z * viewPosition.z) + shadowDepth.w);
+    OUTDepth = (dot(worldPosition, shadowDepth.xyz) + shadowDepth.w);
 }
 
 void vp_blur(in float4 INPosition : POSITION,
