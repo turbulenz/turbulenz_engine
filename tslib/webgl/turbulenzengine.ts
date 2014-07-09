@@ -914,55 +914,67 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                 }
                 else
                 {
-                    osIndex = userAgent.indexOf('Linux');
+                    osIndex = userAgent.indexOf('fireos');
                     if (osIndex !== -1)
                     {
-                        systemInfo.osName = 'Linux';
-                        if (navigator.platform.indexOf('64') !== -1)
+                        systemInfo.osName = 'Fire OS';
+                        if (navigator.platform.indexOf('arm'))
                         {
-                            systemInfo.architecture = 'x86_64';
+                            systemInfo.architecture = 'arm';
                         }
-                        else if (navigator.platform.indexOf('x86') !== -1)
-                        {
-                            systemInfo.architecture = 'x86';
-                        }
-                        if (looksLikeNetbook())
+
+                        if (-1 !== userAgent.indexOf('Kindle Fire') ||
+                            -1 !== userAgent.indexOf('KFOT') ||
+                            -1 !== userAgent.indexOf('KFTT') ||
+                            -1 !== userAgent.indexOf('KFJWI') ||
+                            -1 !== userAgent.indexOf('KFJWA') ||
+                            -1 !== userAgent.indexOf('KFSOWI') ||
+                            -1 !== userAgent.indexOf('KFTHWI') ||
+                            -1 !== userAgent.indexOf('KFTHWA') ||
+                            -1 !== userAgent.indexOf('KFAPWI') ||
+                            -1 !== userAgent.indexOf('KFAPWA'))
                         {
                             systemInfo.platformProfile = "tablet";
-                            if (debug)
-                            {
-                                debug.log("Setting platformProfile to 'tablet'");
-                            }
+                        }
+                        else if (-1 !== userAgent.indexOf('Fire Phone'))
+                        {
+                            // TODO: update when user agent device name is known
+                            systemInfo.platformProfile = "smartphone";
+                        }
+                        else
+                        {
+                            // assume something else, most likely Fire TV
                         }
                     }
                     else
                     {
-                        osIndex = userAgent.indexOf('Android');
-                        if (-1 !== osIndex)
+                        osIndex = userAgent.indexOf('Linux');
+                        if (osIndex !== -1)
                         {
-                            systemInfo.osName = 'Android';
-                            if (navigator.platform.indexOf('arm'))
+                            systemInfo.osName = 'Linux';
+                            if (navigator.platform.indexOf('64') !== -1)
                             {
-                                systemInfo.architecture = 'arm';
+                                systemInfo.architecture = 'x86_64';
                             }
-                            else if (navigator.platform.indexOf('x86'))
+                            else if (navigator.platform.indexOf('x86') !== -1)
                             {
                                 systemInfo.architecture = 'x86';
                             }
-                            if (-1 !== userAgent.indexOf('Mobile'))
-                            {
-                                systemInfo.platformProfile = "smartphone";
-                            }
-                            else
+                            if (looksLikeNetbook())
                             {
                                 systemInfo.platformProfile = "tablet";
+                                if (debug)
+                                {
+                                    debug.log("Setting platformProfile to 'tablet'");
+                                }
                             }
                         }
                         else
                         {
-                            if (-1 !== userAgent.indexOf('CrOS'))
+                            osIndex = userAgent.indexOf('Android');
+                            if (-1 !== osIndex)
                             {
-                                systemInfo.osName = 'Chrome OS';
+                                systemInfo.osName = 'Android';
                                 if (navigator.platform.indexOf('arm'))
                                 {
                                     systemInfo.architecture = 'arm';
@@ -971,28 +983,51 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                                 {
                                     systemInfo.architecture = 'x86';
                                 }
-                                if (systemInfo.architecture === 'arm' ||
-                                    looksLikeNetbook())
+                                if (-1 !== userAgent.indexOf('Mobile'))
+                                {
+                                    systemInfo.platformProfile = "smartphone";
+                                }
+                                else
                                 {
                                     systemInfo.platformProfile = "tablet";
-                                    if (debug)
-                                    {
-                                        debug.log("Setting platformProfile to 'tablet'");
-                                    }
                                 }
                             }
-                            else if (-1 !== userAgent.indexOf("iPhone") ||
-                                     -1 !== userAgent.indexOf("iPod"))
+                            else
                             {
-                                systemInfo.osName = 'iOS';
-                                systemInfo.architecture = 'arm';
-                                systemInfo.platformProfile = 'smartphone';
-                            }
-                            else if (-1 !== userAgent.indexOf("iPad"))
-                            {
-                                systemInfo.osName = 'iOS';
-                                systemInfo.architecture = 'arm';
-                                systemInfo.platformProfile = 'tablet';
+                                if (-1 !== userAgent.indexOf('CrOS'))
+                                {
+                                    systemInfo.osName = 'Chrome OS';
+                                    if (navigator.platform.indexOf('arm'))
+                                    {
+                                        systemInfo.architecture = 'arm';
+                                    }
+                                    else if (navigator.platform.indexOf('x86'))
+                                    {
+                                        systemInfo.architecture = 'x86';
+                                    }
+                                    if (systemInfo.architecture === 'arm' ||
+                                        looksLikeNetbook())
+                                    {
+                                        systemInfo.platformProfile = "tablet";
+                                        if (debug)
+                                        {
+                                            debug.log("Setting platformProfile to 'tablet'");
+                                        }
+                                    }
+                                }
+                                else if (-1 !== userAgent.indexOf("iPhone") ||
+                                         -1 !== userAgent.indexOf("iPod"))
+                                {
+                                    systemInfo.osName = 'iOS';
+                                    systemInfo.architecture = 'arm';
+                                    systemInfo.platformProfile = 'smartphone';
+                                }
+                                else if (-1 !== userAgent.indexOf("iPad"))
+                                {
+                                    systemInfo.osName = 'iOS';
+                                    systemInfo.architecture = 'arm';
+                                    systemInfo.platformProfile = 'tablet';
+                                }
                             }
                         }
                     }
