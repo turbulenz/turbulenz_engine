@@ -550,6 +550,38 @@ class ShadowMapping
         camera.updateViewMatrix();
     }
 
+    updateTechniqueParameters(cameraMatrix, lightInstance): void
+    {
+        var md = this.md;
+
+        var shadowMapInfo = lightInstance.shadowMapInfo;
+        if (!shadowMapInfo)
+        {
+            return;
+        }
+
+        var camera = shadowMapInfo.camera;
+        var viewMatrix = camera.viewMatrix;
+        var shadowProjection = camera.viewProjectionMatrix;
+
+        var distanceScale = (1.0 / 65536);
+        var minLightDistance = (lightInstance.minLightDistance - distanceScale);
+        var maxLightDistance = (lightInstance.maxLightDistance + distanceScale);
+        var maxDepthReciprocal = (1.0 / (maxLightDistance - minLightDistance));
+
+        var techniqueParameters = lightInstance.techniqueParameters;
+        techniqueParameters.shadowProjection = md.m43MulM44(cameraMatrix,
+                                                            shadowProjection,
+                                                            techniqueParameters.shadowProjection);
+
+        var viewToShadowMatrix = md.m43Mul(cameraMatrix, viewMatrix, this.tempMatrix43);
+        techniqueParameters.shadowDepth = md.v4Build(-viewToShadowMatrix[2] * maxDepthReciprocal,
+                                                     -viewToShadowMatrix[5] * maxDepthReciprocal,
+                                                     -viewToShadowMatrix[8] * maxDepthReciprocal,
+                                                     (-viewToShadowMatrix[11] - minLightDistance) * maxDepthReciprocal,
+                                                     techniqueParameters.shadowDepth);
+    }
+
     drawShadowMap(cameraMatrix, minExtentsHigh, lightInstance)
     {
         var md = this.md;
@@ -892,7 +924,8 @@ class ShadowMapping
         shadowMapTechniqueParameters['shadowDepth'] = md.v4Build(-viewMatrix[2] * maxDepthReciprocal,
                                                                  -viewMatrix[5] * maxDepthReciprocal,
                                                                  -viewMatrix[8] * maxDepthReciprocal,
-                                                                 (-viewMatrix[11] - minLightDistance) * maxDepthReciprocal,
+                                                                 (-viewMatrix[11] - minLightDistance) *
+                                                                    maxDepthReciprocal,
                                                                  shadowMapTechniqueParameters['shadowDepth']);
         /* tslint:enable:no-string-literal */
 
