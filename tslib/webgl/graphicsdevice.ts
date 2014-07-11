@@ -6016,6 +6016,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     setTechnique(technique)
     {
+        debug.assert(technique instanceof WebGLTechnique,
+                     "argument must be a Technique");
+
         var activeTechnique = this.activeTechnique;
         if (activeTechnique !== technique)
         {
