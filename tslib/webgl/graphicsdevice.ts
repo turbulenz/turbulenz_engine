@@ -5127,6 +5127,7 @@ class WebGLDrawParameters implements DrawParameters
 
     setTechniqueParameters(indx, techniqueParameters)
     {
+        debug.assert(indx < 8, "indx out of range");
         if (indx < 8)
         {
             indx += (16 * 3);
@@ -5155,6 +5156,7 @@ class WebGLDrawParameters implements DrawParameters
 
     setVertexBuffer(indx, vertexBuffer)
     {
+        debug.assert(indx < 16, "index out of range");
         if (indx < 16)
         {
             indx *= 3;
@@ -5187,6 +5189,12 @@ class WebGLDrawParameters implements DrawParameters
 
     setSemantics(indx, semantics)
     {
+        debug.assert(indx < 16, "index parameter out of range");
+        debug.assert(
+            semantics === null || semantics === undefined ||
+                semantics instanceof WebGLSemantics,
+            "semantics must be created with GraphicsDevice.createSemantics");
+
         if (indx < 16)
         {
             if (this[(indx * 3) + 1] !== semantics)
@@ -5199,6 +5207,7 @@ class WebGLDrawParameters implements DrawParameters
 
     setOffset(indx, offset)
     {
+        debug.assert(indx < 16, "index parameter out of range");
         if (indx < 16)
         {
             if (this[(indx * 3) + 2] !== offset)
@@ -6946,6 +6955,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
               semantics: Semantics): WebGLVertexWriteIterator
     {
         debug.assert("number" === typeof primitive);
+        debug.assert("number" === typeof numVertices);
+        debug.assert(
+            semantics instanceof WebGLSemantics,
+            "semantics must be created with GraphicsDevice.createSemantics");
+
         this.immediatePrimitive = primitive;
         if (numVertices)
         {
