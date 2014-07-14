@@ -220,6 +220,7 @@ class ShadowMapping
         this.shadowMapsLow = [];
 
         this.destroyBuffers();
+
         this.depthBufferLow = gd.createRenderBuffer({
                 width: sizeLow,
                 height: sizeLow,
@@ -232,39 +233,52 @@ class ShadowMapping
                 format: "D16"
             });
 
-        this.blurTextureLow = gd.createTexture({
-                name: "blur-low",
-                width: sizeLow,
-                height: sizeLow,
-                format: "R5G6B5",
-                mipmaps: false,
-                renderable: true
-            });
+        if (this.blurEnabled)
+        {
+            this.blurTextureLow = gd.createTexture({
+                    name: "blur-low",
+                    width: sizeLow,
+                    height: sizeLow,
+                    format: "R5G6B5",
+                    mipmaps: false,
+                    renderable: true
+                });
 
-        this.blurTextureHigh = gd.createTexture({
-                name: "blur-high",
-                width: sizeHigh,
-                height: sizeHigh,
-                format: "R5G6B5",
-                mipmaps: false,
-                renderable: true
-            });
+            this.blurTextureHigh = gd.createTexture({
+                    name: "blur-high",
+                    width: sizeHigh,
+                    height: sizeHigh,
+                    format: "R5G6B5",
+                    mipmaps: false,
+                    renderable: true
+                });
+        }
 
         if (this.depthBufferLow &&
             this.depthBufferHigh &&
-            this.blurTextureLow &&
-            this.blurTextureHigh)
+            (!this.blurEnabled ||
+             (this.blurTextureLow &&
+              this.blurTextureHigh)))
         {
-            this.blurRenderTargetLow = gd.createRenderTarget({
-                    colorTexture0: this.blurTextureLow
-                });
+            if (this.blurEnabled)
+            {
+                this.blurRenderTargetLow = gd.createRenderTarget({
+                        colorTexture0: this.blurTextureLow
+                    });
 
-            this.blurRenderTargetHigh = gd.createRenderTarget({
-                    colorTexture0: this.blurTextureHigh
-                });
+                this.blurRenderTargetHigh = gd.createRenderTarget({
+                        colorTexture0: this.blurTextureHigh
+                    });
 
-            if (this.blurRenderTargetLow &&
-                this.blurRenderTargetHigh)
+                if (this.blurRenderTargetLow &&
+                    this.blurRenderTargetHigh)
+                {
+                    this.sizeLow = sizeLow;
+                    this.sizeHigh = sizeHigh;
+                    return true;
+                }
+            }
+            else
             {
                 this.sizeLow = sizeLow;
                 this.sizeHigh = sizeHigh;
@@ -1334,7 +1348,7 @@ class ShadowMapping
 
     // Constructor function
     static create(gd, md, shaderManager, effectsManager, sizeLow,
-                  sizeHigh): ShadowMapping
+                  sizeHigh, disableBlur?): ShadowMapping
     {
         var shadowMapping = new ShadowMapping();
 
@@ -1377,18 +1391,25 @@ class ShadowMapping
         shadowMapping.shadowMapsLow = [];
         shadowMapping.shadowMapsHigh = [];
 
+        if (disableBlur)
+        {
+            shadowMapping.blurEnabled = false;
+        }
+        else
+        {
+            var precision = gd.maxSupported("FRAGMENT_SHADER_PRECISION");
+            if (precision && // Just in case the query is not supported
+                precision < 16)
+            {
+                shadowMapping.blurEnabled = false;
+            }
+        }
+
         sizeLow = sizeLow || shadowMapping.defaultSizeLow;
         sizeHigh = sizeHigh || shadowMapping.defaultSizeHigh;
         shadowMapping.updateBuffers(sizeLow, sizeHigh);
 
         shadowMapping.occludersExtents = [];
-
-        var precision = gd.maxSupported("FRAGMENT_SHADER_PRECISION");
-        if (precision && // Just in case the query is not supported
-            precision < 16)
-        {
-            shadowMapping.blurEnabled = false;
-        }
 
         return shadowMapping;
     }
