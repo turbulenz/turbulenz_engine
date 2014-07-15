@@ -45,6 +45,19 @@ class WebGLSound implements Sound
     forceUncompress: boolean;
     audioContext : any; // TODO
 
+    constructor(params: SoundParameters)
+    {
+        this.name = (params.name || params.src);
+        this.frequency = 0;
+        this.channels = 0;
+        this.bitrate = 0;
+        this.length = 0;
+        this.compressed = true;
+        this.buffer = null;
+        this.data = null;
+        this.blob = null;
+        this.url = null;
+    }
 
     destroy()
     {
@@ -338,26 +351,16 @@ class WebGLSound implements Sound
 
     static create(sd: WebGLSoundDevice, params: SoundParameters): WebGLSound
     {
-        var sound = new WebGLSound();
+        var sound = new WebGLSound(params);
 
         var soundPath = params.src;
-
-        sound.name = (params.name || soundPath);
-        sound.frequency = 0;
-        sound.channels = 0;
-        sound.bitrate = 0;
-        sound.length = 0;
-        sound.compressed = (!params.uncompress);
-        sound.buffer = null;
-        sound.data = null;
-        sound.blob = null;
-        sound.url = null;
-
         var onload = params.onload;
         var data = params.data;
         var uncompress = (sound.forceUncompress ||
                           params.uncompress ||
                           (!soundPath && data));
+
+        sound.compressed = (!uncompress);
 
         var numSamples, numChannels, samplerRate;
 
