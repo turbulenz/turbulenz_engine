@@ -2624,6 +2624,10 @@ class Physics2DPulleyConstraint extends Physics2DConstraint
     }
 }
 
+// Point these methods at specific methods on the base class.
+Physics2DPulleyConstraint.prototype._clearCache =
+    Physics2DConstraint.prototype.clearCache;
+
 // =========================================================================
 //
 // Motor Constraint
@@ -2815,6 +2819,8 @@ Physics2DMotorConstraint.prototype._wakeConnected =
     Physics2DConstraint.prototype.twoBodyWakeConnected;
 Physics2DMotorConstraint.prototype._sleepComputation =
     Physics2DConstraint.prototype.twoBodySleepComputation;
+Physics2DMotorConstraint.prototype._clearCache =
+    Physics2DConstraint.prototype.clearCache;
 
 // =========================================================================
 //
@@ -3361,6 +3367,8 @@ Physics2DLineConstraint.prototype._wakeConnected =
     Physics2DConstraint.prototype.twoBodyWakeConnected;
 Physics2DLineConstraint.prototype._sleepComputation =
     Physics2DConstraint.prototype.twoBodySleepComputation;
+Physics2DLineConstraint.prototype._clearCache =
+    Physics2DConstraint.prototype.clearCache2;
 
 // =========================================================================
 //
@@ -3833,6 +3841,8 @@ Physics2DDistanceConstraint.prototype._wakeConnected =
     Physics2DConstraint.prototype.twoBodyWakeConnected;
 Physics2DDistanceConstraint.prototype._sleepComputation =
     Physics2DConstraint.prototype.twoBodySleepComputation;
+Physics2DDistanceConstraint.prototype._clearCache =
+    Physics2DConstraint.prototype.clearCache;
 
 // =========================================================================
 //
@@ -4200,6 +4210,8 @@ Physics2DAngleConstraint.prototype._wakeConnected =
     Physics2DConstraint.prototype.twoBodyWakeConnected;
 Physics2DAngleConstraint.prototype._sleepComputation =
     Physics2DConstraint.prototype.twoBodySleepComputation;
+Physics2DAngleConstraint.prototype._clearCache =
+    Physics2DConstraint.prototype.clearCache;
 
 // =========================================================================
 //
@@ -4632,6 +4644,8 @@ Physics2DWeldConstraint.prototype._wakeConnected =
     Physics2DConstraint.prototype.twoBodyWakeConnected;
 Physics2DWeldConstraint.prototype._sleepComputation =
     Physics2DConstraint.prototype.twoBodySleepComputation;
+Physics2DWeldConstraint.prototype._clearCache =
+    Physics2DConstraint.prototype.clearCache3;
 
 // =========================================================================
 //
@@ -5005,9 +5019,8 @@ Physics2DPointConstraint.prototype._wakeConnected =
     Physics2DConstraint.prototype.twoBodyWakeConnected;
 Physics2DPointConstraint.prototype._sleepComputation =
     Physics2DConstraint.prototype.twoBodySleepComputation;
-
-    // =======================================================
-
+Physics2DPointConstraint.prototype._clearCache =
+    Physics2DConstraint.prototype.clearCache2;
 
 // =========================================================================
 //
