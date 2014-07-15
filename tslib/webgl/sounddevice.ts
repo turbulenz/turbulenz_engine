@@ -355,12 +355,15 @@ class WebGLSound implements Sound
 
         var onload = params.onload;
         var data = params.data;
+        var uncompress = (sound.forceUncompress ||
+                          params.uncompress ||
+                          (!soundPath && data));
 
         var numSamples, numChannels, samplerRate;
 
         var audioContext = sd.audioContext;
         var xhr: XMLHttpRequest;
-        if (audioContext && (sound.forceUncompress || params.uncompress))
+        if (audioContext && uncompress)
         {
             var buffer;
             if (soundPath)
