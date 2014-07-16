@@ -3455,7 +3455,7 @@ class WebGLVertexBuffer implements VertexBuffer
         }
         if (debug)
         {
-            gd._metrics.vertexAttributesChanges += numAttributes;
+            gd.metrics.vertexAttributesChanges += numAttributes;
         }
         return attributeMask;
     }
@@ -3495,7 +3495,7 @@ class WebGLVertexBuffer implements VertexBuffer
 
                 if (debug)
                 {
-                    gd._metrics.vertexAttributesChanges += 1;
+                    gd.metrics.vertexAttributesChanges += 1;
                 }
             }
 
@@ -4120,7 +4120,7 @@ class WebGLTechnique implements Technique
 
         if (debug)
         {
-            gd._metrics.techniqueChanges += 1;
+            gd.metrics.techniqueChanges += 1;
         }
     }
 
@@ -5377,19 +5377,8 @@ interface WebGLGraphicsDeviceState
     program                 : WebGLProgram;
 };
 
-interface WebGLMetrics
+interface WebGLMetrics extends GraphicsDeviceMetrics
 {
-    renderTargetChanges: number;
-    textureChanges: number;
-    renderStateChanges: number;
-    vertexAttributesChanges: number;
-    vertexBufferChanges: number;
-    indexBufferChanges: number;
-    vertexArrayObjectChanges: number;
-    techniqueChanges: number;
-    drawCalls: number;
-    primitives: number;
-
     addPrimitives: { (primitive: number, count: number) : void; };
 };
 
@@ -5523,6 +5512,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     desktopHeight                          : number;
     fps                                    : number;
 
+    metrics                                : WebGLMetrics;
+
     // These are specific to WebGLGraphicsDevice
 
     /* private */ _gl                            : WebGLRenderingContext;
@@ -5563,8 +5554,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
     private _vertexArrayObjectExtension          : any;
 
     private _supportedVideoExtensions            : TZWebGLVideoSupportedExtensions;
-
-    /* private */ _metrics                       : WebGLMetrics;
 
     /* private */ _counters                      : WebGLCreationCounters;
 
@@ -5613,7 +5602,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
             if (debug)
             {
-                this._metrics.addPrimitives(primitive, numIndices);
+                this.metrics.addPrimitives(primitive, numIndices);
             }
         }
         else
@@ -5636,7 +5625,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    this._metrics.addPrimitives(primitive, numIndices);
+                    this.metrics.addPrimitives(primitive, numIndices);
                 }
             }
         }
@@ -5672,7 +5661,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
             if (debug)
             {
-                this._metrics.addPrimitives(primitive, numVertices);
+                this.metrics.addPrimitives(primitive, numVertices);
             }
         }
         else
@@ -5695,7 +5684,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    this._metrics.addPrimitives(primitive, numVertices);
+                    this.metrics.addPrimitives(primitive, numVertices);
                 }
             }
         }
@@ -6141,7 +6130,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
             if (debug)
             {
-                this._metrics.indexBufferChanges += 1;
+                this.metrics.indexBufferChanges += 1;
             }
         }
     }
@@ -6286,7 +6275,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                     if (debug)
                     {
-                        this._metrics.indexBufferChanges += 1;
+                        this.metrics.indexBufferChanges += 1;
                     }
                 }
 
@@ -6303,7 +6292,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                         if (debug)
                         {
-                            this._metrics.addPrimitives(primitive, count);
+                            this.metrics.addPrimitives(primitive, count);
                         }
 
                         t += 1;
@@ -6316,7 +6305,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                     if (debug)
                     {
-                        this._metrics.addPrimitives(primitive, count);
+                        this.metrics.addPrimitives(primitive, count);
                     }
                 }
             }
@@ -6333,7 +6322,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                         if (debug)
                         {
-                            this._metrics.addPrimitives(primitive, count);
+                            this.metrics.addPrimitives(primitive, count);
                         }
 
                         t += 1;
@@ -6346,7 +6335,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                     if (debug)
                     {
-                        this._metrics.addPrimitives(primitive, count);
+                        this.metrics.addPrimitives(primitive, count);
                     }
                 }
             }
@@ -6488,7 +6477,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                             if (debug)
                             {
-                                this._metrics.vertexBufferChanges += 1;
+                                this.metrics.vertexBufferChanges += 1;
                             }
                         }
                     }
@@ -6518,7 +6507,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    this._metrics.vertexArrayObjectChanges += 1;
+                    this.metrics.vertexArrayObjectChanges += 1;
                 }
             }
             else
@@ -6555,7 +6544,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                         if (debug)
                         {
-                            this._metrics.addPrimitives(primitive, count);
+                            this.metrics.addPrimitives(primitive, count);
                         }
 
                         t += 1;
@@ -6568,7 +6557,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                     if (debug)
                     {
-                        this._metrics.addPrimitives(primitive, count);
+                        this.metrics.addPrimitives(primitive, count);
                     }
                 }
             }
@@ -6585,7 +6574,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                         if (debug)
                         {
-                            this._metrics.addPrimitives(primitive, count);
+                            this.metrics.addPrimitives(primitive, count);
                         }
 
                         t += 1;
@@ -6598,7 +6587,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                     if (debug)
                     {
-                        this._metrics.addPrimitives(primitive, count);
+                        this.metrics.addPrimitives(primitive, count);
                     }
                 }
             }
@@ -6777,7 +6766,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                     if (debug)
                     {
-                        this._metrics.indexBufferChanges += 1;
+                        this.metrics.indexBufferChanges += 1;
                     }
                 }
 
@@ -6796,7 +6785,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                             if (debug)
                             {
-                                this._metrics.addPrimitives(primitive, count);
+                                this.metrics.addPrimitives(primitive, count);
                             }
 
                             t += 1;
@@ -6809,7 +6798,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                         if (debug)
                         {
-                            this._metrics.addPrimitives(primitive, count);
+                            this.metrics.addPrimitives(primitive, count);
                         }
                     }
                 }
@@ -6838,7 +6827,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                                 if (debug)
                                 {
-                                    this._metrics.addPrimitives(primitive, count);
+                                    this.metrics.addPrimitives(primitive, count);
                                 }
                             }
 
@@ -6864,7 +6853,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                             if (debug)
                             {
-                                this._metrics.addPrimitives(primitive, count);
+                                this.metrics.addPrimitives(primitive, count);
                             }
                         }
                     }
@@ -6885,7 +6874,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                             if (debug)
                             {
-                                this._metrics.addPrimitives(primitive, count);
+                                this.metrics.addPrimitives(primitive, count);
                             }
 
                             t += 1;
@@ -6898,7 +6887,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                         if (debug)
                         {
-                            this._metrics.addPrimitives(primitive, count);
+                            this.metrics.addPrimitives(primitive, count);
                         }
                     }
                 }
@@ -6928,7 +6917,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                             if (debug)
                             {
-                                this._metrics.addPrimitives(primitive, count);
+                                this.metrics.addPrimitives(primitive, count);
                             }
 
                             t += 1;
@@ -6953,7 +6942,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                             if (debug)
                             {
-                                this._metrics.addPrimitives(primitive, count);
+                                this.metrics.addPrimitives(primitive, count);
                             }
                         }
                     }
@@ -7238,16 +7227,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         if (debug)
         {
-            this._metrics.renderTargetChanges = 0;
-            this._metrics.textureChanges = 0;
-            this._metrics.renderStateChanges = 0;
-            this._metrics.vertexAttributesChanges = 0;
-            this._metrics.vertexBufferChanges = 0;
-            this._metrics.indexBufferChanges = 0;
-            this._metrics.vertexArrayObjectChanges = 0;
-            this._metrics.techniqueChanges = 0;
-            this._metrics.drawCalls = 0;
-            this._metrics.primitives = 0;
+            this.metrics.renderTargetChanges = 0;
+            this.metrics.textureChanges = 0;
+            this.metrics.renderStateChanges = 0;
+            this.metrics.vertexAttributesChanges = 0;
+            this.metrics.vertexBufferChanges = 0;
+            this.metrics.indexBufferChanges = 0;
+            this.metrics.vertexArrayObjectChanges = 0;
+            this.metrics.techniqueChanges = 0;
+            this.metrics.drawCalls = 0;
+            this.metrics.primitives = 0;
         }
 
         /* tslint:disable:no-string-literal */
@@ -7263,7 +7252,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         if (debug)
         {
-            this._metrics.renderTargetChanges += 1;
+            this.metrics.renderTargetChanges += 1;
         }
 
         return (<WebGLRenderTarget>renderTarget).bind();
@@ -7826,7 +7815,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
             if (debug)
             {
-                this._metrics.vertexBufferChanges += 1;
+                this.metrics.vertexBufferChanges += 1;
             }
         }
     }
@@ -8076,7 +8065,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    this._metrics.textureChanges += 1;
+                    this.metrics.textureChanges += 1;
                 }
             }
         }
@@ -8779,7 +8768,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         /* tslint:disable:no-bitwise */
         if (debug)
         {
-            gd._metrics = <WebGLMetrics>{
+            gd.metrics = <WebGLMetrics>{
                 renderTargetChanges: 0,
                 textureChanges: 0,
                 renderStateChanges: 0,
@@ -8840,7 +8829,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8854,7 +8843,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8868,7 +8857,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8889,7 +8878,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8904,7 +8893,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8925,7 +8914,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8939,7 +8928,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8953,7 +8942,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8974,7 +8963,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -8995,7 +8984,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9013,7 +9002,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9031,7 +9020,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9052,7 +9041,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9068,7 +9057,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9082,7 +9071,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9097,7 +9086,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9113,7 +9102,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9128,7 +9117,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9143,7 +9132,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9161,7 +9150,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9176,7 +9165,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9192,7 +9181,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9208,7 +9197,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9230,7 +9219,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9245,7 +9234,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9265,7 +9254,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9285,7 +9274,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9300,7 +9289,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9317,7 +9306,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }
@@ -9332,7 +9321,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
                 if (debug)
                 {
-                    gd._metrics.renderStateChanges += 1;
+                    gd.metrics.renderStateChanges += 1;
                 }
             }
         }

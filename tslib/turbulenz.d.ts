@@ -674,6 +674,20 @@ interface GraphicsDeviceParameters
     stencil?     : boolean;
 }
 
+interface GraphicsDeviceMetrics
+{
+    renderTargetChanges: number;
+    textureChanges: number;
+    renderStateChanges: number;
+    vertexAttributesChanges: number;
+    vertexBufferChanges: number;
+    indexBufferChanges: number;
+    vertexArrayObjectChanges: number;
+    techniqueChanges: number;
+    drawCalls: number;
+    primitives: number;
+}
+
 interface GraphicsDevice
 {
     //
@@ -799,6 +813,8 @@ interface GraphicsDevice
     desktopWidth: number;
     desktopHeight: number;
     fps: number;
+
+    metrics?: GraphicsDeviceMetrics;
 
     // Methods
 
