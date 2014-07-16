@@ -73,6 +73,17 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
     base64Encode: { (bytes: any): string; };
     handleZeroTimeoutMessages: { (event): void; };
 
+    private _updateDimensions()
+    {
+        var gd = this.graphicsDevice;
+        if (gd)
+        {
+            var gl = gd._gl;
+            gd.width = (gl.drawingBufferWidth || gl.canvas.width);
+            gd.height = (gl.drawingBufferHeight || gl.canvas.height);
+        }
+    }
+
     setInterval(f, t): any
     {
         var that = this;
@@ -737,6 +748,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
                                 that.updateTime();
                                 if (!that.isUnloading())
                                 {
+                                    that._updateDimensions();
                                     f();
                                 }
                             }
