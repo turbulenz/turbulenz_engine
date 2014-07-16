@@ -1941,7 +1941,9 @@ class DeferredRendering
                 geometryInstance.sharedMaterial.techniqueParameters.uvTransform = identityUVTransform;
             }
 
-            drawParameters.sortKey = renderingCommonSortKeyFn(this.techniqueIndex, meta.materialIndex);
+            drawParameters.sortKey = renderingCommonSortKeyFn(this.techniqueIndex,
+                                                              meta.materialIndex,
+                                                              geometryInstance.geometry.vertexBuffer.id);
             //Now add common for world and skin data
             drawParameters.setTechniqueParameters(0, geometryInstance.sharedMaterial.techniqueParameters);
             drawParameters.setTechniqueParameters(1, geometryInstance.techniqueParameters);
@@ -1967,7 +1969,10 @@ class DeferredRendering
                     drawParameters.technique = this.shadowTechnique;
 
                     drawParameters.sortKey = renderingCommonSortKeyFn(this.shadowTechniqueIndex,
-                                                                      geometryInstance.geometry.vertexBuffer.id);
+                                                                      geometryInstance.geometry.vertexBuffer.id,
+                                                                      (drawParameters.indexBuffer ?
+                                                                       drawParameters.indexBuffer.id :
+                                                                       0));
 
                     var shadowTechniqueParameters = gd.createTechniqueParameters({
                         world: null
