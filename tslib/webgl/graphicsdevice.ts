@@ -6442,11 +6442,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     drawParameters._dirty = false;
 
-                    if (drawParameters._vao)
-                    {
-                        vertexArrayObjectExtension.deleteVertexArrayOES(drawParameters._vao);
-                    }
-
                     drawParameters._vao = vertexArrayObjectExtension.createVertexArrayOES();
 
                     vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
@@ -6512,17 +6507,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             }
             else
             {
-                if (drawParameters._dirty)
-                {
-                    drawParameters._dirty = false;
-                    if (drawParameters._vao !== lastDrawParameters._vao)
-                    {
-                        if (drawParameters._vao)
-                        {
-                            vertexArrayObjectExtension.deleteVertexArrayOES(drawParameters._vao);
-                        }
-                    }
-                }
+                drawParameters._dirty = false;
                 drawParameters._vao = lastDrawParameters._vao;
             }
 
