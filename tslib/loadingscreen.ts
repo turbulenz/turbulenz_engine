@@ -345,7 +345,7 @@ class LoadingScreen
 
         /* tslint:disable:whitespace */
         /* tslint:disable:max-line-length */
-        var shaderParams =
+        var shaderParams : ShaderParameters =
             {
                 "version": 1,
                 "name": "loadingscreen.cgfx",

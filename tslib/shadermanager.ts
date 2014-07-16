@@ -65,7 +65,7 @@ class ShaderManager
         {
             /* tslint:disable:max-line-length */
             /* tslint:disable:whitespace */
-            var shaderParams =
+            var shaderParams : ShaderParameters =
                 {
                     "version": 1,
                     "name": "default.cgfx",

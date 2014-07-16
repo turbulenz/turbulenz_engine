@@ -342,7 +342,7 @@ interface Technique
     numPasses: number;
 
     numParameters: number;
-    device: any;
+    device: GraphicsDevice;
 }
 
 interface ShaderParameter
@@ -351,6 +351,46 @@ interface ShaderParameter
     type    : string;
     rows    : number;
     columns : number;
+}
+
+interface ShaderParametersSampler
+{
+    MinFilter?: number;
+    MagFilter?: number;
+    WrapS?: number;
+    WrapT?: number;
+}
+
+interface ShaderParametersParameter
+{
+    type: string;
+    rows?: number;
+    columns?: number;
+}
+
+interface ShaderParametersPass
+{
+    name?: string;
+    parameters: string[];
+    semantics: string[];
+    states: { [stateName: string]: any; };
+    programs: string[];
+}
+
+interface ShaderParametersProgram
+{
+    type: string;
+    code: string;
+}
+
+interface ShaderParameters
+{
+    version: number;
+    name: string;
+    samplers?: { [samplerName: string]: ShaderParametersSampler; };
+    parameters?: { [parameterName: string]: ShaderParametersParameter; };
+    techniques: { [techniqueName: string]: ShaderParametersPass[]; };
+    programs: { [programName: string]: ShaderParametersProgram; };
 }
 
 interface Shader
@@ -389,6 +429,13 @@ interface TechniqueParameterBuffer
         numValuesToMap?: number): ParameterWriteIterator;
     unmap(writer: ParameterWriteIterator): void;
     setData(data: any, offset: number, numVertices: number): void;
+}
+
+interface RenderBufferParameters
+{
+    width   : number;
+    height  : number;
+    format? : any; // number (gd.PIXELFORMAT_R8G8B8A8) or string ('R8G8B8A8')
 }
 
 interface RenderBuffer
@@ -598,7 +645,7 @@ interface VideoParameters
 {
     src: string;
     looping?: boolean;
-    onload: { (v: Video): void; };
+    onload: { (v: Video, status: number): void; };
 }
 
 interface Video
@@ -616,6 +663,13 @@ interface Video
     resume(position?: number): boolean;
     rewind(): boolean;
     destroy(): void;
+}
+
+interface GraphicsDeviceParameters
+{
+    vsync?       : boolean;
+    multisample? : number;
+    alpha?       : boolean;
 }
 
 interface GraphicsDevice
@@ -749,12 +803,13 @@ interface GraphicsDevice
     createVertexBuffer(params: VertexBufferParameters): VertexBuffer;
     createIndexBuffer(params: IndexBufferParameters): IndexBuffer;
     createTexture(params: TextureParameters): Texture;
-    createShader(params: any, onload?: { (shader: Shader): void; }): Shader;
+    createShader(params: ShaderParameters,
+                 onload?: { (shader: Shader): void; }): Shader;
     createSemantics(attributes: any[]): Semantics;
     createDrawParameters(): DrawParameters;
     createTechniqueParameters(params?: any): TechniqueParameters;
     createTechniqueParameterBuffer(params: any): TechniqueParameterBuffer;
-    createRenderBuffer(params: any): RenderBuffer;
+    createRenderBuffer(params: RenderBufferParameters): RenderBuffer;
     createRenderTarget(params: RenderTargetParameters): RenderTarget;
     createOcclusionQuery(): OcclusionQuery;
     createVideo(params: VideoParameters): Video;
@@ -1383,7 +1438,7 @@ interface TurbulenzEngine
     createMathDevice(params: any): MathDevice;
     getMathDevice(): MathDevice;
 
-    createGraphicsDevice(params: any): GraphicsDevice;
+    createGraphicsDevice(params: GraphicsDeviceParameters): GraphicsDevice;
     getGraphicsDevice(): GraphicsDevice;
 
     createPhysicsDevice(params: any): PhysicsDevice;
