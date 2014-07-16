@@ -670,6 +670,8 @@ interface GraphicsDeviceParameters
     vsync?       : boolean;
     multisample? : number;
     alpha?       : boolean;
+    depth?       : boolean;
+    stencil?     : boolean;
 }
 
 interface GraphicsDevice
