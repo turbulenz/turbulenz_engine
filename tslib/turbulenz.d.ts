@@ -568,6 +568,8 @@ interface VertexBuffer
     stride      : number;
     transient   : boolean;
     dynamic     : boolean;
+    numAttributes : number;
+    attributes    : any[];
 
     // Methods
 

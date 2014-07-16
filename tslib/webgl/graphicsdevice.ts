@@ -2815,14 +2815,14 @@ class WebGLVertexBuffer implements VertexBuffer
     stride      : number;
     transient   : boolean;
     dynamic     : boolean;
+    numAttributes : number;
+    attributes    : WebGLGraphicsDeviceVertexFormat[];
 
     // WebGLVertexBuffer
     private _gd                    : WebGLGraphicsDevice;
     /* private */ _glBuffer        : WebGLBuffer;
-    /* private */ _attributes      : WebGLGraphicsDeviceVertexFormat[];
     /* private */ _hasSingleFormat : boolean;
     /* private */ _strideInBytes   : number;
-    private _numAttributes         : number;
 
     map(offset?: number, numVertices?: number): WebGLVertexWriteIterator
     {
@@ -2839,7 +2839,7 @@ class WebGLVertexBuffer implements VertexBuffer
         var gl = gd._gl;
 
         var numValuesPerVertex = this.stride;
-        var attributes = this._attributes;
+        var attributes = this.attributes;
         var numAttributes = attributes.length;
 
         var data, writer: WebGLVertexWriteIterator;
@@ -3238,8 +3238,8 @@ class WebGLVertexBuffer implements VertexBuffer
             return;
         }
 
-        var attributes = this._attributes;
-        var numAttributes = this._numAttributes;
+        var attributes = this.attributes;
+        var numAttributes = this.numAttributes;
         var attribute, format, bufferData, TypedArrayConstructor;
 
         if (this._hasSingleFormat)
@@ -3428,8 +3428,8 @@ class WebGLVertexBuffer implements VertexBuffer
 
     bindAttributes(semantics: WebGLSemantics, offset: number): number
     {
-        var numAttributes = Math.min(semantics.length, this._numAttributes);
-        var vertexAttributes = this._attributes;
+        var numAttributes = Math.min(semantics.length, this.numAttributes);
+        var vertexAttributes = this.attributes;
         var stride = this._strideInBytes;
         var gd = this._gd;
         var gl = gd._gl;
@@ -3462,8 +3462,8 @@ class WebGLVertexBuffer implements VertexBuffer
 
     bindAttributesCached(semantics: WebGLSemantics, offset: number): number
     {
-        var numAttributes = Math.min(semantics.length, this._numAttributes);
-        var vertexAttributes = this._attributes;
+        var numAttributes = Math.min(semantics.length, this.numAttributes);
+        var vertexAttributes = this.attributes;
         var stride = this._strideInBytes;
         var gd = this._gd;
         var gl = gd._gl;
@@ -3509,8 +3509,8 @@ class WebGLVertexBuffer implements VertexBuffer
         var gd = this._gd;
 
         var numAttributes = attributes.length;
-        this._numAttributes = numAttributes;
-        this._attributes = [];
+        this.numAttributes = numAttributes;
+        this.attributes = [];
 
         var stride = 0, numValuesPerVertex = 0, hasSingleFormat = true;
         for (var i = 0; i < numAttributes; i += 1)
@@ -3520,13 +3520,13 @@ class WebGLVertexBuffer implements VertexBuffer
             {
                 format = gd['VERTEXFORMAT_' + format];
             }
-            this._attributes[i] = format;
+            this.attributes[i] = format;
             stride += format.stride;
             numValuesPerVertex += format.numComponents;
 
             if (hasSingleFormat && i)
             {
-                if (format.format !== this._attributes[i - 1].format)
+                if (format.format !== this.attributes[i - 1].format)
                 {
                     hasSingleFormat = false;
                 }
@@ -7002,7 +7002,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             var stride = immediateVertexBuffer._strideInBytes;
             var offset = 0;
 
-            var vertexAttributes = immediateVertexBuffer._attributes;
+            var vertexAttributes = immediateVertexBuffer.attributes;
 
             var semanticsOffsets = this._semanticsOffsets;
 
