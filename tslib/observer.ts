@@ -7,6 +7,11 @@ class Observer
 {
     subscribers: { (): void; }[];
 
+    constructor()
+    {
+        this.subscribers = [];
+    }
+
     subscribe(subscriber)
     {
         //Check for duplicates
@@ -52,7 +57,7 @@ class Observer
     {
         // Note that the callbacks might unsubscribe
         var subscribers = this.subscribers;
-        var length = this.subscribers.length;
+        var length = subscribers.length;
         var index = 0;
 
         while (index < length)
@@ -71,8 +76,6 @@ class Observer
 
     static create(): Observer
     {
-        var observer = new Observer();
-        observer.subscribers = [];
-        return observer;
+        return new Observer();
     }
 }
