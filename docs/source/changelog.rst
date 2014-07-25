@@ -10,6 +10,13 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-07-25
+
+- Removed the Turbulenz browser plugin for Windows, since all modern
+  browsers now support WebGL.  Correspondingly, samples and apps in
+  the SDK no longer ship with builds that target the plugin
+  (.release.html and .tzjs files).
+
 2014-05-20
 
 - Added closeExistingSessions option to TurbulenzServices.createGameSession function.
