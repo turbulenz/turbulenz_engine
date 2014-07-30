@@ -1474,7 +1474,6 @@ class BlendController implements ControllerBaseClass
         var endController = controllers[last];
 
         startController.update();
-        endController.update();
 
         var output = this.output;
         var outputChannels = this.outputChannels;
@@ -1483,35 +1482,64 @@ class BlendController implements ControllerBaseClass
         var scaleOnEnd = endController.outputChannels.scale;
 
         var startOutput = startController.output;
-        var endOutput = endController.output;
 
-        // For each joint slerp between the quats and return the quat pos result
         var numJoints = startController.getHierarchy().numNodes;
-        for (var j = 0; j < numJoints; j += 1)
+        var j, joint, j1, j2;
+
+        if (delta >= Animation.minKeyframeDelta ||
+            (outputScale && !scaleOnStart && scaleOnEnd))
         {
-            var joint = output[j];
-            var j1 = startOutput[j];
-            var j2 = endOutput[j];
+            endController.update();
 
-            joint.rotation = mathDevice.quatSlerp(j1.rotation, j2.rotation, delta, joint.rotation);
-            joint.translation = mathDevice.v3Lerp(j1.translation, j2.translation, delta, joint.translation);
+            var endOutput = endController.output;
 
-            if (outputScale)
+            // For each joint slerp between the quats and return the quat pos result
+            for (j = 0; j < numJoints; j += 1)
             {
-                if (scaleOnStart)
+                joint = output[j];
+                j1 = startOutput[j];
+                j2 = endOutput[j];
+
+                joint.rotation = mathDevice.quatSlerp(j1.rotation, j2.rotation, delta, joint.rotation);
+                joint.translation = mathDevice.v3Lerp(j1.translation, j2.translation, delta, joint.translation);
+
+                if (outputScale)
                 {
-                    if (scaleOnEnd)
+                    if (scaleOnStart)
                     {
-                        joint.scale = mathDevice.v3Lerp(j1.scale, j2.scale, delta, joint.scale);
+                        if (scaleOnEnd)
+                        {
+                            joint.scale = mathDevice.v3Lerp(j1.scale, j2.scale, delta, joint.scale);
+                        }
+                        else
+                        {
+                            joint.scale = mathDevice.v3Copy(j1.scale, joint.scale);
+                        }
                     }
-                    else
+                    else if (scaleOnEnd)
+                    {
+                        joint.scale = mathDevice.v3Copy(j2.scale, joint.scale);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // For each joint copy the quats and return the quat pos result
+            for (j = 0; j < numJoints; j += 1)
+            {
+                joint = output[j];
+                j1 = startOutput[j];
+
+                joint.rotation = mathDevice.quatCopy(j1.rotation, joint.rotation);
+                joint.translation = mathDevice.v3Copy(j1.translation, joint.translation);
+
+                if (outputScale)
+                {
+                    if (scaleOnStart)
                     {
                         joint.scale = mathDevice.v3Copy(j1.scale, joint.scale);
                     }
-                }
-                else if (scaleOnEnd)
-                {
-                    joint.scale = mathDevice.v3Copy(j2.scale, joint.scale);
                 }
             }
         }
