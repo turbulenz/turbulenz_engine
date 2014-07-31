@@ -9410,27 +9410,27 @@ class WebGLGraphicsDevice implements GraphicsDevice
             if (typeof state === 'object')
             {
                 var value0 = state[0], value1 = state[1], value2 = state[2], value3 = state[3];
-                if (typeof value0 !== 'number')
+                if (typeof value0 !== 'number' && typeof value0 !== 'boolean')
                 {
                     // TODO
                     return null;
                 }
-                if (typeof value1 !== 'number')
+                if (typeof value1 !== 'number' && typeof value1 !== 'boolean')
                 {
                     // TODO
                     return null;
                 }
-                if (typeof value2 !== 'number')
+                if (typeof value2 !== 'number' && typeof value2 !== 'boolean')
                 {
                     // TODO
                     return null;
                 }
-                if (typeof value3 !== 'number')
+                if (typeof value3 !== 'number' && typeof value3 !== 'boolean')
                 {
                     // TODO
                     return null;
                 }
-                return [value0, value1, value2, value3];
+                return [!!value0, !!value1, !!value2, !!value3];
             }
             return null;
         }
