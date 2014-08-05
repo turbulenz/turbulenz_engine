@@ -1746,11 +1746,11 @@ class CaptureGraphicsDevice
         return video;
     }
 
-    public createShader(params)
+    public createShader(params: any, onload?: { (shader: Shader): void; })
     {
         // Need to clone before calling createShader because that function modifies the input object...
         var clonedParams = this._cloneObject(params, true);
-        var shader = this.gd.createShader(params);
+        var shader = this.gd.createShader(params, onload);
         if (shader)
         {
             var id = this._getStringId();
