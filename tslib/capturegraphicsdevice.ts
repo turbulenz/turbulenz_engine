@@ -2507,7 +2507,8 @@ class PlaybackGraphicsDevice
     srcHeight:  number;
     playWidth: number;
     playHeight: number;
-    frames:     any[];
+    frames:     number[][];
+    commands:   any[];
     writerData: any[];
     entities:   any[];
     numPendingResources: number;
@@ -2523,6 +2524,7 @@ class PlaybackGraphicsDevice
         this.playWidth = 0;
         this.playHeight = 0;
         this.frames = [];
+        this.commands = null;
         this.entities = [];
         this.writerData = [];
         this.numPendingResources = 0;
@@ -3072,20 +3074,16 @@ class PlaybackGraphicsDevice
             }
         }
 
-        var c, cmdId;
+        if (this.commands)
+        {
+            this.commands.length = 0;
+        }
+        this.commands = commands;
+
         for (n = 0; n < numFileFrames; n += 1)
         {
-            var frame = fileFrames[n];
-            numCommands = frame.length;
-            for (c = 0; c < numCommands; c += 1)
-            {
-                cmdId = frame[c];
-                command = commands[cmdId];
-                frame[c] = command;
-            }
-            frames.push(frame);
+            frames.push(fileFrames[n]);
         }
-        commands.length = 0;
         fileFrames.length = 0;
 
         this.srcWidth = framesObject.width;
@@ -3123,17 +3121,18 @@ class PlaybackGraphicsDevice
         var nextIndex = this.nextFrameIndex;
         while (nextIndex < endIndex)
         {
-            var frame = this.frames[nextIndex];
-            if (!frame)
+            var frameCommands = this.frames[nextIndex];
+            if (!frameCommands)
             {
                 return false;
             }
 
-            var numCommands = frame.length;
+            var commands = this.commands;
+            var numCommands = frameCommands.length;
             var c, target;
             for (c = 0; c < numCommands; c += 1)
             {
-                var command = frame[c];
+                var command = commands[frameCommands[c]];
                 var method = command[0];
                 if (method === CaptureGraphicsCommand.setData)
                 {
@@ -3176,8 +3175,8 @@ class PlaybackGraphicsDevice
             this.skip(frameIndex);
         }
 
-        var frame = this.frames[frameIndex];
-        if (!frame)
+        var frameCommands = this.frames[frameIndex];
+        if (!frameCommands)
         {
             return false;
         }
@@ -3229,11 +3228,12 @@ class PlaybackGraphicsDevice
         this.playWidth = width;
         this.playHeight = height;
 
-        var numCommands = frame.length;
+        var commands = this.commands;
+        var numCommands = frameCommands.length;
         var c, x, y, w, h;
         for (c = 0; c < numCommands; c += 1)
         {
-            var command = frame[c];
+            var command = commands[frameCommands[c]];
             var method = command[0];
             if (method === CaptureGraphicsCommand.setTechniqueParameters)
             {
@@ -3367,6 +3367,7 @@ class PlaybackGraphicsDevice
     {
         this.gd = null;
         this.frames = null;
+        this.commands = null;
         this.entities = null;
     }
 
