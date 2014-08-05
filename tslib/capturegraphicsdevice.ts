@@ -1113,10 +1113,10 @@ class CaptureGraphicsDevice
         {
             var drawParameters = drawParametersArray[n];
             var technique = drawParameters.technique;
-            var endTechniqueParameters = drawParameters.endTechniqueParameters;
-            var endStreams = drawParameters.endStreams;
-            var endInstances = drawParameters.endInstances;
-            var indexBuffer = drawParameters.indexBuffer;
+            var endTechniqueParameters = drawParameters._endTechniqueParameters;
+            var endStreams = drawParameters._endStreams;
+            var endInstances = drawParameters._endInstances;
+            var indexBuffer = drawParameters._indexBuffer;
             var primitive = drawParameters.primitive;
             var count = drawParameters.count;
             var firstIndex = drawParameters.firstIndex;
