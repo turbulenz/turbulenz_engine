@@ -1334,7 +1334,14 @@ class CaptureGraphicsDevice
 
     public clear(color, depth, stencil)
     {
-        this._addCommand(CaptureGraphicsCommand.clear, this._clone(color), depth, stencil);
+        if (depth === undefined && stencil === undefined)
+        {
+            this._addCommand(CaptureGraphicsCommand.clear, this._clone(color));
+        }
+        else
+        {
+            this._addCommand(CaptureGraphicsCommand.clear, this._clone(color), depth, stencil);
+        }
 
         this.gd.clear(color, depth, stencil);
     }
@@ -2165,18 +2172,6 @@ class CaptureGraphicsDevice
             }
             framesString += ']';
         }
-        framesString += '],"frames":[';
-
-        var frames = this.frames;
-        var numFrames = frames.length;
-        for (n = 0; n < numFrames; n += 1)
-        {
-            if (n)
-            {
-                framesString += ',';
-            }
-            framesString += '[' + frames[n].join(',') + ']';
-        }
         framesString += ']}';
 
         return framesString;
@@ -2317,6 +2312,40 @@ class CaptureGraphicsDevice
         totalSize += this._getDataBinSize(this.floatData, false);
         totalSize += this._getDataBinSize(this.mixedData, true);
 
+        // Frames command ids
+        totalSize += 4 + 4; // Num frames + frame command size
+
+        var frames = this.frames;
+        var numFrames = frames.length;
+
+        totalSize += (4 * numFrames);
+
+        var numCommands = this.numCommands;
+        var n;
+        if (numCommands < 256)
+        {
+            for (n = 0; n < numFrames; n += 1)
+            {
+                // pad element size to multiple of 4
+                totalSize += ((((1 * frames[n].length) + 3) >>> 2) << 2);
+            }
+        }
+        else if (numCommands < 65536)
+        {
+            for (n = 0; n < numFrames; n += 1)
+            {
+                // pad element size to multiple of 4
+                totalSize += ((((2 * frames[n].length) + 3) >>> 2) << 2);
+            }
+        }
+        else
+        {
+            for (n = 0; n < numFrames; n += 1)
+            {
+                totalSize += (4 * frames[n].length);
+            }
+        }
+
         var buffer = new ArrayBuffer(totalSize);
 
         var bytes = new Uint8Array(buffer);
@@ -2328,12 +2357,76 @@ class CaptureGraphicsDevice
         bytes[3] = header.charCodeAt(3);
 
         var ints = new Int32Array(buffer);
-        ints[1] = 1; // version
+        ints[1] = 2; // version
 
         var offset = 2;
         offset = this._getDataBinBuffer(ints, offset, this.integerData, true);
         offset = this._getDataBinBuffer(ints, offset, this.floatData, false);
         offset = this._getDataBinBuffer(ints, offset, this.mixedData, true);
+
+        ints[offset] = numFrames;
+        offset += 1;
+
+        var frameCommands, numFrameCommands, f;
+        if (numCommands < 256)
+        {
+            ints[offset] = 1;
+            offset += 1;
+
+            for (n = 0; n < numFrames; n += 1)
+            {
+                frameCommands = frames[n];
+                numFrameCommands = frameCommands.length;
+
+                ints[offset] = numFrameCommands;
+                offset += 1;
+
+                bytes.set(frameCommands, (offset << 2));
+
+                // pad element size to multiple of 4
+                offset += ((numFrameCommands + 3) >>> 2);
+            }
+        }
+        else if (numCommands < 65536)
+        {
+            ints[offset] = 2;
+            offset += 1;
+
+            var words = new Uint16Array(buffer);
+            for (n = 0; n < numFrames; n += 1)
+            {
+                frameCommands = frames[n];
+                numFrameCommands = frameCommands.length;
+
+                ints[offset] = numFrameCommands;
+                offset += 1;
+
+                words.set(frameCommands, (offset << 1));
+
+                // pad element size to multiple of 4
+                offset += ((numFrameCommands + 1) >>> 1);
+            }
+        }
+        else
+        {
+            ints[offset] = 4;
+            offset += 1;
+
+            for (n = 0; n < numFrames; n += 1)
+            {
+                frameCommands = frames[n];
+                numFrameCommands = frameCommands.length;
+
+                ints[offset] = numFrameCommands;
+                offset += 1;
+
+                ints.set(frameCommands, offset);
+
+                offset += numFrameCommands;
+            }
+        }
+
+        debug.assert((offset << 2) === totalSize);
 
         return bytes;
     }
@@ -2812,11 +2905,13 @@ class PlaybackGraphicsDevice
         resourcesObject.resources = {};
     }
 
-    public addData(dataBuffer)
+    public addData(dataBuffer, append?)
     {
         var ints = new Int32Array(dataBuffer);
 
-        // TODO: chech version number and endianness
+        // TODO: check endianness
+        var version = ints[1];
+
         var offset = 2;
         var binLength, length, n, id, type, byteOffset, data;
 
@@ -2936,6 +3031,84 @@ class PlaybackGraphicsDevice
                 }
             }
         }
+
+        if (version >= 2)
+        {
+            var frames = this.frames;
+            var numFrames;
+            if (!append)
+            {
+                numFrames = frames.length;
+                for (n = 0; n < numFrames; n += 1)
+                {
+                    frames[n].length = 0;
+                    frames[n] = null;
+                }
+                frames.length = 0;
+                this.nextFrameIndex = 0;
+            }
+
+            numFrames = ints[offset];
+            offset += 1;
+
+            var commandsSize = ints[offset];
+            offset += 1;
+
+            var numFrameCommands;
+            if (commandsSize === 1)
+            {
+                for (n = 0; n < numFrames; n += 1)
+                {
+                    numFrameCommands = ints[offset];
+                    offset += 1;
+
+                    byteOffset = (offset << 2);
+
+                    data = new Uint8Array(dataBuffer, byteOffset, numFrameCommands);
+
+                    frames.push(data);
+
+                    // pad element size to multiple of 4
+                    offset += ((data.byteLength + 3) >>> 2);
+                }
+            }
+            else if (commandsSize === 2)
+            {
+                for (n = 0; n < numFrames; n += 1)
+                {
+                    numFrameCommands = ints[offset];
+                    offset += 1;
+
+                    byteOffset = (offset << 2);
+
+                    data = new Uint16Array(dataBuffer, byteOffset, numFrameCommands);
+
+                    frames.push(data);
+
+                    // pad element size to multiple of 4
+                    offset += ((data.byteLength + 3) >>> 2);
+                }
+            }
+            else
+            {
+                for (n = 0; n < numFrames; n += 1)
+                {
+                    numFrameCommands = ints[offset];
+                    offset += 1;
+
+                    byteOffset = (offset << 2);
+
+                    data = new Uint32Array(dataBuffer, byteOffset, numFrameCommands);
+
+                    frames.push(data);
+
+                    // pad element size to multiple of 4
+                    offset += ((data.byteLength + 3) >>> 2);
+                }
+            }
+        }
+
+        debug.assert(offset === ints.length);
     }
 
     public addFrames(framesObject, reset?)
@@ -2971,20 +3144,6 @@ class PlaybackGraphicsDevice
 
         var commands = framesObject.commands;
         var numCommands = commands.length;
-        var fileFrames = framesObject.frames;
-        var numFileFrames = fileFrames.length;
-        var frames = this.frames;
-        if (reset)
-        {
-            var numFrames = frames.length;
-            for (n = 0; n < numFrames; n += 1)
-            {
-                frames[n].length = 0;
-                frames[n] = null;
-            }
-            frames.length = 0;
-            this.nextFrameIndex = 0;
-        }
         for (n = 0; n < numCommands; n += 1)
         {
             var command = commands[n];
@@ -3080,11 +3239,28 @@ class PlaybackGraphicsDevice
         }
         this.commands = commands;
 
-        for (n = 0; n < numFileFrames; n += 1)
+        var fileFrames = framesObject.frames;
+        if (fileFrames)
         {
-            frames.push(fileFrames[n]);
+            var numFileFrames = fileFrames.length;
+            var frames = this.frames;
+            if (reset)
+            {
+                var numFrames = frames.length;
+                for (n = 0; n < numFrames; n += 1)
+                {
+                    frames[n].length = 0;
+                    frames[n] = null;
+                }
+                frames.length = 0;
+                this.nextFrameIndex = 0;
+            }
+            for (n = 0; n < numFileFrames; n += 1)
+            {
+                frames.push(fileFrames[n]);
+            }
+            fileFrames.length = 0;
         }
-        fileFrames.length = 0;
 
         this.srcWidth = framesObject.width;
         this.srcHeight = framesObject.height;
