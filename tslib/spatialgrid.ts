@@ -64,6 +64,7 @@ class SpatialGrid
     queryIndex: number;
     queryRowPlanes: any[];
     queryCellPlanes: any[];
+    cellsPool: SpatialGridNode[][];
 
     floatArrayConstructor: any;
     intArrayConstructor: any;
@@ -92,6 +93,8 @@ class SpatialGrid
         this.queryIndex = -1;
         this.queryRowPlanes = [];
         this.queryCellPlanes = [];
+
+        this.cellsPool = [];
     }
 
     add(externalNode: {}, extents: any): void
@@ -276,10 +279,14 @@ class SpatialGrid
                                         {
                                             cell[n] = cell[numNodes];
                                         }
-                                        cell.length = numNodes;
                                         if (0 === numNodes)
                                         {
                                             cells[ci] = undefined;
+                                            this._releaseCell(cell);
+                                        }
+                                        else
+                                        {
+                                            cell.length = numNodes;
                                         }
                                         break;
                                     }
@@ -292,7 +299,7 @@ class SpatialGrid
 
                             if (newCell)
                             {
-                                cells[ci] = [node];
+                                cells[ci] = this._allocateCell(node);
                             }
                         }
 
@@ -379,7 +386,7 @@ class SpatialGrid
                 }
                 else
                 {
-                    cells[ci] = [node];
+                    cells[ci] = this._allocateCell(node);
                 }
                 ci += 1;
             }
@@ -417,10 +424,14 @@ class SpatialGrid
                         {
                             cell[n] = cell[numNodes];
                         }
-                        cell.length = numNodes;
                         if (0 === numNodes)
                         {
                             cells[ci] = undefined;
+                            this._releaseCell(cell);
+                        }
+                        else
+                        {
+                            cell.length = numNodes;
                         }
                         found = true;
                         break;
@@ -434,6 +445,38 @@ class SpatialGrid
             minRow += numCellsX;
         }
         while (minRow <= maxRow);
+    }
+
+    _allocateCell(node: SpatialGridNode): SpatialGridNode[]
+    {
+        var cell;
+        var cellsPool = this.cellsPool;
+        if (cellsPool.length === 0)
+        {
+            cell = [node];
+        }
+        else
+        {
+            cell = cellsPool.pop();
+            cell[0] = node;
+        }
+        return cell;
+    }
+
+    _releaseCell(cell: SpatialGridNode[]): void
+    {
+        debug.assert(cell.length === 1);
+        var cellsPool = this.cellsPool;
+        if (cellsPool.length < 32)
+        {
+            cell[0] = null;
+            cellsPool.push(cell);
+        }
+        else
+        {
+            cell.length = 0;
+            cellsPool.length = 16;
+        }
     }
 
     /* tslint:disable:no-empty */
