@@ -65,9 +65,10 @@ class SpatialGrid
     queryRowPlanes: any[];
     queryCellPlanes: any[];
     cellsPool: SpatialGridNode[][];
-
-    floatArrayConstructor: any;
     intArrayConstructor: any;
+
+    // On prototype
+    floatArrayConstructor: any;
 
     constructor(extents: any, cellSize: number)
     {
@@ -95,6 +96,29 @@ class SpatialGrid
         this.queryCellPlanes = [];
 
         this.cellsPool = [];
+
+        if ((this.numCellsX * this.numCellsZ) <= 65536)
+        {
+            if (typeof Uint16Array !== "undefined")
+            {
+                this.intArrayConstructor = Uint16Array;
+            }
+            else
+            {
+                this.intArrayConstructor = Array;
+            }
+        }
+        else
+        {
+            if (typeof Int32Array !== "undefined")
+            {
+                this.intArrayConstructor = Int32Array;
+            }
+            else
+            {
+                this.intArrayConstructor = Array;
+            }
+        }
     }
 
     add(externalNode: {}, extents: any): void
@@ -1118,14 +1142,9 @@ class SpatialGrid
 // Detect correct typed arrays
 (function () {
     SpatialGrid.prototype.floatArrayConstructor = Array;
-    SpatialGrid.prototype.intArrayConstructor = Array;
     if (typeof Float32Array !== "undefined")
     {
         SpatialGrid.prototype.floatArrayConstructor = Float32Array;
-    }
-    if (typeof Int32Array !== "undefined")
-    {
-        SpatialGrid.prototype.intArrayConstructor = Int32Array;
     }
 }());
 
