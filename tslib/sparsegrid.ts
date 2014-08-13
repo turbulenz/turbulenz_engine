@@ -454,12 +454,12 @@ class SparseGrid
                     if (numCells < cells.length)
                     {
                         cell = cells[numCells];
-                        cell.reset(x * cellSize, z * cellSize, node);
+                        cell.reset((x - 32768) * cellSize, (z - 32768) * cellSize, node);
                     }
                     else
                     {
                         debug.assert(numCells === cells.length);
-                        cell = new SparseGridCell(x * cellSize, z * cellSize, node);
+                        cell = new SparseGridCell((x - 32768) * cellSize, (z - 32768) * cellSize, node);
                         cells.push(cell);
                     }
                     numCells += 1;
@@ -630,12 +630,12 @@ class SparseGrid
                         if (numCells < cells.length)
                         {
                             cell = cells[numCells];
-                            cell.reset(x * cellSize, z * cellSize, node);
+                            cell.reset((x - 32768) * cellSize, (z - 32768) * cellSize, node);
                         }
                         else
                         {
                             debug.assert(numCells === cells.length);
-                            cell = new SparseGridCell(x * cellSize, z * cellSize, node);
+                            cell = new SparseGridCell((x - 32768) * cellSize, (z - 32768) * cellSize, node);
                             cells.push(cell);
                         }
                         numCells += 1;
