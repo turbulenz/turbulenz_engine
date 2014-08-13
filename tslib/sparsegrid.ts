@@ -1002,6 +1002,11 @@ class SparseGrid
         var numVisibleNodes = 0;
         if (0 < this.numNodes)
         {
+            if ((this.numCells * 2) > this.numNodes)
+            {
+                return this._getVisibleNodesBruteForce(planes, visibleNodes, startIndex);
+            }
+
             var numPlanes = planes.length;
             var storageIndex = (startIndex === undefined) ? visibleNodes.length : startIndex;
             var cellSize = this.cellSize;
@@ -1133,6 +1138,55 @@ class SparseGrid
                 }
             }
         }
+        return numVisibleNodes;
+    }
+
+    private _getVisibleNodesBruteForce(planes: any[], visibleNodes: any[], startIndex?: number): number
+    {
+        var numVisibleNodes = 0;
+        var numPlanes = planes.length;
+        var storageIndex = (startIndex === undefined) ? visibleNodes.length : startIndex;
+        var nodes = this.nodes;
+        var numNodes = this.numNodes;
+        var n, p, plane, isInside, d0, d1, d2;
+        for (n = 0; n < numNodes; n += 1)
+        {
+            var node = nodes[n];
+            var extents = node.extents;
+            var n0 = extents[0];
+            var n1 = extents[1];
+            var n2 = extents[2];
+            var p0 = extents[3];
+            var p1 = extents[4];
+            var p2 = extents[5];
+
+            isInside = true;
+            p = 0;
+            do
+            {
+                plane = planes[p];
+                d0 = plane[0];
+                d1 = plane[1];
+                d2 = plane[2];
+                if ((d0 * (d0 < 0 ? n0 : p0) +
+                     d1 * (d1 < 0 ? n1 : p1) +
+                     d2 * (d2 < 0 ? n2 : p2)) < plane[3])
+                {
+                    isInside = false;
+                    break;
+                }
+                p += 1;
+            }
+            while (p < numPlanes);
+
+            if (isInside)
+            {
+                visibleNodes[storageIndex] = node.externalNode;
+                storageIndex += 1;
+                numVisibleNodes += 1;
+            }
+        }
+
         return numVisibleNodes;
     }
 
