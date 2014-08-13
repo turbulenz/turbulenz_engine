@@ -198,7 +198,7 @@ class SparseGrid
 
         this.numCells = 0;
         this.cells = [];
-        this.cellsMap = {};
+        this.cellsMap = Object.create(null);
 
         this.nodes = [];
         this.numNodes = 0;
@@ -929,7 +929,7 @@ class SparseGrid
             var storageIndex = (startIndex === undefined) ? overlappingPairs.length : startIndex;
             var numCells = this.numCells;
             var cells = this.cells;
-            var pairsMap = {};
+            var pairsMap = Object.create(null);
             var c, i, maxI, j, numNodes, cell, cellNodes, nodeI, idI, nodeJ, idJ, extents, pairId;
             for (c = 0; c < numCells; c += 1)
             {
@@ -1221,7 +1221,7 @@ class SparseGrid
     {
         this.numCells = 0;
         this.cells.length = 0;
-        this.cellsMap = {};
+        this.cellsMap = Object.create(null);
         this.nodes.length = 0;
         this.numNodes = 0;
         this.queryIndex = -1;
