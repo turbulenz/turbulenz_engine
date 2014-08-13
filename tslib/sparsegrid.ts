@@ -355,7 +355,7 @@ class SparseGrid
                         nodeExtents[1] = min1;
                         nodeExtents[4] = max1;
 
-                        this._flagCells(node, oldMinX, oldMinZ, oldMaxX, oldMaxZ);
+                        this._flagCells(min1, max1, oldMinX, oldMinZ, oldMaxX, oldMaxZ);
                     }
                 }
             }
@@ -368,7 +368,7 @@ class SparseGrid
                     nodeExtents[1] = min1;
                     nodeExtents[4] = max1;
 
-                    this._flagCells(node, cellExtents[0], cellExtents[1], cellExtents[2], cellExtents[3]);
+                    this._flagCells(min1, max1, cellExtents[0], cellExtents[1], cellExtents[2], cellExtents[3]);
                 }
             }
         }
@@ -653,13 +653,13 @@ class SparseGrid
         while (z <= maxZ);
     }
 
-    _flagCells(node: SparseGridNode,
+    _flagCells(nodeMinY: number,
+               nodeMaxY: number,
                minX: number,
                minZ: number,
                maxX: number,
                maxZ: number): void
     {
-        var extents = node.extents;
         var cellsMap = this.cellsMap;
         var z = minZ;
         do
@@ -673,8 +673,8 @@ class SparseGrid
                 var cell = cellsMap[hash];
                 if (1 === cell.nodes.length)
                 {
-                    cell.minY = extents[1];
-                    cell.maxY = extents[4];
+                    cell.minY = nodeMinY;
+                    cell.maxY = nodeMaxY;
                 }
                 else
                 {
