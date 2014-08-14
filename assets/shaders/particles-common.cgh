@@ -285,7 +285,7 @@ float4 getAnimation4(float t, float row)
 float2 getAnimation2(float t, float row)
 {
     float4 tex = getAnimation4(t, row);
-    return float2(decodeHalfUnsignedFloat(tex.zw), decodeHalfUnsignedFloat(tex.xy));
+    return float2(decodeHalfUnsignedFloat(tex.xy), decodeHalfUnsignedFloat(tex.zw));
 }
 
 // extract float data for animation frame in given row at particular animation time.
