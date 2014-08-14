@@ -59,7 +59,7 @@ float getRotation(float t)
 }
 float4 getUV(float t)
 {
-    return getAnimation4(t, TEX_UV);
+    return float4(getAnimation2(t, TEX_UV), getAnimation2(t, TEX_UV + 1)).yxwz;
 }
 
 // Constants are randomised values only, as are choices of noise channels.

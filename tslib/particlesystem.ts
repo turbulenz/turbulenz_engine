@@ -2422,14 +2422,13 @@ class ParticleBuilder
     private static buildAnimationTexture(
         graphicsDevice: GraphicsDevice,
         width         : number,
-        height        : number,
         data          : Uint8Array
     ): Texture
     {
         return graphicsDevice.createTexture({
             name      : "ParticleBuilder AnimationTexture",
             width     : width,
-            height    : height,
+            height    : (data.length / width) >>> 2,
             depth     : 1,
             format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
             mipmaps   : false,
@@ -2898,7 +2897,7 @@ class ParticleBuilder
 
         return {
             maxLifeTime: maxLifeTime,
-            animation: ParticleBuilder.buildAnimationTexture(graphicsDevice, width, sys.length, data),
+            animation: ParticleBuilder.buildAnimationTexture(graphicsDevice, width, data),
             particle: particleDefns,
             attribute: minDelta
         };
@@ -2946,7 +2945,7 @@ class ParticleBuilder
     {
         var height = 0;
         var sysCount = system.length;
-        var i;
+        var i, dims = [];
         for (i = 0; i < sysCount; i += 1)
         {
             var attr = system[i];
@@ -2965,6 +2964,7 @@ class ParticleBuilder
                     // _ -> _
             }
             height += dim;
+            dims.push(dim);
         }
 
         var count = width * height;
@@ -3028,6 +3028,7 @@ class ParticleBuilder
                     store += 1;
                 }
             }
+            store += (dims[i] - 1) * width;
         }
         return new Uint8Array(data.buffer);
     }
@@ -7877,7 +7878,8 @@ class ParticleManager
             {
                 name     : "frame",
                 type     : "texture0",
-                "default": 0
+                "default": 0,
+                compress : "half", // 65536 values for uv min and max. 2 rows of texture used.
             }
         ]);
 
