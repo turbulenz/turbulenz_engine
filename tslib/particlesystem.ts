@@ -4414,9 +4414,13 @@ class DefaultParticleRenderer
         {
             ret |= (1 << 30);
         }
-        if (params.facing === "custom")
+        else if (params.facing === "custom")
         {
             ret |= (2 << 30);
+        }
+        else if (params.facing === "velocity-billboard")
+        {
+            ret |= (3 << 30);
         }
         ret |= (<any>params.randomizeRotation << 29);
         ret |= (<any>params.randomizeScale << 28);

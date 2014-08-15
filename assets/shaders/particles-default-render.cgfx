@@ -144,29 +144,51 @@ void vp_render( in float2 inData     : POSITION,
     if (bitSet(data.w, BIT4))
     {
         float3x3 orient = orientSpherical2(getOrientNoise(noiseUV, life).yx);
-        right = mul(orient, right);
-        up = mul(orient, up);
+        rot = mul(rot, orient);
     }
 
-    if (bitSet(data.w, BIT8))
+    float orientStyle = (bitSet(data.w, BIT7) ? 1.0 : 0.0) + (2.0 * (bitSet(data.w, BIT8) ? 1.0 : 0.0));
+    if (orientStyle < 0.5)
     {
-        // custom orientation
-        float3x3 orient = orientSpherical(data.x, data.y);
-        pos += mul(mul(orient, rot), (right * inPosition.x + up * inPosition.y));
+        // bill-boarded verts
         pos = transform43Rot(pos, modelView);
+        pos += mul(rot, transform43Scale(right * inPosition.x + up * inPosition.y, modelView));
     }
-    else if (bitSet(data.w, BIT7))
+    else if (orientStyle < 1.5)
     {
         // velocity orientated verts
         float3x3 orient = orientTo(getVelocity(vParticleState, regionIndex));
         pos += mul(mul(orient, rot), (right * inPosition.x + up * inPosition.y));
         pos = transform43Rot(pos, modelView);
     }
+    else if (orientStyle < 2.5)
+    {
+        // custom orientation
+        float3x3 orient = orientSpherical(data.x, data.y);
+        pos += mul(mul(orient, rot), (right * inPosition.x + up * inPosition.y));
+        pos = transform43Rot(pos, modelView);
+    }
     else
     {
-        // bill-boarded verts
+        // velocity-bill-boarded verts
+        float3x3 orient = orientTo(getVelocity(vParticleState, regionIndex));
+        float3 ox = float3(orient[0][0], orient[1][0], orient[2][0]);
+        float3 oy = float3(orient[0][1], orient[1][1], orient[2][1]);
+        float3 oz = float3(orient[0][2], orient[1][2], orient[2][2]);
+
+        // TODO: If we had access to camera position we could do this in world-space
+        //       instead of having to compute all the view-space orientation vectors
+        float3 ex = normalize(transform43Rot(ox, modelView));
+        float3 ey = normalize(transform43Rot(oy, modelView));
+        float3 ez = normalize(transform43Rot(oz, modelView));
+        float3 eye = transform43(pos, modelView);
+        eye = normalize(eye - ez * dot(ez, eye));
+
+        float cosBillboard = dot(eye, ey);
+        float sinBillboard = -dot(eye, ex);
+
+        pos += mul(rot, oz * inPosition.y + (ox * cosBillboard + oy * sinBillboard) * inPosition.x);
         pos = transform43Rot(pos, modelView);
-        pos += mul(rot, transform43Scale(right * inPosition.x + up * inPosition.y, modelView));
     }
 
     outPosition = mul(float4(transform43Pos(pos, modelView), 1.0), projection);

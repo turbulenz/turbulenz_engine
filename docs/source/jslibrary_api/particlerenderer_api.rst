@@ -152,7 +152,7 @@ The DefaultParticleRenderer Object
 
 Implementation of a :ref:`ParticleRenderer <particlerenderer>`.
 
-Renders particles as textured quads that are either bill-boarded to face camera, aligned to face along direction of motion, or with a per-particle defined direction.
+Renders particles as textured quads that are either bill-boarded to face camera, aligned to face along direction of motion, or with a per-particle defined direction, or with particles that are bill-boarded, but rotated to align with velocity (eg arrows coming out of an explosion).
 
 Particles are rendered based on the default particle animation texture definition, supporting animated rotation, color, scale and a flip-book animation of particle appearances.
 
@@ -162,7 +162,7 @@ On a system wide basis, the amount of randomization can be controlled, and wheth
 
 **Particle userData storage used**
 
-Orientation of particle is controlled with bits `[30,32)` as a 2-bit integer with `0` specifying a bill-boarded orientation, `1` a velocity-aligned orientation, and `2` a custom orientation.
+Orientation of particle is controlled with bits `[30,32)` as a 2-bit integer with `0` specifying a bill-boarded orientation, `1` a velocity-aligned orientation, `2` a custom orientation and `3` a velocity-bill-boarded orientation.
 
 Custom orientations are specified with bits `[0,8)` and `[8,16)` specifying two normalized, spherical angles: theta in the high 8 bits representing values `[0,pi)` and phi in the low 8 bits representing values `[0,2pi)`.
 
@@ -231,7 +231,7 @@ Set up particles' `userData` storage for creation.
     });
 
 ``facing`` (Default `"billboard"`)
-   One of `"billboard"`, `"velocity"` or `"custom"`.
+   One of `"billboard"`, `"velocity"`, `"custom"` or `"velocity-billboard"`.
 
 ``theta`` (Default `0`)
     Useful only in conjunction with `custom` facing. Defines the spherical angle of elevation, with `0` pointing along y-axis and `Math.PI` pointing along negative y-axis.
