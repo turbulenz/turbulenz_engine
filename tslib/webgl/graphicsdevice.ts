@@ -147,15 +147,36 @@ class TZWebGLTexture implements Texture
 
         gd.bindTexture(target, gltex);
 
-        gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-        if (this.mipmaps)
+        var format = this.format;
+        if (format === gd.PIXELFORMAT_RGBA32F ||
+            format === gd.PIXELFORMAT_RGB32F ||
+            format === gd.PIXELFORMAT_RGBA16F ||
+            format === gd.PIXELFORMAT_RGB16F)
         {
-            gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+            // Linear filtering is not always supported for floating point formats
+            gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+            if (this.mipmaps)
+            {
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+            }
+            else
+            {
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            }
         }
         else
         {
-            gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+            if (this.mipmaps)
+            {
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+            }
+            else
+            {
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            }
         }
 
         gl.texParameteri(target, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
