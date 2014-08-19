@@ -685,6 +685,7 @@ interface GraphicsDeviceMetrics
     vertexBufferChanges: number;
     indexBufferChanges: number;
     vertexArrayObjectChanges: number;
+    techniqueParametersChanges: number;
     techniqueChanges: number;
     drawCalls: number;
     primitives: number;

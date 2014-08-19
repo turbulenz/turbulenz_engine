@@ -3787,6 +3787,11 @@ class WebGLPass implements Pass
                             gl.uniform1iv(location, parameterValues);
                         }
                     }
+
+                    if (debug)
+                    {
+                        gd.metrics.techniqueParametersChanges += 1;
+                    }
                 }
             }
         }
@@ -4204,6 +4209,11 @@ class WebGLTechnique implements Technique
                 if (this.device)
                 {
                     gd.setTexture(parameter.textureUnit, parameterValues, parameter.info.sampler);
+
+                    if (debug)
+                    {
+                        gd.metrics.techniqueParametersChanges += 1;
+                    }
                 }
                 else
                 {
@@ -4249,6 +4259,11 @@ class WebGLTechnique implements Technique
                         if (this.device)
                         {
                             gl.uniform1f(location, parameterValues);
+
+                            if (debug)
+                            {
+                                gd.metrics.techniqueParametersChanges += 1;
+                            }
                         }
                         else
                         {
@@ -4261,6 +4276,11 @@ class WebGLTechnique implements Technique
                     if (this.device)
                     {
                         gl.uniform1fv(location, parameterValues);
+
+                        if (debug)
+                        {
+                            gd.metrics.techniqueParametersChanges += 1;
+                        }
                     }
                     else
                     {
@@ -4273,6 +4293,11 @@ class WebGLTechnique implements Technique
                     if (this.device)
                     {
                         gl.uniform2fv(location, parameterValues);
+
+                        if (debug)
+                        {
+                            gd.metrics.techniqueParametersChanges += 1;
+                        }
                     }
                     else
                     {
@@ -4285,6 +4310,11 @@ class WebGLTechnique implements Technique
                     if (this.device)
                     {
                         gl.uniform3fv(location, parameterValues);
+
+                        if (debug)
+                        {
+                            gd.metrics.techniqueParametersChanges += 1;
+                        }
                     }
                     else
                     {
@@ -4297,6 +4327,11 @@ class WebGLTechnique implements Technique
                     if (this.device)
                     {
                         gl.uniform4fv(location, parameterValues);
+
+                        if (debug)
+                        {
+                            gd.metrics.techniqueParametersChanges += 1;
+                        }
                     }
                     else
                     {
@@ -4342,6 +4377,11 @@ class WebGLTechnique implements Technique
                         if (this.device)
                         {
                             gl.uniform1i(location, parameterValues);
+
+                            if (debug)
+                            {
+                                gd.metrics.techniqueParametersChanges += 1;
+                            }
                         }
                         else
                         {
@@ -4354,6 +4394,11 @@ class WebGLTechnique implements Technique
                     if (this.device)
                     {
                         gl.uniform1iv(location, parameterValues);
+
+                        if (debug)
+                        {
+                            gd.metrics.techniqueParametersChanges += 1;
+                        }
                     }
                     else
                     {
@@ -4366,6 +4411,11 @@ class WebGLTechnique implements Technique
                     if (this.device)
                     {
                         gl.uniform2iv(location, parameterValues);
+
+                        if (debug)
+                        {
+                            gd.metrics.techniqueParametersChanges += 1;
+                        }
                     }
                     else
                     {
@@ -4378,6 +4428,11 @@ class WebGLTechnique implements Technique
                     if (this.device)
                     {
                         gl.uniform3iv(location, parameterValues);
+
+                        if (debug)
+                        {
+                            gd.metrics.techniqueParametersChanges += 1;
+                        }
                     }
                     else
                     {
@@ -4390,6 +4445,11 @@ class WebGLTechnique implements Technique
                     if (this.device)
                     {
                         gl.uniform4iv(location, parameterValues);
+
+                        if (debug)
+                        {
+                            gd.metrics.techniqueParametersChanges += 1;
+                        }
                     }
                     else
                     {
@@ -5784,6 +5844,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                             gl.uniform1iv(location, parameterValues);
                         }
                     }
+
+                    if (debug)
+                    {
+                        this.metrics.techniqueParametersChanges += 1;
+                    }
                 }
                 else
                 {
@@ -5867,6 +5932,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                             gl.uniform1iv(location, parameterValues);
                         }
                     }
+
+                    if (debug)
+                    {
+                        this.metrics.techniqueParametersChanges += 1;
+                    }
                 }
             }
         }
@@ -5944,6 +6014,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                             {
                                 gl.uniform1iv(location, parameterValues);
                             }
+                        }
+
+                        if (debug)
+                        {
+                            this.metrics.techniqueParametersChanges += 1;
                         }
                     }
                     else
@@ -7181,26 +7256,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
     {
         var gl = this._gl;
 
-        this._attributeMask = 0;
-
-        var clientStateMask = this._clientStateMask;
-        var n;
-        if (clientStateMask)
-        {
-            for (n = 0; n < 16; n += 1)
-            {
-                /* tslint:disable:no-bitwise */
-                if (clientStateMask & (1 << n))
-                {
-                    gl.disableVertexAttribArray(n);
-                }
-                /* tslint:enable:no-bitwise */
-            }
-            this._clientStateMask = 0;
-        }
-
-        this.resetStates();
-
         var canvas = gl.canvas;
         var width = (gl.drawingBufferWidth || canvas.width);
         var height = (gl.drawingBufferHeight || canvas.height);
@@ -7219,6 +7274,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             this.metrics.vertexBufferChanges = 0;
             this.metrics.indexBufferChanges = 0;
             this.metrics.vertexArrayObjectChanges = 0;
+            this.metrics.techniqueParametersChanges = 0;
             this.metrics.techniqueChanges = 0;
             this.metrics.drawCalls = 0;
             this.metrics.primitives = 0;
@@ -7263,6 +7319,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
     endFrame()
     {
         var gl = this._gl;
+        var state = this._state;
+        var n;
+
         //gl.flush();
 
         if (this._activeTechnique)
@@ -7271,12 +7330,54 @@ class WebGLGraphicsDevice implements GraphicsDevice
             this._activeTechnique = null;
         }
 
-        if (this._activeIndexBuffer)
+        this._attributeMask = 0;
+
+        var clientStateMask = this._clientStateMask;
+        if (clientStateMask)
         {
-            this.setIndexBuffer(null);
+            for (n = 0; n < 16; n += 1)
+            {
+                /* tslint:disable:no-bitwise */
+                if (clientStateMask & (1 << n))
+                {
+                    gl.disableVertexAttribArray(n);
+                }
+                /* tslint:enable:no-bitwise */
+            }
+            this._clientStateMask = 0;
         }
 
-        var state = this._state;
+        if (this._activeIndexBuffer)
+        {
+            this._activeIndexBuffer = null;
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        }
+
+        if (this._bindedVertexBuffer)
+        {
+            this._bindedVertexBuffer = null;
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        }
+
+        var lastMaxTextureUnit = state.lastMaxTextureUnit;
+        var textureUnits = state.textureUnits;
+        for (n = 0; n < lastMaxTextureUnit; n += 1)
+        {
+            var textureUnit = textureUnits[n];
+            if (textureUnit.texture)
+            {
+                if (state.activeTextureUnit !== n)
+                {
+                    state.activeTextureUnit = n;
+                    gl.activeTexture(gl.TEXTURE0 + n);
+                }
+                gl.bindTexture(textureUnit.target, null);
+                textureUnit.texture = null;
+                textureUnit.target = 0;
+            }
+        }
+        state.lastMaxTextureUnit = 0;
+
         if (state.program)
         {
             state.program = null;
@@ -7295,7 +7396,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         // Remove any references to external technique parameters
         var techniqueParametersArray = this._techniqueParametersArray;
-        var n;
         for (n = 0; n < techniqueParametersArray.length; n += 1)
         {
             techniqueParametersArray[n] = null;
@@ -7815,19 +7915,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    bindTextureUnit(unit, target, texture)
-    {
-        var state = this._state;
-        var gl = this._gl;
-
-        if (state.activeTextureUnit !== unit)
-        {
-            state.activeTextureUnit = unit;
-            gl.activeTexture(gl.TEXTURE0 + unit);
-        }
-        gl.bindTexture(target, texture);
-    }
-
     bindTexture(target, texture)
     {
         var state = this._state;
@@ -7840,10 +7927,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
             gl.activeTexture(gl.TEXTURE0 + dummyUnit);
         }
         gl.bindTexture(target, texture);
+
+        if (debug)
+        {
+            this.metrics.textureChanges += 1;
+        }
     }
 
     unbindTexture(texture)
     {
+        var gl = this._gl;
         var state = this._state;
         var lastMaxTextureUnit = state.lastMaxTextureUnit;
         var textureUnits = state.textureUnits;
@@ -7852,8 +7945,13 @@ class WebGLGraphicsDevice implements GraphicsDevice
             var textureUnit = textureUnits[u];
             if (textureUnit.texture === texture)
             {
+                if (state.activeTextureUnit !== u)
+                {
+                    state.activeTextureUnit = u;
+                    gl.activeTexture(gl.TEXTURE0 + u);
+                }
+                gl.bindTexture(textureUnit.target, null);
                 textureUnit.texture = null;
-                this.bindTextureUnit(u, textureUnit.target, null);
             }
         }
     }
@@ -7912,26 +8010,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         // Copy set renderstates to be reset later
         state.renderStatesToReset = renderStates;
 
-        // Reset texture units
-        var lastMaxTextureUnit = state.lastMaxTextureUnit;
-        var textureUnits = state.textureUnits;
-        var currentMaxTextureUnit = pass.numTextureUnits;
-        if (currentMaxTextureUnit < lastMaxTextureUnit)
-        {
-            var u = currentMaxTextureUnit;
-            do
-            {
-                var textureUnit = textureUnits[u];
-                if (textureUnit.texture)
-                {
-                    textureUnit.texture = null;
-                    this.bindTextureUnit(u, textureUnit.target, null);
-                }
-                u += 1;
-            }
-            while (u < lastMaxTextureUnit);
-        }
-        state.lastMaxTextureUnit = currentMaxTextureUnit;
+        state.lastMaxTextureUnit = Math.max(pass.numTextureUnits, state.lastMaxTextureUnit);
 
         var program = pass.glProgram;
         if (state.program !== program)
@@ -8069,6 +8148,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
 
                 gl.bindTexture(oldgltarget, null);
+
+                if (debug)
+                {
+                    this.metrics.textureChanges += 1;
+                }
             }
         }
     }
@@ -8168,24 +8252,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gl.clearDepth(state.clearDepth);
 
         gl.clearStencil(state.clearStencil);
-    }
-
-    resetStates()
-    {
-        var state = this._state;
-
-        var lastMaxTextureUnit = state.lastMaxTextureUnit;
-        var textureUnits = state.textureUnits;
-        for (var u = 0; u < lastMaxTextureUnit; u += 1)
-        {
-            var textureUnit = textureUnits[u];
-            if (textureUnit.texture)
-            {
-                this.bindTextureUnit(u, textureUnit.target, null);
-                textureUnit.texture = null;
-                textureUnit.target = 0;
-            }
-        }
     }
 
     destroy()
@@ -8761,6 +8827,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 vertexBufferChanges: 0,
                 indexBufferChanges: 0,
                 vertexArrayObjectChanges: 0,
+                techniqueParametersChanges: 0,
                 techniqueChanges: 0,
                 drawCalls: 0,
                 primitives: 0,
