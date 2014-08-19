@@ -90,7 +90,7 @@ class TZWebGLTexture implements Texture
     {
         var gd = this._gd;
         var target = this._target;
-        gd.bindTexture(target, this._glTexture);
+        gd._temporaryBindTexture(target, this._glTexture);
         debug.assert(arguments.length === 1 || 3 <= arguments.length);
         if (3 <= arguments.length)
         {
@@ -116,7 +116,7 @@ class TZWebGLTexture implements Texture
         {
             this.updateData(data);
         }
-        gd.bindTexture(target, null);
+        gd._temporaryBindTexture(target, null);
     }
 
     // Internal
@@ -145,7 +145,7 @@ class TZWebGLTexture implements Texture
         var gltex = gl.createTexture();
         this._glTexture = gltex;
 
-        gd.bindTexture(target, gltex);
+        gd._temporaryBindTexture(target, gltex);
 
         var format = this.format;
         if (format === gd.PIXELFORMAT_RGBA32F ||
@@ -184,7 +184,7 @@ class TZWebGLTexture implements Texture
 
         this.updateData(data);
 
-        gd.bindTexture(target, null);
+        gd._temporaryBindTexture(target, null);
 
         return true;
     }
@@ -1154,9 +1154,9 @@ class TZWebGLTexture implements Texture
             var gl = gd._gl;
 
             var target = this._target;
-            gd.bindTexture(target, this._glTexture);
+            gd._temporaryBindTexture(target, this._glTexture);
             gl.generateMipmap(target);
-            gd.bindTexture(target, null);
+            gd._temporaryBindTexture(target, null);
         }
     }
 
@@ -7936,12 +7936,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    bindTexture(target, texture)
+    _temporaryBindTexture(target: number, texture: WebGLTexture): void
     {
         var state = this._state;
         var gl = this._gl;
 
-        var dummyUnit = (state.maxTextureUnit - 1);
+        var dummyUnit = Math.min(state.lastMaxTextureUnit, (state.maxTextureUnit - 1));
         if (state.activeTextureUnit !== dummyUnit)
         {
             state.activeTextureUnit = dummyUnit;
