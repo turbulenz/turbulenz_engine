@@ -8444,6 +8444,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
             gd._floatTextureExtension = gl.getExtension('WEBGL_color_buffer_float');
         }
 
+        // Enagle OES_texture_float_linear extension
+        if (extensionsMap['OES_texture_float_linear'])
+        {
+            gl.getExtension('OES_texture_float_linear');
+        }
+
         // Enagle OES_texture_float extension
         if (extensionsMap['OES_texture_half_float'])
         {
@@ -8452,6 +8458,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
         if (extensionsMap['WEBGL_color_buffer_half_float'])
         {
             gl.getExtension('WEBGL_color_buffer_half_float');
+        }
+
+        // Enagle OES_texture_half_float_linear  extension
+        if (extensionsMap['OES_texture_half_float_linear'])
+        {
+            gl.getExtension('OES_texture_half_float_linear');
         }
 
         // Enagle OES_vertex_array_object extension
