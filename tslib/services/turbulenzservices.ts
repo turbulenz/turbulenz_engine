@@ -404,7 +404,7 @@ class TurbulenzServices
         };
 
         var onReceiveConfig = function onReceiveConfigFn(configString) {
-            var config = JSON.parse(configString);
+            var config = <TurbulenzBridgeConfig>(JSON.parse(configString));
 
             if (config.mode)
             {
