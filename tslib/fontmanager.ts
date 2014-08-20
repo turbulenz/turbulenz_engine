@@ -236,7 +236,7 @@ class Font
             var scale = (params.scale || 1.0);
             var extraSpacing = (params.spacing ? (params.spacing * scale) : 0);
             dimensions =
-                this.calculateTextDimensions(text, scale, extraSpacing);
+                this.calculateTextDimensions(text, scale, extraSpacing, params.lineSpacing);
         }
         return this.generatePageGlyphVertices(dimensions, params, pageIdx, drawCtx);
     }
@@ -430,7 +430,7 @@ class Font
             var scale = params.scale || 1.0;
             var extraSpacing = params.spacing ? (params.spacing * scale) : 0;
             dimensions =
-                this.calculateTextDimensions(text, scale, extraSpacing);
+                this.calculateTextDimensions(text, scale, extraSpacing, params.lineSpacing);
         }
 
         var totalNumGlyphs = dimensions.numGlyphs;
@@ -621,7 +621,8 @@ class FontManager
     isFontMissing: { (path: string): boolean; };
     setPathRemapping: { (prm, assetPrefix: string): void; };
     calculateTextDimensions: { (path: string, text: string, scale: number,
-                                spacing: number): FontDimensions; };
+                                spacing: number, lineSpacing?: number,
+                                dimensions?: FontDimensions): FontDimensions; };
     reuseVertices: { (vertices: any): void; };
     destroy: { (): void; };
 
@@ -1374,13 +1375,13 @@ class FontManager
            @return {object} Width and height of the text
         */
         fm.calculateTextDimensions =
-            function calculateTextDimensionsFn(path, text, scale, spacing)
+            function calculateTextDimensionsFn(path, text, scale, spacing, lineSpacing, dimensions)
         : FontDimensions
         {
             var font = fonts[path];
             if (font)
             {
-                return font.calculateTextDimensions(text, scale, spacing);
+                return font.calculateTextDimensions(text, scale, spacing, lineSpacing, dimensions);
             }
             else
             {

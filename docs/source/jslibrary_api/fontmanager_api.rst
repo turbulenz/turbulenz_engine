@@ -263,7 +263,7 @@ Calculate text dimensions of a block of text and a font.
 
 **Syntax** ::
 
-    var dimensions = fontManager.calculateTextDimensions(name, text, scale, spacing);
+    var dimensions = fontManager.calculateTextDimensions(name, text, scale, spacing, lineSpacing, dimensions);
     var width = dimensions.width;
     var height = dimensions.height;
     var linesWidth = dimensions.linesWidth;
@@ -281,6 +281,13 @@ Calculate text dimensions of a block of text and a font.
 
 ``spacing``
     Extra spacing between characters (in pixels).
+
+``lineSpacing``
+    (Optional) extra spacing between lines (in pixels).
+
+``dimensions``
+    (Optional) A dimensions object to overwrite, so avoid creation of
+    a new one.
 
 Returns an object with properties:
 
