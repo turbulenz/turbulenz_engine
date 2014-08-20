@@ -16,6 +16,73 @@ interface Window
 }
 
 //
+// TurbulenzBridgeConfig
+//
+// Structure sent to 'config.set' when 'config.request' is called.
+interface TurbulenzBridgeConfig
+{
+    mode                      : string;
+    syncing?                  : boolean;
+    offline?                  : boolean;
+    servicesDomain?           : string;
+    bridgeServices?           : boolean;
+    joinMultiplayerSessionId? : string;
+}
+
+//
+// TurbulenzBridgeServiceRequest
+//
+// Structure sent to 'bridgeservices.*' requests
+interface TurbulenzBridgeServiceRequest
+{
+    key: number;
+    data: {
+        // url, etc
+        data: any;  // Data specific to the service request
+    };
+}
+
+// The data part of a response to a bridge service.  This is extended
+// by each of the provided services.
+interface TurbulenzBridgeServiceResponseData
+{
+    status: number;
+}
+
+//
+// TurbulenzBridgeServiceResponse
+//
+// Structure sent from the bridge via 'bridgeservices.repsonse' in
+// reply to 'bridgeservices.*' requests.  (Currently same as the
+// request struct, but with a status value.
+interface TurbulenzBridgeServiceResponse
+{
+    key: number;
+    data: TurbulenzBridgeServiceResponseData;
+}
+
+//
+// GameSessionCreateRequest
+//
+interface GameSessionCreateRequest
+{
+    closeExistingSessions?: number;  // 1 or unset
+}
+
+interface GameSessionCreateResponseMappingTable
+{
+    assetPrefix: string;
+    mappingTablePrefix: string;
+    mappingTableURL: string;
+}
+
+interface GameSessionCreateResponse extends TurbulenzBridgeServiceResponseData
+{
+    mappingTable: GameSessionCreateResponseMappingTable;
+    gameSessionId: string;
+}
+
+//
 // Currency
 //
 interface Currency

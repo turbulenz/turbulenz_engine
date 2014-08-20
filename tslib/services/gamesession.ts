@@ -17,7 +17,7 @@ interface GameSessionInfo
 {
     sessionData: any;
     playerSessionData: any;
-};
+}
 
 interface GameSessionPlayerData
 {
@@ -27,7 +27,7 @@ interface GameSessionPlayerData
     rank: string;
     score: string;
     sortkey: string;
-};
+}
 
 class GameSession
 {
@@ -40,7 +40,7 @@ class GameSession
     gameSessionId: string;
     gameSlug: string;
 
-    mappingTable: { [idx: string]: string; };
+    mappingTable: GameSessionCreateResponseMappingTable;
 
     errorCallbackFn: { (response: string, status?: number) : void; };
 
@@ -237,12 +237,14 @@ class GameSession
             return gameSession;
         }
 
-        var gameSessionRequestCallback = function gameSessionRequestCallbackFn(jsonResponse, status)
+        var gameSessionRequestCallback =
+            function gameSessionRequestCallbackFn(jsonResponse, status)
         {
             if (status === 200)
             {
-                gameSession.mappingTable = jsonResponse.mappingTable;
-                gameSession.gameSessionId = jsonResponse.gameSessionId;
+                var response = <GameSessionCreateResponse>(jsonResponse);
+                gameSession.mappingTable = response.mappingTable;
+                gameSession.gameSessionId = response.gameSessionId;
 
                 if (sessionCreatedFn)
                 {
@@ -276,7 +278,7 @@ class GameSession
             createSessionURL += '/' + mode;
         }
 
-        var dataSpec: any = {};
+        var dataSpec: GameSessionCreateRequest = {};
         if (options)
         {
             if (options.closeExistingSessions)
