@@ -4178,11 +4178,11 @@ class WebGLTechnique implements Technique
             var passes = this.passes;
             if (passes.length === 1)
             {
-                gd.setParametersImmediate(passes[0].parameters, fakeTechniqueParameters);
+                gd._setParametersImmediate(passes[0].parameters, fakeTechniqueParameters);
             }
             else
             {
-                gd.setParametersDeferred(gd, passes, fakeTechniqueParameters);
+                gd._setParametersDeferred(gd, passes, fakeTechniqueParameters);
             }
 
             for (p in fakeTechniqueParameters)
@@ -5162,7 +5162,7 @@ class WebGLDrawParameters implements DrawParameters
     /* tslint:enable:no-unused-variable */
 
     // DrawParameters
-    technique       : WebGLTechnique;
+    technique       : WebGLTechnique; // (getter/setter)
     primitive       : number;
     indexBuffer     : WebGLIndexBuffer; // (getter/setter)
     count           : number;
@@ -5172,18 +5172,20 @@ class WebGLDrawParameters implements DrawParameters
     [idx: number]   : any;
 
     // WebGLDrawParameters (internal)
+    /* private */ _technique              : WebGLTechnique;
     /* private */ _endStreams             : number;
     /* private */ _endTechniqueParameters : number;
     /* private */ _endInstances           : number;
     /* private */ _indexBuffer            : WebGLIndexBuffer;
     /* private */ _dirty                  : boolean;
     /* private */ _vao                    : any;
+    /* private */ _parametersList         : any[];
 
     constructor()
     {
         // Streams, TechniqueParameters and Instances are stored as indexed properties
         this.sortKey = 0;
-        this.technique = null;
+        this._technique = null;
         this._endStreams = 0;
         this._endTechniqueParameters = (16 * 3);
         this._endInstances = ((16 * 3) + 8);
@@ -5195,11 +5197,16 @@ class WebGLDrawParameters implements DrawParameters
         this._indexBuffer = null;
         this._dirty = true;
         this._vao = null;
+        this._parametersList = [];
 
-        // Initialize for 1 Stream
-        this[0] = null;
-        this[1] = null;
-        this[2] = 0;
+        // Initialize Streams
+        var n;
+        for (n = 0; n < (16 * 3); n += 3)
+        {
+            this[n + 0] = null;
+            this[n + 1] = null;
+            this[n + 2] = 0;
+        }
 
         // Initialize for 2 TechniqueParameters
         this[(16 * 3) + 0] = null;
@@ -5225,7 +5232,11 @@ class WebGLDrawParameters implements DrawParameters
         {
             indx += (16 * 3);
 
-            this[indx] = techniqueParameters;
+            if (this[indx] !== techniqueParameters)
+            {
+                this[indx] = techniqueParameters;
+                this._parametersList.length = 0;
+            }
 
             var endTechniqueParameters = this._endTechniqueParameters;
             if (techniqueParameters)
@@ -5379,17 +5390,69 @@ class WebGLDrawParameters implements DrawParameters
         return (this._endInstances - ((16 * 3) + 8));
     }
 
+    _getParametersList(passParameters): any[]
+    {
+        var parametersList = this._parametersList;
+        if (parametersList.length === 0)
+        {
+            var endTechniqueParameters = this._endTechniqueParameters;
+            var offset = 0;
+            var t;
+            for (t = (16 * 3); t < endTechniqueParameters; t += 1)
+            {
+                var techniqueParameters = this[t];
+                if (techniqueParameters)
+                {
+                    var baseOffset = offset;
+                    var p;
+                    offset += 1;
+                    for (p in techniqueParameters)
+                    {
+                        var parameter = passParameters[p];
+                        if (parameter !== undefined &&
+                            techniqueParameters[p] !== undefined)
+                        {
+                            parametersList[offset] = p;
+                            offset += 1;
+
+                            parametersList[offset] = parameter;
+                            offset += 1;
+                        }
+                    }
+                    parametersList[baseOffset] = offset;
+                }
+            }
+        }
+        return parametersList;
+    }
+
     static create(): WebGLDrawParameters
     {
         return new WebGLDrawParameters();
     }
 }
 
+Object.defineProperty(WebGLDrawParameters.prototype, "technique", {
+    get : function getTechniqueFn() {
+        return this._technique;
+    },
+    set : function setTechniqueFn(technique: WebGLTechnique) {
+        if (this._technique !== technique)
+        {
+            this._technique = technique;
+            this._parametersList.length = 0;
+        }
+    },
+    enumerable : true,
+    configurable : false
+});
+
+
 Object.defineProperty(WebGLDrawParameters.prototype, "indexBuffer", {
     get : function getIndexBufferFn() {
         return this._indexBuffer;
     },
-    set : function setIndexBufferFn(indexBuffer) {
+    set : function setIndexBufferFn(indexBuffer: WebGLIndexBuffer) {
         if (this._indexBuffer !== indexBuffer)
         {
             this._indexBuffer = indexBuffer;
@@ -5782,22 +5845,22 @@ class WebGLGraphicsDevice implements GraphicsDevice
             var parameters = passes[0].parameters;
             for (t = 0; t < numTechniqueParameters; t += 1)
             {
-                this.setParametersImmediate(parameters, arguments[t]);
+                this._setParametersImmediate(parameters, arguments[t]);
             }
         }
         else
         {
             for (t = 0; t < numTechniqueParameters; t += 1)
             {
-                this.setParametersDeferred(this, passes, arguments[t]);
+                this._setParametersDeferred(this, passes, arguments[t]);
             }
         }
     }
 
     //Internal
 
-    setParametersImmediate(parameters: { [name: string]: PassParameter },
-                           techniqueParameters: WebGLTechniqueParameters): void
+    _setParametersImmediate(parameters: { [name: string]: PassParameter },
+                            techniqueParameters: WebGLTechniqueParameters): void
     {
         var gl = this._gl;
 
@@ -5880,9 +5943,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
-    setParametersArrayCaching(parameters: { [name: string]: PassParameter },
-                              techniqueParametersArray: any[],
-                              numTechniqueParameters: number): void
+    _setParametersArrayCaching(parameters: { [name: string]: PassParameter },
+                               techniqueParametersArray: any[],
+                               numTechniqueParameters: number): void
     {
         var gl = this._gl;
         var n;
@@ -5963,8 +6026,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    setParametersCaching(parameters: { [name: string]: PassParameter },
-                         techniqueParameters: WebGLTechniqueParameters): void
+    _setParametersCaching(parameters: { [name: string]: PassParameter },
+                          techniqueParameters: WebGLTechniqueParameters): void
     {
         var gl = this._gl;
 
@@ -6051,17 +6114,105 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAYMULTIPASS
-    setParametersCachingMultiPass(gd: WebGLGraphicsDevice,
-                                  passes: WebGLPass[],
-                                  techniqueParameters: WebGLTechniqueParameters): void
+    _setParametersListCaching(techniqueParameters: WebGLTechniqueParameters,
+                              parametersList: any[],
+                              offset: number): number
     {
-        gd.setParametersCaching(passes[0].parameters, techniqueParameters);
+        var gl = this._gl;
+        var endOffset = parametersList[offset];
+        offset += 1;
+
+        while (offset < endOffset)
+        {
+            var p = parametersList[offset];
+            offset += 1;
+
+            var parameter = parametersList[offset];
+            offset += 1;
+
+            var parameterValues = techniqueParameters[p];
+            if (parameter.value !== parameterValues)
+            {
+                parameter.value = parameterValues;
+
+                var paramInfo = parameter.info;
+                var numColumns, location;
+                if (paramInfo.type === 'float')
+                {
+                    numColumns = paramInfo.columns;
+                    location = parameter.location;
+                    if (4 === numColumns)
+                    {
+                        gl.uniform4fv(location, parameterValues);
+                    }
+                    else if (3 === numColumns)
+                    {
+                        gl.uniform3fv(location, parameterValues);
+                    }
+                    else if (2 === numColumns)
+                    {
+                        gl.uniform2fv(location, parameterValues);
+                    }
+                    else if (1 === paramInfo.rows)
+                    {
+                        gl.uniform1f(location, parameterValues);
+                    }
+                    else //if (1 === numColumns)
+                    {
+                        gl.uniform1fv(location, parameterValues);
+                    }
+                }
+                else if (paramInfo.sampler !== undefined)
+                {
+                    this.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                }
+                else
+                {
+                    numColumns = paramInfo.columns;
+                    location = parameter.location;
+                    if (4 === numColumns)
+                    {
+                        gl.uniform4iv(location, parameterValues);
+                    }
+                    else if (3 === numColumns)
+                    {
+                        gl.uniform3iv(location, parameterValues);
+                    }
+                    else if (2 === numColumns)
+                    {
+                        gl.uniform2iv(location, parameterValues);
+                    }
+                    else if (1 === paramInfo.rows)
+                    {
+                        gl.uniform1i(location, parameterValues);
+                    }
+                    else //if (1 === numColumns)
+                    {
+                        gl.uniform1iv(location, parameterValues);
+                    }
+                }
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+            }
+        }
+
+        return offset;
     }
 
-    setParametersDeferred(gd: WebGLGraphicsDevice,
-                          passes: WebGLPass[],
-                          techniqueParameters: WebGLTechniqueParameters): void
+    // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAYMULTIPASS
+    _setParametersCachingMultiPass(gd: WebGLGraphicsDevice,
+                                   passes: WebGLPass[],
+                                   techniqueParameters: WebGLTechniqueParameters): void
+    {
+        gd._setParametersCaching(passes[0].parameters, techniqueParameters);
+    }
+
+    _setParametersDeferred(gd: WebGLGraphicsDevice,
+                           passes: WebGLPass[],
+                           techniqueParameters: WebGLTechniqueParameters): void
     {
         var numPasses = passes.length;
         var min = Math.min;
@@ -6137,7 +6288,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
-    setTechniqueCaching(technique: WebGLTechnique, drawArrayId: number)
+    _setTechniqueCaching(technique: WebGLTechnique, drawArrayId: number)
     {
         var pass = technique.passes[0];
 
@@ -6271,6 +6422,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var indexStride = 0;
         var mask = 0;
         var t = 0;
+        var offset = 0;
 
         if (activeIndexBuffer)
         {
@@ -6281,7 +6433,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         for (var n = 0; n < numDrawParameters; n += 1)
         {
             var drawParameters = drawParametersArray[n];
-            var technique: WebGLTechnique = drawParameters.technique;
+            var technique: WebGLTechnique = drawParameters._technique;
             var endTechniqueParameters = drawParameters._endTechniqueParameters;
             var endStreams = drawParameters._endStreams;
             var endInstances = drawParameters._endInstances;
@@ -6294,7 +6446,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 lastTechnique = technique;
 
-                this.setTechniqueCaching(technique, drawArrayId);
+                this._setTechniqueCaching(technique, drawArrayId);
 
                 pass = technique.passes[0];
                 passParameters = pass.parameters;
@@ -6312,15 +6464,18 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     technique.checkProperties(this);
                 }
 
-                this.setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
+                this._setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
             }
 
+            var parametersList = drawParameters._getParametersList(passParameters);
+
+            offset = 0;
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
             {
                 techniqueParameters = drawParameters[t];
                 if (techniqueParameters)
                 {
-                    this.setParametersCaching(passParameters, techniqueParameters);
+                    offset = this._setParametersListCaching(techniqueParameters, parametersList, offset);
                 }
             }
 
@@ -6382,7 +6537,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     do
                     {
-                        this.setParametersCaching(passParameters, drawParameters[t]);
+                        this._setParametersCaching(passParameters, drawParameters[t]);
 
                         gl.drawElements(primitive, count, indexFormat, firstIndex);
 
@@ -6412,7 +6567,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     do
                     {
-                        this.setParametersCaching(passParameters, drawParameters[t]);
+                        this._setParametersCaching(passParameters, drawParameters[t]);
 
                         gl.drawArrays(primitive, firstIndex, count);
 
@@ -6482,11 +6637,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var indexFormat = 0;
         var indexStride = 0;
         var t = 0;
+        var offset = 0;
 
         for (var n = 0; n < numDrawParameters; n += 1)
         {
             var drawParameters = drawParametersArray[n];
-            var technique: WebGLTechnique = drawParameters.technique;
+            var technique: WebGLTechnique = drawParameters._technique;
             var endTechniqueParameters = drawParameters._endTechniqueParameters;
             var endStreams = drawParameters._endStreams;
             var endInstances = drawParameters._endInstances;
@@ -6499,7 +6655,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 lastTechnique = technique;
 
-                this.setTechniqueCaching(technique, drawArrayId);
+                this._setTechniqueCaching(technique, drawArrayId);
 
                 pass = technique.passes[0];
                 passParameters = pass.parameters;
@@ -6509,15 +6665,18 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     technique.checkProperties(this);
                 }
 
-                this.setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
+                this._setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
             }
 
+            var parametersList = drawParameters._getParametersList(passParameters);
+
+            offset = 0;
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
             {
                 techniqueParameters = drawParameters[t];
                 if (techniqueParameters)
                 {
-                    this.setParametersCaching(passParameters, techniqueParameters);
+                    offset = this._setParametersListCaching(techniqueParameters, parametersList, offset);
                 }
             }
 
@@ -6619,7 +6778,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     do
                     {
-                        this.setParametersCaching(passParameters, drawParameters[t]);
+                        this._setParametersCaching(passParameters, drawParameters[t]);
 
                         gl.drawElements(primitive, count, indexFormat, firstIndex);
 
@@ -6649,7 +6808,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     do
                     {
-                        this.setParametersCaching(passParameters, drawParameters[t]);
+                        this._setParametersCaching(passParameters, drawParameters[t]);
 
                         gl.drawArrays(primitive, firstIndex, count);
 
@@ -6697,8 +6856,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var gl = this._gl;
         var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
 
-        var setParametersCaching = this.setParametersCachingMultiPass;
-        var setParametersDeferred = this.setParametersDeferred;
+        var setParametersCaching = this._setParametersCachingMultiPass;
+        var setParametersDeferred = this._setParametersDeferred;
 
         var numGlobalTechniqueParameters = globalTechniqueParametersArray.length;
 
@@ -6744,7 +6903,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         for (var n = 0; n < numDrawParameters; n += 1)
         {
             var drawParameters = <WebGLDrawParameters>(drawParametersArray[n]);
-            var technique: WebGLTechnique = drawParameters.technique;
+            var technique: WebGLTechnique = drawParameters._technique;
             var endTechniqueParameters = drawParameters._endTechniqueParameters;
             var endStreams = drawParameters._endStreams;
             var endInstances = drawParameters._endInstances;
@@ -6761,7 +6920,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 numPasses = passes.length;
                 if (1 === numPasses)
                 {
-                    this.setTechniqueCaching(technique, drawArrayId);
+                    this._setTechniqueCaching(technique, drawArrayId);
                     setParameters = setParametersCaching;
 
                     /* tslint:disable:no-bitwise */
@@ -7493,7 +7652,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     createTechniqueParameterBuffer(params): TechniqueParameterBuffer
     {
         // TOOD: We're returning a float array, which doesn't have all
-        // the proprties that are expected.
+        // the properties that are expected.
         return <TechniqueParameterBuffer><any>
             techniqueParameterBufferCreate(params);
     }

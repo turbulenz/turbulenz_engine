@@ -10,6 +10,14 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-08-20
+
+- The DrawParameters object is now shadowing the Shader parameters set by its TechniqueParameters in order
+  to optimize the dispatch of the parameters values by GraphicsDevice.drawArray.
+  This significant optimization does require a call to DrawParameters.setTechniqueParameters if properties are
+  *added* to or *removed* from one of its TechniqueParameters objects,
+  otherwise the DrawParameters object will not be aware of the changes.
+
 2014-07-25
 
 - Removed the Turbulenz browser plugin for Windows, since all modern
@@ -100,6 +108,7 @@ Version 1.3
 - Added closeExistingSessions option to TurbulenzServices.createGameSession function.
 - Added TurbulenzServices.onGameSessionClosed property to detect when a gamesession has been closed remotely.
 - Added closeExistingSessions option to the Tic-Tac-Toe app.
+
   * Corrected 2D text rendering order
   * Added additional advanced callbacks/modified call back behavior
 
