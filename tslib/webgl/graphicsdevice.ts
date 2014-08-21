@@ -5426,6 +5426,55 @@ class WebGLDrawParameters implements DrawParameters
         return parametersList;
     }
 
+    _createVAO(gd: WebGLGraphicsDevice): number
+    {
+        var gl = gd._gl;
+
+        this._vao = gd._vertexArrayObjectExtension.createVertexArrayOES();
+
+        gd._vertexArrayObjectExtension.bindVertexArrayOES(this._vao)
+
+        var endStreams = this._endStreams;
+        var attributeMask = 0;
+        var v;
+        for (v = 0; v < endStreams; v += 3)
+        {
+            var vertexBuffer = this[v];
+            if (vertexBuffer)
+            {
+                var semantics = this[v + 1];
+
+                var offset = this[v + 2];
+                if (offset)
+                {
+                    offset *= vertexBuffer._strideInBytes;
+                }
+                else
+                {
+                    offset = 0;
+                }
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer._glBuffer);
+
+                /* tslint:disable:no-bitwise */
+                attributeMask |= vertexBuffer.bindAttributes(semantics, offset);
+                /* tslint:enable:no-bitwise */
+
+                if (debug)
+                {
+                    gd.metrics.vertexBufferChanges += 1;
+                }
+            }
+        }
+
+        if (this._indexBuffer)
+        {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer._glBuffer);
+        }
+
+        return attributeMask;
+    }
+
     static create(): WebGLDrawParameters
     {
         return new WebGLDrawParameters();
@@ -5695,7 +5744,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     /* private */ _drawBuffersExtension          : any;
     /* private */ _floatTextureExtension         : any;
     /* private */ _halfFloatTextureExtension     : any;
-    private _vertexArrayObjectExtension          : any;
+    /* private */ _vertexArrayObjectExtension    : any;
 
     private _supportedVideoExtensions            : TZWebGLVideoSupportedExtensions;
 
@@ -6601,7 +6650,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                  sortMode?: number)
     {
         var gl = this._gl;
-        var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
 
         var numDrawParameters = drawParametersArray.length;
         if (numDrawParameters > 1 && sortMode)
@@ -6697,59 +6745,19 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     drawParameters._dirty = false;
 
-                    drawParameters._vao = vertexArrayObjectExtension.createVertexArrayOES();
-
-                    vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
-
-                    attributeMask = 0;
-                    for (v = 0; v < endStreams; v += 3)
-                    {
-                        vertexBuffer = drawParameters[v];
-                        if (vertexBuffer)
-                        {
-                            semantics = drawParameters[v + 1];
-
-                            offset = drawParameters[v + 2];
-                            if (offset)
-                            {
-                                offset *= vertexBuffer._strideInBytes;
-                            }
-                            else
-                            {
-                                offset = 0;
-                            }
-
-                            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer._glBuffer);
-
-                            /* tslint:disable:no-bitwise */
-                            attributeMask |= vertexBuffer.bindAttributes(semantics, offset);
-                            /* tslint:enable:no-bitwise */
-
-                            if (debug)
-                            {
-                                this.metrics.vertexBufferChanges += 1;
-                            }
-                        }
-                    }
+                    attributeMask = drawParameters._createVAO(this);
 
                     /* tslint:disable:no-bitwise */
                     this._clientStateMask = (~attributeMask) & 0xf;
                     /* tslint:enable:no-bitwise */
                     this.enableClientState(attributeMask);
-
-                    if (indexBuffer)
-                    {
-                        gl.bindBuffer(ELEMENT_ARRAY_BUFFER, indexBuffer._glBuffer);
-                    }
                 }
                 else
                 {
                     vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
                 }
 
-                if (indexBuffer &&
-                    (!lastDrawParameters ||
-                     lastDrawParameters._indexBuffer !== indexBuffer))
+                if (indexBuffer)
                 {
                     indexFormat = indexBuffer.format;
                     indexStride = indexBuffer.stride;
