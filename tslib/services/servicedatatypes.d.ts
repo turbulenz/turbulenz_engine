@@ -65,8 +65,9 @@ interface TurbulenzBridgeServiceResponse
 }
 
 //
-// GameSessionCreateRequest
+// GameSession API
 //
+
 interface GameSessionCreateRequest
 {
     closeExistingSessions?: number;  // 1 or unset
@@ -82,6 +83,11 @@ interface GameSessionCreateResponseMappingTable
 interface GameSessionCreateResponse extends TurbulenzBridgeServiceResponseData
 {
     mappingTable: GameSessionCreateResponseMappingTable;
+    gameSessionId: string;
+}
+
+interface GameSessionDestroyRequest
+{
     gameSessionId: string;
 }
 

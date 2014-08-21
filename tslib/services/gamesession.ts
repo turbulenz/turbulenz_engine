@@ -69,7 +69,7 @@ class GameSession
     // It will not be called if destroy is called in TurbulenzEngine.onUnload
     destroy(callbackFn?)
     {
-        var dataSpec;
+        var dataSpec : GameSessionDestroyRequest;
         if (this.pendingUpdate)
         {
             TurbulenzEngine.clearTimeout(this.pendingUpdate);
@@ -83,7 +83,9 @@ class GameSession
             TurbulenzBridge.destroyedGameSession(this.gameSessionId);
             this.destroyed = true;
 
-            dataSpec = {'gameSessionId': this.gameSessionId};
+            dataSpec = {
+                gameSessionId: this.gameSessionId
+            };
 
             this.service.request({
                 url: '/api/v1/games/destroy-session',
