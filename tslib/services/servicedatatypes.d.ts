@@ -29,6 +29,12 @@ interface TurbulenzBridgeConfig
     joinMultiplayerSessionId? : string;
 }
 
+interface TurbulenzBridgeServiceRequestData
+{
+    url: string;  // URL of the API this represents
+    data: any;    // Data specific to the service request
+}
+
 //
 // TurbulenzBridgeServiceRequest
 //
@@ -36,10 +42,7 @@ interface TurbulenzBridgeConfig
 interface TurbulenzBridgeServiceRequest
 {
     key: number;
-    data: {
-        // url, etc
-        data: any;  // Data specific to the service request
-    };
+    data: TurbulenzBridgeServiceRequestData;
 }
 
 // The data part of a response to a bridge service.  This is extended
@@ -80,6 +83,34 @@ interface GameSessionCreateResponse extends TurbulenzBridgeServiceResponseData
 {
     mappingTable: GameSessionCreateResponseMappingTable;
     gameSessionId: string;
+}
+
+//
+// UserData*Request structures
+//
+
+interface UserDataRequestBase
+{
+    gameSessionId: string;
+}
+interface UserDataGetKeysRequest extends UserDataRequestBase
+{
+}
+interface userDataExistsRequest extends UserDataRequestBase
+{
+}
+interface userDataGetRequest extends UserDataRequestBase
+{
+}
+interface userDataSetRequest extends UserDataRequestBase
+{
+    value: string;
+}
+interface userDataRemoveRequest extends UserDataRequestBase
+{
+}
+interface userDataRemoveAllRequest extends UserDataRequestBase
+{
 }
 
 //
