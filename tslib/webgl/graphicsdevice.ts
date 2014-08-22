@@ -5177,7 +5177,6 @@ class WebGLDrawParameters implements DrawParameters
     /* private */ _endTechniqueParameters : number;
     /* private */ _endInstances           : number;
     /* private */ _indexBuffer            : WebGLIndexBuffer;
-    /* private */ _dirty                  : boolean;
     /* private */ _vao                    : any;
     /* private */ _parametersList         : any[];
 
@@ -5195,7 +5194,6 @@ class WebGLDrawParameters implements DrawParameters
         this.userData = null;
 
         this._indexBuffer = null;
-        this._dirty = true;
         this._vao = null;
         this._parametersList = [];
 
@@ -5268,7 +5266,7 @@ class WebGLDrawParameters implements DrawParameters
             if (this[indx] !== vertexBuffer)
             {
                 this[indx] = vertexBuffer;
-                this._dirty = true;
+                this._vao = null;
             }
 
             var endStreams = this._endStreams;
@@ -5304,7 +5302,7 @@ class WebGLDrawParameters implements DrawParameters
             if (this[(indx * 3) + 1] !== semantics)
             {
                 this[(indx * 3) + 1] = semantics;
-                this._dirty = true;
+                this._vao = null;
             }
         }
     }
@@ -5317,7 +5315,7 @@ class WebGLDrawParameters implements DrawParameters
             if (this[(indx * 3) + 2] !== offset)
             {
                 this[(indx * 3) + 2] = offset;
-                this._dirty = true;
+                this._vao = null;
             }
         }
     }
@@ -5505,7 +5503,7 @@ Object.defineProperty(WebGLDrawParameters.prototype, "indexBuffer", {
         if (this._indexBuffer !== indexBuffer)
         {
             this._indexBuffer = indexBuffer;
-            this._dirty = true;
+            this._vao = null;
         }
     },
     enumerable : true,
@@ -6741,20 +6739,18 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 lastEndStreams = endStreams;
 
-                if (drawParameters._dirty)
+                if (drawParameters._vao)
                 {
-                    drawParameters._dirty = false;
-
+                    vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
+                }
+                else
+                {
                     attributeMask = drawParameters._createVAO(this);
 
                     /* tslint:disable:no-bitwise */
                     this._clientStateMask = (~attributeMask) & 0xf;
                     /* tslint:enable:no-bitwise */
                     this.enableClientState(attributeMask);
-                }
-                else
-                {
-                    vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
                 }
 
                 if (indexBuffer)
@@ -6770,7 +6766,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             }
             else
             {
-                drawParameters._dirty = false;
                 drawParameters._vao = lastDrawParameters._vao;
             }
 
