@@ -5376,40 +5376,36 @@ class WebGLDrawParameters implements DrawParameters
         return (this._endInstances - ((16 * 3) + 8));
     }
 
-    _getParametersList(passParameters): any[]
+    _buildParametersList(passParameters): void
     {
         var parametersList = this._parametersList;
-        if (parametersList.length === 0)
+        var endTechniqueParameters = this._endTechniqueParameters;
+        var offset = 0;
+        var t;
+        for (t = (16 * 3); t < endTechniqueParameters; t += 1)
         {
-            var endTechniqueParameters = this._endTechniqueParameters;
-            var offset = 0;
-            var t;
-            for (t = (16 * 3); t < endTechniqueParameters; t += 1)
+            var techniqueParameters = this[t];
+            if (techniqueParameters)
             {
-                var techniqueParameters = this[t];
-                if (techniqueParameters)
+                var baseOffset = offset;
+                var p;
+                offset += 1;
+                for (p in techniqueParameters)
                 {
-                    var baseOffset = offset;
-                    var p;
-                    offset += 1;
-                    for (p in techniqueParameters)
+                    var parameter = passParameters[p];
+                    if (parameter !== undefined &&
+                        techniqueParameters[p] !== undefined)
                     {
-                        var parameter = passParameters[p];
-                        if (parameter !== undefined &&
-                            techniqueParameters[p] !== undefined)
-                        {
-                            parametersList[offset] = p;
-                            offset += 1;
+                        parametersList[offset] = p;
+                        offset += 1;
 
-                            parametersList[offset] = parameter;
-                            offset += 1;
-                        }
+                        parametersList[offset] = parameter;
+                        offset += 1;
                     }
-                    parametersList[baseOffset] = offset;
                 }
+                parametersList[baseOffset] = offset;
             }
         }
-        return parametersList;
     }
 
     static create(): WebGLDrawParameters
@@ -6464,7 +6460,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 this._setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
             }
 
-            var parametersList = drawParameters._getParametersList(passParameters);
+            var parametersList = drawParameters._parametersList;
+            if (parametersList.length === 0)
+            {
+                drawParameters._buildParametersList(passParameters);
+            }
 
             offset = 0;
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
@@ -6656,7 +6656,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 this._setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
             }
 
-            var parametersList = drawParameters._getParametersList(passParameters);
+            var parametersList = drawParameters._parametersList;
+            if (parametersList.length === 0)
+            {
+                drawParameters._buildParametersList(passParameters);
+            }
 
             offset = 0;
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
