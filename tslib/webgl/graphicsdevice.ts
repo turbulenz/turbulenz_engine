@@ -2691,16 +2691,10 @@ class WebGLIndexBuffer implements IndexBuffer
             var glBuffer = this._glBuffer;
             if (glBuffer)
             {
-                var gl = gd._gl;
-                if (gl)
-                {
-                    gd.unsetIndexBuffer(this);
-                    gl.deleteBuffer(glBuffer);
-                }
-                delete this._glBuffer;
+                gd._deleteIndexBuffer(this);
+                this._glBuffer = null;
             }
-
-            delete this._gd;
+            this._gd = null;
         }
     }
 
@@ -3586,16 +3580,11 @@ class WebGLVertexBuffer implements VertexBuffer
             var glBuffer = this._glBuffer;
             if (glBuffer)
             {
-                var gl = gd._gl;
-                if (gl)
-                {
-                    gd.unbindVertexBuffer(glBuffer);
-                    gl.deleteBuffer(glBuffer);
-                }
-                delete this._glBuffer;
+                gd._deleteVertexBuffer(this);
+                this._glBuffer = null;
             }
 
-            delete this._gd;
+            this._gd = null;
         }
     }
 
@@ -4939,7 +4928,7 @@ class TZWebGLShader implements Shader
                 {
                     sampler.wrapR = gl.CLAMP_TO_EDGE;
                 }
-                shader._samplers[p] = gd.createSampler(sampler);
+                shader._samplers[p] = gd._createSampler(sampler);
             }
         }
 
@@ -5424,55 +5413,6 @@ class WebGLDrawParameters implements DrawParameters
         return parametersList;
     }
 
-    _createVAO(gd: WebGLGraphicsDevice): number
-    {
-        var gl = gd._gl;
-
-        this._vao = gd._vertexArrayObjectExtension.createVertexArrayOES();
-
-        gd._vertexArrayObjectExtension.bindVertexArrayOES(this._vao)
-
-        var endStreams = this._endStreams;
-        var attributeMask = 0;
-        var v;
-        for (v = 0; v < endStreams; v += 3)
-        {
-            var vertexBuffer = this[v];
-            if (vertexBuffer)
-            {
-                var semantics = this[v + 1];
-
-                var offset = this[v + 2];
-                if (offset)
-                {
-                    offset *= vertexBuffer._strideInBytes;
-                }
-                else
-                {
-                    offset = 0;
-                }
-
-                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer._glBuffer);
-
-                /* tslint:disable:no-bitwise */
-                attributeMask |= vertexBuffer.bindAttributes(semantics, offset);
-                /* tslint:enable:no-bitwise */
-
-                if (debug)
-                {
-                    gd.metrics.vertexBufferChanges += 1;
-                }
-            }
-        }
-
-        if (this._indexBuffer)
-        {
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer._glBuffer);
-        }
-
-        return attributeMask;
-    }
-
     static create(): WebGLDrawParameters
     {
         return new WebGLDrawParameters();
@@ -5509,6 +5449,16 @@ Object.defineProperty(WebGLDrawParameters.prototype, "indexBuffer", {
     enumerable : true,
     configurable : false
 });
+
+//
+// WebGLVAOItem
+//
+interface WebGLVAOItem
+{
+    endStreams: number;
+    vao: any;
+    [idx: number]: any;
+};
 
 
 //
@@ -5742,7 +5692,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
     /* private */ _drawBuffersExtension          : any;
     /* private */ _floatTextureExtension         : any;
     /* private */ _halfFloatTextureExtension     : any;
-    /* private */ _vertexArrayObjectExtension    : any;
+    private _vertexArrayObjectExtension          : any;
+    private _cachedVAOs                          : { [id: number]: WebGLVAOItem[] };
 
     private _supportedVideoExtensions            : TZWebGLVideoSupportedExtensions;
 
@@ -6669,28 +6620,20 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         var drawArrayId = (++this._drawArrayId);
         var lastTechnique: WebGLTechnique = null;
-        var lastEndStreams = -1;
-        var lastDrawParameters = null;
+        var lastVAO = null;
         var techniqueParameters = null;
-        var v = 0;
-        var vaoMatch = false;
-        var attributeMask = 0;
-        var vertexBuffer: WebGLVertexBuffer = null;
-        var semantics: WebGLSemantics = null;
-        var offset = 0;
         var pass: WebGLPass = null;
         var passParameters: { [name: string]: PassParameter } = null;
         var indexFormat = 0;
         var indexStride = 0;
-        var t = 0;
         var offset = 0;
+        var t = 0;
 
         for (var n = 0; n < numDrawParameters; n += 1)
         {
             var drawParameters = drawParametersArray[n];
             var technique: WebGLTechnique = drawParameters._technique;
             var endTechniqueParameters = drawParameters._endTechniqueParameters;
-            var endStreams = drawParameters._endStreams;
             var endInstances = drawParameters._endInstances;
             var indexBuffer = drawParameters._indexBuffer;
             var primitive = drawParameters.primitive;
@@ -6726,32 +6669,17 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 }
             }
 
-            vaoMatch = (lastEndStreams === endStreams &&
-                        lastDrawParameters._indexBuffer === indexBuffer);
-            for (v = 0; vaoMatch && v < endStreams; v += 3)
+            var vao = drawParameters._vao;
+            if (!vao)
             {
-                vaoMatch = (lastDrawParameters[v]     === drawParameters[v]     &&
-                            lastDrawParameters[v + 1] === drawParameters[v + 1] &&
-                            lastDrawParameters[v + 2] === drawParameters[v + 2]);
+                vao = this._createVAO(drawParameters);
             }
 
-            if (!vaoMatch)
+            if (lastVAO !== vao)
             {
-                lastEndStreams = endStreams;
+                lastVAO = vao;
 
-                if (drawParameters._vao)
-                {
-                    vertexArrayObjectExtension.bindVertexArrayOES(drawParameters._vao);
-                }
-                else
-                {
-                    attributeMask = drawParameters._createVAO(this);
-
-                    /* tslint:disable:no-bitwise */
-                    this._clientStateMask = (~attributeMask) & 0xf;
-                    /* tslint:enable:no-bitwise */
-                    this.enableClientState(attributeMask);
-                }
+                vertexArrayObjectExtension.bindVertexArrayOES(vao);
 
                 if (indexBuffer)
                 {
@@ -6764,12 +6692,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     this.metrics.vertexArrayObjectChanges += 1;
                 }
             }
-            else
-            {
-                drawParameters._vao = lastDrawParameters._vao;
-            }
-
-            lastDrawParameters = drawParameters;
 
             /* tslint:disable:no-bitwise */
             if (indexBuffer)
@@ -6852,6 +6774,112 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
+    _createVAO(drawParameters: WebGLDrawParameters): any
+    {
+        var endStreams = drawParameters._endStreams;
+        var indexBuffer = drawParameters._indexBuffer;
+        var id = (indexBuffer ? indexBuffer.id : 0);
+        var vaoArray = this._cachedVAOs[id];
+        var vaoItem: WebGLVAOItem;
+        var v;
+        if (vaoArray)
+        {
+            var numVAOs = vaoArray.length;
+            var n, vaoMatch;
+
+            for (n = 0; n < numVAOs; n += 1)
+            {
+                vaoItem = vaoArray[n];
+
+                vaoMatch = (vaoItem.endStreams === endStreams);
+                for (v = 0; vaoMatch && v < endStreams; v += 3)
+                {
+                    vaoMatch = (vaoItem[v]     === drawParameters[v]     &&
+                                vaoItem[v + 1] === drawParameters[v + 1] &&
+                                vaoItem[v + 2] === drawParameters[v + 2]);
+                }
+
+                if (vaoMatch)
+                {
+                    drawParameters._vao = vaoItem.vao;
+                    return vaoItem.vao;
+                }
+            }
+        }
+        else
+        {
+            this._cachedVAOs[id] = vaoArray = [];
+        }
+
+        var gl = this._gl;
+
+        var vao = this._vertexArrayObjectExtension.createVertexArrayOES();
+
+        this._vertexArrayObjectExtension.bindVertexArrayOES(vao)
+
+        var attributeMask = 0;
+        for (v = 0; v < endStreams; v += 3)
+        {
+            var vertexBuffer = drawParameters[v];
+            if (vertexBuffer)
+            {
+                var semantics = drawParameters[v + 1];
+
+                var offset = drawParameters[v + 2];
+                if (offset)
+                {
+                    offset *= vertexBuffer._strideInBytes;
+                }
+                else
+                {
+                    offset = 0;
+                }
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer._glBuffer);
+
+                /* tslint:disable:no-bitwise */
+                attributeMask |= vertexBuffer.bindAttributes(semantics, offset);
+                /* tslint:enable:no-bitwise */
+
+                if (debug)
+                {
+                    this.metrics.vertexBufferChanges += 1;
+                }
+            }
+        }
+
+        if (indexBuffer)
+        {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer._glBuffer);
+
+            if (debug)
+            {
+                this.metrics.indexBufferChanges += 1;
+            }
+        }
+
+        /* tslint:disable:no-bitwise */
+        this._clientStateMask = (~attributeMask) & 0xf;
+        /* tslint:enable:no-bitwise */
+        this.enableClientState(attributeMask);
+
+        vaoItem = <WebGLVAOItem>{
+            endStreams: endStreams,
+            vao: vao
+        };
+
+        for (v = 0; v < endStreams; v += 3)
+        {
+            vaoItem[v]     = drawParameters[v];
+            vaoItem[v + 1] = drawParameters[v + 1];
+            vaoItem[v + 2] = drawParameters[v + 2];
+        }
+
+        vaoArray.push(vaoItem);
+
+        drawParameters._vao = vao;
+        return vao;
+    }
 
     // This version suports technique with multiple passes but it is slower
     drawArrayMultiPass(drawParametersArray, globalTechniqueParametersArray, sortMode)
@@ -8044,7 +8072,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return true;
     }
 
-    createSampler(sampler)
+    _createSampler(sampler): any
     {
         var samplerKey = sampler.minFilter.toString() +
                    ':' + sampler.magFilter.toString() +
@@ -8063,21 +8091,31 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return cachedSampler;
     }
 
-    unsetIndexBuffer(indexBuffer)
+    _deleteIndexBuffer(indexBuffer: WebGLIndexBuffer): void
     {
-        if (this._activeIndexBuffer === indexBuffer)
+        var gl = this._gl;
+        if (gl)
         {
-            this._activeIndexBuffer = null;
-            var gl = this._gl;
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            if (this._activeIndexBuffer === indexBuffer)
+            {
+                this._activeIndexBuffer = null;
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            }
+            gl.deleteBuffer(indexBuffer._glBuffer);
+        }
+
+        if (this._cachedVAOs)
+        {
+            delete this._cachedVAOs[indexBuffer.id];
         }
     }
 
-    bindVertexBuffer(buffer)
+    bindVertexBuffer(buffer): void
     {
         if (this._bindedVertexBuffer !== buffer)
         {
             this._bindedVertexBuffer = buffer;
+
             var gl = this._gl;
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
@@ -8088,13 +8126,17 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
     }
 
-    unbindVertexBuffer(buffer)
+    _deleteVertexBuffer(vertexBuffer: WebGLVertexBuffer): void
     {
-        if (this._bindedVertexBuffer === buffer)
+        var gl = this._gl;
+        if (gl)
         {
-            this._bindedVertexBuffer = null;
-            var gl = this._gl;
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            if (this._bindedVertexBuffer === vertexBuffer._glBuffer)
+            {
+                this._bindedVertexBuffer = null;
+                gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            }
+            gl.deleteBuffer(vertexBuffer._glBuffer);
         }
     }
 
@@ -8652,8 +8694,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
         // Enagle OES_vertex_array_object extension
         if (extensionsMap['OES_vertex_array_object'])
         {
-            gd._vertexArrayObjectExtension = gl.getExtension('OES_vertex_array_object');
             gd.drawArray = gd.drawArrayVAO;
+            gd._vertexArrayObjectExtension = gl.getExtension('OES_vertex_array_object');
+            gd._cachedVAOs = {};
         }
 
         if (extensionsMap['WEBGL_debug_renderer_info'])
