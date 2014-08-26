@@ -4643,7 +4643,7 @@ class TZWebGLShader implements Shader
     /* private */ _programs       : any;
     /* private */ _linkedPrograms : any;
     /* private */ _parameters     : { [name: string]: WebGLShaderParameter };
-    private _samplers             : any;
+    private _samplers             : { [name: string]: TZWebGLSampler };
     private _gd                   : WebGLGraphicsDevice;
 
     getTechnique(name): Technique
@@ -4888,14 +4888,13 @@ class TZWebGLShader implements Shader
         var maxAnisotropy = gd._maxAnisotropy;
 
         shader._samplers = {};
-        var sampler;
         for (p in samplers)
         {
             if (samplers.hasOwnProperty(p))
             {
-                sampler = samplers[p];
+                var fileSampler: any = samplers[p];
 
-                var samplerMaxAnisotropy = sampler.MaxAnisotropy;
+                var samplerMaxAnisotropy = fileSampler.MaxAnisotropy;
                 if (samplerMaxAnisotropy)
                 {
                     if (samplerMaxAnisotropy > maxAnisotropy)
@@ -4908,12 +4907,12 @@ class TZWebGLShader implements Shader
                     samplerMaxAnisotropy = defaultSampler.maxAnisotropy;
                 }
 
-                sampler = {
-                    minFilter : (sampler.MinFilter || defaultSampler.minFilter),
-                    magFilter : (sampler.MagFilter || defaultSampler.magFilter),
-                    wrapS : (sampler.WrapS || defaultSampler.wrapS),
-                    wrapT : (sampler.WrapT || defaultSampler.wrapT),
-                    wrapR : (sampler.WrapR || defaultSampler.wrapR),
+                var sampler: TZWebGLSampler = {
+                    minFilter : (fileSampler.MinFilter || defaultSampler.minFilter),
+                    magFilter : (fileSampler.MagFilter || defaultSampler.magFilter),
+                    wrapS : (fileSampler.WrapS || defaultSampler.wrapS),
+                    wrapT : (fileSampler.WrapT || defaultSampler.wrapT),
+                    wrapR : (fileSampler.WrapR || defaultSampler.wrapR),
                     maxAnisotropy : samplerMaxAnisotropy
                 };
                 if (sampler.wrapS === 0x2900)
@@ -5682,7 +5681,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     private _techniqueParametersArray            : any[];
     private _drawArrayId                         : number;
 
-    private _cachedSamplers                      : any;
+    private _cachedSamplers                      : { [key: string]: TZWebGLSampler };
 
     /* private */ _compressedTexturesExtension   : any;
     /* private */ _WEBGL_compressed_texture_s3tc : boolean;
@@ -6815,7 +6814,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         var vao = this._vertexArrayObjectExtension.createVertexArrayOES();
 
-        this._vertexArrayObjectExtension.bindVertexArrayOES(vao)
+        this._vertexArrayObjectExtension.bindVertexArrayOES(vao);
 
         var attributeMask = 0;
         for (v = 0; v < endStreams; v += 3)
@@ -8072,7 +8071,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return true;
     }
 
-    _createSampler(sampler): any
+    _createSampler(sampler: TZWebGLSampler): TZWebGLSampler
     {
         var samplerKey = sampler.minFilter.toString() +
                    ':' + sampler.magFilter.toString() +
