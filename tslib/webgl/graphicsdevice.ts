@@ -6378,7 +6378,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     // This version only support technique with a single pass, but it is faster
     drawArray(drawParametersArray: WebGLDrawParameters[],
               globalTechniqueParametersArray: TechniqueParameters[],
-              sortMode?: number)
+              sortMode?: number): void
     {
         var gl = this._gl;
         var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
@@ -6595,11 +6595,16 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
     drawArrayVAO(drawParametersArray: WebGLDrawParameters[],
                  globalTechniqueParametersArray: TechniqueParameters[],
-                 sortMode?: number)
+                 sortMode?: number): void
     {
         var gl = this._gl;
 
         var numDrawParameters = drawParametersArray.length;
+        if (numDrawParameters === 0)
+        {
+            return;
+        }
+
         if (numDrawParameters > 1 && sortMode)
         {
             if (sortMode > 0)
@@ -6885,7 +6890,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // This version suports technique with multiple passes but it is slower
-    drawArrayMultiPass(drawParametersArray, globalTechniqueParametersArray, sortMode)
+    drawArrayMultiPass(drawParametersArray: WebGLDrawParameters[],
+                       globalTechniqueParametersArray: TechniqueParameters[],
+                       sortMode?: number): void
     {
         var gl = this._gl;
         var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
