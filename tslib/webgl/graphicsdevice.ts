@@ -5211,6 +5211,31 @@ class WebGLDrawParameters implements DrawParameters
         return this;
     }
 
+    _differentParameters(oldTP, newTP): boolean
+    {
+        var p;
+
+        for (p in oldTP)
+        {
+            if (oldTP.hasOwnProperty(p) &&
+                !newTP.hasOwnProperty(p))
+            {
+                return true;
+            }
+        }
+
+        for (p in newTP)
+        {
+            if (newTP.hasOwnProperty(p) &&
+                !oldTP.hasOwnProperty(p))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     setTechniqueParameters(indx, techniqueParameters)
     {
         debug.assert(indx < 8, "indx out of range");
@@ -5218,10 +5243,16 @@ class WebGLDrawParameters implements DrawParameters
         {
             indx += (16 * 3);
 
-            if (this[indx] !== techniqueParameters)
+            var oldTechniqueParameters = this[indx];
+            if (oldTechniqueParameters !== techniqueParameters)
             {
+                if (!oldTechniqueParameters ||
+                    !techniqueParameters ||
+                    this._differentParameters(oldTechniqueParameters, techniqueParameters))
+                {
+                    this._parametersList.length = 0;
+                }
                 this[indx] = techniqueParameters;
-                this._parametersList.length = 0;
             }
 
             var endTechniqueParameters = this._endTechniqueParameters;
