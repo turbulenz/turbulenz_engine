@@ -5387,9 +5387,7 @@ class WebGLDrawParameters implements DrawParameters
             var techniqueParameters = this[t];
             if (techniqueParameters)
             {
-                var baseOffset = offset;
                 var p;
-                offset += 1;
                 for (p in techniqueParameters)
                 {
                     var parameter = passParameters[p];
@@ -5403,7 +5401,8 @@ class WebGLDrawParameters implements DrawParameters
                         offset += 1;
                     }
                 }
-                parametersList[baseOffset] = offset;
+                parametersList[offset] = null;
+                offset += 1;
             }
         }
     }
@@ -6112,14 +6111,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
                               offset: number): number
     {
         var gl = this._gl;
-        var endOffset = parametersList[offset];
+
+        var p = parametersList[offset];
         offset += 1;
 
-        while (offset < endOffset)
+        while (p !== null)
         {
-            var p = parametersList[offset];
-            offset += 1;
-
             var parameter = parametersList[offset];
             offset += 1;
 
@@ -6190,6 +6187,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     this.metrics.techniqueParametersChanges += 1;
                 }
             }
+
+            p = parametersList[offset];
+            offset += 1;
         }
 
         return offset;
