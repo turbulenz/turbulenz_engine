@@ -6389,6 +6389,8 @@ class ParticleRenderable
             parameters.technique = system.renderer.technique;
             parameters.primitive = system.geometry.primitive;
             parameters.count     = system.maxParticles * system.geometry.particleStride;
+            parameters.sortKey = renderingCommonSortKeyFn(system.renderer.technique.id,
+                                                          system.renderParameters['vParticleState'].id);
             parameters.setTechniqueParameters(this.parametersIndex, system.renderParameters);
         }
     }
