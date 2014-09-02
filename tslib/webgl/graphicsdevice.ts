@@ -5217,8 +5217,7 @@ class WebGLDrawParameters implements DrawParameters
 
         for (p in oldTP)
         {
-            if (oldTP.hasOwnProperty(p) &&
-                !newTP.hasOwnProperty(p))
+            if (newTP[p] === undefined)
             {
                 return true;
             }
@@ -5226,8 +5225,7 @@ class WebGLDrawParameters implements DrawParameters
 
         for (p in newTP)
         {
-            if (newTP.hasOwnProperty(p) &&
-                !oldTP.hasOwnProperty(p))
+            if (oldTP[p] === undefined)
             {
                 return true;
             }
