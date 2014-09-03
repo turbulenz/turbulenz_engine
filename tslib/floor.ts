@@ -22,7 +22,11 @@ class Floor
         var primitive = gd.PRIMITIVE_LINES;
         var vertexFormats = [gd.VERTEXFORMAT_FLOAT2];
         var semantics = gd.createSemantics([gd.SEMANTIC_POSITION]);
-        var techniqueParameters = gd.createTechniqueParameters();
+        var techniqueParameters = gd.createTechniqueParameters({
+            worldViewProjection: md.m44BuildIdentity(),
+            color: md.v4BuildZero(),
+            fadeToColor: md.v4BuildZero()
+        });
 
         var maxValue = Number.MAX_VALUE;
         var abs = Math.abs;
@@ -147,9 +151,11 @@ class Floor
                                                                       worldPos,
                                                                       techniqueParameters.worldViewProjection);
 
-                techniqueParameters.color = (<Floor><any>this).color;
-                techniqueParameters.fadeToColor =
-                    (<Floor><any>this).fadeToColor;
+                techniqueParameters.color = md.v4Copy((<Floor><any>this).color,
+                                                      techniqueParameters.color);
+
+                techniqueParameters.fadeToColor = md.v4Copy((<Floor><any>this).fadeToColor,
+                                                            techniqueParameters.fadeToColor);
 
                 gd.setTechnique(technique);
 
