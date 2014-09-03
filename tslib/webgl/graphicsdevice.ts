@@ -3641,186 +3641,153 @@ interface WebGLShaderParameter extends ShaderParameter
     sampler : any;
 };
 
-interface PassParameter
+interface WebGLProgramParameter
 {
     info: WebGLShaderParameter;
-    value: any;
+    current: any;
+    values: any;
     location: WebGLUniformLocation;
     textureUnit: number;
     dirty?: number;
 };
 
-interface StateBase
+class WebGLShaderProgram
 {
-    name: string;
-    set: (boolean) => void;
-    reset: () => void;
-};
+    glProgram : WebGLProgram;
+    semanticsMask : number;
+    parameters : { [name: string]: WebGLProgramParameter };
+    parametersArray : WebGLProgramParameter[];
+    numTextureUnits : number;
+    _initialized: boolean;
 
-// Use this in addStateHandler, stateHandlers
-interface StateHandler extends StateBase
-{
-    defaultValues: any[];
-    parse: (any) => any;
-};
-
-interface PassState extends StateBase
-{
-    values: any[];
-};
-
-class WebGLPass implements Pass
-{
-    /* tslint:disable:no-unused-variable */
-    static version = 1;
-    /* tslint:enable:no-unused-variable */
-
-    // DO NOT CHANGE: This table is independent from the actual attribute index on GraphicsDevice.SEMANTIC_xxx
-    static semanticToAttr = {
-        POSITION: "ATTR0",
-        POSITION0: "ATTR0",
-        BLENDWEIGHT: "ATTR1",
-        BLENDWEIGHT0: "ATTR1",
-        NORMAL: "ATTR2",
-        NORMAL0: "ATTR2",
-        COLOR: "ATTR3",
-        COLOR0: "ATTR3",
-        COLOR1: "ATTR4",
-        SPECULAR: "ATTR4",
-        FOGCOORD: "ATTR5",
-        TESSFACTOR: "ATTR5",
-        PSIZE0: "ATTR6",
-        BLENDINDICES: "ATTR7",
-        BLENDINDICES0: "ATTR7",
-        TEXCOORD: "ATTR8",
-        TEXCOORD0: "ATTR8",
-        TEXCOORD1: "ATTR9",
-        TEXCOORD2: "ATTR10",
-        TEXCOORD3: "ATTR11",
-        TEXCOORD4: "ATTR12",
-        TEXCOORD5: "ATTR13",
-        TEXCOORD6: "ATTR14",
-        TEXCOORD7: "ATTR15",
-        TANGENT: "ATTR14",
-        TANGENT0: "ATTR14",
-        BINORMAL0: "ATTR15",
-        BINORMAL: "ATTR15",
-        PSIZE: "ATTR6"
-    };
-
-    name: string;
-    parameters: { [name: string]: PassParameter };
-    parametersArray: PassParameter[];
-
-    glProgram: WebGLProgram;
-    semanticsMask: number;
-    numTextureUnits: number;
-    numParameters: number;
-    states: PassState[];
-    statesSet: any;
-    dirty: boolean;
-
-    updateParametersData(gd)
+    constructor(gd: WebGLGraphicsDevice,
+                programs: { [name: string]: WebGLShader },
+                parameters: { [name: string]: WebGLShaderParameter },
+                programNames: string[],
+                semanticNames: string[],
+                parameterNames: string[])
     {
         var gl = gd._gl;
 
-        this.dirty = false;
+        // Create GL program
+        var glProgram = gl.createProgram();
 
-        // Set parameters
-        var parameters = this.parametersArray;
-        var numParameters = parameters.length;
-        var n;
-        for (n = 0; n < numParameters; n += 1)
+        var numPrograms = programNames.length;
+        var p;
+        for (p = 0; p < numPrograms; p += 1)
         {
-            var parameter = parameters[n];
-            if (parameter.dirty)
+            var glShader = programs[programNames[p]];
+            if (glShader)
             {
-                parameter.dirty = 0;
+                gl.attachShader(glProgram, glShader);
+            }
+        }
 
-                var paramInfo = parameter.info;
-                var location = parameter.location;
-                if (paramInfo &&
-                    null !== location)
+        var numSemantics = semanticNames.length;
+        var semanticsMask = 0;
+        var s;
+        for (s = 0; s < numSemantics; s += 1)
+        {
+            var semanticName = semanticNames[s];
+            var semantic = gd['SEMANTIC_' + semanticName];
+            if (semantic !== undefined)
+            {
+                /* tslint:disable:no-bitwise */
+                semanticsMask |= (1 << semantic);
+                /* tslint:enable:no-bitwise */
+                if (0 === semanticName.indexOf("ATTR"))
                 {
-                    var parameterValues = paramInfo.values;
-
-                    var numColumns;
-                    if (paramInfo.type === 'float')
-                    {
-                        numColumns = paramInfo.columns;
-                        if (4 === numColumns)
-                        {
-                            gl.uniform4fv(location, parameterValues);
-                        }
-                        else if (3 === numColumns)
-                        {
-                            gl.uniform3fv(location, parameterValues);
-                        }
-                        else if (2 === numColumns)
-                        {
-                            gl.uniform2fv(location, parameterValues);
-                        }
-                        else if (1 === paramInfo.rows)
-                        {
-                            gl.uniform1f(location, parameterValues[0]);
-                        }
-                        else //if (1 === numColumns)
-                        {
-                            gl.uniform1fv(location, parameterValues);
-                        }
-                    }
-                    else if (paramInfo.sampler !== undefined)
-                    {
-                        gd.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
-                    }
-                    else
-                    {
-                        numColumns = paramInfo.columns;
-                        if (4 === numColumns)
-                        {
-                            gl.uniform4iv(location, parameterValues);
-                        }
-                        else if (3 === numColumns)
-                        {
-                            gl.uniform3iv(location, parameterValues);
-                        }
-                        else if (2 === numColumns)
-                        {
-                            gl.uniform2iv(location, parameterValues);
-                        }
-                        else if (1 === paramInfo.rows)
-                        {
-                            gl.uniform1i(location, parameterValues[0]);
-                        }
-                        else //if (1 === numColumns)
-                        {
-                            gl.uniform1iv(location, parameterValues);
-                        }
-                    }
-
-                    if (debug)
-                    {
-                        gd.metrics.techniqueParametersChanges += 1;
-                    }
+                    gl.bindAttribLocation(glProgram, semantic, semanticName);
+                }
+                else
+                {
+                    var attributeName = WebGLPass.semanticToAttr[semanticName];
+                    gl.bindAttribLocation(glProgram, semantic, attributeName);
                 }
             }
         }
+
+        gl.linkProgram(glProgram);
+
+        // Set parameters
+        var numTextureUnits = 0;
+        var programParameters: { [name: string]: WebGLProgramParameter } = {};
+        var programParametersArray: WebGLProgramParameter[] = [];
+        var numParameters = parameterNames ? parameterNames.length : 0;
+        var n;
+        for (n = 0; n < numParameters; n += 1)
+        {
+            var parameterName = parameterNames[n];
+
+            var paramInfo = parameters[parameterName];
+
+            var parameter : WebGLProgramParameter = {
+                current: null,
+                info : paramInfo,
+                location: null,
+                values: null,
+                textureUnit: -1
+            };
+
+            if (paramInfo)
+            {
+                if (paramInfo.sampler)
+                {
+                    parameter.textureUnit = numTextureUnits;
+                    numTextureUnits += 1;
+                }
+                else if (paramInfo.numValues === 1)
+                {
+                    if (paramInfo.type === "bool")
+                    {
+                        parameter.values = !!paramInfo.values[0];
+                    }
+                    else
+                    {
+                        parameter.values = paramInfo.values[0];
+                    }
+                }
+                else if (paramInfo.type === "float")
+                {
+                    parameter.values = new Float32Array(paramInfo.values);
+                }
+                else
+                {
+                    parameter.values = new Int32Array(paramInfo.values);
+                }
+            }
+
+            programParameters[parameterName] = parameter;
+            programParametersArray[n] = parameter;
+        }
+
+        this.glProgram = glProgram;
+        this.semanticsMask = semanticsMask;
+        this.parameters = programParameters;
+        this.parametersArray = programParametersArray;
+        this.numTextureUnits = numTextureUnits;
+        this._initialized = false;
     }
 
-    initializeParameters(gd)
+    initialize(gd: WebGLGraphicsDevice): void
     {
+        if (this._initialized)
+        {
+            return;
+        }
+
         var gl = gd._gl;
 
         var glProgram = this.glProgram;
 
         gd.setProgram(glProgram);
 
-        var passParameters = this.parameters;
-        for (var p in passParameters)
+        var parameters = this.parameters;
+        for (var p in parameters)
         {
-            if (passParameters.hasOwnProperty(p))
+            if (parameters.hasOwnProperty(p))
             {
-                var parameter = passParameters[p];
+                var parameter = parameters[p];
 
                 var paramInfo = parameter.info;
                 if (paramInfo)
@@ -3892,130 +3859,116 @@ class WebGLPass implements Pass
                 }
             }
         }
+
+        this._initialized = true;
     }
+};
 
-    destroy()
+interface StateBase
+{
+    name: string;
+    set: (boolean) => void;
+    reset: () => void;
+};
+
+// Use this in addStateHandler, stateHandlers
+interface StateHandler extends StateBase
+{
+    defaultValues: any[];
+    parse: (any) => any;
+};
+
+interface PassState extends StateBase
+{
+    values: any[];
+};
+
+class WebGLPass implements Pass
+{
+    /* tslint:disable:no-unused-variable */
+    static version = 1;
+    /* tslint:enable:no-unused-variable */
+
+    // DO NOT CHANGE: This table is independent from the actual attribute index on GraphicsDevice.SEMANTIC_xxx
+    static semanticToAttr = {
+        POSITION: "ATTR0",
+        POSITION0: "ATTR0",
+        BLENDWEIGHT: "ATTR1",
+        BLENDWEIGHT0: "ATTR1",
+        NORMAL: "ATTR2",
+        NORMAL0: "ATTR2",
+        COLOR: "ATTR3",
+        COLOR0: "ATTR3",
+        COLOR1: "ATTR4",
+        SPECULAR: "ATTR4",
+        FOGCOORD: "ATTR5",
+        TESSFACTOR: "ATTR5",
+        PSIZE0: "ATTR6",
+        BLENDINDICES: "ATTR7",
+        BLENDINDICES0: "ATTR7",
+        TEXCOORD: "ATTR8",
+        TEXCOORD0: "ATTR8",
+        TEXCOORD1: "ATTR9",
+        TEXCOORD2: "ATTR10",
+        TEXCOORD3: "ATTR11",
+        TEXCOORD4: "ATTR12",
+        TEXCOORD5: "ATTR13",
+        TEXCOORD6: "ATTR14",
+        TEXCOORD7: "ATTR15",
+        TANGENT: "ATTR14",
+        TANGENT0: "ATTR14",
+        BINORMAL0: "ATTR15",
+        BINORMAL: "ATTR15",
+        PSIZE: "ATTR6"
+    };
+
+    name: string;
+    parameters: { [name: string]: WebGLProgramParameter };
+    parametersArray: WebGLProgramParameter[];
+
+    glProgram: WebGLProgram;
+    semanticsMask: number;
+    numTextureUnits: number;
+    numParameters: number;
+    states: PassState[];
+    statesSet: any;
+    dirty: boolean;
+    _linkedProgram: WebGLShaderProgram;
+
+    constructor(gd: WebGLGraphicsDevice,
+                shader: TZWebGLShader,
+                params: ShaderParametersPass)
     {
-        delete this.glProgram;
-        delete this.semanticsMask;
-        delete this.parametersArray;
-        delete this.parameters;
-        delete this.states;
-        delete this.statesSet;
-    }
+        this.name = (params.name || null);
 
-    static create(gd: WebGLGraphicsDevice,
-                  shader: TZWebGLShader,
-                  params: ShaderParametersPass)
-    : WebGLPass
-    {
-        var gl = gd._gl;
-
-        var pass = new WebGLPass();
-
-        pass.name = (params.name || null);
-
-        var programs = shader._programs;
-        var parameters = shader._parameters;
-
-        var parameterNames = params.parameters;
         var programNames = params.programs;
-        var semanticNames = params.semantics;
         var states = params.states;
 
         var compoundProgramName = programNames.join(':');
         var linkedProgram = shader._linkedPrograms[compoundProgramName];
-        var glProgram, semanticsMask, p, s;
         if (linkedProgram === undefined)
         {
-            // Create GL program
-            glProgram = gl.createProgram();
-
-            var numPrograms = programNames.length;
-            for (p = 0; p < numPrograms; p += 1)
-            {
-                var glShader = programs[programNames[p]];
-                if (glShader)
-                {
-                    gl.attachShader(glProgram, glShader);
-                }
-            }
-
-            var numSemantics = semanticNames.length;
-            semanticsMask = 0;
-            for (s = 0; s < numSemantics; s += 1)
-            {
-                var semanticName = semanticNames[s];
-                var semantic = gd['SEMANTIC_' + semanticName];
-                if (semantic !== undefined)
-                {
-                    /* tslint:disable:no-bitwise */
-                    semanticsMask |= (1 << semantic);
-                    /* tslint:enable:no-bitwise */
-                    if (0 === semanticName.indexOf("ATTR"))
-                    {
-                        gl.bindAttribLocation(glProgram, semantic, semanticName);
-                    }
-                    else
-                    {
-                        var attributeName = WebGLPass.semanticToAttr[semanticName];
-                        gl.bindAttribLocation(glProgram, semantic, attributeName);
-                    }
-                }
-            }
-
-            gl.linkProgram(glProgram);
-
-            shader._linkedPrograms[compoundProgramName] = {
-                glProgram : glProgram,
-                semanticsMask : semanticsMask
-            };
+            linkedProgram = new WebGLShaderProgram(gd,
+                                                   shader._programs,
+                                                   shader._parameters,
+                                                   programNames,
+                                                   params.semantics,
+                                                   params.parameters);
+            shader._linkedPrograms[compoundProgramName] = linkedProgram;
         }
-        else
+        /*else
         {
-            //console.log('Reused program ' + compoundProgramName);
-            glProgram = linkedProgram.glProgram;
-            semanticsMask = linkedProgram.semanticsMask;
+            console.log('Reused program ' + compoundProgramName);
         }
+        */
 
-        pass.glProgram = glProgram;
-        pass.semanticsMask = semanticsMask;
-
-        // Set parameters
-        var numTextureUnits = 0;
-        var passParameters : { [name: string]: PassParameter } = {};
-        var passParametersArray : PassParameter[] = [];
-        pass.parameters = passParameters;
-        pass.parametersArray = passParametersArray;
-        var numParameters = parameterNames ? parameterNames.length : 0;
-        var n;
-        for (n = 0; n < numParameters; n += 1)
-        {
-            var parameterName = parameterNames[n];
-
-            var paramInfo = parameters[parameterName];
-
-            var parameter : PassParameter = {
-                info : paramInfo,
-                value: null,
-                location: null,
-                textureUnit: undefined
-            };
-
-            if (paramInfo)
-            {
-                if (paramInfo.sampler)
-                {
-                    parameter.textureUnit = numTextureUnits;
-                    numTextureUnits += 1;
-                }
-            }
-
-            passParameters[parameterName] = parameter;
-            passParametersArray[n] = parameter;
-        }
-        pass.numTextureUnits = numTextureUnits;
-        pass.numParameters = numParameters;
+        this.glProgram = linkedProgram.glProgram;
+        this.semanticsMask = linkedProgram.semanticsMask;
+        this.parameters = linkedProgram.parameters;
+        this.parametersArray = linkedProgram.parametersArray;
+        this.numTextureUnits = linkedProgram.numTextureUnits;
+        this.numParameters = linkedProgram.parametersArray.length;
+        this._linkedProgram = linkedProgram;
 
         function equalRenderStates(defaultValues, values)
         {
@@ -4034,8 +3987,9 @@ class WebGLPass implements Pass
         var stateHandlers = gd._stateHandlers;
         var passStates = [];
         var passStatesSet = {};
-        pass.states = passStates;
-        pass.statesSet = passStatesSet;
+        this.states = passStates;
+        this.statesSet = passStatesSet;
+        var s;
         for (s in states)
         {
             if (states.hasOwnProperty(s))
@@ -4070,7 +4024,100 @@ class WebGLPass implements Pass
             }
         }
 
-        return pass;
+        this.dirty = false;
+    }
+
+    initialize(gd: WebGLGraphicsDevice): void
+    {
+        this._linkedProgram.initialize(gd);
+    }
+
+    updateParametersData(gd: WebGLGraphicsDevice)
+    {
+        this.dirty = false;
+
+        // Set parameters
+        var parameters = this.parametersArray;
+        var numParameters = parameters.length;
+        var n;
+        for (n = 0; n < numParameters; n += 1)
+        {
+            var parameter = parameters[n];
+            if (parameter.dirty)
+            {
+                parameter.dirty = 0;
+
+                var paramInfo = parameter.info;
+                if (paramInfo)
+                {
+                    var parameterValues = paramInfo.values;
+
+                    var numColumns;
+                    if (paramInfo.type === 'float')
+                    {
+                        numColumns = paramInfo.columns;
+                        if (4 === numColumns)
+                        {
+                            gd._setUniform4fv(parameter.location, parameter.values, parameterValues);
+                        }
+                        else if (3 === numColumns)
+                        {
+                            gd._setUniform3fv(parameter.location, parameter.values, parameterValues);
+                        }
+                        else if (2 === numColumns)
+                        {
+                            gd._setUniform2fv(parameter.location, parameter.values, parameterValues);
+                        }
+                        else if (1 === paramInfo.rows)
+                        {
+                            gd._setUniform1f(parameter, parameterValues[0]);
+                        }
+                        else //if (1 === numColumns)
+                        {
+                            gd._setUniform1fv(parameter.location, parameter.values, parameterValues);
+                        }
+                    }
+                    else if (paramInfo.sampler !== undefined)
+                    {
+                        gd._setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                    }
+                    else
+                    {
+                        numColumns = paramInfo.columns;
+                        if (4 === numColumns)
+                        {
+                            gd._setUniform4iv(parameter.location, parameter.values, parameterValues);
+                        }
+                        else if (3 === numColumns)
+                        {
+                            gd._setUniform3iv(parameter.location, parameter.values, parameterValues);
+                        }
+                        else if (2 === numColumns)
+                        {
+                            gd._setUniform2iv(parameter.location, parameter.values, parameterValues);
+                        }
+                        else if (1 === paramInfo.rows)
+                        {
+                            gd._setUniform1i(parameter, parameterValues[0]);
+                        }
+                        else //if (1 === numColumns)
+                        {
+                            gd._setUniform1iv(parameter.location, parameter.values, parameterValues);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    destroy()
+    {
+        delete this.glProgram;
+        delete this.semanticsMask;
+        delete this.parametersArray;
+        delete this.parameters;
+        delete this.states;
+        delete this.statesSet;
     }
 }
 
@@ -4093,7 +4140,44 @@ class WebGLTechnique implements Technique
     numParameters : number;
     device        : WebGLGraphicsDevice;
 
-    /* private */ _drawArrayId  : number;
+    constructor(gd: WebGLGraphicsDevice,
+                shader: TZWebGLShader,
+                name: string,
+                passes: ShaderParametersPass[])
+    {
+        this.initialized = false;
+        this.shader = shader;
+        this.name = name;
+
+        var numPasses = passes.length, n;
+        var numParameters = 0;
+        this.passes = [];
+        this.numPasses = numPasses;
+        for (n = 0; n < numPasses; n += 1)
+        {
+            var passParams = passes[n];
+            if (passParams.parameters)
+            {
+                numParameters += passParams.parameters.length;
+            }
+            this.passes[n] = new WebGLPass(gd, shader, passParams);
+        }
+
+        this.numParameters = numParameters;
+
+        this.device = null;
+
+        this.id = ++gd._counters.techniques;
+
+        if (1 < numPasses)
+        {
+            if (gd.drawArray !== gd.drawArrayMultiPass)
+            {
+                gd.drawArray = gd.drawArrayMultiPass;
+                debug.log("Detected technique with multiple passes, switching to multi pass support.");
+            }
+        }
+    }
 
     getPass(id)
     {
@@ -4167,7 +4251,7 @@ class WebGLTechnique implements Technique
             var passes = this.passes;
             if (passes.length === 1)
             {
-                gd._setParametersImmediate(passes[0].parameters, fakeTechniqueParameters);
+                gd._setParameters(passes[0].parameters, fakeTechniqueParameters);
             }
             else
             {
@@ -4184,7 +4268,7 @@ class WebGLTechnique implements Technique
         }
     }
 
-    initialize(gd)
+    initialize(gd: WebGLGraphicsDevice): void
     {
         if (this.initialized)
         {
@@ -4198,32 +4282,25 @@ class WebGLTechnique implements Technique
             var n;
             for (n = 0; n < numPasses; n += 1)
             {
-                passes[n].initializeParameters(gd);
+                passes[n].initialize(gd);
             }
         }
 
         if (Object.defineProperty)
         {
-            this.initializeParametersSetters(gd);
+            this.initializeParametersSetters();
         }
 
         this.initialized = true;
     }
 
-    initializeParametersSetters(gd)
+    initializeParametersSetters(): void
     {
-        var gl = gd._gl;
-
-        function make_sampler_setter(pass: WebGLPass, parameter: PassParameter) {
+        function make_sampler_setter(pass: WebGLPass, parameter: WebGLProgramParameter) {
             return function (parameterValues) {
                 if (this.device)
                 {
-                    gd.setTexture(parameter.textureUnit, parameterValues, parameter.info.sampler);
-
-                    if (debug)
-                    {
-                        gd.metrics.techniqueParametersChanges += 1;
-                    }
+                    this.device._setTexture(parameter.textureUnit, parameterValues, parameter.info.sampler);
                 }
                 else
                 {
@@ -4234,10 +4311,9 @@ class WebGLTechnique implements Technique
             };
         }
 
-        function make_float_uniform_setter(pass: WebGLPass, parameter: PassParameter) {
+        function make_float_uniform_setter(pass: WebGLPass, parameter: WebGLProgramParameter) {
 
             var paramInfo = parameter.info;
-            var location = parameter.location;
 
             function setDeferredParameter(parameterValues)
             {
@@ -4268,12 +4344,7 @@ class WebGLTechnique implements Technique
                     {
                         if (this.device)
                         {
-                            gl.uniform1f(location, parameterValues);
-
-                            if (debug)
-                            {
-                                gd.metrics.techniqueParametersChanges += 1;
-                            }
+                            this.device._setUniform1f(parameter, parameterValues);
                         }
                         else
                         {
@@ -4285,12 +4356,7 @@ class WebGLTechnique implements Technique
                 {
                     if (this.device)
                     {
-                        gl.uniform1fv(location, parameterValues);
-
-                        if (debug)
-                        {
-                            gd.metrics.techniqueParametersChanges += 1;
-                        }
+                        this.device._setUniform1fv(parameter.location, parameter.values, parameterValues);
                     }
                     else
                     {
@@ -4302,12 +4368,7 @@ class WebGLTechnique implements Technique
                 {
                     if (this.device)
                     {
-                        gl.uniform2fv(location, parameterValues);
-
-                        if (debug)
-                        {
-                            gd.metrics.techniqueParametersChanges += 1;
-                        }
+                        this.device._setUniform2fv(parameter.location, parameter.values, parameterValues);
                     }
                     else
                     {
@@ -4319,12 +4380,7 @@ class WebGLTechnique implements Technique
                 {
                     if (this.device)
                     {
-                        gl.uniform3fv(location, parameterValues);
-
-                        if (debug)
-                        {
-                            gd.metrics.techniqueParametersChanges += 1;
-                        }
+                        this.device._setUniform3fv(parameter.location, parameter.values, parameterValues);
                     }
                     else
                     {
@@ -4336,12 +4392,7 @@ class WebGLTechnique implements Technique
                 {
                     if (this.device)
                     {
-                        gl.uniform4fv(location, parameterValues);
-
-                        if (debug)
-                        {
-                            gd.metrics.techniqueParametersChanges += 1;
-                        }
+                        this.device._setUniform4fv(parameter.location, parameter.values, parameterValues);
                     }
                     else
                     {
@@ -4353,9 +4404,8 @@ class WebGLTechnique implements Technique
             }
         }
 
-        function make_int_uniform_setter(pass: WebGLPass, parameter: PassParameter) {
+        function make_int_uniform_setter(pass: WebGLPass, parameter: WebGLProgramParameter) {
             var paramInfo = parameter.info;
-            var location = parameter.location;
 
             function setDeferredParameter(parameterValues)
             {
@@ -4386,12 +4436,7 @@ class WebGLTechnique implements Technique
                     {
                         if (this.device)
                         {
-                            gl.uniform1i(location, parameterValues);
-
-                            if (debug)
-                            {
-                                gd.metrics.techniqueParametersChanges += 1;
-                            }
+                            this.device._setUniform1i(parameter, parameterValues);
                         }
                         else
                         {
@@ -4403,12 +4448,7 @@ class WebGLTechnique implements Technique
                 {
                     if (this.device)
                     {
-                        gl.uniform1iv(location, parameterValues);
-
-                        if (debug)
-                        {
-                            gd.metrics.techniqueParametersChanges += 1;
-                        }
+                        this.device._setUniform1iv(parameter.location, parameter.values, parameterValues);
                     }
                     else
                     {
@@ -4420,12 +4460,7 @@ class WebGLTechnique implements Technique
                 {
                     if (this.device)
                     {
-                        gl.uniform2iv(location, parameterValues);
-
-                        if (debug)
-                        {
-                            gd.metrics.techniqueParametersChanges += 1;
-                        }
+                        this.device._setUniform2iv(parameter.location, parameter.values, parameterValues);
                     }
                     else
                     {
@@ -4437,12 +4472,7 @@ class WebGLTechnique implements Technique
                 {
                     if (this.device)
                     {
-                        gl.uniform3iv(location, parameterValues);
-
-                        if (debug)
-                        {
-                            gd.metrics.techniqueParametersChanges += 1;
-                        }
+                        this.device._setUniform3iv(parameter.location, parameter.values, parameterValues);
                     }
                     else
                     {
@@ -4454,12 +4484,7 @@ class WebGLTechnique implements Technique
                 {
                     if (this.device)
                     {
-                        gl.uniform4iv(location, parameterValues);
-
-                        if (debug)
-                        {
-                            gd.metrics.techniqueParametersChanges += 1;
-                        }
+                        this.device._setUniform4iv(parameter.location, parameter.values, parameterValues);
                     }
                     else
                     {
@@ -4576,50 +4601,6 @@ class WebGLTechnique implements Technique
 
         delete this.device;
     }
-
-    static create(gd: WebGLGraphicsDevice,
-                  shader: TZWebGLShader,
-                  name: string,
-                  passes: ShaderParametersPass[]): WebGLTechnique
-    {
-        var technique = new WebGLTechnique();
-
-        technique.initialized = false;
-        technique.shader = <TZWebGLShader>shader;
-        technique.name = name;
-
-        var numPasses = passes.length, n;
-        var numParameters = 0;
-        technique.passes = [];
-        technique.numPasses = numPasses;
-        for (n = 0; n < numPasses; n += 1)
-        {
-            var passParams = passes[n];
-            if (passParams.parameters)
-            {
-                numParameters += passParams.parameters.length;
-            }
-            technique.passes[n] = WebGLPass.create(gd, shader, passParams);
-        }
-
-        technique.numParameters = numParameters;
-
-        technique.device = null;
-        technique._drawArrayId = -1;
-
-        technique.id = ++gd._counters.techniques;
-
-        if (1 < numPasses)
-        {
-            if (gd.drawArray !== gd.drawArrayMultiPass)
-            {
-                gd.drawArray = gd.drawArrayMultiPass;
-                debug.log("Detected technique with multiple passes, switching to multi pass support.");
-            }
-        }
-
-        return technique;
-    }
 }
 
 //
@@ -4640,9 +4621,9 @@ class TZWebGLShader implements Shader
     // private
     private _initialized          : boolean;
     /* private */ _techniques     : { [techniqueName: string]: WebGLTechnique };
-    /* private */ _programs       : any;
-    /* private */ _linkedPrograms : any;
+    /* private */ _programs       : { [name: string]: WebGLShader };
     /* private */ _parameters     : { [name: string]: WebGLShaderParameter };
+    /* private */ _linkedPrograms : { [name: string]: WebGLShaderProgram };
     private _samplers             : { [name: string]: TZWebGLSampler };
     private _gd                   : WebGLGraphicsDevice;
 
@@ -4703,7 +4684,7 @@ class TZWebGLShader implements Shader
         }
     }
 
-    initialize(gd)
+    initialize(gd: WebGLGraphicsDevice): void
     {
         if (this._initialized)
         {
@@ -4841,7 +4822,7 @@ class TZWebGLShader implements Shader
         shader.name = params.name;
 
         // Compile programs as early as possible
-        var shaderPrograms = {};
+        var shaderPrograms: { [name: string]: WebGLShader } = {};
         shader._programs = shaderPrograms;
         for (p in programs)
         {
@@ -4880,7 +4861,7 @@ class TZWebGLShader implements Shader
             }
         }
 
-        var linkedPrograms = {};
+        var linkedPrograms: { [name: string]: WebGLShaderProgram } = {};
         shader._linkedPrograms = linkedPrograms;
 
         // Samplers
@@ -5011,10 +4992,10 @@ class TZWebGLShader implements Shader
         {
             return function () {
                 shaderTechniques[techniqueName] =
-                    WebGLTechnique.create(gd,
-                                          shader,
-                                          techniqueName,
-                                          techniques[techniqueName]);
+                    new WebGLTechnique(gd,
+                                       shader,
+                                       techniqueName,
+                                       techniques[techniqueName]);
                 numLoadedTechniques += 1;
                 if (numLoadedTechniques >= numTechniques)
                 {
@@ -5035,7 +5016,7 @@ class TZWebGLShader implements Shader
                 }
                 else
                 {
-                    shaderTechniques[p] = WebGLTechnique.create(gd, shader, p, techniques[p]);
+                    shaderTechniques[p] = new WebGLTechnique(gd, shader, p, techniques[p]);
                 }
                 numTechniques += 1;
             }
@@ -5703,7 +5684,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
     private _previousFrameTime                   : number;
 
     private _techniqueParametersArray            : any[];
-    private _drawArrayId                         : number;
 
     private _cachedSamplers                      : { [key: string]: TZWebGLSampler };
 
@@ -5866,7 +5846,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             var parameters = passes[0].parameters;
             for (t = 0; t < numTechniqueParameters; t += 1)
             {
-                this._setParametersImmediate(parameters, arguments[t]);
+                this._setParameters(parameters, arguments[t]);
             }
         }
         else
@@ -5879,12 +5859,323 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     //Internal
-
-    _setParametersImmediate(parameters: { [name: string]: PassParameter },
-                            techniqueParameters: WebGLTechniqueParameters): void
+    _setUniform4fv(location: WebGLUniformLocation,
+                   oldValues: any,
+                   newValues: any): void
     {
-        var gl = this._gl;
+        var numValues = newValues.length;
+        var n = 0;
+        do
+        {
+            if (oldValues[n]     !== newValues[n] ||
+                oldValues[n + 1] !== newValues[n + 1] ||
+                oldValues[n + 2] !== newValues[n + 2] ||
+                oldValues[n + 3] !== newValues[n + 3])
+            {
+                // Copy new values
+                do
+                {
+                    oldValues[n]     = newValues[n];
+                    oldValues[n + 1] = newValues[n + 1];
+                    oldValues[n + 2] = newValues[n + 2];
+                    oldValues[n + 3] = newValues[n + 3];
+                    n += 4;
+                }
+                while (n < numValues);
 
+                this._gl.uniform4fv(location, newValues);
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+
+                break;
+            }
+            n += 4;
+        }
+        while (n < numValues);
+    }
+
+    _setUniform3fv(location: WebGLUniformLocation,
+                   oldValues: any,
+                   newValues: any): void
+    {
+        var numValues = newValues.length;
+        var n = 0;
+        do
+        {
+            if (oldValues[n]     !== newValues[n] ||
+                oldValues[n + 1] !== newValues[n + 1] ||
+                oldValues[n + 2] !== newValues[n + 2])
+            {
+                // Copy new values
+                do
+                {
+                    oldValues[n]     = newValues[n];
+                    oldValues[n + 1] = newValues[n + 1];
+                    oldValues[n + 2] = newValues[n + 2];
+                    n += 3;
+                }
+                while (n < numValues);
+
+                this._gl.uniform3fv(location, newValues);
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+
+                break;
+            }
+            n += 3;
+        }
+        while (n < numValues);
+    }
+
+    _setUniform2fv(location: WebGLUniformLocation,
+                   oldValues: any,
+                   newValues: any): void
+    {
+        var numValues = newValues.length;
+        var n = 0;
+        do
+        {
+            if (oldValues[n]     !== newValues[n] ||
+                oldValues[n + 1] !== newValues[n + 1])
+            {
+                // Copy new values
+                do
+                {
+                    oldValues[n]     = newValues[n];
+                    oldValues[n + 1] = newValues[n + 1];
+                    n += 2;
+                }
+                while (n < numValues);
+
+                this._gl.uniform2fv(location, newValues);
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+
+                break;
+            }
+            n += 2;
+        }
+        while (n < numValues);
+    }
+
+    _setUniform1fv(location: WebGLUniformLocation,
+                   oldValues: any,
+                   newValues: any): void
+    {
+        var numValues = newValues.length;
+        var n = 0;
+        do
+        {
+            if (oldValues[n] !== newValues[n])
+            {
+                // Copy new values
+                do
+                {
+                    oldValues[n] = newValues[n];
+                    n += 1;
+                }
+                while (n < numValues);
+
+                this._gl.uniform1fv(location, newValues);
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+
+                break;
+            }
+            n += 1;
+        }
+        while (n < numValues);
+    }
+
+    _setUniform1f(parameter: WebGLProgramParameter,
+                  newValue: number): void
+    {
+        if (Math.abs(parameter.values - newValue) >= 1e-6)
+        {
+            // Copy new value
+            parameter.values = newValue;
+
+            this._gl.uniform1f(parameter.location, newValue);
+
+            if (debug)
+            {
+                this.metrics.techniqueParametersChanges += 1;
+            }
+        }
+    }
+
+    _setUniform4iv(location: WebGLUniformLocation,
+                   oldValues: any,
+                   newValues: any): void
+    {
+        var numValues = newValues.length;
+        var n = 0;
+        do
+        {
+            if (oldValues[n]     !== newValues[n] ||
+                oldValues[n + 1] !== newValues[n + 1] ||
+                oldValues[n + 2] !== newValues[n + 2] ||
+                oldValues[n + 3] !== newValues[n + 3])
+            {
+                // Copy new values
+                do
+                {
+                    oldValues[n]     = newValues[n];
+                    oldValues[n + 1] = newValues[n + 1];
+                    oldValues[n + 2] = newValues[n + 2];
+                    oldValues[n + 3] = newValues[n + 3];
+                    n += 4;
+                }
+                while (n < numValues);
+
+                this._gl.uniform4iv(location, newValues);
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+
+                break;
+            }
+            n += 4;
+        }
+        while (n < numValues);
+    }
+
+    _setUniform3iv(location: WebGLUniformLocation,
+                   oldValues: any,
+                   newValues: any): void
+    {
+        var numValues = newValues.length;
+        var n = 0;
+        do
+        {
+            if (oldValues[n]     !== newValues[n] ||
+                oldValues[n + 1] !== newValues[n + 1] ||
+                oldValues[n + 2] !== newValues[n + 2])
+            {
+                // Copy new values
+                do
+                {
+                    oldValues[n]     = newValues[n];
+                    oldValues[n + 1] = newValues[n + 1];
+                    oldValues[n + 2] = newValues[n + 2];
+                    n += 3;
+                }
+                while (n < numValues);
+
+                this._gl.uniform3iv(location, newValues);
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+
+                break;
+            }
+            n += 3;
+        }
+        while (n < numValues);
+    }
+
+    _setUniform2iv(location: WebGLUniformLocation,
+                   oldValues: any,
+                   newValues: any): void
+    {
+        var numValues = newValues.length;
+        var n = 0;
+        do
+        {
+            if (oldValues[n]     !== newValues[n] ||
+                oldValues[n + 1] !== newValues[n + 1])
+            {
+                // Copy new values
+                do
+                {
+                    oldValues[n]     = newValues[n];
+                    oldValues[n + 1] = newValues[n + 1];
+                    n += 2;
+                }
+                while (n < numValues);
+
+                this._gl.uniform2iv(location, newValues);
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+
+                break;
+            }
+            n += 2;
+        }
+        while (n < numValues);
+    }
+
+    _setUniform1iv(location: WebGLUniformLocation,
+                   oldValues: any,
+                   newValues: any): void
+    {
+        var numValues = newValues.length;
+        var n = 0;
+        do
+        {
+            if (oldValues[n] !== newValues[n])
+            {
+                // Copy new values
+                do
+                {
+                    oldValues[n] = newValues[n];
+                    n += 1;
+                }
+                while (n < numValues);
+
+                this._gl.uniform1iv(location, newValues);
+
+                if (debug)
+                {
+                    this.metrics.techniqueParametersChanges += 1;
+                }
+
+                break;
+            }
+            n += 1;
+        }
+        while (n < numValues);
+    }
+
+    _setUniform1i(parameter: WebGLProgramParameter,
+                  newValue: number): void
+    {
+        if (parameter.values !== newValue)
+        {
+            // Copy new value
+            parameter.values = newValue;
+
+            this._gl.uniform1i(parameter.location, newValue);
+
+            if (debug)
+            {
+                this.metrics.techniqueParametersChanges += 1;
+            }
+        }
+    }
+
+    _setParameters(parameters: { [name: string]: WebGLProgramParameter },
+                   techniqueParameters: WebGLTechniqueParameters): void
+    {
         for (var p in techniqueParameters)
         {
             var parameter = parameters[p];
@@ -5894,65 +6185,58 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 if (parameterValues !== undefined)
                 {
                     var paramInfo = parameter.info;
-                    var numColumns, location;
+                    var numColumns;
                     if (paramInfo.type === 'float')
                     {
                         numColumns = paramInfo.columns;
-                        location = parameter.location;
                         if (4 === numColumns)
                         {
-                            gl.uniform4fv(location, parameterValues);
+                            this._setUniform4fv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (3 === numColumns)
                         {
-                            gl.uniform3fv(location, parameterValues);
+                            this._setUniform3fv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (2 === numColumns)
                         {
-                            gl.uniform2fv(location, parameterValues);
+                            this._setUniform2fv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (1 === paramInfo.rows)
                         {
-                            gl.uniform1f(location, parameterValues);
+                            this._setUniform1f(parameter, parameterValues);
                         }
                         else //if (1 === numColumns)
                         {
-                            gl.uniform1fv(location, parameterValues);
+                            this._setUniform1fv(parameter.location, parameter.values, parameterValues);
                         }
                     }
                     else if (paramInfo.sampler !== undefined)
                     {
-                        this.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                        this._setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
                     }
                     else
                     {
                         numColumns = paramInfo.columns;
-                        location = parameter.location;
                         if (4 === numColumns)
                         {
-                            gl.uniform4iv(location, parameterValues);
+                            this._setUniform4iv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (3 === numColumns)
                         {
-                            gl.uniform3iv(location, parameterValues);
+                            this._setUniform3iv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (2 === numColumns)
                         {
-                            gl.uniform2iv(location, parameterValues);
+                            this._setUniform2iv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (1 === paramInfo.rows)
                         {
-                            gl.uniform1i(location, parameterValues);
+                            this._setUniform1i(parameter, parameterValues);
                         }
                         else //if (1 === numColumns)
                         {
-                            gl.uniform1iv(location, parameterValues);
+                            this._setUniform1iv(parameter.location, parameter.values, parameterValues);
                         }
-                    }
-
-                    if (debug)
-                    {
-                        this.metrics.techniqueParametersChanges += 1;
                     }
                 }
                 else
@@ -5964,11 +6248,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
-    _setParametersArrayCaching(parameters: { [name: string]: PassParameter },
-                               techniqueParametersArray: any[],
-                               numTechniqueParameters: number): void
+    _setParametersArray(parameters: { [name: string]: WebGLProgramParameter },
+                        techniqueParametersArray: any[],
+                        numTechniqueParameters: number): void
     {
-        var gl = this._gl;
         var n;
         for (n = 0; n < numTechniqueParameters; n += 2)
         {
@@ -5977,170 +6260,74 @@ class WebGLGraphicsDevice implements GraphicsDevice
             if (parameter !== undefined)
             {
                 var parameterValues = techniqueParametersArray[n + 1];
-                if (parameter.value !== parameterValues)
+
+                if (parameter.current !== parameterValues)
                 {
-                    parameter.value = parameterValues;
+                    parameter.current = parameterValues;
 
                     var paramInfo = parameter.info;
-                    var numColumns, location;
+                    var numColumns;
                     if (paramInfo.type === 'float')
                     {
                         numColumns = paramInfo.columns;
-                        location = parameter.location;
                         if (4 === numColumns)
                         {
-                            gl.uniform4fv(location, parameterValues);
+                            this._setUniform4fv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (3 === numColumns)
                         {
-                            gl.uniform3fv(location, parameterValues);
+                            this._setUniform3fv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (2 === numColumns)
                         {
-                            gl.uniform2fv(location, parameterValues);
+                            this._setUniform2fv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (1 === paramInfo.rows)
                         {
-                            gl.uniform1f(location, parameterValues);
+                            this._setUniform1f(parameter, parameterValues);
                         }
                         else //if (1 === numColumns)
                         {
-                            gl.uniform1fv(location, parameterValues);
+                            this._setUniform1fv(parameter.location, parameter.values, parameterValues);
                         }
                     }
                     else if (paramInfo.sampler !== undefined)
                     {
-                        this.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                        this._setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
                     }
                     else
                     {
                         numColumns = paramInfo.columns;
-                        location = parameter.location;
                         if (4 === numColumns)
                         {
-                            gl.uniform4iv(location, parameterValues);
+                            this._setUniform4iv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (3 === numColumns)
                         {
-                            gl.uniform3iv(location, parameterValues);
+                            this._setUniform3iv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (2 === numColumns)
                         {
-                            gl.uniform2iv(location, parameterValues);
+                            this._setUniform2iv(parameter.location, parameter.values, parameterValues);
                         }
                         else if (1 === paramInfo.rows)
                         {
-                            gl.uniform1i(location, parameterValues);
+                            this._setUniform1i(parameter, parameterValues);
                         }
                         else //if (1 === numColumns)
                         {
-                            gl.uniform1iv(location, parameterValues);
+                            this._setUniform1iv(parameter.location, parameter.values, parameterValues);
                         }
-                    }
-
-                    if (debug)
-                    {
-                        this.metrics.techniqueParametersChanges += 1;
                     }
                 }
             }
         }
     }
 
-    _setParametersCaching(parameters: { [name: string]: PassParameter },
-                          techniqueParameters: WebGLTechniqueParameters): void
+    _setParametersList(techniqueParameters: WebGLTechniqueParameters,
+                       parametersList: any[],
+                       offset: number): number
     {
-        var gl = this._gl;
-
-        for (var p in techniqueParameters)
-        {
-            var parameter = parameters[p];
-            if (parameter !== undefined)
-            {
-                var parameterValues = techniqueParameters[p];
-                if (parameter.value !== parameterValues)
-                {
-                    if (parameterValues !== undefined)
-                    {
-                        parameter.value = parameterValues;
-
-                        var paramInfo = parameter.info;
-                        var numColumns, location;
-                        if (paramInfo.type === 'float')
-                        {
-                            numColumns = paramInfo.columns;
-                            location = parameter.location;
-                            if (4 === numColumns)
-                            {
-                                gl.uniform4fv(location, parameterValues);
-                            }
-                            else if (3 === numColumns)
-                            {
-                                gl.uniform3fv(location, parameterValues);
-                            }
-                            else if (2 === numColumns)
-                            {
-                                gl.uniform2fv(location, parameterValues);
-                            }
-                            else if (1 === paramInfo.rows)
-                            {
-                                gl.uniform1f(location, parameterValues);
-                            }
-                            else //if (1 === numColumns)
-                            {
-                                gl.uniform1fv(location, parameterValues);
-                            }
-                        }
-                        else if (paramInfo.sampler !== undefined)
-                        {
-                            this.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
-                        }
-                        else
-                        {
-                            numColumns = paramInfo.columns;
-                            location = parameter.location;
-                            if (4 === numColumns)
-                            {
-                                gl.uniform4iv(location, parameterValues);
-                            }
-                            else if (3 === numColumns)
-                            {
-                                gl.uniform3iv(location, parameterValues);
-                            }
-                            else if (2 === numColumns)
-                            {
-                                gl.uniform2iv(location, parameterValues);
-                            }
-                            else if (1 === paramInfo.rows)
-                            {
-                                gl.uniform1i(location, parameterValues);
-                            }
-                            else //if (1 === numColumns)
-                            {
-                                gl.uniform1iv(location, parameterValues);
-                            }
-                        }
-
-                        if (debug)
-                        {
-                            this.metrics.techniqueParametersChanges += 1;
-                        }
-                    }
-                    else
-                    {
-                        delete techniqueParameters[p];
-                    }
-                }
-            }
-        }
-    }
-
-    _setParametersListCaching(techniqueParameters: WebGLTechniqueParameters,
-                              parametersList: any[],
-                              offset: number): number
-    {
-        var gl = this._gl;
-
         var p = parametersList[offset];
         offset += 1;
 
@@ -6150,70 +6337,63 @@ class WebGLGraphicsDevice implements GraphicsDevice
             offset += 1;
 
             var parameterValues = techniqueParameters[p];
-            if (parameter.value !== parameterValues)
+            if (parameter.current !== parameterValues)
             {
-                parameter.value = parameterValues;
+                parameter.current = parameterValues;
 
                 var paramInfo = parameter.info;
-                var numColumns, location;
+                var numColumns;
                 if (paramInfo.type === 'float')
                 {
                     numColumns = paramInfo.columns;
-                    location = parameter.location;
                     if (4 === numColumns)
                     {
-                        gl.uniform4fv(location, parameterValues);
+                        this._setUniform4fv(parameter.location, parameter.values, parameterValues);
                     }
                     else if (3 === numColumns)
                     {
-                        gl.uniform3fv(location, parameterValues);
+                        this._setUniform3fv(parameter.location, parameter.values, parameterValues);
                     }
                     else if (2 === numColumns)
                     {
-                        gl.uniform2fv(location, parameterValues);
+                        this._setUniform2fv(parameter.location, parameter.values, parameterValues);
                     }
                     else if (1 === paramInfo.rows)
                     {
-                        gl.uniform1f(location, parameterValues);
+                        this._setUniform1f(parameter, parameterValues);
                     }
                     else //if (1 === numColumns)
                     {
-                        gl.uniform1fv(location, parameterValues);
+                        this._setUniform1fv(parameter.location, parameter.values, parameterValues);
                     }
                 }
                 else if (paramInfo.sampler !== undefined)
                 {
-                    this.setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
+                    this._setTexture(parameter.textureUnit, parameterValues, paramInfo.sampler);
                 }
                 else
                 {
                     numColumns = paramInfo.columns;
-                    location = parameter.location;
                     if (4 === numColumns)
                     {
-                        gl.uniform4iv(location, parameterValues);
+                        this._setUniform4iv(parameter.location, parameter.values, parameterValues);
                     }
                     else if (3 === numColumns)
                     {
-                        gl.uniform3iv(location, parameterValues);
+                        this._setUniform3iv(parameter.location, parameter.values, parameterValues);
                     }
                     else if (2 === numColumns)
                     {
-                        gl.uniform2iv(location, parameterValues);
+                        this._setUniform2iv(parameter.location, parameter.values, parameterValues);
                     }
                     else if (1 === paramInfo.rows)
                     {
-                        gl.uniform1i(location, parameterValues);
+                        this._setUniform1i(parameter, parameterValues);
                     }
                     else //if (1 === numColumns)
                     {
-                        gl.uniform1iv(location, parameterValues);
+                        this._setUniform1iv(parameter.location, parameter.values, parameterValues);
                     }
-                }
-
-                if (debug)
-                {
-                    this.metrics.techniqueParametersChanges += 1;
                 }
             }
 
@@ -6225,11 +6405,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAYMULTIPASS
-    _setParametersCachingMultiPass(gd: WebGLGraphicsDevice,
-                                   passes: WebGLPass[],
-                                   techniqueParameters: WebGLTechniqueParameters): void
+    _setParametersMultiPass(gd: WebGLGraphicsDevice,
+                            passes: WebGLPass[],
+                            techniqueParameters: WebGLTechniqueParameters): void
     {
-        gd._setParametersCaching(passes[0].parameters, techniqueParameters);
+        gd._setParameters(passes[0].parameters, techniqueParameters);
     }
 
     _setParametersDeferred(gd: WebGLGraphicsDevice,
@@ -6310,7 +6490,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
 
     // ONLY USE FOR SINGLE PASS TECHNIQUES ON DRAWARRAY
-    _setTechniqueCaching(technique: WebGLTechnique, drawArrayId: number)
+    _setTechnique(technique: WebGLTechnique)
     {
         var pass = technique.passes[0];
 
@@ -6328,28 +6508,13 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
             this.setPass(pass);
         }
+
         var parameters = pass.parametersArray;
         var numParameters = parameters.length;
         var n;
-        if (technique._drawArrayId !== drawArrayId)
+        for (n = 0; n < numParameters; n += 1)
         {
-            technique._drawArrayId = drawArrayId;
-            for (n = 0; n < numParameters; n += 1)
-            {
-                parameters[n].value = null;
-            }
-        }
-        else
-        {
-            for (n = 0; n < numParameters; n += 1)
-            {
-                var parameter = parameters[n];
-                var paramInfo = parameter.info;
-                if (paramInfo.sampler)
-                {
-                    parameter.value = null;
-                }
-            }
+            parameters[n].current = null;
         }
     }
 
@@ -6428,7 +6593,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var globalsArray = this._techniqueParametersArray;
         var numGlobalParameters = this._createTechniqueParametersArray(globalTechniqueParametersArray, globalsArray);
 
-        var drawArrayId = (++this._drawArrayId);
         var activeIndexBuffer = this._activeIndexBuffer;
         var attributeMask = this._attributeMask;
         var lastTechnique: WebGLTechnique = null;
@@ -6439,7 +6603,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var streamsMatch = false;
         var vertexBuffer = null;
         var pass: WebGLPass = null;
-        var passParameters: { [name: string]: PassParameter } = null;
+        var passParameters: { [name: string]: WebGLProgramParameter } = null;
         var indexFormat = 0;
         var indexStride = 0;
         var mask = 0;
@@ -6468,7 +6632,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 lastTechnique = technique;
 
-                this._setTechniqueCaching(technique, drawArrayId);
+                this._setTechnique(technique);
 
                 pass = technique.passes[0];
                 passParameters = pass.parameters;
@@ -6486,7 +6650,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     technique.checkProperties(this);
                 }
 
-                this._setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
+                this._setParametersArray(passParameters, globalsArray, numGlobalParameters);
             }
 
             var parametersList = drawParameters._parametersList;
@@ -6501,7 +6665,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 techniqueParameters = drawParameters[t];
                 if (techniqueParameters)
                 {
-                    offset = this._setParametersListCaching(techniqueParameters, parametersList, offset);
+                    offset = this._setParametersList(techniqueParameters, parametersList, offset);
                 }
             }
 
@@ -6563,7 +6727,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     do
                     {
-                        this._setParametersCaching(passParameters, drawParameters[t]);
+                        this._setParameters(passParameters, drawParameters[t]);
 
                         gl.drawElements(primitive, count, indexFormat, firstIndex);
 
@@ -6593,7 +6757,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     do
                     {
-                        this._setParametersCaching(passParameters, drawParameters[t]);
+                        this._setParameters(passParameters, drawParameters[t]);
 
                         gl.drawArrays(primitive, firstIndex, count);
 
@@ -6651,12 +6815,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         var vertexArrayObjectExtension = this._vertexArrayObjectExtension;
 
-        var drawArrayId = (++this._drawArrayId);
         var lastTechnique: WebGLTechnique = null;
         var lastVAO = null;
         var techniqueParameters = null;
         var pass: WebGLPass = null;
-        var passParameters: { [name: string]: PassParameter } = null;
+        var passParameters: { [name: string]: WebGLProgramParameter } = null;
         var indexFormat = 0;
         var indexStride = 0;
         var offset = 0;
@@ -6677,7 +6840,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             {
                 lastTechnique = technique;
 
-                this._setTechniqueCaching(technique, drawArrayId);
+                this._setTechnique(technique);
 
                 pass = technique.passes[0];
                 passParameters = pass.parameters;
@@ -6687,7 +6850,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     technique.checkProperties(this);
                 }
 
-                this._setParametersArrayCaching(passParameters, globalsArray, numGlobalParameters);
+                this._setParametersArray(passParameters, globalsArray, numGlobalParameters);
             }
 
             var parametersList = drawParameters._parametersList;
@@ -6702,7 +6865,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 techniqueParameters = drawParameters[t];
                 if (techniqueParameters)
                 {
-                    offset = this._setParametersListCaching(techniqueParameters, parametersList, offset);
+                    offset = this._setParametersList(techniqueParameters, parametersList, offset);
                 }
             }
 
@@ -6740,7 +6903,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     do
                     {
-                        this._setParametersCaching(passParameters, drawParameters[t]);
+                        this._setParameters(passParameters, drawParameters[t]);
 
                         gl.drawElements(primitive, count, indexFormat, firstIndex);
 
@@ -6770,7 +6933,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 {
                     do
                     {
-                        this._setParametersCaching(passParameters, drawParameters[t]);
+                        this._setParameters(passParameters, drawParameters[t]);
 
                         gl.drawArrays(primitive, firstIndex, count);
 
@@ -6926,7 +7089,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var gl = this._gl;
         var ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
 
-        var setParametersCaching = this._setParametersCachingMultiPass;
+        var setParametersImmediate = this._setParametersMultiPass;
         var setParametersDeferred = this._setParametersDeferred;
 
         var numGlobalTechniqueParameters = globalTechniqueParametersArray.length;
@@ -6944,7 +7107,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
             }
         }
 
-        var drawArrayId = (++this._drawArrayId);
         var activeIndexBuffer = this._activeIndexBuffer;
         var attributeMask = this._attributeMask;
         var setParameters = null;
@@ -6990,8 +7152,8 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 numPasses = passes.length;
                 if (1 === numPasses)
                 {
-                    this._setTechniqueCaching(technique, drawArrayId);
-                    setParameters = setParametersCaching;
+                    this._setTechnique(technique);
+                    setParameters = setParametersImmediate;
 
                     /* tslint:disable:no-bitwise */
                     mask = (passes[0].semanticsMask & attributeMask);
@@ -8349,9 +8511,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
         /* tslint:enable:no-bitwise */
     }
 
-    setTexture(textureUnitIndex: number,
-               texture: TZWebGLTexture,
-               sampler: TZWebGLSampler)
+    _setTexture(textureUnitIndex: number,
+                texture: TZWebGLTexture,
+                sampler: TZWebGLSampler)
     {
         var state = this._state;
         var gl = this._gl;
@@ -9902,7 +10064,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         gd._previousFrameTime = TurbulenzEngine.getTime();
 
         gd._techniqueParametersArray = [];
-        gd._drawArrayId = -1;
 
         // Need a temporary elements to test capabilities
         var video = <HTMLVideoElement>document.createElement('video');
