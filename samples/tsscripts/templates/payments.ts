@@ -351,6 +351,13 @@ TurbulenzEngine.onload = function onloadFn()
             writeFont('Upgrade User', normalScale, upgrade, 'upgrade');
         }
 
+        if (false)
+        {
+            writeFont('Open ga.ne', normalScale, function () {
+                TurbulenzBridge.emit("app.url.open", "https://ga.me/");
+            }, 'open_url');
+        }
+
         yPaddingTop = 7;
         yOffset = yPaddingTop;
         xOffset = xPaddingLeft;
