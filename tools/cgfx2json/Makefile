@@ -14,9 +14,9 @@ ifeq ($(PLATFORM),Linux)
   endif
   LDFLAGS=$(LIBPATHS) -lCg -lCgGL -lGL -lstdc++ -lpthread
 else
-  CFLAGS += -arch x86_64 -arch i386
+  CFLAGS += -arch x86_64 -arch i386 -F /Library/Frameworks
   LIBTYPE=macosx
-  LDFLAGS=$(LIBPATHS) -arch x86_64 -arch i386 -framework Cg -framework OpenGL -framework Foundation -lstdc++
+  LDFLAGS=$(LIBPATHS) -arch x86_64 -arch i386 -F /Library/Frameworks -framework Cg -framework OpenGL -framework Foundation -lstdc++
 endif
 
 INCLUDES += -I../common -I../../external/boost/1.43/include
