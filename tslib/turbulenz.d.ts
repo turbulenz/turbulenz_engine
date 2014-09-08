@@ -1438,6 +1438,7 @@ interface TurbulenzEngine
 
     canvas?              : any;
     VMath?               : any;
+    _createTechniqueParameterBuffer? : any;
 
     encryptionEnabled?   : boolean;
 

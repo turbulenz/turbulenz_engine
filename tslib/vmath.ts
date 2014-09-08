@@ -6055,3 +6055,10 @@ var _tz_techniqueParameterBufferCreate =
 
     return new Float32Array(params.numFloats);
 };
+
+if (typeof TurbulenzEngine !== 'undefined' &&
+    TurbulenzEngine.hasOwnProperty('_createTechniqueParameterBuffer'))
+{
+    TurbulenzEngine._createTechniqueParameterBuffer =
+        _tz_techniqueParameterBufferCreate;
+}
