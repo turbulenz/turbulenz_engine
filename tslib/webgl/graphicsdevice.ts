@@ -5059,67 +5059,68 @@ class WebGLTechniqueParameters implements TechniqueParameters
 //
 // TechniqueParameterBuffer
 //
-var techniqueParameterBufferCreate =
-    function techniqueParameterBufferCreateFn(params): Float32Array
-{
-    if (Float32Array.prototype.map === undefined)
-    {
-        Float32Array.prototype.map = function techniqueParameterBufferMap(offset, numFloats) {
-            if (offset === undefined)
-            {
-                offset = 0;
-            }
-            var buffer = this;
-            if (numFloats === undefined)
-            {
-                numFloats = this.length;
-            }
-            function techniqueParameterBufferWriter()
-            {
-                var numArguments = arguments.length;
-                for (var a = 0; a < numArguments; a += 1)
-                {
-                    var value = arguments[a];
-                    if (typeof value === 'number')
-                    {
-                        buffer[offset] = value;
-                        offset += 1;
-                    }
-                    else
-                    {
-                        buffer.setData(value, offset, value.length);
-                        offset += value.length;
-                    }
-                }
-            }
-            return techniqueParameterBufferWriter;
-        };
+// var techniqueParameterBufferCreate =
+//     function techniqueParameterBufferCreateFn(params): Float32Array
+// {
+//     // if (Float32Array.prototype.map === undefined)
+//     // {
+//     //     Float32Array.prototype.map = function techniqueParameterBufferMap(offset, numFloats) {
+//     //         if (offset === undefined)
+//     //         {
+//     //             offset = 0;
+//     //         }
+//     //         var buffer = this;
+//     //         if (numFloats === undefined)
+//     //         {
+//     //             numFloats = this.length;
+//     //         }
+//     //         function techniqueParameterBufferWriter()
+//     //         {
+//     //             var numArguments = arguments.length;
+//     //             for (var a = 0; a < numArguments; a += 1)
+//     //             {
+//     //                 var value = arguments[a];
+//     //                 if (typeof value === 'number')
+//     //                 {
+//     //                     buffer[offset] = value;
+//     //                     offset += 1;
+//     //                 }
+//     //                 else
+//     //                 {
+//     //                     buffer.setData(value, offset, value.length);
+//     //                     offset += value.length;
+//     //                 }
+//     //             }
+//     //         }
+//     //         return techniqueParameterBufferWriter;
+//     //     };
 
-        /* tslint:disable:no-empty */
-        Float32Array.prototype.unmap = function techniqueParameterBufferUnmap(writer) {
-        };
-        /* tslint:enable:no-empty */
+//     //     /* tslint:disable:no-empty */
+//     //     Float32Array.prototype.unmap = function techniqueParameterBufferUnmap(writer) {
+//     //     };
+//     //     /* tslint:enable:no-empty */
 
-        Float32Array.prototype.setData = function techniqueParameterBufferSetData(data,
-                                                                                  offset?: number,
-                                                                                  numValues?: number) {
-            if (offset === undefined)
-            {
-                offset = 0;
-            }
-            if (numValues === undefined)
-            {
-                numValues = this.length;
-            }
-            for (var n = 0; n < numValues; n += 1, offset += 1)
-            {
-                this[offset] = data[n];
-            }
-        };
-    }
+//     //     Float32Array.prototype.setData =
+//     //         function techniqueParameterBufferSetData(data,
+//     //                                                  offset?: number,
+//     //                                                  numValues?: number) {
+//     //             if (offset === undefined)
+//     //             {
+//     //                 offset = 0;
+//     //             }
+//     //             if (numValues === undefined)
+//     //             {
+//     //                 numValues = this.length;
+//     //             }
+//     //             for (var n = 0; n < numValues; n += 1, offset += 1)
+//     //             {
+//     //                 this[offset] = data[n];
+//     //             }
+//     //         };
+//     // }
 
-    return new Float32Array(params.numFloats);
-};
+//     // return new Float32Array(params.numFloats);
+// };
 
 //
 // WebGLDrawParameters
@@ -7886,7 +7887,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         // TOOD: We're returning a float array, which doesn't have all
         // the properties that are expected.
         return <TechniqueParameterBuffer><any>
-            techniqueParameterBufferCreate(params);
+            _tz_techniqueParameterBufferCreate(params);
     }
 
     createRenderBuffer(params): WebGLRenderBuffer

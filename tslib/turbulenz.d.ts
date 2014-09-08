@@ -413,22 +413,27 @@ interface TechniqueParameters
     [paramName: string]: any;
 }
 
+interface TechniqueParameterBufferParameters
+{
+    numFloats  : number;
+    dynamic?   : boolean;
+}
+
 interface ParameterWriteIterator
 {
     (... data: any[]): void;
-    write(... data: any[]): void;
+    // write(... data: any[]): void;
 }
 
-interface TechniqueParameterBuffer
+interface TechniqueParameterBuffer extends Float32Array
 {
     numFloats: number;
     dynamic: boolean;
     data: number[];
 
-    map(firstValueToMap?: number,
-        numValuesToMap?: number): ParameterWriteIterator;
+    map(offset?: number, numValues?: number): ParameterWriteIterator;
     unmap(writer: ParameterWriteIterator): void;
-    setData(data: any, offset: number, numVertices: number): void;
+    setData(data: any, offset?: number, numValues?: number): void;
 }
 
 interface RenderBufferParameters
@@ -829,7 +834,8 @@ interface GraphicsDevice
     createSemantics(attributes: any[]): Semantics;
     createDrawParameters(): DrawParameters;
     createTechniqueParameters(params?: any): TechniqueParameters;
-    createTechniqueParameterBuffer(params: any): TechniqueParameterBuffer;
+    createTechniqueParameterBuffer(params: TechniqueParameterBufferParameters)
+    : TechniqueParameterBuffer;
     createRenderBuffer(params: RenderBufferParameters): RenderBuffer;
     createRenderTarget(params: RenderTargetParameters): RenderTarget;
     createOcclusionQuery(): OcclusionQuery;

@@ -5883,3 +5883,175 @@ if (typeof TurbulenzEngine !== 'undefined' &&
 {
     TurbulenzEngine.VMath = VMath;
 }
+
+/*
+
+// A child class of Float32Array.  Typescript won't let us inherit
+// from Float32Array so we do it in this manner.
+class TzTechniqueParameterBuffer extends Float32Array implements TechniqueParameterBuffer
+{
+    numFloats: number;
+    dynamic: boolean;
+    data: number[];
+
+    constructor(params: TechniqueParameterBufferParameters)
+    {
+        super(params.numFloats);
+        this.numFloats = params.numFloats;
+        this.dynamic = !!(params.dynamic);
+        Object.defineProperty(this, "data", {
+            get: function techniqueParameterBufferDataGet()
+            {
+                return this;
+            },
+            enumerable: true
+        });
+    }
+
+    map(offset?: number, numValues?: number) : ParameterWriteIterator
+    {
+        if (offset === undefined)
+        {
+            offset = 0;
+        }
+        var buffer = this;
+        if (numFloats === undefined)
+        {
+            numFloats = this.length;
+        }
+        function techniqueParameterBufferWriter()
+        {
+            var numArguments = arguments.length;
+            for (var a = 0; a < numArguments; a += 1)
+            {
+                var value = arguments[a];
+                if (typeof value === 'number')
+                {
+                    buffer[offset] = value;
+                    offset += 1;
+                }
+                else
+                {
+                    buffer.setData(value, offset, value.length);
+                    offset += value.length;
+                }
+            }
+        }
+        return techniqueParameterBufferWriter;
+    }
+
+    unmap(writer: ParameterWriteIterator): void
+    {
+    }
+
+    setData(data: any, offset?: number, numValues?: number): void
+    {
+        if (offset === undefined)
+        {
+            offset = 0;
+        }
+        if (numValues === undefined)
+        {
+            numValues = this.length;
+        }
+        for (var n = 0; n < numValues; n += 1, offset += 1)
+        {
+            this[offset] = data[n];
+        }
+    }
+
+    static create(params: TechniqueParameterBufferParameters)
+    : TechniqueParameterBuffer
+    {
+        return new TechniqueParameterBuffer(params);
+    }
+}
+*/
+
+//
+// TechniqueParameterBuffer
+//
+var _tz_techniqueParameterBufferCreate =
+    function techniqueParameterBufferCreateFn(params): Float32Array
+{
+    if (Float32Array.prototype.map === undefined)
+    {
+        Float32Array.prototype.map =
+            function techniqueParameterBufferMap(offset, numFloats)
+        {
+            if (offset === undefined)
+            {
+                offset = 0;
+            }
+            var buffer = this;
+            if (numFloats === undefined)
+            {
+                numFloats = this.length;
+            }
+            function techniqueParameterBufferWriter()
+            {
+                var numArguments = arguments.length;
+                for (var a = 0; a < numArguments; a += 1)
+                {
+                    var value = arguments[a];
+                    if (typeof value === 'number')
+                    {
+                        buffer[offset] = value;
+                        offset += 1;
+                    }
+                    else
+                    {
+                        buffer.setData(value, offset, value.length);
+                        offset += value.length;
+                    }
+                }
+            }
+            return techniqueParameterBufferWriter;
+        };
+
+        /* tslint:disable:no-empty */
+        Float32Array.prototype.unmap =
+            function techniqueParameterBufferUnmap(writer)
+        {
+        };
+        /* tslint:enable:no-empty */
+
+        Float32Array.prototype.setData =
+            function techniqueParameterBufferSetData(data,
+                                                     offset?: number,
+                                                     numValues?: number)
+        {
+            if (offset === undefined)
+            {
+                offset = 0;
+            }
+            if (numValues === undefined)
+            {
+                numValues = this.length;
+            }
+            for (var n = 0; n < numValues; n += 1, offset += 1)
+            {
+                this[offset] = data[n];
+            }
+        };
+
+        Object.defineProperty(Float32Array.prototype, "data", {
+            get: function techniqueParameterBufferDataGet()
+            {
+                return this;
+            },
+            enumerable: true
+        });
+
+        Object.defineProperty(Float32Array.prototype, "numFloats", {
+            get: function techniqueParameterBufferDataGet()
+            {
+                return this.length;
+            },
+            enumerable: true
+        });
+
+    }
+
+    return new Float32Array(params.numFloats);
+};
