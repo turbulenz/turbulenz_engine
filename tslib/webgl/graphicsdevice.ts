@@ -3755,6 +3755,7 @@ class WebGLShaderProgram
                 {
                     parameter.values = new Int32Array(paramInfo.values);
                 }
+                parameter.current = parameter.values;
             }
 
             programParameters[parameterName] = parameter;
@@ -6514,7 +6515,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var n;
         for (n = 0; n < numParameters; n += 1)
         {
-            parameters[n].current = null;
+            parameters[n].current = parameters[n].values;
         }
     }
 
