@@ -2516,10 +2516,10 @@ class WebGLIndexBuffer implements IndexBuffer
     stride     : number;
     length     : number;
     dynamic    : boolean;
-    usage      : number;
 
     // WebGLIndexBuffer
-    private _gd             : WebGLGraphicsDevice;
+    private _usage  : number;
+    private _gd     : WebGLGraphicsDevice;
     /* private */ _glBuffer : WebGLBuffer;
 
     map(offset?: number, numIndices?: number)
@@ -2605,7 +2605,7 @@ class WebGLIndexBuffer implements IndexBuffer
             }
             else
             {
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data, this.usage);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data, this._usage);
             }
         }
     }
@@ -2679,7 +2679,7 @@ class WebGLIndexBuffer implements IndexBuffer
         }
         else
         {
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, bufferData, this.usage);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, bufferData, this._usage);
         }
     }
 
@@ -2735,7 +2735,7 @@ class WebGLIndexBuffer implements IndexBuffer
         /* tslint:disable:no-string-literal */
         ib['transient'] = (params['transient'] || false);
         ib.dynamic = (params.dynamic || ib['transient']);
-        ib.usage = (ib['transient'] ? gl.STREAM_DRAW : (ib.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW));
+        ib._usage = (ib['transient'] ? gl.STREAM_DRAW : (ib.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW));
         /* tslint:enable:no-string-literal */
 
         ib._glBuffer = gl.createBuffer();
@@ -2748,7 +2748,7 @@ class WebGLIndexBuffer implements IndexBuffer
         {
             gd.setIndexBuffer(ib);
 
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, (numIndices * stride), ib.usage);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, (numIndices * stride), ib._usage);
         }
 
         ib.id = ++gd._counters.indexBuffers;
@@ -2826,7 +2826,6 @@ class WebGLVertexBuffer implements VertexBuffer
     // VertexBuffer
     id          : number;
     numVertices : number;
-    usage       : number;
     stride      : number;
     transient   : boolean;
     dynamic     : boolean;
@@ -2835,6 +2834,7 @@ class WebGLVertexBuffer implements VertexBuffer
 
     // WebGLVertexBuffer
     private _gd                    : WebGLGraphicsDevice;
+    private _usage                 : number;
     /* private */ _glBuffer        : WebGLBuffer;
     /* private */ _hasSingleFormat : boolean;
     /* private */ _strideInBytes   : number;
@@ -3216,7 +3216,7 @@ class WebGLVertexBuffer implements VertexBuffer
             }
             else
             {
-                gl.bufferData(gl.ARRAY_BUFFER, data, this.usage);
+                gl.bufferData(gl.ARRAY_BUFFER, data, this._usage);
             }
         }
     }
@@ -3248,7 +3248,7 @@ class WebGLVertexBuffer implements VertexBuffer
             }
             else
             {
-                gl.bufferData(gl.ARRAY_BUFFER, data, this.usage);
+                gl.bufferData(gl.ARRAY_BUFFER, data, this._usage);
             }
             return;
         }
@@ -3422,7 +3422,7 @@ class WebGLVertexBuffer implements VertexBuffer
         }
         else
         {
-            gl.bufferData(gl.ARRAY_BUFFER, bufferData, this.usage);
+            gl.bufferData(gl.ARRAY_BUFFER, bufferData, this._usage);
         }
     }
 
@@ -3565,7 +3565,7 @@ class WebGLVertexBuffer implements VertexBuffer
             gd.bindVertexBuffer(this._glBuffer);
 
             var bufferType = gl.ARRAY_BUFFER;
-            gl.bufferData(bufferType, size, this.usage);
+            gl.bufferData(bufferType, size, this._usage);
 
             var bufferSize = gl.getBufferParameter(bufferType, gl.BUFFER_SIZE);
             this.numVertices = Math.floor(bufferSize / this._strideInBytes);
@@ -3607,7 +3607,7 @@ class WebGLVertexBuffer implements VertexBuffer
         /* tslint:disable:no-string-literal */
         vb['transient'] = (params['transient'] || false);
         vb.dynamic = (params.dynamic || vb['transient']);
-        vb.usage = (vb['transient'] ? gl.STREAM_DRAW : (vb.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW));
+        vb._usage = (vb['transient'] ? gl.STREAM_DRAW : (vb.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW));
         /* tslint:enable:no-string-literal */
         vb._glBuffer = gl.createBuffer();
 
@@ -3620,8 +3620,7 @@ class WebGLVertexBuffer implements VertexBuffer
         else
         {
             gd.bindVertexBuffer(vb._glBuffer);
-
-            gl.bufferData(gl.ARRAY_BUFFER, bufferSize, vb.usage);
+            gl.bufferData(gl.ARRAY_BUFFER, bufferSize, vb._usage);
         }
 
         vb.id = ++gd._counters.vertexBuffers;

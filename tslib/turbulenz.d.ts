@@ -569,7 +569,6 @@ interface VertexBuffer
 {
     id          : number;
     numVertices : number;
-    usage       : number;
     stride      : number;
     transient   : boolean;
     dynamic     : boolean;
@@ -609,14 +608,12 @@ interface IndexBuffer
     stride     : number;
     length     : number;
     dynamic    : boolean;
-    usage      : number;
 
     // Methods
 
     setData(data: any, offset: number, numIndices: number): void;
     map(offset?: number, count?: number): IndexWriteIterator;
     unmap(writer: IndexWriteIterator): void;
-
     destroy(): void;
 }
 
