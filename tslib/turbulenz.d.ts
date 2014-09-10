@@ -605,9 +605,8 @@ interface IndexBuffer
     id         : number;
     numIndices : number;
     format     : number;
-    stride     : number;
-    length     : number;
     dynamic    : boolean;
+    transient  : boolean;
 
     // Methods
 

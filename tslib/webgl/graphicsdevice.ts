@@ -2510,16 +2510,16 @@ class WebGLIndexBuffer implements IndexBuffer
     /* tslint:enable:no-unused-variable */
 
     // IndexBuffer
-    id         : number;
-    numIndices : number;
-    format     : number;
-    stride     : number;
-    length     : number;
-    dynamic    : boolean;
+    id                      : number;
+    numIndices              : number;
+    format                  : number;
+    dynamic                 : boolean;
+    transient               : boolean;
 
     // WebGLIndexBuffer
-    private _usage  : number;
-    private _gd     : WebGLGraphicsDevice;
+    /* private */ _stride   : number;
+    private _usage          : number;
+    private _gd             : WebGLGraphicsDevice;
     /* private */ _glBuffer : WebGLBuffer;
 
     map(offset?: number, numIndices?: number)
@@ -2729,7 +2729,7 @@ class WebGLIndexBuffer implements IndexBuffer
         {
             stride = 4;
         }
-        ib.stride = stride;
+        ib._stride = stride;
 
         // Avoid dot notation lookup to prevent Google Closure complaining about transient being a keyword
         /* tslint:disable:no-string-literal */
@@ -5652,7 +5652,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var offset;
         if (first)
         {
-            offset = (first * indexBuffer.stride);
+            offset = (first * indexBuffer._stride);
         }
         else
         {
@@ -6553,7 +6553,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         if (activeIndexBuffer)
         {
             indexFormat = activeIndexBuffer.format;
-            indexStride = activeIndexBuffer.stride;
+            indexStride = activeIndexBuffer._stride;
         }
 
         for (var n = 0; n < numDrawParameters; n += 1)
@@ -6652,7 +6652,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     gl.bindBuffer(ELEMENT_ARRAY_BUFFER, indexBuffer._glBuffer);
 
                     indexFormat = indexBuffer.format;
-                    indexStride = indexBuffer.stride;
+                    indexStride = indexBuffer._stride;
 
                     if (debug)
                     {
@@ -6824,7 +6824,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                 if (indexBuffer)
                 {
                     indexFormat = indexBuffer.format;
-                    indexStride = indexBuffer.stride;
+                    indexStride = indexBuffer._stride;
                 }
 
                 if (debug)
@@ -7069,7 +7069,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         if (activeIndexBuffer)
         {
             indexFormat = activeIndexBuffer.format;
-            indexStride = activeIndexBuffer.stride;
+            indexStride = activeIndexBuffer._stride;
         }
 
         for (var n = 0; n < numDrawParameters; n += 1)
@@ -7174,7 +7174,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
                     gl.bindBuffer(ELEMENT_ARRAY_BUFFER, indexBuffer._glBuffer);
 
                     indexFormat = indexBuffer.format;
-                    indexStride = indexBuffer.stride;
+                    indexStride = indexBuffer._stride;
 
                     if (debug)
                     {
