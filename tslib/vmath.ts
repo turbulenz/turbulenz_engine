@@ -5972,7 +5972,7 @@ class TzTechniqueParameterBuffer extends Float32Array implements TechniqueParame
 // TechniqueParameterBuffer
 //
 var _tz_techniqueParameterBufferCreate =
-    function techniqueParameterBufferCreateFn(params): Float32Array
+    function techniqueParameterBufferCreateFn(params): TechniqueParameterBuffer
 {
     if (Float32Array.prototype.map === undefined)
     {
@@ -6053,7 +6053,7 @@ var _tz_techniqueParameterBufferCreate =
 
     }
 
-    return new Float32Array(params.numFloats);
+    return <TechniqueParameterBuffer><any>(new Float32Array(params.numFloats));
 };
 
 if (typeof TurbulenzEngine !== 'undefined' &&
