@@ -892,6 +892,13 @@ static std::string FixShaderCode(char *text, int textLength, const UniformRules 
                             "#define TZ_LOWP\n"
                          "#endif\n");
 
+    if (newtext.find("dFdx") != newtext.npos
+        || newtext.find("dFdy") != newtext.npos
+        || newtext.find("fwidth") != newtext.npos)
+    {
+        esPrefix += "#extension GL_OES_standard_derivatives : enable\n";
+    }
+
     if (newtext.find("gl_Color") != newtext.npos
         || newtext.find("gl_FrontColor") != newtext.npos
         || newtext.find("gl_BackColor") != newtext.npos)

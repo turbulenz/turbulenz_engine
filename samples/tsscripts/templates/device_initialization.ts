@@ -112,6 +112,8 @@ TurbulenzEngine.onload = function onloadFn()
             "<li>FILEFORMAT_PNG: " + graphicsDevice.isSupported("FILEFORMAT_PNG") + " <\/li>" +
             "<li>FILEFORMAT_DDS: " + graphicsDevice.isSupported("FILEFORMAT_DDS") + " <\/li>" +
             "<li>FILEFORMAT_TGA: " + graphicsDevice.isSupported("FILEFORMAT_TGA") + " <\/li>" +
+            "<li>DEPTH_TEXTURE: " + graphicsDevice.isSupported("DEPTH_TEXTURE") + " <\/li>" +
+            "<li>STANDARD_DERIVATIVES: " + graphicsDevice.isSupported("STANDARD_DERIVATIVES") + " <\/li>" +
             "<li>Extensions: " + graphicsDevice.extensions + "<\/li>" +
             "<\/ul>",
             gdDiv);

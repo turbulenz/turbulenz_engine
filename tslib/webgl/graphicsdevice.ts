@@ -4871,13 +4871,6 @@ class TZWebGLShader implements Shader
                     }
                 }
 
-                if (code.indexOf("dFdx") !== -1 ||
-                    code.indexOf("dFdy") !== -1 ||
-                    code.indexOf("fwidth") !== -1)
-                {
-                    code = "#extension GL_OES_standard_derivatives : enable\n" + code;
-                }
-
                 gl.shaderSource(glShader, code);
 
                 gl.compileShader(glShader);
