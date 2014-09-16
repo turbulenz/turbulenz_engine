@@ -5157,6 +5157,41 @@ class WebGLDrawParameters implements DrawParameters
         return this;
     }
 
+    clone(dst)
+    {
+        if (!dst)
+        {
+            dst = new WebGLDrawParameters();
+        }
+
+        dst.sortKey = this.sortKey;
+        dst._technique = this._technique;
+        dst._endStreams = this._endStreams;
+        dst._endTechniqueParameters = this._endTechniqueParameters;
+        dst._endInstances = this._endInstances;
+        dst.primitive = this.primitive;
+        dst.count = this.count;
+        dst.firstIndex = this.firstIndex;
+        dst.userData = this.userData;
+
+        dst._indexBuffer = this._indexBuffer;
+        dst._vao = this._vao;
+
+        var count = this._parametersList.length;
+        for (var i = 0; i < count; i += 1)
+        {
+            dst._parametersList[i] = this._parametersList[i];
+        }
+        dst._parametersList.length = count;
+
+        for (i = 0; i < this._endInstances; i += 1)
+        {
+            dst[i] = this[i];
+        }
+
+        return dst;
+    }
+
     _differentParameters(oldTP, newTP): boolean
     {
         var p;
