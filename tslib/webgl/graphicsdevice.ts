@@ -484,6 +484,16 @@ class TZWebGLTexture implements Texture
                 }
             }
         }
+        else if (format === gd.PIXELFORMAT_D32)
+        {
+            internalFormat = gl.DEPTH_COMPONENT;
+            gltype = gl.UNSIGNED_INT;
+        }
+        else if (format === gd.PIXELFORMAT_D16)
+        {
+            internalFormat = gl.DEPTH_COMPONENT;
+            gltype = gl.UNSIGNED_SHORT;
+        }
         else if (format === gd.PIXELFORMAT_D24S8)
         {
             //internalFormat = gl.DEPTH24_STENCIL8_EXT;
@@ -813,8 +823,9 @@ class TZWebGLTexture implements Texture
                         {
                             levelData = new Float32Array(levelSize);
                         }
-                        else if (gd._halfFloatTextureExtension &&
-                                 gltype === gd._halfFloatTextureExtension.HALF_FLOAT_OES)
+                        else if ((gd._halfFloatTextureExtension &&
+                                 gltype === gd._halfFloatTextureExtension.HALF_FLOAT_OES) ||
+                                 internalFormat === gl.DEPTH_COMPONENT)
                         {
                             levelData = null;
                         }
@@ -1592,7 +1603,8 @@ class TZWebGLTexture implements Texture
 
             if (params.renderable)
             {
-                if (gd.PIXELFORMAT_D16 === format)
+                if (gd.PIXELFORMAT_D16 === format ||
+                    gd.PIXELFORMAT_D32 === format)
                 {
                     tex._glDepthAttachment = gd._gl.DEPTH_ATTACHMENT;
                 }
@@ -1947,7 +1959,8 @@ class WebGLRenderBuffer implements RenderBuffer
         }
 
         if (format !== gd.PIXELFORMAT_D24S8 &&
-            format !== gd.PIXELFORMAT_D16)
+            format !== gd.PIXELFORMAT_D16 &&
+            format !== gd.PIXELFORMAT_D32)
         {
             return null;
         }
@@ -1963,6 +1976,11 @@ class WebGLRenderBuffer implements RenderBuffer
         if (gd.PIXELFORMAT_D16 === format)
         {
             internalFormat = gl.DEPTH_COMPONENT16;
+            attachment = gl.DEPTH_ATTACHMENT;
+        }
+        else if (gd.PIXELFORMAT_D32 === format)
+        {
+            internalFormat = gl.DEPTH_COMPONENT;
             attachment = gl.DEPTH_ATTACHMENT;
         }
         else // if (gd.PIXELFORMAT_D24S8 === format)
@@ -5495,6 +5513,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     PIXELFORMAT_R8G8B8       : number;
     PIXELFORMAT_D24S8        : number;
     PIXELFORMAT_D16          : number;
+    PIXELFORMAT_D32          : number;
     PIXELFORMAT_DXT1         : number;
     PIXELFORMAT_DXT3         : number;
     PIXELFORMAT_DXT5         : number;
@@ -5635,6 +5654,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     /* private */ _drawBuffersExtension          : any;
     /* private */ _floatTextureExtension         : any;
     /* private */ _halfFloatTextureExtension     : any;
+    /* private */ _depthTextureExtension         : boolean;
     private _vertexArrayObjectExtension          : any;
     private _cachedVAOs                          : { [id: number]: WebGLVAOItem[] };
 
@@ -7936,6 +7956,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             return typeof TGALoader !== 'undefined';
         }
+        else if ("DEPTH_TEXTURE" === name)
+        {
+            return this._depthTextureExtension;
+        }
         return undefined;
     }
 
@@ -8749,6 +8773,22 @@ class WebGLGraphicsDevice implements GraphicsDevice
         else if (extensionsMap['WEBKIT_WEBGL_compressed_textures'])
         {
             gd._compressedTexturesExtension = gl.getExtension('WEBKIT_WEBGL_compressed_textures');
+        }
+
+        if (extensionsMap['WEBGL_depth_texture'])
+        {
+            gd._depthTextureExtension = true;
+            gl.getExtension('WEBGL_depth_texture');
+        }
+        else if (extensionsMap['WEBKIT_WEBGL_depth_texture'])
+        {
+            gd._depthTextureExtension = true;
+            gl.getExtension('WEBKIT_WEBGL_depth_texture');
+        }
+        else if (extensionsMap['MOZ_WEBGL_depth_texture'])
+        {
+            gd._depthTextureExtension = true;
+            gl.getExtension('MOZ_WEBGL_depth_texture');
         }
 
         var anisotropyExtension;
@@ -10082,3 +10122,4 @@ WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA32F = 14;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB32F = 15;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_RGBA16F = 16;
 WebGLGraphicsDevice.prototype.PIXELFORMAT_RGB16F = 17;
+WebGLGraphicsDevice.prototype.PIXELFORMAT_D32 = 18;
