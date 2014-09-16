@@ -4871,6 +4871,13 @@ class TZWebGLShader implements Shader
                     }
                 }
 
+                if (code.indexOf("dFdx") !== -1 ||
+                    code.indexOf("dFdy") !== -1 ||
+                    code.indexOf("fwidth") !== -1)
+                {
+                    code = "#extension GL_OES_standard_derivatives : enable\n" + code;
+                }
+
                 gl.shaderSource(glShader, code);
 
                 gl.compileShader(glShader);
@@ -5655,6 +5662,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
     /* private */ _floatTextureExtension         : any;
     /* private */ _halfFloatTextureExtension     : any;
     /* private */ _depthTextureExtension         : boolean;
+    /* private */ _standardDerivativesExtension  : boolean;
     private _vertexArrayObjectExtension          : any;
     private _cachedVAOs                          : { [id: number]: WebGLVAOItem[] };
 
@@ -7960,6 +7968,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             return this._depthTextureExtension;
         }
+        else if ("STANDARD_DERIVATIVES" === name)
+        {
+            return this._standardDerivativesExtension;
+        }
         return undefined;
     }
 
@@ -8789,6 +8801,12 @@ class WebGLGraphicsDevice implements GraphicsDevice
         {
             gd._depthTextureExtension = true;
             gl.getExtension('MOZ_WEBGL_depth_texture');
+        }
+
+        if (extensionsMap['OES_standard_derivatives'])
+        {
+            gd._standardDerivativesExtension = true;
+            gl.getExtension('OES_standard_derivatives');
         }
 
         var anisotropyExtension;
