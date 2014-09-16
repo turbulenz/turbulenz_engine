@@ -5351,9 +5351,9 @@ class WebGLDrawParameters implements DrawParameters
                         offset += 1;
                     }
                 }
-                parametersList[offset] = null;
-                offset += 1;
             }
+            parametersList[offset] = null;
+            offset += 1;
         }
     }
 
@@ -6538,7 +6538,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
         var lastTechnique: WebGLTechnique = null;
         var lastEndStreams = -1;
         var lastDrawParameters = null;
-        var techniqueParameters = null;
         var v = 0;
         var streamsMatch = false;
         var vertexBuffer = null;
@@ -6602,11 +6601,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             offset = 0;
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
             {
-                techniqueParameters = drawParameters[t];
-                if (techniqueParameters)
-                {
-                    offset = this._setParametersList(techniqueParameters, parametersList, offset);
-                }
+                offset = this._setParametersList(drawParameters[t], parametersList, offset);
             }
 
             streamsMatch = (lastEndStreams === endStreams);
@@ -6757,7 +6752,6 @@ class WebGLGraphicsDevice implements GraphicsDevice
 
         var lastTechnique: WebGLTechnique = null;
         var lastVAO = null;
-        var techniqueParameters = null;
         var pass: WebGLPass = null;
         var passParameters: { [name: string]: WebGLProgramParameter } = null;
         var indexFormat = 0;
@@ -6802,11 +6796,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
             offset = 0;
             for (t = (16 * 3); t < endTechniqueParameters; t += 1)
             {
-                techniqueParameters = drawParameters[t];
-                if (techniqueParameters)
-                {
-                    offset = this._setParametersList(techniqueParameters, parametersList, offset);
-                }
+                offset = this._setParametersList(drawParameters[t], parametersList, offset);
             }
 
             var vao = drawParameters._vao;
