@@ -812,7 +812,8 @@ Creates a RenderTarget object.
         colorTexture1: specularTexture,
         colorTexture2: normalTexture,
         colorTexture3: depthTexture,
-        depthBuffer: depthBuffer
+        depthBuffer: depthBuffer,
+        depthTexture: depthTexture
     });
 
 Returns a :ref:`RenderTarget <rendertarget>` object.
@@ -1123,6 +1124,8 @@ See also :ref:`maxSupported <graphicsdevice_maxsupported>`.
 * "FILEFORMAT_PNG"
 * "FILEFORMAT_DDS"
 * "FILEFORMAT_TGA"
+* "DEPTH_TEXTURE"
+* "STANDARD_DERIVATIVES"
 
 Returns a boolean.
 
@@ -1627,6 +1630,8 @@ Valid pixel format values, required when creating textures.
     - PIXELFORMAT_R8G8B8A8
     - PIXELFORMAT_R8G8B8
     - PIXELFORMAT_D24S8
+    - PIXELFORMAT_D16
+    - PIXELFORMAT_D32
     - PIXELFORMAT_DXT1
     - PIXELFORMAT_DXT3
     - PIXELFORMAT_DXT5

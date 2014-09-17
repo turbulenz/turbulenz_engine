@@ -10,6 +10,14 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-09-16
+
+- Added support for standard derivative functions `ddx, ddy, fwidth` in shaders to cgfx2json and GraphicsDevice.
+  Use `graphicsDevice.isSupported("STANDARD_DERIVATIVES")` to check for hardware support.
+- Added `PIXELFORMAT_D32` to GraphicsDevice and completed support for depth textures.
+  Use `graphicsDevice.isSupported("DEPTH_TEXTURE")` to check for hardware support.
+- Added clone method to DrawParameters object.
+
 2014-08-20
 
 - The DrawParameters object is now shadowing the Shader parameters set by its TechniqueParameters in order

@@ -187,6 +187,28 @@ Gets an element of the array of offsets.
 
 Returns a number.
 
+.. index::
+    pair: DrawParameters; clone
+
+`clone`
+-------
+
+**Summary**
+
+Create a clone of the DrawParameters object.
+
+**Syntax** ::
+
+    var clone = drawParameters.clone(dst);
+
+``dst``
+    Optional parameter to specify an existing DrawParameters object as the source
+    of the clone operation. If unspecified a new DrawParameters object will be
+    constructed.
+
+References to other objects in the DrawParameters are assigned to the clone
+without further deep copying.
+
 Properties
 ==========
 
