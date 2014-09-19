@@ -2478,8 +2478,8 @@ class ParticleBuilder
                 ]);
             parameters = ParticleBuilder.packedCopyParameters =
                 graphicsDevice.createTechniqueParameters({
-                    dim: [0, 0],
-                    dst: [0, 0, 0, 0]
+                    dim: new Float32Array([0, 0]),
+                    dst: new Float32Array([0, 0, 0, 0])
                 });
 
             // Shader embedded from assets/shaders/particles-packer.cgfx
