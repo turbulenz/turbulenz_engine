@@ -3613,8 +3613,9 @@ class SharedRenderContext
                 ]);
             SharedRenderContext.copyParameters =
                 graphicsDevice.createTechniqueParameters({
-                    dim: [0, 0],
-                    dst: [0, 0, 0, 0]
+                    src: null,
+                    dim: new Float32Array([0, 0]),
+                    dst: new Float32Array([0, 0, 0, 0])
                 });
 
             // Shader embedded from assets/shaders/particles-copy.cgfx
@@ -3798,11 +3799,12 @@ class SharedRenderContext
         var semantics  = SharedRenderContext.textureSemantics;
 
         parameters["src"] = from.colorTexture0;
-        parameters["dst"] = [
-            0, 0,
-            from.colorTexture0.width / to.colorTexture0.width,
-            from.colorTexture0.height / to.colorTexture0.height
-        ];
+
+        var dst = parameters["dst"];
+        dst[0] = 0;
+        dst[1] = 0;
+        dst[2] = from.colorTexture0.width / to.colorTexture0.width;
+        dst[3] = from.colorTexture0.height / to.colorTexture0.height;
 
         gd.beginRenderTarget(to);
         gd.setStream(vertices, semantics);
