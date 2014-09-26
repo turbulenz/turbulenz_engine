@@ -1414,6 +1414,9 @@ interface SystemInfo
     platformProfile   : string;
 
     userLocale        : string;
+
+    native?           : boolean;
+    plugin?           : boolean;
 }
 
 interface TurbulenzRequestCallback

@@ -662,6 +662,15 @@ following properties:
 ``userLocale``
     The current locale setting for the user.
 
+``native``
+    If present and true, indicates that appliation is running on a
+    native implementation of the Turbulenz engine.
+
+``plugin``
+    If present and true, the application is running in a plugin.  If
+    this property is false while ``native`` is true then the game is
+    running in an application (developer client or packaged app).
+
 **Syntax** ::
 
     var systemInfo = TurbulenzEngine.getSystemInfo();
