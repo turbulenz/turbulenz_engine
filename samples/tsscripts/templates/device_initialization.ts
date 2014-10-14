@@ -88,6 +88,7 @@ TurbulenzEngine.onload = function onloadFn()
             "<li>Shading Language Version: " + graphicsDevice.shadingLanguageVersion + "<\/li>" +
             "<li>Video Ram: " + graphicsDevice.videoRam + " MB<\/li>" +
             "<li>OCCLUSION_QUERIES: " + graphicsDevice.isSupported("OCCLUSION_QUERIES") + " <\/li>" +
+            "<li>TIMER_QUERIES: " + graphicsDevice.isSupported("TIMER_QUERIES") + " <\/li>" +
             "<li>NPOT_MIPMAPPED_TEXTURES: " + graphicsDevice.isSupported("NPOT_MIPMAPPED_TEXTURES") + " <\/li>" +
             "<li>TEXTURE_DXT1: " + graphicsDevice.isSupported("TEXTURE_DXT1") + " <\/li>" +
             "<li>TEXTURE_DXT3: " + graphicsDevice.isSupported("TEXTURE_DXT3") + " <\/li>" +

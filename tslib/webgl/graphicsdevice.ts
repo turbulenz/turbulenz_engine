@@ -7714,6 +7714,17 @@ class WebGLGraphicsDevice implements GraphicsDevice
     }
     /* tslint:enable:no-empty */
 
+    beginTimerQuery()
+    {
+        return false;
+    }
+
+    /* tslint:disable:no-empty */
+    endTimerQuery()
+    {
+    }
+    /* tslint:enable:no-empty */
+
     endFrame()
     {
         var gl = this._gl;
@@ -7888,6 +7899,11 @@ class WebGLGraphicsDevice implements GraphicsDevice
         return null;
     }
 
+    createTimerQuery(): TimerQuery
+    {
+        return null;
+    }
+
     createDrawParameters(): WebGLDrawParameters
     {
         return WebGLDrawParameters.create();
@@ -7897,6 +7913,10 @@ class WebGLGraphicsDevice implements GraphicsDevice
     {
         var gl = this._gl;
         if ("OCCLUSION_QUERIES" === name)
+        {
+            return false;
+        }
+        else if ("TIMER_QUERIES" === name)
         {
             return false;
         }

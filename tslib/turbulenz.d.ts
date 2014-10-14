@@ -644,6 +644,10 @@ interface OcclusionQuery
 {
 }
 
+interface TimerQuery
+{
+}
+
 interface VideoParameters
 {
     src: string;
@@ -835,6 +839,7 @@ interface GraphicsDevice
     createRenderBuffer(params: RenderBufferParameters): RenderBuffer;
     createRenderTarget(params: RenderTargetParameters): RenderTarget;
     createOcclusionQuery(): OcclusionQuery;
+    createTimerQuery(): TimerQuery;
     createVideo(params: VideoParameters): Video;
 
     isSupported(feature: string): boolean;
@@ -850,6 +855,9 @@ interface GraphicsDevice
 
     beginOcclusionQuery(occlusionQuery: OcclusionQuery): boolean;
     endOcclusionQuery(): void;
+
+    beginTimerQuery(occlusionQuery: TimerQuery): boolean;
+    endTimerQuery(): void;
 
     clear(clearColor: number[], clearDepth?: number,
           clearStencil?: number): void;
