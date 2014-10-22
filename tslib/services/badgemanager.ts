@@ -5,16 +5,33 @@
 /*global Utilities*/
 
 //
-// API
+// Callback types
 //
-interface BadgeManagerDataSpec
-{
-    gameSessionId?: string;
-    badge_key?: string;
-    current?: number;
-};
 
-//badges is created by Turbulenzservices.createBadges
+interface BadgeManagerErrorCB
+{
+    (errorMessage: string, status: number, parameters: any[]): void;
+}
+
+interface BadgeManagerUserBadgesCB
+{
+    (badgeProgressList: BadgeUserProgressList): void;
+}
+
+interface BadgeManagerAddProgressCB
+{
+    (badgeProgress: BadgeProgress): void;
+}
+
+interface BadgeManagerListBadgesCB
+{
+    (badgeDescriptions: BadgeDescriptionList): void;
+}
+
+//
+// BadgeManager
+//
+// created by Turbulenzservices.createBadges
 class BadgeManager
 {
     /* tslint:disable:no-unused-variable */
@@ -27,7 +44,8 @@ class BadgeManager
     requestHandler: RequestHandler;
 
     // list all badges (just queries the yaml file)
-    listUserBadges(callbackFn, errorCallbackFn)
+    listUserBadges(callbackFn: BadgeManagerUserBadgesCB,
+                   errorCallbackFn: BadgeManagerErrorCB)
     {
         var that = this;
         var cb = function cbFn(jsonResponse, status)
@@ -57,12 +75,17 @@ class BadgeManager
         }, 'badge.read');
     }
 
-    awardUserBadge(badge_key, callbackFn, errorCallbackFn)
+    awardUserBadge(badge_key: string,
+                   callbackFn: BadgeManagerAddProgressCB,
+                   errorCallbackFn: BadgeManagerErrorCB)
     {
         this.addUserBadge(badge_key, null, callbackFn, errorCallbackFn);
     }
 
-    updateUserBadgeProgress(badge_key, current, callbackFn, errorCallbackFn)
+    updateUserBadgeProgress(badge_key: string,
+                            current: number,
+                            callbackFn: BadgeManagerAddProgressCB,
+                            errorCallbackFn: BadgeManagerErrorCB)
     {
         var that = this;
         if (current && typeof current === 'number')
@@ -80,7 +103,10 @@ class BadgeManager
 
     // add a badge to a user (gets passed a badge and a current level
     // over POST, the username is taken from the environment)
-    addUserBadge(badge_key, current, callbackFn, errorCallbackFn)
+    addUserBadge(badge_key: string,
+                 current: number,
+                 callbackFn: BadgeManagerAddProgressCB,
+                 errorCallbackFn: BadgeManagerErrorCB)
     {
         var that = this;
         var cb = function cbFn(jsonResponse, status)
@@ -101,16 +127,12 @@ class BadgeManager
             }
         };
 
-        var dataSpec : BadgeManagerDataSpec = {};
-        dataSpec.gameSessionId = this.gameSessionId;
-        dataSpec.badge_key = badge_key;
-
         var url = '/api/v1/badges/progress/add/' + this.gameSession.gameSlug;
-
-        if (current)
-        {
-            dataSpec.current = current;
-        }
+        var dataSpec : BadgeAddProgressRequest = {
+            gameSessionId: this.gameSessionId,
+            badge_key: badge_key,
+            current: current || undefined,
+        };
 
         this.service.request({
             url: url,
@@ -123,7 +145,8 @@ class BadgeManager
     }
 
     // list all badges (just queries the yaml file)
-    listBadges(callbackFn, errorCallbackFn)
+    listBadges(callbackFn: BadgeManagerListBadgesCB,
+               errorCallbackFn: BadgeManagerErrorCB)
     {
         var that = this;
         var cb = function cbFn(jsonResponse, status)

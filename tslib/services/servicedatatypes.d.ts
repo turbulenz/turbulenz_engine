@@ -120,6 +120,58 @@ interface userDataRemoveAllRequest extends UserDataRequestBase
 }
 
 //
+// Badges
+//
+
+interface BadgeDescription
+{
+    key             : string;
+    title           : string; /// May be localized
+    visible         : boolean;
+    description     : string; /// May be localized
+    shape           : string; /// "circle" or "diamond"
+    total?          : number; /// May not be known, even for
+                              /// progressive achievements
+
+    points?         : number;
+    predescription? : string;
+    image?          : {
+        'border-color'  : string;
+        'icon'          : string;
+    };
+    imageresource?  : string;
+}
+
+/// Returned by badge.meta (badges/read/<session>)
+interface BadgeDescriptionList extends TurbulenzBridgeServiceResponseData
+{
+    [idx: number]: BadgeDescription;
+}
+
+/// Data passed to badge.add (badge/progress/add/<session>)
+interface BadgeAddProgressRequest
+{
+    gameSessionId : string;
+    badge_key     : string;
+    current?      : number;  /// If omitted, the badge is awarded immediately
+}
+
+/// Returned by badge.add call (badge/progress/add/<session>)
+interface BadgeProgress extends TurbulenzBridgeServiceResponseData
+{
+    badge_key: string;
+    achieved: boolean;
+    current: number;
+    total:  number;
+}
+
+/// Returned by badge.read call (badges/progress/read/<session>)
+interface BadgeUserProgressList extends TurbulenzBridgeServiceResponseData
+{
+    [idx: number]: BadgeProgress;
+}
+
+//
 // Currency
 //
 interface Currency
