@@ -159,10 +159,10 @@ interface BadgeAddProgressRequest
 /// Returned by badge.add call (badge/progress/add/<session>)
 interface BadgeProgress extends TurbulenzBridgeServiceResponseData
 {
-    badge_key: string;
-    achieved: boolean;
-    current: number;
-    total:  number;
+    badge_key : string;
+    achieved  : boolean;
+    current   : number;
+    total?    : number;
 }
 
 /// Returned by badge.read call (badges/progress/read/<session>)
