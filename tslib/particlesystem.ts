@@ -2470,7 +2470,7 @@ class ParticleBuilder
                     numVertices: 4,
                     attributes : [graphicsDevice.VERTEXFORMAT_FLOAT2],
                     dynamic    : false,
-                    data       : [0,0, 1,0, 0,1, 1,1]
+                    data       : new Float32Array([0,0, 1,0, 0,1, 1,1])
                 });
             semantics = ParticleBuilder.packedTextureSemantics =
                 graphicsDevice.createSemantics([
@@ -3605,7 +3605,7 @@ class SharedRenderContext
                     numVertices: 4,
                     attributes : [graphicsDevice.VERTEXFORMAT_FLOAT2],
                     dynamic    : false,
-                    data       : [0,0, 1,0, 0,1, 1,1]
+                    data       : new Float32Array([0,0, 1,0, 0,1, 1,1])
                 });
             SharedRenderContext.textureSemantics =
                 graphicsDevice.createSemantics([
@@ -5154,7 +5154,7 @@ class ParticleSystem
                 numVertices: 4,
                 attributes : [ret.graphicsDevice.VERTEXFORMAT_FLOAT2],
                 dynamic    : false,
-                data       : [0,0, 1,0, 0,1, 1,1]
+                data       : new Float32Array([0,0, 1,0, 0,1, 1,1])
             });
             ParticleSystem.fullTextureSemantics =
                 ret.graphicsDevice.createSemantics([ret.graphicsDevice.SEMANTIC_POSITION]);
