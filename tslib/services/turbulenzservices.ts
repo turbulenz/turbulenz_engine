@@ -466,7 +466,8 @@ class TurbulenzServices
             this.responseHandlers[this.responseIndex] = callback;
             request.key = this.responseIndex;
         }
-        var resultJSON = TurbulenzBridge.emit('bridgeservices.' + event, JSON.stringify(request));
+        var resultJSON = TurbulenzBridge.emit('bridgeservices.' + event,
+                                              JSON.stringify(request));
         return resultJSON && JSON.parse(resultJSON).fullyProcessed;
     }
 
@@ -583,7 +584,8 @@ class TurbulenzServices
                                          errorCallbackFn);
     }
 
-    static createBadgeManager(requestHandler, gameSession) : BadgeManager
+    static createBadgeManager(requestHandler: RequestHandler,
+                              gameSession: GameSession) : BadgeManager
     {
         return BadgeManager.create(requestHandler, gameSession);
     }

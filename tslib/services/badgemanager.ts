@@ -15,7 +15,7 @@ interface BadgeManagerErrorCB
 
 interface BadgeManagerUserBadgesCB
 {
-    (badgeProgressList: BadgeUserProgressList): void;
+    (badgeProgressList: BadgeProgressList): void;
 }
 
 interface BadgeManagerAddProgressCB
@@ -43,7 +43,7 @@ class BadgeManager
     service: ServiceRequester;
     requestHandler: RequestHandler;
 
-    // list all badges (just queries the yaml file)
+    //
     listUserBadges(callbackFn: BadgeManagerUserBadgesCB,
                    errorCallbackFn: BadgeManagerErrorCB)
     {
@@ -60,7 +60,7 @@ class BadgeManager
             }
             else
             {
-                var errorCallback = errorCallbackFn || that.errorCallbackFn;
+                var errorCallback = errorCallbackFn || that._errorCallbackFn;
                 errorCallback("Badges.listUserBadges failed with status " + status + ": " + jsonResponse.msg,
                               status,
                               [callbackFn]);
@@ -79,7 +79,7 @@ class BadgeManager
                    callbackFn: BadgeManagerAddProgressCB,
                    errorCallbackFn: BadgeManagerErrorCB)
     {
-        this.addUserBadge(badge_key, null, callbackFn, errorCallbackFn);
+        this._addUserBadge(badge_key, null, callbackFn, errorCallbackFn);
     }
 
     updateUserBadgeProgress(badge_key: string,
@@ -90,11 +90,11 @@ class BadgeManager
         var that = this;
         if (current && typeof current === 'number')
         {
-            this.addUserBadge(badge_key, current, callbackFn, errorCallbackFn);
+            this._addUserBadge(badge_key, current, callbackFn, errorCallbackFn);
         }
         else
         {
-            var errorCallback = errorCallbackFn || that.errorCallbackFn;
+            var errorCallback = errorCallbackFn || that._errorCallbackFn;
             errorCallback("Badges.updateUserBadgeProgress expects a numeric value for current",
                           400,
                           [badge_key, current, callbackFn]);
@@ -103,10 +103,10 @@ class BadgeManager
 
     // add a badge to a user (gets passed a badge and a current level
     // over POST, the username is taken from the environment)
-    addUserBadge(badge_key: string,
-                 current: number,
-                 callbackFn: BadgeManagerAddProgressCB,
-                 errorCallbackFn: BadgeManagerErrorCB)
+    private _addUserBadge(badge_key: string,
+                          current: number,
+                          callbackFn: BadgeManagerAddProgressCB,
+                          errorCallbackFn: BadgeManagerErrorCB)
     {
         var that = this;
         var cb = function cbFn(jsonResponse, status)
@@ -120,8 +120,8 @@ class BadgeManager
             }
             else
             {
-                var errorCallback = errorCallbackFn || that.errorCallbackFn;
-                errorCallback("Badges.addUserBadge failed with status " + status + ": " + jsonResponse.msg,
+                var errorCallback = errorCallbackFn || that._errorCallbackFn;
+                errorCallback("Badges._addUserBadge failed with status " + status + ": " + jsonResponse.msg,
                               status,
                               [badge_key, current, callbackFn]);
             }
@@ -161,7 +161,7 @@ class BadgeManager
             }
             else
             {
-                var errorCallback = errorCallbackFn || that.errorCallbackFn;
+                var errorCallback = errorCallbackFn || that._errorCallbackFn;
                 errorCallback("Badges.listBadges failed with status " + status + ": " + jsonResponse.msg,
                               status,
                               [callbackFn]);
@@ -176,7 +176,7 @@ class BadgeManager
         }, 'badge.meta');
     }
 
-    errorCallbackFn()
+    private _errorCallbackFn()
     {
         var x = Array.prototype.slice.call(arguments);
         Utilities.log('BadgeManager error: ', x);

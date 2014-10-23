@@ -127,8 +127,8 @@ interface BadgeDescription
 {
     key             : string;
     title           : string; /// May be localized
-    visible         : boolean;
     description     : string; /// May be localized
+    visible         : boolean;
     shape           : string; /// "circle" or "diamond"
     total?          : number; /// May not be known, even for
                               /// progressive achievements
@@ -142,10 +142,14 @@ interface BadgeDescription
     imageresource?  : string;
 }
 
-/// Returned by badge.meta (badges/read/<session>)
-interface BadgeDescriptionList extends TurbulenzBridgeServiceResponseData
+interface BadgeDescriptionList extends Array<BadgeDescription>
 {
-    [idx: number]: BadgeDescription;
+}
+
+/// Returned by badge.meta (badges/read/<session>)
+interface BadgeMetaResponse extends TurbulenzBridgeServiceResponseData
+{
+    data: BadgeDescriptionList;
 }
 
 /// Data passed to badge.add (badge/progress/add/<session>)
@@ -156,19 +160,28 @@ interface BadgeAddProgressRequest
     current?      : number;  /// If omitted, the badge is awarded immediately
 }
 
-/// Returned by badge.add call (badge/progress/add/<session>)
-interface BadgeProgress extends TurbulenzBridgeServiceResponseData
+interface BadgeProgress
 {
     badge_key : string;
     achieved  : boolean;
-    current   : number;
+    current?  : number;
     total?    : number;
 }
 
-/// Returned by badge.read call (badges/progress/read/<session>)
-interface BadgeUserProgressList extends TurbulenzBridgeServiceResponseData
+/// Returned by badge.add call (badge/progress/add/<session>)
+interface BadgeAddResponse extends TurbulenzBridgeServiceResponseData
 {
-    [idx: number]: BadgeProgress;
+    data: BadgeProgress;
+}
+
+interface BadgeProgressList extends Array<BadgeProgress>
+{
+}
+
+/// Returned by badge.read call (badges/progress/read/<session>)
+interface BadgeReadResponse extends TurbulenzBridgeServiceResponseData
+{
+    data: BadgeProgressList;
 }
 
 //
