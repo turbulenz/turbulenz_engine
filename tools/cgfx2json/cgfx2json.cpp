@@ -24,7 +24,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.23"
+#define VERSION_STRING "cgfx2json 0.24"
 
 //
 // Utils
