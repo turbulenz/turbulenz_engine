@@ -7156,7 +7156,7 @@ class DefaultParticleEmitter
         }
         else
         {
-            return emitter.emittance.delay + DefaultParticleEmitter.getMaxLifeTime(archetype, emitter) + (burstCount - 1) * emitter.emittance.rate;
+            return emitter.emittance.delay + DefaultParticleEmitter.getMaxLifeTime(archetype, emitter) + (burstCount - 1) / emitter.emittance.rate;
         }
     }
 
