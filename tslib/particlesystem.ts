@@ -7144,6 +7144,11 @@ class DefaultParticleEmitter
             return emitter.particle.lifeTimeMax;
         }
     }
+    static getBurstCountTimeout(archetype: ParticleArchetype, emitter: DefaultEmitterArchetype, fadeout: number): number
+    {
+        var maxLifeTime = DefaultParticleEmitter.getMaxLifeTime(archetype, emitter);
+        return Math.max(0, Math.floor(emitter.emittance.rate * (timeout - maxLifeTime - emitter.emittance.delay)));
+    }
     static getBurstCount(emitter: DefaultEmitterArchetype, activeTime: number): number
     {
         return Math.max(0, Math.floor((activeTime - emitter.emittance.delay) * emitter.emittance.rate));
