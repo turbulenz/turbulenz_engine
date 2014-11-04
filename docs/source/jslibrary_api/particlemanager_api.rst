@@ -255,7 +255,7 @@ Register the set of functions required to create and work with a :ref:`ParticleE
 
 **Syntax** ::
 
-    particleManager.registerEmitter(name, parser, compressor, constructor);
+    particleManager.registerEmitter(name, parser, compressor, getBurstCount, getTotalLifeTime, constructor);
 
 ``name``
     The name of the emitter to be referenced by particle archetypes.
@@ -269,6 +269,12 @@ Register the set of functions required to create and work with a :ref:`ParticleE
     A function taking as argument the complete set of configurable options for the emitter, and returning its minimal representation.
 
    The parser and compressor should be inverses of each-other.
+
+``getBurstCount``
+    Get burst count required for emitter so that it auto-disabled after the given period of time. Function takes the parsed archetype of emitter as argument, and the active time.
+
+``getTotalLifeTime``
+    Function returning total (upper bound) on emitter life time given a burst count (Time at which the last particle would in worst case be killed). Function takes as arguments the parsed system archetype, the specific parsed emitter archetype and the burst count.
 
 ``constructor``
    A function to be called to construct an instance of this emitter. This function should take no arguments.
@@ -383,6 +389,77 @@ The emitters of the system will be enabled automatically. If a timeout is specif
     A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
 
 .. index::
+    pair: ParticleManager; createTimedInstance
+
+`createTimedInstance`
+---------------------
+
+**Summary**
+
+Helper function. Will set up a particle instance whose emitters remain active for the given period of time (by suitable calls to `emitter.burst(N)`) and whose timeout is sufficiently large that all particles fade out naturally before the instance is removed.
+
+**Syntax** ::
+
+    var instance = particleManager.createTimedInstance(archetype, activeTime, baseTechniqueParametersList);
+
+``archetype``
+    The pre-loaded archetype to create instance from.
+
+``activeTime``
+    All emitters will be disabled after this amount of time has passed.
+
+``baseTechniqueParametersList`` (Optional)
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
+
+.. index::
+    pair: ParticleManager; createBurstInstance
+
+`createBurstInstance`
+---------------------
+
+**Summary**
+
+Helper function. Will set up a particle instance whose emitters are set to burst exactly the given number of times, and whose timeout is sufficiently large that all particles fade out naturally before the instance is removed.
+
+**Syntax** ::
+
+    var instance = particleManager.createBurstInstance(archetype, burstCount, baseTechniqueParametersList);
+
+``archetype``
+    The pre-loaded archetype to create instance from.
+
+``burstCount`` (Optional)
+    The number of times each emitter should burst.
+
+    If unspecified, a default value of `1` is assumed to perform a single burst of the system.
+
+``baseTechniqueParametersList`` (Optional)
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
+
+.. index::
+    pair: ParticleManager; createMultiBurstInstance
+
+`createMultiBurstInstance`
+--------------------------
+
+**Summary**
+
+Helper function. Will set up a particle instance whose emitters are set to burst exactly the given number of times, and whose timeout is sufficiently large that all particles fade out naturally before the instance is removed. Each emitter may be provided with a different number of bursts compared to the `createBurstInstance` helper.
+
+**Syntax** ::
+
+    var instance = particleManager.createMultiBurstInstance(archetype, burstCounts, baseTechniqueParametersList);
+
+``archetype``
+    The pre-loaded archetype to create instance from.
+
+``burstCounts``
+    An array containing the number of times each emitter should burst.
+
+``baseTechniqueParametersList`` (Optional)
+    A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
+
+.. index::
     pair: ParticleManager; createConjoinedInstance
 
 `createChildInstance`
@@ -413,6 +490,8 @@ Any child instance will be automatically destroyed if the original root instance
     The amount of time this instance should exist for. Once this amount of time has passed, the instance will be automatically removed from the scene if necessary, and recycled.
 
     Unlike with true instances, the child instance will not generally have its effect faded out when the instance dies as it has no control over the underlying particle system.
+
+    If unspecified, the parent instance's timeout will be inherited.
 
 ``baseTechniqueParametersList`` (Optional)
     A list of :ref:`TechniqueParameters <techniqueparameters>` to be applied to the instances :ref:`ParticleRenderable <particlerenderable>` before system specific parameters are set during rendering of the particle system.
@@ -719,5 +798,17 @@ The :ref:`ParticleSynchronizer <particlesynchronizer>` created for this instance
 The :ref:`ParticleSystem <particlesystem>` created for this instance.
 
 This system will be lazily allocated when the instance has first become visible, and may never exist at all.
+
+.. note :: Read Only
+
+.. index::
+    pair: ParticleInstance; timeout
+
+`timeout`
+---------
+
+**Summary**
+
+The timeout value used when instance was created.
 
 .. note :: Read Only

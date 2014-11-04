@@ -185,6 +185,34 @@ Get the maximum speed required for particles to fully support the intended behav
 
     var maxSpeed = emitter.getMaxSpeed();
 
+.. index::
+    pair: ParticleEmitter; getBurstCount
+
+`getBurstCount`
+---------------
+
+**Summary**
+
+Static function to compute the amount of bursts required (in a call to `emitter.burst(N)`) so that the emitter will be automatically disabled after the given time period has passed.
+
+**Syntax** ::
+
+    var burstCount = EmitterType.getBurstCount(parsedEmitterArchetype, activeTime);
+
+.. index::
+    pair: ParticleEmitter; getTotalLifeTime
+
+`getTotaLifeTime`
+-----------------
+
+**Summary**
+
+Static function to compute the maximum possible life time of all particles emitted by the emitter for a given number of bursts, should be used to set a suitable `timeout` when creating a new `ParticleInstance` in `particleManager.createInstance` calls.
+
+**Syntax** ::
+
+    var lifeTime = EmitterType.getTotalLifeTime(parsedParticleArchetype, parsedEmitterArchetype, burstCount);
+
 Properties
 ==========
 

@@ -10,6 +10,13 @@ Changelog
 Version 1.x-dev
 ---------------
 
+2014-11-04
+
+- Added helpers createTimedInstance, createBurstInstance, createMultiBurstInstance to ParticleManager.
+- Added additional static type constraints to ParticleEmitter interface: getBurstCount and getTotalLifeTime
+- Added timeout field to ParticleInstance mirroring the values used when it was created.
+- Changed the behaviour of createChildInstance timeout parameter to inherit parent instance timeout if unspecified.
+
 2014-09-16
 
 - Added support for standard derivative functions `ddx, ddy, fwidth` in shaders to cgfx2json and GraphicsDevice.

@@ -7132,6 +7132,27 @@ class DefaultParticleEmitter
         thisParticle.lifeTimeMax = max;
     }
 
+    static getMaxLifeTime(archetype: ParticleArchetype, emitter: DefaultEmitterArchetype): number
+    {
+        if (emitter.particle.useAnimationLifeTime)
+        {
+            var particleDefn = archetype.context.particleDefns[emitter.particle.name];
+            return emitter.particle.lifeTimeScaleMax * particleDefn.lifeTime;
+        }
+        else
+        {
+            return emitter.particle.lifeTimeMax;
+        }
+    }
+    static getBurstCount(emitter: DefaultEmitterArchetype, activeTime: number): number
+    {
+        return Math.max(0, Math.floor((activeTime - emitter.emittance.delay) * emitter.emittance.rate));
+    }
+    static getTotalLifeTime(archetype: ParticleArchetype, emitter: DefaultEmitterArchetype, burstCount: number): number
+    {
+        return DefaultParticleEmitter.getMaxLifeTime(archetype, emitter) * (burstCount / emitter.emittance.rate) + (burstCount === 0 ? 0 : emitter.emittance.delay);
+    }
+
     getMaxLifeTime(): number
     {
         return this.particle.lifeTimeMax;
@@ -7582,7 +7603,7 @@ class DefaultParticleEmitter
         var emittance = this.emittance;
         var particle = this.particle;
         var burstCount = emittance.rate * (timeout - particle.lifeTimeMax - emittance.delay);
-        this.burst(burstCount);
+        this.burst(Math.max(Math.floor(burstCount), 0));
     }
 }
 
@@ -7644,6 +7665,7 @@ interface ParticleInstance
     // private
     queued      : boolean;
     creationTime: number;
+    timeout     : number;
     lazySystem  : () => ParticleSystem;
 
     parent      : ParticleInstance;
@@ -7702,6 +7724,8 @@ class ParticleManager
     private emitters: { [name: string]: {
                         parseArchetype   : (_: ParticleBuildError, def: any, parts: { [name: string]: any }) => any;
                         compressArchetype: (_: any) => any;
+                        getBurstCount    : (a: any, b: number) => number;
+                        getTotalLifeTime : (a: any, b: any, c: number) => number;
                         value            : () => any;
                         pool             : Array<any> } };
 
@@ -7728,6 +7752,8 @@ class ParticleManager
     private time = 0;
     private timerCb: () => number;
     private queue: TimeoutQueue<ParticleInstance>;
+
+    private _burstScratchpad: number[];
 
     update(timeStep: number)
     {
@@ -7904,11 +7930,15 @@ class ParticleManager
         ret.registerEmitter("default",
                             DefaultParticleEmitter.parseArchetype,
                             DefaultParticleEmitter.compressArchetype,
+                            DefaultParticleEmitter.getBurstCount,
+                            DefaultParticleEmitter.getTotalLifeTime,
                             DefaultParticleEmitter.create);
 
         ret.timerCb = function () {
             return ret.time;
         };
+
+        ret._burstScratchpad = [];
 
         return ret;
     }
@@ -8195,12 +8225,14 @@ class ParticleManager
         ret.name = name;
         return ret;
     }
-    registerEmitter(name, parser, compressor, generator): void
+    registerEmitter(name, parser, compressor, getBurstCount, getTotalLifeTime, generator): void
     {
         this.emitters[name] = {
             parseArchetype   : parser,
             compressArchetype: compressor,
             value            : generator,
+            getBurstCount    : getBurstCount,
+            getTotalLifeTime : getTotalLifeTime,
             pool             : []
         };
     }
@@ -8456,6 +8488,76 @@ class ParticleManager
         archetype.context = context;
     }
 
+    createTimedInstance(archetype, lifeTime, baseTechniqueParametersList?)
+    {
+        var burstCounts = this._burstScratchpad;
+        var emitters = archetype.emitters;
+        var numEmitters = emitters.length;
+        var i, emitter, timeout = 0.0;
+        for (i = 0; i < numEmitters; i += 1)
+        {
+            emitter = emitters[i];
+            var emitterType = this.emitters[emitter.name];
+            burstCounts[i] = emitterType.getBurstCount(emitter, lifeTime);
+            timeout = Math.max(timeout, emitterType.getTotalLifeTime(archetype, emitter, burstCounts[i]));
+        }
+
+        var instance = this.createInstance(archetype, timeout, baseTechniqueParametersList);
+        emitters = instance.synchronizer.emitters;
+        for (i = 0; i < numEmitters; i += 1)
+        {
+            emitters[i].burst(burstCounts[i]);
+        }
+
+        return instance;
+    }
+
+    createBurstInstance(archetype, burstCount = 1, baseTechniqueParametersList?)
+    {
+        var emitters = archetype.emitters;
+        var numEmitters = emitters.length;
+        var i, emitter, timeout = 0.0;
+        for (i = 0; i < numEmitters; i += 1)
+        {
+            emitter = emitters[i];
+            var emitterType = this.emitters[emitter.name];
+            timeout = Math.max(timeout, emitterType.getTotalLifeTime(archetype, emitter, burstCount));
+        }
+
+        var instance = this.createInstance(archetype, timeout, baseTechniqueParametersList);
+        emitters = instance.synchronizer.emitters;
+        for (i = 0; i < numEmitters; i += 1)
+        {
+            emitters[i].burst(burstCount);
+        }
+
+        return instance;
+    }
+
+    createMultiBurstInstance(archetype, burstCounts: number[], baseTechniqueParametersList?)
+    {
+        var emitters = archetype.emitters;
+        var numEmitters = emitters.length;
+        debug.assert(burstCounts.length === numEmitters);
+
+        var i, emitter, timeout = 0.0;
+        for (i = 0; i < numEmitters; i += 1)
+        {
+            emitter = emitters[i];
+            var emitterType = this.emitters[emitter.name];
+            timeout = Math.max(timeout, emitterType.getTotalLifeTime(archetype, emitter, burstCounts[i]));
+        }
+
+        var instance = this.createInstance(archetype, timeout, baseTechniqueParametersList);
+        emitters = instance.synchronizer.emitters;
+        for (i = 0; i < numEmitters; i += 1)
+        {
+            emitters[i].burst(burstCounts[i]);
+        }
+
+        return instance;
+    }
+
     createChildInstance(parentInstance, timeout?, baseTechniqueParametersList?)
     {
         if (parentInstance.parent)
@@ -8487,6 +8589,7 @@ class ParticleManager
         debug.assert(parentInstance.children.indexOf(instance) === -1);
         parentInstance.children.push(instance);
 
+        timeout = (timeout === undefined ? parentInstance.timeout : timeout);
         instance.queued = (timeout !== undefined && timeout !== Number.POSITIVE_INFINITY);
         instance.creationTime = this.timerCb();
         if (instance.queued)
@@ -8516,6 +8619,7 @@ class ParticleManager
         }
 
         instance.parent = null;
+        instance.timeout = timeout;
         instance.renderable.setBaseTechniqueParameters(baseTechniqueParametersList);
         this.buildSynchronizer(archetype, instance);
 
@@ -8736,7 +8840,8 @@ class ParticleManager
             lazySystem  : null,
 
             parent      : null,
-            children    : null
+            children    : null,
+            timeout     : undefined
         };
         this.buildParticleSceneNode(archetype, instance);
         return instance;
