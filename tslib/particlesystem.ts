@@ -7150,7 +7150,14 @@ class DefaultParticleEmitter
     }
     static getTotalLifeTime(archetype: ParticleArchetype, emitter: DefaultEmitterArchetype, burstCount: number): number
     {
-        return DefaultParticleEmitter.getMaxLifeTime(archetype, emitter) * (burstCount / emitter.emittance.rate) + (burstCount === 0 ? 0 : emitter.emittance.delay);
+        if (burstCount === 0)
+        {
+            return 0;
+        }
+        else
+        {
+            return emitter.emittance.delay + DefaultParticleEmitter.getMaxLifeTime(archetype, emitter) + (burstCount - 1) * emitter.emittance.rate;
+        }
     }
 
     getMaxLifeTime(): number
