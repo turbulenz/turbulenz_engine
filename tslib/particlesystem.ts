@@ -3973,6 +3973,7 @@ interface ParticleUpdater
             dataI     : Uint32Array,
             tracked   : Uint16Array,
             numTracked: number): void;
+    updateTransform(transform: Float32Array, parameters: TechniqueParameters): void;
     predict?(parameters: TechniqueParameters,
              position  : FloatArray,
              velocity  : FloatArray,
@@ -3999,6 +4000,7 @@ class DefaultParticleUpdater
 {
     technique: Technique;
     parameters: { [name: string]: any };
+    prevTransform: Float32Array;
 
     static template = {
         acceleration          : [0, 0, 0],
@@ -4150,6 +4152,65 @@ class DefaultParticleUpdater
         return userData;
     }
 
+    updateTransform(transform: Float32Array, outParameters: TechniqueParameters)
+    {
+        var m0 = transform[0];
+        var m1 = transform[1];
+        var m2 = transform[2];
+        var m3 = transform[3];
+        var m4 = transform[4];
+        var m5 = transform[5];
+        var m6 = transform[6];
+        var m7 = transform[7];
+        var m8 = transform[8];
+        var prevTransform = this.prevTransform;
+        if (prevTransform[0] !== m0 ||
+            prevTransform[1] !== m1 ||
+            prevTransform[2] !== m2 ||
+            prevTransform[3] !== m3 ||
+            prevTransform[4] !== m4 ||
+            prevTransform[5] !== m5 ||
+            prevTransform[6] !== m6 ||
+            prevTransform[7] !== m7 ||
+            prevTransform[8] !== m8)
+        {
+            prevTransform[0] = m0;
+            prevTransform[1] = m1;
+            prevTransform[2] = m2;
+            prevTransform[3] = m3;
+            prevTransform[4] = m4;
+            prevTransform[5] = m5;
+            prevTransform[6] = m6;
+            prevTransform[7] = m7;
+            prevTransform[8] = m8;
+
+            var d4857 = (m4 * m8 - m5 * m7);
+            var d5638 = (m5 * m6 - m3 * m8);
+            var d3746 = (m3 * m7 - m4 * m6);
+            var det = (m0 * d4857 + m1 * d5638 + m2 * d3746);
+
+            var detrecp = 1.0 / det;
+            var d0 = (d4857 * detrecp);
+            var d1 = ((m7 * m2 - m8 * m1) * detrecp);
+            var d2 = ((m1 * m5 - m2 * m4) * detrecp);
+            var d3 = (d5638 * detrecp);
+            var d4 = ((m8 * m0 - m6 * m2) * detrecp);
+            var d5 = ((m3 * m2 - m0 * m5) * detrecp);
+            var d6 = (d3746 * detrecp);
+            var d7 = ((m6 * m1 - m7 * m0) * detrecp);
+            var d8 = ((m0 * m4 - m3 * m1) * detrecp);
+
+            var untransformedAcceleration = this.parameters["acceleration"];
+            var acceleration = outParameters["acceleration"];
+            var v0 = untransformedAcceleration[0];
+            var v1 = untransformedAcceleration[1];
+            var v2 = untransformedAcceleration[2];
+            acceleration[0] = (d0 * v0 + d3 * v1 + d6 * v2);
+            acceleration[1] = (d1 * v0 + d4 * v1 + d7 * v2);
+            acceleration[2] = (d2 * v0 + d5 * v1 + d8 * v2);
+        }
+    }
+
     update(
         parameters: TechniqueParameters,
         dataF     : Float32Array,
@@ -4246,6 +4307,7 @@ class DefaultParticleUpdater
             noiseTexture          : ParticleSystem.getDefaultNoiseTexture(graphicsDevice),
             randomizedAcceleration: new Float32Array(3)
         };
+        ret.prevTransform = new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
         return ret;
     }
 }
@@ -5607,11 +5669,13 @@ class ParticleSystem
     /*Used by ParticleView*/
     /*private*/ hasLiveParticles: boolean;
     private updateTime: number;
-    private updateShift: FloatArray;
-    beginUpdate(deltaTime: number, shift?: FloatArray)
+    private updateShift: Float32Array;
+    private updateTransform: Float32Array;
+    beginUpdate(deltaTime: number, shift?: FloatArray, transform?: FloatArray)
     {
         this.updateTime = deltaTime;
         this.updateShift = shift ? VMath.v3Copy(shift, this.updateShift) : VMath.v3BuildZero(this.updateShift);
+        this.updateTransform = transform ? VMath.m43Copy(transform, this.updateTransform) : VMath.m43BuildIdentity(this.updateTransform);
         this.shouldUpdate = this.hasLiveParticles;
         this.hasLiveParticles = this.queue.update(deltaTime);
     }
@@ -5620,12 +5684,12 @@ class ParticleSystem
         this.hasLiveParticles = this.hasLiveParticles || (ParticleSystem.numCreated !== 0);
         if (this.shouldUpdate || this.hasLiveParticles)
         {
-            this.updateParticleState(this.updateTime, this.updateShift);
+            this.updateParticleState(this.updateTime, this.updateShift, this.updateTransform);
         }
         return this.hasLiveParticles;
     }
 
-    private updateParticleState(deltaTime: number, shift: FloatArray)
+    private updateParticleState(deltaTime: number, shift: FloatArray, transform: Float32Array)
     {
         ParticleSystem.dispatchCreated(this.particleSize);
 
@@ -5640,6 +5704,11 @@ class ParticleSystem
         uShift[0] = shift[0] * invHalfExtents[0];
         uShift[1] = shift[1] * invHalfExtents[1];
         uShift[2] = shift[2] * invHalfExtents[2];
+
+        if (transform)
+        {
+            updater.updateTransform(transform, parameters);
+        }
 
         var gd = this.graphicsDevice;
         var targets = this.stateContext.renderTargets;
@@ -6129,7 +6198,7 @@ class ParticleRenderable
 
     system: ParticleSystem;
     fixedOrientation: boolean;
-    localTransform: FloatArray;
+    localTransform: Float32Array;
 
     parametersIndex: number;
 
@@ -6318,6 +6387,7 @@ class ParticleRenderable
         {
             this.setSystem(this.lazySystem());
         }
+
         this.system.sync(this.frameVisible);
 
         // Use an additional field on Camera to track unique instances
@@ -6585,9 +6655,10 @@ class DefaultParticleSynchronizer
     private update(system: ParticleSystem, timeStep: number)
     {
         var shift = this.shift;
+        var xform;
         if (this.renderable)
         {
-            var xform = this.renderable.world;
+            xform = this.renderable.world;
             var prev = this.previousPos;
             if (!prev)
             {
@@ -6605,7 +6676,7 @@ class DefaultParticleSynchronizer
             VMath.v3BuildZero(shift);
         }
 
-        system.beginUpdate(timeStep, shift);
+        system.beginUpdate(timeStep, shift, xform);
 
         var emitters = this.emitters;
         var num = emitters.length;
@@ -7144,7 +7215,7 @@ class DefaultParticleEmitter
             return emitter.particle.lifeTimeMax;
         }
     }
-    static getBurstCountTimeout(archetype: ParticleArchetype, emitter: DefaultEmitterArchetype, fadeout: number): number
+    static getBurstCountTimeout(archetype: ParticleArchetype, emitter: DefaultEmitterArchetype, timeout: number): number
     {
         var maxLifeTime = DefaultParticleEmitter.getMaxLifeTime(archetype, emitter);
         return Math.max(0, Math.floor(emitter.emittance.rate * (timeout - maxLifeTime - emitter.emittance.delay)));
