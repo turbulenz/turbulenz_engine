@@ -1404,6 +1404,14 @@ interface InputDevice
 // TurbulenzEngine
 // -----------------------------------------------------------------------------
 
+interface SystemInfoDisplayMode
+{
+    width: number;
+    height: number;
+    bitsPerPixel: number;
+    refreshHz: number;
+}
+
 interface SystemInfo
 {
     architecture      : string;
@@ -1421,6 +1429,7 @@ interface SystemInfo
 
     platformProfile   : string;
 
+    displayModes      : SystemInfoDisplayMode[];
     userLocale        : string;
 
     native?           : boolean;

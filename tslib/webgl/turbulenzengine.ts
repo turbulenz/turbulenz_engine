@@ -852,6 +852,7 @@ class WebGLTurbulenzEngine implements TurbulenzEngine
             osVersionBuild: 0,
             osName: navigator.platform,
             platformProfile: "desktop",
+            displayModes: [],
             userLocale: (navigator.language || navigator.userLanguage).replace('-', '_')
         };
 
