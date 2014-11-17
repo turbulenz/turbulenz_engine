@@ -845,8 +845,6 @@ interface GraphicsDevice
     isSupported(feature: string): boolean;
     maxSupported(feature: string): number;
 
-    requestFullScreen(fullscreen: boolean): boolean;
-
     beginFrame(): boolean;
     endFrame(): void;
 
