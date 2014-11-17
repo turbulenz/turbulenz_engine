@@ -353,9 +353,23 @@ TurbulenzEngine.onload = function onloadFn()
 
         if (false)
         {
-            writeFont('Open ga.ne', normalScale, function () {
+            writeFont('Open ga.me', normalScale, function () {
                 TurbulenzBridge.emit("app.url.open", "https://ga.me/");
             }, 'open_url');
+        }
+
+        if (false)
+        {
+            writeFont('Quit', normalScale, function () {
+                TurbulenzBridge.emit("app.exit.confirm");
+            }, 'quit');
+        }
+
+        if (false)
+        {
+            writeFont('Resize', normalScale, function () {
+                // _tz_native.setWindowSize(400,800,false);
+            }, 'resize');
         }
 
         yPaddingTop = 7;
