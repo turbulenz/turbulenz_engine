@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2014 Turbulenz Limited
 
 #include "stdafx.h"
 #include "../common/json.h"
@@ -24,7 +24,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.24"
+#define VERSION_STRING "cgfx2json 0.25"
 
 //
 // Utils
@@ -884,13 +884,28 @@ static std::string FixShaderCode(char *text, int textLength, const UniformRules 
     // and ES ref www.khronos.org/files/opengles_shading_language.pdf
     //
 
-    std::string esPrefix("#ifdef GL_ES\n"
-                            "#define TZ_LOWP lowp\n"
-                            "precision mediump float;\n"
-                            "precision mediump int;\n"
-                         "#else\n"
-                            "#define TZ_LOWP\n"
-                         "#endif\n");
+    std::string esPrefix;
+
+    if (vertexShader)
+    {
+        esPrefix = "#ifdef GL_ES\n"
+                      "#define TZ_LOWP lowp\n"
+                      "precision highp float;\n"
+                      "precision highp int;\n"
+                   "#else\n"
+                     "#define TZ_LOWP\n"
+                   "#endif\n";
+    }
+    else
+    {
+        esPrefix = "#ifdef GL_ES\n"
+                      "#define TZ_LOWP lowp\n"
+                      "precision mediump float;\n"
+                      "precision mediump int;\n"
+                   "#else\n"
+                     "#define TZ_LOWP\n"
+                   "#endif\n";
+    };
 
     if (newtext.find("dFdx") != newtext.npos
         || newtext.find("dFdy") != newtext.npos
