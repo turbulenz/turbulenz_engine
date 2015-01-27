@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2014 Turbulenz Limited
+// Copyright (c) 2012-2015 Turbulenz Limited
 
 // Complains in various parts about use of (/*NAME*/value) constants.
 
@@ -7719,6 +7719,7 @@ class Physics2DBoxTreeBroadphase implements Physics2DBroadphase
 
         var dynamicNodes = dynamicTree.getNodes();
         var numDynamicNodes = dynamicNodes.length;
+        var extents = [];
         var n;
         for (n = 0; n < numDynamicNodes; n += 1)
         {
@@ -7726,7 +7727,11 @@ class Physics2DBoxTreeBroadphase implements Physics2DBroadphase
             var handle = dynamicNode.externalNode;
             if (handle)
             {
-                var numOverlappingNodes = staticTree.getOverlappingNodes(dynamicNode.extents,
+                extents[0] = dynamicNode.minX;
+                extents[1] = dynamicNode.minY;
+                extents[2] = dynamicNode.maxX;
+                extents[3] = dynamicNode.maxY;
+                var numOverlappingNodes = staticTree.getOverlappingNodes(extents,
                                                                          overlappingNodes,
                                                                          0);
                 var i;

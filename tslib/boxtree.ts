@@ -1,23 +1,27 @@
-// Copyright (c) 2012-2014 Turbulenz Limited
-/*global Float32Array: false*/
+// Copyright (c) 2012-2015 Turbulenz Limited
 
 interface BoxTreeRay
 {
     origin: any;    // v2
     direction: any; // v2
     maxFactor: number;
-};
+}
 
 interface BoxTreeRayTestResult
 {
     factor: number;
-};
+}
 
 interface BoxTreeRayTestCallback
 {
     (tree, externalNode, ray: BoxTreeRay, distance,
      upperBound): BoxTreeRayTestResult;
-};
+}
+
+interface BoxTreeExternalNode
+{
+    boxTreeIndex: number;
+}
 
 //
 // BoxTreeNode
@@ -28,15 +32,21 @@ class BoxTreeNode
     static version = 1;
     /* tslint:enable:no-unused-variable */
 
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
     escapeNodeOffset: number;
-    externalNode: {};
-    extents: number[];
+    externalNode: BoxTreeExternalNode;
 
-    constructor(extents, escapeNodeOffset, externalNode)
+    constructor(minX, minY, maxX, maxY, escapeNodeOffset, externalNode)
     {
+        this.minX = minX;
+        this.minY = minY;
+        this.maxX = maxX;
+        this.maxY = maxY;
         this.escapeNodeOffset = escapeNodeOffset;
         this.externalNode = externalNode;
-        this.extents = extents;
     }
 
     isLeaf(): boolean
@@ -44,34 +54,32 @@ class BoxTreeNode
         return !!this.externalNode;
     }
 
-    reset(minX, minY, maxX, maxY, escapeNodeOffset, externalNode?)
+    reset(minX, minY, maxX, maxY, escapeNodeOffset)
     {
+        this.minX = minX;
+        this.minY = minY;
+        this.maxX = maxX;
+        this.maxY = maxY;
         this.escapeNodeOffset = escapeNodeOffset;
-        this.externalNode = externalNode;
-        var oldExtents = this.extents;
-        oldExtents[0] = minX;
-        oldExtents[1] = minY;
-        oldExtents[2] = maxX;
-        oldExtents[3] = maxY;
+        this.externalNode = undefined;
     }
 
     clear()
     {
+        var maxNumber = Number.MAX_VALUE;
+        this.minX = maxNumber;
+        this.minY = maxNumber;
+        this.maxX = -maxNumber;
+        this.maxY = -maxNumber;
         this.escapeNodeOffset = 1;
         this.externalNode = undefined;
-        var oldExtents = this.extents;
-        var maxNumber = Number.MAX_VALUE;
-        oldExtents[0] = maxNumber;
-        oldExtents[1] = maxNumber;
-        oldExtents[2] = -maxNumber;
-        oldExtents[3] = -maxNumber;
     }
 
     // Constructor function
 
-    static create(extents, escapeNodeOffset, externalNode?): BoxTreeNode
+    static create(minX, minY, maxX, maxY, escapeNodeOffset, externalNode): BoxTreeNode
     {
-        return new BoxTreeNode(extents, escapeNodeOffset, externalNode);
+        return new BoxTreeNode(minX, minY, maxX, maxY, escapeNodeOffset, externalNode);
     }
 }
 
@@ -97,9 +105,6 @@ class BoxTree
 
     numNodesLeaf = 4;
 
-    // prototype
-    arrayConstructor: any;
-
     constructor(highQuality: boolean)
     {
         this.nodes = [];
@@ -118,12 +123,12 @@ class BoxTree
     {
         var endNode = this.endNode;
         externalNode.boxTreeIndex = endNode;
-        var copyExtents = new this.arrayConstructor(4);
-        copyExtents[0] = extents[0];
-        copyExtents[1] = extents[1];
-        copyExtents[2] = extents[2];
-        copyExtents[3] = extents[3];
-        this.nodes[endNode] = BoxTreeNode.create(copyExtents, 1, externalNode);
+        this.nodes[endNode] = BoxTreeNode.create(extents[0],
+                                                 extents[1],
+                                                 extents[2],
+                                                 extents[3],
+                                                 1,
+                                                 externalNode);
         this.endNode = (endNode + 1);
         this.needsRebuild = true;
         this.numAdds += 1;
@@ -195,19 +200,18 @@ class BoxTree
             var needsRebound = this.needsRebound;
             var nodes = this.nodes;
             var node = nodes[index];
-            var nodeExtents = node.extents;
 
             var doUpdate = (needsRebuild ||
                             needsRebound ||
-                            nodeExtents[0] > min0 ||
-                            nodeExtents[1] > min1 ||
-                            nodeExtents[2] < max0 ||
-                            nodeExtents[3] < max1);
+                            node.minX > min0 ||
+                            node.minY > min1 ||
+                            node.maxX < max0 ||
+                            node.maxY < max1);
 
-            nodeExtents[0] = min0;
-            nodeExtents[1] = min1;
-            nodeExtents[2] = max0;
-            nodeExtents[3] = max1;
+            node.minX = min0;
+            node.minY = min1;
+            node.maxX = max0;
+            node.maxY = max1;
 
             if (doUpdate)
             {
@@ -232,11 +236,10 @@ class BoxTree
                         else
                         {
                             var parent = this.findParent(index);
-                            var parentExtents = parent.extents;
-                            if (parentExtents[0] > min0 ||
-                                parentExtents[1] > min1 ||
-                                parentExtents[2] < max0 ||
-                                parentExtents[3] < max1)
+                            if (parent.minX > min0 ||
+                                parent.minY > min1 ||
+                                parent.maxX < max0 ||
+                                parent.maxY < max1)
                             {
                                 this.needsRebound = true;
                             }
@@ -324,29 +327,26 @@ class BoxTree
                     nodeIndex = (topNodeIndex + 1); // First child
                     node = nodes[nodeIndex];
 
-                    var extents = node.extents;
-                    var minX = extents[0];
-                    var minY = extents[1];
-                    var maxX = extents[2];
-                    var maxY = extents[3];
+                    var minX = node.minX;
+                    var minY = node.minY;
+                    var maxX = node.maxX;
+                    var maxY = node.maxY;
 
                     nodeIndex = (nodeIndex + node.escapeNodeOffset);
                     while (nodeIndex < currentEscapeNodeIndex)
                     {
                         node = nodes[nodeIndex];
-                        extents = node.extents;
-                        if (minX > extents[0]) { minX = extents[0]; }
-                        if (minY > extents[1]) { minY = extents[1]; }
-                        if (maxX < extents[2]) { maxX = extents[2]; }
-                        if (maxY < extents[3]) { maxY = extents[3]; }
+                        if (minX > node.minX) { minX = node.minX; }
+                        if (minY > node.minY) { minY = node.minY; }
+                        if (maxX < node.maxX) { maxX = node.maxX; }
+                        if (maxY < node.maxY) { maxY = node.maxY; }
                         nodeIndex = (nodeIndex + node.escapeNodeOffset);
                     }
 
-                    extents = topNode.extents;
-                    extents[0] = minX;
-                    extents[1] = minY;
-                    extents[2] = maxX;
-                    extents[3] = maxY;
+                    topNode.minX = minX;
+                    topNode.minY = minY;
+                    topNode.maxX = maxX;
+                    topNode.maxY = maxY;
 
                     endUpdateNodeIndex = topNodeIndex;
 
@@ -377,7 +377,7 @@ class BoxTree
         {
             var nodes = this.nodes;
 
-            var buildNodes, numBuildNodes, endNodeIndex;
+            var buildNodes: BoxTreeNode[], numBuildNodes, endNodeIndex;
 
             if (this.numExternalNodes === nodes.length)
             {
@@ -434,7 +434,7 @@ class BoxTree
             }
             else
             {
-                var rootNode = buildNodes[0];
+                var rootNode: BoxTreeNode = buildNodes[0];
                 rootNode.externalNode.boxTreeIndex = 0;
                 nodes.length = 1;
                 nodes[0] = rootNode;
@@ -451,41 +451,36 @@ class BoxTree
         this.endUpdate = -0x7FFFFFFF;
     }
 
-    sortNodes(nodes)
+    sortNodes(nodes: BoxTreeNode[])
     {
         var numNodesLeaf = this.numNodesLeaf;
         var numNodes = nodes.length;
 
-        var getkeyXfn = function getkeyXfnFn(node)
+        function getkeyXfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return (extents[0] + extents[2]);
-        };
+            return (node.minX + node.maxX);
+        }
 
-        var getkeyYfn = function getkeyYfnFn(node)
+        function getkeyYfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return (extents[1] + extents[3]);
-        };
+            return (node.minY + node.maxY);
+        }
 
-        var getreversekeyXfn = function getreversekeyXfnFn(node)
+        function getreversekeyXfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return -(extents[0] + extents[2]);
-        };
+            return -(node.minX + node.maxX);
+        }
 
-        var getreversekeyYfn = function getreversekeyYfnFn(node)
+        function getreversekeyYfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return -(extents[1] + extents[3]);
-        };
+            return -(node.minY + node.maxY);
+        }
 
         var nthElement = this.nthElement;
         var reverse = false;
         var axis = 0;
 
-        var sortNodesRecursive =
-            function sortNodesRecursiveFn(nodes, startIndex, endIndex)
+        function sortNodesRecursive(nodes: BoxTreeNode[], startIndex, endIndex)
         {
             /* tslint:disable:no-bitwise */
             var splitNodeIndex = ((startIndex + endIndex) >> 1);
@@ -538,71 +533,61 @@ class BoxTree
             {
                 sortNodesRecursive(nodes, splitNodeIndex, endIndex);
             }
-        };
+        }
 
         sortNodesRecursive(nodes, 0, numNodes);
     }
 
-    sortNodesHighQuality(nodes)
+    sortNodesHighQuality(nodes: BoxTreeNode[])
     {
         var numNodesLeaf = this.numNodesLeaf;
         var numNodes = nodes.length;
 
-        var getkeyXfn = function getkeyXfnFn(node)
+        function getkeyXfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return (extents[0] + extents[2]);
-        };
+            return (node.minX + node.maxX);
+        }
 
-        var getkeyYfn = function getkeyYfnFn(node)
+        function getkeyYfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return (extents[1] + extents[3]);
-        };
+            return (node.minY + node.maxY);
+        }
 
-        var getkeyXYfn = function getkeyXYfnFn(node)
+        function getkeyXYfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return (extents[0] + extents[1] + extents[2] + extents[3]);
-        };
+            return (node.minX + node.minY + node.maxX + node.maxY);
+        }
 
-        var getkeyYXfn = function getkeyYXfnFn(node)
+        function getkeyYXfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return (extents[0] - extents[1] + extents[2] - extents[3]);
-        };
+            return (node.minX - node.minY + node.maxX - node.maxY);
+        }
 
-        var getreversekeyXfn = function getreversekeyXfnFn(node)
+        function getreversekeyXfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return -(extents[0] + extents[2]);
-        };
+            return -(node.minX + node.maxX);
+        }
 
-        var getreversekeyYfn = function getreversekeyYfnFn(node)
+        function getreversekeyYfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return -(extents[1] + extents[3]);
-        };
+            return -(node.minY + node.maxY);
+        }
 
-        var getreversekeyXYfn = function getreversekeyXYfnFn(node)
+        function getreversekeyXYfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return -(extents[0] + extents[1] + extents[2] + extents[3]);
-        };
+            return -(node.minX + node.minY + node.maxX + node.maxY);
+        }
 
-        var getreversekeyYXfn = function getreversekeyYXfnFn(node)
+        function getreversekeyYXfn(node: BoxTreeNode)
         {
-            var extents = node.extents;
-            return -(extents[0] - extents[1] + extents[2] - extents[3]);
-        };
+            return -(node.minX - node.minY + node.maxX - node.maxY);
+        }
 
         var nthElement = this.nthElement;
         var calculateSAH = this.calculateSAH;
         var reverse = false;
 
-        var sortNodesHighQualityRecursive =
-            function sortNodesHighQualityRecursiveFn(nodes, startIndex,
-                                                     endIndex)
+        function sortNodesHighQualityRecursive(nodes: BoxTreeNode[], startIndex, endIndex)
         {
             /* tslint:disable:no-bitwise */
             var splitNodeIndex = ((startIndex + endIndex) >> 1);
@@ -683,36 +668,34 @@ class BoxTree
             {
                 sortNodesHighQualityRecursive(nodes, splitNodeIndex, endIndex);
             }
-        };
+        }
 
         sortNodesHighQualityRecursive(nodes, 0, numNodes);
     }
 
-    calculateSAH(buildNodes, startIndex, endIndex)
+    calculateSAH(buildNodes: BoxTreeNode[], startIndex, endIndex)
     {
-        var buildNode, extents, minX, minY, maxX, maxY;
+        var buildNode: BoxTreeNode, minX, minY, maxX, maxY;
 
         buildNode = buildNodes[startIndex];
-        extents = buildNode.extents;
-        minX = extents[0];
-        minY = extents[1];
-        maxX = extents[2];
-        maxY = extents[3];
+        minX = buildNode.minX;
+        minY = buildNode.minY;
+        maxX = buildNode.maxX;
+        maxY = buildNode.maxY;
 
         for (var n = (startIndex + 1); n < endIndex; n += 1)
         {
             buildNode = buildNodes[n];
-            extents = buildNode.extents;
-            if (minX > extents[0]) { minX = extents[0]; }
-            if (minY > extents[1]) { minY = extents[1]; }
-            if (maxX < extents[2]) { maxX = extents[2]; }
-            if (maxY < extents[3]) { maxY = extents[3]; }
+            if (minX > buildNode.minX) { minX = buildNode.minX; }
+            if (minY > buildNode.minY) { minY = buildNode.minY; }
+            if (maxX < buildNode.maxX) { maxX = buildNode.maxX; }
+            if (maxY < buildNode.maxY) { maxY = buildNode.maxY; }
         }
 
         return ((maxX - minX) + (maxY - minY));
     }
 
-    nthElement(nodes, first, nth, last, getkey)
+    nthElement(nodes: BoxTreeNode[], first, nth, last, getkey)
     {
         function medianFn(a, b, c)
         {
@@ -742,7 +725,7 @@ class BoxTree
             return b;
         }
 
-        function insertionSortFn(nodes, first, last, getkey)
+        function insertionSort(nodes, first, last, getkey)
         {
             var sorted = (first + 1);
             while (sorted !== last)
@@ -816,26 +799,25 @@ class BoxTree
             }
         }
 
-        insertionSortFn(nodes, first, last, getkey);
+        insertionSort(nodes, first, last, getkey);
     }
 
-    recursiveBuild(buildNodes, startIndex, endIndex, lastNodeIndex)
+    recursiveBuild(buildNodes: BoxTreeNode[], startIndex: number, endIndex: number, lastNodeIndex: number)
     {
         var nodes = this.nodes;
         var nodeIndex = lastNodeIndex;
         lastNodeIndex += 1;
 
-        var minX, minY, maxX, maxY, extents;
-        var buildNode, lastNode;
+        var minX, minY, maxX, maxY;
+        var buildNode: BoxTreeNode, lastNode: BoxTreeNode;
 
         if ((startIndex + this.numNodesLeaf) >= endIndex)
         {
             buildNode = buildNodes[startIndex];
-            extents = buildNode.extents;
-            minX = extents[0];
-            minY = extents[1];
-            maxX = extents[2];
-            maxY = extents[3];
+            minX = buildNode.minX;
+            minY = buildNode.minY;
+            maxX = buildNode.maxX;
+            maxY = buildNode.maxY;
 
             buildNode.externalNode.boxTreeIndex = lastNodeIndex;
             nodes[lastNodeIndex] = buildNode;
@@ -843,11 +825,10 @@ class BoxTree
             for (var n = (startIndex + 1); n < endIndex; n += 1)
             {
                 buildNode = buildNodes[n];
-                extents = buildNode.extents;
-                if (minX > extents[0]) { minX = extents[0]; }
-                if (minY > extents[1]) { minY = extents[1]; }
-                if (maxX < extents[2]) { maxX = extents[2]; }
-                if (maxY < extents[3]) { maxY = extents[3]; }
+                if (minX > buildNode.minX) { minX = buildNode.minX; }
+                if (minY > buildNode.minY) { minY = buildNode.minY; }
+                if (maxX < buildNode.maxX) { maxX = buildNode.maxX; }
+                if (maxY < buildNode.maxY) { maxY = buildNode.maxY; }
                 lastNodeIndex += 1;
                 buildNode.externalNode.boxTreeIndex = lastNodeIndex;
                 nodes[lastNodeIndex] = buildNode;
@@ -873,11 +854,10 @@ class BoxTree
             }
 
             lastNode = nodes[lastNodeIndex];
-            extents = lastNode.extents;
-            minX = extents[0];
-            minY = extents[1];
-            maxX = extents[2];
-            maxY = extents[3];
+            minX = lastNode.minX;
+            minY = lastNode.minY;
+            maxX = lastNode.maxX;
+            maxY = lastNode.maxY;
 
             lastNodeIndex = (lastNodeIndex + lastNode.escapeNodeOffset);
 
@@ -893,11 +873,10 @@ class BoxTree
             }
 
             lastNode = nodes[lastNodeIndex];
-            extents = lastNode.extents;
-            if (minX > extents[0]) { minX = extents[0]; }
-            if (minY > extents[1]) { minY = extents[1]; }
-            if (maxX < extents[2]) { maxX = extents[2]; }
-            if (maxY < extents[3]) { maxY = extents[3]; }
+            if (minX > lastNode.minX) { minX = lastNode.minX; }
+            if (minY > lastNode.minY) { minY = lastNode.minY; }
+            if (maxX < lastNode.maxX) { maxX = lastNode.maxX; }
+            if (maxY < lastNode.maxY) { maxY = lastNode.maxY; }
         }
 
         var node = nodes[nodeIndex];
@@ -908,14 +887,12 @@ class BoxTree
         }
         else
         {
-            var parentExtents = new this.arrayConstructor(4);
-            parentExtents[0] = minX;
-            parentExtents[1] = minY;
-            parentExtents[2] = maxX;
-            parentExtents[3] = maxY;
-
-            nodes[nodeIndex] = BoxTreeNode.create(parentExtents,
-                                                  (lastNodeIndex + lastNode.escapeNodeOffset - nodeIndex));
+            nodes[nodeIndex] = BoxTreeNode.create(minX,
+                                                  minY,
+                                                  maxX,
+                                                  maxY,
+                                                  (lastNodeIndex + lastNode.escapeNodeOffset - nodeIndex),
+                                                  undefined);
         }
     }
 
@@ -927,7 +904,7 @@ class BoxTree
             var endNodeIndex = this.endNode;
             var numPlanes = planes.length;
             var numVisibleNodes = visibleNodes.length;
-            var node, extents, endChildren;
+            var node, endChildren;
             var n0, n1, p0, p1;
             var isInside, n, plane, d0, d1;
             var nodeIndex = 0;
@@ -935,11 +912,10 @@ class BoxTree
             for ( ; ; )
             {
                 node = nodes[nodeIndex];
-                extents = node.extents;
-                n0 = extents[0];
-                n1 = extents[1];
-                p0 = extents[2];
-                p1 = extents[3];
+                n0 = node.minX;
+                n1 = node.minY;
+                p0 = node.maxX;
+                p1 = node.maxY;
                 //isInsidePlanesBox
                 isInside = true;
                 n = 0;
@@ -1034,18 +1010,17 @@ class BoxTree
             var queryMaxY = queryExtents[3];
             var nodes = this.nodes;
             var endNodeIndex = this.endNode;
-            var node, extents, endChildren;
+            var node, endChildren;
             var numOverlappingNodes = 0;
             var storageIndex = (startIndex === undefined) ? overlappingNodes.length : startIndex;
             var nodeIndex = 0;
             for ( ; ; )
             {
                 node = nodes[nodeIndex];
-                extents = node.extents;
-                var minX = extents[0];
-                var minY = extents[1];
-                var maxX = extents[2];
-                var maxY = extents[3];
+                var minX = node.minX;
+                var minY = node.minY;
+                var maxX = node.maxX;
+                var maxY = node.maxY;
                 if (queryMinX <= maxX &&
                     queryMinY <= maxY &&
                     queryMaxX >= minX &&
@@ -1120,17 +1095,16 @@ class BoxTree
             var centerY = center[1];
             var nodes = this.nodes;
             var endNodeIndex = this.endNode;
-            var node, extents;
+            var node;
             var numOverlappingNodes = overlappingNodes.length;
             var nodeIndex = 0;
             for ( ; ; )
             {
                 node = nodes[nodeIndex];
-                extents = node.extents;
-                var minX = extents[0];
-                var minY = extents[1];
-                var maxX = extents[2];
-                var maxY = extents[3];
+                var minX = node.minX;
+                var minY = node.minY;
+                var maxX = node.maxX;
+                var maxY = node.maxY;
                 var totalDistance = 0, sideDistance;
                 if (centerX < minX)
                 {
@@ -1183,7 +1157,7 @@ class BoxTree
         {
             var nodes = this.nodes;
             var endNodeIndex = this.endNode;
-            var currentNode, currentExternalNode, node, extents;
+            var currentNode, currentExternalNode, node;
             var numInsertions = 0;
             var storageIndex = (startIndex === undefined) ? overlappingPairs.length : startIndex;
             var currentNodeIndex = 0, nodeIndex;
@@ -1200,21 +1174,19 @@ class BoxTree
                 if (currentNodeIndex < endNodeIndex)
                 {
                     currentExternalNode = currentNode.externalNode;
-                    extents = currentNode.extents;
-                    var minX = extents[0];
-                    var minY = extents[1];
-                    var maxX = extents[2];
-                    var maxY = extents[3];
+                    var minX = currentNode.minX;
+                    var minY = currentNode.minY;
+                    var maxX = currentNode.maxX;
+                    var maxY = currentNode.maxY;
 
                     nodeIndex = currentNodeIndex;
                     for ( ; ; )
                     {
                         node = nodes[nodeIndex];
-                        extents = node.extents;
-                        if (minX <= extents[2] &&
-                            minY <= extents[3] &&
-                            maxX >= extents[0] &&
-                            maxY >= extents[1])
+                        if (minX <= node.maxX &&
+                            minY <= node.maxY &&
+                            maxX >= node.minX &&
+                            maxY >= node.minY)
                         {
                             nodeIndex += 1;
                             if (node.externalNode) // Is leaf
@@ -1257,7 +1229,7 @@ class BoxTree
         return this.nodes[0];
     }
 
-    getNodes()
+    getNodes(): BoxTreeNode[]
     {
         return this.nodes;
     }
@@ -1297,12 +1269,12 @@ class BoxTree
 
         // evaluate distance factor to a node's extents from ray origin, along direction
         // use this to induce an ordering on which nodes to check.
-        var distanceExtents = function distanceExtentsFn(extents, upperBound)
+        function distanceExtents(min0: number,
+                                 min1: number,
+                                 max0: number,
+                                 max1: number,
+                                 upperBound: number)
         {
-            var min0 = extents[0];
-            var min1 = extents[1];
-            var max0 = extents[2];
-            var max1 = extents[3];
 
             // treat origin internal to extents as 0 distance.
             if (min0 <= o0 && o0 <= max0 &&
@@ -1363,7 +1335,7 @@ class BoxTree
             }
 
             return (0 <= tmin && tmin < upperBound) ? tmin : undefined;
-        };
+        }
 
         // we traverse both trees at once
         // keeping a priority list of nodes to check next.
@@ -1377,11 +1349,11 @@ class BoxTree
 
         //if node is a leaf, intersect ray with shape
         // otherwise insert node into priority list.
-        var processNode = function processNodeFn(tree, nodeIndex, upperBound)
+        function processNode(tree, nodeIndex, upperBound)
         {
             var nodes = tree.getNodes();
             var node = nodes[nodeIndex];
-            var distance = distanceExtents(node.extents, upperBound);
+            var distance = distanceExtents(node.minX, node.minY, node.maxX, node.maxY, upperBound);
             if (distance === undefined)
             {
                 return upperBound;
@@ -1419,7 +1391,7 @@ class BoxTree
             }
 
             return upperBound;
-        };
+        }
 
         var upperBound = ray.maxFactor;
 
@@ -1470,16 +1442,3 @@ class BoxTree
     }
 }
 
-// Detect correct typed arrays
-(function () {
-    BoxTree.prototype.arrayConstructor = Array;
-    if (typeof Float32Array !== "undefined")
-    {
-        var testArray = new Float32Array(4);
-        var textDescriptor = Object.prototype.toString.call(testArray);
-        if (textDescriptor === '[object Float32Array]')
-        {
-            BoxTree.prototype.arrayConstructor = Float32Array;
-        }
-    }
-}());
