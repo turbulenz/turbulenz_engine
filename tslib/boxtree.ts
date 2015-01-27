@@ -478,7 +478,7 @@ class BoxTree
 
         var nthElement = this.nthElement;
         var reverse = false;
-        var axis = 0;
+        var sortByX = true;
 
         function sortNodesRecursive(nodes: BoxTreeNode[], startIndex, endIndex)
         {
@@ -486,7 +486,7 @@ class BoxTree
             var splitNodeIndex = ((startIndex + endIndex) >> 1);
             /* tslint:enable:no-bitwise */
 
-            if (axis === 0)
+            if (sortByX)
             {
                 if (reverse)
                 {
@@ -497,7 +497,7 @@ class BoxTree
                     nthElement(nodes, startIndex, splitNodeIndex, endIndex, getkeyXfn);
                 }
             }
-            else //if (axis === 1)
+            else
             {
                 if (reverse)
                 {
@@ -509,20 +509,8 @@ class BoxTree
                 }
             }
 
-            if (axis === 0)
-            {
-                axis = 2;
-            }
-            else if (axis === 2)
-            {
-                axis = 1;
-            }
-            else //if (axis === 1)
-            {
-                axis = 0;
-            }
-
             reverse = !reverse;
+            sortByX = !sortByX;
 
             if ((startIndex + numNodesLeaf) < splitNodeIndex)
             {
