@@ -321,7 +321,7 @@ Example: ::
         }
     }
 
-    spikeShape.addEventlistener('begin', spikesOfDoomHandler, PLAYER_GROUP);
+    spikeShape.addEventListener('begin', spikesOfDoomHandler, PLAYER_GROUP);
     platformShape.addEventListener('preSolve', oneWayHandler, undefined, true);
 
 As the `begin` event is deferred until the end of the simulation step, it is safe to remove rigid bodies from the world. We make use of the fact that `this` is set to the shape on which the event was defined to choose the player shape which collided with the spikes.
