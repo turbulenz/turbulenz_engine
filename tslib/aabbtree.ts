@@ -609,9 +609,8 @@ class AABBTree
 
         var nthElement = this._nthElement;
         var reverse = false;
-        var axis = 0;
 
-        function sortNodesRecursive(nodes: AABBTreeNode[], startIndex: number, endIndex: number): void
+        function sortNodesRecursive(nodes: AABBTreeNode[], startIndex: number, endIndex: number, axis: number): void
         {
             /* tslint:disable:no-bitwise */
             var splitNodeIndex = ((startIndex + endIndex) >> 1);
@@ -668,16 +667,16 @@ class AABBTree
 
             if ((startIndex + numNodesLeaf) < splitNodeIndex)
             {
-                sortNodesRecursive(nodes, startIndex, splitNodeIndex);
+                sortNodesRecursive(nodes, startIndex, splitNodeIndex, axis);
             }
 
             if ((splitNodeIndex + numNodesLeaf) < endIndex)
             {
-                sortNodesRecursive(nodes, splitNodeIndex, endIndex);
+                sortNodesRecursive(nodes, splitNodeIndex, endIndex, axis);
             }
         }
 
-        sortNodesRecursive(nodes, 0, numNodes);
+        sortNodesRecursive(nodes, 0, numNodes, 0);
     }
 
     _sortNodesNoY(nodes: AABBTreeNode[]): void
@@ -711,9 +710,8 @@ class AABBTree
 
         var nthElement = this._nthElement;
         var reverse = false;
-        var axis = 0;
 
-        function sortNodesNoYRecursive(nodes: AABBTreeNode[], startIndex: number, endIndex: number): void
+        function sortNodesNoYRecursive(nodes: AABBTreeNode[], startIndex: number, endIndex: number, axis: number): void
         {
             /* tslint:disable:no-bitwise */
             var splitNodeIndex = ((startIndex + endIndex) >> 1);
@@ -755,16 +753,16 @@ class AABBTree
 
             if ((startIndex + numNodesLeaf) < splitNodeIndex)
             {
-                sortNodesNoYRecursive(nodes, startIndex, splitNodeIndex);
+                sortNodesNoYRecursive(nodes, startIndex, splitNodeIndex, axis);
             }
 
             if ((splitNodeIndex + numNodesLeaf) < endIndex)
             {
-                sortNodesNoYRecursive(nodes, splitNodeIndex, endIndex);
+                sortNodesNoYRecursive(nodes, splitNodeIndex, endIndex, axis);
             }
         }
 
-        sortNodesNoYRecursive(nodes, 0, numNodes);
+        sortNodesNoYRecursive(nodes, 0, numNodes, 0);
     }
 
     _sortNodesHighQuality(nodes: AABBTreeNode[]): void
