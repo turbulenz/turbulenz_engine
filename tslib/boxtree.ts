@@ -478,9 +478,8 @@ class BoxTree
 
         var nthElement = this.nthElement;
         var reverse = false;
-        var sortByX = true;
 
-        function sortNodesRecursive(nodes: BoxTreeNode[], startIndex, endIndex)
+        function sortNodesRecursive(nodes: BoxTreeNode[], startIndex: number, endIndex: number, sortByX: boolean)
         {
             /* tslint:disable:no-bitwise */
             var splitNodeIndex = ((startIndex + endIndex) >> 1);
@@ -510,20 +509,19 @@ class BoxTree
             }
 
             reverse = !reverse;
-            sortByX = !sortByX;
 
             if ((startIndex + numNodesLeaf) < splitNodeIndex)
             {
-                sortNodesRecursive(nodes, startIndex, splitNodeIndex);
+                sortNodesRecursive(nodes, startIndex, splitNodeIndex, !sortByX);
             }
 
             if ((splitNodeIndex + numNodesLeaf) < endIndex)
             {
-                sortNodesRecursive(nodes, splitNodeIndex, endIndex);
+                sortNodesRecursive(nodes, splitNodeIndex, endIndex, !sortByX);
             }
         }
 
-        sortNodesRecursive(nodes, 0, numNodes);
+        sortNodesRecursive(nodes, 0, numNodes, true);
     }
 
     sortNodesHighQuality(nodes: BoxTreeNode[])
