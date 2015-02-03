@@ -5974,86 +5974,91 @@ class TzTechniqueParameterBuffer extends Float32Array implements TechniqueParame
 var _tz_techniqueParameterBufferCreate =
     function techniqueParameterBufferCreateFn(params): TechniqueParameterBuffer
 {
-    if (Float32Array.prototype.map === undefined)
+    var tpbProto = this.tpbProto;
+    if (!tpbProto)
     {
-        Float32Array.prototype.map =
-            function techniqueParameterBufferMap(offset, numFloats)
+        var tpbProtoConstructor = function ()
         {
-            if (offset === undefined)
+            this.map = function techniqueParameterBufferMap(offset, numFloats)
             {
-                offset = 0;
-            }
-            var buffer = this;
-            if (numFloats === undefined)
-            {
-                numFloats = this.length;
-            }
-            function techniqueParameterBufferWriter()
-            {
-                var numArguments = arguments.length;
-                for (var a = 0; a < numArguments; a += 1)
+                if (offset === undefined)
                 {
-                    var value = arguments[a];
-                    if (typeof value === 'number')
+                    offset = 0;
+                }
+                var buffer = this;
+                if (numFloats === undefined)
+                {
+                    numFloats = this.length;
+                }
+                function techniqueParameterBufferWriter()
+                {
+                    var numArguments = arguments.length;
+                    for (var a = 0; a < numArguments; a += 1)
                     {
-                        buffer[offset] = value;
-                        offset += 1;
-                    }
-                    else
-                    {
-                        buffer.setData(value, offset, value.length);
-                        offset += value.length;
+                        var value = arguments[a];
+                        if (typeof value === 'number')
+                        {
+                            buffer[offset] = value;
+                            offset += 1;
+                        }
+                        else
+                        {
+                            buffer.setData(value, offset, value.length);
+                            offset += value.length;
+                        }
                     }
                 }
-            }
-            return techniqueParameterBufferWriter;
+                return techniqueParameterBufferWriter;
+            };
+
+            /* tslint:disable:no-empty */
+            this.unmap = function techniqueParameterBufferUnmap(writer)
+            {
+            };
+            /* tslint:enable:no-empty */
+
+            this.setData =
+                function techniqueParameterBufferSetData(data,
+                                                         offset?: number,
+                                                         numValues?: number)
+            {
+                if (offset === undefined)
+                {
+                    offset = 0;
+                }
+                if (numValues === undefined)
+                {
+                    numValues = this.length;
+                }
+                for (var n = 0; n < numValues; n += 1, offset += 1)
+                {
+                    this[offset] = data[n];
+                }
+            };
+
+            Object.defineProperty(this, "data", {
+                get: function techniqueParameterBufferDataGet()
+                {
+                    return this;
+                },
+                enumerable: true
+            });
+
+            Object.defineProperty(this, "numFloats", {
+                get: function techniqueParameterBufferDataGet()
+                {
+                    return this.length;
+                },
+                enumerable: true
+            });
         };
-
-        /* tslint:disable:no-empty */
-        Float32Array.prototype.unmap =
-            function techniqueParameterBufferUnmap(writer)
-        {
-        };
-        /* tslint:enable:no-empty */
-
-        Float32Array.prototype.setData =
-            function techniqueParameterBufferSetData(data,
-                                                     offset?: number,
-                                                     numValues?: number)
-        {
-            if (offset === undefined)
-            {
-                offset = 0;
-            }
-            if (numValues === undefined)
-            {
-                numValues = this.length;
-            }
-            for (var n = 0; n < numValues; n += 1, offset += 1)
-            {
-                this[offset] = data[n];
-            }
-        };
-
-        Object.defineProperty(Float32Array.prototype, "data", {
-            get: function techniqueParameterBufferDataGet()
-            {
-                return this;
-            },
-            enumerable: true
-        });
-
-        Object.defineProperty(Float32Array.prototype, "numFloats", {
-            get: function techniqueParameterBufferDataGet()
-            {
-                return this.length;
-            },
-            enumerable: true
-        });
-
+        tpbProtoConstructor.prototype = Float32Array.prototype;
+        this.tpbProto = tpbProto = new tpbProtoConstructor();
     }
 
-    return <TechniqueParameterBuffer><any>(new Float32Array(params.numFloats));
+    var tpb = new Float32Array(params.numFloats);
+    (<any>tpb).__proto__ = tpbProto;
+    return <TechniqueParameterBuffer><any>(tpb);
 };
 
 if (typeof TurbulenzEngine !== 'undefined' &&
