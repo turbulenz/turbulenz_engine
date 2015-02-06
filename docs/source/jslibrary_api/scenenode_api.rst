@@ -168,6 +168,7 @@ Add a SceneNode as a child of this node.
 ``sceneNode``
     A :ref:`SceneNode <scenenode>` object.
     Cyclic links will cause undefined behavior.
+    If ``sceneNode`` previously had a parent node it will be removed from that parent's children.
 
 .. index::
     pair: SceneNode; removeChild
