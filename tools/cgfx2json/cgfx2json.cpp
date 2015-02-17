@@ -1,20 +1,23 @@
-// Copyright (c) 2009-2014 Turbulenz Limited
+// Copyright (c) 2009-2015 Turbulenz Limited
 
 #include "stdafx.h"
 #include "../common/json.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef WIN32
-    #include <direct.h>
-    #define GetCurrentDir _getcwd
-    #define snprintf _snprintf
+# include <windows.h>
+# include <tchar.h>
+# include <direct.h>
+# define GetCurrentDir _getcwd
+# define snprintf _snprintf
 #else
-    #include <unistd.h>
-    #define GetCurrentDir getcwd
-    #define _stat stat
- #endif
+# include <unistd.h>
+# define GetCurrentDir getcwd
+# define _stat stat
+#endif
 typedef std::map<std::string, const char *> SemanticsMap;
 typedef std::map<std::string, std::string> UniformsMap;
 typedef std::pair<boost::xpressive::sregex, std::string> UniformRule;
@@ -72,6 +75,82 @@ void ErrorMessage(const char *message, ...)
     printf("Error: %s\n", messageBuffer);
 }
 
+static const char encode_base64[]=
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+static bool EncodeBase64String(const std::vector<uint8_t> &src,
+                               std::string &out_base64)
+{
+    const size_t sourceLength = src.size();
+    size_t numBlocks = sourceLength / 3;
+    size_t remainder = sourceLength - (numBlocks*3);
+    size_t outLength = (numBlocks * 4) + ((0 == remainder)?(0):(4));
+
+    // Blocks
+
+    const uint8_t *sourceData = &src[0];
+
+    out_base64.resize(outLength);
+    char *destinationBuffer = &out_base64[0];
+
+    for (size_t blockIdx = 0 ; blockIdx < numBlocks ; ++blockIdx)
+    {
+        uint8_t a = sourceData[0];
+        uint8_t b = sourceData[1];
+        uint8_t c = sourceData[2];
+        sourceData += 3;
+
+        uint8_t outA = a >> 2;
+        uint8_t outB = ((a & 0x3) << 4) | (b >> 4);
+        uint8_t outC = ((b & 0xf) << 2) | (c >> 6);
+        uint8_t outD = c & 0x3f;
+
+        destinationBuffer[0] = encode_base64[outA];
+        destinationBuffer[1] = encode_base64[outB];
+        destinationBuffer[2] = encode_base64[outC];
+        destinationBuffer[3] = encode_base64[outD];
+        destinationBuffer += 4;
+    }
+
+    // Extras
+
+    switch (remainder)
+    {
+    case 1:
+        {
+            uint8_t a = sourceData[0];
+
+            uint8_t outA = a >> 2;
+            uint8_t outB = ((a & 0x3) << 4);
+
+            destinationBuffer[0] = encode_base64[outA];
+            destinationBuffer[1] = encode_base64[outB];
+            destinationBuffer[2] = destinationBuffer[3] = '=';
+        }
+        break;
+
+    case 2:
+        {
+            uint8_t a = sourceData[0];
+            uint8_t b = sourceData[1];
+
+            uint8_t outA = a >> 2;
+            uint8_t outB = ((a & 0x3) << 4) | (b >> 4);
+            uint8_t outC = ((b & 0xf) << 2);
+
+            destinationBuffer[0] = encode_base64[outA];
+            destinationBuffer[1] = encode_base64[outB];
+            destinationBuffer[2] = encode_base64[outC];
+            destinationBuffer[3] = '=';
+        }
+
+    default:
+        break;
+    }
+    destinationBuffer += 4;
+
+    return true;
+}
 
 static void AddParameter(JSON &json, CGparameter param)
 {
@@ -537,7 +616,11 @@ static void AddMappedParameter(JSON &json,
     }
 }
 
-static bool AddPass(CGtechnique technique, JSON &json, CGpass pass, UniformsMap &uniformRemapping, const SemanticsMap &semanticsMap)
+static bool AddPass(CGtechnique technique,
+                    JSON &json,
+                    CGpass pass,
+                    UniformsMap &uniformRemapping,
+                    const SemanticsMap &semanticsMap)
 {
     bool success = true;
     json.AddObject(NULL);
@@ -699,7 +782,9 @@ static bool AddPass(CGtechnique technique, JSON &json, CGpass pass, UniformsMap 
     return success;
 }
 
-static void replace(std::string &target, const std::string &that, const std::string &with)
+static void replace(std::string &target,
+                    const std::string &that,
+                    const std::string &with)
 {
     for (std::string::size_type where = target.find(that); where != std::string::npos; where = target.find(that))
     {
@@ -1034,6 +1119,14 @@ static void PrintHelp()
          "--asm                   generate ASM code instead of GLSL\n"
          "--json_indent=SIZE, -j SIZE\n"
          "                        json output pretty printing indent size, defaults to 0\n"
+         "--binary-compiler <path>\n"
+         "                        Optional path to an executable or script that is invoked:\n"
+         "                          <path> <type> <inputfile> <outputfile>\n"
+         "                        for each program in the cgfx file.  The output is base64\n"
+         "                        encoded and written to the 'binary' property in the\n"
+         "                        resulting JSON.\n"
+         "--binary-name <name>    Use <name> instead of 'binary' for the compiled binary\n"
+         "                        \n"
          "\n"
          "File Options\n"
          "------------\n"
@@ -1092,6 +1185,133 @@ static void PrintVersion(const char *outfile)
     exit(1);
 }
 
+static bool WriteFile(const char *fileName, const std::string &data)
+{
+    FILE *f = fopen(fileName, "wb");
+    if (NULL == f)
+    {
+        return false;
+    }
+
+    size_t bytesToWrite = data.size();
+    size_t offset = 0;
+    while (0 < bytesToWrite)
+    {
+        size_t written = fwrite(&data[offset], 1, bytesToWrite, f);
+        if (0 == written)
+        {
+            fclose(f);
+            return false;
+        }
+
+        bytesToWrite -= written;
+        offset += written;
+    }
+    fclose(f);
+    return true;
+}
+
+static bool ReadFile(const char *fileName, std::vector<uint8_t> &data)
+{
+    FILE *f = fopen(fileName, "rb");
+    if (NULL == f)
+    {
+        return false;
+    }
+
+    fseek(f, 0L, SEEK_END);
+    const long filesize = ftell(f);
+    fseek(f, 0L, SEEK_SET);
+
+    size_t bytesToRead = (size_t )filesize;
+    size_t offset = 0;
+
+    data.resize(bytesToRead);
+
+    while (0 < bytesToRead)
+    {
+        size_t read = fread(&data[offset], 1, bytesToRead, f);
+        if (0 == read)
+        {
+            fclose(f);
+            return false;
+        }
+
+        bytesToRead -= read;
+        offset += read;
+    }
+    fclose(f);
+    return true;
+}
+
+static bool BinaryCompile(const std::string &code,
+    const char *compiler,
+    const char *shaderType,
+    std::string &out_base64)
+{
+#ifdef _WIN32
+    int dwRetVal = 0;
+    char tempPath[MAX_PATH];
+    char inputFilename[MAX_PATH];
+    char outputFilename[MAX_PATH];
+
+    dwRetVal = GetTempPathA(MAX_PATH, tempPath);
+    if (dwRetVal > MAX_PATH || (dwRetVal == 0))
+    {
+        ErrorMessage("Failed to get Temporary Path");
+        return 1;
+    }
+
+    if (0 == GetTempFileNameA(tempPath, "shadercode", 0, inputFilename) ||
+        0 == GetTempFileNameA(tempPath, "binary", 0, outputFilename))
+    {
+        out_base64 = "Failed to get temporary files";
+        return false;
+    }
+
+    if (!WriteFile(inputFilename, code))
+    {
+        out_base64 = "Failed to write temp file";
+        return false;
+    }
+
+    std::string command = compiler;
+    command += " ";
+    command += shaderType;
+    command += " ";
+    command += inputFilename;
+    command += " ";
+    command += outputFilename;
+
+    printf("Running binary compiler: %s\n", command.c_str());
+    if (0 != system(command.c_str()))
+    {
+        out_base64 = "Failed to execute binary compile command: ";
+        out_base64 += command;
+        return false;
+    }
+
+    std::vector<uint8_t> data;
+    if (!ReadFile(outputFilename, data))
+    {
+        out_base64 = "Failed to read compiled shader: ";
+        out_base64 += outputFilename;
+        return false;
+    }
+
+    if (!EncodeBase64String(data, out_base64))
+    {
+        out_base64 = "Failed to encode shader binary as base64";
+        return false;
+    }
+
+    return true;
+#else
+    out_base64 = "Binary compile not supported on this platform";
+    return false;
+#endif
+}
+
 //
 // Main
 //
@@ -1106,6 +1326,9 @@ int main(int argc, char **argv)
     int indentationStep = 0;
     bool generateGLSL = true;
     bool printVersion = false;
+
+    const char *binaryCompiler = NULL;
+    const char *binaryName = "binary";
 
     sVerbose = false;
 
@@ -1177,6 +1400,22 @@ int main(int argc, char **argv)
         else if (0 == strcmp(argv[argn], "--version"))
         {
             printVersion = true;
+        }
+        else if (0 == strcmp(argv[argn], "--binary-compiler"))
+        {
+            argn++;
+            if (argn < argc)
+            {
+                binaryCompiler = argv[argn];
+            }
+        }
+        else if (0 == strcmp(argv[argn], "--binary-name"))
+        {
+            argn++;
+            if (argn < argc)
+            {
+                binaryName = argv[argn];
+            }
         }
     }
 
@@ -1570,6 +1809,8 @@ int main(int argc, char **argv)
 
             const char * const programString = cgGetProgramString(program, CG_COMPILED_PROGRAM);
             const size_t originalLength = strlen(programString);
+
+            std::string finalCode;
             char *minimizedString;
             int minimizedLength;
             if (0 == memcmp(programString, "!!ARB", 5))
@@ -1593,23 +1834,48 @@ int main(int argc, char **argv)
                     }
                 }
                 cleanString[dn] = 0;
-                minimizedString = (char *)malloc(dn);
-                minimizedLength = jsmin(cleanString, minimizedString);
-                free(cleanString);
 
-                json.AddMultiLineString("code", minimizedString, minimizedLength);
+                finalCode.resize(dn);
+                // minimizedString = (char *)malloc(dn);
+                minimizedLength = jsmin(cleanString, &finalCode[0]);
+                finalCode.resize(minimizedLength);
+                // free(cleanString);
+
+                json.AddMultiLineString("code",
+                                        finalCode.c_str(),
+                                        minimizedLength);
             }
             else
             {
                 minimizedString = (char *)malloc(originalLength);
                 minimizedLength = jsmin(programString, minimizedString);
 
-                const std::string fixedShaderCode(FixShaderCode(minimizedString,
-                                                                minimizedLength,
-                                                                uniformsRename,
-                                                                (CG_VERTEX_DOMAIN == domain)));
+                finalCode = FixShaderCode(minimizedString,
+                                          minimizedLength,
+                                          uniformsRename,
+                                          (CG_VERTEX_DOMAIN == domain));
 
-                json.AddMultiLineString("code", fixedShaderCode.c_str(), fixedShaderCode.size());
+                json.AddMultiLineString("code",
+                                        finalCode.c_str(),
+                                        finalCode.size());
+            }
+
+            if (NULL != binaryCompiler)
+            {
+                std::string base64OrError;
+                if (!BinaryCompile(finalCode,
+                                   binaryCompiler,
+                                   domainString,
+                                   base64OrError))
+                {
+                    ErrorMessage("Failed to compile shader to binary: %s",
+                                 base64OrError.c_str());
+                    return 1;
+                }
+
+                json.AddMultiLineString(binaryName,
+                                        base64OrError.c_str(),
+                                        base64OrError.size());
             }
 
             json.CloseObject(); // program
