@@ -7045,7 +7045,7 @@ class WebGLGraphicsDevice implements GraphicsDevice
         }
 
         /* tslint:disable:no-bitwise */
-        this._clientStateMask = (~attributeMask) & 0xf;
+        this._clientStateMask = (~attributeMask) & 0xffff;
         /* tslint:enable:no-bitwise */
         this.enableClientState(attributeMask);
 
