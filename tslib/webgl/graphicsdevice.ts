@@ -6950,8 +6950,9 @@ class WebGLGraphicsDevice implements GraphicsDevice
         // Reset vertex state
         this._activeIndexBuffer = null;
         this._bindedVertexBuffer = null;
-        this._clientStateMask = 0;
+        this._clientStateMask = 0xffff;
         this._attributeMask = 0;
+        this.enableClientState(0);
 
         var semanticsOffsets = this._semanticsOffsets;
         for (n = 0; n < 16; n += 1)
