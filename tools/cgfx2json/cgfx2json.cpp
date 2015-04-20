@@ -1340,6 +1340,7 @@ static bool ReadFile(const char *fileName, std::vector<uint8_t> &data)
 static bool BinaryCompile(const std::string &code,
     const char *compiler,
     const char *shaderType,
+    bool generateHLSL,
     std::string &out_base64)
 {
 #ifdef _WIN32
@@ -1368,13 +1369,39 @@ static bool BinaryCompile(const std::string &code,
         return false;
     }
 
-    std::string command = compiler;
-    command += " ";
-    command += shaderType;
-    command += " ";
-    command += inputFilename;
-    command += " ";
-    command += outputFilename;
+    std::string command = "\"";
+    command += compiler;
+    command += "\"";
+
+    if (generateHLSL)
+    {
+        command += " /T ";
+        if (0 == strcmp(shaderType, "vertex"))
+        {
+            command += "vs_5_0";
+        }
+        else if (0 == strcmp(shaderType, "fragment"))
+        {
+            command += "ps_5_0";
+        }
+        else if (0 == strcmp(shaderType, "geometry"))
+        {
+            command += "gs_5_0";
+        }
+        command += " /Fo ";
+        command += outputFilename;
+        command += " ";
+        command += inputFilename;
+    }
+    else
+    {
+        command += " ";
+        command += shaderType;
+        command += " ";
+        command += inputFilename;
+        command += " ";
+        command += outputFilename;
+    }
 
     printf("Running binary compiler: %s\n", command.c_str());
     if (0 != system(command.c_str()))
@@ -1998,6 +2025,7 @@ int main(int argc, char **argv)
                 if (!BinaryCompile(finalCode,
                                    binaryCompiler,
                                    domainString,
+                                   generateHLSL,
                                    base64OrError))
                 {
                     ErrorMessage("Failed to compile shader to binary: %s",
