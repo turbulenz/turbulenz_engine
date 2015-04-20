@@ -166,8 +166,8 @@ technique rigid
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_null();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_null();
     }
 }
 
@@ -183,8 +183,8 @@ technique skinned
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp_skinned();
-        FragmentProgram = compile glslf fp_null();
+        VertexProgram   = compile latest vp_skinned();
+        FragmentProgram = compile latest fp_null();
     }
 }
 
@@ -200,8 +200,8 @@ technique rigid_alphatest
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp_alpha();
-        FragmentProgram = compile glslf fp_alpha();
+        VertexProgram   = compile latest vp_alpha();
+        FragmentProgram = compile latest fp_alpha();
     }
 }
 
@@ -217,8 +217,8 @@ technique skinned_alphatest
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp_alpha_skinned();
-        FragmentProgram = compile glslf fp_alpha();
+        VertexProgram   = compile latest vp_alpha_skinned();
+        FragmentProgram = compile latest fp_alpha();
     }
 }
 
@@ -233,8 +233,8 @@ technique rigid_nocull
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_null();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_null();
     }
 }
 
@@ -249,8 +249,8 @@ technique skinned_nocull
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp_skinned();
-        FragmentProgram = compile glslf fp_null();
+        VertexProgram   = compile latest vp_skinned();
+        FragmentProgram = compile latest fp_null();
     }
 }
 
@@ -265,8 +265,8 @@ technique rigid_alphatest_nocull
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp_alpha();
-        FragmentProgram = compile glslf fp_alpha();
+        VertexProgram   = compile latest vp_alpha();
+        FragmentProgram = compile latest fp_alpha();
     }
 }
 
@@ -281,8 +281,8 @@ technique skinned_alphatest_nocull
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp_alpha_skinned();
-        FragmentProgram = compile glslf fp_alpha();
+        VertexProgram   = compile latest vp_alpha_skinned();
+        FragmentProgram = compile latest fp_alpha();
     }
 }
 
@@ -301,8 +301,8 @@ technique stencil_set
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_null();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_null();
     }
 }
 
@@ -321,8 +321,8 @@ technique stencil_set_spotlight
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp_spotlight();
-        FragmentProgram = compile glslf fp_null();
+        VertexProgram   = compile latest vp_spotlight();
+        FragmentProgram = compile latest fp_null();
     }
 }
 
@@ -341,8 +341,8 @@ technique stencil_clear
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_null();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_null();
     }
 }
 
@@ -361,7 +361,7 @@ technique stencil_clear_spotlight
         BlendEnable     = false;
         ColorMask       = { 0, 0, 0, 0 };
 
-        VertexProgram   = compile glslv vp_spotlight();
-        FragmentProgram = compile glslf fp_null();
+        VertexProgram   = compile latest vp_spotlight();
+        FragmentProgram = compile latest fp_null();
     }
 }

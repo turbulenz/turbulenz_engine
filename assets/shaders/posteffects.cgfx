@@ -85,8 +85,8 @@ technique fadein
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_fade();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_fade();
     }
 }
 
@@ -98,8 +98,8 @@ technique copy
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_copy();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_copy();
     }
 }
 
@@ -111,8 +111,8 @@ technique copyFiltered
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_copyFiltered();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_copyFiltered();
     }
 }
 
@@ -124,8 +124,8 @@ technique bicolor
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_bicolor();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_bicolor();
     }
 }
 
@@ -137,8 +137,8 @@ technique modulate
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_modulate();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_modulate();
     }
 }
 
@@ -151,7 +151,7 @@ technique blend
         CullFaceEnable  = false;
         BlendEnable     = true;
         BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_blend();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_blend();
     }
 }

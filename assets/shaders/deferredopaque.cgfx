@@ -725,8 +725,8 @@ technique blinn
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_blinn();
-        FragmentProgram = compile glslf fp_blinn();
+        VertexProgram   = compile latest vp_blinn();
+        FragmentProgram = compile latest fp_blinn();
     }
 }
 
@@ -744,8 +744,8 @@ technique blinn_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_blinn_skinned();
-        FragmentProgram = compile glslf fp_blinn();
+        VertexProgram   = compile latest vp_blinn_skinned();
+        FragmentProgram = compile latest fp_blinn();
     }
 }
 
@@ -763,8 +763,8 @@ technique rxgb_normalmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap();
     }
 }
 
@@ -782,8 +782,8 @@ technique rxgb_normalmap_specularmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_rxgb_normalmap_specularmap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_rxgb_normalmap_specularmap();
     }
 }
 
@@ -800,8 +800,8 @@ technique rxgb_normalmap_alphatest
         CullFaceEnable  = true;
         CullFace        = Back;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_alphatest();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_alphatest();
     }
 }
 
@@ -818,8 +818,8 @@ technique rxgb_normalmap_specularmap_alphatest
         CullFaceEnable  = true;
         CullFace        = Back;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_rxgb_normalmap_specularmap_alphatest();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_rxgb_normalmap_specularmap_alphatest();
     }
 }
 
@@ -837,8 +837,8 @@ technique rxgb_normalmap_specularmap_glowmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_rxgb_normalmap_specularmap_glowmap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_rxgb_normalmap_specularmap_glowmap();
     }
 }
 
@@ -856,8 +856,8 @@ technique rxgb_normalmap_glowmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_rxgb_normalmap_glowmap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_rxgb_normalmap_glowmap();
     }
 }
 
@@ -875,8 +875,8 @@ technique rxgb_normalmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap();
     }
 }
 
@@ -894,8 +894,8 @@ technique rxgb_normalmap_specularmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_rxgb_normalmap_specularmap();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_rxgb_normalmap_specularmap();
     }
 }
 
@@ -912,8 +912,8 @@ technique rxgb_normalmap_alphatest_skinned
         CullFaceEnable  = true;
         CullFace        = Back;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap_alphatest();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap_alphatest();
     }
 }
 
@@ -930,8 +930,8 @@ technique rxgb_normalmap_specularmap_alphatest_skinned
         CullFaceEnable  = true;
         CullFace        = Back;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_rxgb_normalmap_specularmap_alphatest();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_rxgb_normalmap_specularmap_alphatest();
     }
 }
 
@@ -949,8 +949,8 @@ technique rxgb_normalmap_specularmap_glowmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_rxgb_normalmap_specularmap_glowmap();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_rxgb_normalmap_specularmap_glowmap();
     }
 }
 
@@ -968,8 +968,8 @@ technique rxgb_normalmap_glowmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_rxgb_normalmap_glowmap();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_rxgb_normalmap_glowmap();
     }
 }
 
@@ -987,8 +987,8 @@ technique normalmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap();
     }
 }
 
@@ -1006,8 +1006,8 @@ technique normalmap_specularmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_specularmap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_specularmap();
     }
 }
 
@@ -1025,8 +1025,8 @@ technique normalmap_specularmap_alphamap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_specularmap_alphamap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_specularmap_alphamap();
     }
 }
 
@@ -1043,8 +1043,8 @@ technique normalmap_alphatest
         CullFaceEnable  = true;
         CullFace        = Back;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_alphatest();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_alphatest();
     }
 }
 
@@ -1061,8 +1061,8 @@ technique normalmap_specularmap_alphatest
         CullFaceEnable  = true;
         CullFace        = Back;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_specularmap_alphatest();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_specularmap_alphatest();
     }
 }
 
@@ -1080,8 +1080,8 @@ technique normalmap_specularmap_glowmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_specularmap_glowmap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_specularmap_glowmap();
     }
 }
 
@@ -1099,8 +1099,8 @@ technique normalmap_glowmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_glowmap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_glowmap();
     }
 }
 
@@ -1118,8 +1118,8 @@ technique normalmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap();
     }
 }
 
@@ -1137,8 +1137,8 @@ technique normalmap_specularmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap_specularmap();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap_specularmap();
     }
 }
 
@@ -1155,8 +1155,8 @@ technique normalmap_alphatest_skinned
         CullFaceEnable  = true;
         CullFace        = Back;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap_alphatest();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap_alphatest();
     }
 }
 
@@ -1173,8 +1173,8 @@ technique normalmap_specularmap_alphatest_skinned
         CullFaceEnable  = true;
         CullFace        = Back;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap_specularmap_alphatest();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap_specularmap_alphatest();
     }
 }
 
@@ -1192,8 +1192,8 @@ technique normalmap_specularmap_glowmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap_specularmap_glowmap();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap_specularmap_glowmap();
     }
 }
 
@@ -1211,8 +1211,8 @@ technique normalmap_glowmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap_glowmap();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap_glowmap();
     }
 }
 
@@ -1230,8 +1230,8 @@ technique glowmap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_glowmap();
-        FragmentProgram = compile glslf fp_glowmap();
+        VertexProgram   = compile latest vp_glowmap();
+        FragmentProgram = compile latest fp_glowmap();
     }
 }
 
@@ -1249,8 +1249,8 @@ technique glowmap_skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_glowmap_skinned();
-        FragmentProgram = compile glslf fp_glowmap();
+        VertexProgram   = compile latest vp_glowmap_skinned();
+        FragmentProgram = compile latest fp_glowmap();
     }
 }
 
@@ -1268,7 +1268,7 @@ technique skybox
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_skybox();
-        FragmentProgram = compile glslf fp_skybox();
+        VertexProgram   = compile latest vp_skybox();
+        FragmentProgram = compile latest fp_skybox();
     }
 }

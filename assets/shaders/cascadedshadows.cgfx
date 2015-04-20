@@ -179,8 +179,8 @@ technique rigid
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp();
     }
 }
 
@@ -194,8 +194,8 @@ technique rigid_nocull
         CullFaceEnable  = false;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp();
     }
 }
 
@@ -210,8 +210,8 @@ technique skinned
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_skinned();
-        FragmentProgram = compile glslf fp();
+        VertexProgram   = compile latest vp_skinned();
+        FragmentProgram = compile latest fp();
     }
 }
 
@@ -225,8 +225,8 @@ technique skinned_nocull
         CullFaceEnable  = false;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_skinned();
-        FragmentProgram = compile glslf fp();
+        VertexProgram   = compile latest vp_skinned();
+        FragmentProgram = compile latest fp();
     }
 }
 
@@ -238,7 +238,7 @@ technique blur
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_blur();
-        FragmentProgram = compile glslf fp_blur();
+        VertexProgram   = compile latest vp_blur();
+        FragmentProgram = compile latest fp_blur();
     }
 }

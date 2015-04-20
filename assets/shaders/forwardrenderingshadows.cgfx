@@ -652,8 +652,8 @@ technique normalmap_specularmap_alphamap_shadows
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_specularmap_alphamap_shadows();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_specularmap_alphamap_shadows();
     }
 }
 
@@ -737,8 +737,8 @@ technique normalmap_specularmap_alphamap_skinned_shadows
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
 
-        VertexProgram   = compile glslv vp_normalmap_skinned();
-        FragmentProgram = compile glslf fp_normalmap_specularmap_alphamap_shadows();
+        VertexProgram   = compile latest vp_normalmap_skinned();
+        FragmentProgram = compile latest fp_normalmap_specularmap_alphamap_shadows();
     }
 }
 

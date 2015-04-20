@@ -303,8 +303,8 @@ technique add
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight();
-        FragmentProgram = compile glslf fp_premodulatealpha();
+        VertexProgram   = compile latest vp_nolight();
+        FragmentProgram = compile latest fp_premodulatealpha();
     }
 }
 
@@ -322,8 +322,8 @@ technique add_skinned
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_skinned();
-        FragmentProgram = compile glslf fp_premodulatealpha();
+        VertexProgram   = compile latest vp_nolight_skinned();
+        FragmentProgram = compile latest fp_premodulatealpha();
     }
 }
 
@@ -340,8 +340,8 @@ technique add_particle
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_vertexcolor();
-        FragmentProgram = compile glslf fp_premodulatealpha();
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_premodulatealpha();
     }
 }
 
@@ -359,8 +359,8 @@ technique blend
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight();
-        FragmentProgram = compile glslf fp_normal();
+        VertexProgram   = compile latest vp_nolight();
+        FragmentProgram = compile latest fp_normal();
     }
 }
 
@@ -378,8 +378,8 @@ technique blend_skinned
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_skinned();
-        FragmentProgram = compile glslf fp_normal();
+        VertexProgram   = compile latest vp_nolight_skinned();
+        FragmentProgram = compile latest fp_normal();
     }
 }
 
@@ -396,8 +396,8 @@ technique blend_particle
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_vertexcolor();
-        FragmentProgram = compile glslf fp_normal();
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_normal();
     }
 }
 
@@ -415,8 +415,8 @@ technique translucent
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight();
-        FragmentProgram = compile glslf fp_translucent();
+        VertexProgram   = compile latest vp_nolight();
+        FragmentProgram = compile latest fp_translucent();
     }
 }
 
@@ -434,8 +434,8 @@ technique translucent_skinned
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_skinned();
-        FragmentProgram = compile glslf fp_translucent();
+        VertexProgram   = compile latest vp_nolight_skinned();
+        FragmentProgram = compile latest fp_translucent();
     }
 }
 
@@ -452,8 +452,8 @@ technique translucent_particle
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_vertexcolor();
-        FragmentProgram = compile glslf fp_translucent();
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_translucent();
     }
 }
 
@@ -471,8 +471,8 @@ technique filter
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight();
-        FragmentProgram = compile glslf fp_normal();
+        VertexProgram   = compile latest vp_nolight();
+        FragmentProgram = compile latest fp_normal();
     }
 }
 
@@ -490,8 +490,8 @@ technique filter_skinned
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_skinned();
-        FragmentProgram = compile glslf fp_normal();
+        VertexProgram   = compile latest vp_nolight_skinned();
+        FragmentProgram = compile latest fp_normal();
     }
 }
 
@@ -509,8 +509,8 @@ technique invfilter
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight();
-        FragmentProgram = compile glslf fp_premodulatealpha();
+        VertexProgram   = compile latest vp_nolight();
+        FragmentProgram = compile latest fp_premodulatealpha();
     }
 }
 
@@ -527,8 +527,8 @@ technique invfilter_particle
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_vertexcolor();
-        FragmentProgram = compile glslf fp_premodulatealpha();
+        VertexProgram   = compile latest vp_nolight_vertexcolor();
+        FragmentProgram = compile latest fp_premodulatealpha();
     }
 }
 
@@ -543,8 +543,8 @@ technique glass
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
 
-        VertexProgram   = compile glslv vp_nolight();
-        FragmentProgram = compile glslf fp_separatealpha();
+        VertexProgram   = compile latest vp_nolight();
+        FragmentProgram = compile latest fp_separatealpha();
     }
 }
 
@@ -559,8 +559,8 @@ technique glass_env
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
 
-        VertexProgram   = compile glslv vp_glass_env();
-        FragmentProgram = compile glslf fp_separatealpha_env();
+        VertexProgram   = compile latest vp_glass_env();
+        FragmentProgram = compile latest fp_separatealpha_env();
     }
 }
 
@@ -578,8 +578,8 @@ technique modulate2
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight();
-        FragmentProgram = compile glslf fp_normal();
+        VertexProgram   = compile latest vp_nolight();
+        FragmentProgram = compile latest fp_normal();
     }
 }
 
@@ -597,8 +597,8 @@ technique modulate2_skinned
         PolygonOffset   = float2(-1.0, -1.0);
         PolygonOffsetFillEnable = true;
 
-        VertexProgram   = compile glslv vp_nolight_skinned();
-        FragmentProgram = compile glslf fp_normal();
+        VertexProgram   = compile latest vp_nolight_skinned();
+        FragmentProgram = compile latest fp_normal();
     }
 }
 
@@ -613,8 +613,8 @@ technique env
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
 
-        VertexProgram   = compile glslv vp_env();
-        FragmentProgram = compile glslf fp_env();
+        VertexProgram   = compile latest vp_env();
+        FragmentProgram = compile latest fp_env();
     }
 }
 
@@ -629,7 +629,7 @@ technique env_skinned
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
 
-        VertexProgram   = compile glslv vp_env_skinned();
-        FragmentProgram = compile glslf fp_env();
+        VertexProgram   = compile latest vp_env_skinned();
+        FragmentProgram = compile latest fp_env();
     }
 }

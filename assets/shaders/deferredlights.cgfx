@@ -555,8 +555,8 @@ technique ambient_light
         StencilOp         = int3(Keep, Keep, Keep);
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_ambient_light();
-        FragmentProgram = compile glslf fp_ambient_light();
+        VertexProgram   = compile latest vp_ambient_light();
+        FragmentProgram = compile latest fp_ambient_light();
     }
 }
 
@@ -571,8 +571,8 @@ technique ambient_directional_light
         StencilOp         = int3(Keep, Keep, Keep);
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_directional_light();
-        FragmentProgram = compile glslf fp_ambient_directional_light();
+        VertexProgram   = compile latest vp_directional_light();
+        FragmentProgram = compile latest fp_ambient_directional_light();
     }
 }
 
@@ -588,8 +588,8 @@ technique directional_light
         CullFaceEnable  = false;
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
-        VertexProgram   = compile glslv vp_directional_light();
-        FragmentProgram = compile glslf fp_directional_light();
+        VertexProgram   = compile latest vp_directional_light();
+        FragmentProgram = compile latest fp_directional_light();
     }
 }
 
@@ -607,8 +607,8 @@ technique spot_light
         CullFace        = Front;
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
-        VertexProgram   = compile glslv vp_spot_light();
-        FragmentProgram = compile glslf fp_spot_light();
+        VertexProgram   = compile latest vp_spot_light();
+        FragmentProgram = compile latest fp_spot_light();
     }
 }
 
@@ -626,8 +626,8 @@ technique spot_light_shadow
         CullFace        = Front;
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
-        VertexProgram   = compile glslv vp_spot_light();
-        FragmentProgram = compile glslf fp_spot_light_shadow();
+        VertexProgram   = compile latest vp_spot_light();
+        FragmentProgram = compile latest fp_spot_light_shadow();
     }
 }
 
@@ -645,8 +645,8 @@ technique point_light
         CullFace        = Front;
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
-        VertexProgram   = compile glslv vp_light();
-        FragmentProgram = compile glslf fp_point_light();
+        VertexProgram   = compile latest vp_light();
+        FragmentProgram = compile latest fp_point_light();
     }
 }
 
@@ -664,8 +664,8 @@ technique point_light_specular
         CullFace        = Front;
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
-        VertexProgram   = compile glslv vp_light();
-        FragmentProgram = compile glslf fp_point_light_specular();
+        VertexProgram   = compile latest vp_light();
+        FragmentProgram = compile latest fp_point_light_specular();
     }
 }
 
@@ -682,8 +682,8 @@ technique point_light_specular_opaque
         CullFaceEnable  = true;
         CullFace        = Front;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_light();
-        FragmentProgram = compile glslf fp_point_light_specular();
+        VertexProgram   = compile latest vp_light();
+        FragmentProgram = compile latest fp_point_light_specular();
     }
 }
 
@@ -701,8 +701,8 @@ technique point_light_specular_shadow
         CullFace        = Front;
         BlendEnable     = true;
         BlendFunc       = int2(One, One);
-        VertexProgram   = compile glslv vp_light();
-        FragmentProgram = compile glslf fp_point_light_specular_shadow();
+        VertexProgram   = compile latest vp_light();
+        FragmentProgram = compile latest fp_point_light_specular_shadow();
     }
 }
 
@@ -719,8 +719,8 @@ technique point_light_specular_shadow_opaque
         CullFaceEnable  = true;
         CullFace        = Front;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_light();
-        FragmentProgram = compile glslf fp_point_light_specular_shadow();
+        VertexProgram   = compile latest vp_light();
+        FragmentProgram = compile latest fp_point_light_specular_shadow();
     }
 }
 technique fog_light
@@ -733,8 +733,8 @@ technique fog_light
         CullFace        = Front;
         BlendEnable     = true;
         BlendFunc       = int2(SrcAlpha, InvSrcAlpha);
-        VertexProgram   = compile glslv vp_fog_light();
-        FragmentProgram = compile glslf fp_fog_light();
+        VertexProgram   = compile latest vp_fog_light();
+        FragmentProgram = compile latest fp_fog_light();
     }
 }
 
@@ -746,7 +746,7 @@ technique mix
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_mix();
-        FragmentProgram = compile glslf fp_mix();
+        VertexProgram   = compile latest vp_mix();
+        FragmentProgram = compile latest fp_mix();
     }
 }

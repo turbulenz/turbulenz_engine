@@ -1057,8 +1057,8 @@ technique blinn_specularmap_alphamap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_blinn();
-        FragmentProgram = compile glslf fp_blinn_specularmap_alphamap();
+        VertexProgram   = compile latest vp_blinn();
+        FragmentProgram = compile latest fp_blinn_specularmap_alphamap();
     }
 }
 

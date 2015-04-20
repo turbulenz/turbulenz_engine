@@ -120,7 +120,7 @@ technique copy
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_copy();
-        FragmentProgram = compile glslf fp_copy();
+        VertexProgram   = compile latest vp_copy();
+        FragmentProgram = compile latest fp_copy();
     }
 }

@@ -160,8 +160,8 @@ technique distort
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_copy();
-        FragmentProgram = compile glslf fp_distort();
+        VertexProgram   = compile latest vp_copy();
+        FragmentProgram = compile latest fp_distort();
     }
 }
 
@@ -173,8 +173,8 @@ technique copyColorMatrix
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_copy();
-        FragmentProgram = compile glslf fp_colorMatrix();
+        VertexProgram   = compile latest vp_copy();
+        FragmentProgram = compile latest fp_colorMatrix();
     }
 }
 
@@ -186,8 +186,8 @@ technique bloomThreshold
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_copy();
-        FragmentProgram = compile glslf fp_bloom_threshold();
+        VertexProgram   = compile latest vp_copy();
+        FragmentProgram = compile latest fp_bloom_threshold();
     }
 }
 
@@ -199,8 +199,8 @@ technique bloomMerge
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_copy();
-        FragmentProgram = compile glslf fp_bloom_merge();
+        VertexProgram   = compile latest vp_copy();
+        FragmentProgram = compile latest fp_bloom_merge();
     }
 }
 
@@ -212,8 +212,8 @@ technique gaussianBlur
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp_copy();
-        FragmentProgram = compile glslf fp_gaussian_blur();
+        VertexProgram   = compile latest vp_copy();
+        FragmentProgram = compile latest fp_gaussian_blur();
     }
 }
 

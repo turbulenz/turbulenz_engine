@@ -116,8 +116,8 @@ technique copy
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_copy();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_copy();
     }
 }
 
@@ -129,8 +129,8 @@ technique invert
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_invert();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_invert();
     }
 }
 
@@ -142,8 +142,8 @@ technique luminance
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_luminance();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_luminance();
     }
 }
 
@@ -155,8 +155,8 @@ technique blurvert
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_basicblur_vert();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_basicblur_vert();
     }
 
 }
@@ -169,8 +169,8 @@ technique blurhorz
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = false;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_basicblur_horz();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_basicblur_horz();
     }
 }
 
@@ -182,7 +182,7 @@ technique composite
         DepthMask       = false;
         CullFaceEnable  = false;
         BlendEnable     = true;
-        VertexProgram   = compile glslv vp();
-        FragmentProgram = compile glslf fp_composite();
+        VertexProgram   = compile latest vp();
+        FragmentProgram = compile latest fp_composite();
     }
 }

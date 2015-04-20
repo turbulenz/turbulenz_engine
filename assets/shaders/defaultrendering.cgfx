@@ -1464,8 +1464,8 @@ technique normalmap_specularmap_alphamap
         CullFace        = Back;
         BlendEnable     = false;
 
-        VertexProgram   = compile glslv vp_normalmap();
-        FragmentProgram = compile glslf fp_normalmap_specularmap_alphamap();
+        VertexProgram   = compile latest vp_normalmap();
+        FragmentProgram = compile latest fp_normalmap_specularmap_alphamap();
     }
 }
 
