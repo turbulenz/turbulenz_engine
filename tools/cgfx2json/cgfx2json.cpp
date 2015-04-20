@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.25"
+#define VERSION_STRING "cgfx2json 0.30"
 
 //
 // Utils
@@ -826,7 +826,7 @@ static bool AddTechnique(JSON &json, CGtechnique technique, UniformsMap &uniform
 }
 
 
-static std::string FixShaderCode(char *text, int textLength, const UniformRules &uniformsRename, bool vertexShader)
+static std::string FixGLSLShaderCode(const char *text, int textLength, const UniformRules &uniformsRename, bool vertexShader)
 {
     struct ReplacePair
     {
@@ -1054,6 +1054,98 @@ static std::string FixShaderCode(char *text, int textLength, const UniformRules 
     return newtext;
 }
 
+static std::string FixHLSLShaderCode(const char *text, int textLength, const UniformRules &uniformsRename)
+{
+    struct ReplacePair
+    {
+        ReplacePair(const char *pat, const char *rep) :
+            pattern(boost::xpressive::sregex::compile(pat,
+                                                      (boost::xpressive::regex_constants::ECMAScript |
+                                                       boost::xpressive::regex_constants::optimize))),
+            replace(rep)
+        {
+        }
+
+        boost::xpressive::sregex pattern;
+        std::string replace;
+    };
+
+    static const ReplacePair sFixPairs[] =
+    {
+        ReplacePair("\\.0+E\\+0+\\b", ".0"),
+        ReplacePair("0*E\\+0+\\b", ""),
+        ReplacePair("(\\d+)\\.([0-9][1-9])0*E\\+0+2\\b", "$1$2.0"),
+        ReplacePair("(\\d+)\\.([1-9])0*E\\+0+1\\b", "$1$2.0"),
+        ReplacePair("(\\d+)\\.0+E\\-0+1\\b", "0.$1"),
+        ReplacePair("(\\d+)\\.00+E(\\+\\d+)\\b", "$1.0E$2"),
+    };
+
+    static const boost::xpressive::sregex structPattern(boost::xpressive::sregex::compile("\\bstruct\\s+(\\w+)\\s*{[^}]*};",
+                                                                                          (boost::xpressive::regex_constants::ECMAScript |
+                                                                                           boost::xpressive::regex_constants::optimize)));
+    static const int subs[] = {1};
+
+    std::string newtext(text, textLength);
+
+    // Find all the struct declarations
+    std::list<std::string> structsList;
+    boost::xpressive::sregex_token_iterator cur(newtext.begin(), newtext.end(), structPattern, subs);
+    boost::xpressive::sregex_token_iterator end;
+    for(; cur != end; ++cur )
+    {
+        structsList.push_back(*cur);
+    }
+
+    // Remove unused struct declarations
+    if (!structsList.empty())
+    {
+        const std::list<std::string>::const_iterator itEnd(structsList.end());
+        for (std::list<std::string>::const_iterator it = structsList.begin(); it != itEnd; ++it)
+        {
+            const std::string &structName(*it);
+            boost::xpressive::sregex_iterator cur(newtext.begin(), newtext.end(),
+                                                  (boost::xpressive::_b >> structName >> boost::xpressive::_b));
+            boost::xpressive::sregex_iterator end;
+            int count = 0;
+            for(; cur != end; ++cur, ++count)
+            {
+            }
+            if (1 >= count)
+            {
+                const boost::xpressive::sregex removeStructPattern(boost::xpressive::sregex::compile("\\bstruct\\s+" + structName + "\\s*{[^}]*};"));
+                newtext = regex_replace(newtext, removeStructPattern, std::string(""));
+            }
+        }
+        structsList.clear();
+    }
+
+    // Fix numbers
+    const size_t numPairs = sizeof(sFixPairs) / sizeof(ReplacePair);
+    for (size_t n = 0; n < numPairs; n++)
+    {
+        newtext = regex_replace(newtext, sFixPairs[n].pattern, sFixPairs[n].replace);
+    }
+
+    // Fix names of uniform values
+    const UniformRules::const_iterator itEnd(uniformsRename.end());
+    for (UniformRules::const_iterator it = uniformsRename.begin(); it != itEnd; ++it)
+    {
+        newtext = regex_replace(newtext, (it->first), (it->second));
+    }
+
+    // Remove useless trailing 'return;' statement that causes problems with some drivers
+    static const char emptyReturn[] = "return;}";
+    const size_t returnPos = newtext.rfind(emptyReturn);
+    if (returnPos != newtext.npos &&
+        returnPos == (newtext.size() - (sizeof(emptyReturn) - 1)))
+    {
+        newtext.erase(returnPos, (sizeof(emptyReturn) - 2));
+    }
+
+    return newtext;
+}
+
+
 static void ReplaceForwardSlash(char *str, size_t len)
 {
     for (size_t i = 0; i < len; i++)
@@ -1117,6 +1209,7 @@ static void PrintHelp()
          "Asset Generation Options\n"
          "------------------------\n"
          "--asm                   generate ASM code instead of GLSL\n"
+         "--hlsl                  generate HLSL code instead of GLSL\n"
          "--json_indent=SIZE, -j SIZE\n"
          "                        json output pretty printing indent size, defaults to 0\n"
          "--binary-compiler <path>\n"
@@ -1325,6 +1418,7 @@ int main(int argc, char **argv)
 
     int indentationStep = 0;
     bool generateGLSL = true;
+    bool generateHLSL = false;
     bool printVersion = false;
 
     const char *binaryCompiler = NULL;
@@ -1386,6 +1480,11 @@ int main(int argc, char **argv)
         else if (0 == strcmp(argv[argn], "--asm"))
         {
             generateGLSL = false;
+        }
+        else if (0 == strcmp(argv[argn], "--hlsl"))
+        {
+            generateGLSL = false;
+            generateHLSL = true;
         }
         else if (0 == strcmp(argv[argn], "-v") ||
                  0 == strcmp(argv[argn], "--verbose"))
@@ -1466,6 +1565,10 @@ int main(int argc, char **argv)
         {
             puts("\nGenerating GLSL programs.");
         }
+        else if (generateHLSL)
+        {
+            puts("\nGenerating HLSL programs.");
+        }
         else
         {
             puts("\nGenerating ASM programs.");
@@ -1520,6 +1623,26 @@ int main(int argc, char **argv)
 
         cgGLEnableProfile(CG_PROFILE_GLSLG);
         cgGLSetOptimalOptions(CG_PROFILE_GLSLG);
+    }
+    else if (generateHLSL)
+    {
+        const CGstate vpState = cgGetNamedState(sCgContext, "VertexProgram");
+        cgSetStateLatestProfile(vpState, CG_PROFILE_VS_5_0);
+
+        const CGstate fpState = cgGetNamedState(sCgContext, "FragmentProgram");
+        cgSetStateLatestProfile(fpState, CG_PROFILE_PS_5_0);
+
+        const CGstate gpState = cgGetNamedState(sCgContext, "GeometryProgram");
+        cgSetStateLatestProfile(gpState, CG_PROFILE_GS_5_0);
+
+        cgGLEnableProfile(CG_PROFILE_VS_5_0);
+        cgGLSetOptimalOptions(CG_PROFILE_VS_5_0);
+
+        cgGLEnableProfile(CG_PROFILE_PS_5_0);
+        cgGLSetOptimalOptions(CG_PROFILE_PS_5_0);
+
+        cgGLEnableProfile(CG_PROFILE_GS_5_0);
+        cgGLSetOptimalOptions(CG_PROFILE_GS_5_0);
     }
     else
     {
@@ -1811,7 +1934,7 @@ int main(int argc, char **argv)
             const size_t originalLength = strlen(programString);
 
             std::string finalCode;
-            char *minimizedString;
+            char *minimizedString = NULL;
             int minimizedLength;
             if (0 == memcmp(programString, "!!ARB", 5))
             {
@@ -1850,10 +1973,19 @@ int main(int argc, char **argv)
                 minimizedString = (char *)malloc(originalLength);
                 minimizedLength = jsmin(programString, minimizedString);
 
-                finalCode = FixShaderCode(minimizedString,
-                                          minimizedLength,
-                                          uniformsRename,
-                                          (CG_VERTEX_DOMAIN == domain));
+                if (generateGLSL)
+                {
+                    finalCode = FixGLSLShaderCode(minimizedString,
+                                                  minimizedLength,
+                                                  uniformsRename,
+                                                  (CG_VERTEX_DOMAIN == domain));
+                }
+                else if (generateHLSL)
+                {
+                    finalCode = FixHLSLShaderCode(minimizedString,
+                                                  minimizedLength,
+                                                  uniformsRename);
+                }
 
                 json.AddMultiLineString("code",
                                         finalCode.c_str(),
@@ -1880,7 +2012,10 @@ int main(int argc, char **argv)
 
             json.CloseObject(); // program
 
-            free(minimizedString);
+            if (NULL != minimizedString)
+            {
+                free(minimizedString);
+            }
 
             numPrograms++;
         }
