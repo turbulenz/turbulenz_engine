@@ -1250,7 +1250,7 @@ static void PrintVersion(const char *outfile)
         char *old_version = (char *)malloc(filesize + 1);
         if (0 != old_version)
         {
-            filesize = fread(old_version, 1, filesize, outf);
+            filesize = (long)fread(old_version, 1, filesize, outf);
             old_version[filesize] = 0;
             //printf("Old version: %s\n", old_version);
 
