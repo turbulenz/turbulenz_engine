@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.31"
+#define VERSION_STRING "cgfx2json 0.32"
 
 //
 // Utils
@@ -1078,6 +1078,7 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
         ReplacePair("(\\d+)\\.([1-9])0*E\\+0+1\\b", "$1$2.0"),
         ReplacePair("(\\d+)\\.0+E\\-0+1\\b", "0.$1"),
         ReplacePair("(\\d+)\\.00+E(\\+\\d+)\\b", "$1.0E$2"),
+        ReplacePair("float4 _COL0:COLOR0;float4 _POSITION:SV_Position;", "float4 _POSITION:SV_Position;float4 _COL0:COLOR0;"),
     };
 
     static const boost::xpressive::sregex structPattern(boost::xpressive::sregex::compile("\\bstruct\\s+(\\w+)\\s*{[^}]*};",
@@ -1144,6 +1145,18 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
         returnPos == (newtext.size() - (sizeof(emptyReturn) - 1)))
     {
         newtext.erase(returnPos, (sizeof(emptyReturn) - 2));
+    }
+
+    // Fix semantic registers by adding dummy input position
+    static const char svposition[] = ":SV_Position";
+    if (newtext.find(svposition) == newtext.npos)
+    {
+        static const char main[] = " main(in ";
+        const size_t mainPos = newtext.find(main);
+        if (mainPos != newtext.npos)
+        {
+            replace(newtext, " main(in ", " main( in float4 _dummyposition:SV_Position,in ");
+        }
     }
 
     return newtext;
