@@ -27,12 +27,12 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.32"
+#define VERSION_STRING "cgfx2json 0.33"
 
 //
 // Utils
 //
-static const char *sCompilerArgs[] =
+static const char *sCompilerArgsGLSL[] =
 {
     "-DTANGENT0=TEXCOORD6",
     "-DTANGENT=TEXCOORD6",
@@ -42,6 +42,13 @@ static const char *sCompilerArgs[] =
     "-DBLENDINDICES=ATTR7",
     "-DBLENDWEIGHT0=ATTR1",
     "-DBLENDWEIGHT=ATTR1",
+    "-unroll",
+    "all",
+    NULL
+};
+
+static const char *sCompilerArgsHLSL[] =
+{
     "-unroll",
     "all",
     NULL
@@ -1709,7 +1716,9 @@ int main(int argc, char **argv)
     }
 
     // Open cgfx file
-    const CGeffect effect = cgCreateEffectFromFile(sCgContext, inputFileName, sCompilerArgs);
+    const CGeffect effect = cgCreateEffectFromFile(sCgContext,
+                                                   inputFileName,
+                                                   (generateHLSL ? sCompilerArgsHLSL : sCompilerArgsGLSL));
     if (NULL == effect)
     {
         ErrorMessage("Failed to load cgfx file.");
