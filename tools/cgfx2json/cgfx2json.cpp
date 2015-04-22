@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.33"
+#define VERSION_STRING "cgfx2json 0.34"
 
 //
 // Utils
@@ -1079,12 +1079,14 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
 
     static const ReplacePair sFixPairs[] =
     {
+        ReplacePair("\\.0+E0+f", ".0f"),
         ReplacePair("\\.0+E\\+0+\\b", ".0"),
         ReplacePair("0*E\\+0+\\b", ""),
         ReplacePair("(\\d+)\\.([0-9][1-9])0*E\\+0+2\\b", "$1$2.0"),
         ReplacePair("(\\d+)\\.([1-9])0*E\\+0+1\\b", "$1$2.0"),
         ReplacePair("(\\d+)\\.0+E\\-0+1\\b", "0.$1"),
         ReplacePair("(\\d+)\\.00+E(\\+\\d+)\\b", "$1.0E$2"),
+        ReplacePair("float4 (\\w+):BLENDINDICES0", "int4 $1:BLENDINDICES0"),
         ReplacePair("float4 _COL0:COLOR0;float4 _POSITION:SV_Position;", "float4 _POSITION:SV_Position;float4 _COL0:COLOR0;"),
     };
 
