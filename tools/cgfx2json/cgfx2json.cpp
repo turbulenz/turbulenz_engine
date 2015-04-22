@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.30"
+#define VERSION_STRING "cgfx2json 0.31"
 
 //
 // Utils
@@ -1130,7 +1130,11 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
     const UniformRules::const_iterator itEnd(uniformsRename.end());
     for (UniformRules::const_iterator it = uniformsRename.begin(); it != itEnd; ++it)
     {
-        newtext = regex_replace(newtext, (it->first), (it->second));
+        // Avoid issue with "texture" being a reserved word
+        if (it->second != "texture")
+        {
+            newtext = regex_replace(newtext, (it->first), (it->second));
+        }
     }
 
     // Remove useless trailing 'return;' statement that causes problems with some drivers
