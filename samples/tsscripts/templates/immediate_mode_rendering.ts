@@ -124,7 +124,7 @@ TurbulenzEngine.onload = function onloadFn()
 
     // Both position and texture coordinate
     semanticsTypes.positionAndTexture = graphicsDevice.createSemantics([graphicsDevice.SEMANTIC_POSITION, graphicsDevice.SEMANTIC_TEXCOORD]);
-    vertexFormatTypes.positionAndTexture = [graphicsDevice.VERTEXFORMAT_FLOAT3, graphicsDevice.VERTEXFORMAT_SHORT2];
+    vertexFormatTypes.positionAndTexture = [graphicsDevice.VERTEXFORMAT_FLOAT3, graphicsDevice.VERTEXFORMAT_SHORT2N];
 
     var shader = null;
 
@@ -483,7 +483,7 @@ TurbulenzEngine.onload = function onloadFn()
             var positionsParameters =
             {
                 numVertices: coloredItems,
-                attributes: ['FLOAT3', 'SHORT2'], // attributes specify the types the graphicsDevice is expecting to receive for each vertex buffer
+                attributes: ['FLOAT3', 'SHORT2N'], // attributes specify the types the graphicsDevice is expecting to receive for each vertex buffer
                 dynamic: false
             };
 

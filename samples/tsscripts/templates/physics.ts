@@ -103,7 +103,7 @@ TurbulenzEngine.onload = function onloadFn()
     var vertexbufferParameters =
     {
         numVertices: 24,
-        attributes: ['FLOAT3', 'SHORT2'],
+        attributes: ['FLOAT3', 'SHORT2N'],
         dynamic: false,
         data: [
                 -0.5, -0.5,  0.5, 0, 0,

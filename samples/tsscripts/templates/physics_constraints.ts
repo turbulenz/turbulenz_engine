@@ -153,7 +153,7 @@ TurbulenzEngine.onload = function onloadFn()
 
         return {
             numVertices: 24,
-            attributes: ['FLOAT3', 'SHORT2'],
+            attributes: ['FLOAT3', 'SHORT2N'],
             dynamic: false,
             data: [
                     -extents0, -extents1,  extents2, 0, 0,
