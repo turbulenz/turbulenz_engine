@@ -21,7 +21,7 @@ float3 ambientColor;
 float Ks = 0.5;
 float SpecularExponent = 55.0;
 
-sampler2D   diffuse     : register(s0);
+sampler2D   diffuse;
 
 
 //

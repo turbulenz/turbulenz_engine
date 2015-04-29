@@ -20,7 +20,7 @@ static const float Ks = 0.5;
 static const float Kr = 0.5;
 static const float SpecularExponent = 32.0;
 
-sampler2D diffuse : register(s0) = sampler_state
+sampler2D diffuse = sampler_state
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;

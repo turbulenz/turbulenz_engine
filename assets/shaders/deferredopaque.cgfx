@@ -15,7 +15,7 @@ float4 materialColor = {1.0, 1.0, 1.0, 1.0};
 
 float4 skinBones[75 * 3];
 
-sampler2D diffuse : register(s0) = sampler_state
+sampler2D diffuse = sampler_state
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
