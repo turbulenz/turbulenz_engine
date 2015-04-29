@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.34"
+#define VERSION_STRING "cgfx2json 0.35"
 
 //
 // Utils
@@ -871,11 +871,13 @@ static std::string FixGLSLShaderCode(const char *text, int textLength, const Uni
 
     // Find all the struct declarations
     std::list<std::string> structsList;
-    boost::xpressive::sregex_token_iterator cur(newtext.begin(), newtext.end(), structPattern, subs);
-    boost::xpressive::sregex_token_iterator end;
-    for(; cur != end; ++cur )
     {
-        structsList.push_back(*cur);
+        boost::xpressive::sregex_token_iterator cur(newtext.begin(), newtext.end(), structPattern, subs);
+        boost::xpressive::sregex_token_iterator end;
+        for (; cur != end; ++cur)
+        {
+            structsList.push_back(*cur);
+        }
     }
 
     // Remove unused struct declarations
@@ -1093,17 +1095,23 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
     static const boost::xpressive::sregex structPattern(boost::xpressive::sregex::compile("\\bstruct\\s+(\\w+)\\s*{[^}]*};",
                                                                                           (boost::xpressive::regex_constants::ECMAScript |
                                                                                            boost::xpressive::regex_constants::optimize)));
+
+    static const boost::xpressive::sregex texturePattern(boost::xpressive::sregex::compile("\\bTexture[^<]+<float4>(\\w+);",
+                                                                                          (boost::xpressive::regex_constants::ECMAScript |
+                                                                                          boost::xpressive::regex_constants::optimize)));
     static const int subs[] = {1};
 
     std::string newtext(text, textLength);
 
     // Find all the struct declarations
     std::list<std::string> structsList;
-    boost::xpressive::sregex_token_iterator cur(newtext.begin(), newtext.end(), structPattern, subs);
-    boost::xpressive::sregex_token_iterator end;
-    for(; cur != end; ++cur )
     {
-        structsList.push_back(*cur);
+        boost::xpressive::sregex_token_iterator cur(newtext.begin(), newtext.end(), structPattern, subs);
+        boost::xpressive::sregex_token_iterator end;
+        for (; cur != end; ++cur)
+        {
+            structsList.push_back(*cur);
+        }
     }
 
     // Remove unused struct declarations
@@ -1165,6 +1173,40 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
         if (mainPos != newtext.npos)
         {
             replace(newtext, " main(in ", " main( in float4 _dummyposition:SV_Position,in ");
+        }
+    }
+
+    // Fix texture and sampler registers
+    {
+        std::vector<std::string> textures;
+        boost::xpressive::sregex_token_iterator curt(newtext.begin(), newtext.end(), texturePattern, subs);
+        boost::xpressive::sregex_token_iterator end;
+        for (; curt != end; ++curt)
+        {
+            textures.push_back(*curt);
+        }
+
+        const size_t numTextures = textures.size();
+        char registerName[4];
+
+        for (size_t n = 0; n < numTextures; n++)
+        {
+            const std::string &textureName(textures[n]);
+
+            // Assign register to texture
+            const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>" + textureName + ";"));
+            sprintf(registerName, "%u", (unsigned int)n);
+            newtext = regex_replace(newtext, curTexturePattern, "<float4>" + textureName + ":register(t" + registerName + ");");
+
+            // Assign register to sampler using it
+            const boost::xpressive::sregex samplerUsagePattern(boost::xpressive::sregex::compile("\\b" + textureName + "\\.Sample\\((\\w+),"));
+            const boost::xpressive::sregex_token_iterator curs(newtext.begin(), newtext.end(), samplerUsagePattern, subs);
+            if (curs != end)
+            {
+                const std::string &samplerName(*curs);
+                const boost::xpressive::sregex samplerPattern(boost::xpressive::sregex::compile("\\bSamplerState\\s+" + samplerName + ";"));
+                newtext = regex_replace(newtext, samplerPattern, "SamplerState " + samplerName + ":register(s" + registerName + ");");
+            }
         }
     }
 
