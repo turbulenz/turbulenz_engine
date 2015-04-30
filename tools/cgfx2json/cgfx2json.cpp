@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.36"
+#define VERSION_STRING "cgfx2json 0.37"
 
 //
 // Utils
@@ -1211,13 +1211,13 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
     }
 
     // Add viewport remapping
-    const size_t positionWrite = newtext.find("cout._POSITION=");
-    if (positionWrite != newtext.npos)
+    if (newtext.find("cout._POSITION") != newtext.npos)
     {
-        const size_t patchPos = newtext.find(';', positionWrite);
-        if (patchPos != newtext.npos)
+        const size_t returnPosition = newtext.find("return cout;");
+        if (returnPosition != newtext.npos)
         {
-            newtext.insert(patchPos + 1, "if(_tz_hack_invertY){cout._POSITION.y=-cout._POSITION.y;}");
+            newtext.insert(returnPosition, "if(_tz_hack_invertY){cout._POSITION.y=-cout._POSITION.y;}"
+                "cout._POSITION.z=(cout._POSITION.z+cout._POSITION.w)*0.5f;");
 
             const size_t firstLine = newtext.find("\n");
             newtext.insert(firstLine + 1, "cbuffer tz_hacks:register(b1){bool _tz_hack_invertY;};");
