@@ -25,7 +25,19 @@
 #define BOOST_DISABLE_THREADS
 #endif
 
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable:4458)
+# pragma warning(disable:4459)
+# pragma warning(disable:4456)
+#endif
+
 #include <boost/xpressive/xpressive.hpp>
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
