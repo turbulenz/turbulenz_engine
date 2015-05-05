@@ -15,6 +15,14 @@ sampler2D texture = sampler_state
     WrapT = ClampToEdge;
 };
 
+sampler2D npottexture = sampler_state
+{
+    MinFilter = Nearest;
+    MagFilter = Linear;
+    WrapS = ClampToEdge;
+    WrapT = ClampToEdge;
+};
+
 sampler2D inputTexture0 = sampler_state
 {
     MinFilter = Nearest;
@@ -63,6 +71,11 @@ float4 fp_draw2D(float4 INColor : COLOR, float2 INTexCoord0 : TEXCOORD0) : COLOR
     return INColor * tex2D(texture, INTexCoord0);
 }
 
+float4 fp_draw2D_nomips(float4 INColor : COLOR, float2 INTexCoord0 : TEXCOORD0) : COLOR
+{
+    return INColor * tex2D(npottexture, INTexCoord0);
+}
+
 float4 fp_copy(float2 UV: TEXCOORD0) : COLOR
 {
     return tex2D(inputTexture0, UV);
@@ -84,6 +97,19 @@ technique opaque
     }
 }
 
+technique opaquenomip
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = false;
+        VertexProgram   = compile latest vp_draw2D();
+        FragmentProgram = compile latest fp_draw2D_nomips();
+    }
+}
+
 technique alpha
 {
     pass
@@ -98,6 +124,20 @@ technique alpha
     }
 }
 
+technique alphanomip
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, OneMinusSrcAlpha);
+        VertexProgram   = compile latest vp_draw2D();
+        FragmentProgram = compile latest fp_draw2D_nomips();
+    }
+}
+
 technique additive
 {
     pass
@@ -109,6 +149,20 @@ technique additive
         BlendFunc       = int2(SrcAlpha, One);
         VertexProgram   = compile latest vp_draw2D();
         FragmentProgram = compile latest fp_draw2D();
+    }
+}
+
+technique additivenomip
+{
+    pass
+    {
+        DepthTestEnable = false;
+        DepthMask       = false;
+        CullFaceEnable  = false;
+        BlendEnable     = true;
+        BlendFunc       = int2(SrcAlpha, One);
+        VertexProgram   = compile latest vp_draw2D();
+        FragmentProgram = compile latest fp_draw2D_nomips();
     }
 }
 
