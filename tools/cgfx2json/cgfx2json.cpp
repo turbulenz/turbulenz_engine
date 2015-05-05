@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.37"
+#define VERSION_STRING "cgfx2json 0.38"
 
 //
 // Utils
@@ -1291,7 +1291,8 @@ static void PrintHelp()
          "Asset Generation Options\n"
          "------------------------\n"
          "--asm                   generate ASM code instead of GLSL\n"
-         "--hlsl                  generate HLSL code instead of GLSL\n"
+         "--hlsl5                 generate HLSL Shader Model 5 code instead of GLSL\n"
+         "--hlsl3                 generate HLSL Shader Model 3 code instead of GLSL\n"
          "--json_indent=SIZE, -j SIZE\n"
          "                        json output pretty printing indent size, defaults to 0\n"
          "--binary-compiler <path>\n"
@@ -1422,7 +1423,7 @@ static bool ReadFile(const char *fileName, std::vector<uint8_t> &data)
 static bool BinaryCompile(const std::string &code,
     const char *compiler,
     const char *shaderType,
-    bool generateHLSL,
+    int generateHLSL,
     std::string &out_base64)
 {
 #ifdef _WIN32
@@ -1458,17 +1459,35 @@ static bool BinaryCompile(const std::string &code,
     if (generateHLSL)
     {
         command += " /T ";
-        if (0 == strcmp(shaderType, "vertex"))
+        if (generateHLSL == 5)
         {
-            command += "vs_5_0";
+            if (0 == strcmp(shaderType, "vertex"))
+            {
+                command += "vs_5_0";
+            }
+            else if (0 == strcmp(shaderType, "fragment"))
+            {
+                command += "ps_5_0";
+            }
+            else if (0 == strcmp(shaderType, "geometry"))
+            {
+                command += "gs_5_0";
+            }
         }
-        else if (0 == strcmp(shaderType, "fragment"))
+        else //if (generateHLSL == 3)
         {
-            command += "ps_5_0";
-        }
-        else if (0 == strcmp(shaderType, "geometry"))
-        {
-            command += "gs_5_0";
+            if (0 == strcmp(shaderType, "vertex"))
+            {
+                command += "vs_3_0";
+            }
+            else if (0 == strcmp(shaderType, "fragment"))
+            {
+                command += "ps_3_0";
+            }
+            else if (0 == strcmp(shaderType, "geometry"))
+            {
+                command += "gs_3_0";
+            }
         }
         command += " /Fo ";
         command += outputFilename;
@@ -1526,8 +1545,8 @@ int main(int argc, char **argv)
     const char *dependencyFileName = NULL;
 
     int indentationStep = 0;
+    int generateHLSL = 5;
     bool generateGLSL = true;
-    bool generateHLSL = false;
     bool printVersion = false;
 
     const char *binaryCompiler = NULL;
@@ -1590,10 +1609,15 @@ int main(int argc, char **argv)
         {
             generateGLSL = false;
         }
-        else if (0 == strcmp(argv[argn], "--hlsl"))
+        else if (0 == strcmp(argv[argn], "--hlsl5"))
         {
             generateGLSL = false;
-            generateHLSL = true;
+            generateHLSL = 5;
+        }
+        else if (0 == strcmp(argv[argn], "--hlsl3"))
+        {
+            generateGLSL = false;
+            generateHLSL = 3;
         }
         else if (0 == strcmp(argv[argn], "-v") ||
                  0 == strcmp(argv[argn], "--verbose"))
@@ -1676,7 +1700,7 @@ int main(int argc, char **argv)
         }
         else if (generateHLSL)
         {
-            puts("\nGenerating HLSL programs.");
+            printf("\nGenerating HLSL Shader Model %d programs.", generateHLSL);
         }
         else
         {
@@ -1733,7 +1757,7 @@ int main(int argc, char **argv)
         cgGLEnableProfile(CG_PROFILE_GLSLG);
         cgGLSetOptimalOptions(CG_PROFILE_GLSLG);
     }
-    else if (generateHLSL)
+    else if (generateHLSL == 5)
     {
         const CGstate vpState = cgGetNamedState(sCgContext, "VertexProgram");
         cgSetStateLatestProfile(vpState, CG_PROFILE_VS_5_0);
@@ -1752,6 +1776,20 @@ int main(int argc, char **argv)
 
         cgGLEnableProfile(CG_PROFILE_GS_5_0);
         cgGLSetOptimalOptions(CG_PROFILE_GS_5_0);
+    }
+    else if (generateHLSL == 3)
+    {
+        const CGstate vpState = cgGetNamedState(sCgContext, "VertexProgram");
+        cgSetStateLatestProfile(vpState, CG_PROFILE_VS_3_0);
+
+        const CGstate fpState = cgGetNamedState(sCgContext, "FragmentProgram");
+        cgSetStateLatestProfile(fpState, CG_PROFILE_PS_3_0);
+
+        cgGLEnableProfile(CG_PROFILE_VS_3_0);
+        cgGLSetOptimalOptions(CG_PROFILE_VS_3_0);
+
+        cgGLEnableProfile(CG_PROFILE_PS_3_0);
+        cgGLSetOptimalOptions(CG_PROFILE_PS_3_0);
     }
     else
     {
@@ -1776,7 +1814,7 @@ int main(int argc, char **argv)
     // Open cgfx file
     const CGeffect effect = cgCreateEffectFromFile(sCgContext,
                                                    inputFileName,
-                                                   (generateHLSL ? sCompilerArgsHLSL : sCompilerArgsGLSL));
+                                                   (generateGLSL ? sCompilerArgsGLSL : sCompilerArgsHLSL));
     if (NULL == effect)
     {
         ErrorMessage("Failed to load cgfx file.");
