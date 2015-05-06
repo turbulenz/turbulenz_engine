@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.38"
+#define VERSION_STRING "cgfx2json 0.39"
 
 //
 // Utils
@@ -1063,7 +1063,7 @@ static std::string FixGLSLShaderCode(const char *text, int textLength, const Uni
     return newtext;
 }
 
-static std::string FixHLSLShaderCode(const char *text, int textLength, const UniformRules &uniformsRename)
+static std::string FixHLSLShaderCode(const char *text, int textLength, const UniformRules &uniformsRename, bool vertexShader)
 {
     struct ReplacePair
     {
@@ -1095,10 +1095,6 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
     static const boost::xpressive::sregex structPattern(boost::xpressive::sregex::compile("\\bstruct\\s+(\\w+)\\s*{[^}]*};",
                                                                                           (boost::xpressive::regex_constants::ECMAScript |
                                                                                            boost::xpressive::regex_constants::optimize)));
-
-    static const boost::xpressive::sregex texturePattern(boost::xpressive::sregex::compile("\\bTexture[^<]+<float4>(\\w+);",
-                                                                                          (boost::xpressive::regex_constants::ECMAScript |
-                                                                                          boost::xpressive::regex_constants::optimize)));
     static const int subs[] = {1};
 
     std::string newtext(text, textLength);
@@ -1178,6 +1174,10 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
 
     // Fix texture and sampler registers
     {
+        static const boost::xpressive::sregex texturePattern(boost::xpressive::sregex::compile("\\bTexture[^<]+<float4>(\\w+);",
+                                                             (boost::xpressive::regex_constants::ECMAScript |
+                                                             boost::xpressive::regex_constants::optimize)));
+
         std::vector<std::string> textures;
         boost::xpressive::sregex_token_iterator curt(newtext.begin(), newtext.end(), texturePattern, subs);
         boost::xpressive::sregex_token_iterator end;
@@ -1193,19 +1193,37 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
         {
             const std::string &textureName(textures[n]);
 
-            // Assign register to texture
-            const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>" + textureName + ";"));
-            sprintf(registerName, "%u", (unsigned int)n);
-            newtext = regex_replace(newtext, curTexturePattern, "<float4>" + textureName + ":register(t" + registerName + ");");
-
-            // Assign register to sampler using it
             const boost::xpressive::sregex samplerUsagePattern(boost::xpressive::sregex::compile("\\b" + textureName + "\\.Sample\\((\\w+),"));
             const boost::xpressive::sregex_token_iterator curs(newtext.begin(), newtext.end(), samplerUsagePattern, subs);
             if (curs != end)
             {
                 const std::string &samplerName(*curs);
                 const boost::xpressive::sregex samplerPattern(boost::xpressive::sregex::compile("\\bSamplerState\\s+" + samplerName + ";"));
-                newtext = regex_replace(newtext, samplerPattern, "SamplerState " + samplerName + ":register(s" + registerName + ");");
+
+                sprintf(registerName, "%u", (unsigned int)n);
+
+                if (vertexShader)
+                {
+                    // Remove sampler declaration
+                    newtext = regex_replace(newtext, samplerPattern, "");
+
+                    // Rename texture to sampler name
+                    const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>" + textureName + ";"));
+                    newtext = regex_replace(newtext, curTexturePattern, "<float4>" + samplerName + ":register(t" + registerName + ");");
+
+                    // Change from sampling to direct access
+                    const boost::xpressive::sregex samplerPattern(boost::xpressive::sregex::compile("\\b" + textureName + "\\.Sample\\(" + samplerName + ",([^;]+);"));
+                    newtext = regex_replace(newtext, samplerPattern, samplerName + "[($1];");
+                }
+                else
+                {
+                    // Assign register to sampler using it
+                    newtext = regex_replace(newtext, samplerPattern, "SamplerState " + samplerName + ":register(s" + registerName + ");");
+
+                    // Assign register to texture
+                    const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>" + textureName + ";"));
+                    newtext = regex_replace(newtext, curTexturePattern, "<float4>" + textureName + ":register(t" + registerName + ");");
+                }
             }
         }
     }
@@ -2133,7 +2151,8 @@ int main(int argc, char **argv)
                 {
                     finalCode = FixHLSLShaderCode(minimizedString,
                                                   minimizedLength,
-                                                  uniformsRename);
+                                                  uniformsRename,
+                                                  (CG_VERTEX_DOMAIN == domain));
                 }
 
                 json.AddMultiLineString("code",
