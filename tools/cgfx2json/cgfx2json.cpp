@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.40"
+#define VERSION_STRING "cgfx2json 0.41"
 
 //
 // Utils
@@ -1198,31 +1198,22 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
             if (curs != end)
             {
                 const std::string &samplerName(*curs);
-                const boost::xpressive::sregex samplerPattern(boost::xpressive::sregex::compile("\\bSamplerState\\s+" + samplerName + ";"));
 
                 sprintf(registerName, "%u", (unsigned int)n);
 
+                // Assign register to sampler using it
+                const boost::xpressive::sregex samplerPattern(boost::xpressive::sregex::compile("\\bSamplerState\\s+" + samplerName + ";"));
+                newtext = regex_replace(newtext, samplerPattern, "SamplerState " + samplerName + ":register(s" + registerName + ");");
+
+                // Assign register to texture
+                const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>" + textureName + ";"));
+                newtext = regex_replace(newtext, curTexturePattern, "<float4>" + textureName + ":register(t" + registerName + ");");
+
                 if (vertexShader)
                 {
-                    // Remove sampler declaration
-                    newtext = regex_replace(newtext, samplerPattern, "");
-
-                    // Rename texture to sampler name
-                    const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>" + textureName + ";"));
-                    newtext = regex_replace(newtext, curTexturePattern, "<float4>" + samplerName + ":register(t" + registerName + ");");
-
-                    // Change from sampling to direct access
+                    // Change from Sample to SampleLevel
                     const boost::xpressive::sregex samplerPattern(boost::xpressive::sregex::compile("\\b" + textureName + "\\.Sample\\(" + samplerName + ",([^;]+);"));
-                    newtext = regex_replace(newtext, samplerPattern, samplerName + "[($1];");
-                }
-                else
-                {
-                    // Assign register to sampler using it
-                    newtext = regex_replace(newtext, samplerPattern, "SamplerState " + samplerName + ":register(s" + registerName + ");");
-
-                    // Assign register to texture
-                    const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>" + textureName + ";"));
-                    newtext = regex_replace(newtext, curTexturePattern, "<float4>" + textureName + ":register(t" + registerName + ");");
+                    newtext = regex_replace(newtext, samplerPattern, textureName + ".SampleLevel(" + samplerName + ",($1,0);");
                 }
             }
         }
