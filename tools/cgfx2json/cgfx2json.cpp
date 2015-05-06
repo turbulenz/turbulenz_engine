@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.41"
+#define VERSION_STRING "cgfx2json 0.42"
 
 //
 // Utils
@@ -1225,9 +1225,10 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
         const size_t returnPosition = newtext.find("return cout;");
         if (returnPosition != newtext.npos)
         {
-            newtext.insert(returnPosition, "if(_tz_hack_invertY){cout._POSITION.y=-cout._POSITION.y;}"
-                "cout._POSITION.z=(cout._POSITION.z+cout._POSITION.w)*0.5f;");
-
+            const boost::xpressive::sregex returnPattern(boost::xpressive::sregex::compile("\\breturn cout;"));
+            newtext = regex_replace(newtext, returnPattern, "if(_tz_hack_invertY){cout._POSITION.y=-cout._POSITION.y;}"
+                                                            "cout._POSITION.z=(cout._POSITION.z+cout._POSITION.w)*0.5f;"
+                                                            "return cout;");
             const size_t firstLine = newtext.find("\n");
             newtext.insert(firstLine + 1, "cbuffer tz_hacks:register(b1){bool _tz_hack_invertY;};");
         }
