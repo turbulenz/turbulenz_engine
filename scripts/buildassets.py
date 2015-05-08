@@ -254,6 +254,10 @@ class Dae2Json(PythonTool):
         return self.run_sh(cmd, verbose=verbose)
 
 class Cgfx2JsonTool(Tool):
+    def __init__(self, name, path, cgfx_flags):
+        super(Cgfx2JsonTool, self).__init__(name, path)
+        self.cgfx_flags = cgfx_flags
+
     def get_version(self, version_file_path):
         try:
             version = sh([self.path, '--version'], verbose=False)
@@ -268,6 +272,8 @@ class Cgfx2JsonTool(Tool):
         cmd = [self.path, '-i', src, '-o', dst]
         if args:
             cmd.extend(args)
+        cmd.extend(self.cgfx_flags)
+        print "CMD: %s" % cmd
         return self.run_sh(cmd, verbose=verbose)
 
     def check_external_deps(self, src, dst, args):
@@ -324,7 +330,15 @@ class Tools(object):
         obj2json = PythonTool('obj2json', module_name='turbulenz_tools.tools.obj2json')
         material2json = PythonTool('material2json', module_name='turbulenz_tools.tools.material2json')
         bmfont2json = PythonTool('bmfont2json', module_name='turbulenz_tools.tools.bmfont2json')
-        cgfx2json = Cgfx2JsonTool('cgfx2json', path_join(root, 'tools', 'bin', turbulenz_os, 'cgfx2json' + exe))
+
+        cgfx_flags = []
+        for c in args.cgfx_binary_compiler:
+            cgfx_flags.extend([ '--binary-compiler', c ])
+        cgfx2json = Cgfx2JsonTool( \
+            'cgfx2json',
+            path_join(root, 'tools', 'bin', turbulenz_os, 'cgfx2json' + exe),
+            cgfx_flags
+        )
 
         copy.check_version(build_path, verbose)
         tga2png.check_version(build_path, verbose)
@@ -505,6 +519,9 @@ def main():
     parser.add_argument('--install-path', default='staticmax', help="Path to install output assets into")
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--imagemagick-convert', help="Path to ImageMagick convert executable (enables TGA support)")
+    parser.add_argument('--cgfx-binary-compiler', action='append',
+                        help="Argument to pass to cgfx2json tool")
+
     try:
         default_num_threads = multiprocessing.cpu_count()
     except NotImplementedError:

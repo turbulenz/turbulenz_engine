@@ -1431,10 +1431,11 @@ static bool ReadFile(const char *fileName, std::vector<uint8_t> &data)
 }
 
 static bool BinaryCompile(const std::string &code,
-    const char *compiler,
-    const char *shaderType,
-    int generateHLSL,
-    std::string &out_base64)
+                          const char *compiler,
+                          const char *shaderType,
+                          const char *entryPoint,
+                          const char *cgfxFilename,
+                          int generateHLSL,                          std::string &out_base64)
 {
 #ifdef _WIN32
     int dwRetVal = 0;
@@ -1465,6 +1466,10 @@ static bool BinaryCompile(const std::string &code,
     std::string command = "\"";
     command += compiler;
     command += "\"";
+    command += " ";
+    command += entryPoint;
+    command += " ";
+    command += cgfxFilename;
 
     if (generateHLSL)
     {
@@ -2103,11 +2108,11 @@ int main(int argc, char **argv)
                 {
                     if ('#' == programString[n])
                     {
-                       n++;
-                       while ('\n' != programString[n])
-                       {
-                           n++;
-                       }
+                        n++;
+                        while ('\n' != programString[n])
+                        {
+                            n++;
+                        }
                     }
                     else
                     {
@@ -2158,6 +2163,8 @@ int main(int argc, char **argv)
                 if (!BinaryCompile(finalCode,
                                    binaryCompiler,
                                    domainString,
+                                   programName,
+                                   inputFileName,
                                    generateHLSL,
                                    base64OrError))
                 {
