@@ -307,6 +307,8 @@ def command_apps(options):
                         choices=['all', 'plugin', 'plugin-debug', 'canvas', 'canvas-debug'])
     parser.add_argument('--assets-path', action='append', help="Specify additional asset root paths")
     parser.add_argument('app', default='all_apps', nargs='?', help="Select an individual app to build")
+    parser.add_argument('--cgfx-binary-compiler', action='append',
+                        help="cgfx binary compiler")
     parser.add_argument('--options', nargs='*', help="Additional options to pass to the build process")
 
     args = parser.parse_args(options)
@@ -335,6 +337,10 @@ def command_apps(options):
             return
 
     options = ' '.join(args.options) if args.options else ''
+
+    asset_options = []
+    for c in args.cgfx_binary_compiler:
+        asset_options.extend([ '--cgfx-binary-compiler', c ])
 
     start_time = time.time()
 
@@ -374,6 +380,7 @@ def command_apps(options):
 
             buildassets_cmd = ['python', os.path.join(TURBULENZROOT, 'scripts', 'buildassets.py')]
             buildassets_cmd.extend(['--root', TURBULENZROOT])
+            buildassets_cmd.extend(asset_options)
 
             # Add asset paths, start with user supplied paths, then app specific, then default assets
             # Build assets searches the paths in order in the case of duplicate source names
