@@ -27,7 +27,7 @@ typedef std::set<std::string> IncludeList;
 extern int jsmin(const char *inputText, char *outputBuffer);
 
 
-#define VERSION_STRING "cgfx2json 0.42"
+#define VERSION_STRING "cgfx2json 0.43"
 
 //
 // Utils
@@ -1063,7 +1063,7 @@ static std::string FixGLSLShaderCode(const char *text, int textLength, const Uni
     return newtext;
 }
 
-static std::string FixHLSLShaderCode(const char *text, int textLength, const UniformRules &uniformsRename, bool vertexShader)
+static std::string FixHLSLShaderCode(const char *text, int textLength, const UniformRules &uniformsRename, bool vertexShader, int generateHLSL)
 {
     struct ReplacePair
     {
@@ -1140,6 +1140,30 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
         newtext = regex_replace(newtext, sFixPairs[n].pattern, sFixPairs[n].replace);
     }
 
+    // Fix declaration of temporary variables
+    if (generateHLSL == 3)
+    {
+        // This would change all global variables
+        const boost::xpressive::sregex tmpFloatPattern(boost::xpressive::sregex::compile("float([\\dx]*\\s+\\w+);"));
+        newtext = regex_replace(newtext, tmpFloatPattern, "static float$1;");
+        /*
+        const boost::xpressive::sregex tmpBoolPattern(boost::xpressive::sregex::compile("bool([\\dx]*\\s+\\w+);"));
+        newtext = regex_replace(newtext, tmpBoolPattern, "static bool$1;");
+        */
+
+        // Fix uniforms
+        const UniformRules::const_iterator itEnd(uniformsRename.end());
+        for (UniformRules::const_iterator it = uniformsRename.begin(); it != itEnd; ++it)
+        {
+            const boost::xpressive::sregex renamedFloatPattern(boost::xpressive::sregex::compile(std::string("static float([\\dx]*\\s+_") + it->second + ");"));
+            newtext = regex_replace(newtext, renamedFloatPattern, "float$1;");
+            /*
+            const boost::xpressive::sregex renamedBoolPattern(boost::xpressive::sregex::compile(std::string("static bool([\\dx]*\\s+_") + it->second + ");"));
+            newtext = regex_replace(newtext, renamedBoolPattern, "bool$1;");
+            */
+        }
+    }
+
     // Fix names of uniform values
     const UniformRules::const_iterator itEnd(uniformsRename.end());
     for (UniformRules::const_iterator it = uniformsRename.begin(); it != itEnd; ++it)
@@ -1161,14 +1185,17 @@ static std::string FixHLSLShaderCode(const char *text, int textLength, const Uni
     }
 
     // Fix semantic registers by adding dummy input position
-    static const char svposition[] = ":SV_Position";
-    if (newtext.find(svposition) == newtext.npos)
+    if (!vertexShader && generateHLSL == 5)
     {
-        static const char main[] = " main(in ";
-        const size_t mainPos = newtext.find(main);
-        if (mainPos != newtext.npos)
+        static const char svposition[] = ":SV_Position";
+        if (newtext.find(svposition) == newtext.npos)
         {
-            replace(newtext, " main(in ", " main( in float4 _dummyposition:SV_Position,in ");
+            static const char main[] = " main(in ";
+            const size_t mainPos = newtext.find(main);
+            if (mainPos != newtext.npos)
+            {
+                replace(newtext, " main(in ", " main( in float4 _dummyposition:SV_Position,in ");
+            }
         }
     }
 
@@ -1435,7 +1462,8 @@ static bool BinaryCompile(const std::string &code,
                           const char *shaderType,
                           const char *entryPoint,
                           const char *cgfxFilename,
-                          int generateHLSL,                          std::string &out_base64)
+                          int generateHLSL,
+                          std::string &out_base64)
 {
 #ifdef _WIN32
     int dwRetVal = 0;
@@ -1795,16 +1823,16 @@ int main(int argc, char **argv)
     else if (generateHLSL == 3)
     {
         const CGstate vpState = cgGetNamedState(sCgContext, "VertexProgram");
-        cgSetStateLatestProfile(vpState, CG_PROFILE_VS_3_0);
+        cgSetStateLatestProfile(vpState, CG_PROFILE_HLSLV);
 
         const CGstate fpState = cgGetNamedState(sCgContext, "FragmentProgram");
-        cgSetStateLatestProfile(fpState, CG_PROFILE_PS_3_0);
+        cgSetStateLatestProfile(fpState, CG_PROFILE_HLSLF);
 
-        cgGLEnableProfile(CG_PROFILE_VS_3_0);
-        cgGLSetOptimalOptions(CG_PROFILE_VS_3_0);
+        cgGLEnableProfile(CG_PROFILE_HLSLV);
+        cgGLSetOptimalOptions(CG_PROFILE_HLSLV);
 
-        cgGLEnableProfile(CG_PROFILE_PS_3_0);
-        cgGLSetOptimalOptions(CG_PROFILE_PS_3_0);
+        cgGLEnableProfile(CG_PROFILE_HLSLF);
+        cgGLSetOptimalOptions(CG_PROFILE_HLSLF);
     }
     else
     {
@@ -2149,7 +2177,8 @@ int main(int argc, char **argv)
                     finalCode = FixHLSLShaderCode(minimizedString,
                                                   minimizedLength,
                                                   uniformsRename,
-                                                  (CG_VERTEX_DOMAIN == domain));
+                                                  (CG_VERTEX_DOMAIN == domain),
+                                                  generateHLSL);
                 }
 
                 json.AddMultiLineString("code",
