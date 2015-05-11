@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # Copyright (c) 2013-2014 Turbulenz Limited
 
+# pylint:disable=C0330
+
 from sys import argv, stdout
 from json import loads as load_json, dumps as dump_json
 from yaml import load as load_yaml
@@ -421,7 +423,7 @@ class AssetInfo(object):
 def build_asset(tool, asset_path, dst_path, verbose, args):
     try:
         create_dir(dirname(dst_path))
-        ran = tool.run(asset_path, dst_path, verbose, args)
+        tool.run(asset_path, dst_path, verbose, args)
     except Exception as e:
         try:
             remove_file(dst_path)
