@@ -1466,10 +1466,6 @@ static bool BinaryCompile(const std::string &code,
     std::string command = "\"";
     command += compiler;
     command += "\"";
-    command += " ";
-    command += entryPoint;
-    command += " ";
-    command += cgfxFilename;
 
     if (generateHLSL)
     {
@@ -1511,6 +1507,10 @@ static bool BinaryCompile(const std::string &code,
     }
     else
     {
+        command += " ";
+        command += entryPoint;
+        command += " ";
+        command += cgfxFilename;
         command += " ";
         command += shaderType;
         command += " ";
