@@ -273,7 +273,7 @@ class Cgfx2JsonTool(Tool):
         if args:
             cmd.extend(args)
         cmd.extend(self.cgfx_flags)
-        print "CMD: %s" % cmd
+        # print "CMD: %s" % cmd
         return self.run_sh(cmd, verbose=verbose)
 
     def check_external_deps(self, src, dst, args):
@@ -332,8 +332,9 @@ class Tools(object):
         bmfont2json = PythonTool('bmfont2json', module_name='turbulenz_tools.tools.bmfont2json')
 
         cgfx_flags = []
-        for c in args.cgfx_binary_compiler:
-            cgfx_flags.extend([ '--binary-compiler', c ])
+        if args.cgfx_binary_compiler:
+            for c in args.cgfx_binary_compiler:
+                cgfx_flags.extend([ '--binary-compiler', c ])
         cgfx2json = Cgfx2JsonTool( \
             'cgfx2json',
             path_join(root, 'tools', 'bin', turbulenz_os, 'cgfx2json' + exe),

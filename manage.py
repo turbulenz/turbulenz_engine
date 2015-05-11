@@ -339,8 +339,9 @@ def command_apps(options):
     options = ' '.join(args.options) if args.options else ''
 
     asset_options = []
-    for c in args.cgfx_binary_compiler:
-        asset_options.extend([ '--cgfx-binary-compiler', c ])
+    if args.cgfx_binary_compiler:
+        for c in args.cgfx_binary_compiler:
+            asset_options.extend([ '--cgfx-binary-compiler', c ])
 
     start_time = time.time()
 
