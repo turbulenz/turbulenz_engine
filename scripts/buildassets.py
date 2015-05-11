@@ -417,11 +417,24 @@ class AssetInfo(object):
         self.build_path = None
 
 
-def build_asset(asset_info, source_list, tools, build_path, verbose):
+def build_asset(tool, asset_path, dst_path, verbose, args):
+    try:
+        create_dir(dirname(dst_path))
+        ran = tool.run(asset_path, dst_path, verbose, args)
+    except Exception as e:
+        try:
+            remove_file(dst_path)
+        finally:
+            pass
+        raise e
+
+
+def check_and_build_asset(asset_info, source_list, tools, build_path, verbose):
     src = asset_info.path
 
     asset_tool = tools.get_asset_tool(src)
     dst_path = path_join(build_path, tools.get_asset_destination(src))
+
     asset_info.build_path = dst_path
 
     create_dir(dirname(dst_path))
@@ -431,7 +444,12 @@ def build_asset(asset_info, source_list, tools, build_path, verbose):
     if any([dep.has_changed() for dep in deps]) or asset_tool.has_changed() or not path_exists(dst_path) \
             or asset_tool.check_external_deps(source.asset_path, dst_path, asset_info.args):
         stdout.write('[%s] %s\n' % (asset_tool.name.upper(), src))
-        asset_tool.run(source.asset_path, dst_path, verbose, asset_info.args)
+        # asset_tool.run(source.asset_path, dst_path, verbose, asset_info.args)
+        build_asset(asset_tool,
+                    source.asset_path,
+                    dst_path,
+                    verbose,
+                    asset_info.args)
         source.built = True
         return True
     else:
@@ -587,7 +605,11 @@ def main():
                     self.mutex.release()
                     return 0
                 try:
-                    rebuild = build_asset(asset_info, source_list, tools, base_build_path, args.verbose)
+                    rebuild = check_and_build_asset(asset_info,
+                                                    source_list,
+                                                    tools,
+                                                    base_build_path,
+                                                    args.verbose)
                 except CalledProcessError as e:
                     self.error = '%s - Tool failed - %s' % (asset_info.path, str(e))
                     return 1
