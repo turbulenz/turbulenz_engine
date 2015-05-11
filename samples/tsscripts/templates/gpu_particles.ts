@@ -755,17 +755,73 @@ TurbulenzEngine.onload = function onloadFn()
 
         var instanceMetrics = particleManager.gatherInstanceMetrics();
         var count = instanceMetrics.length;
+        var invScaleX = 1.0 / 2 * scaleX;
+        var invScaleY = 1.0 / 2 * scaleY;
         var i;
+
+        // Active
+        ctx.beginPath();
+        var numRectangles = 0;
         for (i = 0; i < count; i += 1)
         {
             var metric = instanceMetrics[i];
-            var extents = metric.instance.renderable.getWorldExtents();
-            x = (extents[0] + extents[3]) / 2 * scaleX;
-            z = (extents[2] + extents[5]) / 2 * scaleY;
-            ctx.strokeStyle = metric.active    ? "#00ff00" :
-                              metric.allocated ? "#ffff00" :
-                                                 "#ff0000";
-            ctx.strokeRect(x - 0.5, z - 0.5, 1, 1);
+            if (metric.active)
+            {
+                var extents = metric.instance.renderable.getWorldExtents();
+                x = (extents[0] + extents[3]) * invScaleX;
+                z = (extents[2] + extents[5]) * invScaleY;
+                ctx.rect(x - 0.5, z - 0.5, 2, 2);
+                numRectangles += 1;
+            }
+        }
+        if (numRectangles)
+        {
+            ctx.fillStyle = "#00ff00";
+            ctx.fill();
+        }
+
+        // Allocated
+        ctx.beginPath();
+        numRectangles = 0;
+        for (i = 0; i < count; i += 1)
+        {
+            var metric = instanceMetrics[i];
+            if (!metric.active &&
+                metric.allocated)
+            {
+                var extents = metric.instance.renderable.getWorldExtents();
+                x = (extents[0] + extents[3]) * invScaleX;
+                z = (extents[2] + extents[5]) * invScaleY;
+                ctx.rect(x - 0.5, z - 0.5, 2, 2);
+                numRectangles += 1;
+            }
+        }
+        if (numRectangles)
+        {
+            ctx.fillStyle = "#ffff00";
+            ctx.fill();
+        }
+
+        // Not active and not allocated
+        ctx.beginPath();
+        numRectangles = 0;
+        for (i = 0; i < count; i += 1)
+        {
+            var metric = instanceMetrics[i];
+            if (!metric.active &&
+                !metric.allocated)
+            {
+                var extents = metric.instance.renderable.getWorldExtents();
+                x = (extents[0] + extents[3]) * invScaleX;
+                z = (extents[2] + extents[5]) * invScaleY;
+                ctx.rect(x - 0.5, z - 0.5, 2, 2);
+                numRectangles += 1;
+            }
+        }
+        if (numRectangles)
+        {
+            ctx.fillStyle = "#ff0000";
+            ctx.fill();
         }
 
         // Display camera (xz) position on minimap also.
