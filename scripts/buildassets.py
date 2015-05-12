@@ -258,7 +258,7 @@ class Dae2Json(PythonTool):
 class Cgfx2JsonTool(Tool):
     def __init__(self, name, path, cgfx_flags):
         super(Cgfx2JsonTool, self).__init__(name, path)
-        self.cgfx_flags = cgfx_flags
+        self.cgfx_flags = cgfx_flags or []
 
     def get_version(self, version_file_path):
         try:
@@ -420,12 +420,10 @@ def build_asset(tool, asset_path, dst_path, verbose, args):
     try:
         create_dir(dirname(dst_path))
         tool.run(asset_path, dst_path, verbose, args)
-    except Exception as e:
-        try:
+    except:
+        if path_exists(dst_path):
             remove_file(dst_path)
-        finally:
-            pass
-        raise e
+        raise
 
 
 def check_and_build_asset(asset_info, source_list, tools, build_path, verbose):
