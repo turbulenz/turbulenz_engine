@@ -1213,7 +1213,7 @@ public:
             if (!sInstance->Initialize(cgfxFilename))
             {
                 delete sInstance;
-                sInstance = nullptr;
+                sInstance = 0;
             }
         }
         return sInstance;
@@ -1318,7 +1318,7 @@ public:
             if (!sInstance->Initialize(cgfxFilename))
             {
                 delete sInstance;
-                sInstance = nullptr;
+                sInstance = 0;
             }
         }
         return sInstance;
@@ -1633,7 +1633,7 @@ public:
             if (!sInstance->Initialize(cgfxFilename))
             {
                 delete sInstance;
-                sInstance = nullptr;
+                sInstance = 0;
             }
         }
         return sInstance;
@@ -1916,7 +1916,7 @@ public:
             if (!sInstance->Initialize(cgfxFilename))
             {
                 delete sInstance;
-                sInstance = nullptr;
+                sInstance = 0;
             }
         }
         return sInstance;
@@ -2244,7 +2244,7 @@ static bool BinaryCompile(const std::string &code,
         command += " ";
         command += inputFilename;
 
-        if (nullptr == hlslEffect)
+        if (0 == hlslEffect)
         {
             out_base64 = "Failed to create hlsl context for ";
             out_base64 += cgfxFilename;
