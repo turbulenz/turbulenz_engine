@@ -333,14 +333,10 @@ class Tools(object):
         material2json = PythonTool('material2json', module_name='turbulenz_tools.tools.material2json')
         bmfont2json = PythonTool('bmfont2json', module_name='turbulenz_tools.tools.bmfont2json')
 
-        cgfx_flags = []
-        if args.cgfx_binary_compiler:
-            for c in args.cgfx_binary_compiler:
-                cgfx_flags.extend([ '--binary-compiler', c ])
         cgfx2json = Cgfx2JsonTool( \
             'cgfx2json',
             path_join(root, 'tools', 'bin', turbulenz_os, 'cgfx2json' + exe),
-            cgfx_flags
+            args.cgfx_flag
         )
 
         copy.check_version(build_path, verbose)
@@ -540,8 +536,8 @@ def main():
     parser.add_argument('--install-path', default='staticmax', help="Path to install output assets into")
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--imagemagick-convert', help="Path to ImageMagick convert executable (enables TGA support)")
-    parser.add_argument('--cgfx-binary-compiler', action='append',
-                        help="Argument to pass to cgfx2json tool")
+    parser.add_argument('--cgfx-flag', action='append',
+                        help="argument to pass to cgfx2json tool")
 
     try:
         default_num_threads = multiprocessing.cpu_count()
