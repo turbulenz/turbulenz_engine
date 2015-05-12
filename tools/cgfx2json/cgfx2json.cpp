@@ -1372,8 +1372,13 @@ protected:
                                  bool vertexShader,
                                  std::string &out_finalCode)
     {
-        const char *text = programString;
-        int textLength = (int )strlen(programString);
+        {
+            const size_t originalLength = strlen(programString);
+            out_finalCode.resize(originalLength);
+            const int textLength = jsmin(programString, &out_finalCode[0]);
+            out_finalCode.resize(textLength);
+        }
+        std::string &newtext = out_finalCode;
 
         struct ReplacePair
         {
@@ -1407,10 +1412,6 @@ protected:
               (boost::xpressive::regex_constants::ECMAScript |
                boost::xpressive::regex_constants::optimize)));
         static const int subs[] = {1};
-
-        // std::string newtext(text, textLength);
-        out_finalCode = programString;
-        std::string &newtext = out_finalCode;
 
         // Find all the struct declarations
         std::list<std::string> structsList;
@@ -1689,6 +1690,14 @@ protected:
                      int generateHLSL,
                      std::string &out_finalCode)
     {
+        {
+            const size_t originalLength = strlen(programString);
+            out_finalCode.resize(originalLength);
+            const int textLength = jsmin(programString, &out_finalCode[0]);
+            out_finalCode.resize(textLength);
+        }
+        std::string &newtext = out_finalCode;
+
         struct ReplacePair
         {
             ReplacePair(const char *pat, const char *rep) :
@@ -1721,10 +1730,6 @@ protected:
               (boost::xpressive::regex_constants::ECMAScript |
                boost::xpressive::regex_constants::optimize)));
         static const int subs[] = {1};
-
-        out_finalCode = programString;
-        std::string &newtext = out_finalCode;
-        // std::string newtext(text, textLength);
 
         // Find all the struct declarations
         std::list<std::string> structsList;
