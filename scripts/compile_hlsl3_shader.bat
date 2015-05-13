@@ -1,4 +1,4 @@
-rem @echo off
+@echo off
 rem Copyright (c) 2009-2015 Turbulenz Limited
 
 set FXC=C:\Program Files (x86)\Windows Kits\8.1\bin\x86\fxc.exe
@@ -22,6 +22,11 @@ if "%TYPE%" == "fragment" (
 )
 if "%TYPE%" == "geometry" (
   set HLSL_PROFILE=gs_3_0
+)
+
+if "" == "%HLSL_PROFILE%" (
+  echo Unknown shader type '%TYPE%'
+  exit 1
 )
 
 rem echo "%FXC%" /nologo /O3 /WX /T %HLSL_PROFILE% /Fo %OUTPUT% %INPUT%
