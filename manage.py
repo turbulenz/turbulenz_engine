@@ -307,6 +307,7 @@ def command_apps(options):
                         choices=['all', 'plugin', 'plugin-debug', 'canvas', 'canvas-debug'])
     parser.add_argument('--assets-path', action='append', help="Specify additional asset root paths")
     parser.add_argument('app', default='all_apps', nargs='?', help="Select an individual app to build")
+    parser.add_argument('--d3d11', action='store_true', help="Build shaders for d3d11")
     parser.add_argument('--cgfx-flag', action='append',
                         help="flag for cgfx2json")
     parser.add_argument('--options', nargs='*', help="Additional options to pass to the build process")
@@ -342,9 +343,22 @@ def command_apps(options):
     if args.cgfx_flag:
         asset_options.extend([ '--cgfx-flag=%s' % c for c in args.cgfx_flag ])
 
+    if args.d3d11:
+        abspath = os.path.abspath
+        join = os.path.join
+        hlsl3_script = abspath(join('scripts', 'compile_hlsl3_shader.bat'))
+        hlsl5_script = abspath(join('scripts', 'compile_hlsl5_shader.bat'))
+        asset_options.extend([
+            "--cgfx-flag=--hlsl3",
+            "--cgfx-flag=%s,%s" % ("binary_hlsl3", hlsl3_script),
+            "--cgfx-flag=--hlsl5",
+            "--cgfx-flag=%s,%s" % ("binary_hlsl5", hlsl5_script),
+        ])
+
     start_time = time.time()
 
     # Build / clean each app
+
     for app in apps:
         try:
             app_dir = all_apps[app]

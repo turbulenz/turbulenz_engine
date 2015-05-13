@@ -2195,59 +2195,28 @@ static bool BinaryCompile(const std::string &code,
         return false;
     }
 
-    // Set up the command
-
-    // TODO: can we unify this and have all the parameters controlled
-    // by a batch file, as for the generic case?
-
-    std::string command = "\"";
-    command += compiler;
-    command += "\"";
+    // Write GLSL / HLSL to a temporary file
 
     std::string hlslCode;
-    if (generateHLSL)
+    if (0 == generateHLSL)
+    {
+        if (!WriteFile(inputFilename, code))
+        {
+            out_base64 = "Failed to write temp file";
+            return false;
+        }
+    }
+    else
     {
         Effect *hlslEffect;
-
-        command += " /T ";
         if (generateHLSL == 5)
         {
             hlslEffect = HLSL5Effect::GetInstance(cgfxFilename);
-
-            if (0 == strcmp(shaderType, "vertex"))
-            {
-                command += "vs_5_0";
-            }
-            else if (0 == strcmp(shaderType, "fragment"))
-            {
-                command += "ps_5_0";
-            }
-            else if (0 == strcmp(shaderType, "geometry"))
-            {
-                command += "gs_5_0";
-            }
         }
         else //if (generateHLSL == 3)
         {
             hlslEffect = HLSL3Effect::GetInstance(cgfxFilename);
-
-            if (0 == strcmp(shaderType, "vertex"))
-            {
-                command += "vs_3_0";
-            }
-            else if (0 == strcmp(shaderType, "fragment"))
-            {
-                command += "ps_3_0";
-            }
-            else if (0 == strcmp(shaderType, "geometry"))
-            {
-                command += "gs_3_0";
-            }
         }
-        command += " /Fo ";
-        command += outputFilename;
-        command += " ";
-        command += inputFilename;
 
         if (0 == hlslEffect)
         {
@@ -2256,43 +2225,32 @@ static bool BinaryCompile(const std::string &code,
             return false;
         }
 
-        // Extract the HLSL code and use it inplace of 'code'
-
         hlslEffect->GetProgramCodeStringByEntry(entryPoint,
                                                 uniformsRename,
                                                 hlslCode);
-
-        // Write the HLSL code to a temporary file
-
         if (!WriteFile(inputFilename, hlslCode))
         {
             out_base64 = "Failed to write temp file";
             return false;
         }
     }
-    else
-    {
-        command += " ";
-        command += entryPoint;
-        command += " ";
-        command += cgfxFilename;
-        command += " ";
-        command += shaderType;
-        command += " ";
-        command += inputFilename;
-        command += " ";
-        command += outputFilename;
 
-        // Write the ASM/GLSL code to a temporary file
+    // Set up the command
 
-        if (!WriteFile(inputFilename, code))
-        {
-            out_base64 = "Failed to write temp file";
-            return false;
-        }
-    }
+    std::string command = "\"";
+    command += compiler;
+    command += "\" ";
+    command += entryPoint;
+    command += " ";
+    command += cgfxFilename;
+    command += " ";
+    command += shaderType;
+    command += " ";
+    command += inputFilename;
+    command += " ";
+    command += outputFilename;
 
-    printf("Running binary compiler: %s\n", command.c_str());
+    printf("external compiler: %s\n", command.c_str());
     if (0 != system(command.c_str()))
     {
         out_base64 = "Failed to execute binary compile command: ";
