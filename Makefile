@@ -85,7 +85,7 @@ services_src := $(wildcard $(TS_SRC_DIR)/services/*.ts)
 services_deps := utilities debug servicedatatypes
 
 # tzdraw2d
-tzdraw2d_src := $(TS_SRC_DIR)/draw2d.ts assets/shaders/draw2d.cgfx
+tzdraw2d_src := $(TS_SRC_DIR)/draw2d.ts assets/shaders/draw2D.cgfx
 tzdraw2d_deps = platform debug
 
 # physics2d
