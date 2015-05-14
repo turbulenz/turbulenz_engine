@@ -275,7 +275,8 @@ class Cgfx2JsonTool(Tool):
         if args:
             cmd.extend(args)
         cmd.extend(self.cgfx_flags)
-        # print "CMD: %s" % cmd
+        if verbose:
+            print "CMD: %s" % " ".join(cmd)
         return self.run_sh(cmd, verbose=verbose)
 
     def check_external_deps(self, src, dst, args):

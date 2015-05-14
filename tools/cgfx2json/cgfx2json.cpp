@@ -59,7 +59,6 @@ static bool IsAscii(const std::vector<uint8_t> data)
             continue;
         }
 
-        printf("Char value %d at position %d\n", (int )d, (int )i);
         return false;
     }
     return true;
@@ -2154,9 +2153,6 @@ static bool DecomposeBinaryArg(const char *_arg,
     out_property = std::string(_arg, firstComma-_arg);
     out_script = std::string(firstComma+1);
 
-    fprintf(stderr, "prop: %s, script: %s\n",
-           out_property.c_str(), out_script.c_str());
-
     if (0 == out_property.size() || 0 == out_script.size())
     {
         fprintf(stderr, "Badly formatted (1) --binary arg: %s\n", _arg);
@@ -2657,9 +2653,6 @@ int main(int argc, char **argv)
                 const std::string &script = binaryCompilers[i];
                 const std::string &property = binaryProperties[i];
                 const int genHLSL = generateHLSL[i];
-
-                printf("i: %d, script: %s, property: %s, genHLSL: %d\n",
-                       i, script.c_str(), property.c_str(), genHLSL);
 
                 std::string base64OrError;
                 if (!BinaryCompile(finalCode,
