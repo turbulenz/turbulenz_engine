@@ -98,7 +98,7 @@ fontmanager_src := $(TS_SRC_DIR)/fontmanager.ts
 fontmanager_deps := platform utilities debug
 
 # canvas
-canvas_src := $(TS_SRC_DIR)/canvas.ts
+canvas_src := $(TS_SRC_DIR)/canvas.ts assets/shaders/canvas.cgfx
 canvas_deps := platform fontmanager
 
 # svg
