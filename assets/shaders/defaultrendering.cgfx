@@ -1,4 +1,6 @@
-// Copyright (c) 2009-2013 Turbulenz Limited
+// Copyright (c) 2009-2015 Turbulenz Limited
+
+#include "platform.cgh"
 
 #include "skinning.cgh"
 #include "uvtransform.cgh"
@@ -24,7 +26,7 @@ static const float Ks = 0.5;
 static const float Kr = 0.5;
 static const float SpecularExponent = 32.0;
 
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -33,7 +35,7 @@ sampler2D diffuse = sampler_state
     MaxAnisotropy = 16;
 };
 
-sampler2D normal_map = sampler_state
+TZ_TEXTURE2D_DECLARE(normal_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -42,7 +44,7 @@ sampler2D normal_map = sampler_state
     MaxAnisotropy = 16;
 };
 
-sampler2D specular_map = sampler_state
+TZ_TEXTURE2D_DECLARE(specular_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -51,7 +53,7 @@ sampler2D specular_map = sampler_state
     MaxAnisotropy = 16;
 };
 
-sampler2D glow_map = sampler_state
+TZ_TEXTURE2D_DECLARE(glow_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -59,7 +61,7 @@ sampler2D glow_map = sampler_state
     WrapT = Repeat;
 };
 
-sampler2D alpha_map = sampler_state
+TZ_TEXTURE2D_DECLARE(alpha_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -68,7 +70,7 @@ sampler2D alpha_map = sampler_state
     MaxAnisotropy = 16;
 };
 
-samplerCUBE env_map = sampler_state
+TZ_TEXTURECUBE_DECLARE(env_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -77,14 +79,13 @@ samplerCUBE env_map = sampler_state
     WrapR = ClampToEdge;
 };
 
-sampler2D light_map = sampler_state
+TZ_TEXTURE2D_DECLARE(light_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
     WrapS = ClampToEdge;
     WrapT = ClampToEdge;
 };
-
 
 //
 // Utils
@@ -150,15 +151,15 @@ void blinn_ks_shading(float3 LightColor,
 
 float3 SampleNormalMap(float2 uv)
 {
-    return normalize(2.0 * tex2D(normal_map, uv).xyz - 1.0);
+    return normalize(2.0 * TZ_TEX2D(normal_map, uv).xyz - 1.0);
 }
 
 float3 SampleNormalMapRXGB(float2 uv)
 {
     float3 normal;
-    //normal = (2.0 * tex2D(normal_map, uv).xyz - 1.0);
-    normal = normalize(2.0 * tex2D(normal_map, uv).agb - 1.0);
-    //normal.xy = (2.0 * tex2D(normal_map, uv).ag - 1.0);
+    //normal = (2.0 * TZ_TEX2D(normal_map, uv).xyz - 1.0);
+    normal = normalize(2.0 * TZ_TEX2D(normal_map, uv).agb - 1.0);
+    //normal.xy = (2.0 * TZ_TEX2D(normal_map, uv).ag - 1.0);
     //normal.z = sqrt(1.0 - (normal.x * normal.x) - (normal.y * normal.y));
     return normal;
 }
@@ -168,7 +169,7 @@ float3 SampleNormalMapRXGB(float2 uv)
 //
 void vp_nolight(in float3 INPosition : POSITION,
                 in float2 INUV       : TEXCOORD0,
-                out float4 OUTPosition : POSITION,
+                out float4 OUTPosition : TZ_OUT_POSITION,
                 out float2 OUTUV       : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -179,7 +180,7 @@ void vp_nolight_skinned(in float3 INPosition : POSITION,
                         in float2 INUV       : TEXCOORD0,
                         in float4 INIndices  : BLENDINDICES,
                         in float4 INWeights  : BLENDWEIGHT,
-                        out float4 OUTPosition : POSITION,
+                        out float4 OUTPosition : TZ_OUT_POSITION,
                         out float2 OUTUV       : TEXCOORD0)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -197,7 +198,7 @@ void vp_nolight_skinned(in float3 INPosition : POSITION,
 void vp_nolight_vertexcolor(in float3 INPosition : POSITION,
                             in float2 INUV       : TEXCOORD0,
                             in float4 INColor    : COLOR,
-                            out float4 OUTPosition : POSITION,
+                            out float4 OUTPosition : TZ_OUT_POSITION,
                             out float4 OUTColor    : COLOR,
                             out float2 OUTUV       : TEXCOORD0)
 {
@@ -207,7 +208,7 @@ void vp_nolight_vertexcolor(in float3 INPosition : POSITION,
 }
 
 void vp_skybox(in float3 INPosition : POSITION,
-               out float4 OUTPosition     : POSITION,
+               out float4 OUTPosition     : TZ_OUT_POSITION,
                out float3 OUTEyeDirection : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -217,7 +218,7 @@ void vp_skybox(in float3 INPosition : POSITION,
 void vp_glass_env(in float3 INPosition : POSITION,
                   in float3 INNormal   : NORMAL,
                   in float2 INUV       : TEXCOORD0,
-                  out float4 OUTPosition     : POSITION,
+                  out float4 OUTPosition     : TZ_OUT_POSITION,
                   out float2 OUTUV           : TEXCOORD0,
                   out float3 OUTNormal       : TEXCOORD1,
                   out float3 OUTEyeDirection : TEXCOORD2)
@@ -230,7 +231,7 @@ void vp_glass_env(in float3 INPosition : POSITION,
 
 void vp_env(in float3 INPosition : POSITION,
             in float3 INNormal   : NORMAL,
-            out float4 OUTPosition     : POSITION,
+            out float4 OUTPosition     : TZ_OUT_POSITION,
             out float3 OUTNormal       : TEXCOORD0,
             out float3 OUTEyeDirection : TEXCOORD1)
 {
@@ -243,7 +244,7 @@ void vp_env_skinned(in float3 INPosition : POSITION,
                     in float3 INNormal   : NORMAL,
                     in float4 INIndices  : BLENDINDICES,
                     in float4 INWeights  : BLENDWEIGHT,
-                    out float4 OUTPosition     : POSITION,
+                    out float4 OUTPosition     : TZ_OUT_POSITION,
                     out float3 OUTNormal       : TEXCOORD0,
                     out float3 OUTEyeDirection : TEXCOORD1)
 {
@@ -266,7 +267,7 @@ void vp_env_skinned(in float3 INPosition : POSITION,
 
 void vp_flat(in float3 INPosition : POSITION,
              in float3 INNormal   : NORMAL,
-             out float4 OUTPosition : POSITION,
+             out float4 OUTPosition : TZ_OUT_POSITION,
              out float4 OUTColor    : COLOR)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -279,7 +280,7 @@ void vp_flat_skinned(in float3 INPosition : POSITION,
                      in float3 INNormal   : NORMAL,
                      in float4 INIndices  : BLENDINDICES,
                      in float4 INWeights  : BLENDWEIGHT,
-                     out float4 OUTPosition : POSITION,
+                     out float4 OUTPosition : TZ_OUT_POSITION,
                      out float4 OUTColor    : COLOR)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -305,7 +306,7 @@ void vp_flat_skinned(in float3 INPosition : POSITION,
 void vp_lambert(in float3 INPosition : POSITION,
                 in float3 INNormal   : NORMAL,
                 in float2 INUV       : TEXCOORD0,
-                out float4 OUTPosition : POSITION,
+                out float4 OUTPosition : TZ_OUT_POSITION,
                 out float4 OUTColor    : COLOR,
                 out float2 OUTUV       : TEXCOORD0)
 {
@@ -321,7 +322,7 @@ void vp_lambert_skinned(in float3 INPosition : POSITION,
                         in float2 INUV       : TEXCOORD0,
                         in float4 INIndices  : BLENDINDICES,
                         in float4 INWeights  : BLENDWEIGHT,
-                        out float4 OUTPosition : POSITION,
+                        out float4 OUTPosition : TZ_OUT_POSITION,
                         out float4 OUTColor    : COLOR,
                         out float2 OUTUV       : TEXCOORD0)
 {
@@ -349,7 +350,7 @@ void vp_lambert_skinned(in float3 INPosition : POSITION,
 void vp_blinn(in float3 INPosition : POSITION,
               in float3 INNormal   : NORMAL,
               in float2 INUV       : TEXCOORD0,
-              out float4 OUTPosition : POSITION,
+              out float4 OUTPosition : TZ_OUT_POSITION,
               out float2 OUTUV       : TEXCOORD0,
               out float3 OUTNormal   : TEXCOORD1,
               out float3 OUTLight    : TEXCOORD2,
@@ -367,7 +368,7 @@ void vp_blinn_skinned(in float3 INPosition : POSITION,
                       in float2 INUV       : TEXCOORD0,
                       in float4 INIndices  : BLENDINDICES,
                       in float4 INWeights  : BLENDWEIGHT,
-                      out float4 OUTPosition : POSITION,
+                      out float4 OUTPosition : TZ_OUT_POSITION,
                       out float2 OUTUV       : TEXCOORD0,
                       out float3 OUTNormal   : TEXCOORD1,
                       out float3 OUTLight    : TEXCOORD2,
@@ -399,7 +400,7 @@ void vp_normalmap(in float3 INPosition : POSITION,
                   in float2 INUV       : TEXCOORD0,
                   in float3 INTangent  : TANGENT,
                   in float3 INBinormal : BINORMAL,
-                  out float4 OUTPosition : POSITION,
+                  out float4 OUTPosition : TZ_OUT_POSITION,
                   out float2 OUTUV       : TEXCOORD0,
                   out float3 OUTLight    : TEXCOORD1,
                   out float3 OUTView     : TEXCOORD2)
@@ -422,7 +423,7 @@ void vp_normalmap_skinned(in float3 INPosition : POSITION,
                           in float3 INBinormal : BINORMAL,
                           in float4 INIndices  : BLENDINDICES,
                           in float4 INWeights  : BLENDWEIGHT,
-                          out float4 OUTPosition : POSITION,
+                          out float4 OUTPosition : TZ_OUT_POSITION,
                           out float2 OUTUV       : TEXCOORD0,
                           out float3 OUTLight    : TEXCOORD1,
                           out float3 OUTView     : TEXCOORD2)
@@ -465,7 +466,7 @@ void vp_normalmap_skinned(in float3 INPosition : POSITION,
 
 void vp_glowmap(in float3 INPosition : POSITION,
                 in float2 INUV       : TEXCOORD0,
-                out float4 OUTPosition : POSITION,
+                out float4 OUTPosition : TZ_OUT_POSITION,
                 out float2 OUTUV       : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -476,7 +477,7 @@ void vp_glowmap_skinned(in float3 INPosition : POSITION,
                         in float2 INUV       : TEXCOORD0,
                         in float4 INIndices  : BLENDINDICES,
                         in float4 INWeights  : BLENDWEIGHT,
-                        out float4 OUTPosition : POSITION,
+                        out float4 OUTPosition : TZ_OUT_POSITION,
                         out float2 OUTUV       : TEXCOORD0)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -495,7 +496,7 @@ void vp_glowmap_skinned(in float3 INPosition : POSITION,
 void vp_lightmap(in float3 INPosition : POSITION,
                  in float2 INUV0      : TEXCOORD0,
                  in float2 INUV1      : TEXCOORD1,
-                 out float4 OUTPosition : POSITION,
+                 out float4 OUTPosition : TZ_OUT_POSITION,
                  out float4 OUTUV       : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -508,7 +509,7 @@ void vp_debug(in float3 INPosition : POSITION,
               in float2 INUV       : TEXCOORD0,
               in float3 INTangent  : TANGENT,
               in float3 INBinormal : BINORMAL,
-              out float4 OUTPosition : POSITION,
+              out float4 OUTPosition : TZ_OUT_POSITION,
               out float3 OUTNormal   : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -525,7 +526,7 @@ void vp_debug_skinned(in float3 INPosition : POSITION,
                       in float3 INBinormal : BINORMAL,
                       in float4 INIndices  : BLENDINDICES,
                       in float4 INWeights  : BLENDWEIGHT,
-                      out float4 OUTPosition : POSITION,
+                      out float4 OUTPosition : TZ_OUT_POSITION,
                       out float3 OUTNormal   : TEXCOORD0)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -563,80 +564,80 @@ void vp_debug_skinned(in float3 INPosition : POSITION,
 //
 // Fragment programs
 //
-float4 fp_normal(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_normal(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return materialColor * tex2D(diffuse, INUV);
+    return materialColor * TZ_TEX2D(diffuse, INUV);
 }
 
 float4 fp_normal_vertexcolor(float4 INColor : COLOR,
-                             float2 INUV    : TEXCOORD0) : COLOR
+                             float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return INColor * tex2D(diffuse, INUV);
+    return INColor * TZ_TEX2D(diffuse, INUV);
 }
 
-float4 fp_translucent(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_translucent(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return float4(tex2D(diffuse, INUV).xyz * materialColor.xyz, 1.0);
+    return float4(TZ_TEX2D(diffuse, INUV).xyz * materialColor.xyz, 1.0);
 }
 
 float4 fp_translucent_vertexcolor(float4 INColor : COLOR,
-                                  float2 INUV    : TEXCOORD0) : COLOR
+                                  float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return float4(tex2D(diffuse, INUV).xyz * INColor.xyz, 1.0);
+    return float4(TZ_TEX2D(diffuse, INUV).xyz * INColor.xyz, 1.0);
 }
 
-float4 fp_premodulatealpha(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_premodulatealpha(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 color = materialColor * tex2D(diffuse, INUV);
+    float4 color = materialColor * TZ_TEX2D(diffuse, INUV);
     color.xyz *= materialColor.w;
     return color;
 }
 
 float4 fp_premodulatealpha_vertexcolor(float4 INColor : COLOR,
-                                       float2 INUV    : TEXCOORD0) : COLOR
+                                       float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 color = INColor * tex2D(diffuse, INUV);
+    float4 color = INColor * TZ_TEX2D(diffuse, INUV);
     color.xyz *= INColor.w;
     return color;
 }
 
-float4 fp_separatealpha(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_separatealpha(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, INUV).a;
-    return materialColor * tex2D(diffuse, INUV) * alpha;
+    float alpha = materialColor.w * TZ_TEX2D(alpha_map, INUV).a;
+    return materialColor * TZ_TEX2D(diffuse, INUV) * alpha;
 }
 
 float4 fp_separatealpha_env(float2 INUV           : TEXCOORD0,
                             float3 INNormal       : TEXCOORD1,
-                            float3 INEyeDirection : TEXCOORD2) : COLOR
+                            float3 INEyeDirection : TEXCOORD2) : TZ_OUT_COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, INUV).a;
+    float alpha = materialColor.w * TZ_TEX2D(alpha_map, INUV).a;
     float3 R = reflect(normalize(INEyeDirection), normalize(INNormal));
-    return materialColor * texCUBE(env_map, R) * alpha;
+    return materialColor * TZ_TEXCUBE(env_map, R) * alpha;
 }
 
 float4 fp_env(float3 INNormal       : TEXCOORD0,
-              float3 INEyeDirection : TEXCOORD1) : COLOR
+              float3 INEyeDirection : TEXCOORD1) : TZ_OUT_COLOR
 {
     float3 R = reflect(normalize(INEyeDirection), normalize(INNormal));
-    return materialColor.w * materialColor * texCUBE(env_map, R);
+    return materialColor.w * materialColor * TZ_TEXCUBE(env_map, R);
 }
 
-float4 fp_flat(float4 INColor : COLOR) : COLOR
+float4 fp_flat(float4 INColor : COLOR) : TZ_OUT_COLOR
 {
     return INColor;
 }
 
 float4 fp_lambert(float4 INColor : COLOR,
-                  float2 INUV    : TEXCOORD0) : COLOR
+                  float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return INColor * tex2D(diffuse, INUV);
+    return INColor * TZ_TEX2D(diffuse, INUV);
 }
 
 float4 fp_blinn(float2 INUV     : TEXCOORD0,
                 float3 INNormal : TEXCOORD1,
                 float3 INLight  : TEXCOORD2,
-                float3 INView   : TEXCOORD3) : COLOR
+                float3 INView   : TEXCOORD3) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -644,7 +645,7 @@ float4 fp_blinn(float2 INUV     : TEXCOORD0,
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
@@ -652,7 +653,7 @@ float4 fp_blinn(float2 INUV     : TEXCOORD0,
 float4 fp_phong(float2 INUV     : TEXCOORD0,
                 float3 INNormal : TEXCOORD1,
                 float3 INLight  : TEXCOORD2,
-                float3 INView   : TEXCOORD3) : COLOR
+                float3 INView   : TEXCOORD3) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -660,14 +661,14 @@ float4 fp_phong(float2 INUV     : TEXCOORD0,
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     phong_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, INUV).rgb;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).rgb;
     float3 result = specContrib + (diffuseColor * (diffContrib + ambientColor));
     return float4(result,1.0);
 }
 
 float4 fp_normalmap(float2 INUV    : TEXCOORD0,
                     float3 INLight : TEXCOORD1,
-                    float3 INView  : TEXCOORD2) : COLOR
+                    float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -675,16 +676,16 @@ float4 fp_normalmap(float2 INUV    : TEXCOORD0,
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMap(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
 float4 fp_normalmap_alphatest(float2 INUV    : TEXCOORD0,
                               float3 INLight : TEXCOORD1,
-                              float3 INView  : TEXCOORD2) : COLOR
+                              float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
@@ -701,25 +702,25 @@ float4 fp_normalmap_alphatest(float2 INUV    : TEXCOORD0,
 
 float4 fp_normalmap_specularmap(float2 INUV    : TEXCOORD0,
                                 float3 INLight : TEXCOORD1,
-                                float3 INView  : TEXCOORD2) : COLOR
+                                float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMap(INUV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
+    float3 ks = materialColor.xyz * TZ_TEX2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
 float4 fp_normalmap_specularmap_alphatest(float2 INUV    : TEXCOORD0,
                                           float3 INLight : TEXCOORD1,
-                                          float3 INView  : TEXCOORD2) : COLOR
+                                          float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
@@ -729,7 +730,7 @@ float4 fp_normalmap_specularmap_alphatest(float2 INUV    : TEXCOORD0,
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMap(INUV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
+    float3 ks = materialColor.xyz * TZ_TEX2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
@@ -737,9 +738,9 @@ float4 fp_normalmap_specularmap_alphatest(float2 INUV    : TEXCOORD0,
 
 float4 fp_normalmap_specularmap_alphamap(float2 INUV    : TEXCOORD0,
                                          float3 INLight : TEXCOORD1,
-                                         float3 INView  : TEXCOORD2) : COLOR
+                                         float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, INUV).a;
+    float alpha = materialColor.w * TZ_TEX2D(alpha_map, INUV).a;
     if (alpha < alphaRef)
     {
         discard;
@@ -749,16 +750,16 @@ float4 fp_normalmap_specularmap_alphamap(float2 INUV    : TEXCOORD0,
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMap(INUV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
+    float3 ks = materialColor.xyz * TZ_TEX2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = materialColor.xyz * tex2D(diffuse, INUV).xyz;
+    float3 diffuseColor = materialColor.xyz * TZ_TEX2D(diffuse, INUV).xyz;
     float3 result = specContrib + (diffuseColor * (diffContrib + ambientColor));
     return float4(result, alpha);
 }
 
 float4 fp_normalmap_glowmap(float2 INUV    : TEXCOORD0,
                             float3 INLight : TEXCOORD1,
-                            float3 INView  : TEXCOORD2) : COLOR
+                            float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -766,32 +767,32 @@ float4 fp_normalmap_glowmap(float2 INUV    : TEXCOORD0,
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMap(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * TZ_TEX2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, 1.0);
 }
 
 float4 fp_normalmap_specularmap_glowmap(float2 INUV    : TEXCOORD0,
                                         float3 INLight : TEXCOORD1,
-                                        float3 INView  : TEXCOORD2) : COLOR
+                                        float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMap(INUV);
-    float3 ks = tex2D(specular_map, INUV).xyz;
+    float3 ks = TZ_TEX2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * TZ_TEX2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, 1.0);
 }
 
 float4 fp_rxgb_normalmap(float2 INUV    : TEXCOORD0,
                          float3 INLight : TEXCOORD1,
-                         float3 INView  : TEXCOORD2) : COLOR
+                         float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -799,16 +800,16 @@ float4 fp_rxgb_normalmap(float2 INUV    : TEXCOORD0,
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMapRXGB(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
 float4 fp_rxgb_normalmap_alphatest(float2 INUV    : TEXCOORD0,
                                    float3 INLight : TEXCOORD1,
-                                   float3 INView  : TEXCOORD2) : COLOR
+                                   float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
@@ -825,25 +826,26 @@ float4 fp_rxgb_normalmap_alphatest(float2 INUV    : TEXCOORD0,
 
 float4 fp_rxgb_normalmap_specularmap(float2 INUV    : TEXCOORD0,
                                      float3 INLight : TEXCOORD1,
-                                     float3 INView  : TEXCOORD2) : COLOR
+                                     float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMapRXGB(INUV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
+    float3 ks = materialColor.xyz * TZ_TEX2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
 float4 fp_rxgb_normalmap_specularmap_alphatest(float2 INUV    : TEXCOORD0,
                                                float3 INLight : TEXCOORD1,
-                                               float3 INView  : TEXCOORD2) : COLOR
+                                               float3 INView  : TEXCOORD2)
+    : TZ_OUT_COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
@@ -853,7 +855,7 @@ float4 fp_rxgb_normalmap_specularmap_alphatest(float2 INUV    : TEXCOORD0,
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMapRXGB(INUV);
-    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
+    float3 ks = materialColor.xyz * TZ_TEX2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
@@ -861,7 +863,7 @@ float4 fp_rxgb_normalmap_specularmap_alphatest(float2 INUV    : TEXCOORD0,
 
 float4 fp_rxgb_normalmap_glowmap(float2 INUV    : TEXCOORD0,
                                  float3 INLight : TEXCOORD1,
-                                 float3 INView  : TEXCOORD2) : COLOR
+                                 float3 INView  : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -869,47 +871,48 @@ float4 fp_rxgb_normalmap_glowmap(float2 INUV    : TEXCOORD0,
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMapRXGB(INUV);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * TZ_TEX2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, materialColor.w);
 }
 
 float4 fp_rxgb_normalmap_specularmap_glowmap(float2 INUV    : TEXCOORD0,
                                              float3 INLight : TEXCOORD1,
-                                             float3 INView  : TEXCOORD2) : COLOR
+                                             float3 INView  : TEXCOORD2)
+    : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     float3 Nn = SampleNormalMapRXGB(INUV);
-    float3 ks = tex2D(specular_map, INUV).xyz;
+    float3 ks = TZ_TEX2D(specular_map, INUV).xyz;
     blinn_ks_shading(lightColor, ks, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * TZ_TEX2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, materialColor.w);
 }
 
-float4 fp_glowmap(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_glowmap(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return float4(materialColor.xyz * tex2D(glow_map, INUV).xyz, 1.0);
+    return float4(materialColor.xyz * TZ_TEX2D(glow_map, INUV).xyz, 1.0);
 }
 
-float4 fp_lightmap(float4 INUV : TEXCOORD0) : COLOR
+float4 fp_lightmap(float4 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float3 diffuseColor = tex2D(diffuse, INUV.xy).xyz;
-    float3 diffContrib = ((lightingScale * tex2D(light_map, INUV.zw).xyz) + ambientColor);
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV.xy).xyz;
+    float3 diffContrib = ((lightingScale * TZ_TEX2D(light_map, INUV.zw).xyz) + ambientColor);
     return float4(materialColor.xyz * diffuseColor * diffContrib, 1.0);
 }
 
-float4 fp_skybox(float3 INEyeDirection : TEXCOORD0) : COLOR
+float4 fp_skybox(float3 INEyeDirection : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return texCUBE(env_map, INEyeDirection);
+    return TZ_TEXCUBE(env_map, INEyeDirection);
 }
 
-float4 fp_debug(float3 INNormal : TEXCOORD0) : COLOR
+float4 fp_debug(float3 INNormal : TEXCOORD0) : TZ_OUT_COLOR
 {
     return float4(INNormal * 0.5 + 0.5, 1.0);
 }
@@ -1908,4 +1911,3 @@ technique lightmap
         FragmentProgram = compile latest fp_lightmap();
     }
 }
-

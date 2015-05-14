@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
+#include "platform.cgh"
+
 #include "common.cgh"
 
 //
@@ -30,7 +32,7 @@ float alphaRef = 0.003;
 
 static const float SpecularExponent = 8.0;
 
-sampler2D lightprojection = sampler_state
+TZ_TEXTURE2D_DECLARE(lightprojection)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -38,7 +40,7 @@ sampler2D lightprojection = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D lightfalloff = sampler_state
+TZ_TEXTURE2D_DECLARE(lightfalloff)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -46,7 +48,7 @@ sampler2D lightfalloff = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D depthTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(depthTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -54,7 +56,7 @@ sampler2D depthTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D normalTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(normalTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -62,7 +64,7 @@ sampler2D normalTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D shadowMapTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(shadowMapTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -70,7 +72,7 @@ sampler2D shadowMapTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D albedoTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(albedoTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -78,7 +80,7 @@ sampler2D albedoTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D specularTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(specularTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -86,7 +88,7 @@ sampler2D specularTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D diffuseLightingTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuseLightingTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -94,7 +96,7 @@ sampler2D diffuseLightingTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D specularLightingTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(specularLightingTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -102,7 +104,7 @@ sampler2D specularLightingTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D colorTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(colorTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -115,20 +117,20 @@ sampler2D colorTexture = sampler_state
 //
 struct VP_DIRECTIONAL_LIGHT_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float2 UV       : TEXCOORD0;
 };
 
 struct VP_LIGHT_OUT
 {
-    float4 Position  : POSITION;
+    float4 Position  : TZ_OUT_POSITION;
     float3 ScreenPos : TEXCOORD0;
     float3 ViewPos   : TEXCOORD1;
 };
 
 struct VP_FOG_LIGHT_OUT
 {
-    float4 Position  : POSITION;
+    float4 Position  : TZ_OUT_POSITION;
     float3 ScreenPos : TEXCOORD0;
     float3 ViewPos   : TEXCOORD1;
     float3 ExitPos   : TEXCOORD2;
@@ -137,13 +139,13 @@ struct VP_FOG_LIGHT_OUT
 
 struct FP_LIGHT_OUT
 {
-    float4 diffuse  : COLOR0;
-    float4 specular : COLOR1;
+    float4 diffuse  : TZ_OUT_COLOR0;
+    float4 specular : TZ_OUT_COLOR1;
 };
 
 struct VS_MIX_OUT
 {
-    float4 Position: POSITION;
+    float4 Position: TZ_OUT_POSITION;
     float2 UV: TEXCOORD0;
 };
 
@@ -266,10 +268,10 @@ float3 ApplyShadowAttenuation(float3 position, float3 attenuation)
     unnormalized = floor(unnormalized);
     float shadowSizeReciprocal = (1.0 / shadowSize);
     float4 exponent;
-    exponent.x = DecodeFloatRGB16(tex2D(shadowMapTexture, (unnormalized + float2(-0.5,  0.5)) * shadowSizeReciprocal));
-    exponent.y = DecodeFloatRGB16(tex2D(shadowMapTexture, (unnormalized + float2( 0.5,  0.5)) * shadowSizeReciprocal));
-    exponent.z = DecodeFloatRGB16(tex2D(shadowMapTexture, (unnormalized + float2( 0.5, -0.5)) * shadowSizeReciprocal));
-    exponent.w = DecodeFloatRGB16(tex2D(shadowMapTexture, (unnormalized + float2(-0.5, -0.5)) * shadowSizeReciprocal));
+    exponent.x = DecodeFloatRGB16(TZ_TEX2D(shadowMapTexture, (unnormalized + float2(-0.5,  0.5)) * shadowSizeReciprocal));
+    exponent.y = DecodeFloatRGB16(TZ_TEX2D(shadowMapTexture, (unnormalized + float2( 0.5,  0.5)) * shadowSizeReciprocal));
+    exponent.z = DecodeFloatRGB16(TZ_TEX2D(shadowMapTexture, (unnormalized + float2( 0.5, -0.5)) * shadowSizeReciprocal));
+    exponent.w = DecodeFloatRGB16(TZ_TEX2D(shadowMapTexture, (unnormalized + float2(-0.5, -0.5)) * shadowSizeReciprocal));
 
     const float over_darkening_factor = 48.0;
     /*
@@ -290,7 +292,7 @@ float3 ApplyShadowAttenuation(float3 position, float3 attenuation)
 //
 // Vertex programs
 //
-float4 vp_ambient_light(float4 Position : POSITION) : POSITION
+float4 vp_ambient_light(float4 Position : POSITION) : TZ_OUT_POSITION
 {
    return Position;
 }
@@ -369,7 +371,7 @@ FP_LIGHT_OUT fp_ambient_light()
 FP_LIGHT_OUT fp_directional_light(float2 UV : TEXCOORD0)
 {
     FP_LIGHT_OUT OUT;
-    float3 normal = (tex2D(normalTexture, UV).xyz * 2.0 - 1.0);
+    float3 normal = (TZ_TEX2D(normalTexture, UV).xyz * 2.0 - 1.0);
     float3 diffuseContrib = (max(dot(-lightDirection, normal), 0.0) * lightColor);
     OUT.diffuse = float4(diffuseContrib, 1.0);
     OUT.specular = float4(0.0, 0.0, 0.0, 0.0);
@@ -379,7 +381,7 @@ FP_LIGHT_OUT fp_directional_light(float2 UV : TEXCOORD0)
 FP_LIGHT_OUT fp_ambient_directional_light(float2 UV : TEXCOORD0)
 {
     FP_LIGHT_OUT OUT;
-    float3 normal = (tex2D(normalTexture, UV).xyz * 2.0 - 1.0);
+    float3 normal = (TZ_TEX2D(normalTexture, UV).xyz * 2.0 - 1.0);
     float3 diffuseContrib = ((max(dot(-lightDirection, normal), 0.0) * lightColor) + ambientColor);
     OUT.diffuse = float4(diffuseContrib, 1.0);
     OUT.specular = float4(0.0, 0.0, 0.0, 0.0);
@@ -391,10 +393,10 @@ FP_LIGHT_OUT fp_spot_light(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(TZ_TEX2D(depthTexture, uv)) * maxDepth);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
-    float3 attenuation = tex2DprojFix(lightprojection, lightPos).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    float3 attenuation = tex2DprojFix(lightprojection, lightPos).xyz * TZ_TEX2D(lightfalloff, float2(lightPos.z, 0.5)).y;
     float alpha = dot(attenuation, float3(0.3, 0.59, 0.11));
     if (alpha < alphaRef)
     {
@@ -402,7 +404,7 @@ FP_LIGHT_OUT fp_spot_light(float3 ScreenPos : TEXCOORD0,
     }
     float3 light = normalize(lightOrigin - position);
     float3 view = -normalize(position);
-    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float3 normal = (TZ_TEX2D(normalTexture, uv).xyz * 2.0 - 1.0);
     float3 diffuseContrib, specularContrib;
     blinn_shading(normal, light, view, diffuseContrib, specularContrib);
     OUT.diffuse = float4(diffuseContrib * attenuation, alpha);
@@ -415,10 +417,10 @@ FP_LIGHT_OUT fp_spot_light_shadow(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(TZ_TEX2D(depthTexture, uv)) * maxDepth);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
-    float3 attenuation = tex2DprojFix(lightprojection, lightPos).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    float3 attenuation = tex2DprojFix(lightprojection, lightPos).xyz * TZ_TEX2D(lightfalloff, float2(lightPos.z, 0.5)).y;
     // do NOT apply the shadowmap before the 'alpha' value or the pixelCount will be wrong
     float alpha = dot(attenuation, float3(0.3, 0.59, 0.11));
     if (alpha < alphaRef)
@@ -427,7 +429,7 @@ FP_LIGHT_OUT fp_spot_light_shadow(float3 ScreenPos : TEXCOORD0,
     }
     float3 light = normalize(lightOrigin - position);
     float3 view = -normalize(position);
-    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float3 normal = (TZ_TEX2D(normalTexture, uv).xyz * 2.0 - 1.0);
     float3 diffuseContrib, specularContrib;
     blinn_shading(normal, light, view, diffuseContrib, specularContrib);
     attenuation = ApplyShadowAttenuation(position, attenuation);
@@ -441,13 +443,13 @@ FP_LIGHT_OUT fp_point_light(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
-    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float z = (DecodeFloatRGBA32(TZ_TEX2D(depthTexture, uv)) * maxDepth);
+    float3 normal = (TZ_TEX2D(normalTexture, uv).xyz * 2.0 - 1.0);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
     float3 light = normalize(lightOrigin - position);
     float3 diffuseContrib = max(dot(light, normal), 0.0) * lightColor;
-    float3 attenuation = tex2D(lightprojection, lightPos.xy).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    float3 attenuation = TZ_TEX2D(lightprojection, lightPos.xy).xyz * TZ_TEX2D(lightfalloff, float2(lightPos.z, 0.5)).y;
     diffuseContrib *= attenuation;
     float alpha = dot(diffuseContrib, float3(0.3, 0.59, 0.11));
     if (alpha < alphaRef)
@@ -464,11 +466,11 @@ FP_LIGHT_OUT fp_point_light_specular(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
-    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float z = (DecodeFloatRGBA32(TZ_TEX2D(depthTexture, uv)) * maxDepth);
+    float3 normal = (TZ_TEX2D(normalTexture, uv).xyz * 2.0 - 1.0);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
-    float3 attenuation = tex2D(lightprojection, lightPos.xy).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    float3 attenuation = TZ_TEX2D(lightprojection, lightPos.xy).xyz * TZ_TEX2D(lightfalloff, float2(lightPos.z, 0.5)).y;
     float alpha = dot(attenuation, float3(0.3, 0.59, 0.11));
     if (alpha < alphaRef)
     {
@@ -488,11 +490,11 @@ FP_LIGHT_OUT fp_point_light_specular_shadow(float3 ScreenPos : TEXCOORD0,
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
-    float3 normal = (tex2D(normalTexture, uv).xyz * 2.0 - 1.0);
+    float z = (DecodeFloatRGBA32(TZ_TEX2D(depthTexture, uv)) * maxDepth);
+    float3 normal = (TZ_TEX2D(normalTexture, uv).xyz * 2.0 - 1.0);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 lightPos = LocalPointToView(position, lightViewInverseTranspose);
-    float3 attenuation = tex2D(lightprojection, lightPos.xy).xyz * tex2D(lightfalloff, float2(lightPos.z, 0.5)).y;
+    float3 attenuation = TZ_TEX2D(lightprojection, lightPos.xy).xyz * TZ_TEX2D(lightfalloff, float2(lightPos.z, 0.5)).y;
     // do NOT apply the shadowmap before the 'alpha' value or the pixelCount will be wrong
     float alpha = dot(attenuation, float3(0.3, 0.59, 0.11));
     if (alpha < alphaRef)
@@ -512,11 +514,11 @@ FP_LIGHT_OUT fp_point_light_specular_shadow(float3 ScreenPos : TEXCOORD0,
 float4 fp_fog_light(float3 ScreenPos : TEXCOORD0,
                     float3 ViewPos   : TEXCOORD1,
                     float3 ExitPos   : TEXCOORD2,
-                    float3 HitPos    : TEXCOORD3) : COLOR
+                    float3 HitPos    : TEXCOORD3) : TZ_OUT_COLOR
 {
     FP_LIGHT_OUT OUT;
     float2 uv = ((ScreenPos.xy / ScreenPos.z) * 0.5 + 0.5);
-    float z = (DecodeFloatRGBA32(tex2D(depthTexture, uv)) * maxDepth);
+    float z = (DecodeFloatRGBA32(TZ_TEX2D(depthTexture, uv)) * maxDepth);
     float3 position = float3((ViewPos.xy / ViewPos.z) * z, z);
     float3 fragmentPos = LocalPointToView(position, lightViewInverseTranspose);
     float3 eyePos = float3(lightViewInverseTranspose[0].w, lightViewInverseTranspose[1].w, lightViewInverseTranspose[2].w);
@@ -531,12 +533,12 @@ float4 fp_fog_light(float3 ScreenPos : TEXCOORD0,
     return float4(lightColor, fogDistance);
 }
 
-float4 fp_mix(float2 UV : TEXCOORD0) : COLOR
+float4 fp_mix(float2 UV : TEXCOORD0) : TZ_OUT_COLOR
 {
-   float3 albedo = tex2D(albedoTexture, UV).xyz;
-   float4 specular = tex2D(specularTexture, UV);
-   float3 diffuseLighting  = lightingScale * tex2D(diffuseLightingTexture, UV).xyz;
-   float3 specularLighting = lightingScale * tex2D(specularLightingTexture, UV).xyz;
+   float3 albedo = TZ_TEX2D(albedoTexture, UV).xyz;
+   float4 specular = TZ_TEX2D(specularTexture, UV);
+   float3 diffuseLighting  = lightingScale * TZ_TEX2D(diffuseLightingTexture, UV).xyz;
+   float3 specularLighting = lightingScale * TZ_TEX2D(specularLightingTexture, UV).xyz;
    return float4((lerp(albedo, (albedo * diffuseLighting), specular.w) + (specularLighting * specular.xyz)), 1.0);
 }
 

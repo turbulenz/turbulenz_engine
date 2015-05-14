@@ -1,5 +1,6 @@
 // Copyright (c) 2012-2013 Turbulenz Limited
 
+#include "platform.cgh"
 #include "common.cgh"
 #include "uvtransform.cgh"
 
@@ -30,7 +31,7 @@ static const float SpecularExponent = 8.0;
 
 float4 skinBones[75 * 3];
 
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -39,7 +40,7 @@ sampler2D diffuse = sampler_state
     MaxAnisotropy = 8;
 };
 
-sampler2D normal_map = sampler_state
+TZ_TEXTURE2D_DECLARE(normal_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -48,7 +49,7 @@ sampler2D normal_map = sampler_state
     MaxAnisotropy = 8;
 };
 
-sampler2D specular_map = sampler_state
+TZ_TEXTURE2D_DECLARE(specular_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -57,7 +58,7 @@ sampler2D specular_map = sampler_state
     MaxAnisotropy = 8;
 };
 
-sampler2D alpha_map = sampler_state
+TZ_TEXTURE2D_DECLARE(alpha_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -66,7 +67,7 @@ sampler2D alpha_map = sampler_state
     MaxAnisotropy = 4;
 };
 
-sampler2D glow_map = sampler_state
+TZ_TEXTURE2D_DECLARE(glow_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -74,7 +75,7 @@ sampler2D glow_map = sampler_state
     WrapT = Repeat;
 };
 
-sampler2D light_map = sampler_state
+TZ_TEXTURE2D_DECLARE(light_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -82,7 +83,7 @@ sampler2D light_map = sampler_state
     WrapT = ClampToEdge;
 };
 
-samplerCUBE env_map = sampler_state
+TZ_TEXTURECUBE_DECLARE(env_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -91,7 +92,7 @@ samplerCUBE env_map = sampler_state
     WrapR = ClampToEdge;
 };
 
-sampler2D lightprojection = sampler_state
+TZ_TEXTURE2D_DECLARE(lightprojection)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -99,7 +100,7 @@ sampler2D lightprojection = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D lightfalloff = sampler_state
+TZ_TEXTURE2D_DECLARE(lightfalloff)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -180,9 +181,9 @@ void light_contribution(in float3 INViewNormal   : TEXCOORD1,
     Ln = float3(dot(Ln, INViewTangent), dot(Ln, INViewBinormal), dot(Ln, INViewNormal));
     Ln = normalize(Ln);
     float4 position4 = float4(position, 1.0);
-    float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
-    float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
-                         tex2D(lightfalloff, float2(projection.w, 0.5)).y;
+    float4 proj = PointToLight(position4, lightViewInverseTransposeFalloff);
+    float3 attenuation = tex2DprojFix(lightprojection, proj.xyz).xyz *
+                         TZ_TEX2D(lightfalloff, float2(proj.w, 0.5)).y;
     diffContrib = (dot(Ln, Nn) * lightColor * attenuation);
     // Discard fragment if it does not contribute much actual light
     if (dot(diffContrib, float3(0.3, 0.59, 0.11)) < 0.004)
@@ -208,9 +209,9 @@ void light_contribution_specular(in float3 INViewNormal   : TEXCOORD1,
     Ln = normalize(Ln);
     Hn = normalize(Hn);
     float4 position4 = float4(position, 1.0);
-    float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
-    float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
-                         tex2D(lightfalloff, float2(projection.w, 0.5)).y;
+    float4 proj = PointToLight(position4, lightViewInverseTransposeFalloff);
+    float3 attenuation = tex2DprojFix(lightprojection, proj.xyz).xyz *
+                         TZ_TEX2D(lightfalloff, float2(proj.w, 0.5)).y;
     float3 lightcolor = (lightColor * attenuation);
     diffContrib = (dot(Ln, Nn) * lightcolor);
     // Discard fragment if it does not contribute much actual light
@@ -224,15 +225,15 @@ void light_contribution_specular(in float3 INViewNormal   : TEXCOORD1,
 
 float3 SampleNormalMap(float2 uv)
 {
-    return normalize(2.0 * tex2D(normal_map, uv).xyz - 1.0);
+    return normalize(2.0 * TZ_TEX2D(normal_map, uv).xyz - 1.0);
 }
 
 float3 SampleNormalMapRXGB(float2 uv)
 {
     float3 normal;
-    //normal = (2.0 * tex2D(normal_map, uv).xyz - 1.0);
-    normal = normalize(2.0 * tex2D(normal_map, uv).agb - 1.0);
-    //normal.xy = (2.0 * tex2D(normal_map, uv).ag - 1.0);
+    //normal = (2.0 * TZ_TEX2D(normal_map, uv).xyz - 1.0);
+    normal = normalize(2.0 * TZ_TEX2D(normal_map, uv).agb - 1.0);
+    //normal.xy = (2.0 * TZ_TEX2D(normal_map, uv).ag - 1.0);
     //normal.z = sqrt(1.0 - (normal.x * normal.x) - (normal.y * normal.y));
     return normal;
 }
@@ -242,7 +243,7 @@ float3 SampleNormalMapRXGB(float2 uv)
 //
 void vp_ambient(in float3 INPosition : POSITION,
                 in float2 INUV       : TEXCOORD0,
-                out float4 OUTPosition : POSITION,
+                out float4 OUTPosition : TZ_OUT_POSITION,
                 out float2 OUTUV       : TEXCOORD0)
 {
     float3 position = TransformPoint(INPosition, worldView);
@@ -254,7 +255,7 @@ void vp_ambient_skinned(in float3 INPosition : POSITION,
                         in float2 INUV		 : TEXCOORD0,
                         in float4 INIndices  : BLENDINDICES,
                         in float4 INWeights  : BLENDWEIGHT,
-                        out float4 OUTPosition : POSITION,
+                        out float4 OUTPosition : TZ_OUT_POSITION,
                         out float2 OUTUV       : TEXCOORD0)
 {
     float3x4 skinTransform = BuildSkinTransform(INIndices, INWeights);
@@ -270,7 +271,7 @@ void vp_ambient_skinned(in float3 INPosition : POSITION,
     OUTUV = TransformUV(INUV);
 }
 
-float4 vp_ambient_flat(float3 INPosition : POSITION) : POSITION
+float4 vp_ambient_flat(float3 INPosition : POSITION) : TZ_OUT_POSITION
 {
     float3 position = TransformPoint(INPosition, worldView);
     return PointToDevice(position, projection);
@@ -278,7 +279,7 @@ float4 vp_ambient_flat(float3 INPosition : POSITION) : POSITION
 
 float4 vp_ambient_flat_skinned(in float3 INPosition : POSITION,
                                in float4 INIndices  : BLENDINDICES,
-                               in float4 INWeights  : BLENDWEIGHT) : POSITION
+                               in float4 INWeights  : BLENDWEIGHT) : TZ_OUT_POSITION
 {
     float3x4 skinTransform = BuildSkinTransform(INIndices, INWeights);
 
@@ -295,7 +296,7 @@ float4 vp_ambient_flat_skinned(in float3 INPosition : POSITION,
 void vp_lightmap(in float3 INPosition : POSITION,
                  in float2 INUV0      : TEXCOORD0,
                  in float2 INUV1      : TEXCOORD1,
-                 out float4 OUTPosition : POSITION,
+                 out float4 OUTPosition : TZ_OUT_POSITION,
                  out float4 OUTUV       : TEXCOORD0)
 {
     float3 position = TransformPoint(INPosition, worldView);
@@ -306,7 +307,7 @@ void vp_lightmap(in float3 INPosition : POSITION,
 
 void vp_nolight(in float3 INPosition : POSITION,
                 in float2 INUV       : TEXCOORD0,
-                out float4 OUTPosition : POSITION,
+                out float4 OUTPosition : TZ_OUT_POSITION,
                 out float4 OUTColor    : COLOR,
                 out float2 OUTUV       : TEXCOORD0)
 {
@@ -320,7 +321,7 @@ void vp_nolight_skinned(in float3 INPosition : POSITION,
                         in float2 INUV	   : TEXCOORD0,
                         in float4 INIndices  : BLENDINDICES,
                         in float4 INWeights  : BLENDWEIGHT,
-                        out float4 OUTPosition : POSITION,
+                        out float4 OUTPosition : TZ_OUT_POSITION,
                         out float4 OUTColor    : COLOR,
                         out float2 OUTUV       : TEXCOORD0)
 {
@@ -341,7 +342,7 @@ void vp_nolight_skinned(in float3 INPosition : POSITION,
 void vp_nolight_vertexcolor(in float3 INPosition : POSITION,
                             in float2 INUV       : TEXCOORD0,
                             in float4 INColor    : COLOR,
-                            out float4 OUTPosition : POSITION,
+                            out float4 OUTPosition : TZ_OUT_POSITION,
                             out float4 OUTColor    : COLOR,
                             out float2 OUTUV       : TEXCOORD0)
 {
@@ -352,7 +353,7 @@ void vp_nolight_vertexcolor(in float3 INPosition : POSITION,
 }
 
 void vp_skybox(in float3 INPosition : POSITION,
-               out float4 OUTPosition     : POSITION,
+               out float4 OUTPosition     : TZ_OUT_POSITION,
                out float3 OUTeyeDirection : TEXCOORD0)
 {
     float3 position = TransformPoint(INPosition, world);
@@ -363,7 +364,7 @@ void vp_skybox(in float3 INPosition : POSITION,
 void vp_glass_env(in float3 INPosition : POSITION,
                   in float3 INNormal   : NORMAL,
                   in float2 INUV       : TEXCOORD0,
-                  out float4 OUTPosition     : POSITION,
+                  out float4 OUTPosition     : TZ_OUT_POSITION,
                   out float4 OUTColor        : COLOR,
                   out float2 OUTUV           : TEXCOORD0,
                   out float3 OUTNormal       : TEXCOORD1,
@@ -379,7 +380,7 @@ void vp_glass_env(in float3 INPosition : POSITION,
 
 void vp_env(in float3 INPosition : POSITION,
             in float3 INNormal   : NORMAL,
-            out float4 OUTPosition     : POSITION,
+            out float4 OUTPosition     : TZ_OUT_POSITION,
             out float4 OUTColor        : COLOR,
             out float3 OUTNormal       : TEXCOORD0,
             out float3 OUTeyeDirection : TEXCOORD1)
@@ -395,7 +396,7 @@ void vp_env_skinned(in float3 INPosition : POSITION,
                     in float3 INNormal   : NORMAL,
                     in float4 INIndices  : BLENDINDICES,
                     in float4 INWeights  : BLENDWEIGHT,
-                    out float4 OUTPosition     : POSITION,
+                    out float4 OUTPosition     : TZ_OUT_POSITION,
                     out float4 OUTColor        : COLOR,
                     out float3 OUTNormal       : TEXCOORD0,
                     out float3 OUTeyeDirection : TEXCOORD1)
@@ -421,7 +422,7 @@ void vp_env_skinned(in float3 INPosition : POSITION,
 
 void vp_flat(in float3 INPosition : POSITION,
              in float3 INNormal   : NORMAL,
-             out float4 OUTPosition : POSITION,
+             out float4 OUTPosition : TZ_OUT_POSITION,
              out float4 OUTColor    : COLOR,
              out float3 OUTViewNormal   : TEXCOORD1,
              out float3 OUTViewPosition : TEXCOORD2)
@@ -437,7 +438,7 @@ void vp_flat_skinned(in float3 INPosition : POSITION,
                      in float3 INNormal	: NORMAL,
                      in float4 INIndices  : BLENDINDICES,
                      in float4 INWeights  : BLENDWEIGHT,
-                     out float4 OUTPosition : POSITION,
+                     out float4 OUTPosition : TZ_OUT_POSITION,
                      out float4 OUTColor    : COLOR,
                      out float3 OUTViewNormal   : TEXCOORD1,
                      out float3 OUTViewPosition : TEXCOORD2)
@@ -466,7 +467,7 @@ void vp_flat_skinned(in float3 INPosition : POSITION,
 void vp_blinn(in float3 INPosition : POSITION,
               in float3 INNormal   : NORMAL,
               in float2 INUV       : TEXCOORD0,
-              out float4 OUTPosition : POSITION,
+              out float4 OUTPosition : TZ_OUT_POSITION,
               out float4 OUTColor    : COLOR,
               out float2 OUTUV       : TEXCOORD0,
               out float3 OUTViewNormal   : TEXCOORD1,
@@ -485,7 +486,7 @@ void vp_blinn_skinned(in float3 INPosition : POSITION,
                       in float2 INUV       : TEXCOORD0,
                       in float4 INIndices  : BLENDINDICES,
                       in float4 INWeights  : BLENDWEIGHT,
-                      out float4 OUTPosition : POSITION,
+                      out float4 OUTPosition : TZ_OUT_POSITION,
                       out float4 OUTColor    : COLOR,
                       out float2 OUTUV       : TEXCOORD0,
                       out float3 OUTViewNormal   : TEXCOORD1,
@@ -518,7 +519,7 @@ void vp_normalmap(in float3 INPosition : POSITION,
                   in float2 INUV       : TEXCOORD0,
                   in float3 INTangent  : TANGENT,
                   in float3 INBinormal : BINORMAL,
-                  out float4 OUTPosition : POSITION,
+                  out float4 OUTPosition : TZ_OUT_POSITION,
                   out float4 OUTColor    : COLOR,
                   out float2 OUTUV       : TEXCOORD0,
                   out float3 OUTViewNormal   : TEXCOORD1,
@@ -543,7 +544,7 @@ void vp_normalmap_skinned(in float3 INPosition : POSITION,
                           in float3 INBinormal : BINORMAL,
                           in float4 INIndices  : BLENDINDICES,
                           in float4 INWeights  : BLENDWEIGHT,
-                          out float4 OUTPosition : POSITION,
+                          out float4 OUTPosition : TZ_OUT_POSITION,
                           out float4 OUTColor    : COLOR,
                           out float2 OUTUV       : TEXCOORD0,
                           out float3 OUTViewNormal   : TEXCOORD1,

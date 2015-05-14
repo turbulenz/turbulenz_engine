@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
+#include "platform.cgh"
 #include "skinning.cgh"
 
 //
@@ -47,7 +48,7 @@ void vp_normals(in float3 INPosition : POSITION,
                 in float3 INNormal   : NORMAL,
                 in float3 INTangent  : TANGENT,
                 in float3 INBinormal : BINORMAL,
-                out float4 OUTPosition : POSITION,
+                out float4 OUTPosition : TZ_OUT_POSITION,
                 out float3 OUTNormal   : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -61,7 +62,7 @@ void vp_normals_skinned(in float3 INPosition : POSITION,
                         in float3 INBinormal : BINORMAL,
                         in float4 INIndices  : BLENDINDICES,
                         in float4 INWeights  : BLENDWEIGHT,
-                        out float4 OUTPosition : POSITION,
+                        out float4 OUTPosition : TZ_OUT_POSITION,
                         out float3 OUTNormal   : TEXCOORD0)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -92,7 +93,7 @@ void vp_tangents(in float3 INPosition : POSITION,
                  in float3 INNormal   : NORMAL,
                  in float3 INTangent  : TANGENT,
                  in float3 INBinormal : BINORMAL,
-                 out float4 OUTPosition : POSITION,
+                 out float4 OUTPosition : TZ_OUT_POSITION,
                  out float3 OUTNormal   : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -106,7 +107,7 @@ void vp_tangents_skinned(in float3 INPosition : POSITION,
                          in float3 INBinormal : BINORMAL,
                          in float4 INIndices  : BLENDINDICES,
                          in float4 INWeights  : BLENDWEIGHT,
-                         out float4 OUTPosition : POSITION,
+                         out float4 OUTPosition : TZ_OUT_POSITION,
                          out float3 OUTNormal   : TEXCOORD0)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -138,7 +139,7 @@ void vp_binormals(in float3 INPosition : POSITION,
                   in float3 INNormal   : NORMAL,
                   in float3 INTangent  : TANGENT,
                   in float3 INBinormal : BINORMAL,
-                  out float4 OUTPosition : POSITION,
+                  out float4 OUTPosition : TZ_OUT_POSITION,
                   out float3 OUTNormal   : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -152,7 +153,7 @@ void vp_binormals_skinned(in float3 INPosition : POSITION,
                           in float3 INBinormal : BINORMAL,
                           in float4 INIndices  : BLENDINDICES,
                           in float4 INWeights  : BLENDWEIGHT,
-                          out float4 OUTPosition : POSITION,
+                          out float4 OUTPosition : TZ_OUT_POSITION,
                           out float3 OUTNormal   : TEXCOORD0)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -182,21 +183,21 @@ void vp_binormals_skinned(in float3 INPosition : POSITION,
 
 void vp_vertexcolor(in float3 INPosition : POSITION,
                     in float4 INColor    : COLOR,
-                    out float4 OUTPosition : POSITION,
+                    out float4 OUTPosition : TZ_OUT_POSITION,
                     out float4 OUTColor    : COLOR)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
     OUTColor = INColor;
 }
 
-float4 vp_constantcolor(float3 position : POSITION) : POSITION
+float4 vp_constantcolor(float3 position : POSITION) : TZ_OUT_POSITION
 {
     return PointToDevice(position, worldViewProjection);
 }
 
 float4 vp_constantcolor_skinned(float3 position : POSITION,
                                 float4 indices  : BLENDINDICES,
-                                float4 weights  : BLENDWEIGHT) : POSITION
+                                float4 weights  : BLENDWEIGHT) : TZ_OUT_POSITION
 {
     float3x4 skinMatrix = BuildSkinMatrix(indices, weights);
 
@@ -213,7 +214,7 @@ float4 vp_constantcolor_skinned(float3 position : POSITION,
 void vp_wireframe(in float4 INVertex0 : POSITION,
                   in float3 INVertex1 : TEXCOORD0,
                   in float3 INVertex2 : TEXCOORD1,
-                  out float4 OUTPosition : POSITION,
+                  out float4 OUTPosition : TZ_OUT_POSITION,
                   out float4 OUTDistance : TEXCOORD0)
 {
     float VertexId = INVertex0.w;
@@ -252,7 +253,7 @@ void vp_wireframe_skinned(in float4 INVertex0  : POSITION,
                           in float4 INWeights1 : TEXCOORD3,
                           in float4 INIndices2 : TEXCOORD4,
                           in float4 INWeights2 : TEXCOORD5,
-                          out float4 OUTPosition : POSITION,
+                          out float4 OUTPosition : TZ_OUT_POSITION,
                           out float4 OUTDistance : TEXCOORD0)
 {
     float VertexId = INVertex0.w;
@@ -300,23 +301,23 @@ void vp_wireframe_skinned(in float4 INVertex0  : POSITION,
 //
 // Fragment programs
 //
-float4 fp_normals(float3 normal : TEXCOORD0) : COLOR
+float4 fp_normals(float3 normal : TEXCOORD0) : TZ_OUT_COLOR
 {
     float3 Nn = normalize(normal);
     return float4(Nn * 0.5 + 0.5, 1.0);
 }
 
-float4 fp_vertexcolor(float4 color : COLOR) : COLOR
+float4 fp_vertexcolor(float4 color : COLOR) : TZ_OUT_COLOR
 {
     return color;
 }
 
-float4 fp_constantcolor() : COLOR
+float4 fp_constantcolor() : TZ_OUT_COLOR
 {
     return constantColor;
 }
 
-float4 fp_wireframe(float4 INDistance : TEXCOORD0) : COLOR
+float4 fp_wireframe(float4 INDistance : TEXCOORD0) : TZ_OUT_COLOR
 {
     float3 Distance = INDistance.xyz * INDistance.w;
 
@@ -330,7 +331,7 @@ float4 fp_wireframe(float4 INDistance : TEXCOORD0) : COLOR
     return OUTColor;
 }
 
-float4 fp_physics_debug(float4 INDistance : TEXCOORD0) : COLOR
+float4 fp_physics_debug(float4 INDistance : TEXCOORD0) : TZ_OUT_COLOR
 {
     float3 Distance = INDistance.xyz * INDistance.w;
 

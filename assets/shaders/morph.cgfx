@@ -1,5 +1,7 @@
 // Copyright (c) 2010-2013 Turbulenz Limited
 
+#include "platform.cgh"
+
 #define MAX_MORPH_WEIGHTS 3
 
 //
@@ -20,7 +22,7 @@ static const float Ks = 0.5;
 static const float Kr = 0.5;
 static const float SpecularExponent = 32.0;
 
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -64,7 +66,7 @@ void vp_morph(in float3 INPosition0 : ATTR0,
               in float3 INPosition3 : ATTR14,
               in float3 INNormal3   : ATTR15,
               in float2 INUV        : ATTR8,
-              out float4 OUTPosition : POSITION,
+              out float4 OUTPosition : TZ_OUT_POSITION,
               out float4 OUTColor    : COLOR)
 {
     float3 morphPosition = INPosition0;
@@ -86,7 +88,7 @@ void vp_morph(in float3 INPosition0 : ATTR0,
     OUTColor = float4(color * materialColor.xyz, materialColor.w);
 }
 
-float4 fp_morph(float4 INColor : COLOR) : COLOR
+float4 fp_morph(float4 INColor : COLOR) : TZ_OUT_COLOR
 {
     return INColor;
 }
@@ -100,7 +102,7 @@ void vp_normals_morph(in float3 INPosition0 : ATTR0,
                       in float3 INPosition3 : ATTR14,
                       in float3 INNormal3   : ATTR15,
                       in float2 INUV        : ATTR8,
-                      out float4 OUTPosition : POSITION,
+                      out float4 OUTPosition : TZ_OUT_POSITION,
                       out float3 OUTNormal   : TEXCOORD0)
 {
     float3 morphPosition = INPosition0;
@@ -120,7 +122,7 @@ void vp_normals_morph(in float3 INPosition0 : ATTR0,
     OUTNormal = morphNormal;
 }
 
-float4 fp_normals(float3 normal : TEXCOORD0) : COLOR
+float4 fp_normals(float3 normal : TEXCOORD0) : TZ_OUT_COLOR
 {
     float3 Nn = normalize(normal);
     return float4(Nn * 0.5 + 0.5, 1.0);
@@ -135,7 +137,7 @@ void vp_blinn_morph(in float3 INPosition0 : ATTR0,
                     in float3 INPosition3 : ATTR14,
                     in float3 INNormal3   : ATTR15,
                     in float2 INUV        : ATTR8,
-                    out float4 OUTPosition : POSITION,
+                    out float4 OUTPosition : TZ_OUT_POSITION,
                     out float4 OUTColor    : COLOR,
                     out float2 OUTUV       : TEXCOORD0,
                     out float3 OUTNormal   : TEXCOORD1,
@@ -167,7 +169,7 @@ float4 fp_blinn(in float4 INColor    : COLOR,
                 in float2 INUV       : TEXCOORD0,
                 in float3 INNormal   : TEXCOORD1,
                 in float3 INLight    : TEXCOORD2,
-                in float3 INView     : TEXCOORD3) : COLOR
+                in float3 INView     : TEXCOORD3) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -175,7 +177,7 @@ float4 fp_blinn(in float4 INColor    : COLOR,
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float4 diffuseColor = INColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = INColor * TZ_TEX2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }

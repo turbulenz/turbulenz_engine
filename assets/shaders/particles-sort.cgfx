@@ -1,5 +1,7 @@
 // Copyright (c) 2013-2014 Turbulenz Limited
 
+#include "platform.cgh"
+
 #include "particles-common.cgh"
 
 // z bound for normalization
@@ -14,9 +16,9 @@ float twoStage_PmS_1;
 // --------------------------------------------------------------
 
 // Compute zOrder for each particle.
-float4 fp_prepare_sort(float2 INParticle : TEXCOORD0) : COLOR
+float4 fp_prepare_sort(float2 INParticle : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float2 uv = tex2D(mappingTable, mappingRegionMap(INParticle)).xy;
+    float2 uv = TZ_TEX2D(mappingTable, mappingRegionMap(INParticle)).xy;
     float2 particleUV = particleRegionMap(uv * 255.0 * PARTICLE_DIM * invRegionSize);
     if (getLife(fParticleState, particleUV * textureSize) <= 0)
     {
@@ -47,9 +49,9 @@ float2 uvFromIndex(float index)
 
 // Perform sort pass on mapping table by particle zOrder
 // Adapated from GPUGems 2 (Faster GPU Sorting)
-float4 fp_merge_sort_pass(float2 INParticle : TEXCOORD0) : COLOR
+float4 fp_merge_sort_pass(float2 INParticle : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 self = tex2D(mappingTable, mappingRegionMap(INParticle));
+    float4 self = TZ_TEX2D(mappingTable, mappingRegionMap(INParticle));
     float index = indexOf(INParticle);
     float j = floor(mod(index, twoStage));
 
@@ -58,7 +60,7 @@ float4 fp_merge_sort_pass(float2 INParticle : TEXCOORD0) : COLOR
         (mod((j + PmS) / cpass, 2.0) < 1.0) ? 1.0 :
         -1.0;
 
-    float4 other = tex2D(mappingTable, mappingRegionMap(uvFromIndex(index + compare * cpass)));
+    float4 other = TZ_TEX2D(mappingTable, mappingRegionMap(uvFromIndex(index + compare * cpass)));
     return (decodeHalfUnsignedFloat(self.zw)  * compare <=
             decodeHalfUnsignedFloat(other.zw) * compare) ? self : other;
 }

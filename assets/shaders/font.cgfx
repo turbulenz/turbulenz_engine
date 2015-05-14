@@ -1,10 +1,13 @@
 // Copyright (c) 2009,2012 Turbulenz Limited
 
+#include "platform.cgh"
+
 float4 clipSpace;
 float  alphaRef = 0.03;
 float4 color;
 
-sampler2D texture = sampler_state
+/* sampler2D texture = sampler_state */
+TZ_TEXTURE2D_DECLARE(texture)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -15,9 +18,9 @@ sampler2D texture = sampler_state
 //
 void
 vp_font(in float4 INPosition : POSITION,
-               in float2 INTexCoord0 : TEXCOORD0,
-               out float4 OUTPosition : POSITION,
-               out float2 OUTTexCoord0 : TEXCOORD0)
+            in float2 INTexCoord0 : TEXCOORD0,
+            out float4 OUTPosition : TZ_OUT_POSITION,
+            out float2 OUTTexCoord0 : TEXCOORD0)
 {
     float4 position = INPosition;
     position.xy = position.xy * clipSpace.xy + clipSpace.zw;
@@ -30,9 +33,9 @@ vp_font(in float4 INPosition : POSITION,
 //
 
 float4
-fp_font(float2 INTexCoord0 : TEXCOORD0) : COLOR
+fp_font(float2 INTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 result = color * tex2D(texture, INTexCoord0);
+    float4 result = color * TZ_TEX2D(texture, INTexCoord0);
     if (result.a < alphaRef)
     {
         discard;
@@ -42,9 +45,10 @@ fp_font(float2 INTexCoord0 : TEXCOORD0) : COLOR
 
 // For the case where the texture is single-channel
 float4
-fp_font_8(float2 INTexCoord0 : TEXCOORD0) : COLOR
+fp_font_8(float2 INTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float a = tex2D(texture, INTexCoord0).y;
+    float a = TZ_TEX2D(texture, INTexCoord0).y;
+
     float4 result = color;
     result.a = result.a * a;
     if (result.a < alphaRef)

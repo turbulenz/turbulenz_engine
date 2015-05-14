@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2013 Turbulenz Limited
+#include "platform.cgh"
 
 //
 // Uniform variables
@@ -8,7 +9,7 @@ float3 uvtransform[2];
 float4 color;
 float alpha;
 
-sampler2D texture = sampler_state
+TZ_TEXTURE2D_DECLARE(texture)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -16,7 +17,7 @@ sampler2D texture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D pattern = sampler_state
+TZ_TEXTURE2D_DECLARE(pattern)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -24,7 +25,7 @@ sampler2D pattern = sampler_state
     WrapT = Repeat;
 };
 
-sampler2D gradient = sampler_state
+TZ_TEXTURE2D_DECLARE(gradient)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -32,7 +33,7 @@ sampler2D gradient = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D image = sampler_state
+TZ_TEXTURE2D_DECLARE(image)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -43,14 +44,14 @@ sampler2D image = sampler_state
 //
 // Vertex programs
 //
-float4 vp_flat(float2 InPosition : POSITION) : POSITION
+float4 vp_flat(float2 InPosition : POSITION) : TZ_OUT_POSITION
 {
     return float4(((InPosition * screen.xy) + screen.zw), 0.0, 1.0);
 }
 
 void vp_texture(in float2 InPosition: POSITION,
                 in float2 InUV: TEXCOORD0,
-                out float4 OutPosition: POSITION,
+                out float4 OutPosition: TZ_OUT_POSITION,
                 out float2 OutUV: TEXCOORD0)
 {
     OutPosition = float4(((InPosition * screen.xy) + screen.zw), 0.0, 1.0);
@@ -58,7 +59,7 @@ void vp_texture(in float2 InPosition: POSITION,
 }
 
 void vp_texture_uvtransform(in float2 InPosition: POSITION,
-                            out float4 OutPosition: POSITION,
+                            out float4 OutPosition: TZ_OUT_POSITION,
                             out float2 OutUV: TEXCOORD0)
 {
     OutPosition = float4(((InPosition * screen.xy) + screen.zw), 0.0, 1.0);
@@ -69,7 +70,7 @@ void vp_texture_uvtransform(in float2 InPosition: POSITION,
 
 void vp_image(in float2 InPosition: POSITION,
               in float2 InUV: TEXCOORD0,
-              out float4 OutPosition: POSITION,
+              out float4 OutPosition: TZ_OUT_POSITION,
               out float2 OutUV: TEXCOORD0)
 {
     OutPosition = float4(InPosition, 0.0, 1.0);
@@ -79,53 +80,53 @@ void vp_image(in float2 InPosition: POSITION,
 //
 // Fragment programs
 //
-float4 fp_flat() : COLOR
+float4 fp_flat() : TZ_OUT_COLOR
 {
     // Alpha is premultiplied on the CPU
     return color;
 }
 
-float4 fp_texture(float2 InUV: TEXCOORD0) : COLOR
+float4 fp_texture(float2 InUV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 fg = (tex2D(texture, InUV) * color);
+    float4 fg = (TZ_TEX2D(texture, InUV) * color);
     fg.rgb *= fg.a;
     return fg;
 }
 
-float4 fp_pattern(float2 InUV: TEXCOORD0) : COLOR
+float4 fp_pattern(float2 InUV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 fg = tex2D(pattern, InUV);
+    float4 fg = TZ_TEX2D(pattern, InUV);
     fg.a *= alpha;
     fg.rgb *= fg.a;
     return fg;
 }
 
-float4 fp_gradient(float2 InUV: TEXCOORD0) : COLOR
+float4 fp_gradient(float2 InUV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 fg = tex2D(gradient, InUV);
+    float4 fg = TZ_TEX2D(gradient, InUV);
     fg.a *= alpha;
     fg.rgb *= fg.a;
     return fg;
 }
 
-float4 fp_image(float2 InUV: TEXCOORD0) : COLOR
+float4 fp_image(float2 InUV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    return tex2D(image, InUV);
+    return TZ_TEX2D(image, InUV);
 }
 
-float4 fp_texture_shadow(float2 InUV: TEXCOORD0) : COLOR
+float4 fp_texture_shadow(float2 InUV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    return (color * (tex2D(texture, InUV).a));
+    return (color * (TZ_TEX2D(texture, InUV).a));
 }
 
-float4 fp_pattern_shadow(float2 InUV: TEXCOORD0) : COLOR
+float4 fp_pattern_shadow(float2 InUV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    return (color * (tex2D(pattern, InUV).a));
+    return (color * (TZ_TEX2D(pattern, InUV).a));
 }
 
-float4 fp_gradient_shadow(float2 InUV: TEXCOORD0) : COLOR
+float4 fp_gradient_shadow(float2 InUV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    return (color * (tex2D(gradient, InUV).a));
+    return (color * (TZ_TEX2D(gradient, InUV).a));
 }
 
 //

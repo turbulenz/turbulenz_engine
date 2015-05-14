@@ -1,0 +1,30 @@
+// Copyright (c) 2009,2012 Turbulenz Limited
+
+#ifndef __TZ_SHADER_PLATFORM_CGH__
+#define __TZ_SHADER_PLATFORM_CGH__
+
+#if !defined(TZ_OUT_COLOR)
+
+// -----------------------------------------------------------------------------
+// CGFX
+// -----------------------------------------------------------------------------
+
+# define TZ_VERTEX_SHADER
+# define TZ_FRAGMENT_SHADER
+
+# define TZ_OUT_COLOR      COLOR
+# define TZ_OUT_COLOR0     COLOR0
+# define TZ_OUT_COLOR1     COLOR1
+# define TZ_OUT_COLOR2     COLOR2
+# define TZ_OUT_COLOR3     COLOR3
+# define TZ_OUT_POSITION   POSITION
+
+# define TZ_TEXTURE2D_DECLARE( _name_ ) sampler2D _name_ = sampler_state
+# define TZ_TEXTURECUBE_DECLARE( _name_ ) samplerCUBE _name_ = sampler_state
+# define TZ_TEX2D( _name_, _uv_ ) tex2D( _name_, _uv_ )
+# define TZ_TEX2DPROJ( _name_, _uvw_ ) tex2Dproj( _name_ , _uvw_ )
+# define TZ_TEXCUBE( _name_, _uvw_ ) texCUBE( _name_, _uvw_ )
+
+#endif // !defined(TZ_OUT_COLOR)
+
+#endif // __TZ_SHADER_PLATFORM_CGH__

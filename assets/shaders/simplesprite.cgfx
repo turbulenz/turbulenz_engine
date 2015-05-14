@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
+#include "platform.cgh"
+
 #include "skinning.cgh"
 
 //
@@ -9,7 +11,7 @@ float4x4 worldViewProjection;
 
 float4 materialColor = {1.0, 1.0, 1.0, 1.0};
 
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -30,7 +32,7 @@ struct VP_NOLIGHT_VERTEXCOLOR_IN
 
 struct VP_NOLIGHT_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float4 Color    : COLOR;
     float2 UV       : TEXCOORD0;
 };
@@ -67,14 +69,14 @@ VP_NOLIGHT_OUT vp_nolight_vertexcolor(VP_NOLIGHT_VERTEXCOLOR_IN IN)
 //
 // Fragment programs
 //
-float4 fp_normal(FP_NOLIGHT_IN IN) : COLOR
+float4 fp_normal(FP_NOLIGHT_IN IN) : TZ_OUT_COLOR
 {
-    return IN.Color * tex2D(diffuse, IN.UV);
+    return IN.Color * TZ_TEX2D(diffuse, IN.UV);
 }
 
-float4 fp_premodulatealpha(FP_NOLIGHT_IN IN) : COLOR
+float4 fp_premodulatealpha(FP_NOLIGHT_IN IN) : TZ_OUT_COLOR
 {
-    float4 color = IN.Color * tex2D(diffuse, IN.UV);
+    float4 color = IN.Color * TZ_TEX2D(diffuse, IN.UV);
     color.xyz *= IN.Color.w;
     return color;
 }

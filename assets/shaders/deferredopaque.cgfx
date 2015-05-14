@@ -1,4 +1,6 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
+
+#include "platform.cgh"
 #include "uvtransform.cgh"
 
 //
@@ -15,7 +17,7 @@ float4 materialColor = {1.0, 1.0, 1.0, 1.0};
 
 float4 skinBones[75 * 3];
 
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -24,7 +26,7 @@ sampler2D diffuse = sampler_state
     MaxAnisotropy = 8;
 };
 
-sampler2D normal_map = sampler_state
+TZ_TEXTURE2D_DECLARE(normal_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -33,7 +35,7 @@ sampler2D normal_map = sampler_state
     MaxAnisotropy = 8;
 };
 
-sampler2D specular_map = sampler_state
+TZ_TEXTURE2D_DECLARE(specular_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -42,7 +44,7 @@ sampler2D specular_map = sampler_state
     MaxAnisotropy = 8;
 };
 
-sampler2D alpha_map = sampler_state
+TZ_TEXTURE2D_DECLARE(alpha_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -51,7 +53,7 @@ sampler2D alpha_map = sampler_state
     MaxAnisotropy = 4;
 };
 
-sampler2D glow_map = sampler_state
+TZ_TEXTURE2D_DECLARE(glow_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -59,7 +61,7 @@ sampler2D glow_map = sampler_state
     WrapT = Repeat;
 };
 
-samplerCUBE env_map = sampler_state
+TZ_TEXTURECUBE_DECLARE(env_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -89,7 +91,7 @@ struct VP_BLINN_SKINNED_IN
 
 struct VP_BLINN_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float4 Color    : COLOR;
     float3 UVDepth  : TEXCOORD0;
     float3 Normal   : TEXCOORD1;
@@ -114,7 +116,7 @@ struct VP_NORMALMAP_IN
 
 struct VP_NORMALMAP_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float4 Color    : COLOR;
     float3 UVDepth  : TEXCOORD0;
     float3 Normal   : TEXCOORD1;
@@ -151,7 +153,7 @@ struct VP_GLOWMAP_IN
 
 struct VP_GLOWMAP_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float4 Color    : COLOR;
     float3 UVDepth  : TEXCOORD0;
 };
@@ -178,7 +180,7 @@ struct VP_SKYBOX_IN
 
 struct VP_SKYBOX_OUT
 {
-    float4 Position     : POSITION;
+    float4 Position     : TZ_OUT_POSITION;
     float3 eyeDirection : TEXCOORD0;
 };
 
@@ -199,10 +201,10 @@ struct FP_DEBUG_IN
 
 struct FP_DEFERRED_OUT
 {
-    float4 albedo   : COLOR0;
-    float4 specular : COLOR1;
-    float4 normal   : COLOR2;
-    float4 depth    : COLOR3;
+    float4 albedo   : TZ_OUT_COLOR0;
+    float4 specular : TZ_OUT_COLOR1;
+    float4 normal   : TZ_OUT_COLOR2;
+    float4 depth    : TZ_OUT_COLOR3;
 };
 
 struct SkinTransform
@@ -265,15 +267,15 @@ float3 NormalToView(float3 n, float3 normal, float3 tangent, float3 binormal)
 
 float3 SampleNormalMap(float2 uv)
 {
-    return normalize(2.0 * tex2D(normal_map, uv).rgb - 1.0);
+    return normalize(2.0 * TZ_TEX2D(normal_map, uv).rgb - 1.0);
 }
 
 float3 SampleNormalMapRXGB(float2 uv)
 {
     float3 normal;
-    //normal = (2.0 * tex2D(normal_map, uv).rgb - 1.0);
-    normal = normalize(2.0 * tex2D(normal_map, uv).agb - 1.0);
-    //normal.xy = (2.0 * tex2D(normal_map, uv).ag - 1.0);
+    //normal = (2.0 * TZ_TEX2D(normal_map, uv).rgb - 1.0);
+    normal = normalize(2.0 * TZ_TEX2D(normal_map, uv).agb - 1.0);
+    //normal.xy = (2.0 * TZ_TEX2D(normal_map, uv).ag - 1.0);
     //normal.z = sqrt(1.0 - (normal.x * normal.x) - (normal.y * normal.y));
     return normal;
 }
@@ -485,7 +487,7 @@ FP_DEFERRED_OUT fp_blinn(FP_BLINN_IN IN)
     FP_DEFERRED_OUT OUT;
     float3 Nn = normalize(IN.Normal);
     float2 uv = IN.UVDepth.xy;
-    OUT.albedo = IN.Color * tex2D(diffuse, uv);
+    OUT.albedo = IN.Color * TZ_TEX2D(diffuse, uv);
     OUT.specular = float4(0.0, 0.0, 0.0, 1.0);
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
@@ -497,17 +499,18 @@ FP_DEFERRED_OUT fp_rxgb_normalmap(FP_NORMALMAP_IN IN)
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
     float3 Nn = NormalToView(SampleNormalMapRXGB(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    OUT.albedo = IN.Color * tex2D(diffuse, uv);
+    OUT.albedo = IN.Color * TZ_TEX2D(diffuse, uv);
     OUT.specular = float4(0.0, 0.0, 0.0, 1.0);
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
 }
 
+#if 0
 FP_DEFERRED_OUT fp_rxgb_normalmap_alphamap(FP_NORMALMAP_IN IN)
 {
     FP_DEFERRED_OUT OUT;
-    float4 diffuseColor = tex2D(diffuse, uv);
+    float4 diffuseColor = TZ_TEX2D(diffuse, uv);
     if (diffuseColor.a < alphaRef)
     {
         discard;
@@ -520,14 +523,15 @@ FP_DEFERRED_OUT fp_rxgb_normalmap_alphamap(FP_NORMALMAP_IN IN)
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
 }
+#endif
 
 FP_DEFERRED_OUT fp_rxgb_normalmap_specularmap(FP_NORMALMAP_IN IN)
 {
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
     float3 Nn = NormalToView(SampleNormalMapRXGB(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    OUT.albedo = IN.Color * tex2D(diffuse, uv);
-    OUT.specular = float4(IN.Color.xyz * tex2D(specular_map, uv).xyz, 1.0);
+    OUT.albedo = IN.Color * TZ_TEX2D(diffuse, uv);
+    OUT.specular = float4(IN.Color.xyz * TZ_TEX2D(specular_map, uv).xyz, 1.0);
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
@@ -537,14 +541,14 @@ FP_DEFERRED_OUT fp_rxgb_normalmap_specularmap_alphatest(FP_NORMALMAP_IN IN)
 {
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
-    float4 diffuseColor = tex2D(diffuse, uv);
+    float4 diffuseColor = TZ_TEX2D(diffuse, uv);
     if (diffuseColor.a < alphaRef)
     {
         discard;
     }
     float3 Nn = NormalToView(SampleNormalMapRXGB(uv), IN.Normal, IN.Tangent, IN.Binormal);
     OUT.albedo = IN.Color * diffuseColor;
-    OUT.specular = float4(IN.Color.xyz * tex2D(specular_map, uv).xyz, 1.0);
+    OUT.specular = float4(IN.Color.xyz * TZ_TEX2D(specular_map, uv).xyz, 1.0);
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
@@ -555,8 +559,8 @@ FP_DEFERRED_OUT fp_rxgb_normalmap_glowmap(FP_NORMALMAP_IN IN)
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
     float3 Nn = NormalToView(SampleNormalMapRXGB(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    float4 albedo = tex2D(diffuse, uv);
-    float3 glow = (IN.Color.xyz * tex2D(glow_map, uv).xyz);
+    float4 albedo = TZ_TEX2D(diffuse, uv);
+    float3 glow = (IN.Color.xyz * TZ_TEX2D(glow_map, uv).xyz);
     OUT.albedo = (albedo + float4(glow, 0.0));
     OUT.specular = float4(0.0, 0.0, 0.0, (1.0 - dot(glow, glow)));
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
@@ -569,10 +573,10 @@ FP_DEFERRED_OUT fp_rxgb_normalmap_specularmap_glowmap(FP_NORMALMAP_IN IN)
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
     float3 Nn = NormalToView(SampleNormalMapRXGB(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    float4 albedo = tex2D(diffuse, uv);
-    float3 glow = (IN.Color.xyz * tex2D(glow_map, uv).xyz);
+    float4 albedo = TZ_TEX2D(diffuse, uv);
+    float3 glow = (IN.Color.xyz * TZ_TEX2D(glow_map, uv).xyz);
     OUT.albedo = (albedo + float4(glow, 0.0));
-    OUT.specular = float4(tex2D(specular_map, uv).xyz, (1.0 - dot(glow, glow)));
+    OUT.specular = float4(TZ_TEX2D(specular_map, uv).xyz, (1.0 - dot(glow, glow)));
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
@@ -583,7 +587,7 @@ FP_DEFERRED_OUT fp_normalmap(FP_NORMALMAP_IN IN)
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
     float3 Nn = NormalToView(SampleNormalMap(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    OUT.albedo = IN.Color * tex2D(diffuse, uv);
+    OUT.albedo = IN.Color * TZ_TEX2D(diffuse, uv);
     OUT.specular = float4(0.0, 0.0, 0.0, 1.0);
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
@@ -594,7 +598,7 @@ FP_DEFERRED_OUT fp_normalmap_alphatest(FP_NORMALMAP_IN IN)
 {
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
-    float4 diffuseColor = tex2D(diffuse, uv);
+    float4 diffuseColor = TZ_TEX2D(diffuse, uv);
     if (diffuseColor.a < alphaRef)
     {
         discard;
@@ -612,8 +616,8 @@ FP_DEFERRED_OUT fp_normalmap_specularmap(FP_NORMALMAP_IN IN)
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
     float3 Nn = NormalToView(SampleNormalMap(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    OUT.albedo = IN.Color * tex2D(diffuse, uv);
-    OUT.specular = float4(IN.Color.xyz * tex2D(specular_map, uv).xyz, 1.0);
+    OUT.albedo = IN.Color * TZ_TEX2D(diffuse, uv);
+    OUT.specular = float4(IN.Color.xyz * TZ_TEX2D(specular_map, uv).xyz, 1.0);
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
@@ -623,14 +627,14 @@ FP_DEFERRED_OUT fp_normalmap_specularmap_alphatest(FP_NORMALMAP_IN IN)
 {
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
-    float4 diffuseColor = tex2D(diffuse, uv);
+    float4 diffuseColor = TZ_TEX2D(diffuse, uv);
     if (diffuseColor.a < alphaRef)
     {
         discard;
     }
     float3 Nn = NormalToView(SampleNormalMap(uv), IN.Normal, IN.Tangent, IN.Binormal);
     OUT.albedo = IN.Color * diffuseColor;
-    OUT.specular = float4(IN.Color.xyz * tex2D(specular_map, uv).xyz, 1.0);
+    OUT.specular = float4(IN.Color.xyz * TZ_TEX2D(specular_map, uv).xyz, 1.0);
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
@@ -640,14 +644,14 @@ FP_DEFERRED_OUT fp_normalmap_specularmap_alphamap(FP_NORMALMAP_IN IN)
 {
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
-    float alpha = IN.Color.w * tex2D(alpha_map, uv).a;
+    float alpha = IN.Color.w * TZ_TEX2D(alpha_map, uv).a;
     if (alpha < alphaRef)
     {
         discard;
     }
     float3 Nn = NormalToView(SampleNormalMap(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    OUT.albedo = float4(IN.Color.xyz * tex2D(diffuse, uv).xyz, alpha);
-    OUT.specular = float4(IN.Color.xyz * tex2D(specular_map, uv).xyz, 1.0);
+    OUT.albedo = float4(IN.Color.xyz * TZ_TEX2D(diffuse, uv).xyz, alpha);
+    OUT.specular = float4(IN.Color.xyz * TZ_TEX2D(specular_map, uv).xyz, 1.0);
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
@@ -658,8 +662,8 @@ FP_DEFERRED_OUT fp_normalmap_glowmap(FP_NORMALMAP_IN IN)
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
     float3 Nn = NormalToView(SampleNormalMap(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    float4 albedo = tex2D(diffuse, uv);
-    float3 glow = (IN.Color.xyz * tex2D(glow_map, uv).xyz);
+    float4 albedo = TZ_TEX2D(diffuse, uv);
+    float3 glow = (IN.Color.xyz * TZ_TEX2D(glow_map, uv).xyz);
     OUT.albedo = (albedo + float4(glow, 0.0));
     OUT.specular = float4(0.0, 0.0, 0.0, (1.0 - dot(glow, glow)));
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
@@ -672,10 +676,10 @@ FP_DEFERRED_OUT fp_normalmap_specularmap_glowmap(FP_NORMALMAP_IN IN)
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
     float3 Nn = NormalToView(SampleNormalMap(uv), IN.Normal, IN.Tangent, IN.Binormal);
-    float4 albedo = tex2D(diffuse, uv);
-    float3 glow = (IN.Color.xyz * tex2D(glow_map, uv).xyz);
+    float4 albedo = TZ_TEX2D(diffuse, uv);
+    float3 glow = (IN.Color.xyz * TZ_TEX2D(glow_map, uv).xyz);
     OUT.albedo = (albedo + float4(glow, 0.0));
-    OUT.specular = float4(tex2D(specular_map, uv).xyz, (1.0 - dot(glow, glow)));
+    OUT.specular = float4(TZ_TEX2D(specular_map, uv).xyz, (1.0 - dot(glow, glow)));
     OUT.normal = float4(Nn * 0.5 + 0.5, 1.0);
     OUT.depth = EncodeFloatRGBA(IN.UVDepth.z);
     return OUT;
@@ -685,7 +689,7 @@ FP_DEFERRED_OUT fp_glowmap(FP_GLOWMAP_IN IN)
 {
     FP_DEFERRED_OUT OUT;
     float2 uv = IN.UVDepth.xy;
-    float3 glow = (IN.Color.xyz * tex2D(glow_map, uv).xyz);
+    float3 glow = (IN.Color.xyz * TZ_TEX2D(glow_map, uv).xyz);
     OUT.albedo = float4(glow, 0.0);
     OUT.specular = float4(0.0, 0.0, 0.0, 0.0);
     OUT.normal = float4(0.0, 0.0, 0.0, 0.0);
@@ -696,14 +700,14 @@ FP_DEFERRED_OUT fp_glowmap(FP_GLOWMAP_IN IN)
 FP_DEFERRED_OUT fp_skybox(FP_SKYBOX_IN IN)
 {
     FP_DEFERRED_OUT OUT;
-    OUT.albedo = texCUBE(env_map, IN.eyeDirection);
+    OUT.albedo = TZ_TEXCUBE(env_map, IN.eyeDirection);
     OUT.specular = float4(0.0, 0.0, 0.0, 0.0);
     OUT.normal = float4(0.0, 0.0, 0.0, 0.0);
     OUT.depth = float4(1.0, 0.0, 0.0, 0.0);
     return OUT;
 }
 
-float4 fp_debug(FP_DEBUG_IN IN) : COLOR
+float4 fp_debug(FP_DEBUG_IN IN) : TZ_OUT_COLOR
 {
     return float4(IN.Normal * 0.5 + 0.5, 1.0);
 }

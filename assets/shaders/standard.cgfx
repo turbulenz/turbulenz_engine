@@ -1,5 +1,7 @@
 // Copyright (c) 2010-2013 Turbulenz Limited
 
+#include "platform.cgh"
+
 #include "skinning.cgh"
 #include "uvtransform.cgh"
 
@@ -21,7 +23,7 @@ float3 ambientColor;
 float Ks = 0.5;
 float SpecularExponent = 55.0;
 
-sampler2D   diffuse;
+TZ_TEXTURE2D_DECLARE(diffuse){};
 
 
 //
@@ -59,20 +61,20 @@ struct VP_FLAT_SKINNED_IN
 
 struct VP_LAMBERT_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float4 Color    : COLOR;
     float2 UV       : TEXCOORD0;
 };
 
 struct VP_FLAT_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float4 Color    : COLOR;
 };
 
 struct VP_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float2 UV       : TEXCOORD0;
     float3 Normal	: TEXCOORD1;
     float3 Light    : TEXCOORD2;
@@ -253,21 +255,21 @@ void phong_shading(float3 LightColor,
     SpecularContrib = float(d > 0.0) * s * Ks * LightColor;
 }
 
-float4 fp_flat(float4 INColor : COLOR) : COLOR
+float4 fp_flat(float4 INColor : COLOR) : TZ_OUT_COLOR
 {
     return INColor;
 }
 
 float4 fp_lambert(float4 INColor : COLOR,
-                  float2 INUV    : TEXCOORD0) : COLOR
+                  float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return INColor * tex2D(diffuse, INUV);
+    return INColor * TZ_TEX2D(diffuse, INUV);
 }
 
 float4 fp_blinn(float2 INUV     : TEXCOORD0,
                 float3 INNormal : TEXCOORD1,
                 float3 INLight  : TEXCOORD2,
-                float3 INView   : TEXCOORD3) : COLOR
+                float3 INView   : TEXCOORD3) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -275,7 +277,7 @@ float4 fp_blinn(float2 INUV     : TEXCOORD0,
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     blinn_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, INUV).rgb;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).rgb;
     float3 result = specContrib + (diffuseColor * (diffContrib + ambientColor));
     return float4(result,1.0);
 }
@@ -283,7 +285,7 @@ float4 fp_blinn(float2 INUV     : TEXCOORD0,
 float4 fp_phong(float2 INUV     : TEXCOORD0,
                 float3 INNormal : TEXCOORD1,
                 float3 INLight  : TEXCOORD2,
-                float3 INView   : TEXCOORD3) : COLOR
+                float3 INView   : TEXCOORD3) : TZ_OUT_COLOR
 {
     float3 diffContrib;
     float3 specContrib;
@@ -291,7 +293,7 @@ float4 fp_phong(float2 INUV     : TEXCOORD0,
     float3 Ln = normalize(INLight);
     float3 Vn = normalize(INView);
     phong_shading(lightColor, Nn, Ln, Vn, diffContrib, specContrib);
-    float3 diffuseColor = tex2D(diffuse, INUV).rgb;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).rgb;
     float3 result = specContrib + (diffuseColor * (diffContrib + ambientColor));
     return float4(result,1.0);
 }

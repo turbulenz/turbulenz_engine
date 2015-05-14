@@ -1,35 +1,37 @@
 // Copyright (c) 2010-2013 Turbulenz Limited
 
+#include "platform.cgh"
+
 float4 color;
 float4 clipSpace;
 float  alpha;
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = Linear;
     MagFilter = Linear;
     WrapS = ClampToEdge;
     WrapT = ClampToEdge;
 };
-float4 vp_background(float4 Position : POSITION) : POSITION
+float4 vp_background(float4 Position : POSITION) : TZ_OUT_POSITION
 {
    return Position;
 }
-float4 fp_background() : COLOR
+float4 fp_background() : TZ_OUT_COLOR
 {
    return float4(color.xyz, smoothstep(0.0, 1.0, color.w));
 }
 void vp_texture(in float4 InPosition : POSITION,
                 in float2 InUV : TEXCOORD0,
-                out float4 OutPosition: POSITION,
+                out float4 OutPosition: TZ_OUT_POSITION,
                 out float2 OutUV: TEXCOORD0)
 {
    OutPosition.xy = (InPosition.xy * clipSpace.xy) + clipSpace.zw;
    OutPosition.zw = InPosition.zw;
    OutUV = InUV;
 }
-float4 fp_texture(float2 uv : TEXCOORD0) : COLOR
+float4 fp_texture(float2 uv : TEXCOORD0) : TZ_OUT_COLOR
 {
-   float4 textureColor = tex2D(diffuse, uv);
+   float4 textureColor = TZ_TEX2D(diffuse, uv);
    textureColor.w *= smoothstep(0.0, 1.0, alpha);
    return textureColor;
 }

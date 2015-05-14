@@ -2601,7 +2601,7 @@ class ParticleBuilder
             for (j = 0; j < refCount; j += 1)
             {
                 ref = unique[j];
-                parameters["dst"] = dsts[j];
+                parameters["destRect"] = dsts[j];
                 dim[0] = ref.texture.width;
                 dim[1] = ref.texture.height;
                 parameters["src"]    = ref.texture;
@@ -3615,7 +3615,7 @@ class SharedRenderContext
                 graphicsDevice.createTechniqueParameters({
                     src: null,
                     dim: new Float32Array([0, 0]),
-                    dst: new Float32Array([0, 0, 0, 0])
+                    destRect: new Float32Array([0, 0, 0, 0])
                 });
 
             // Shader embedded from assets/shaders/particles-copy.cgfx
@@ -3800,7 +3800,7 @@ class SharedRenderContext
 
         parameters["src"] = from.colorTexture0;
 
-        var dst = parameters["dst"];
+        var dst = parameters["destRect"];
         dst[0] = 0;
         dst[1] = 0;
         dst[2] = from.colorTexture0.width / to.colorTexture0.width;

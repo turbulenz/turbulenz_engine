@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
+#include "platform.cgh"
+
 //
 // Vertex Programs
 //
@@ -18,7 +20,7 @@ float4 TransformPoint(float3 pt, float4x4 transform)
 
 void
 vp_constantColor_3d(in float3 InPosition : POSITION,
-                    out float4 OutPosition  : POSITION)
+                    out float4 OutPosition  : TZ_OUT_POSITION)
 {
     OutPosition = TransformPoint(InPosition, worldViewProjection);
 }
@@ -26,7 +28,7 @@ vp_constantColor_3d(in float3 InPosition : POSITION,
 void
 vp_vertexColor_3d(in float3 InPosition : POSITION,
                   in float4 InColor0   : COLOR,
-                  out float4 OutPosition  : POSITION,
+                  out float4 OutPosition  : TZ_OUT_POSITION,
                   out float4 OutColor0    : COLOR)
 {
     OutPosition = TransformPoint(InPosition, worldViewProjection);
@@ -36,7 +38,7 @@ vp_vertexColor_3d(in float3 InPosition : POSITION,
 void
 vp_textured_3d(in float3 InPosition : POSITION,
                in float2 InTexCoord0 : TEXCOORD0,
-               out float4 OutPosition : POSITION,
+               out float4 OutPosition : TZ_OUT_POSITION,
                out float2 OutTexCoord0 : TEXCOORD0)
 {
     OutPosition  = TransformPoint(InPosition, worldViewProjection);
@@ -47,7 +49,7 @@ void
 vp_vertexColorTextured_3d(in float3 InPosition  : POSITION,
                           in float4 InColor0    : COLOR,
                           in float2 InTexCoord0 : TEXCOORD0,
-                          out float4 OutPosition  : POSITION,
+                          out float4 OutPosition  : TZ_OUT_POSITION,
                           out float4 OutColor0    : COLOR,
                           out float2 OutTexCoord0 : TEXCOORD0)
 {
@@ -58,7 +60,7 @@ vp_vertexColorTextured_3d(in float3 InPosition  : POSITION,
 
 void
 vp_point_constantColor_3d(in float3 InPosition : POSITION,
-                          out float4 OutPosition  : POSITION,
+                          out float4 OutPosition  : TZ_OUT_POSITION,
                           out float  OutPointSize : PSIZE)
 {
     OutPosition = TransformPoint(InPosition, worldViewProjection);
@@ -69,42 +71,42 @@ vp_point_constantColor_3d(in float3 InPosition : POSITION,
 // Pixel Programs
 //
 float4 constantColor;
-sampler2D diffuse  = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
 };
 
 float4
-fp_constantColor() : COLOR
+fp_constantColor() : TZ_OUT_COLOR
 {
     return constantColor;
 }
 
 float4
-fp_vertexColor(float4 InColor : COLOR) : COLOR
+fp_vertexColor(float4 InColor : COLOR) : TZ_OUT_COLOR
 {
     return InColor;
 }
 
 float4
-fp_textured(float2 InTexCoord0 : TEXCOORD0) : COLOR
+fp_textured(float2 InTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return tex2D(diffuse, InTexCoord0);
+    return TZ_TEX2D(diffuse, InTexCoord0);
     //return float4(InTexCoord0, 0.0, 1.0);
 }
 
 float4
 fp_vertexColorTextured(float4 InColor : COLOR,
-                       float2 InTexCoord0 : TEXCOORD0) : COLOR
+                       float2 InTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return InColor * tex2D(diffuse, InTexCoord0);
+    return InColor * TZ_TEX2D(diffuse, InTexCoord0);
 }
 
 float4
-fp_desatureTextureConstantColor(float2 InTexCoord0 : TEXCOORD0) : COLOR
+fp_desatureTextureConstantColor(float2 InTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 tex      = tex2D(diffuse, InTexCoord0);
+    float4 tex      = TZ_TEX2D(diffuse, InTexCoord0);
     float greyscale = dot(tex.rgb, float3(0.30, 0.59, 0.11));
     tex.rgb         = lerp(greyscale, tex.rgb, 0.0);
 

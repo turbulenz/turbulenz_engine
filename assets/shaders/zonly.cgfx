@@ -1,4 +1,6 @@
 // Copyright (c) 2010-2013 Turbulenz Limited
+
+#include "platform.cgh"
 #include "uvtransform.cgh"
 
 //
@@ -12,7 +14,7 @@ float4 skinBones[75 * 3];
 
 float alphaFactor;
 
-sampler2D alpha_map = sampler_state
+TZ_TEXTURE2D_DECLARE(alpha_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -74,13 +76,13 @@ float3 RotateScalePoint(float3 p, float3x3 transform)
 //
 // Vertex programs
 //
-float4 vp(float3 position : POSITION) : POSITION
+float4 vp(float3 position : POSITION) : TZ_OUT_POSITION
 {
     float3 viewPosition = LocalPointToWorld(position, worldView);
     return WorldPointToDevice(viewPosition, projection);
 }
 
-float4 vp_spotlight(float3 position : POSITION) : POSITION
+float4 vp_spotlight(float3 position : POSITION) : TZ_OUT_POSITION
 {
     float3 scaledInPosition = RotateScalePoint(position, lightFrustum);
     return LocalPointToDevice(scaledInPosition, worldView, projection);
@@ -88,7 +90,7 @@ float4 vp_spotlight(float3 position : POSITION) : POSITION
 
 float4 vp_skinned(float3 position : POSITION,
                   float4 indices  : BLENDINDICES,
-                  float4 weights  : BLENDWEIGHT) : POSITION
+                  float4 weights  : BLENDWEIGHT) : TZ_OUT_POSITION
 {
     float3x4 skinTransform = BuildSkinTransform(indices, weights);
 
@@ -104,7 +106,7 @@ float4 vp_skinned(float3 position : POSITION,
 
 void vp_alpha(in float3 INPosition : POSITION,
               in float2 INUV       : TEXCOORD0,
-              out float4 OUTPosition : POSITION,
+              out float4 OUTPosition : TZ_OUT_POSITION,
               out float2 OUTUV       : TEXCOORD0)
 {
     float3 viewPosition = LocalPointToWorld(INPosition, worldView);
@@ -116,7 +118,7 @@ void vp_alpha_skinned(in float3 INPosition : POSITION,
                       in float2 INUV       : TEXCOORD0,
                       in float4 INIndices  : BLENDINDICES,
                       in float4 INWeights  : BLENDWEIGHT,
-                      out float4 OUTPosition : POSITION,
+                      out float4 OUTPosition : TZ_OUT_POSITION,
                       out float2 OUTUV       : TEXCOORD0)
 {
     float3x4 skinTransform = BuildSkinTransform(INIndices, INWeights);
@@ -136,9 +138,9 @@ void vp_alpha_skinned(in float3 INPosition : POSITION,
 //
 // Fragment programs
 //
-float4 fp_alpha(float2 UV : TEXCOORD0) : COLOR
+float4 fp_alpha(float2 UV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float alpha = alphaFactor * tex2D(alpha_map, UV).w;
+    float alpha = alphaFactor * TZ_TEX2D(alpha_map, UV).w;
     if (alpha < 1.0)
     {
         discard;

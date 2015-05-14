@@ -5,7 +5,7 @@
 float3 acceleration;
 float drag;
 
-sampler2D noiseTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(noiseTexture)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -19,8 +19,10 @@ float3 randomizedAcceleration;
 float3 getAccelerationNoise(float2 uv, float t)
 {
     // constants are randomised values as are choice of noise channels.
-    return (2.0 * tex2D(noiseTexture, uv + float2(0.97303011314943430, 0.19842534395866096) * t
-                                         + float2(0.84200346702709790, 0.59638088289648291)).zyx - 1.0
+    return (2.0 *
+            TZ_TEX2D(noiseTexture,
+                     uv + float2(0.97303011314943430, 0.19842534395866096) * t
+                     + float2(0.84200346702709790, 0.59638088289648291)).zyx - 1.0
            ) * randomizedAcceleration;
 }
 
@@ -43,11 +45,13 @@ float4 fp_update_state_base(bool wrapPositions, float4 wPos)
     if (createdParticle(index))
     {
         // Newly created particle, no simulation to be performed.
-        return tex2D(creationState, (particle + 0.5) * creationScale);
+        return TZ_TEX2D(creationState, (particle + 0.5) * creationScale);
     }
 
     float2 regionIndex = index + regionPos;
-    if (deadParticle(previousState, regionIndex))
+    bool dead;
+    deadParticle(previousState, regionIndex, dead);
+    if (dead)
     {
         // Dead particle
         return float4(0.0);
@@ -58,8 +62,8 @@ float4 fp_update_state_base(bool wrapPositions, float4 wPos)
     if (slot.x == 0.0)
     {
         // position fragment
-        float p = decodeSignedFloat(tex2D(previousState, inParticle));
-        float v = decodeSignedFloat(tex2D(previousState, inParticle + float2(invTextureSize.x, 0.0)));
+        float p = decodeSignedFloat(TZ_TEX2D(previousState, inParticle));
+        float v = decodeSignedFloat(TZ_TEX2D(previousState, inParticle + float2(invTextureSize.x, 0.0)));
         p += (v * timeStep * maxSpeed / halfExtents[slot.y]) + shift[slot.y];
         if (wrapPositions)
         {
@@ -73,15 +77,19 @@ float4 fp_update_state_base(bool wrapPositions, float4 wPos)
     else if (slot.x == 1.0)
     {
         // velocity fragment
-        float v = decodeSignedFloat(tex2D(previousState, inParticle));
+        float v = decodeSignedFloat(TZ_TEX2D(previousState, inParticle));
         float a = acceleration[slot.y];
         float4 data = getData(previousState, regionIndex);
         if (bitSet(data.w, BIT1))
         {
             float2 noiseUV = decodeByteUnsignedFloat2(data.z);
-            float animTime = getAnimationTime(previousState,
-                                              regionIndex,
-                                              getLifePair(previousState, regionIndex));
+            float2 lifePair;
+            getLifePair(previousState, regionIndex, lifePair);
+            float animTime;
+            getAnimationTime(previousState,
+                             regionIndex,
+                             lifePair,
+                             animTime);
             a += getAccelerationNoise(noiseUV, animTime)[slot.y];
         }
         float d = 1.0 - min(1.0, timeStep * drag);
@@ -92,24 +100,24 @@ float4 fp_update_state_base(bool wrapPositions, float4 wPos)
         if (slot.y == 0.0)
         {
             // life
-            float4 pix = tex2D(previousState, inParticle);
+            float4 pix = TZ_TEX2D(previousState, inParticle);
             float life = decodeHalfUnsignedFloat(pix.zw);
             return float4(pix.xy, encodeHalfUnsignedFloat(life - lifeStep));
         }
         else
         {
             // user store.
-            return tex2D(previousState, inParticle);
+            return TZ_TEX2D(previousState, inParticle);
         }
     }
 }
 
-float4 fp_update_state(float4 inWPos: WPOS): COLOR
+float4 fp_update_state(float4 inWPos: WPOS): TZ_OUT_COLOR
 {
     return fp_update_state_base(false, inWPos);
 }
 
-float4 fp_update_state_wrap(float4 inWPos: WPOS): COLOR
+float4 fp_update_state_wrap(float4 inWPos: WPOS): TZ_OUT_COLOR
 {
     return fp_update_state_base(true, inWPos);
 }

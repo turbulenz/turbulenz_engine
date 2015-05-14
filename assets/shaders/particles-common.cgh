@@ -1,5 +1,7 @@
 // Copyright (c) 2013-2014 Turbulenz Limited
 
+#include "platform.cgh"
+
 // texture dimensions and reciprocals.
 float2 textureSize;
 float2 invTextureSize;
@@ -15,7 +17,7 @@ float maxLifeTime;
 
 // Specific to updaters.
 // ----------------------------------------------------------------------------
-sampler2D previousState = sampler_state
+TZ_TEXTURE2D_DECLARE(previousState)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -26,7 +28,7 @@ float3 shift;
 float timeStep;
 float lifeStep;
 float maxSpeed;
-sampler2D creationState = sampler_state
+TZ_TEXTURE2D_DECLARE(creationState)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -39,7 +41,7 @@ float2 creationScale;
 // ----------------------------------------------------------------------------
 float4x4 projection;
 float4x3 modelView;
-sampler2D mappingTable = sampler_state
+TZ_TEXTURE2D_DECLARE(mappingTable)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -52,14 +54,14 @@ float2 invMappingSize;
 // for region size we can assume size = particle size / PARTICLE_DIM
 float2 mappingPos;
 
-sampler2D vParticleState = sampler_state
+TZ_TEXTURE2D_DECLARE(vParticleState)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
     WrapS = ClampToEdge;
     WrapT = ClampToEdge;
 };
-sampler2D fParticleState = sampler_state
+TZ_TEXTURE2D_DECLARE(fParticleState)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -92,12 +94,12 @@ float2 mappingRegionUnmap(float2 p)
 
 // vertex shader for full (region) texture update pass.
 void vp_update(in float2 inPosition : POSITION,
-               out float4 outPosition : POSITION)
+               out float4 outPosition : TZ_OUT_POSITION)
 {
     outPosition = float4((particleRegionMap(inPosition) * 2.0) - 1.0, 0.0, 1.0);
 }
 void vp_update_mapping(in float2 inPosition : POSITION,
-                       out float4 outPosition : POSITION,
+                       out float4 outPosition : TZ_OUT_POSITION,
                        out float2 outParticle : TEXCOORD0)
 {
     outPosition = float4((mappingRegionMap(inPosition) * 2.0) - 1.0, 0.0, 1.0);
@@ -106,7 +108,7 @@ void vp_update_mapping(in float2 inPosition : POSITION,
 
 // vertex shader for full texture update pass.
 void vp_update_full(in float2 inPosition   : POSITION,
-                    out float4 outPosition : POSITION,
+                    out float4 outPosition : TZ_OUT_POSITION,
                     out float2 outParticle : TEXCOORD0)
 {
     outPosition = float4((inPosition * 2.0) - 1.0, 0.0, 1.0);
@@ -139,15 +141,15 @@ float decodeSignedFloat(float4 pix)
     return (decodeUnsignedFloat(pix) - 0.5) * 2.0;
 }
 
-float extractUnsignedFloat(sampler2D tex, float2 uv)
-{
-    return decodeUnsignedFloat(tex2D(tex, uv));
-}
+/* float extractUnsignedFloat(sampler2D tex, float2 uv) */
+/* { */
+/*     return decodeUnsignedFloat(TZ_TEX2D(tex, uv)); */
+/* } */
 
-float extractSignedFloat(sampler2D tex, float2 uv)
-{
-    return decodeSignedFloat(tex2D(tex, uv));
-}
+/* float extractSignedFloat(sampler2D tex, float2 uv) */
+/* { */
+/*     return decodeSignedFloat(TZ_TEX2D(tex, uv)); */
+/* } */
 
 float4 encodeUnsignedFloat(float x)
 {
@@ -179,10 +181,10 @@ float decodeHalfSignedFloat(float2 pix)
     return (decodeHalfUnsignedFloat(pix) - 0.5) * 2.0;
 }
 
-float extractHighHalfUnsignedFloat(sampler2D tex, float2 uv)
-{
-    return decodeHalfUnsignedFloat(tex2D(tex, uv).zw);
-}
+/* float extractHighHalfUnsignedFloat(sampler2D tex, float2 uv) */
+/* { */
+/*     return decodeHalfUnsignedFloat(TZ_TEX2D(tex, uv).zw); */
+/* } */
 
 float2 encodeHalfUnsignedFloat(float x)
 {
@@ -248,7 +250,7 @@ float2 PARTICLE_ANIM = float2(2.5, 1.5);
 float2 PARTICLE_DATA = float2(2.5, 2.5);
 
 float2 animationSize;
-sampler2D animation = sampler_state
+TZ_TEXTURE2D_DECLARE(animation)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -258,58 +260,58 @@ sampler2D animation = sampler_state
 
 // get particle uv [0,1]^2 from particle index [0,N) via mapping table
 bool zSorted;
-float2 getParticle(float linearIndex, sampler2D mappingTable)
-{
-    float i = linearIndex * PARTICLE_DIM.x;
-    float y = floor(i * invRegionSize.x);
-    float2 index = float2(i - y * regionSize.x, y * PARTICLE_DIM.y);
-    if (zSorted)
-    {
-        float2 mappingUV = mappingRegionMap((index + (0.5 * PARTICLE_DIM)) * invRegionSize);
-        return tex2D(mappingTable, mappingUV).xy * (255.0 * PARTICLE_DIM);
+/* float2 getParticle(float linearIndex, sampler2D mappingTable) */
+#define getParticle(_linearIndex, _mappingTable, _out)                  \
+    {                                                                   \
+        float i = _linearIndex * PARTICLE_DIM.x;                        \
+        float y = floor(i * invRegionSize.x);                           \
+        float2 index = float2(i - y * regionSize.x, y * PARTICLE_DIM.y); \
+        if (zSorted)                                                    \
+        {                                                               \
+            float2 mappingUV =                                          \
+                mappingRegionMap((index + (0.5 * PARTICLE_DIM)) * invRegionSize); \
+            _out = TZ_TEX2D(_mappingTable,                              \
+                            mappingUV).xy * (255.0 * PARTICLE_DIM);     \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            _out = index;                                               \
+        }                                                               \
     }
-    else
-    {
-        return index;
-    }
-}
 
 // extract float4 data for animation frame in given row at particular animation time.
-float4 getAnimation4(float t, float row)
+float4 getAnimation4(float t, float _row)
 {
-    float s = (0.5 + row) / animationSize.y;
-    return tex2D(animation, float2(t, s));
+    float s = (0.5 + _row) / animationSize.y;
+    return TZ_TEX2D(animation, float2(t, s));
 }
 
 // extract float2 data for animation frame in given row at particular animation time.
-float2 getAnimation2(float t, float row)
+float2 getAnimation2(float t, float _row)
 {
-    float4 tex = getAnimation4(t, row);
+    float4 tex = getAnimation4(t, _row);
     return float2(decodeHalfUnsignedFloat(tex.xy), decodeHalfUnsignedFloat(tex.zw));
 }
 
 // extract float data for animation frame in given row at particular animation time.
-float getAnimation(float t, float row)
+float getAnimation(float t, float _row)
 {
-    float4 tex = getAnimation4(t, row);
+    float4 tex = getAnimation4(t, _row);
     return decodeUnsignedFloat(tex);
 }
 
 // return normalised position for particle
-float3 getPosition(sampler2D texture, float2 regionIndex)
-{
-    return float3(decodeSignedFloat(tex2D(texture, (regionIndex + (PARTICLE_POS + float2(0.0, 0.0))) * invTextureSize)),
-                  decodeSignedFloat(tex2D(texture, (regionIndex + (PARTICLE_POS + float2(0.0, 1.0))) * invTextureSize)),
-                  decodeSignedFloat(tex2D(texture, (regionIndex + (PARTICLE_POS + float2(0.0, 2.0))) * invTextureSize)));
-}
+#define getPosition(_texture, _regionIndex)                             \
+    float3(decodeSignedFloat(TZ_TEX2D(_texture, (_regionIndex + (PARTICLE_POS + float2(0.0, 0.0))) * invTextureSize)), \
+           decodeSignedFloat(TZ_TEX2D(_texture, (_regionIndex + (PARTICLE_POS + float2(0.0, 1.0))) * invTextureSize)), \
+           decodeSignedFloat(TZ_TEX2D(_texture, (_regionIndex + (PARTICLE_POS + float2(0.0, 2.0))) * invTextureSize)))
 
 // return normalised velocity for particle
-float3 getVelocity(sampler2D texture, float2 regionIndex)
-{
-    return float3(decodeSignedFloat(tex2D(texture, (regionIndex + (PARTICLE_VEL + float2(0.0, 0.0))) * invTextureSize)),
-                  decodeSignedFloat(tex2D(texture, (regionIndex + (PARTICLE_VEL + float2(0.0, 1.0))) * invTextureSize)),
-                  decodeSignedFloat(tex2D(texture, (regionIndex + (PARTICLE_VEL + float2(0.0, 2.0))) * invTextureSize)));
-}
+#define getVelocity(_texture, _regionIndex)                             \
+    float3(decodeSignedFloat(TZ_TEX2D(_texture, (_regionIndex + (PARTICLE_VEL + float2(0.0, 0.0))) * invTextureSize)), \
+           decodeSignedFloat(TZ_TEX2D(_texture, (_regionIndex + (PARTICLE_VEL + float2(0.0, 1.0))) * invTextureSize)), \
+           decodeSignedFloat(TZ_TEX2D(_texture, (_regionIndex + (PARTICLE_VEL + float2(0.0, 2.0))) * invTextureSize)))
+
 
 // get rotation matrix for rotation around z-axis
 float3x3 rotZ(float rad)
@@ -394,43 +396,49 @@ float3x4 getContrastMatrix(float c)
 }
 
 // return userData float4
-float4 getData(sampler2D texture, float2 regionIndex)
-{
-    return tex2D(texture, (regionIndex + PARTICLE_DATA) * invTextureSize);
-}
+#define getData(_texture, _regionIndex) \
+    TZ_TEX2D(_texture, (_regionIndex + PARTICLE_DATA) * invTextureSize)
 
 // return (currentLife, totalLife) normalised values
-float2 getLifePair(sampler2D texture, float2 regionIndex)
-{
-    float4 life = tex2D(texture, (regionIndex + PARTICLE_LIFE) * invTextureSize);
-    return float2(decodeHalfUnsignedFloat(life.zw), decodeHalfUnsignedFloat(life.xy));
-}
+#define getLifePair(_texture, _regionIndex, _out)                       \
+    {                                                                   \
+        float4 _life =                                                  \
+            TZ_TEX2D(_texture, (_regionIndex + PARTICLE_LIFE) * invTextureSize); \
+        _out = float2(decodeHalfUnsignedFloat(_life.zw),                \
+                      decodeHalfUnsignedFloat(_life.xy));               \
+    }
 
 // return currentLife
-float getLife(sampler2D texture, float2 regionIndex)
-{
-    float4 life = tex2D(texture, (regionIndex + PARTICLE_LIFE) * invTextureSize);
-    return decodeHalfUnsignedFloat(life.zw);
-}
+#define getLife(_texture, _regionIndex)                                 \
+    decodeHalfUnsignedFloat                                             \
+    (TZ_TEX2D(_texture,                                                 \
+              (_regionIndex + PARTICLE_LIFE) * invTextureSize).zw)
 
 // return animation time for particle with given life
-float getAnimationTime(sampler2D texture, float2 regionIndex, float2 life)
-{
-    float4 c01 = tex2D(texture, (regionIndex + PARTICLE_ANIM) * invTextureSize);
-    return decodeHalfUnsignedFloat(c01.xy) - ((life.x / life.y) * decodeHalfUnsignedFloat(c01.zw));
-}
+#define getAnimationTime(_texture, _regionIndex, _life, _out)           \
+    {                                                                   \
+        float4 c01 = TZ_TEX2D(_texture,                                 \
+                              (_regionIndex + PARTICLE_ANIM) * invTextureSize); \
+        _out = decodeHalfUnsignedFloat                                  \
+            (c01.xy) - ((_life.x / _life.y) * decodeHalfUnsignedFloat(c01.zw)); \
+    }
 
 // return boolean for if this particle should be gathered from creationState instead of previousState
 // takes non-normalised uv of particle base relative to region start.
 bool createdParticle(float2 index)
 {
-    float2 flag = tex2D(creationState, (index + PARTICLE_LIFE) * creationScale).xy; // total life time
+    // total life time
+
+    float2 flag = TZ_TEX2D(creationState,
+                           (index + PARTICLE_LIFE) * creationScale).xy;
     return dot(flag, flag) != 0.0;
 }
 
 // return boolean for if this particle is dead
-bool deadParticle(sampler2D texture, float2 regionIndex)
-{
-    float2 flag = tex2D(texture, (regionIndex + PARTICLE_LIFE) * invTextureSize).zw; // current life time
-    return dot(flag, flag) == 0.0;
-}
+#define deadParticle(_texture, _regionIndex, _out)                      \
+    {                                                                   \
+        float2 flag =                                                   \
+            TZ_TEX2D(_texture,                                          \
+                     (_regionIndex + PARTICLE_LIFE) * invTextureSize).zw; \
+        _out = dot(flag, flag) == 0.0;                                  \
+    }

@@ -1,5 +1,7 @@
 // Copyright (c) 2013-2014 Turbulenz Limited
 
+#include "platform.cgh"
+
 #include "skinning.cgh"
 
 //
@@ -11,7 +13,7 @@ float4x4 viewProjectionTranspose;
 float4 uvScaleOffset;
 float2 pixelOffset;
 
-sampler2D shadowMap = sampler_state
+TZ_TEXTURE2D_DECLARE(shadowMap)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -79,7 +81,7 @@ float log_conv(float x0, float X, float y0, float Y)
 // Vertex programs
 //
 void vp(in float3 INPosition : POSITION,
-        out float4 OUTPosition : POSITION)
+        out float4 OUTPosition : TZ_OUT_POSITION)
 {
     float4 worldPosition = float4(((INPosition.x * world[0]) +
                                    (INPosition.y * world[1]) +
@@ -96,7 +98,7 @@ void vp(in float3 INPosition : POSITION,
 void vp_skinned(in float3 INPosition : POSITION,
                 in float4 INIndices  : BLENDINDICES,
                 in float4 INWeights  : BLENDWEIGHT,
-                out float4 OUTPosition : POSITION)
+                out float4 OUTPosition : TZ_OUT_POSITION)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
 
@@ -120,7 +122,7 @@ void vp_skinned(in float3 INPosition : POSITION,
 
 void vp_blur(in float4 INPosition : POSITION,
              in float2 INUV       : TEXCOORD0,
-             out float4 OUTPosition : POSITION,
+             out float4 OUTPosition : TZ_OUT_POSITION,
              out float2 OUTUV       : TEXCOORD0)
 {
     OUTPosition = INPosition;
@@ -130,18 +132,18 @@ void vp_blur(in float4 INPosition : POSITION,
 //
 // Fragment programs
 //
-float4 fp(in float4 INPosition : WPOS) : COLOR
+float4 fp(in float4 INPosition : WPOS) : TZ_OUT_COLOR
 {
     return EncodeClampedFloatRGB32(INPosition.z);
 }
 
-float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
+float4 fp_blur(in float2 UV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 sample0 = tex2D(shadowMap, (UV - (2.0 * pixelOffset)));
-    float4 sample1 = tex2D(shadowMap, (UV - (1.0 * pixelOffset)));
-    float4 sample2 = tex2D(shadowMap,  UV);
-    float4 sample3 = tex2D(shadowMap, (UV + (1.0 * pixelOffset)));
-    float4 sample4 = tex2D(shadowMap, (UV + (2.0 * pixelOffset)));
+    float4 sample0 = TZ_TEX2D(shadowMap, (UV - (2.0 * pixelOffset)));
+    float4 sample1 = TZ_TEX2D(shadowMap, (UV - (1.0 * pixelOffset)));
+    float4 sample2 = TZ_TEX2D(shadowMap,  UV);
+    float4 sample3 = TZ_TEX2D(shadowMap, (UV + (1.0 * pixelOffset)));
+    float4 sample4 = TZ_TEX2D(shadowMap, (UV + (2.0 * pixelOffset)));
 
     const float c = (1.0 / 5.0);
 

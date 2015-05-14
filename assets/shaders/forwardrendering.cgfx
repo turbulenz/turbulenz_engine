@@ -1,20 +1,22 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
+#include "platform.cgh"
+
 #include "forwardrenderingcommon.cgh"
 
 //
 // Fragment programs
 //
-float4 fp_ambient(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_ambient(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, INUV);
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
     diffuseColor.xyz *= ambientColor;
     return materialColor * diffuseColor;
 }
 
-float4 fp_ambient_alphatest(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_ambient_alphatest(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, INUV);
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
     if (diffuseColor.w * materialColor.w < alphaRef)
     {
         discard;
@@ -24,98 +26,98 @@ float4 fp_ambient_alphatest(float2 INUV : TEXCOORD0) : COLOR
     return materialColor * diffuseColor;
 }
 
-float4 fp_ambient_flat() : COLOR
+float4 fp_ambient_flat() : TZ_OUT_COLOR
 {
     return float4((materialColor.xyz * ambientColor), materialColor.w);
 }
 
-float4 fp_ambient_glowmap(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_ambient_glowmap(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 glowColor = tex2D(glow_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 glowColor = TZ_TEX2D(glow_map, INUV).xyz;
     diffuseColor *= ambientColor;
     return float4((diffuseColor + materialColor.xyz * glowColor), materialColor.w);
 }
 
-float4 fp_glowmap(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_glowmap(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float3 glowColor = tex2D(glow_map, INUV).xyz;
+    float3 glowColor = TZ_TEX2D(glow_map, INUV).xyz;
     return float4((materialColor.xyz * glowColor), materialColor.w);
 }
 
-float4 fp_ambient_lightmap(float4 INUV : TEXCOORD0) : COLOR
+float4 fp_ambient_lightmap(float4 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float3 diffuseColor = tex2D(diffuse, INUV.xy).xyz;
-    float3 diffContrib = ((lightingScale * tex2D(light_map, INUV.zw).xyz) + ambientColor);
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV.xy).xyz;
+    float3 diffContrib = ((lightingScale * TZ_TEX2D(light_map, INUV.zw).xyz) + ambientColor);
     return float4(materialColor.xyz * diffuseColor * diffContrib, 1.0);
 }
 
-float4 fp_lightmap(float4 INUV : TEXCOORD0) : COLOR
+float4 fp_lightmap(float4 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float3 diffuseColor = tex2D(diffuse, INUV.xy).xyz;
-    float3 diffContrib = (lightingScale * tex2D(light_map, INUV.zw).xyz);
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV.xy).xyz;
+    float3 diffContrib = (lightingScale * TZ_TEX2D(light_map, INUV.zw).xyz);
     return float4(materialColor.xyz * diffuseColor * diffContrib, 1.0);
 }
 
 float4 fp_simple(in float4 INColor : COLOR,
-                 in float2 INUV    : TEXCOORD0) : COLOR
+                 in float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return INColor * tex2D(diffuse, INUV);
+    return INColor * TZ_TEX2D(diffuse, INUV);
 }
 
 float4 fp_translucent(in float4 INColor : COLOR,
-                      in float2 INUV    : TEXCOORD0) : COLOR
+                      in float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return float4(tex2D(diffuse, INUV).xyz * INColor.xyz, 1.0);
+    return float4(TZ_TEX2D(diffuse, INUV).xyz * INColor.xyz, 1.0);
 }
 
 float4 fp_premodulatealpha(in float4 INColor : COLOR,
-                           in float2 INUV    : TEXCOORD0) : COLOR
+                           in float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 color = INColor * tex2D(diffuse, INUV);
+    float4 color = INColor * TZ_TEX2D(diffuse, INUV);
     color.xyz *= INColor.w;
     return color;
 }
 
 float4 fp_separatealpha(in float4 INColor : COLOR,
-                        in float2 INUV    : TEXCOORD0) : COLOR
+                        in float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float alpha = INColor.w * tex2D(alpha_map, INUV).a;
-    return INColor * tex2D(diffuse, INUV) * alpha;
+    float alpha = INColor.w * TZ_TEX2D(alpha_map, INUV).a;
+    return INColor * TZ_TEX2D(diffuse, INUV) * alpha;
 }
 
 float4 fp_separatealpha_env(in float4 INColor        : COLOR,
                             in float2 INUV           : TEXCOORD0,
                             in float3 INNormal       : TEXCOORD1,
-                            in float3 INeyeDirection : TEXCOORD2) : COLOR
+                            in float3 INeyeDirection : TEXCOORD2) : TZ_OUT_COLOR
 {
-    float alpha = INColor.w * tex2D(alpha_map, INUV).a;
+    float alpha = INColor.w * TZ_TEX2D(alpha_map, INUV).a;
     float3 R = reflect(normalize(INeyeDirection), normalize(INNormal));
-    return INColor * texCUBE(env_map, R) * alpha;
+    return INColor * TZ_TEXCUBE(env_map, R) * alpha;
 }
 
 float4 fp_env(in float4 INColor        : COLOR,
               in float3 INNormal       : TEXCOORD0,
-              in float3 INeyeDirection : TEXCOORD1) : COLOR
+              in float3 INeyeDirection : TEXCOORD1) : TZ_OUT_COLOR
 {
     float3 R = reflect(normalize(INeyeDirection), normalize(INNormal));
-    return INColor.w * INColor * texCUBE(env_map, R);
+    return INColor.w * INColor * TZ_TEXCUBE(env_map, R);
 }
 
 float4 fp_flat(in float4 INColor        : COLOR,
                in float3 INViewNormal   : TEXCOORD1,
-               in float3 INViewPosition : TEXCOORD2) : COLOR
+               in float3 INViewPosition : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 Nn = normalize(INViewNormal);
     float3 position = INViewPosition;
 
     float4 position4 = float4(position, 1.0);
-    float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
+    float4 proj = PointToLight(position4, lightViewInverseTransposeFalloff);
 
     float3 Ln = normalize(lightOrigin - position);
     float3 diffContrib = dot(Ln, Nn) * lightColor;
-    float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
-                         tex2D(lightfalloff, float2(projection.w, 0.5)).y;
+    float3 attenuation = tex2DprojFix(lightprojection, proj.xyz).xyz *
+                         TZ_TEX2D(lightfalloff, float2(proj.w, 0.5)).y;
     diffContrib *= attenuation;
     if (dot(diffContrib, float3(0.3, 0.59, 0.11)) < 0.004)
     {
@@ -128,19 +130,19 @@ float4 fp_flat(in float4 INColor        : COLOR,
 float4 fp_blinn(in float4 INColor    : COLOR,
                 in float2 INUV       : TEXCOORD0,
                 in float3 INViewNormal   : TEXCOORD1,
-                in float3 INViewPosition : TEXCOORD2) : COLOR
+                in float3 INViewPosition : TEXCOORD2) : TZ_OUT_COLOR
 {
     float3 Nn = normalize(INViewNormal);
     float3 position = INViewPosition;
 
     float4 position4 = float4(position, 1.0);
-    float4 projection = PointToLight(position4, lightViewInverseTransposeFalloff);
+    float4 proj = PointToLight(position4, lightViewInverseTransposeFalloff);
 
     float3 Ln = normalize(lightOrigin - position);
     float3 diffContrib = dot(Ln, Nn) * lightColor;
-    float4 diffuseColor = tex2D(diffuse, INUV);
-    float3 attenuation = tex2DprojFix(lightprojection, projection.xyz).xyz *
-                         tex2D(lightfalloff, float2(projection.w, 0.5)).y;
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
+    float3 attenuation = tex2DprojFix(lightprojection, proj.xyz).xyz *
+                         TZ_TEX2D(lightfalloff, float2(proj.w, 0.5)).y;
     diffContrib *= attenuation;
     if (dot(diffContrib, float3(0.3, 0.59, 0.11)) < 0.004)
     {
@@ -156,10 +158,10 @@ float4 fp_rxgb_normalmap(in float4 INColor   : COLOR,
                          in float3 INViewNormal   : TEXCOORD1,
                          in float3 INViewTangent  : TEXCOORD2,
                          in float3 INViewBinormal : TEXCOORD3,
-                         in float3 INViewPosition : TEXCOORD4) : COLOR
+                         in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
     float3 Nn = SampleNormalMapRXGB(INUV);
-    float4 diffuseColor = tex2D(diffuse, INUV);
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
 
     float3 diffContrib;
     light_contribution(INViewNormal,
@@ -178,9 +180,9 @@ float4 fp_rxgb_normalmap_alphatest(in float4 INColor   : COLOR,
                                    in float3 INViewNormal   : TEXCOORD1,
                                    in float3 INViewTangent  : TEXCOORD2,
                                    in float3 INViewBinormal : TEXCOORD3,
-                                   in float3 INViewPosition : TEXCOORD4) : COLOR
+                                   in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, INUV);
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
     if (INColor.w * diffuseColor.w < alphaRef)
     {
         discard;
@@ -205,11 +207,11 @@ float4 fp_rxgb_normalmap_specularmap(in float4 INColor   : COLOR,
                                      in float3 INViewNormal   : TEXCOORD1,
                                      in float3 INViewTangent  : TEXCOORD2,
                                      in float3 INViewBinormal : TEXCOORD3,
-                                     in float3 INViewPosition : TEXCOORD4) : COLOR
+                                     in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
     float3 Nn = SampleNormalMapRXGB(INUV);
-    float4 diffuseColor = tex2D(diffuse, INUV);
-    float3 specularColor = tex2D(specular_map, INUV).xyz;
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
+    float3 specularColor = TZ_TEX2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
     light_contribution_specular(INViewNormal,
@@ -229,16 +231,16 @@ float4 fp_rxgb_normalmap_specularmap_alphatest(in float4 INColor   : COLOR,
                                                in float3 INViewNormal   : TEXCOORD1,
                                                in float3 INViewTangent  : TEXCOORD2,
                                                in float3 INViewBinormal : TEXCOORD3,
-                                               in float3 INViewPosition : TEXCOORD4) : COLOR
+                                               in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, INUV);
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
     if (INColor.w * diffuseColor.w < alphaRef)
     {
         discard;
     }
 
     float3 Nn = SampleNormalMapRXGB(INUV);
-    float3 specularColor = tex2D(specular_map, INUV).xyz;
+    float3 specularColor = TZ_TEX2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
     light_contribution_specular(INViewNormal,
@@ -258,11 +260,11 @@ float4 fp_rxgb_normalmap_glowmap(in float4 INColor   : COLOR,
                                  in float3 INViewNormal   : TEXCOORD1,
                                  in float3 INViewTangent  : TEXCOORD2,
                                  in float3 INViewBinormal : TEXCOORD3,
-                                 in float3 INViewPosition : TEXCOORD4) : COLOR
+                                 in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
     // glowmap is applied on ambient pass with the material color
     float3 Nn = SampleNormalMapRXGB(INUV);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
 
     float3 diffContrib;
     light_contribution(INViewNormal,
@@ -281,12 +283,12 @@ float4 fp_rxgb_normalmap_specularmap_glowmap(in float4 INColor   : COLOR,
                                              in float3 INViewNormal   : TEXCOORD1,
                                              in float3 INViewTangent  : TEXCOORD2,
                                              in float3 INViewBinormal : TEXCOORD3,
-                                             in float3 INViewPosition : TEXCOORD4) : COLOR
+                                             in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
     // glowmap is applied on ambient pass with the material color
     float3 Nn = SampleNormalMapRXGB(INUV);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 specularColor = tex2D(specular_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 specularColor = TZ_TEX2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
     light_contribution_specular(INViewNormal,
@@ -306,10 +308,10 @@ float4 fp_normalmap(in float4 INColor   : COLOR,
                     in float3 INViewNormal   : TEXCOORD1,
                     in float3 INViewTangent  : TEXCOORD2,
                     in float3 INViewBinormal : TEXCOORD3,
-                    in float3 INViewPosition : TEXCOORD4) : COLOR
+                    in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
     float3 Nn = SampleNormalMap(INUV);
-    float4 diffuseColor = tex2D(diffuse, INUV);
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
 
     float3 diffContrib;
     light_contribution(INViewNormal,
@@ -328,9 +330,9 @@ float4 fp_normalmap_alphatest(in float4 INColor   : COLOR,
                               in float3 INViewNormal   : TEXCOORD1,
                               in float3 INViewTangent  : TEXCOORD2,
                               in float3 INViewBinormal : TEXCOORD3,
-                              in float3 INViewPosition : TEXCOORD4) : COLOR
+                              in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, INUV);
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
     if (INColor.w * diffuseColor.w < alphaRef)
     {
         discard;
@@ -355,11 +357,11 @@ float4 fp_normalmap_specularmap(in float4 INColor   : COLOR,
                                 in float3 INViewNormal   : TEXCOORD1,
                                 in float3 INViewTangent  : TEXCOORD2,
                                 in float3 INViewBinormal : TEXCOORD3,
-                                in float3 INViewPosition : TEXCOORD4) : COLOR
+                                in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
     float3 Nn = SampleNormalMap(INUV);
-    float4 diffuseColor = tex2D(diffuse, INUV);
-    float3 specularColor = tex2D(specular_map, INUV).xyz;
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
+    float3 specularColor = TZ_TEX2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
     light_contribution_specular(INViewNormal,
@@ -379,16 +381,16 @@ float4 fp_normalmap_specularmap_alphatest(in float4 INColor   : COLOR,
                                           in float3 INViewNormal   : TEXCOORD1,
                                           in float3 INViewTangent  : TEXCOORD2,
                                           in float3 INViewBinormal : TEXCOORD3,
-                                          in float3 INViewPosition : TEXCOORD4) : COLOR
+                                          in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = tex2D(diffuse, INUV);
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
     if (INColor.w * diffuseColor.w < alphaRef)
     {
         discard;
     }
 
     float3 Nn = SampleNormalMap(INUV);
-    float3 specularColor = tex2D(specular_map, INUV).xyz;
+    float3 specularColor = TZ_TEX2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
     light_contribution_specular(INViewNormal,
@@ -408,17 +410,17 @@ float4 fp_normalmap_specularmap_alphamap(in float4 INColor   : COLOR,
                                          in float3 INViewNormal   : TEXCOORD1,
                                          in float3 INViewTangent  : TEXCOORD2,
                                          in float3 INViewBinormal : TEXCOORD3,
-                                         in float3 INViewPosition : TEXCOORD4) : COLOR
+                                         in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
-    float alpha = tex2D(alpha_map, INUV).a;
+    float alpha = TZ_TEX2D(alpha_map, INUV).a;
     if (alpha < alphaRef)
     {
         discard;
     }
 
     float3 Nn = SampleNormalMap(INUV);
-    float4 diffuseColor = tex2D(diffuse, INUV);
-    float3 specularColor = tex2D(specular_map, INUV).xyz;
+    float4 diffuseColor = TZ_TEX2D(diffuse, INUV);
+    float3 specularColor = TZ_TEX2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
     light_contribution_specular(INViewNormal,
@@ -438,11 +440,11 @@ float4 fp_normalmap_glowmap(in float4 INColor   : COLOR,
                             in float3 INViewNormal   : TEXCOORD1,
                             in float3 INViewTangent  : TEXCOORD2,
                             in float3 INViewBinormal : TEXCOORD3,
-                            in float3 INViewPosition : TEXCOORD4) : COLOR
+                            in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
     // glowmap is applied on ambient pass
     float3 Nn = SampleNormalMap(INUV);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
 
     float3 diffContrib;
     light_contribution(INViewNormal,
@@ -461,12 +463,12 @@ float4 fp_normalmap_specularmap_glowmap(in float4 INColor   : COLOR,
                                         in float3 INViewNormal   : TEXCOORD1,
                                         in float3 INViewTangent  : TEXCOORD2,
                                         in float3 INViewBinormal : TEXCOORD3,
-                                        in float3 INViewPosition : TEXCOORD4) : COLOR
+                                        in float3 INViewPosition : TEXCOORD4) : TZ_OUT_COLOR
 {
     // glowmap is applied on ambient pass
     float3 Nn = SampleNormalMap(INUV);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 specularColor = tex2D(specular_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 specularColor = TZ_TEX2D(specular_map, INUV).xyz;
 
     float3 diffContrib, specContrib;
     light_contribution_specular(INViewNormal,
@@ -481,9 +483,9 @@ float4 fp_normalmap_specularmap_glowmap(in float4 INColor   : COLOR,
     return float4(result, INColor.w);
 }
 
-float4 fp_skybox(in float3 INeyeDirection : TEXCOORD0) : COLOR
+float4 fp_skybox(in float3 INeyeDirection : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return texCUBE(env_map, INeyeDirection);
+    return TZ_TEXCUBE(env_map, INeyeDirection);
 }
 
 

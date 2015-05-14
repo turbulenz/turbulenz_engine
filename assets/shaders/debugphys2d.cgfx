@@ -1,17 +1,19 @@
 // Copyright (c) 2012 Turbulenz Limited
 
+#include "platform.cgh"
+
 float4 clipSpace;
 
 void vp_draw2dlines(in float2 inpos : POSITION,
                   in float4 incol : COLOR,
-                  out float4 outpos : POSITION,
+                  out float4 outpos : TZ_OUT_POSITION,
                   out float4 outcol : COLOR)
 {
     outpos = float4(inpos * clipSpace.xy + clipSpace.zw, 0, 1);
     outcol = incol;
 }
 
-float4 fp_draw2dlines(float4 col : COLOR) : COLOR
+float4 fp_draw2dlines(float4 col : COLOR) : TZ_OUT_COLOR
 {
     return col;
 }

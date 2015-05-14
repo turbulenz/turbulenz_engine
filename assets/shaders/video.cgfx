@@ -1,9 +1,11 @@
 // Copyright (c) 2012 Turbulenz Limited
 
+#include "platform.cgh"
+
 float4 clipSpace;
 float4 color;
 
-sampler2D texture = sampler_state
+TZ_TEXTURE2D_DECLARE(texture)
 {
     MinFilter = Linear;
     MagFilter = Linear;
@@ -16,7 +18,7 @@ sampler2D texture = sampler_state
 //
 void vp_video(in float2 InPosition : POSITION,
                in float2 InTexCoord : TEXCOORD0,
-               out float4 OutPosition : POSITION,
+               out float4 OutPosition : TZ_OUT_POSITION,
                out float2 OutTexCoord : TEXCOORD0)
 {
     OutPosition = float4(InPosition * clipSpace.xy + clipSpace.zw, 0.0, 1.0);
@@ -26,9 +28,9 @@ void vp_video(in float2 InPosition : POSITION,
 //
 // Pixel Programs
 //
-float4 fp_video(float2 InTexCoord : TEXCOORD0) : COLOR
+float4 fp_video(float2 InTexCoord : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return color * tex2D(texture, InTexCoord);
+    return color * TZ_TEX2D(texture, InTexCoord);
 }
 
 //

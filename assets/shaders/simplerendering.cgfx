@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
+#include "platform.cgh"
+
 #include "skinning.cgh"
 #include "uvtransform.cgh"
 
@@ -23,7 +25,7 @@ static const float Ks = 0.5;
 static const float Kr = 0.5;
 static const float SpecularExponent = 32.0;
 
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -32,7 +34,7 @@ sampler2D diffuse = sampler_state
     MaxAnisotropy = 16;
 };
 
-sampler2D specular_map = sampler_state
+TZ_TEXTURE2D_DECLARE(specular_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -41,7 +43,7 @@ sampler2D specular_map = sampler_state
     MaxAnisotropy = 16;
 };
 
-sampler2D glow_map = sampler_state
+TZ_TEXTURE2D_DECLARE(glow_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -49,7 +51,7 @@ sampler2D glow_map = sampler_state
     WrapT = Repeat;
 };
 
-sampler2D alpha_map = sampler_state
+TZ_TEXTURE2D_DECLARE(alpha_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -58,7 +60,7 @@ sampler2D alpha_map = sampler_state
     MaxAnisotropy = 16;
 };
 
-samplerCUBE env_map = sampler_state
+TZ_TEXTURECUBE_DECLARE(env_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -67,7 +69,7 @@ samplerCUBE env_map = sampler_state
     WrapR = ClampToEdge;
 };
 
-sampler2D light_map = sampler_state
+TZ_TEXTURE2D_DECLARE(light_map)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -95,7 +97,7 @@ struct VP_ENV_SKINNED_IN
 
 struct VP_ENV_OUT
 {
-    float4 Position     : POSITION;
+    float4 Position     : TZ_OUT_POSITION;
     float3 Normal       : TEXCOORD0;
     float3 eyeDirection : TEXCOORD1;
 };
@@ -115,7 +117,7 @@ struct VP_GLASS_ENV_IN
 
 struct VP_GLASS_ENV_OUT
 {
-    float4 Position     : POSITION;
+    float4 Position     : TZ_OUT_POSITION;
     float2 UV           : TEXCOORD0;
     float3 Normal       : TEXCOORD1;
     float3 eyeDirection : TEXCOORD2;
@@ -145,7 +147,7 @@ struct VP_GLOWMAP_SKINNED_IN
 
 struct VP_GLOWMAP_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float2 UV       : TEXCOORD0;
 };
 
@@ -163,7 +165,7 @@ struct VP_LIGHTMAP_IN
 
 struct VP_LIGHTMAP_OUT
 {
-    float4 Position : POSITION;
+    float4 Position : TZ_OUT_POSITION;
     float4 UV       : TEXCOORD0;
 };
 
@@ -179,7 +181,7 @@ struct VP_SKYBOX_IN
 
 struct VP_SKYBOX_OUT
 {
-    float4 Position     : POSITION;
+    float4 Position     : TZ_OUT_POSITION;
     float3 eyeDirection : TEXCOORD0;
 };
 
@@ -230,7 +232,7 @@ float2 gouraud_shading(float3 Nn,
 //
 void vp_nolight(in float3 INPosition : POSITION,
                 in float2 INUV       : TEXCOORD0,
-                out float4 OUTPosition : POSITION,
+                out float4 OUTPosition : TZ_OUT_POSITION,
                 out float2 OUTUV       : TEXCOORD0)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -241,7 +243,7 @@ void vp_nolight_skinned(in float3 INPosition : POSITION,
                         in float2 INUV       : TEXCOORD0,
                         in float4 INIndices  : BLENDINDICES,
                         in float4 INWeights  : BLENDWEIGHT,
-                        out float4 OUTPosition : POSITION,
+                        out float4 OUTPosition : TZ_OUT_POSITION,
                         out float2 OUTUV       : TEXCOORD0)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -259,7 +261,7 @@ void vp_nolight_skinned(in float3 INPosition : POSITION,
 void vp_nolight_vertexcolor(in float3 INPosition : POSITION,
                             in float2 INUV       : TEXCOORD0,
                             in float4 INColor    : COLOR,
-                            out float4 OUTPosition : POSITION,
+                            out float4 OUTPosition : TZ_OUT_POSITION,
                             out float2 OUTUV       : TEXCOORD0,
                             out float4 OUTColor    : COLOR)
 {
@@ -270,7 +272,7 @@ void vp_nolight_vertexcolor(in float3 INPosition : POSITION,
 
 void vp_flat(in float3 INPosition : POSITION,
              in float3 INNormal   : NORMAL,
-             out float4 OUTPosition : POSITION,
+             out float4 OUTPosition : TZ_OUT_POSITION,
              out float4 OUTColor    : COLOR)
 {
     OUTPosition = PointToDevice(INPosition, worldViewProjection);
@@ -283,7 +285,7 @@ void vp_flat_skinned(in float3 INPosition : POSITION,
                      in float3 INNormal	  : NORMAL,
                      in float4 INIndices  : BLENDINDICES,
                      in float4 INWeights  : BLENDWEIGHT,
-                     out float4 OUTPosition : POSITION,
+                     out float4 OUTPosition : TZ_OUT_POSITION,
                      out float4 OUTColor    : COLOR)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -358,7 +360,7 @@ VP_ENV_OUT vp_env_skinned(VP_ENV_SKINNED_IN IN)
 void vp_blinn(in float3 INPosition : POSITION,
               in float3 INNormal   : NORMAL,
               in float2 INUV       : TEXCOORD0,
-              out float4 OUTPosition : POSITION,
+              out float4 OUTPosition : TZ_OUT_POSITION,
               out float2 OUTUV       : TEXCOORD0,
               out float2 OUTDiffSpec : TEXCOORD1)
 {
@@ -375,7 +377,7 @@ void vp_blinn_skinned(in float3 INPosition : POSITION,
                       in float2 INUV       : TEXCOORD0,
                       in float4 INIndices  : BLENDINDICES,
                       in float4 INWeights  : BLENDWEIGHT,
-                      out float4 OUTPosition : POSITION,
+                      out float4 OUTPosition : TZ_OUT_POSITION,
                       out float2 OUTUV       : TEXCOORD0,
                       out float2 OUTDiffSpec : TEXCOORD1)
 {
@@ -440,71 +442,71 @@ VP_LIGHTMAP_OUT vp_lightmap(VP_LIGHTMAP_IN IN)
 //
 // Fragment programs
 //
-float4 fp_flat(float4 INColor : COLOR) : COLOR
+float4 fp_flat(float4 INColor : COLOR) : TZ_OUT_COLOR
 {
     return INColor;
 }
 
-float4 fp_normal(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_normal(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return materialColor * tex2D(diffuse, INUV);
+    return materialColor * TZ_TEX2D(diffuse, INUV);
 }
 
 float4 fp_normal_vertexcolor(float4 INColor : COLOR,
-                             float2 INUV    : TEXCOORD0) : COLOR
+                             float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return INColor * tex2D(diffuse, INUV);
+    return INColor * TZ_TEX2D(diffuse, INUV);
 }
 
-float4 fp_translucent(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_translucent(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return float4(tex2D(diffuse, INUV).xyz * materialColor.xyz, 1.0);
+    return float4(TZ_TEX2D(diffuse, INUV).xyz * materialColor.xyz, 1.0);
 }
 
 float4 fp_translucent_vertexcolor(float4 INColor : COLOR,
-                                  float2 INUV    : TEXCOORD0) : COLOR
+                                  float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return float4(tex2D(diffuse, INUV).xyz * INColor.xyz, 1.0);
+    return float4(TZ_TEX2D(diffuse, INUV).xyz * INColor.xyz, 1.0);
 }
 
-float4 fp_premodulatealpha(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_premodulatealpha(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 color = materialColor * tex2D(diffuse, INUV);
+    float4 color = materialColor * TZ_TEX2D(diffuse, INUV);
     color.xyz *= materialColor.w;
     return color;
 }
 
 float4 fp_premodulatealpha_vertexcolor(float4 INColor : COLOR,
-                                       float2 INUV    : TEXCOORD0) : COLOR
+                                       float2 INUV    : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 color = INColor * tex2D(diffuse, INUV);
+    float4 color = INColor * TZ_TEX2D(diffuse, INUV);
     color.xyz *= INColor.w;
     return color;
 }
 
-float4 fp_separatealpha(float2 INUV : TEXCOORD0) : COLOR
+float4 fp_separatealpha(float2 INUV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, INUV).a;
-    return materialColor * tex2D(diffuse, INUV) * alpha;
+    float alpha = materialColor.w * TZ_TEX2D(alpha_map, INUV).a;
+    return materialColor * TZ_TEX2D(diffuse, INUV) * alpha;
 }
 
-float4 fp_separatealpha_env(FP_GLASS_ENV_IN IN) : COLOR
+float4 fp_separatealpha_env(FP_GLASS_ENV_IN IN) : TZ_OUT_COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, IN.UV).a;
+    float alpha = materialColor.w * TZ_TEX2D(alpha_map, IN.UV).a;
     float3 R = reflect(normalize(IN.eyeDirection), normalize(IN.Normal));
-    return materialColor * texCUBE(env_map, R) * alpha;
+    return materialColor * TZ_TEXCUBE(env_map, R) * alpha;
 }
 
-float4 fp_env(FP_ENV_IN IN) : COLOR
+float4 fp_env(FP_ENV_IN IN) : TZ_OUT_COLOR
 {
     float3 R = reflect(normalize(IN.eyeDirection), normalize(IN.Normal));
-    return materialColor.w * materialColor * texCUBE(env_map, R);
+    return materialColor.w * materialColor * TZ_TEXCUBE(env_map, R);
 }
 
 float4 fp_blinn(float2 INUV       : TEXCOORD0,
-                float2 INDiffSpec : TEXCOORD1) : COLOR
+                float2 INDiffSpec : TEXCOORD1) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     float3 diffContrib = (INDiffSpec.x * lightColor);
     float3 specContrib = (INDiffSpec.y * lightColor);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
@@ -512,9 +514,9 @@ float4 fp_blinn(float2 INUV       : TEXCOORD0,
 }
 
 float4 fp_blinn_alphatest(float2 INUV       : TEXCOORD0,
-                          float2 INDiffSpec : TEXCOORD1) : COLOR
+                          float2 INDiffSpec : TEXCOORD1) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
@@ -526,25 +528,25 @@ float4 fp_blinn_alphatest(float2 INUV       : TEXCOORD0,
 }
 
 float4 fp_blinn_specularmap(float2 INUV       : TEXCOORD0,
-                            float2 INDiffSpec : TEXCOORD1) : COLOR
+                            float2 INDiffSpec : TEXCOORD1) : TZ_OUT_COLOR
 {
-    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
+    float3 ks = materialColor.xyz * TZ_TEX2D(specular_map, INUV).xyz;
     float3 diffContrib = (INDiffSpec.x * lightColor);
     float3 specContrib = (INDiffSpec.y * ks * lightColor);
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
     return float4(result, diffuseColor.w);
 }
 
 float4 fp_blinn_specularmap_alphatest(float2 INUV       : TEXCOORD0,
-                                      float2 INDiffSpec : TEXCOORD1) : COLOR
+                                      float2 INDiffSpec : TEXCOORD1) : TZ_OUT_COLOR
 {
-    float4 diffuseColor = materialColor * tex2D(diffuse, INUV);
+    float4 diffuseColor = materialColor * TZ_TEX2D(diffuse, INUV);
     if (diffuseColor.a < alphaRef)
     {
         discard;
     }
-    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
+    float3 ks = materialColor.xyz * TZ_TEX2D(specular_map, INUV).xyz;
     float3 diffContrib = (INDiffSpec.x * lightColor);
     float3 specContrib = (INDiffSpec.y * ks * lightColor);
     float3 result = specContrib + (diffuseColor.xyz * (diffContrib + ambientColor));
@@ -552,72 +554,74 @@ float4 fp_blinn_specularmap_alphatest(float2 INUV       : TEXCOORD0,
 }
 
 float4 fp_blinn_specularmap_alphamap(float2 INUV       : TEXCOORD0,
-                                     float2 INDiffSpec : TEXCOORD1) : COLOR
+                                     float2 INDiffSpec : TEXCOORD1) : TZ_OUT_COLOR
 {
-    float alpha = materialColor.w * tex2D(alpha_map, INUV).a;
+    float alpha = materialColor.w * TZ_TEX2D(alpha_map, INUV).a;
     if (alpha < alphaRef)
     {
         discard;
     }
-    float3 ks = materialColor.xyz * tex2D(specular_map, INUV).xyz;
+    float3 ks = materialColor.xyz * TZ_TEX2D(specular_map, INUV).xyz;
     float3 diffContrib = (INDiffSpec.x * lightColor);
     float3 specContrib = (INDiffSpec.y * ks * lightColor);
-    float3 diffuseColor = materialColor.xyz * tex2D(diffuse, INUV).xyz;
+    float3 diffuseColor = materialColor.xyz * TZ_TEX2D(diffuse, INUV).xyz;
     float3 result = specContrib + (diffuseColor * (diffContrib + ambientColor));
     return float4(result, alpha);
 }
 
 float4 fp_blinn_glowmap(float2 INUV       : TEXCOORD0,
-                        float2 INDiffSpec : TEXCOORD1) : COLOR
+                        float2 INDiffSpec : TEXCOORD1) : TZ_OUT_COLOR
 {
     float3 diffContrib = (INDiffSpec.x * lightColor);
     float3 specContrib = (INDiffSpec.y * lightColor);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * TZ_TEX2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, 1.0);
 }
 
 float4 fp_blinn_specularmap_glowmap(float2 INUV       : TEXCOORD0,
-                                    float2 INDiffSpec : TEXCOORD1) : COLOR
+                                    float2 INDiffSpec : TEXCOORD1) : TZ_OUT_COLOR
 {
-    float3 ks = tex2D(specular_map, INUV).xyz;
+    float3 ks = TZ_TEX2D(specular_map, INUV).xyz;
     float3 diffContrib = (INDiffSpec.x * lightColor);
     float3 specContrib = (INDiffSpec.y * ks * lightColor);
-    float3 diffuseColor = tex2D(diffuse, INUV).xyz;
-    float3 glowColor = materialColor.xyz * tex2D(glow_map, INUV).xyz;
+    float3 diffuseColor = TZ_TEX2D(diffuse, INUV).xyz;
+    float3 glowColor = materialColor.xyz * TZ_TEX2D(glow_map, INUV).xyz;
     float3 result = (specContrib + (diffuseColor * (diffContrib + ambientColor)) + glowColor);
     return float4(result, 1.0);
 }
 
+#if 0
 float4 fp_blinn_env(float2 INUV       : TEXCOORD0,
-                    float2 INDiffSpec : TEXCOORD1) : COLOR
+                    float2 INDiffSpec : TEXCOORD1) : TZ_OUT_COLOR
 {
     float3 diffContrib = (INDiffSpec.x * lightColor);
     float3 specContrib = (INDiffSpec.y * lightColor);
-    float3 diffuseColor = materialColor.xyz * tex2D(diffuse, INUV).xyz;
+    float3 diffuseColor = materialColor.xyz * TZ_TEX2D(diffuse, INUV).xyz;
     float3 result = specContrib + (diffuseColor * (diffContrib + ambientColor));
     float3 R = -reflect(Vn, Nn);
-    float3 reflColor = Kr * texCUBE(env_map, R.xyz).xyz;
+    float3 reflColor = Kr * TZ_TEXCUBE(env_map, R.xyz).xyz;
     result += diffuseColor * reflColor;
     return float4(result, 1.0);
 }
+#endif
 
-float4 fp_glowmap(FP_GLOWMAP_IN IN) : COLOR
+float4 fp_glowmap(FP_GLOWMAP_IN IN) : TZ_OUT_COLOR
 {
-    return float4(materialColor.xyz * tex2D(glow_map, IN.UV).xyz, 1.0);
+    return float4(materialColor.xyz * TZ_TEX2D(glow_map, IN.UV).xyz, 1.0);
 }
 
-float4 fp_lightmap(FP_LIGHTMAP_IN IN) : COLOR
+float4 fp_lightmap(FP_LIGHTMAP_IN IN) : TZ_OUT_COLOR
 {
-    float3 diffuseColor = tex2D(diffuse, IN.UV.xy).xyz;
-    float3 diffContrib = ((lightingScale * tex2D(light_map, IN.UV.zw).xyz) + ambientColor);
+    float3 diffuseColor = TZ_TEX2D(diffuse, IN.UV.xy).xyz;
+    float3 diffContrib = ((lightingScale * TZ_TEX2D(light_map, IN.UV.zw).xyz) + ambientColor);
     return float4(materialColor.xyz * diffuseColor * diffContrib, 1.0);
 }
 
-float4 fp_skybox(FP_SKYBOX_IN IN) : COLOR
+float4 fp_skybox(FP_SKYBOX_IN IN) : TZ_OUT_COLOR
 {
-    return texCUBE(env_map, IN.eyeDirection);
+    return TZ_TEXCUBE(env_map, IN.eyeDirection);
 }
 
 //
@@ -1282,4 +1286,3 @@ technique lightmap
         FragmentProgram = compile latest fp_lightmap();
     }
 }
-

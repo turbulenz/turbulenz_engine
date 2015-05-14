@@ -1,5 +1,7 @@
 // Copyright (c) 2010-2011 Turbulenz Limited
 
+#include "platform.cgh"
+
 float4x4 worldViewProjection;
 
 float4 TransformPoint(float3 pt, float4x4 transform)
@@ -12,22 +14,22 @@ float4 TransformPoint(float3 pt, float4x4 transform)
 
 void vp(float3 INpos : POSITION,
         float2 INuv : TEXCOORD0,
-        out float4 OUTpos : POSITION,
+        out float4 OUTpos : TZ_OUT_POSITION,
         out float2 OUTuv : TEXCOORD0)
 {
     OUTpos = TransformPoint(INpos, worldViewProjection);
     OUTuv  = INuv;
 }
 
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
 };
 
-float4 fp(float2 uv : TEXCOORD0) : COLOR
+float4 fp(float2 uv : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return tex2D(diffuse, uv);
+    return TZ_TEX2D(diffuse, uv);
 }
 
 technique textured3D

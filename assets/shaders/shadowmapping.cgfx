@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
+#include "platform.cgh"
+
 #include "skinning.cgh"
 
 //
@@ -12,7 +14,7 @@ float4 shadowDepth;
 
 float2 pixelOffset;
 
-sampler2D shadowMap = sampler_state
+TZ_TEXTURE2D_DECLARE(shadowMap)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -69,7 +71,7 @@ float log_conv(float x0, float X, float y0, float Y)
 // Vertex programs
 //
 void vp(in float3 INPosition : POSITION,
-        out float4 OUTPosition : POSITION,
+        out float4 OUTPosition : TZ_OUT_POSITION,
         out float  OUTDepth    : TEXCOORD0)
 {
     float3 worldPosition = float3((INPosition.x * world[0]) +
@@ -88,7 +90,7 @@ void vp(in float3 INPosition : POSITION,
 void vp_skinned(in float3 INPosition : POSITION,
                 in float4 INIndices  : BLENDINDICES,
                 in float4 INWeights  : BLENDWEIGHT,
-                out float4 OUTPosition : POSITION,
+                out float4 OUTPosition : TZ_OUT_POSITION,
                 out float  OUTDepth    : TEXCOORD0)
 {
     float3x4 skinMatrix = BuildSkinMatrix(INIndices, INWeights);
@@ -113,7 +115,7 @@ void vp_skinned(in float3 INPosition : POSITION,
 
 void vp_blur(in float4 INPosition : POSITION,
              in float2 INUV       : TEXCOORD0,
-             out float4 OUTPosition : POSITION,
+             out float4 OUTPosition : TZ_OUT_POSITION,
              out float2 OUTUV       : TEXCOORD0)
 {
     OUTPosition = INPosition;
@@ -123,20 +125,20 @@ void vp_blur(in float4 INPosition : POSITION,
 //
 // Fragment programs
 //
-float4 fp(in float INDepth : TEXCOORD0) : COLOR
+float4 fp(in float INDepth : TEXCOORD0) : TZ_OUT_COLOR
 {
     //return EncodeFloatRGBA32(Depth); //float4(Depth, Depth, Depth, 1.0);
     //return EncodeFloatRGB16((INDepth.x / INDepth.y) * 0.5 + 0.5);
     return EncodeFloatRGB16(INDepth);
 }
 
-float4 fp_blur(in float2 UV : TEXCOORD0) : COLOR
+float4 fp_blur(in float2 UV : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float sample0 = DecodeFloatRGB16(tex2D(shadowMap, (UV - (2.0 * pixelOffset))));
-    float sample1 = DecodeFloatRGB16(tex2D(shadowMap, (UV - (1.0 * pixelOffset))));
-    float sample2 = DecodeFloatRGB16(tex2D(shadowMap,  UV));
-    float sample3 = DecodeFloatRGB16(tex2D(shadowMap, (UV + (1.0 * pixelOffset))));
-    float sample4 = DecodeFloatRGB16(tex2D(shadowMap, (UV + (2.0 * pixelOffset))));
+    float sample0 = DecodeFloatRGB16(TZ_TEX2D(shadowMap, (UV - (2.0 * pixelOffset))));
+    float sample1 = DecodeFloatRGB16(TZ_TEX2D(shadowMap, (UV - (1.0 * pixelOffset))));
+    float sample2 = DecodeFloatRGB16(TZ_TEX2D(shadowMap,  UV));
+    float sample3 = DecodeFloatRGB16(TZ_TEX2D(shadowMap, (UV + (1.0 * pixelOffset))));
+    float sample4 = DecodeFloatRGB16(TZ_TEX2D(shadowMap, (UV + (2.0 * pixelOffset))));
 
     const float c = (1.0 / 5.0);
 

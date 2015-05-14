@@ -1,11 +1,13 @@
 // Copyright (c) 2009-2010 Turbulenz Limited
 
+#include "platform.cgh"
+
 float4x4 worldViewProjection;
 float4 color;
 float4 fadeToColor;
 
 void vp_floor(float2 INPosition : POSITION,
-              out float4 OUTPosition: POSITION,
+              out float4 OUTPosition: TZ_OUT_POSITION,
               out float2 OUTDistance: TEXCOORD0)
 {
     OUTPosition = (INPosition.xxxx * worldViewProjection[0] +
@@ -14,7 +16,7 @@ void vp_floor(float2 INPosition : POSITION,
     OUTDistance = INPosition;
 }
 
-float4 fp_floor(float2 distance : TEXCOORD0) : COLOR
+float4 fp_floor(float2 distance : TEXCOORD0) : TZ_OUT_COLOR
 {
     return lerp(color, fadeToColor, saturate(length(distance)));
 }

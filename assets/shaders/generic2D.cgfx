@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
+#include "platform.cgh"
+
 //
 // Vertex Programs
 //
@@ -7,7 +9,7 @@ float4 clipSpace;
 float  alphaRef = 0.03;
 
 float4
-vp_constantColor_2d(float4 INPosition : POSITION) : POSITION
+vp_constantColor_2d(float4 INPosition : POSITION) : TZ_OUT_POSITION
 {
     float4 position = INPosition;
     position.xy = position.xy * clipSpace.xy + clipSpace.zw;
@@ -17,7 +19,7 @@ vp_constantColor_2d(float4 INPosition : POSITION) : POSITION
 void
 vp_vertexColor_2d(in float4 INPosition : POSITION,
                   in float4 INColor : COLOR,
-                  out float4 OUTPosition : POSITION,
+                  out float4 OUTPosition : TZ_OUT_POSITION,
                   out float4 OUTColor : COLOR)
 {
     float4 position = INPosition;
@@ -30,7 +32,7 @@ vp_vertexColor_2d(in float4 INPosition : POSITION,
 void
 vp_textured_2d(in float4 INPosition : POSITION,
                in float2 INTexCoord0 : TEXCOORD0,
-               out float4 OUTPosition : POSITION,
+               out float4 OUTPosition : TZ_OUT_POSITION,
                out float2 OUTTexCoord0 : TEXCOORD0)
 {
     float4 position = INPosition;
@@ -43,7 +45,7 @@ void
 vp_vertexColorTextured_2d(in float4 INPosition : POSITION,
                           in float4 INColor : COLOR,
                           in float2 INTexCoord0 : TEXCOORD0,
-                          out float4 OUTPosition : POSITION,
+                          out float4 OUTPosition : TZ_OUT_POSITION,
                           out float4 OUTColor : COLOR,
                           out float2 OUTTexCoord0 : TEXCOORD0)
 {
@@ -59,35 +61,35 @@ vp_vertexColorTextured_2d(in float4 INPosition : POSITION,
 // Pixel Programs
 //
 float4 constantColor;
-sampler2D diffuse = sampler_state
+TZ_TEXTURE2D_DECLARE(diffuse)
 {
     MinFilter = LinearMipMapLinear;
     MagFilter = Linear;
 };
 
 float4
-fp_constantColor() : COLOR
+fp_constantColor() : TZ_OUT_COLOR
 {
     return constantColor;
 }
 
 float4
-fp_vertexColor(float4 INColor : COLOR) : COLOR
+fp_vertexColor(float4 INColor : COLOR) : TZ_OUT_COLOR
 {
     return INColor;
 }
 
 
 float4
-fp_textured(float2 INTexCoord0 : TEXCOORD0) : COLOR
+fp_textured(float2 INTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return tex2D(diffuse, INTexCoord0);
+    return TZ_TEX2D(diffuse, INTexCoord0);
 }
 
 float4
-fp_texturedAlpha(float2 INTexCoord0 : TEXCOORD0) : COLOR
+fp_texturedAlpha(float2 INTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    float4 result = tex2D(diffuse, INTexCoord0);
+    float4 result = TZ_TEX2D(diffuse, INTexCoord0);
     if (result.a < alphaRef)
     {
         discard;
@@ -97,9 +99,9 @@ fp_texturedAlpha(float2 INTexCoord0 : TEXCOORD0) : COLOR
 
 float4
 fp_vertexColorTextured(float4 INColor : COLOR,
-                       float2 INTexCoord0 : TEXCOORD0) : COLOR
+                       float2 INTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return INColor * tex2D(diffuse, INTexCoord0);
+    return INColor * TZ_TEX2D(diffuse, INTexCoord0);
 }
 
 

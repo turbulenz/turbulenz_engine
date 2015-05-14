@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2013 Turbulenz Limited
 
+#include "platform.cgh"
+
 //
 // Uniform variables
 //
@@ -9,7 +11,7 @@ float3 color1;
 float3 modulateColor;
 float  alpha;
 
-sampler2D colorTexture = sampler_state
+TZ_TEXTURE2D_DECLARE(colorTexture)
 {
     MinFilter = Nearest;
     MagFilter = Nearest;
@@ -17,7 +19,7 @@ sampler2D colorTexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D colorTextureFiltered = sampler_state
+TZ_TEXTURE2D_DECLARE(colorTextureFiltered)
 {
     MinFilter = Linear;
     MagFilter = Linear;
@@ -30,7 +32,7 @@ sampler2D colorTextureFiltered = sampler_state
 //
 void vp(in float4 INPosition : POSITION,
         in float2 INUV       : TEXCOORD0,
-        out float4 OUTPosition : POSITION,
+        out float4 OUTPosition : TZ_OUT_POSITION,
         out float2 OUTUV       : TEXCOORD0)
 {
     OUTPosition = INPosition;
@@ -40,38 +42,38 @@ void vp(in float4 INPosition : POSITION,
 //
 // Fragment programs
 //
-float4 fp_fade(float2 UV: TEXCOORD0) : COLOR
+float4 fp_fade(float2 UV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    float3 color = tex2D(colorTexture, UV).xyz;
+    float3 color = TZ_TEX2D(colorTexture, UV).xyz;
     return float4(lerp(color, fadeColor.xyz, smoothstep(0.0, 1.0, fadeColor.w)), 1.0);
 }
 
-float4 fp_copy(float2 UV: TEXCOORD0) : COLOR
+float4 fp_copy(float2 UV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    return tex2D(colorTexture, UV);
+    return TZ_TEX2D(colorTexture, UV);
 }
 
-float4 fp_copyFiltered(float2 UV: TEXCOORD0) : COLOR
+float4 fp_copyFiltered(float2 UV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    return tex2D(colorTextureFiltered, UV);
+    return TZ_TEX2D(colorTextureFiltered, UV);
 }
 
-float4 fp_bicolor(float2 UV: TEXCOORD0) : COLOR
+float4 fp_bicolor(float2 UV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    float3 color = tex2D(colorTexture, UV).xyz;
+    float3 color = TZ_TEX2D(colorTexture, UV).xyz;
     float luminance = (0.3 * color.x + 0.59 * color.y + 0.11 * color.z);
     return float4(lerp(color0, color1, luminance), 1.0);
 }
 
-float4 fp_modulate(float2 UV: TEXCOORD0) : COLOR
+float4 fp_modulate(float2 UV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    float3 color = tex2D(colorTexture, UV).xyz;
+    float3 color = TZ_TEX2D(colorTexture, UV).xyz;
     return float4(color * modulateColor, 1.0);
 }
 
-float4 fp_blend(float2 UV: TEXCOORD0) : COLOR
+float4 fp_blend(float2 UV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    return float4(tex2D(colorTexture, UV).xyz, alpha);
+    return float4(TZ_TEX2D(colorTexture, UV).xyz, alpha);
 }
 
 //

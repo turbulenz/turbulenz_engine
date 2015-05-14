@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2012 Turbulenz Limited
 
+#include "platform.cgh"
+
 //
 // Uniform variables
 //
@@ -7,7 +9,7 @@ float4 clipSpace;
 float2 copyUVScale;
 float copyFlip;
 
-sampler2D texture = sampler_state
+TZ_TEXTURE2D_DECLARE(texture)
 {
     MinFilter = LinearMipMapNearest;
     MagFilter = Linear;
@@ -15,7 +17,7 @@ sampler2D texture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D npottexture = sampler_state
+TZ_TEXTURE2D_DECLARE(npottexture)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -23,7 +25,7 @@ sampler2D npottexture = sampler_state
     WrapT = ClampToEdge;
 };
 
-sampler2D inputTexture0 = sampler_state
+TZ_TEXTURE2D_DECLARE(inputTexture0)
 {
     MinFilter = Nearest;
     MagFilter = Linear;
@@ -38,7 +40,7 @@ sampler2D inputTexture0 = sampler_state
 void vp_draw2D(in float2 INPosition : POSITION,
                in float4 INColor : COLOR,
                in float2 INTexCoord0 : TEXCOORD0,
-               out float4 OUTPosition : POSITION,
+               out float4 OUTPosition : TZ_OUT_POSITION,
                out float4 OUTColor : COLOR,
                out float2 OUTTexCoord0 : TEXCOORD0)
 {
@@ -53,7 +55,7 @@ void vp_draw2D(in float2 INPosition : POSITION,
 
 void vp_copy(in float4 InPosition : POSITION,
              in float2 InUV : TEXCOORD0,
-             out float4 OutPosition : POSITION,
+             out float4 OutPosition : TZ_OUT_POSITION,
              out float2 OutUV : TEXCOORD0)
 {
     OutPosition.x = InPosition.x;
@@ -66,19 +68,19 @@ void vp_copy(in float4 InPosition : POSITION,
 // Pixel Programs
 //
 
-float4 fp_draw2D(float4 INColor : COLOR, float2 INTexCoord0 : TEXCOORD0) : COLOR
+float4 fp_draw2D(float4 INColor : COLOR, float2 INTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return INColor * tex2D(texture, INTexCoord0);
+    return INColor * TZ_TEX2D(texture, INTexCoord0);
 }
 
-float4 fp_draw2D_nomips(float4 INColor : COLOR, float2 INTexCoord0 : TEXCOORD0) : COLOR
+float4 fp_draw2D_nomips(float4 INColor : COLOR, float2 INTexCoord0 : TEXCOORD0) : TZ_OUT_COLOR
 {
-    return INColor * tex2D(npottexture, INTexCoord0);
+    return INColor * TZ_TEX2D(npottexture, INTexCoord0);
 }
 
-float4 fp_copy(float2 UV: TEXCOORD0) : COLOR
+float4 fp_copy(float2 UV: TEXCOORD0) : TZ_OUT_COLOR
 {
-    return tex2D(inputTexture0, UV);
+    return TZ_TEX2D(inputTexture0, UV);
 }
 
 //
