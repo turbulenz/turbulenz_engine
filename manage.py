@@ -19,7 +19,21 @@ from scripts.utils import command_no_arguments, command_with_arguments, command_
 from scripts.utils import CalledProcessError, echo, log, warning, error, ok, sh, rmdir, rm, mkdir, cp
 from scripts.utils import check_documentation_links, find_devenv, check_compilers
 
-#######################################################################################################################
+################################################################################
+
+def _d3d11_cgfx2json_flags():
+    abspath = os.path.abspath
+    join = os.path.join
+    hlsl3_script = abspath(join('scripts', 'compile_hlsl3_shader.bat'))
+    hlsl5_script = abspath(join('scripts', 'compile_hlsl5_shader.bat'))
+    return [
+        "--hlsl3",
+        "%s,%s" % ("binary_hlsl3", hlsl3_script),
+        "--hlsl5",
+        "%s,%s" % ("binary_hlsl5", hlsl5_script),
+    ]
+
+################################################################################
 
 @command_no_arguments
 def command_env():
@@ -109,6 +123,7 @@ def command_jslib(options):
     parser.add_argument('--refcheck', action='store_true', help="Enable the reference checking build")
     parser.add_argument('-m', '--modular', action='store_true', help="Build modules only (in dependency order)")
     parser.add_argument('--crude', action='store_true', help="Build jslib only (no error checking)")
+    parser.add_argument('--d3d11', action='store_true', help=" Build D3D11 shaders")
 
     args = parser.parse_args(options)
 
@@ -136,6 +151,8 @@ def command_jslib(options):
         cmd += " CMDVERBOSE=1"
     if args.closure:
         cmd += " VERIFY_CLOSURE=1"
+    if args.d3d11:
+        cmd += " \"CGFX2JSONFLAGS=%s\"" % " ".join(_d3d11_cgfx2json_flags())
 
     # If mode == "all", run the modular build, then crude
     if "all" == mode:
@@ -344,16 +361,8 @@ def command_apps(options):
         asset_options.extend([ '--cgfx-flag=%s' % c for c in args.cgfx_flag ])
 
     if args.d3d11:
-        abspath = os.path.abspath
-        join = os.path.join
-        hlsl3_script = abspath(join('scripts', 'compile_hlsl3_shader.bat'))
-        hlsl5_script = abspath(join('scripts', 'compile_hlsl5_shader.bat'))
-        asset_options.extend([
-            "--cgfx-flag=--hlsl3",
-            "--cgfx-flag=%s,%s" % ("binary_hlsl3", hlsl3_script),
-            "--cgfx-flag=--hlsl5",
-            "--cgfx-flag=%s,%s" % ("binary_hlsl5", hlsl5_script),
-        ])
+        d3d11_flags = _d3d11_cgfx2json_flags()
+        asset_options.extend([ "--cgfx-flag=%s" % f for f in d3d11_flags ])
 
     start_time = time.time()
 

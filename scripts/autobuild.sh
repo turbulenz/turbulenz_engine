@@ -81,7 +81,7 @@ function setup {
   echo "-----------------------------"
   echo "  Remove old build files"
   echo "-----------------------------"
-  git clean -fdx build devserver
+  git clean -fdx build devserver jslib jslib-modular
 
   echo
   echo "-----------------------------"
