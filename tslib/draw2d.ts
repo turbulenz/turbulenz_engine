@@ -2323,8 +2323,8 @@ class Draw2D
         o.drawSprite = undefined;
         o.drawRaw = undefined;
 
-        // Generated from assets/shaders/draw2d.cgfx
-        var shader = gd.createShader(draw2d_cgfx);
+        // Generated from assets/shaders/draw2D.cgfx
+        var shader = gd.createShader(draw2D_cgfx);
 
         // Mapping from blend mode name to Technique object.
         o.blendModeTechniques = {
