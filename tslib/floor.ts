@@ -206,68 +206,8 @@ class Floor
             }
         };
 
-        /* tslint:disable:whitespace */
-        /* tslint:disable:max-line-length */
-        var shaderParameters =
-            {
-                "version": 1,
-                "name": "floor.cgfx",
-                "parameters":
-                {
-                    "worldViewProjection":
-                    {
-                        "type": "float",
-                        "rows": 4,
-                        "columns": 4
-                    },
-                    "color":
-                    {
-                        "type": "float",
-                        "columns": 4
-                    },
-                    "fadeToColor":
-                    {
-                        "type": "float",
-                        "columns": 4
-                    }
-                },
-                "techniques":
-                {
-                    "floor":
-                    [
-                        {
-                            "parameters": ["worldViewProjection","color","fadeToColor"],
-                            "semantics": ["POSITION"],
-                            "states":
-                            {
-                                "DepthTestEnable": true,
-                                "DepthFunc": 515,
-                                "DepthMask": false,
-                                "CullFaceEnable": false,
-                                "BlendEnable": false
-                            },
-                            "programs": ["vp_floor","fp_floor"]
-                        }
-                    ]
-                },
-                "programs":
-                {
-                    "fp_floor":
-                    {
-                        "type": "fragment",
-                        "code": "#ifdef GL_ES\nprecision mediump float;precision mediump int;\n#endif\nvec4 _ret_0;float _TMP11;float _a0012;float _TMP15;float _b0020;uniform vec4 color;uniform vec4 fadeToColor;varying vec4 tz_TexCoord[1];void main()\n{_a0012=dot(tz_TexCoord[0].xy,tz_TexCoord[0].xy);_TMP11=1.0/inversesqrt(_a0012);_b0020=min(1.0,_TMP11);_TMP15=max(0.0,_b0020);_ret_0=color+_TMP15*(fadeToColor-color);gl_FragColor=_ret_0;}"
-                    },
-                    "vp_floor":
-                    {
-                        "type": "vertex",
-                        "code": "#ifdef GL_ES\nprecision mediump float;precision mediump int;\n#endif\nvarying vec4 tz_TexCoord[1];attribute vec4 ATTR0;\nvec4 _OUTPosition1;vec2 _OUTDistance1;uniform vec4 worldViewProjection[4];void main()\n{_OUTPosition1=ATTR0.xxxx*worldViewProjection[0]+ATTR0.yyyy*worldViewProjection[2]+worldViewProjection[3];_OUTDistance1=ATTR0.xy;tz_TexCoord[0].xy=ATTR0.xy;gl_Position=_OUTPosition1;}"
-                    }
-                }
-            };
-        /* tslint:enable:max-line-length */
-        /* tslint:enable:whitespace */
-
-        var shader = gd.createShader(shaderParameters);
+        // Generated from assets/shaders/floor.cgfx
+        var shader = gd.createShader(floor_cgfx);
         if (shader)
         {
             technique = shader.getTechnique(0);

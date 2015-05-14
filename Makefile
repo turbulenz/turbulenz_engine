@@ -85,13 +85,17 @@ services_src := $(wildcard $(TS_SRC_DIR)/services/*.ts)
 services_deps := utilities debug servicedatatypes
 
 # tzdraw2d
-tzdraw2d_src := $(TS_SRC_DIR)/draw2d.ts
+tzdraw2d_src := $(TS_SRC_DIR)/draw2d.ts assets/shaders/draw2d.cgfx
 tzdraw2d_deps = platform debug
 
 # physics2d
-physics2d_src := $(addprefix $(TS_SRC_DIR)/, \
-  physics2ddevice.ts physics2ddebugdraw.ts boxtree.ts)
+physics2d_src := $(TS_SRC_DIR)/physics2ddevice.ts $(TS_SRC_DIR)/boxtree.ts
 physics2d_deps := platform debug
+
+# physics2ddebugdraw
+physics2ddebugdraw_src := \
+  $(TS_SRC_DIR)/physics2ddebugdraw.ts assets/shaders/debugphys2d.cgfx
+physics2ddebugdraw_deps := physics2d
 
 # fontmanager
 fontmanager_src := $(TS_SRC_DIR)/fontmanager.ts
@@ -117,18 +121,35 @@ sparsegrid_deps := debug
 jsengine_base_src := $(addprefix $(TS_SRC_DIR)/, \
   assetcache.ts assettracker.ts camera.ts charactercontroller.ts \
   indexbuffermanager.ts soundmanager.ts texturemanager.ts \
-  vertexbuffermanager.ts shadermanager.ts)
+  vertexbuffermanager.ts)
 jsengine_base_deps := platform utilities debug
+
+# shadermanager
+shadermanager_src := $(TS_SRC_DIR)/shadermanager.ts assets/shaders/default.cgfx
+shadermanager_deps := jsengine_base
 
 # jsengine
 jsengine_src := $(addprefix $(TS_SRC_DIR)/,                                   \
-  animation.ts animationmanager.ts defaultrendering.ts loadingscreen.ts       \
-  effectmanager.ts material.ts floor.ts geometry.ts                           \
-  light.ts mouseforces.ts physicsmanager.ts posteffects.ts renderingcommon.ts \
-  resourceloader.ts scene.ts scenenode.ts shadowmapping.ts cascadedshadows.ts \
-  textureeffects.ts                                                           \
+  animation.ts animationmanager.ts defaultrendering.ts effectmanager.ts       \
+  material.ts geometry.ts light.ts mouseforces.ts physicsmanager.ts           \
+  posteffects.ts renderingcommon.ts resourceloader.ts scene.ts scenenode.ts   \
+  shadowmapping.ts cascadedshadows.ts                                         \
 )
-jsengine_deps := services aabbtree jsengine_base
+jsengine_deps := services aabbtree jsengine_base shadermanager
+
+# floor
+floor_src := $(TS_SRC_DIR)/floor.ts assets/shaders/floor.cgfx
+floor_deps := jsengine_base
+
+# loadingscreen
+loadingscreen_src := \
+  $(TS_SRC_DIR)/loadingscreen.ts assets/shaders/loadingscreen.cgfx
+loadingscreen_deps := jsengine_base
+
+# textureeffects
+textureeffects_src := \
+  $(TS_SRC_DIR)/textureeffects.ts assets/shaders/textureeffects.cgfx
+textureeffects_deps := jsengine_base
 
 # jsengine_simplerendering
 jsengine_simplerendering_src := $(TS_SRC_DIR)/simplerendering.ts
@@ -160,10 +181,11 @@ particlesystem_src := tslib/particlesystem.ts  \
   assets/shaders/particles-sort.cgfx
 particlesystem_deps := platform debug jsengine
 
-TSLIBS += platform debug vmath aabbtree physics_canvas platform_canvas     \
-  utilities services tzdraw2d physics2d fontmanager canvas jsengine_base   \
-  jsengine jsengine_simplerendering jsengine_deferredrendering             \
-  jsengine_forwardrendering jsengine_debug capturedevices svg spatialgrid  \
+TSLIBS += platform debug vmath aabbtree physics_canvas platform_canvas        \
+  utilities services tzdraw2d physics2d physics2ddebugdraw fontmanager canvas \
+  jsengine_base shadermanager floor loadingscreen textureeffects jsengine     \
+  jsengine_simplerendering jsengine_deferredrendering                         \
+  jsengine_forwardrendering jsengine_debug capturedevices svg spatialgrid     \
   particlesystem sparsegrid
 
 # Check we haven't forgotten any tslib files
