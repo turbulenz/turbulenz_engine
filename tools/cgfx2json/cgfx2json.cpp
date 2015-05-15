@@ -18,6 +18,8 @@
 # define GetCurrentDir getcwd
 # define _stat stat
 #endif
+
+typedef std::vector<const char *> InjectIncludes;
 typedef std::map<std::string, const char *> SemanticsMap;
 typedef std::map<std::string, std::string> UniformsMap;
 typedef std::pair<boost::xpressive::sregex, std::string> UniformRule;
@@ -26,6 +28,9 @@ typedef std::set<std::string> IncludeList;
 
 extern int jsmin(const char *inputText, char *outputBuffer);
 
+bool           sVerbose = false;
+int            sErrorCount = 0;
+InjectIncludes sInjectIncludes;
 
 #define VERSION_STRING "cgfx2json 0.5"
 
@@ -185,9 +190,6 @@ static bool EncodeBase64String(const std::vector<uint8_t> &src,
     return true;
 }
 
-bool sVerbose = false;
-int sErrorCount = 0;
-
 // -----------------------------------------------------------------------------
 // Effect
 // -----------------------------------------------------------------------------
@@ -247,6 +249,17 @@ public:
         }
 
         cgSetCompilerIncludeCallback(mCgContext, &AddDependency);
+
+        {
+            const size_t numInjects = sInjectIncludes.size();
+            for (size_t i = 0 ; i < numInjects ; ++i)
+            {
+                const char *filename = sInjectIncludes[i];
+                const char *basename = ExtractFilename(filename);
+                // printf("INCLUDE: '%s' -> %s\n", basename, filename);
+                cgSetCompilerIncludeFile(mCgContext, basename, filename);
+            }
+        }
 
         sErrorCount = 0;
         cgSetErrorHandler(CgErrorHandler, this); // (void *)&sErrorCount);
@@ -2022,6 +2035,7 @@ static void PrintHelp(int error=0)
 "------------\n"
 "--input=FILE, -i FILE   source FILE to process\n"
 "--output=FILE, -o FILE  output FILE to write to\n"
+"-include FILE           make FILE available via #include\n"
 "-M                      output dependencies\n"
 "-MF FILE                dependencies output to FILE\n"
          );
@@ -2328,6 +2342,14 @@ int main(int argc, char **argv)
         else if (0 == memcmp(argv[argn], "--output=", (sizeof("--output=") - 1)))
         {
             outputFileName = (argv[argn] + 9);
+        }
+        else if (0 == strcmp(argv[argn], "-include"))
+        {
+            argn++;
+            if (argn < argc)
+            {
+                sInjectIncludes.push_back(argv[argn]);
+            }
         }
         else if (0 == strcmp(argv[argn], "-M"))
         {
