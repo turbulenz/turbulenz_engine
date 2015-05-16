@@ -123,7 +123,8 @@ def command_jslib(options):
     parser.add_argument('--refcheck', action='store_true', help="Enable the reference checking build")
     parser.add_argument('-m', '--modular', action='store_true', help="Build modules only (in dependency order)")
     parser.add_argument('--crude', action='store_true', help="Build jslib only (no error checking)")
-    parser.add_argument('--d3d11', action='store_true', help=" Build D3D11 shaders")
+    parser.add_argument('--cgfx-flag', action='append', help="Flag for cgfx2json")
+    parser.add_argument('--d3d11', action='store_true', help="Build D3D11 shaders")
 
     args = parser.parse_args(options)
 
@@ -151,8 +152,14 @@ def command_jslib(options):
         cmd += " CMDVERBOSE=1"
     if args.closure:
         cmd += " VERIFY_CLOSURE=1"
+
+    cgfx2json_flags = []
     if args.d3d11:
-        cmd += " \"CGFX2JSONFLAGS=%s\"" % " ".join(_d3d11_cgfx2json_flags())
+        cgfx2json_flags.extend(_d3d11_cgfx2json_flags())
+    if args.cgfx_flag:
+        cgfx2json_flags.extend(args.cgfx_flag)
+    if 0 != len(cgfx2json_flags):
+        cmd += " \"CGFX2JSONFLAGS=%s\"" % " ".join(cgfx2json_flags)
 
     # If mode == "all", run the modular build, then crude
     if "all" == mode:
