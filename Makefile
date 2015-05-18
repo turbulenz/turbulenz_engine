@@ -40,11 +40,8 @@ TS_OUTPUT_DIR := jslib$(if $(filter $(MODULAR),1),-modular)
 TS_OUTPUT_DIR := $(TS_OUTPUT_DIR)$(if $(filter $(REFCHECK),1),-refcheck)
 TS_SRC_DIR := tslib
 
-ifeq (win32,$(BUILDHOST))
-  CGFX2JSON ?= tools/cgfx2json/Release/cgfx2json.exe
-else
-  CGFX2JSON ?= tools/cgfx2json/bin/release/cgfx2json
-endif
+CGFX2JSON ?= tools/bin/$(BUILDHOST)/cgfx2json
+CGFX2JSONFLAGS := -j 4
 
 # platform
 platform_src := $(TS_SRC_DIR)/base.d.ts $(TS_SRC_DIR)/turbulenz.d.ts
