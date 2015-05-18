@@ -40,7 +40,11 @@ TS_OUTPUT_DIR := jslib$(if $(filter $(MODULAR),1),-modular)
 TS_OUTPUT_DIR := $(TS_OUTPUT_DIR)$(if $(filter $(REFCHECK),1),-refcheck)
 TS_SRC_DIR := tslib
 
-CGFX2JSON ?= tools/bin/$(BUILDHOST)/cgfx2json
+ifeq (win32,$(BUILDHOST))
+  CGFX2JSON ?= tools\bin\$(BUILDHOST)\cgfx2json.exe
+else
+  CGFX2JSON ?= tools/bin/$(BUILDHOST)/cgfx2json
+endif
 CGFX2JSONFLAGS := -j 4
 
 # platform
