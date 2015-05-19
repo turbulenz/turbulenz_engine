@@ -24,14 +24,14 @@ from scripts.utils import check_documentation_links, find_devenv, check_compiler
 def _d3d11_cgfx2json_flags():
     abspath = os.path.abspath
     join = os.path.join
-    hlsl3_script = abspath(join('scripts', 'compile_hlsl3_shader.bat'))
     hlsl5_script = abspath(join('scripts', 'compile_hlsl5_shader.bat'))
-    return [
-        "--hlsl3",
-        "%s,%s" % ("binary_hlsl3", hlsl3_script),
-        "--hlsl5",
-        "%s,%s" % ("binary_hlsl5", hlsl5_script),
-    ]
+    return [ "--hlsl5", "%s,%s" % ("binary_hlsl5", hlsl5_script) ]
+
+def _d3d9_cgfx2json_flags():
+    abspath = os.path.abspath
+    join = os.path.join
+    hlsl3_script = abspath(join('scripts', 'compile_hlsl3_shader.bat'))
+    return [ "--hlsl3", "%s,%s" % ("binary_hlsl3", hlsl3_script) ]
 
 ################################################################################
 
@@ -125,6 +125,7 @@ def command_jslib(options):
     parser.add_argument('--crude', action='store_true', help="Build jslib only (no error checking)")
     parser.add_argument('--cgfx-flag', action='append', help="Flag for cgfx2json")
     parser.add_argument('--d3d11', action='store_true', help="Build D3D11 shaders")
+    parser.add_argument('--d3d9', action='store_true', help="Build D3D9 shaders")
 
     args = parser.parse_args(options)
 
@@ -156,6 +157,8 @@ def command_jslib(options):
     cgfx2json_flags = []
     if args.d3d11:
         cgfx2json_flags.extend(_d3d11_cgfx2json_flags())
+    if args.d3d9:
+        cgfx2json_flags.extend(_d3d9_cgfx2json_flags())
     if args.cgfx_flag:
         cgfx2json_flags.extend(args.cgfx_flag)
     if 0 != len(cgfx2json_flags):
@@ -332,6 +335,7 @@ def command_apps(options):
     parser.add_argument('--assets-path', action='append', help="Specify additional asset root paths")
     parser.add_argument('app', default='all_apps', nargs='?', help="Select an individual app to build")
     parser.add_argument('--d3d11', action='store_true', help="Build shaders for d3d11")
+    parser.add_argument('--d3d9', action='store_true', help="Build shaders for d3d11")
     parser.add_argument('--cgfx-flag', action='append',
                         help="flag for cgfx2json")
     parser.add_argument('--options', nargs='*', help="Additional options to pass to the build process")
@@ -370,6 +374,9 @@ def command_apps(options):
     if args.d3d11:
         d3d11_flags = _d3d11_cgfx2json_flags()
         asset_options.extend([ "--cgfx-flag=%s" % f for f in d3d11_flags ])
+    if args.d3d9:
+        d3d9_flags = _d3d9_cgfx2json_flags()
+        asset_options.extend([ "--cgfx-flag=%s" % f for f in d3d9_flags ])
 
     start_time = time.time()
 
