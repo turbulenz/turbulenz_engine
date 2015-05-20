@@ -35,6 +35,68 @@ InjectIncludes sInjectIncludes;
 #define VERSION_STRING "cgfx2json 0.25"
 
 // -----------------------------------------------------------------------------
+// Timers
+// -----------------------------------------------------------------------------
+
+static bool   sInitialized = false;
+static double sTicksToSeconds = 1.0;
+static double sSecondsToTicks = 1.0;
+
+#if defined(_MSC_VER)
+# include <windows.h>
+# undef max
+# undef min
+typedef __int64 Ticks;
+#elif defined(__APPLE__)
+# include <mach/mach_time.h>
+typedef uint64_t Ticks;
+#else
+# include<sys/time.h>
+# include <time.h>
+typedef unsigned long long Ticks;
+#endif
+
+void InitializeTimer()
+{
+    sInitialized = true;
+#if defined(_MSC_VER)
+    Ticks frequency;
+    QueryPerformanceFrequency((LARGE_INTEGER *)(&frequency));
+    sTicksToSeconds = (1.0 / (double)frequency);
+#elif defined(__APPLE__)
+    mach_timebase_info_data_t info;
+    mach_timebase_info(&info);
+    sTicksToSeconds = ((double)(info.numer) / (double)(info.denom) * 1e-9);
+#else
+    sTicksToSeconds = 1.0 / 1000000;
+#endif
+}
+
+Ticks GetTicks()
+{
+    assert(sInitialized);
+#if defined(_MSC_VER)
+    Ticks ticks;
+    QueryPerformanceCounter((LARGE_INTEGER *)(&ticks));
+    return ticks;
+#elif defined(__APPLE__)
+    return mach_absolute_time();
+#else
+    timeval now;
+    gettimeofday(&now, NULL);
+    Ticks ticks = (Ticks)now.tv_sec;
+    ticks *= 1000000;
+    ticks += now.tv_usec;
+    return ticks;
+#endif
+}
+
+double TicksToSeconds(Ticks ticks)
+{
+    return ((double)ticks * sTicksToSeconds);
+}
+
+// -----------------------------------------------------------------------------
 // Utils
 // -----------------------------------------------------------------------------
 
@@ -2301,6 +2363,9 @@ static bool BinaryCompile(const std::string &code,
 //
 int main(int argc, char **argv)
 {
+    InitializeTimer();
+    const Ticks start = GetTicks();
+
     char *inputFileName  = NULL;
     char *outputFileName = NULL;
 
@@ -2529,6 +2594,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    const Ticks loadCGFXFile = GetTicks();
+
     if (outputDependencies)
     {
         if (sVerbose)
@@ -2604,11 +2671,15 @@ int main(int argc, char **argv)
     json.AddValue("version", "1", 1);
     json.AddString("name", ExtractFilename(inputFileName), 0);
 
+    const Ticks jsonSetup = GetTicks();
+
     if (!effect->AddSamplers(json))
     {
         fprintf(stderr, "Failed parsing Samplers\n");
         return 1;
     }
+
+    const Ticks addSamplers = GetTicks();
 
     if (!effect->AddParameters(json))
     {
@@ -2616,12 +2687,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    const Ticks addParameters = GetTicks();
+
     UniformRules uniformsRename;
     if (!effect->AddTechniques(json, uniformsRename))
     {
         fprintf(stderr, "Failed parsing Techniques\n");
         return 1;
     }
+
+    const Ticks addTechniques = GetTicks();
 
     //
     // Programs.
@@ -2703,6 +2778,8 @@ int main(int argc, char **argv)
         program = effect->GetNextProgram(program);
     }
 
+    const Ticks addPrograms = GetTicks();
+
     json.CloseObject(); // programs
 
     if (sVerbose)
@@ -2714,6 +2791,20 @@ int main(int argc, char **argv)
     }
 
     CleanUpEffects();
+
+    const Ticks cleanup = GetTicks();
+
+    if (sVerbose)
+    {
+        printf("TIMING:\n");
+        printf(" loadCGFXFile:  %g\n", TicksToSeconds(loadCGFXFile - start));
+        printf(" jsonSetup:     %g\n", TicksToSeconds(jsonSetup - start));
+        printf(" addSamplers:   %g\n", TicksToSeconds(addSamplers - start));
+        printf(" addParameters: %g\n", TicksToSeconds(addParameters - start));
+        printf(" addTechniques: %g\n", TicksToSeconds(addTechniques - start));
+        printf(" addPrograms:   %g\n", TicksToSeconds(addPrograms - start));
+        printf(" cleanup:       %g\n", TicksToSeconds(cleanup - start));
+    }
 
     return 0;
 }
