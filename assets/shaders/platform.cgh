@@ -3,6 +3,26 @@
 #ifndef __TZ_SHADER_PLATFORM_CGH__
 #define __TZ_SHADER_PLATFORM_CGH__
 
+#if defined(__HLSL__)
+# define TZ_ATTR_UINT1     uint1
+# define TZ_ATTR_UINT2     uint2
+# define TZ_ATTR_UINT3     uint3
+# define TZ_ATTR_UINT4     uint4
+# define TZ_ATTR_INT1      int1
+# define TZ_ATTR_INT2      int2
+# define TZ_ATTR_INT3      int3
+# define TZ_ATTR_INT4      int4
+#else
+# define TZ_ATTR_UINT1     float1
+# define TZ_ATTR_UINT2     float2
+# define TZ_ATTR_UINT3     float3
+# define TZ_ATTR_UINT4     float4
+# define TZ_ATTR_INT1      float1
+# define TZ_ATTR_INT2      float2
+# define TZ_ATTR_INT3      float3
+# define TZ_ATTR_INT4      float4
+#endif
+
 #if !defined(TZ_OUT_COLOR)
 
 // -----------------------------------------------------------------------------

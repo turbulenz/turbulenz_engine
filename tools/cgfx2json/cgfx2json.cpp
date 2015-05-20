@@ -32,7 +32,7 @@ bool           sVerbose = false;
 int            sErrorCount = 0;
 InjectIncludes sInjectIncludes;
 
-#define VERSION_STRING "cgfx2json 0.25"
+#define VERSION_STRING "cgfx2json 0.26"
 
 // -----------------------------------------------------------------------------
 // Timers
@@ -1690,6 +1690,7 @@ GLSLEffect *GLSLEffect::sInstance = 0;
 
 static const char *sCompilerArgsHLSL[] =
 {
+    "-D__HLSL__",
     "-unroll",
     "all",
     NULL
