@@ -96,7 +96,7 @@ float2 quadVertex[4] = {float2(-1.0, -1.0),
                         float2( 1.0, -1.0),
                         float2( 1.0,  1.0),
                         float2(-1.0,  1.0)};
-void vp_render( in float2 inData     : POSITION,
+void vp_render( in TZ_ATTR_UINT2 inData : POSITION,
                out float4 outPosition: TZ_OUT_POSITION,
                out float2 outUV      : TEXCOORD0,
                out float4 outColor   : COLOR)
