@@ -533,7 +533,12 @@ public:
                               std::string &out_code)
     {
         const bool vertexShader = (CG_VERTEX_DOMAIN == cgGetProgramDomain(program));
-        const char *programString =
+        // Force compilation, otherwise we do not get compiler errors
+        if (!cgIsProgramCompiled(program))
+        {
+            cgCompileProgram(program);
+        }
+        const char * const programString =
             cgGetProgramString(program, CG_COMPILED_PROGRAM);
         return PostProcessCode(programString,
                                uniformsRename,
