@@ -30,4 +30,4 @@ if "" == "%HLSL_PROFILE%" (
 )
 
 rem echo "%FXC%" /nologo /O3 /WX /T %HLSL_PROFILE% /Fo %OUTPUT% %INPUT%
-"%FXC%" /nologo /O3 /WX /T %HLSL_PROFILE% /Fo %OUTPUT% %INPUT%
+"%FXC%" /nologo /O3 /T %HLSL_PROFILE% /Fo %OUTPUT% %INPUT%
