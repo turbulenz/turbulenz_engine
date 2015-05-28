@@ -1935,7 +1935,7 @@ protected:
 
         // Fix texture and sampler registers
         {
-            static const boost::xpressive::sregex texturePattern(boost::xpressive::sregex::compile("\\bTexture[^<]+<float4>(\\w+);",
+            static const boost::xpressive::sregex texturePattern(boost::xpressive::sregex::compile("\\bTexture[^<]+<float4>\\s*(\\w+);",
                                                                                                    (boost::xpressive::regex_constants::ECMAScript |
                                                                                                     boost::xpressive::regex_constants::optimize)));
 
@@ -1967,7 +1967,7 @@ protected:
                     newtext = regex_replace(newtext, samplerPattern, "SamplerState " + samplerName + ":register(s" + registerName + ");");
 
                     // Assign register to texture
-                    const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>" + textureName + ";"));
+                    const boost::xpressive::sregex curTexturePattern(boost::xpressive::sregex::compile("<float4>\\s*" + textureName + ";"));
                     newtext = regex_replace(newtext, curTexturePattern, "<float4>" + textureName + ":register(t" + registerName + ");");
 
                     if (vertexShader)
