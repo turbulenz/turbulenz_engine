@@ -32,7 +32,7 @@ bool           sVerbose = false;
 int            sErrorCount = 0;
 InjectIncludes sInjectIncludes;
 
-#define VERSION_STRING "cgfx2json 0.26"
+#define VERSION_STRING "cgfx2json 0.27"
 
 // -----------------------------------------------------------------------------
 // Timers
@@ -532,7 +532,7 @@ public:
                               const UniformRules &uniformsRename,
                               std::string &out_code)
     {
-        bool vertexShader = (CG_VERTEX_DOMAIN == cgGetProgramDomain(program));
+        const bool vertexShader = (CG_VERTEX_DOMAIN == cgGetProgramDomain(program));
         const char *programString =
             cgGetProgramString(program, CG_COMPILED_PROGRAM);
         return PostProcessCode(programString,
@@ -1691,6 +1691,23 @@ GLSLEffect *GLSLEffect::sInstance = 0;
 static const char *sCompilerArgsHLSL[] =
 {
     "-D__HLSL__",
+    "-DATTR0=POSITION",
+    "-DATTR1=BLENDWEIGHT",
+    "-DATTR2=NORMAL",
+    "-DATTR3=COLOR",
+    "-DATTR4=COLOR1",
+    "-DATTR5=TESSFACTOR",
+    "-DATTR6=PSIZE",
+    "-DATTR7=BLENDINDICES",
+    "-DATTR8=TEXCOORD0",
+    "-DATTR9=TEXCOORD1",
+    "-DATTR10=TEXCOORD2",
+    "-DATTR11=TEXCOORD3",
+    "-DATTR12=TEXCOORD4",
+    "-DATTR13=TEXCOORD5",
+    "-DATTR14=TANGENT",
+    "-DATTR15=BINORMAL",
+    "-DCOLOR0=COLOR",
     "-unroll",
     "all",
     NULL
