@@ -2002,6 +2002,78 @@ protected:
 HLSL3Effect *HLSL3Effect::sInstance = 0;
 
 // -----------------------------------------------------------------------------
+// HLSL4Effect
+// -----------------------------------------------------------------------------
+
+class HLSL4Effect : public HLSL3Effect
+{
+    static HLSL4Effect *sInstance;
+
+public:
+    static Effect *GetInstance(const char *cgfxFilename)
+    {
+        if (0 == sInstance)
+        {
+            sInstance = new HLSL4Effect();
+            if (!sInstance->Initialize(cgfxFilename))
+            {
+                delete sInstance;
+                sInstance = 0;
+            }
+        }
+        return sInstance;
+    }
+
+    static void CleanUp()
+    {
+        if (0 != sInstance)
+        {
+            delete sInstance;
+            sInstance = 0;
+        }
+    }
+
+protected:
+
+    virtual bool InitializeContext(CGcontext context)
+    {
+        const CGstate vpState = cgGetNamedState(mCgContext, "VertexProgram");
+        cgSetStateLatestProfile(vpState, CG_PROFILE_VS_4_0);
+
+        const CGstate fpState = cgGetNamedState(mCgContext, "FragmentProgram");
+        cgSetStateLatestProfile(fpState, CG_PROFILE_PS_4_0);
+
+        const CGstate gpState = cgGetNamedState(mCgContext, "GeometryProgram");
+        cgSetStateLatestProfile(gpState, CG_PROFILE_GS_4_0);
+
+        cgGLEnableProfile(CG_PROFILE_VS_4_0);
+        cgGLSetOptimalOptions(CG_PROFILE_VS_4_0);
+
+        cgGLEnableProfile(CG_PROFILE_PS_4_0);
+        cgGLSetOptimalOptions(CG_PROFILE_PS_4_0);
+
+        cgGLEnableProfile(CG_PROFILE_GS_4_0);
+        cgGLSetOptimalOptions(CG_PROFILE_GS_4_0);
+
+        return true;
+    }
+
+    virtual bool PostProcessCode(const char *programString,
+                                 const UniformRules &uniformsRename,
+                                 bool vertexShader,
+                                 std::string &out_finalCode)
+    {
+        return FixHLSLCode(programString,
+                           uniformsRename,
+                           vertexShader,
+                           5,
+                           out_finalCode);
+    }
+};
+
+HLSL4Effect *HLSL4Effect::sInstance = 0;
+
+// -----------------------------------------------------------------------------
 // HLSL5Effect
 // -----------------------------------------------------------------------------
 
@@ -2076,6 +2148,7 @@ HLSL5Effect *HLSL5Effect::sInstance = 0;
 static void CleanUpEffects()
 {
     HLSL5Effect::CleanUp();
+    HLSL4Effect::CleanUp();
     HLSL3Effect::CleanUp();
     GLSLEffect::CleanUp();
     ASMEffect::CleanUp();
@@ -2102,6 +2175,7 @@ static void PrintHelp(int error=0)
 "--json_indent=SIZE, -j SIZE\n"
 "                        json output pretty printing indent size, defaults to 0\n"
 "--hlsl3 <property>,<compile-script>\n"
+"--hlsl4 <property>,<compile-script>\n"
 "--hlsl5 <property>,<compile-script>\n"
 "--binary <property>,<compile-script>\n"
 "                        For each program, optionall generate HLSL code of the\n"
@@ -2308,6 +2382,10 @@ static bool BinaryCompile(const std::string &code,
         {
             hlslEffect = HLSL5Effect::GetInstance(cgfxFilename);
         }
+        else if (generateHLSL == 4)
+        {
+            hlslEffect = HLSL4Effect::GetInstance(cgfxFilename);
+        }
         else //if (generateHLSL == 3)
         {
             hlslEffect = HLSL3Effect::GetInstance(cgfxFilename);
@@ -2498,6 +2576,24 @@ int main(int argc, char **argv)
                 binaryProperties.push_back(property);
                 binaryCompilers.push_back(script);
                 generateHLSL.push_back(5);
+            }
+        }
+        else if (0 == strcmp(argv[argn], "--hlsl4"))
+        {
+            std::string property;
+            std::string script;
+
+            argn++;
+            if (argn < argc)
+            {
+                if (!DecomposeBinaryArg(argv[argn], property, script))
+                {
+                    PrintHelp(1);
+                }
+
+                binaryProperties.push_back(property);
+                binaryCompilers.push_back(script);
+                generateHLSL.push_back(4);
             }
         }
         else if (0 == strcmp(argv[argn], "--hlsl3"))

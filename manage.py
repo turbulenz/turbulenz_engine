@@ -25,7 +25,12 @@ def _d3d11_cgfx2json_flags():
     abspath = os.path.abspath
     join = os.path.join
     hlsl5_script = abspath(join('scripts', 'compile_hlsl5_shader.bat'))
-    return [ "--hlsl5", "%s,%s" % ("binary_hlsl5", hlsl5_script) ]
+    hlsl4_script = abspath(join('scripts', 'compile_hlsl4_shader.bat'))
+    return [
+        "--hlsl5", "%s,%s" % ("binary_hlsl5", hlsl5_script),
+        "--hlsl4", "%s,%s" % ("binary_hlsl4", hlsl4_script),
+        "-j", "1",
+    ]
 
 def _d3d9_cgfx2json_flags():
     abspath = os.path.abspath
