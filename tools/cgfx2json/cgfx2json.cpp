@@ -32,7 +32,7 @@ bool           sVerbose = false;
 int            sErrorCount = 0;
 InjectIncludes sInjectIncludes;
 
-#define VERSION_STRING "cgfx2json 0.27"
+#define VERSION_STRING "cgfx2json 0.28"
 
 // -----------------------------------------------------------------------------
 // Timers
