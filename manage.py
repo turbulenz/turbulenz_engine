@@ -29,7 +29,6 @@ def _d3d11_cgfx2json_flags():
     return [
         "--hlsl5", "%s,%s" % ("binary_hlsl5", hlsl5_script),
         "--hlsl4", "%s,%s" % ("binary_hlsl4", hlsl4_script),
-        "-j", "1",
     ]
 
 def _d3d9_cgfx2json_flags():

@@ -2423,7 +2423,7 @@ static bool BinaryCompile(const std::string &code,
     command += " ";
     command += outputFilename;
 
-    printf("external compiler: %s\n", command.c_str());
+    // printf("external compiler: %s\n", command.c_str());
     if (0 != system(command.c_str()))
     {
         out_base64 = "Failed to execute binary compile command: ";
