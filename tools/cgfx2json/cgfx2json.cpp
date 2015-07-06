@@ -1421,7 +1421,7 @@ protected:
 
     virtual bool InitializeContext(CGcontext context)
     {
-#if CG_VERSION_NUM >= 3100
+#if !defined(__linux__) && CG_VERSION_NUM >= 3100
         cgGLSetContextGLSLVersion(context, CG_GL_GLSL_DEFAULT);
 #endif
 
