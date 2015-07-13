@@ -57,8 +57,13 @@ def nodejs_get_version(allow_system_node, prefix):
 #
 def nodejs_install_binary_win32(version, filename, prefix):
     if filename is None:
+        tmpfile = '%s/Scripts/_node.exe' % prefix
+        final = '%s/Scripts/_node.exe' % prefix
         url = '%s/%s/node.exe' % (NODEJS_DIST, version)
-        download(url, '%s/Scripts/node.exe' % prefix)
+        download(url, tmpfile)
+        if os.path.exists(final):
+            os.unlink(final)
+        os.rename(tmpfile, final)
     else:
         shutil.copyfile(filename, '%s/Scripts/node.exe' % prefix)
 
