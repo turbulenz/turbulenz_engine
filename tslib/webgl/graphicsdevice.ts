@@ -1592,6 +1592,12 @@ class TZWebGLTexture implements Texture
             tex.cubemap = (params.cubemap || false);
             tex.name = params.name;
 
+            if (tex.width === 0 || tex.height === 0)
+            {
+                debug.assert(false, "Invalid texture dimensions.");
+                return null;
+            }
+
             var result = tex.createGLTexture(params.data);
             if (!result)
             {
