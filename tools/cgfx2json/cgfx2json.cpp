@@ -115,7 +115,7 @@ static void replace(std::string &target,
     }
 }
 
-static bool IsAscii(const std::vector<uint8_t> data)
+static bool IsAscii(const std::vector<uint8_t> &data)
 {
     const size_t size = data.size() - 1;
     for (size_t i = 0 ; i < size ; ++i)
@@ -348,7 +348,15 @@ public:
         mCgEffect = cgCreateEffectFromFile(mCgContext, cgfxFilename, args);
         if (0 == mCgEffect)
         {
-            ErrorMessage("Failed to load cgfx file.");
+            ErrorMessage("Failed to parse cgfx file.");
+            return false;
+        }
+
+        if (sErrorCount)
+        {
+            cgDestroyEffect(mCgEffect);
+            mCgEffect = 0;
+            ErrorMessage("Errors parsing cgfx file.");
             return false;
         }
 
@@ -2709,7 +2717,7 @@ int main(int argc, char **argv)
     }
     if (NULL == effect)
     {
-        ErrorMessage("Failed to load cgfx file.");
+        ErrorMessage("Failed to parse cgfx file.");
         return 1;
     }
 
