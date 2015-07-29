@@ -2447,6 +2447,9 @@ static bool BinaryCompile(const std::string &code,
         return false;
     }
 
+    DeleteFileA(inputFilename);
+    DeleteFileA(outputFilename);
+
     if (!IsAscii(data))
     {
         if (!EncodeBase64String(data, out_base64))
