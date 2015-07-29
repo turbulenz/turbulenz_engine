@@ -19,7 +19,7 @@ else
   LDFLAGS=$(LIBPATHS) -arch x86_64 -arch i386 -F /Library/Frameworks -framework Cg -framework OpenGL -framework Foundation -lstdc++
 endif
 
-INCLUDES += -I../common -I../../external/boost/1.43/include
+INCLUDES += -I../common -I../../external/boost/1.43/include -I../../external/Cg/include
 DEFINES +=
 CFLAGS += $(DEFINES) $(INCLUDES)
 
