@@ -2425,18 +2425,23 @@ class ParticleBuilder
         data          : Uint8Array
     ): Texture
     {
-        return graphicsDevice.createTexture({
-            name      : "ParticleBuilder AnimationTexture",
-            width     : width,
-            height    : (data.length / width) >>> 2,
-            depth     : 1,
-            format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
-            mipmaps   : false,
-            cubemap   : false,
-            renderable: false,
-            dynamic   : false,
-            data      : data
-        });
+        if (0 !== data.length)
+        {
+            return graphicsDevice.createTexture({
+                name      : "ParticleBuilder AnimationTexture",
+                width     : width,
+                height    : (data.length / width) >>> 2,
+                depth     : 1,
+                format    : graphicsDevice.PIXELFORMAT_R8G8B8A8,
+                mipmaps   : false,
+                cubemap   : false,
+                renderable: false,
+                dynamic   : false,
+                data      : data
+            });
+        }
+
+        return null;
     }
 
     private static nearPow2Geq(x)
