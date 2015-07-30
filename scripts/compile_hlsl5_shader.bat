@@ -13,6 +13,8 @@ set CGFXSOURCE=%2
 set TYPE=%3
 set INPUT=%4
 set OUTPUT=%5
+set LOG=%6
+set MUTE=%7
 
 if "%TYPE%" == "vertex" (
   set HLSL_PROFILE=vs_5_0
@@ -25,4 +27,4 @@ if "%TYPE%" == "geometry" (
 )
 
 rem echo "%FXC%" /nologo /O3 /WX /T %HLSL_PROFILE% /Fo %OUTPUT% %INPUT%
-"%FXC%" /nologo /O3 /T %HLSL_PROFILE% /Fo %OUTPUT% %INPUT%
+"%FXC%" /nologo /O3 /Fe %LOG% /T %HLSL_PROFILE% /Fo %OUTPUT% %INPUT% > %MUTE%

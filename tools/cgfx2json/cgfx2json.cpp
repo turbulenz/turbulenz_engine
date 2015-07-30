@@ -2357,6 +2357,8 @@ static bool BinaryCompile(const std::string &code,
     char tempPath[MAX_PATH];
     char inputFilename[MAX_PATH];
     char outputFilename[MAX_PATH];
+    char logFilename[MAX_PATH];
+    char muteFilename[MAX_PATH];
 
     dwRetVal = GetTempPathA(MAX_PATH, tempPath);
     if (dwRetVal > MAX_PATH || (dwRetVal == 0))
@@ -2366,7 +2368,9 @@ static bool BinaryCompile(const std::string &code,
     }
 
     if (0 == GetTempFileNameA(tempPath, "shadercode", 0, inputFilename) ||
-        0 == GetTempFileNameA(tempPath, "binary", 0, outputFilename))
+        0 == GetTempFileNameA(tempPath, "binary", 0, outputFilename) ||
+        0 == GetTempFileNameA(tempPath, "binary", 0, logFilename) ||
+        0 == GetTempFileNameA(tempPath, "binary", 0, muteFilename))
     {
         out_base64 = "Failed to get temporary files";
         return false;
@@ -2430,9 +2434,61 @@ static bool BinaryCompile(const std::string &code,
     command += inputFilename;
     command += " ";
     command += outputFilename;
+    command += " ";
+    command += logFilename;
+    command += " ";
+    command += muteFilename; //consummes fxc info about build success.
 
     // printf("external compiler: %s\n", command.c_str());
-    if (0 != system(command.c_str()))
+    int result = system(command.c_str());
+    DeleteFileA(muteFilename);
+    DeleteFileA(inputFilename);
+
+    if (0 != generateHLSL)
+    {
+        //Filter fxc output
+        std::vector<uint8_t> logData;
+        if (ReadFile(logFilename, logData))
+        {
+            if (logData.size())
+            {
+                logData.push_back(0);
+                std::string output;
+                size_t inputFileNameLength = strlen(inputFilename);
+
+                char* lineStart = (char*)logData.data();
+                for (char*  lineEnd = strchr(lineStart, '\n');
+                    lineEnd != nullptr;
+                    lineEnd = strchr(lineStart, '\n'))
+                {
+                    *lineEnd = 0;
+                    if (lineEnd != lineStart + 1) // \r
+                    {
+                        //  warning X3571 : pow(f, e) will not work for negative f, use abs(f) or conditionally handle negative
+                        if (!strstr(lineStart, "warning X3571"))
+                        {
+                            *lineEnd = '\n';
+                            char *strippedOfInputFile = strstr(lineStart, inputFilename);
+                            if (strippedOfInputFile)
+                            {
+                                lineStart = strippedOfInputFile + inputFileNameLength;
+                            }
+                            output.append(lineStart, 1 + lineEnd - lineStart);
+                        }
+                    }
+                    lineStart = lineEnd + 1;
+                }
+
+                if (output.size())
+                {
+                    fprintf(stderr, "%s:\n%s\n", entryPoint, output.c_str());
+                }
+            }
+        }
+    }
+    DeleteFileA(logFilename);
+
+    if (0 != result)
     {
         out_base64 = "Failed to execute binary compile command: ";
         out_base64 += command;
@@ -2447,7 +2503,6 @@ static bool BinaryCompile(const std::string &code,
         return false;
     }
 
-    DeleteFileA(inputFilename);
     DeleteFileA(outputFilename);
 
     if (!IsAscii(data))
