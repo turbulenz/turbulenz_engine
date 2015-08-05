@@ -1759,6 +1759,7 @@ class WebGLInputDevice implements InputDevice
         keyMap[35] = 635; // END
         keyMap[33] = 636; // PAGE_UP
         keyMap[34] = 637; // PAGE_DOWN
+        keyMap[220] = 220; // EXTENDED_BACKSLASH_LEFTANGLE
 
         id.keyMap = keyMap;
 
@@ -1997,6 +1998,7 @@ WebGLInputDevice.prototype.keyCodes = {
     RIGHT : 201,
     UP : 202,
     DOWN : 203,
+    EXTENDED_BACKSLASH_LEFTANGLE : 220,  // Lower left \ or < key on RT 102 keyboard
     LEFT_SHIFT : 300,
     RIGHT_SHIFT : 301,
     LEFT_CONTROL : 302,
