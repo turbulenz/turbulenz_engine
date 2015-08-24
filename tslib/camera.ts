@@ -787,6 +787,13 @@ class CameraController
             case keyCodes.NUMPAD_7:
                 c.down = 1.0;
                 break;
+
+            case keyCodes.ESCAPE:
+                if (id.isLocked())
+                {
+                    id.unlockMouse();
+                }
+                break;
             }
         };
 
