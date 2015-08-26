@@ -10,44 +10,34 @@ Changelog
 Version 1.x-dev
 ---------------
 
-2014-11-04
+Version 1.3.2
+-------------
 
+2015-08-26
+
+- Support for compiling alternate shader binaries and embedding them within assets and library source.
+- Fix for issues relating to appending a map function Float32Array.
 - Added helpers createTimedInstance, createBurstInstance, createMultiBurstInstance to ParticleManager.
 - Added additional static type constraints to ParticleEmitter interface: getBurstCount and getTotalLifeTime
 - Added timeout field to ParticleInstance mirroring the values used when it was created.
 - Changed the behaviour of createChildInstance timeout parameter to inherit parent instance timeout if unspecified.
-
-2014-09-16
-
 - Added support for standard derivative functions `ddx, ddy, fwidth` in shaders to cgfx2json and GraphicsDevice.
   Use `graphicsDevice.isSupported("STANDARD_DERIVATIVES")` to check for hardware support.
 - Added `PIXELFORMAT_D32` to GraphicsDevice and completed support for depth textures.
   Use `graphicsDevice.isSupported("DEPTH_TEXTURE")` to check for hardware support.
 - Added clone method to DrawParameters object.
-
-2014-08-20
-
 - The DrawParameters object is now shadowing the Shader parameters set by its TechniqueParameters in order
   to optimize the dispatch of the parameters values by GraphicsDevice.drawArray.
   This significant optimization does require a call to DrawParameters.setTechniqueParameters if properties are
   *added* to or *removed* from one of its TechniqueParameters objects,
   otherwise the DrawParameters object will not be aware of the changes.
-
-2014-07-25
-
 - Removed the Turbulenz browser plugin for Windows, since all modern
   browsers now support WebGL.  Correspondingly, samples and apps in
   the SDK no longer ship with builds that target the plugin
   (.release.html and .tzjs files).
-
-2014-05-20
-
 - Added closeExistingSessions option to TurbulenzServices.createGameSession function.
 - Added TurbulenzServices.onGameSessionClosed property to detect when a gamesession has been closed remotely.
 - Added closeExistingSessions option to the Tic-Tac-Toe app.
-
-2014-04-03
-
 - Added addWebsocket function to the NetworkLatencySimulator
 - Added missing normalized `VERTEXFORMAT_` values to the GraphicsDevice documentation
 - Added frustum planes and frustum points order to the Camera documentation
