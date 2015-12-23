@@ -905,6 +905,7 @@ Now you can create the mesh example HTML file and place it at the root of the Tu
             var TurbulenzEngine = {};
         </script>
         <script src="jslib/debug.js"></script>
+        <script src="jslib/vmath.js"></script>
         <script src="jslib/webgl/turbulenzengine.js"></script>
         <script src="jslib/webgl/graphicsdevice.js"></script>
         <script src="jslib/webgl/inputdevice.js"></script>
@@ -935,7 +936,6 @@ Now you can create the mesh example HTML file and place it at the root of the Tu
         <script src="jslib/texturemanager.js"></script>
         <script src="jslib/utilities.js"></script>
         <script src="jslib/vertexbuffermanager.js"></script>
-        <script src="jslib/vmath.js"></script>
 
         <script src="jslib/services/turbulenzbridge.js"></script>
         <script src="jslib/services/turbulenzservices.js"></script>
