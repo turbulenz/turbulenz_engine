@@ -54,6 +54,7 @@ class CharacterController
     onGround                     : boolean;
     dead                         : boolean;
     god                          : boolean;
+    disableGod                   : boolean;
 
     walkDirection                : any; // v3
 
@@ -133,6 +134,7 @@ class CharacterController
         c.onGround = false;
         c.dead = false;
         c.god = false;
+        c.disableGod = false;
 
         if (params)
         {
@@ -145,6 +147,7 @@ class CharacterController
             c.maxSpeed = params.maxSpeed || c.maxSpeed;
             c.maxStepHeight = params.maxStepHeight || c.maxStepHeight;
             c.maxJumpHeight = params.maxJumpHeight || c.maxJumpHeight;
+            c.disableGod = params.disableGod != null ? params.disableGod : c.disableGod;
         }
 
         var at = md.m43At(matrix);
@@ -264,16 +267,7 @@ class CharacterController
             }
             if (keynum === keyCodes.G)
             {
-                c.god = !c.god;
-                if (c.god)
-                {
-                    c.character.velocity = c.md.v3BuildZero();
-                }
-                else
-                {
-                    var characterPosition = c.md.m43Pos(c.matrix);
-                    c.character.position = c.md.v3Add(characterPosition, c.physicsHeightOffset);
-                }
+                c.setGod(!c.god);
             }
             else if (keynum === keyCodes.RETURN)
             {
@@ -386,16 +380,7 @@ class CharacterController
             }
             if (buttonnum === padCodes.BACK)
             {
-                c.god = !c.god;
-                if (c.god)
-                {
-                    c.character.velocity = c.md.v3BuildZero();
-                }
-                else
-                {
-                    var characterPosition = c.md.m43Pos(c.matrix);
-                    c.character.position = c.md.v3Add(characterPosition, c.physicsHeightOffset);
-                }
+                c.setGod(!c.god);
             }
         };
 
@@ -530,6 +515,24 @@ class CharacterController
         }
 
         return c;
+    }
+
+    setGod(newGod)
+    {
+        if (newGod && this.disableGod)
+        {
+            return;
+        }
+        this.god = newGod;
+        if (this.god)
+        {
+            this.character.velocity = this.md.v3BuildZero();
+        }
+        else
+        {
+            var characterPosition = this.md.m43Pos(this.matrix);
+            this.character.position = this.md.v3Add(characterPosition, this.physicsHeightOffset);
+        }
     }
 
     rotate(turn, pitch)
