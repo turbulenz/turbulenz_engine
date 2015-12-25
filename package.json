@@ -1,0 +1,31 @@
+{
+  "name": "turbulenz_engine",
+  "version": "1.1.0",
+  "description": "modular 3D and 2D game framework for making HTML5 powered games for browsers and mobile devices",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/turbulenz/turbulenz_engine.git"
+  },
+  "contributors": [
+    "Blake Maltby <blakemaltby@turbulenz.com>",
+    "David Galeano <davidgaleano@turbulenz.com>",
+    "Duncan Tebbs <duncantebbs@turbulenz.com>",
+    "James Austin <jamesaustin@turbulenz.com>",
+    "Ian Ballantyne <ianballantyne@turbulenz.com>",
+    "David Fooks <davidfooks@turbulenz.com>",
+    "Ben Furneaux <benfurneaux@turbulenz.com>",
+    "James Long <jameslong@turbulenz.com>",
+    "Jan Borchers <janborchers@turbulenz.com>",
+    "Joe Kilner <joekilner@turbulenz.com>",
+    "Michael Braithwaite <michaelbraithwaite@turbulenz.com>",
+    "Sheheryar Zakaria",
+    "Simon Moore <simonmoore@turbulenz.com>",
+    "Vincent Briglia",
+    "Adam Langridge <adamlangridge@turbulenz.com>",
+    "Chris Matthews <chrismatthews@turbulenz.com>"
+  ],
+  "license": "MIT",
+  "readmeFilename": "README.rst"
+}
