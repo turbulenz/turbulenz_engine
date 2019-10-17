@@ -442,7 +442,7 @@ Turbulenz Service API
 
 - Payments API: In game, On website, App stores.
 - Payment methods: Single purchase, Micro transactions.
-- Purchasable items: Ownable, Consumeable.
+- Purchasable items: Ownable, Consumable.
 
 **Userdata**
 
