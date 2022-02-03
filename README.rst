@@ -223,7 +223,7 @@ Low-level API
 
 - Bi-directional, full-duplex communications channels, over a TCP socket:
 
-  - Utilizes browser Websocket support.
+  - Utilizes browser WebSocket support.
   - Efficient native implementation of WebSockets for platforms without support:
 
     - http://en.wikipedia.org/wiki/WebSocket
@@ -346,7 +346,7 @@ High-level API
 - Single point and ambient light.
 - Pixel-based lighting.
 - Materials with multiple texture maps: Specular color and intensity, Normal vector, Glow color, Alpha.
-- Optimzed for speed and compatibility on a wide range of hardware.
+- Optimized for speed and compatibility on a wide range of hardware.
 - 4 weight GPU skinning.
 - UV animation.
 - Wireframe mode.
@@ -357,7 +357,7 @@ High-level API
 - Single point and ambient light.
 - Vertex-based lighting.
 - Materials with multiple texture maps: Specular color and intensity, Normal vector, Glow color, Alpha.
-- Optimzed for speed and compatibility on a wide range of hardware.
+- Optimized for speed and compatibility on a wide range of hardware.
 - 4 weight GPU skinning.
 - UV animation.
 - Wireframe mode.
@@ -442,7 +442,7 @@ Turbulenz Service API
 
 - Payments API: In game, On website, App stores.
 - Payment methods: Single purchase, Micro transactions.
-- Purchasable items: Ownable, Consumeable.
+- Purchasable items: Ownable, Consumable.
 
 **Userdata**
 
