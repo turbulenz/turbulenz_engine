@@ -11207,7 +11207,7 @@ class Physics2DWorld
             /*jshint bitwise: true*/
             {
                 cb = Physics2DCallback.allocate();
-                cb.thisObject = shapeA;
+                cb.thisObject = shapeB;
                 cb.callback = eventObject.callback;
                 cb.time = this._eventTime;
                 cb.index = i;
