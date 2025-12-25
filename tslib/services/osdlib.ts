@@ -24,7 +24,10 @@ class OSD
                 doc.osdStartLoading();
             }
         }
-        catch (exception) {}
+        catch (exception)
+        {
+            // Silently ignore - OSD methods may throw in cross-origin iframe contexts
+        }
     }
 
     startSaving()
@@ -37,7 +40,10 @@ class OSD
                 doc.osdStartSaving();
             }
         }
-        catch (exception) {}
+        catch (exception)
+        {
+            // Silently ignore - OSD methods may throw in cross-origin iframe contexts
+        }
     }
 
     stopLoading()
@@ -50,7 +56,10 @@ class OSD
                 doc.osdStopLoading();
             }
         }
-        catch (exception) {}
+        catch (exception)
+        {
+            // Silently ignore - OSD methods may throw in cross-origin iframe contexts
+        }
     }
 
     stopSaving()
@@ -63,7 +72,10 @@ class OSD
                 doc.osdStopSaving();
             }
         }
-        catch (exception) {}
+        catch (exception)
+        {
+            // Silently ignore - OSD methods may throw in cross-origin iframe contexts
+        }
     }
 
     // Constructor function
